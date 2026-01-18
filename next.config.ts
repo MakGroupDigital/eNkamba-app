@@ -2,12 +2,10 @@ import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
   /* config options here */
-  // Pour Capacitor, utilisez: output: 'export'
-  // Pour Vercel, ne pas utiliser output: 'export' (commenté ci-dessous)
+  // Pour Capacitor, décommentez: output: 'export' et images.unoptimized: true
+  // Pour Vercel, laissez ces lignes commentées (Vercel optimise automatiquement)
   // output: 'export',
   trailingSlash: true,
-  images: {
-    unoptimized: false, // Vercel optimise les images automatiquement
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -15,6 +13,7 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
+    unoptimized: false, // Vercel optimise les images automatiquement
     remotePatterns: [
       {
         protocol: 'https',
