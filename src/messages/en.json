@@ -1,0 +1,9 @@
+{
+  "BottomNav": {
+    "home": "Home",
+    "wallet": "Wallet",
+    "history": "History",
+    "settings": "Settings",
+    "add": "Add"
+  }
+}

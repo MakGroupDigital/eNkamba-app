@@ -1,0 +1,16 @@
+{
+  "placeholderImages": [
+    {
+      "id": "landing-hero",
+      "description": "African people using mobile financial services",
+      "imageUrl": "https://picsum.photos/seed/africa-finance/1200/800",
+      "imageHint": "african finance"
+    },
+    {
+      "id": "makutano-post",
+      "description": "An African woman working on a sewing machine in a small workshop.",
+      "imageUrl": "https://picsum.photos/seed/sewing-project/800/600",
+      "imageHint": "african entrepreneur"
+    }
+  ]
+}

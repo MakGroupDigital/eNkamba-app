@@ -1,0 +1,26 @@
+{
+  "name": "eNkamba - La vie simplifiée et meilleure",
+  "short_name": "eNkamba",
+  "description": "Écosystème digital tout-en-un : finance, e-commerce, logistique, messagerie et réseau social",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#32BB78",
+  "theme_color": "#32BB78",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

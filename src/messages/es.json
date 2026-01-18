@@ -1,0 +1,9 @@
+{
+  "BottomNav": {
+    "home": "Inicio",
+    "wallet": "Cartera",
+    "history": "Historial",
+    "settings": "Ajustes",
+    "add": "Añadir"
+  }
+}
