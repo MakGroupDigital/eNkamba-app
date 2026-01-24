@@ -134,7 +134,7 @@ const getInitialProgress = (): KycProgress => {
 
 export default function KycPage() {
   const router = useRouter();
-  const { completeKyc } = useKycStatus();
+  const { completeKyc, isKycCompleted, isLoading: kycLoading } = useKycStatus();
   const [isHydrated, setIsHydrated] = useState(false);
   const [progress, setProgress] = useState<KycProgress>(getInitialProgress);
   const [step, setStep] = useState<Step>('identity');
@@ -144,6 +144,13 @@ export default function KycPage() {
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // États pour les données d'identité
+  const [identityType, setIdentityType] = useState('passport');
+  const [identityNumber, setIdentityNumber] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState('');
+  const [country, setCountry] = useState('CD');
 
   // États pour Mobile Money Dialog
   const [mobileMoneyOpen, setMobileMoneyOpen] = useState(false);
@@ -171,17 +178,21 @@ export default function KycPage() {
   const [bankCompleted, setBankCompleted] = useState<BankStep[]>([]);
   const [bankLinked, setBankLinked] = useState(false);
 
+  // Vérifier si KYC est déjà complété et rediriger
+  useEffect(() => {
+    // Si le KYC est complété, rediriger vers le dashboard
+    if (!kycLoading && isKycCompleted) {
+      console.log('KYC déjà complété, redirection vers dashboard');
+      router.push('/dashboard');
+    }
+  }, [isKycCompleted, kycLoading, router]);
+
   // Hydrater depuis localStorage au montage
   useEffect(() => {
     const savedProgress = getInitialProgress();
     setProgress(savedProgress);
     setStep(savedProgress.currentStep);
     setIsHydrated(true);
-    
-    // Si l'utilisateur a déjà complété le KYC, rediriger vers dashboard
-    if (savedProgress.currentStep === 'completed') {
-      router.push('/dashboard');
-    }
 
     // Charger la progression Mobile Money
     try {
@@ -554,16 +565,25 @@ export default function KycPage() {
   const handleNextStep = () => {
     switch (step) {
       case 'identity':
-        if (idFront && idBack) {
-          saveProgress({ idFrontUploaded: true, idBackUploaded: true });
-          completeStep('identity');
-        } else {
+        // Validate identity form fields
+        if (!identityType || !identityNumber || !fullName || !dateOfBirth || !country) {
+          toast({ 
+            variant: 'destructive', 
+            title: 'Erreur', 
+            description: 'Veuillez remplir tous les champs d\'identité.' 
+          });
+          return;
+        }
+        if (!idFront || !idBack) {
           toast({ 
             variant: 'destructive', 
             title: 'Erreur', 
             description: "Veuillez importer le recto et le verso de votre pièce d'identité." 
           });
+          return;
         }
+        saveProgress({ idFrontUploaded: true, idBackUploaded: true });
+        completeStep('identity');
         break;
       case 'selfie':
         if (selfie) {
@@ -582,15 +602,87 @@ export default function KycPage() {
         completeStep('referral');
         break;
       case 'linkAccount':
+        // Validation stricte AVANT d'appeler completeKyc
+        if (!identityType || !identityType.trim()) {
+          toast({ variant: 'destructive', title: 'Erreur', description: 'Veuillez sélectionner un type de pièce d\'identité.' });
+          return;
+        }
+        if (!identityNumber || !identityNumber.trim()) {
+          toast({ variant: 'destructive', title: 'Erreur', description: 'Veuillez entrer votre numéro de pièce d\'identité.' });
+          return;
+        }
+        if (!fullName || !fullName.trim()) {
+          toast({ variant: 'destructive', title: 'Erreur', description: 'Veuillez entrer votre nom complet.' });
+          return;
+        }
+        if (!dateOfBirth || !dateOfBirth.trim()) {
+          toast({ variant: 'destructive', title: 'Erreur', description: 'Veuillez entrer votre date de naissance.' });
+          return;
+        }
+        if (!country || !country.trim()) {
+          toast({ variant: 'destructive', title: 'Erreur', description: 'Veuillez sélectionner votre pays.' });
+          return;
+        }
+        if (!progress.idFrontUploaded) {
+          toast({ variant: 'destructive', title: 'Erreur', description: 'Veuillez uploader le recto de votre pièce d\'identité.' });
+          return;
+        }
+        if (!progress.idBackUploaded) {
+          toast({ variant: 'destructive', title: 'Erreur', description: 'Veuillez uploader le verso de votre pièce d\'identité.' });
+          return;
+        }
+        if (!progress.selfieTaken) {
+          toast({ variant: 'destructive', title: 'Erreur', description: 'Veuillez prendre un selfie.' });
+          return;
+        }
+
         setIsLoading(true);
-        setTimeout(() => {
-          setIsLoading(false);
-          completeStep('linkAccount');
-          // Nettoyer le localStorage après complétion totale
-          localStorage.removeItem(KYC_STORAGE_KEY);
-          // Marquer KYC comme complété
-          completeKyc();
-          setTimeout(() => router.push('/dashboard'), 2000);
+        setTimeout(async () => {
+          try {
+            // Utiliser les données du formulaire
+            const kycData = {
+              identityType,
+              identityNumber,
+              fullName,
+              dateOfBirth,
+              country,
+              linkedAccount: mobileMoneyLinked ? {
+                type: 'mobile_money' as const,
+                operator: mobileMoneyData.operator,
+                phoneNumber: mobileMoneyData.phoneNumber,
+                accountName: mobileMoneyData.accountName,
+              } : bankLinked ? {
+                type: 'bank' as const,
+                bankName: bankData.bankName,
+                accountNumber: bankData.accountNumber,
+                accountHolder: bankData.accountHolder,
+                swiftCode: bankData.swiftCode,
+              } : undefined,
+            };
+
+            // Appeler completeKyc avec les données d'identité
+            const result = await completeKyc(kycData);
+
+            if (result.success) {
+              setIsLoading(false);
+              completeStep('linkAccount');
+              // Nettoyer le localStorage après complétion totale
+              localStorage.removeItem(KYC_STORAGE_KEY);
+              
+              // Rediriger immédiatement vers le dashboard
+              // Ne pas attendre, rediriger tout de suite
+              router.push('/dashboard');
+            }
+          } catch (error: any) {
+            setIsLoading(false);
+            console.error('Erreur complétude KYC:', error);
+            // Afficher l'erreur à l'utilisateur
+            toast({
+              variant: 'destructive',
+              title: 'Erreur KYC',
+              description: error.message || 'Une erreur est survenue lors de la vérification.'
+            });
+          }
         }, 1500);
         break;
     }
@@ -618,8 +710,8 @@ export default function KycPage() {
     });
   };
 
-  // Afficher un loader pendant l'hydratation
-  if (!isHydrated) {
+  // Afficher un loader pendant l'hydratation ou le chargement du KYC
+  if (!isHydrated || kycLoading) {
     return (
       <div className="flex min-h-screen w-full items-center justify-center bg-muted/30 p-4">
         <Card className="w-full max-w-lg">
@@ -637,39 +729,119 @@ export default function KycPage() {
         return (
           <div className="space-y-6">
             <p className="text-muted-foreground">
-              Téléversez une image claire du recto et du verso de votre carte d&apos;identité.
+              Remplissez vos informations d&apos;identité et téléversez les documents.
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <label 
-                htmlFor="id-front" 
-                className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:bg-muted/50 transition-colors"
-              >
-                <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
-                <span className="mt-2 block text-sm font-semibold text-primary">Importer Recto</span>
-                <Input 
-                  id="id-front" 
-                  type="file" 
-                  className="hidden" 
-                  accept="image/*" 
-                  onChange={(e) => setIdFront(e.target.files?.[0] || null)} 
+            
+            {/* Identity Information Form */}
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="identity-type">Type de pièce d&apos;identité</Label>
+                <Select value={identityType} onValueChange={setIdentityType}>
+                  <SelectTrigger id="identity-type">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="passport">Passeport</SelectItem>
+                    <SelectItem value="national_id">Carte d&apos;identité nationale</SelectItem>
+                    <SelectItem value="drivers_license">Permis de conduire</SelectItem>
+                    <SelectItem value="residence_permit">Titre de séjour</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="identity-number">Numéro de pièce d&apos;identité</Label>
+                <Input
+                  id="identity-number"
+                  placeholder="Ex: AB123456"
+                  value={identityNumber}
+                  onChange={(e) => setIdentityNumber(e.target.value)}
                 />
-                {idFront && <p className="text-xs text-muted-foreground mt-2 truncate">{idFront.name}</p>}
-              </label>
-              <label 
-                htmlFor="id-back" 
-                className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:bg-muted/50 transition-colors"
-              >
-                <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
-                <span className="mt-2 block text-sm font-semibold text-primary">Importer Verso</span>
-                <Input 
-                  id="id-back" 
-                  type="file" 
-                  className="hidden" 
-                  accept="image/*" 
-                  onChange={(e) => setIdBack(e.target.files?.[0] || null)} 
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="full-name">Nom complet</Label>
+                <Input
+                  id="full-name"
+                  placeholder="Prénom et Nom"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
                 />
-                {idBack && <p className="text-xs text-muted-foreground mt-2 truncate">{idBack.name}</p>}
-              </label>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="dob">Date de naissance</Label>
+                  <Input
+                    id="dob"
+                    type="date"
+                    value={dateOfBirth}
+                    onChange={(e) => setDateOfBirth(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="country">Pays</Label>
+                  <Select value={country} onValueChange={setCountry}>
+                    <SelectTrigger id="country">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="CD">🇨🇩 RDC</SelectItem>
+                      <SelectItem value="CG">🇨🇬 Congo</SelectItem>
+                      <SelectItem value="CM">🇨🇲 Cameroun</SelectItem>
+                      <SelectItem value="CI">🇨🇮 Côte d&apos;Ivoire</SelectItem>
+                      <SelectItem value="SN">🇸🇳 Sénégal</SelectItem>
+                      <SelectItem value="KE">🇰🇪 Kenya</SelectItem>
+                      <SelectItem value="NG">🇳🇬 Nigeria</SelectItem>
+                      <SelectItem value="GH">🇬🇭 Ghana</SelectItem>
+                      <SelectItem value="ZA">🇿🇦 Afrique du Sud</SelectItem>
+                      <SelectItem value="FR">🇫🇷 France</SelectItem>
+                      <SelectItem value="BE">🇧🇪 Belgique</SelectItem>
+                      <SelectItem value="US">🇺🇸 États-Unis</SelectItem>
+                      <SelectItem value="GB">🇬🇧 Royaume-Uni</SelectItem>
+                      <SelectItem value="CA">🇨🇦 Canada</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+
+            {/* Document Upload */}
+            <div className="pt-4 border-t">
+              <p className="text-sm font-semibold mb-4">Téléversez vos documents</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <label 
+                  htmlFor="id-front" 
+                  className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:bg-muted/50 transition-colors"
+                >
+                  <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
+                  <span className="mt-2 block text-sm font-semibold text-primary">Importer Recto</span>
+                  <Input 
+                    id="id-front" 
+                    type="file" 
+                    className="hidden" 
+                    accept="image/*" 
+                    onChange={(e) => setIdFront(e.target.files?.[0] || null)} 
+                  />
+                  {idFront && <p className="text-xs text-muted-foreground mt-2 truncate">{idFront.name}</p>}
+                </label>
+                <label 
+                  htmlFor="id-back" 
+                  className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:bg-muted/50 transition-colors"
+                >
+                  <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
+                  <span className="mt-2 block text-sm font-semibold text-primary">Importer Verso</span>
+                  <Input 
+                    id="id-back" 
+                    type="file" 
+                    className="hidden" 
+                    accept="image/*" 
+                    onChange={(e) => setIdBack(e.target.files?.[0] || null)} 
+                  />
+                  {idBack && <p className="text-xs text-muted-foreground mt-2 truncate">{idBack.name}</p>}
+                </label>
+              </div>
             </div>
           </div>
         );

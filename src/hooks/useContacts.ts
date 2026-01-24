@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
+import { Contacts } from '@capacitor-community/contacts';
 
 export interface Contact {
   id: string;
@@ -26,6 +27,8 @@ const ENKAMBA_USERS = [
   { phoneNumber: '+243812345678', name: 'Jean Dupont', referralCode: 'JEAN123' },
   { phoneNumber: '+243987654321', name: 'Marie Martin', referralCode: 'MARIE456' },
   { phoneNumber: '+243812111111', name: 'Pierre Bernard', referralCode: 'PIERRE789' },
+  { phoneNumber: '+243899999999', name: 'Alice Moreau', referralCode: 'ALICE999' },
+  { phoneNumber: '+243888888888', name: 'Bob Leclerc', referralCode: 'BOB888' },
 ];
 
 export function useContacts() {
@@ -70,28 +73,26 @@ export function useContacts() {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      // Vérifier si l'API Contacts est disponible
-      if (!('contacts' in navigator)) {
-        throw new Error('API Contacts non disponible sur cet appareil');
-      }
+      // Utiliser Capacitor Contacts pour accéder aux vrais contacts du téléphone
+      const result = await Contacts.getContacts({
+        projection: {
+          name: true,
+          phones: true,
+          emails: true,
+        },
+      });
 
-      // Demander la permission
-      const contacts = await (navigator as any).contacts.select(
-        ['name', 'tel'],
-        { multiple: true }
-      );
-
-      if (!contacts || contacts.length === 0) {
+      if (!result.contacts || result.contacts.length === 0) {
         setState(prev => ({
           ...prev,
           isLoading: false,
-          error: 'Aucun contact sélectionné',
+          error: 'Aucun contact trouvé sur votre téléphone',
         }));
         return;
       }
 
       // Traiter les contacts
-      const processedContacts = processContacts(contacts);
+      const processedContacts = processContacts(result.contacts);
 
       // Sauvegarder
       localStorage.setItem(PERMISSION_STORAGE_KEY, 'true');
@@ -111,11 +112,11 @@ export function useContacts() {
         isLoading: false,
       }));
     } catch (error: any) {
-      console.error('Erreur accès contacts:', error);
+      console.error('Erreur accès contacts Capacitor:', error);
       setState(prev => ({
         ...prev,
         isLoading: false,
-        error: error.message || 'Erreur lors de l\'accès aux contacts',
+        error: error.message || 'Erreur lors de l\'accès aux contacts. Assurez-vous que l\'app a la permission d\'accéder aux contacts.',
       }));
     }
   }, []);
@@ -127,8 +128,9 @@ export function useContacts() {
     const nonEnkamba: Contact[] = [];
 
     rawContacts.forEach((contact, index) => {
-      const phoneNumber = contact.tel?.[0]?.value || '';
-      const name = contact.name?.[0] || `Contact ${index + 1}`;
+      // Extraire le premier numéro de téléphone
+      const phoneNumber = contact.phones?.[0]?.number || '';
+      const name = contact.name?.display || contact.name?.formatted || `Contact ${index + 1}`;
 
       if (!phoneNumber) return;
 
@@ -159,7 +161,25 @@ export function useContacts() {
 
   // Normaliser le numéro de téléphone
   const normalizePhoneNumber = (phone: string): string => {
-    return phone.replace(/\D/g, '');
+    // Supprimer tous les caractères non numériques
+    const cleaned = phone.replace(/\D/g, '');
+    
+    // Si le numéro commence par 0, le remplacer par l'indicatif du pays (ex: +243)
+    if (cleaned.startsWith('0')) {
+      return '+243' + cleaned.substring(1);
+    }
+    
+    // Si le numéro ne commence pas par +, ajouter +243 (RDC par défaut)
+    if (!cleaned.startsWith('243') && !cleaned.startsWith('+')) {
+      return '+243' + cleaned;
+    }
+    
+    // Si le numéro commence par 243 sans +, ajouter +
+    if (cleaned.startsWith('243') && !phone.startsWith('+')) {
+      return '+' + cleaned;
+    }
+    
+    return phone;
   };
 
   // Envoyer une invitation SMS

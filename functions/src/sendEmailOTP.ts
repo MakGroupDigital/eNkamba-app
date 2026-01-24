@@ -16,11 +16,59 @@ const transporter = nodemailer.createTransport({
 });
 
 /**
- * Cloud Function pour envoyer un code OTP par email
- * 
- * Appelée depuis le client pour envoyer un code de vérification
- * Stocke le code dans Firestore avec expiration
+ * Cloud Function pour créer ou mettre à jour le profil utilisateur
+ * Appelée après la vérification du code OTP
  */
+export const createOrUpdateUserProfile = functions.https.onCall(
+  async (data: { email: string }, context) => {
+    const { email } = data;
+
+    // Vérifier que l'utilisateur est authentifié
+    if (!context.auth) {
+      throw new functions.https.HttpsError(
+        'unauthenticated',
+        'Utilisateur non authentifié'
+      );
+    }
+
+    // Valider l'email
+    if (!email || !email.trim()) {
+      throw new functions.https.HttpsError(
+        'invalid-argument',
+        'Email requis'
+      );
+    }
+
+    try {
+      const db = admin.firestore();
+      const userRef = db.collection('users').doc(context.auth.uid);
+
+      // Créer ou mettre à jour le document utilisateur
+      await userRef.set({
+        email,
+        uid: context.auth.uid,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        kycStatus: 'not_started',
+        lastLogin: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+
+      return {
+        success: true,
+        message: 'Profil utilisateur créé/mis à jour',
+        uid: context.auth.uid,
+      };
+    } catch (error) {
+      console.error('Erreur création profil utilisateur:', error);
+      throw new functions.https.HttpsError(
+        'internal',
+        'Erreur lors de la création du profil utilisateur'
+      );
+    }
+  }
+);
+
+/**
+ * Cloud Function pour envoyer un code OTP par email
 export const sendEmailOTP = functions.https.onCall(
   async (data: { email: string }, context) => {
     const { email } = data;
@@ -233,6 +281,191 @@ export const verifyEmailOTP = functions.https.onCall(
       }
       
       throw error;
+    }
+  }
+);
+
+
+/**
+ * Cloud Function pour compléter la vérification KYC
+ * 
+ * Stocke les données KYC dans Firestore et met à jour le statut utilisateur
+ */
+export const completeKyc = functions.https.onCall(
+  async (data: {
+    userId: string;
+    identityType: string;
+    identityNumber: string;
+    fullName: string;
+    dateOfBirth: string;
+    country: string;
+    linkedAccount?: {
+      type: 'mobile_money' | 'bank';
+      operator?: string;
+      phoneNumber?: string;
+      accountName?: string;
+      bankName?: string;
+      accountNumber?: string;
+      swiftCode?: string;
+    };
+  }, context) => {
+    const { userId, identityType, identityNumber, fullName, dateOfBirth, country, linkedAccount } = data;
+
+    // Vérifier que l'utilisateur est authentifié
+    if (!context.auth) {
+      throw new functions.https.HttpsError(
+        'unauthenticated',
+        'Utilisateur non authentifié'
+      );
+    }
+
+    // Vérifier que l'utilisateur ne modifie que ses propres données
+    if (context.auth.uid !== userId) {
+      throw new functions.https.HttpsError(
+        'permission-denied',
+        'Vous ne pouvez modifier que vos propres données'
+      );
+    }
+
+    // Valider les paramètres - STRICT
+    if (!identityType || !identityType.trim()) {
+      throw new functions.https.HttpsError(
+        'invalid-argument',
+        'Type de pièce d\'identité requis'
+      );
+    }
+    if (!identityNumber || !identityNumber.trim()) {
+      throw new functions.https.HttpsError(
+        'invalid-argument',
+        'Numéro de pièce d\'identité requis'
+      );
+    }
+    if (!fullName || !fullName.trim()) {
+      throw new functions.https.HttpsError(
+        'invalid-argument',
+        'Nom complet requis'
+      );
+    }
+    if (!dateOfBirth || !dateOfBirth.trim()) {
+      throw new functions.https.HttpsError(
+        'invalid-argument',
+        'Date de naissance requise'
+      );
+    }
+    if (!country || !country.trim()) {
+      throw new functions.https.HttpsError(
+        'invalid-argument',
+        'Pays requis'
+      );
+    }
+
+    try {
+      const db = admin.firestore();
+      const userRef = db.collection('users').doc(userId);
+
+      // Préparer les données KYC
+      const kycData = {
+        kyc: {
+          status: 'verified',
+          completedAt: admin.firestore.FieldValue.serverTimestamp(),
+          identity: {
+            type: identityType,
+            number: identityNumber,
+            fullName,
+            dateOfBirth,
+            country,
+          },
+          linkedAccount: linkedAccount || null,
+        },
+        // Mettre à jour le statut utilisateur
+        kycStatus: 'verified',
+        kycCompletedAt: admin.firestore.FieldValue.serverTimestamp(),
+      };
+
+      // Sauvegarder dans Firestore
+      await userRef.set(kycData, { merge: true });
+
+      // Créer un document séparé pour les données KYC sensibles (optionnel, pour audit)
+      const kycAuditRef = db.collection('kycAudits').doc();
+      await kycAuditRef.set({
+        userId,
+        status: 'verified',
+        identityType,
+        identityNumber: identityNumber.slice(-4), // Stocker seulement les 4 derniers chiffres
+        fullName,
+        country,
+        completedAt: admin.firestore.FieldValue.serverTimestamp(),
+        linkedAccountType: linkedAccount?.type || null,
+      });
+
+      return {
+        success: true,
+        message: 'Vérification KYC complétée avec succès',
+        kycStatus: 'verified',
+      };
+    } catch (error) {
+      console.error('Erreur complétude KYC:', error);
+      throw new functions.https.HttpsError(
+        'internal',
+        'Erreur lors de la sauvegarde des données KYC'
+      );
+    }
+  }
+);
+
+/**
+ * Cloud Function pour récupérer le statut KYC de l'utilisateur
+ */
+export const getKycStatus = functions.https.onCall(
+  async (data: { userId: string }, context) => {
+    const { userId } = data;
+
+    // Vérifier que l'utilisateur est authentifié
+    if (!context.auth) {
+      throw new functions.https.HttpsError(
+        'unauthenticated',
+        'Utilisateur non authentifié'
+      );
+    }
+
+    // Vérifier que l'utilisateur ne peut voir que ses propres données
+    if (context.auth.uid !== userId) {
+      throw new functions.https.HttpsError(
+        'permission-denied',
+        'Vous ne pouvez voir que vos propres données'
+      );
+    }
+
+    try {
+      const db = admin.firestore();
+      const userRef = db.collection('users').doc(userId);
+      const userDoc = await userRef.get();
+
+      if (!userDoc.exists) {
+        return {
+          kycStatus: 'not_started',
+          isCompleted: false,
+        };
+      }
+
+      const userData = userDoc.data()!;
+
+      return {
+        kycStatus: userData.kycStatus || 'not_started',
+        isCompleted: userData.kycStatus === 'verified',
+        completedAt: userData.kycCompletedAt || null,
+        identity: userData.kyc?.identity ? {
+          type: userData.kyc.identity.type,
+          fullName: userData.kyc.identity.fullName,
+          country: userData.kyc.identity.country,
+        } : null,
+      };
+    } catch (error) {
+      console.error('Erreur récupération KYC status:', error);
+      throw new functions.https.HttpsError(
+        'internal',
+        'Erreur lors de la récupération du statut KYC'
+      );
     }
   }
 );

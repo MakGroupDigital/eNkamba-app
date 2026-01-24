@@ -82,13 +82,6 @@ const EcosystemIcon = ({ size = 24, className = "" }: { size?: number; className
 
 const chatSections = [
   { 
-    label: "Accueil Écosystème", 
-    icon: EcosystemIcon, 
-    href: "/ecosystem",
-    color: "from-emerald-500 to-teal-600",
-    description: "Vue d'ensemble"
-  },
-  { 
     label: "ChatMbongo", 
     icon: PaymentNavIcon, 
     href: "/dashboard/miyiki-chat",

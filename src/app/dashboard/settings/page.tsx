@@ -13,6 +13,8 @@ import {
   ChevronRight,
   Moon,
   Sun,
+  AlertCircle,
+  CheckCircle2,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
@@ -20,6 +22,7 @@ import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
 import { useState, useEffect } from 'react';
+import { useKycStatus } from '@/hooks/useKycStatus';
 import {
   SettingsPageIcon,
   UserProfileIcon,
@@ -94,6 +97,7 @@ const getDefaultUser = (): UserData => ({
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
+  const { isKycCompleted } = useKycStatus();
   const [isMounted, setIsMounted] = useState(false);
   const [userData, setUserData] = useState<UserData>(getDefaultUser());
 
@@ -164,9 +168,13 @@ export default function SettingsPage() {
           <div className="flex items-center gap-4">
             <div className="relative">
               <Avatar className="h-20 w-20 border-4 border-primary/20">
-                <AvatarImage src="https://picsum.photos/seed/user-avatar/100/100" />
-                <AvatarFallback>
-                  <UserProfileIcon size={40} />
+                <AvatarFallback className="bg-gradient-to-br from-primary to-green-800 text-white text-lg font-bold">
+                  {userData.name
+                    .split(' ')
+                    .map(n => n[0])
+                    .join('')
+                    .toUpperCase()
+                    .slice(0, 2)}
                 </AvatarFallback>
               </Avatar>
               <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-green-500 border-2 border-white" />
@@ -177,15 +185,34 @@ export default function SettingsPage() {
               {userData.phone && (
                 <p className="text-sm text-muted-foreground mt-1">{userData.phone}</p>
               )}
-              <p className="text-xs text-green-600 mt-1">✓ Compte vérifié</p>
+              {isKycCompleted ? (
+                <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                  <CheckCircle2 size={14} />
+                  Profil vérifié
+                </p>
+              ) : (
+                <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+                  <AlertCircle size={14} />
+                  Profil non vérifié - Veuillez vérifier le KYC
+                </p>
+              )}
             </div>
           </div>
         </CardContent>
         <CardFooter>
-          <Button variant="outline" className="gap-2">
-            <UserProfileIcon size={18} />
-            Modifier le Profil
-          </Button>
+          {!isKycCompleted ? (
+            <Button className="gap-2 bg-amber-600 hover:bg-amber-700" asChild>
+              <Link href="/kyc">
+                <AlertCircle size={18} />
+                Vérifier le KYC
+              </Link>
+            </Button>
+          ) : (
+            <Button variant="outline" className="gap-2">
+              <UserProfileIcon size={18} />
+              Modifier le Profil
+            </Button>
+          )}
         </CardFooter>
       </Card>
 

@@ -1,7 +1,3 @@
-import { clerkMiddleware } from "@clerk/nextjs/server";
-
-export default clerkMiddleware();
-
 export const config = {
   matcher: [
     // Skip Next.js internals and all static files, unless found in search params
@@ -10,4 +6,10 @@ export const config = {
     "/(api|trpc)(.*)",
   ],
 };
+
+// No middleware needed - using Firebase auth on client side
+export default function middleware() {
+  // Middleware is empty as we're using client-side Firebase auth
+}
+
 

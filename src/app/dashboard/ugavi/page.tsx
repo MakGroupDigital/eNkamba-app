@@ -133,9 +133,6 @@ export default function UgaviPage() {
       <header className="sticky top-0 z-30 w-full bg-gradient-to-r from-primary via-primary to-green-800 p-4 shadow-lg">
         <div className="container mx-auto flex justify-between items-center">
           <UgaviLogo />
-          <Button variant="ghost" className="text-white hover:bg-white/10" asChild>
-            <Link href="/ecosystem">{'<'} Écosystème</Link>
-          </Button>
         </div>
       </header>
 
@@ -218,7 +215,7 @@ export default function UgaviPage() {
               </CardContent>
             </Card>
 
-            <Card className="text-center transition-all duration-300 hover:scale-105 hover:shadow-xl overflow-hidden bg-card">
+            <Card className="text-center transition-all duration-300 hover:scale-105 hover:shadow-xl overflow-hidden bg-card cursor-pointer" onClick={() => setShowTrackingResult(true)}>
               <CardContent className="p-6 flex flex-col items-center justify-center gap-4">
                 <div className="p-3 rounded-2xl bg-muted">
                   <TrackPackageIcon size={36} />

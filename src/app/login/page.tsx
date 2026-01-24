@@ -24,7 +24,8 @@ import {
   ConfirmationResult,
   signInAnonymously
 } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { httpsCallable } from "firebase/functions";
+import { auth, functions } from "@/lib/firebase";
 
 // Authentification Email (Custom/Simulated in Dev)
 import {
@@ -108,7 +109,16 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+
+      // Créer le profil utilisateur dans Firestore
+      try {
+        const createUserProfileFn = httpsCallable(functions, 'createOrUpdateUserProfile');
+        await createUserProfileFn({ email: result.user.email });
+        console.log("Profil utilisateur créé avec succès");
+      } catch (err) {
+        console.error("Erreur création profil utilisateur:", err);
+      }
 
       toast({
         title: "Connexion réussie",
@@ -192,8 +202,17 @@ export default function LoginPage() {
         // même avec l'auth simulée par email
         if (process.env.NODE_ENV === 'development') {
           try {
-            await signInAnonymously(auth);
+            const result = await signInAnonymously(auth);
             console.log("Connexion Firebase Anonyme réussie pour l'accès Firestore");
+            
+            // Créer le profil utilisateur dans Firestore
+            try {
+              const createUserProfileFn = httpsCallable(functions, 'createOrUpdateUserProfile');
+              await createUserProfileFn({ email });
+              console.log("Profil utilisateur créé avec succès");
+            } catch (err) {
+              console.error("Erreur création profil utilisateur:", err);
+            }
           } catch (err) {
             console.error("Erreur connexion anonyme:", err);
           }
@@ -264,7 +283,16 @@ export default function LoginPage() {
 
     setIsLoading(true);
     try {
-      await confirmationResult.confirm(otpCode);
+      const result = await confirmationResult.confirm(otpCode);
+
+      // Créer le profil utilisateur dans Firestore
+      try {
+        const createUserProfileFn = httpsCallable(functions, 'createOrUpdateUserProfile');
+        await createUserProfileFn({ email: result.user.email || phone });
+        console.log("Profil utilisateur créé avec succès");
+      } catch (err) {
+        console.error("Erreur création profil utilisateur:", err);
+      }
 
       toast({
         title: "Connexion réussie",
