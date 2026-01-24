@@ -414,6 +414,72 @@ export const completeKyc = functions.https.onCall(
 );
 
 /**
+ * Cloud Function pour récupérer le profil utilisateur complet
+ */
+export const getUserProfile = functions.https.onCall(
+  async (data: { userId: string }, context) => {
+    const { userId } = data;
+
+    // Vérifier que l'utilisateur est authentifié
+    if (!context.auth) {
+      throw new functions.https.HttpsError(
+        'unauthenticated',
+        'Utilisateur non authentifié'
+      );
+    }
+
+    // Vérifier que l'utilisateur ne peut voir que son propre profil
+    if (context.auth.uid !== userId) {
+      throw new functions.https.HttpsError(
+        'permission-denied',
+        'Vous ne pouvez voir que votre propre profil'
+      );
+    }
+
+    try {
+      const db = admin.firestore();
+      const userRef = db.collection('users').doc(userId);
+      const userDoc = await userRef.get();
+
+      if (!userDoc.exists) {
+        throw new functions.https.HttpsError(
+          'not-found',
+          'Profil utilisateur non trouvé'
+        );
+      }
+
+      const userData = userDoc.data()!;
+
+      return {
+        success: true,
+        profile: {
+          uid: userId,
+          email: userData.email || context.auth.token.email || '',
+          phone: userData.phone || null,
+          fullName: userData.kyc?.identity?.fullName || null,
+          dateOfBirth: userData.kyc?.identity?.dateOfBirth || null,
+          country: userData.kyc?.identity?.country || null,
+          kycStatus: userData.kycStatus || 'not_started',
+          kycCompletedAt: userData.kycCompletedAt || null,
+          kyc: userData.kyc || null,
+          createdAt: userData.createdAt || null,
+          lastLogin: userData.lastLogin || null,
+        },
+      };
+    } catch (error) {
+      console.error('Erreur récupération profil utilisateur:', error);
+      if (error instanceof functions.https.HttpsError) {
+        throw error;
+      }
+      throw new functions.https.HttpsError(
+        'internal',
+        'Erreur lors de la récupération du profil'
+      );
+    }
+  }
+);
+
+/**
  * Cloud Function pour récupérer le statut KYC de l'utilisateur
  */
 export const getKycStatus = functions.https.onCall(

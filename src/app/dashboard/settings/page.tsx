@@ -15,6 +15,7 @@ import {
   Sun,
   AlertCircle,
   CheckCircle2,
+  Loader2,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
@@ -23,6 +24,7 @@ import Link from 'next/link';
 import { useTheme } from 'next-themes';
 import { useState, useEffect } from 'react';
 import { useKycStatus } from '@/hooks/useKycStatus';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import {
   SettingsPageIcon,
   UserProfileIcon,
@@ -98,25 +100,24 @@ const getDefaultUser = (): UserData => ({
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
   const { isKycCompleted } = useKycStatus();
+  const { profile, isLoading: profileLoading } = useUserProfile();
   const [isMounted, setIsMounted] = useState(false);
   const [userData, setUserData] = useState<UserData>(getDefaultUser());
 
   useEffect(() => {
     setIsMounted(true);
-    
-    // Récupérer les données utilisateur depuis localStorage
-    try {
-      const saved = localStorage.getItem(USER_STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.name && parsed.email) {
-          setUserData(parsed);
-        }
-      }
-    } catch (e) {
-      console.error('Erreur lecture données utilisateur:', e);
-    }
   }, []);
+
+  // Mettre à jour les données utilisateur quand le profil est chargé
+  useEffect(() => {
+    if (profile) {
+      setUserData({
+        name: profile.fullName || profile.email?.split('@')[0] || 'Utilisateur',
+        email: profile.email || '',
+        phone: profile.phone || undefined,
+      });
+    }
+  }, [profile]);
 
 
   const renderThemeSwitcher = () => {
@@ -164,40 +165,142 @@ export default function SettingsPage() {
             Profil
           </CardTitle>
         </CardHeader>
-        <CardContent className="pt-4">
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              <Avatar className="h-20 w-20 border-4 border-primary/20">
-                <AvatarFallback className="bg-gradient-to-br from-primary to-green-800 text-white text-lg font-bold">
-                  {userData.name
-                    .split(' ')
-                    .map(n => n[0])
-                    .join('')
-                    .toUpperCase()
-                    .slice(0, 2)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-green-500 border-2 border-white" />
+        <CardContent className="pt-6">
+          {profileLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
             </div>
-            <div>
-              <p className="text-xl font-bold font-headline">{userData.name}</p>
-              <p className="text-muted-foreground">{userData.email}</p>
-              {userData.phone && (
-                <p className="text-sm text-muted-foreground mt-1">{userData.phone}</p>
+          ) : (
+            <>
+              <div className="flex items-center gap-4 mb-6">
+                <div className="relative">
+                  <Avatar className="h-20 w-20 border-4 border-primary/20">
+                    <AvatarFallback className="bg-gradient-to-br from-primary to-green-800 text-white text-lg font-bold">
+                      {userData.name
+                        .split(' ')
+                        .map(n => n[0])
+                        .join('')
+                        .toUpperCase()
+                        .slice(0, 2)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-green-500 border-2 border-white" />
+                </div>
+                <div>
+                  <p className="text-xl font-bold font-headline">{userData.name}</p>
+                  <p className="text-muted-foreground">{userData.email}</p>
+                  {userData.phone && (
+                    <p className="text-sm text-muted-foreground mt-1">{userData.phone}</p>
+                  )}
+                  {isKycCompleted ? (
+                    <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                      <CheckCircle2 size={14} />
+                      Profil vérifié
+                    </p>
+                  ) : (
+                    <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+                      <AlertCircle size={14} />
+                      Profil non vérifié
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Detailed Information */}
+              {profile && (
+                <div className="space-y-4 border-t pt-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {profile.fullName && (
+                      <div>
+                        <p className="text-sm font-semibold text-muted-foreground">Nom complet</p>
+                        <p className="text-base font-medium">{profile.fullName}</p>
+                      </div>
+                    )}
+                    {profile.email && (
+                      <div>
+                        <p className="text-sm font-semibold text-muted-foreground">Email</p>
+                        <p className="text-base font-medium break-all">{profile.email}</p>
+                      </div>
+                    )}
+                    {profile.phone && (
+                      <div>
+                        <p className="text-sm font-semibold text-muted-foreground">Téléphone</p>
+                        <p className="text-base font-medium">{profile.phone}</p>
+                      </div>
+                    )}
+                    {profile.dateOfBirth && (
+                      <div>
+                        <p className="text-sm font-semibold text-muted-foreground">Date de naissance</p>
+                        <p className="text-base font-medium">{profile.dateOfBirth}</p>
+                      </div>
+                    )}
+                    {profile.country && (
+                      <div>
+                        <p className="text-sm font-semibold text-muted-foreground">Pays</p>
+                        <p className="text-base font-medium">{profile.country}</p>
+                      </div>
+                    )}
+                    {profile.kycStatus && (
+                      <div>
+                        <p className="text-sm font-semibold text-muted-foreground">Statut KYC</p>
+                        <p className="text-base font-medium capitalize">
+                          {profile.kycStatus === 'verified' ? (
+                            <span className="text-green-600 flex items-center gap-1">
+                              <CheckCircle2 size={16} />
+                              Vérifié
+                            </span>
+                          ) : (
+                            <span className="text-amber-600 flex items-center gap-1">
+                              <AlertCircle size={16} />
+                              Non vérifié
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Linked Account Information */}
+                  {profile.kyc?.linkedAccount && (
+                    <div className="border-t pt-4 mt-4">
+                      <p className="text-sm font-semibold text-muted-foreground mb-3">Compte lié</p>
+                      <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                        <p className="text-sm">
+                          <span className="font-semibold">Type:</span>{' '}
+                          {profile.kyc.linkedAccount.type === 'mobile_money' ? 'Mobile Money' : 'Compte bancaire'}
+                        </p>
+                        {profile.kyc.linkedAccount.operator && (
+                          <p className="text-sm">
+                            <span className="font-semibold">Opérateur:</span> {profile.kyc.linkedAccount.operator}
+                          </p>
+                        )}
+                        {profile.kyc.linkedAccount.phoneNumber && (
+                          <p className="text-sm">
+                            <span className="font-semibold">Numéro:</span> {profile.kyc.linkedAccount.phoneNumber}
+                          </p>
+                        )}
+                        {profile.kyc.linkedAccount.accountName && (
+                          <p className="text-sm">
+                            <span className="font-semibold">Nom du compte:</span> {profile.kyc.linkedAccount.accountName}
+                          </p>
+                        )}
+                        {profile.kyc.linkedAccount.bankName && (
+                          <p className="text-sm">
+                            <span className="font-semibold">Banque:</span> {profile.kyc.linkedAccount.bankName}
+                          </p>
+                        )}
+                        {profile.kyc.linkedAccount.accountNumber && (
+                          <p className="text-sm">
+                            <span className="font-semibold">Numéro de compte:</span> {profile.kyc.linkedAccount.accountNumber}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
-              {isKycCompleted ? (
-                <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
-                  <CheckCircle2 size={14} />
-                  Profil vérifié
-                </p>
-              ) : (
-                <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
-                  <AlertCircle size={14} />
-                  Profil non vérifié - Veuillez vérifier le KYC
-                </p>
-              )}
-            </div>
-          </div>
+            </>
+          )}
         </CardContent>
         <CardFooter>
           {!isKycCompleted ? (

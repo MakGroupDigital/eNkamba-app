@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getKycStatus = exports.completeKyc = exports.verifyEmailOTP = exports.createOrUpdateUserProfile = void 0;
+exports.getKycStatus = exports.getUserProfile = exports.completeKyc = exports.verifyEmailOTP = exports.createOrUpdateUserProfile = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 const nodemailer = __importStar(require("nodemailer"));
@@ -345,6 +345,52 @@ exports.completeKyc = functions.https.onCall(async (data, context) => {
     catch (error) {
         console.error('Erreur complétude KYC:', error);
         throw new functions.https.HttpsError('internal', 'Erreur lors de la sauvegarde des données KYC');
+    }
+});
+/**
+ * Cloud Function pour récupérer le profil utilisateur complet
+ */
+exports.getUserProfile = functions.https.onCall(async (data, context) => {
+    const { userId } = data;
+    // Vérifier que l'utilisateur est authentifié
+    if (!context.auth) {
+        throw new functions.https.HttpsError('unauthenticated', 'Utilisateur non authentifié');
+    }
+    // Vérifier que l'utilisateur ne peut voir que son propre profil
+    if (context.auth.uid !== userId) {
+        throw new functions.https.HttpsError('permission-denied', 'Vous ne pouvez voir que votre propre profil');
+    }
+    try {
+        const db = admin.firestore();
+        const userRef = db.collection('users').doc(userId);
+        const userDoc = await userRef.get();
+        if (!userDoc.exists) {
+            throw new functions.https.HttpsError('not-found', 'Profil utilisateur non trouvé');
+        }
+        const userData = userDoc.data();
+        return {
+            success: true,
+            profile: {
+                uid: userId,
+                email: userData.email || context.auth.token.email || '',
+                phone: userData.phone || null,
+                fullName: userData.kyc?.identity?.fullName || null,
+                dateOfBirth: userData.kyc?.identity?.dateOfBirth || null,
+                country: userData.kyc?.identity?.country || null,
+                kycStatus: userData.kycStatus || 'not_started',
+                kycCompletedAt: userData.kycCompletedAt || null,
+                kyc: userData.kyc || null,
+                createdAt: userData.createdAt || null,
+                lastLogin: userData.lastLogin || null,
+            },
+        };
+    }
+    catch (error) {
+        console.error('Erreur récupération profil utilisateur:', error);
+        if (error instanceof functions.https.HttpsError) {
+            throw error;
+        }
+        throw new functions.https.HttpsError('internal', 'Erreur lors de la récupération du profil');
     }
 });
 /**
