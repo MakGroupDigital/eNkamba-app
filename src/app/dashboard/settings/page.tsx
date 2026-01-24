@@ -311,9 +311,11 @@ export default function SettingsPage() {
               </Link>
             </Button>
           ) : (
-            <Button variant="outline" className="gap-2">
-              <UserProfileIcon size={18} />
-              Modifier le Profil
+            <Button variant="outline" className="gap-2" asChild>
+              <Link href="/dashboard/settings/edit-profile">
+                <UserProfileIcon size={18} />
+                Modifier le Profil
+              </Link>
             </Button>
           )}
         </CardFooter>

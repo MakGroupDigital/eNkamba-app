@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence, PanInfo } from "framer-motion";
 import {
   ArrowRight,
@@ -19,10 +20,12 @@ import {
   Bot,
   Sparkles,
   TrendingUp,
+  Loader2,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
 
 const slides = [
   {
@@ -133,8 +136,17 @@ const slides = [
 ];
 
 export default function OnboardingPage() {
+  const router = useRouter();
+  const { user, isLoading: authLoading } = useAuth();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [direction, setDirection] = useState(0);
+
+  // Rediriger les utilisateurs authentifiés vers le dashboard
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.push("/dashboard");
+    }
+  }, [user, authLoading, router]);
 
   const goToSlide = (index: number) => {
     setDirection(index > currentSlide ? 1 : -1);
@@ -166,6 +178,20 @@ export default function OnboardingPage() {
       prevSlide();
     }
   };
+
+  // Afficher un loader pendant le chargement de l'auth
+  if (authLoading) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{
+          background: "linear-gradient(to bottom right, #32BB78, #28a86a, #1e9f5e)",
+        }}
+      >
+        <Loader2 className="w-8 h-8 animate-spin text-white" />
+      </div>
+    );
+  }
 
   const slideVariants = {
     enter: (dir: number) => ({

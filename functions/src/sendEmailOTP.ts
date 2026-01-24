@@ -414,6 +414,68 @@ export const completeKyc = functions.https.onCall(
 );
 
 /**
+ * Cloud Function pour mettre à jour le profil utilisateur
+ */
+export const updateUserProfile = functions.https.onCall(
+  async (data: {
+    userId: string;
+    fullName?: string;
+    phone?: string;
+    dateOfBirth?: string;
+    country?: string;
+    profileImage?: string;
+  }, context) => {
+    const { userId, fullName, phone, dateOfBirth, country, profileImage } = data;
+
+    // Vérifier que l'utilisateur est authentifié
+    if (!context.auth) {
+      throw new functions.https.HttpsError(
+        'unauthenticated',
+        'Utilisateur non authentifié'
+      );
+    }
+
+    // Vérifier que l'utilisateur ne modifie que son propre profil
+    if (context.auth.uid !== userId) {
+      throw new functions.https.HttpsError(
+        'permission-denied',
+        'Vous ne pouvez modifier que votre propre profil'
+      );
+    }
+
+    try {
+      const db = admin.firestore();
+      const userRef = db.collection('users').doc(userId);
+
+      // Préparer les données à mettre à jour
+      const updateData: any = {};
+      
+      if (fullName) updateData['kyc.identity.fullName'] = fullName;
+      if (phone) updateData.phone = phone;
+      if (dateOfBirth) updateData['kyc.identity.dateOfBirth'] = dateOfBirth;
+      if (country) updateData['kyc.identity.country'] = country;
+      if (profileImage) updateData.profileImage = profileImage;
+
+      updateData.updatedAt = admin.firestore.FieldValue.serverTimestamp();
+
+      // Mettre à jour le document
+      await userRef.update(updateData);
+
+      return {
+        success: true,
+        message: 'Profil mis à jour avec succès',
+      };
+    } catch (error) {
+      console.error('Erreur mise à jour profil utilisateur:', error);
+      throw new functions.https.HttpsError(
+        'internal',
+        'Erreur lors de la mise à jour du profil'
+      );
+    }
+  }
+);
+
+/**
  * Cloud Function pour récupérer le profil utilisateur complet
  */
 export const getUserProfile = functions.https.onCall(

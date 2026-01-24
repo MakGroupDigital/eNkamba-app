@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getKycStatus = exports.getUserProfile = exports.completeKyc = exports.verifyEmailOTP = exports.createOrUpdateUserProfile = void 0;
+exports.getKycStatus = exports.getUserProfile = exports.updateUserProfile = exports.completeKyc = exports.verifyEmailOTP = exports.createOrUpdateUserProfile = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 const nodemailer = __importStar(require("nodemailer"));
@@ -345,6 +345,47 @@ exports.completeKyc = functions.https.onCall(async (data, context) => {
     catch (error) {
         console.error('Erreur complétude KYC:', error);
         throw new functions.https.HttpsError('internal', 'Erreur lors de la sauvegarde des données KYC');
+    }
+});
+/**
+ * Cloud Function pour mettre à jour le profil utilisateur
+ */
+exports.updateUserProfile = functions.https.onCall(async (data, context) => {
+    const { userId, fullName, phone, dateOfBirth, country, profileImage } = data;
+    // Vérifier que l'utilisateur est authentifié
+    if (!context.auth) {
+        throw new functions.https.HttpsError('unauthenticated', 'Utilisateur non authentifié');
+    }
+    // Vérifier que l'utilisateur ne modifie que son propre profil
+    if (context.auth.uid !== userId) {
+        throw new functions.https.HttpsError('permission-denied', 'Vous ne pouvez modifier que votre propre profil');
+    }
+    try {
+        const db = admin.firestore();
+        const userRef = db.collection('users').doc(userId);
+        // Préparer les données à mettre à jour
+        const updateData = {};
+        if (fullName)
+            updateData['kyc.identity.fullName'] = fullName;
+        if (phone)
+            updateData.phone = phone;
+        if (dateOfBirth)
+            updateData['kyc.identity.dateOfBirth'] = dateOfBirth;
+        if (country)
+            updateData['kyc.identity.country'] = country;
+        if (profileImage)
+            updateData.profileImage = profileImage;
+        updateData.updatedAt = admin.firestore.FieldValue.serverTimestamp();
+        // Mettre à jour le document
+        await userRef.update(updateData);
+        return {
+            success: true,
+            message: 'Profil mis à jour avec succès',
+        };
+    }
+    catch (error) {
+        console.error('Erreur mise à jour profil utilisateur:', error);
+        throw new functions.https.HttpsError('internal', 'Erreur lors de la mise à jour du profil');
     }
 });
 /**
