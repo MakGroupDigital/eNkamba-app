@@ -4,6 +4,8 @@ import { functions } from '@/lib/firebase';
 import { useAuth } from '@/hooks/useAuth';
 
 const KYC_STATUS_KEY = 'enkamba_kyc_status';
+const KYC_STATUS_TIMESTAMP_KEY = 'enkamba_kyc_status_timestamp';
+const KYC_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 export interface KycStatus {
   isCompleted: boolean;
@@ -26,7 +28,6 @@ export function useKycStatus() {
           return;
         }
 
-        setIsLoading(true);
         setError(null);
 
         // Si pas d'utilisateur, arrêter
@@ -35,8 +36,31 @@ export function useKycStatus() {
           return;
         }
 
-        // Appeler la Cloud Function pour récupérer le statut KYC depuis Firebase
-        // C'est la source de vérité - TOUJOURS vérifier Firebase en priorité
+        // Vérifier si on a un cache valide en localStorage
+        try {
+          const cachedStatus = localStorage.getItem(KYC_STATUS_KEY);
+          const cachedTimestamp = localStorage.getItem(KYC_STATUS_TIMESTAMP_KEY);
+          
+          if (cachedStatus && cachedTimestamp) {
+            const timestamp = parseInt(cachedTimestamp, 10);
+            const now = Date.now();
+            
+            // Si le cache est encore valide (moins de 5 minutes), l'utiliser
+            if (now - timestamp < KYC_CACHE_DURATION) {
+              const parsed = JSON.parse(cachedStatus);
+              setKycStatus(parsed);
+              setIsLoading(false);
+              console.log('Utilisation du cache KYC local');
+              return;
+            }
+          }
+        } catch (e) {
+          console.warn('Erreur lecture cache localStorage:', e);
+        }
+
+        // Cache invalide ou inexistant, charger depuis Firebase
+        setIsLoading(true);
+        
         try {
           const getKycStatusFn = httpsCallable(functions, 'getKycStatus');
           const result = await getKycStatusFn({ userId: user.uid });
@@ -49,9 +73,10 @@ export function useKycStatus() {
 
           setKycStatus(newStatus);
 
-          // Sauvegarder aussi en localStorage pour fallback
+          // Sauvegarder en localStorage avec timestamp
           try {
             localStorage.setItem(KYC_STATUS_KEY, JSON.stringify(newStatus));
+            localStorage.setItem(KYC_STATUS_TIMESTAMP_KEY, Date.now().toString());
           } catch (e) {
             console.warn('Erreur sauvegarde localStorage:', e);
           }
@@ -123,9 +148,10 @@ export function useKycStatus() {
 
       setKycStatus(newStatus);
       
-      // Sauvegarder aussi en localStorage pour fallback
+      // Sauvegarder en localStorage avec timestamp pour un cache long terme
       try {
         localStorage.setItem(KYC_STATUS_KEY, JSON.stringify(newStatus));
+        localStorage.setItem(KYC_STATUS_TIMESTAMP_KEY, Date.now().toString());
       } catch (e) {
         console.warn('Erreur sauvegarde localStorage:', e);
       }
@@ -149,6 +175,7 @@ export function useKycStatus() {
     setKycStatus({ isCompleted: false });
     try {
       localStorage.removeItem(KYC_STATUS_KEY);
+      localStorage.removeItem(KYC_STATUS_TIMESTAMP_KEY);
     } catch (error) {
       console.error('Erreur suppression KYC status:', error);
     }

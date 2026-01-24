@@ -181,11 +181,12 @@ export default function KycPage() {
   // Vérifier si KYC est déjà complété et rediriger
   useEffect(() => {
     // Si le KYC est complété, rediriger vers le dashboard
-    if (!kycLoading && isKycCompleted) {
+    // Ne pas attendre le loading, rediriger immédiatement si complété
+    if (isKycCompleted) {
       console.log('KYC déjà complété, redirection vers dashboard');
       router.push('/dashboard');
     }
-  }, [isKycCompleted, kycLoading, router]);
+  }, [isKycCompleted, router]);
 
   // Hydrater depuis localStorage au montage
   useEffect(() => {
