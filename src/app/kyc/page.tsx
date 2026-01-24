@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { useKycStatus } from '@/hooks/useKycStatus';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -132,6 +133,8 @@ const getInitialProgress = (): KycProgress => {
 };
 
 export default function KycPage() {
+  const router = useRouter();
+  const { completeKyc } = useKycStatus();
   const [isHydrated, setIsHydrated] = useState(false);
   const [progress, setProgress] = useState<KycProgress>(getInitialProgress);
   const [step, setStep] = useState<Step>('identity');
@@ -425,7 +428,6 @@ export default function KycPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  const router = useRouter();
   const { toast } = useToast();
 
   const stepsConfig = {
@@ -586,6 +588,8 @@ export default function KycPage() {
           completeStep('linkAccount');
           // Nettoyer le localStorage après complétion totale
           localStorage.removeItem(KYC_STORAGE_KEY);
+          // Marquer KYC comme complété
+          completeKyc();
           setTimeout(() => router.push('/dashboard'), 2000);
         }, 1500);
         break;

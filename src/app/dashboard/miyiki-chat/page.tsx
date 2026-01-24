@@ -1,9 +1,17 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
+import { useContacts } from '@/hooks/useContacts';
+import { useConversations } from '@/hooks/useConversations';
+import { ContactsPermissionDialog } from '@/components/contacts-permission-dialog';
+import { ContactsList } from '@/components/contacts-list';
+import { StartChatEmptyState } from '@/components/start-chat-empty-state';
 import {
   MiyikiChatIcon,
   PaymentNavIcon,
@@ -23,49 +31,48 @@ const filters = [
   { label: "ChatAI", icon: EnkambaAIIcon, href: "/dashboard/ai", color: "from-primary to-green-800" },
 ];
 
-const conversations = [
-  {
-    id: "1",
-    name: "Service Client Mbongo",
-    lastMessage: "Bonjour, comment puis-je vous aider ?",
-    time: "10:45",
-    avatar: "https://picsum.photos/seed/makuta/100/100",
-    unread: 2,
-  },
-  {
-    id: "2",
-    name: "Groupe Tontine 'Les Amis'",
-    lastMessage: "Vous: N'oubliez pas la cotisation de demain !",
-    time: "09:30",
-    avatar: "https://picsum.photos/seed/tontine/100/100",
-    isGroup: true,
-  },
-    {
-    id: "3",
-    name: "Support Nkampa",
-    lastMessage: "Votre commande est en cours de préparation.",
-    time: "Hier",
-    avatar: "https://picsum.photos/seed/nkampa/100/100",
-  },
-  {
-    id: "4",
-    name: "eNkamba.ai",
-    lastMessage: "Je peux vous aider à analyser vos finances.",
-    time: "Hier",
-    avatar: "https://picsum.photos/seed/ai/100/100",
-    href: "/dashboard/ai"
-  },
-    {
-    id: "5",
-    name: "Livreur Ugavi #5",
-    lastMessage: "Je serai là dans 15 minutes.",
-    time: "12/05/24",
-    avatar: "https://picsum.photos/seed/ugavi/100/100",
-  },
-];
-
-
 export default function MiyikiChatPage() {
+  const {
+    enkambaContacts,
+    nonEnkambaContacts,
+    hasPermission,
+    isLoading: contactsLoading,
+    requestContactsPermission,
+    sendInvitation,
+  } = useContacts();
+
+  const {
+    conversations,
+    isLoading: conversationsLoading,
+    hasConversations,
+  } = useConversations();
+
+  const [showPermissionDialog, setShowPermissionDialog] = useState(false);
+  const [showContactsList, setShowContactsList] = useState(false);
+
+  // Afficher le dialog si l'utilisateur clique sur "Commencer"
+  const handleStartChat = () => {
+    if (!hasPermission) {
+      setShowPermissionDialog(true);
+    } else {
+      setShowContactsList(true);
+    }
+  };
+
+  // Gérer l'autorisation des contacts
+  const handleAllowContacts = async () => {
+    await requestContactsPermission();
+    setShowPermissionDialog(false);
+    setShowContactsList(true);
+  };
+
+  // Gérer l'envoi d'invitation
+  const handleSendInvitation = async (contact: any) => {
+    // Récupérer le code de parrainage de l'utilisateur actuel
+    const userReferralCode = localStorage.getItem('enkamba_referral_code') || 'ENKAMBA';
+    await sendInvitation(contact, userReferralCode);
+  };
+
   return (
     <div className="flex h-screen flex-col bg-background text-foreground animate-in fade-in duration-500">
       {/* Header */}
@@ -121,37 +128,61 @@ export default function MiyikiChatPage() {
               })}
             </div>
           </div>
-          
-          {/* Conversations List */}
-          <div className="space-y-2">
-            {conversations.map((convo, i) => (
-              <Link href={convo.href || `/dashboard/miyiki-chat/${convo.id}`} key={i} className="block">
-                 <Card 
-                  className="p-3 rounded-2xl transition-all duration-300 hover:shadow-lg hover:scale-[1.02] animate-in fade-in-up"
-                  style={{animationDelay: `${i * 100}ms`}}
-                >
-                  <div className="flex items-center gap-4">
-                    <Avatar className="h-12 w-12 border-2 border-primary/10">
-                      <AvatarImage src={convo.avatar} alt={convo.name} />
-                      <AvatarFallback>{convo.name.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <p className="font-headline font-bold text-foreground">{convo.name}</p>
-                      <p className="text-sm text-muted-foreground truncate">{convo.lastMessage}</p>
+
+          {/* Afficher les conversations réelles ou l'état vide */}
+          {conversationsLoading ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">Chargement des conversations...</p>
+            </div>
+          ) : !hasConversations && !showContactsList ? (
+            <StartChatEmptyState onStartChat={handleStartChat} isLoading={contactsLoading} />
+          ) : showContactsList ? (
+            <ContactsList
+              enkambaContacts={enkambaContacts}
+              nonEnkambaContacts={nonEnkambaContacts}
+              onSendInvitation={handleSendInvitation}
+              isLoading={contactsLoading}
+            />
+          ) : (
+            /* Conversations List */
+            <div className="space-y-2">
+              {conversations.map((convo, i) => (
+                <Link href={convo.href || `/dashboard/miyiki-chat/${convo.id}`} key={convo.id} className="block">
+                   <Card 
+                    className="p-3 rounded-2xl transition-all duration-300 hover:shadow-lg hover:scale-[1.02] animate-in fade-in-up"
+                    style={{animationDelay: `${i * 100}ms`}}
+                  >
+                    <div className="flex items-center gap-4">
+                      <Avatar className="h-12 w-12 border-2 border-primary/10">
+                        <AvatarImage src={convo.avatar} alt={convo.name} />
+                        <AvatarFallback>{convo.name.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <p className="font-headline font-bold text-foreground">{convo.name}</p>
+                        <p className="text-sm text-muted-foreground truncate">{convo.lastMessage}</p>
+                      </div>
+                      <div className="text-right flex flex-col items-end h-full">
+                         <p className="text-xs text-muted-foreground mb-1">{convo.time}</p>
+                         {convo.unread && (
+                           <Badge className="bg-accent text-accent-foreground rounded-full h-6 w-6 flex items-center justify-center">{convo.unread}</Badge>
+                         )}
+                      </div>
                     </div>
-                    <div className="text-right flex flex-col items-end h-full">
-                       <p className="text-xs text-muted-foreground mb-1">{convo.time}</p>
-                       {convo.unread && (
-                         <Badge className="bg-accent text-accent-foreground rounded-full h-6 w-6 flex items-center justify-center">{convo.unread}</Badge>
-                       )}
-                    </div>
-                  </div>
-                </Card>
-              </Link>
-            ))}
-          </div>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </main>
+
+      {/* Permission Dialog */}
+      <ContactsPermissionDialog
+        open={showPermissionDialog}
+        onOpenChange={setShowPermissionDialog}
+        onAllow={handleAllowContacts}
+        isLoading={contactsLoading}
+      />
     </div>
   );
 }

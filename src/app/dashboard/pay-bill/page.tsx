@@ -7,10 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { ArrowLeft, CheckCircle2, Info } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Info, QrCode } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 type Currency = 'CDF' | 'USD' | 'EUR';
@@ -34,6 +34,7 @@ const billTypes: Record<BillType, { label: string; description: string; fields: 
 function PayBillContent() {
   const { toast } = useToast();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const billType = (searchParams.get('type') || 'tax') as BillType;
   const billInfo = billTypes[billType];
   
@@ -92,9 +93,35 @@ function PayBillContent() {
       <Card>
         <CardHeader>
           <CardTitle className="font-headline">Informations de paiement</CardTitle>
-          <CardDescription>Remplissez les informations pour procéder au paiement.</CardDescription>
+          <CardDescription>Remplissez les informations ou scannez un QR code pour procéder au paiement.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          <Alert variant="default" className="border-primary/20 bg-primary/5">
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5">
+                <QrCode className="h-5 w-5 text-primary" />
+              </div>
+              <div className="space-y-1 flex-1">
+                <AlertTitle className="text-sm font-semibold text-primary">
+                  Scanner un QR code pour payer
+                </AlertTitle>
+                <AlertDescription className="text-xs text-muted-foreground">
+                  Vous pouvez utiliser le scanner QR pour payer ce service (Impôts, Yango, Regideso, Canal+, frais, billets, etc.) directement.
+                </AlertDescription>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="mt-2 gap-2"
+                  onClick={() => router.push(`/dashboard/scanner?context=bill&type=${billType}`)}
+                >
+                  <QrCode className="h-4 w-4" />
+                  Scanner un QR code
+                </Button>
+              </div>
+            </div>
+          </Alert>
+
           <div className="space-y-2">
             <Label htmlFor="field1">{billInfo.fields[0]} *</Label>
             <Input

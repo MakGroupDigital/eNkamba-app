@@ -1,10 +1,10 @@
-import type {NextConfig} from 'next';
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   /* config options here */
-  // Pour Capacitor, décommentez: output: 'export' et images.unoptimized: true
-  // Pour Vercel, laissez ces lignes commentées (Vercel optimise automatiquement)
-  // output: 'export',
+  // Pour Capacitor avec URL externe, pas besoin d'export statique
+  // L'APK chargera directement depuis https://www.enkamba.io
+  // output: 'export', // Désactivé temporairement pour le build - à réactiver pour Capacitor
   trailingSlash: true,
   typescript: {
     ignoreBuildErrors: true,
@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
-    unoptimized: false, // Vercel optimise les images automatiquement
+    unoptimized: true, // Requis pour l'export statique Capacitor
     remotePatterns: [
       {
         protocol: 'https',

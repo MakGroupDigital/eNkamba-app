@@ -1,45 +1,452 @@
 "use client";
 
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import {
+  ChevronLeft,
+  Mail,
+  Phone,
+  Loader2,
+  CheckCircle2,
+  ArrowRight,
+  ShieldCheck
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+
+// Firebase imports
+import {
+  GoogleAuthProvider,
+  signInWithPopup,
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
+  ConfirmationResult,
+  signInAnonymously
+} from "firebase/auth";
+import { auth } from "@/lib/firebase";
+
+// Authentification Email (Custom/Simulated in Dev)
+import {
+  generateOTPCode,
+  saveEmailAuthData,
+  sendEmailCode,
+  getEmailAuthData,
+  verifyOTPCode,
+  clearEmailAuthData
+} from "@/lib/email-auth";
+
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import Link from "next/link";
-import Image from "next/image";
-import {
-  Phone,
-  Mail,
-  Lock,
-  ArrowRight,
-  Eye,
-  EyeOff,
-  ChevronLeft,
-  User,
-} from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { PhoneCountrySelector } from "@/components/phone-country-selector";
 
-type AuthMode = "login" | "signup" | "forgot";
+interface Country {
+  code: string;
+  name: string;
+  dialCode: string;
+  flag: string;
+}
 
-const USER_STORAGE_KEY = 'enkamba_user';
+type LoginMethod = "SELECT" | "EMAIL" | "PHONE" | "OTP_EMAIL" | "OTP_PHONE";
 
 export default function LoginPage() {
-  const [mode, setMode] = useState<AuthMode>("login");
-  const [showPassword, setShowPassword] = useState(false);
-  const [loginEmail, setLoginEmail] = useState('');
-  const [signupName, setSignupName] = useState('');
-  const [signupEmail, setSignupEmail] = useState('');
-  const [signupPhone, setSignupPhone] = useState('');
+  const router = useRouter();
+  const { toast } = useToast();
 
-  const titles = {
-    login: "Connexion",
-    signup: "Inscription",
-    forgot: "Mot de passe oublié",
+  // États
+  const [method, setMethod] = useState<LoginMethod>("SELECT");
+  const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
+  const [otpCode, setOtpCode] = useState("");
+  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
+
+  // Refs
+  const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
+
+  // Initialiser reCAPTCHA pour le téléphone
+  useEffect(() => {
+    // Activer le mode test en développement pour contourner le reCAPTCHA réel
+    // Utilisez le numéro +1 650-555-1234 et le code 123456 pour tester
+    if (process.env.NODE_ENV === 'development') {
+      auth.settings.appVerificationDisabledForTesting = true;
+    }
+
+    if (!window.recaptchaVerifier && method === "PHONE") {
+      try {
+        auth.languageCode = 'fr'; // Définir la langue en français
+
+        const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+          'size': 'normal', // 'invisible' -> 'normal' pour voir la checkbox et debugger
+          'callback': () => {
+            // reCAPTCHA solved
+            console.log("reCAPTCHA résolu");
+          },
+          'expired-callback': () => {
+            toast({
+              variant: "destructive",
+              title: "Expiration",
+              description: "Le reCAPTCHA a expiré, veuillez réessayer."
+            });
+          }
+        });
+        window.recaptchaVerifier = verifier;
+        recaptchaVerifierRef.current = verifier;
+      } catch (error) {
+        console.error("Erreur init reCAPTCHA:", error);
+      }
+    }
+  }, [method, toast]);
+
+  // --- HANDLERS ---
+
+  // 1. Google Login
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+
+      toast({
+        title: "Connexion réussie",
+        description: "Bienvenue sur eNkamba !",
+        className: "bg-[#32BB78] text-white border-none",
+      });
+
+      router.push("/dashboard");
+    } catch (error: any) {
+      console.error("Google Login Error:", error);
+      toast({
+        variant: "destructive",
+        title: "Erreur de connexion",
+        description: error.message || "Impossible de se connecter avec Google."
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const descriptions = {
-    login: "Connectez-vous pour accéder à votre compte",
-    signup: "Créez votre compte en quelques secondes",
-    forgot: "Entrez votre email pour réinitialiser votre mot de passe",
+  // 2. Email Login (Start)
+  const handleEmailSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+
+    setIsLoading(true);
+    try {
+      // Générer et envoyer le code (simulé en dev)
+      const code = generateOTPCode();
+      await sendEmailCode(email, code);
+      saveEmailAuthData(email, code);
+
+      toast({
+        title: "Code envoyé !",
+        description: process.env.NODE_ENV === 'development'
+          ? "Regardez dans la console (F12) pour le code 📧"
+          : "Vérifiez votre boîte mail.",
+      });
+
+      setMethod("OTP_EMAIL");
+    } catch (error: any) {
+      console.error("Email Error:", error);
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: error.message
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  // 3. Email OTP Verify
+  const handleEmailOtpVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otpCode) return;
+
+    setIsLoading(true);
+    try {
+      const storedData = getEmailAuthData();
+
+      if (!storedData || storedData.email !== email) {
+        throw new Error("Session expirée. Recommencez.");
+      }
+
+      const isValid = verifyOTPCode(storedData.code, otpCode);
+
+      if (isValid) {
+        // Succès ! (En dev on simule la connexion utilisateur)
+        // En production, on appellerait ici verifyEmailOTP Cloud Function
+        clearEmailAuthData();
+
+        // Simuler une session utilisateur dans localStorage pour le dev
+        localStorage.setItem("enkamba_user", JSON.stringify({
+          email: email,
+          name: email.split('@')[0],
+          provider: 'email'
+        }));
+
+        // CRITIQUE : Se connecter anonymement à Firebase pour avoir accès à Firestore (Chat IA)
+        // même avec l'auth simulée par email
+        if (process.env.NODE_ENV === 'development') {
+          try {
+            await signInAnonymously(auth);
+            console.log("Connexion Firebase Anonyme réussie pour l'accès Firestore");
+          } catch (err) {
+            console.error("Erreur connexion anonyme:", err);
+          }
+        }
+
+        toast({
+          title: "Connexion réussie",
+          description: "Bienvenue sur eNkamba !",
+          className: "bg-[#32BB78] text-white border-none",
+        });
+
+        router.push("/dashboard");
+      } else {
+        throw new Error("Code incorrect.");
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: error.message
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 4. Phone Login (Start)
+  const handlePhoneSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!phone) return;
+
+    setIsLoading(true);
+    try {
+      if (!window.recaptchaVerifier) {
+        throw new Error("reCAPTCHA non initialisé");
+      }
+
+      const confirmation = await signInWithPhoneNumber(auth, phone, window.recaptchaVerifier);
+      setConfirmationResult(confirmation);
+
+      toast({
+        title: "SMS envoyé !",
+        description: "Vérifiez vos messages.",
+      });
+
+      setMethod("OTP_PHONE");
+    } catch (error: any) {
+      console.error("Phone Error:", error);
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: error.message
+      });
+      // Reset captcha if needed
+      if (window.recaptchaVerifier) {
+        window.recaptchaVerifier.clear();
+        window.recaptchaVerifier = undefined; // Force re-init next time
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 5. Phone OTP Verify
+  const handlePhoneOtpVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otpCode || !confirmationResult) return;
+
+    setIsLoading(true);
+    try {
+      await confirmationResult.confirm(otpCode);
+
+      toast({
+        title: "Connexion réussie",
+        description: "Bienvenue sur eNkamba !",
+        className: "bg-[#32BB78] text-white border-none",
+      });
+
+      router.push("/dashboard");
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Code invalide",
+        description: "Le code SMS est incorrect."
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // --- RENDER HELPERS ---
+
+  const renderSelectMethod = () => (
+    <div className="w-full space-y-4">
+      <Button
+        variant="outline"
+        className="w-full h-12 relative bg-white border-gray-200 text-gray-700 hover:bg-gray-50 flex items-center justify-center gap-3"
+        onClick={handleGoogleLogin}
+        disabled={isLoading}
+      >
+        {isLoading ? (
+          <Loader2 className="w-5 h-5 animate-spin" />
+        ) : (
+          <>
+            <svg viewBox="0 0 24 24" className="w-5 h-5" aria-hidden="true">
+              <path
+                d="M12.0003 20.45c4.6484 0 8.0844-3.2372 8.0844-8.1563 0-0.6469-.0703-1.2515-.1781-1.8328H12.0003v3.4734h4.7297c-.2438 1.4906-1.1297 2.8734-2.6578 3.7313v2.5312h3.9187V20.45z"
+                fill="#4285F4"
+              />
+              <path
+                d="M12.0003 24c3.2438 0 5.9578-1.0734 7.9453-2.9063l-3.9187-2.5312c-1.0781.7266-2.461 1.1578-4.0266 1.1578-3.1078 0-5.7422-2.1094-6.6844-4.9453H1.3815v2.625C3.391 21.3938 7.3972 24 12.0003 24z"
+                fill="#34A853"
+              />
+              <path
+                d="M5.3159 14.775c-.2444-.7313-.3831-1.5141-.3831-2.325 0-.8109.1388-1.5938.3831-2.325V7.5H1.3816C.5128 9.2437.0284 11.2172.0284 13.25c0 2.0328.4844 4.0063 1.3531 5.75l3.9344-2.625z"
+                fill="#FBBC05"
+              />
+              <path
+                d="M12.0003 5.3063c1.7672 0 3.3516.6094 4.5984 1.8l2.5875-2.5875C17.6112 2.9766 14.9956 2 12.0003 2c-4.6031 0-8.6094 2.6063-10.6188 6.5l3.9344 2.625c.9375-2.8359 3.5719-4.9453 6.6844-4.9453z"
+                fill="#EA4335"
+              />
+            </svg>
+            Continuer avec Google
+          </>
+        )}
+      </Button>
+
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t border-white/20" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-[#32BB78] px-2 text-white/80">Ou continuer avec</span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <Button
+          variant="secondary"
+          className="bg-white/10 hover:bg-white/20 text-white border-0"
+          onClick={() => setMethod("EMAIL")}
+        >
+          <Mail className="mr-2 h-4 w-4" />
+          Email
+        </Button>
+        <Button
+          variant="secondary"
+          className="bg-white/10 hover:bg-white/20 text-white border-0"
+          onClick={() => setMethod("PHONE")}
+        >
+          <Phone className="mr-2 h-4 w-4" />
+          Téléphone
+        </Button>
+      </div>
+    </div>
+  );
+
+  const renderEmailForm = () => (
+    <form onSubmit={handleEmailSubmit} className="w-full space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="email" className="text-white">Email professionnel ou personnel</Label>
+        <Input
+          id="email"
+          type="email"
+          placeholder="nom@exemple.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          className="bg-white/90 border-0 text-black placeholder:text-gray-400 focus-visible:ring-offset-2 focus-visible:ring-[#32BB78]"
+        />
+      </div>
+      <Button
+        type="submit"
+        className="w-full bg-[#209058] hover:bg-[#186a41] text-white"
+        disabled={isLoading}
+      >
+        {isLoading ? <Loader2 className="animate-spin" /> : "Recevoir un code par email"}
+      </Button>
+    </form>
+  );
+
+  const renderPhoneForm = () => (
+    <form onSubmit={handlePhoneSubmit} className="w-full space-y-4">
+      <PhoneCountrySelector
+        phone={phone}
+        onPhoneChange={setPhone}
+        selectedCountry={selectedCountry}
+        onCountrySelect={setSelectedCountry}
+        isLoading={isLoading}
+      />
+
+      {selectedCountry && (
+        <Button
+          type="submit"
+          className="w-full bg-[#209058] hover:bg-[#186a41] text-white"
+          disabled={isLoading || !phone || phone === selectedCountry.dialCode + " "}
+        >
+          {isLoading ? <Loader2 className="animate-spin" /> : "Recevoir un code par SMS"}
+        </Button>
+      )}
+    </form>
+  );
+
+  const renderOTPForm = (type: 'EMAIL' | 'PHONE') => (
+    <form onSubmit={type === 'EMAIL' ? handleEmailOtpVerify : handlePhoneOtpVerify} className="w-full space-y-6">
+      <div className="space-y-2 text-center">
+        <div className="flex justify-center mb-2">
+          <div className="p-3 bg-white/20 rounded-full">
+            <ShieldCheck className="w-8 h-8 text-white" />
+          </div>
+        </div>
+        <h3 className="text-xl font-bold text-white">Vérification</h3>
+        <p className="text-white/80 text-sm">
+          Entrez le code envoyé à <span className="font-bold">{type === 'EMAIL' ? email : phone}</span>
+        </p>
+      </div>
+
+      <Input
+        type="text"
+        placeholder="000000"
+        value={otpCode}
+        onChange={(e) => setOtpCode(e.target.value)}
+        maxLength={6}
+        className="text-center text-2xl tracking-widest bg-white/90 border-0 text-black h-14 font-mono"
+        autoFocus
+      />
+
+      <Button
+        type="submit"
+        className="w-full bg-[#209058] hover:bg-[#186a41] text-white h-12 text-lg"
+        disabled={isLoading || otpCode.length < 6}
+      >
+        {isLoading ? <Loader2 className="animate-spin" /> : (
+          <span className="flex items-center gap-2">
+            Confirmer et continuer <ArrowRight className="w-4 h-4" />
+          </span>
+        )}
+      </Button>
+
+      <div className="text-center">
+        <button
+          type="button"
+          onClick={() => {
+            setOtpCode("");
+            setMethod(type); // Retour à l'étape précédente
+          }}
+          className="text-white/60 text-xs hover:text-white underline"
+        >
+          Renvoyer le code ou changer de {type === 'EMAIL' ? 'mail' : 'numéro'}
+        </button>
+      </div>
+    </form>
+  );
 
   return (
     <div
@@ -49,7 +456,7 @@ export default function LoginPage() {
           "linear-gradient(to bottom right, #32BB78, #28a86a, #1e9f5e)",
       }}
     >
-      {/* Floating decorative circles */}
+      {/* Background Animations */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
           className="absolute top-20 left-10 w-32 h-32 rounded-full bg-white/10"
@@ -57,36 +464,17 @@ export default function LoginPage() {
           transition={{ duration: 6, repeat: Infinity }}
         />
         <motion.div
-          className="absolute top-40 right-8 w-24 h-24 rounded-full bg-white/10"
-          animate={{ y: [0, -15, 0], scale: [1, 0.9, 1] }}
-          transition={{ duration: 5, repeat: Infinity }}
-        />
-        <motion.div
           className="absolute bottom-40 left-20 w-20 h-20 rounded-full bg-white/10"
           animate={{ y: [0, 15, 0] }}
           transition={{ duration: 4, repeat: Infinity }}
-        />
-        <motion.div
-          className="absolute bottom-60 right-16 w-16 h-16 rounded-full bg-white/10"
-          animate={{ y: [0, -10, 0] }}
-          transition={{ duration: 7, repeat: Infinity }}
-        />
-        <motion.div
-          className="absolute top-1/3 right-4 w-2 h-2 rounded-full bg-white/60"
-          animate={{ opacity: [0.3, 1, 0.3] }}
-          transition={{ duration: 2, repeat: Infinity }}
-        />
-        <motion.div
-          className="absolute bottom-1/3 left-8 w-3 h-3 rounded-full bg-white/60"
-          animate={{ opacity: [0.5, 1, 0.5] }}
-          transition={{ duration: 3, repeat: Infinity }}
         />
       </div>
 
       {/* Main content */}
       <div className="relative z-10 min-h-screen flex flex-col items-center justify-between px-6 py-8">
+
         {/* Header */}
-        <div className="w-full flex justify-between items-center">
+        <div className="w-full flex justify-between items-center max-w-md">
           <Link href="/onboarding">
             <span className="text-white/80 text-sm hover:text-white transition-colors flex items-center gap-1">
               <ChevronLeft className="w-4 h-4" />
@@ -96,240 +484,139 @@ export default function LoginPage() {
           <div className="w-16" />
         </div>
 
-        {/* Form content */}
+        {/* Auth Card */}
         <div className="flex-1 flex flex-col items-center justify-center w-full max-w-sm py-8">
+
+          {/* Logo */}
+          <div className="text-center mb-8">
+            <motion.div
+              className="w-24 h-24 mx-auto mb-4 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30 shadow-xl overflow-hidden"
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 0.5 }}
+            >
+              <Image
+                src="/enkamba-logo.png"
+                alt="eNkamba Logo"
+                width={96}
+                height={96}
+                className="w-full h-full object-cover"
+              />
+            </motion.div>
+            <h1 className="text-2xl font-bold text-white font-headline mb-1">
+              {method === "SELECT" ? "Connexion eNkamba" :
+                method === "EMAIL" ? "Connexion par Email" :
+                  method === "PHONE" ? "Connexion par Téléphone" : "Vérification"}
+            </h1>
+            <p className="text-white/80 text-sm">
+              {method === "SELECT" ? "Identifiez-vous pour accéder à votre espace." :
+                method === "OTP_EMAIL" || method === "OTP_PHONE" ? "Sécurisons votre compte." :
+                  "Nous allons vous envoyer un code de vérification."}
+            </p>
+          </div>
+
+          {/* Form Container */}
           <motion.div
-            key={mode}
+            className="w-full bg-white/10 backdrop-blur-md rounded-3xl p-6 border border-white/20 shadow-xl"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="w-full"
+            transition={{ delay: 0.1 }}
           >
-            {/* Logo */}
-            <div className="text-center mb-8">
-              <motion.div
-                className="w-24 h-24 mx-auto mb-4 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30 shadow-xl overflow-hidden"
-                initial={{ scale: 0.8 }}
-                animate={{ scale: 1 }}
-                transition={{ duration: 0.5 }}
-              >
-                <Image
-                  src="/enkamba-logo.png"
-                  alt="eNkamba Logo"
-                  width={96}
-                  height={96}
-                  className="w-full h-full object-cover"
-                />
-              </motion.div>
-              <h1 className="text-2xl font-bold text-white font-headline mb-2">
-                {titles[mode]}
-              </h1>
-              <p className="text-white/80 text-sm">{descriptions[mode]}</p>
-            </div>
+            <AnimatePresence mode="wait">
+              {method === "SELECT" && (
+                <motion.div
+                  key="select"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                >
+                  {renderSelectMethod()}
+                </motion.div>
+              )}
 
-            {/* Form Card */}
-            <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 border border-white/20 shadow-xl">
-              {mode === "login" && (
-                <div className="space-y-4">
-                  <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/60" />
-                    <Input
-                      type="email"
-                      placeholder="Adresse e-mail"
-                      className="h-14 pl-12 bg-white/10 border-white/20 text-white placeholder:text-white/50 rounded-xl focus:border-white/40 focus:ring-white/20"
-                    />
-                  </div>
-                  <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/60" />
-                    <Input
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Mot de passe"
-                      className="h-14 pl-12 pr-12 bg-white/10 border-white/20 text-white placeholder:text-white/50 rounded-xl focus:border-white/40 focus:ring-white/20"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 hover:text-white"
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-5 w-5" />
-                      ) : (
-                        <Eye className="h-5 w-5" />
-                      )}
-                    </button>
-                  </div>
+              {method === "EMAIL" && (
+                <motion.div
+                  key="email"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                >
+                  {renderEmailForm()}
+                  <Button variant="ghost" className="w-full mt-4 text-white/60 hover:text-white hover:bg-white/10" onClick={() => setMethod("SELECT")}>
+                    Annuler
+                  </Button>
+                </motion.div>
+              )}
 
-                  <button
-                    onClick={() => setMode("forgot")}
-                    className="text-white/70 text-sm hover:text-white transition-colors w-full text-right"
-                  >
-                    Mot de passe oublié ?
-                  </button>
-
-                  <Button
-                    className="w-full h-14 bg-white text-[#32BB78] hover:bg-white/90 rounded-xl text-lg font-semibold shadow-lg"
-                    onClick={(e) => {
-                      if (loginEmail) {
-                        // Extraire le nom depuis l'email (partie avant @)
-                        const nameFromEmail = loginEmail.split('@')[0];
-                        const userData = {
-                          name: nameFromEmail.charAt(0).toUpperCase() + nameFromEmail.slice(1),
-                          email: loginEmail,
-                        };
-                        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userData));
-                      }
+              {method === "PHONE" && (
+                <motion.div
+                  key="phone"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                >
+                  {renderPhoneForm()}
+                  <Button 
+                    variant="ghost" 
+                    className="w-full mt-4 text-white/60 hover:text-white hover:bg-white/10" 
+                    onClick={() => {
+                      setMethod("SELECT");
+                      setSelectedCountry(null);
+                      setPhone("");
                     }}
-                    asChild
                   >
-                    <Link href="/kyc">
-                      Se connecter
-                      <ArrowRight className="w-5 h-5 ml-2" />
-                    </Link>
+                    Annuler
                   </Button>
-                </div>
+                </motion.div>
               )}
 
-              {mode === "signup" && (
-                <div className="space-y-4">
-                  <div className="relative">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/60" />
-                    <Input
-                      type="text"
-                      placeholder="Nom complet"
-                      value={signupName}
-                      onChange={(e) => setSignupName(e.target.value)}
-                      className="h-14 pl-12 bg-white/10 border-white/20 text-white placeholder:text-white/50 rounded-xl focus:border-white/40 focus:ring-white/20"
-                    />
-                  </div>
-                  <div className="relative">
-                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/60" />
-                    <Input
-                      type="tel"
-                      placeholder="Numéro de téléphone"
-                      value={signupPhone}
-                      onChange={(e) => setSignupPhone(e.target.value)}
-                      className="h-14 pl-12 bg-white/10 border-white/20 text-white placeholder:text-white/50 rounded-xl focus:border-white/40 focus:ring-white/20"
-                    />
-                  </div>
-                  <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/60" />
-                    <Input
-                      type="email"
-                      placeholder="Adresse e-mail"
-                      value={signupEmail}
-                      onChange={(e) => setSignupEmail(e.target.value)}
-                      className="h-14 pl-12 bg-white/10 border-white/20 text-white placeholder:text-white/50 rounded-xl focus:border-white/40 focus:ring-white/20"
-                    />
-                  </div>
-                  <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/60" />
-                    <Input
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Mot de passe"
-                      className="h-14 pl-12 pr-12 bg-white/10 border-white/20 text-white placeholder:text-white/50 rounded-xl focus:border-white/40 focus:ring-white/20"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 hover:text-white"
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-5 w-5" />
-                      ) : (
-                        <Eye className="h-5 w-5" />
-                      )}
-                    </button>
-                  </div>
-
-                  <Button
-                    className="w-full h-14 bg-white text-[#32BB78] hover:bg-white/90 rounded-xl text-lg font-semibold shadow-lg"
-                    onClick={(e) => {
-                      if (signupName && signupEmail) {
-                        const userData = {
-                          name: signupName,
-                          email: signupEmail,
-                          phone: signupPhone || undefined,
-                        };
-                        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userData));
-                      }
-                    }}
-                    asChild
-                  >
-                    <Link href="/kyc">
-                      S&apos;inscrire
-                      <ArrowRight className="w-5 h-5 ml-2" />
-                    </Link>
-                  </Button>
-                </div>
+              {method === "OTP_EMAIL" && (
+                <motion.div
+                  key="otp-email"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                >
+                  {renderOTPForm('EMAIL')}
+                </motion.div>
               )}
 
-              {mode === "forgot" && (
-                <div className="space-y-4">
-                  <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/60" />
-                    <Input
-                      type="email"
-                      placeholder="Adresse e-mail"
-                      className="h-14 pl-12 bg-white/10 border-white/20 text-white placeholder:text-white/50 rounded-xl focus:border-white/40 focus:ring-white/20"
-                    />
-                  </div>
-
-                  <p className="text-white/60 text-xs text-center">
-                    Nous vous enverrons un lien pour réinitialiser votre mot de
-                    passe.
-                  </p>
-
-                  <Button className="w-full h-14 bg-white text-[#32BB78] hover:bg-white/90 rounded-xl text-lg font-semibold shadow-lg">
-                    Envoyer le lien
-                    <ArrowRight className="w-5 h-5 ml-2" />
-                  </Button>
-
-                  <button
-                    onClick={() => setMode("login")}
-                    className="text-white/70 text-sm hover:text-white transition-colors w-full text-center flex items-center justify-center gap-1"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                    Retour à la connexion
-                  </button>
-                </div>
+              {method === "OTP_PHONE" && (
+                <motion.div
+                  key="otp-phone"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                >
+                  {renderOTPForm('PHONE')}
+                </motion.div>
               )}
-            </div>
-
-            {/* Toggle between login and signup */}
-            {mode !== "forgot" && (
-              <div className="mt-6 text-center">
-                <p className="text-white/70 text-sm">
-                  {mode === "login"
-                    ? "Pas encore de compte ?"
-                    : "Déjà un compte ?"}
-                  <button
-                    onClick={() =>
-                      setMode(mode === "login" ? "signup" : "login")
-                    }
-                    className="text-white font-semibold ml-2 hover:underline"
-                  >
-                    {mode === "login" ? "S'inscrire" : "Se connecter"}
-                  </button>
-                </p>
-              </div>
-            )}
+            </AnimatePresence>
           </motion.div>
+
         </div>
 
         {/* Footer */}
         <div className="w-full max-w-sm text-center">
           <p className="text-white/50 text-xs">
-            En continuant, vous acceptez nos{" "}
-            <Link href="#" className="text-white/70 hover:text-white underline">
-              Conditions d&apos;utilisation
-            </Link>{" "}
-            et notre{" "}
-            <Link href="#" className="text-white/70 hover:text-white underline">
-              Politique de confidentialité
-            </Link>
+            eNkamba.io &copy; 2026<br />
+            Global solution et services sarl
           </p>
         </div>
       </div>
+
+      {/* Global reCAPTCHA container (must be always present) */}
+      <div id="recaptcha-container"></div>
+
+      {/* Global Type Helper for Recaptcha */}
+      <script dangerouslySetInnerHTML={{
+        __html: `window.recaptchaVerifier = null;`
+      }} />
     </div>
   );
+}
+
+// Add types for window
+declare global {
+  interface Window {
+    recaptchaVerifier: RecaptchaVerifier | undefined;
+  }
 }

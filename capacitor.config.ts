@@ -6,8 +6,9 @@ const config: CapacitorConfig = {
   webDir: 'out',
   server: {
     androidScheme: 'https',
-    url: 'https://enkamba.io',
-    cleartext: true
+    // Pour production, charge depuis le site déployé
+    // url: 'https://www.enkamba.io',
+    // cleartext: true // Désactivé pour utiliser l'URL de production
   },
   plugins: {
     SplashScreen: {

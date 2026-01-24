@@ -1,0 +1,24 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Règles permissives pour le développement
+    // À SÉCURISER EN PRODUCTION
+    
+    match /{allPaths=**} {
+      allow read, write: if true;
+    }
+    
+    // Dossiers spécifiques
+    match /chat-media/{userId}/{allPaths=**} {
+      allow read, write: if true;
+    }
+    
+    match /ai-chat-media/{userId}/{allPaths=**} {
+      allow read, write: if true;
+    }
+    
+    match /user-avatars/{userId}/{allPaths=**} {
+      allow read, write: if true;
+    }
+  }
+}

@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import HubNavigation from '@/components/dashboard/hub-navigation';
 import MbongoNavigation from '@/components/dashboard/mbongo-navigation';
+import AuthGuard from '@/components/auth-guard';
 
 export default function DashboardLayout({
   children,
@@ -43,20 +44,22 @@ export default function DashboardLayout({
   const showMbongoNav = activeTab === 'Paiement';
 
   return (
-    <div className="flex h-screen flex-col bg-background">
-      <main className="flex-grow overflow-y-auto pb-40">
-        {children}
-      </main>
-      
-      {showMasoloButton && (
-        <div className="fixed bottom-24 right-4 z-50 flex items-center gap-3">
-          <MasoloFloatingButton />
-        </div>
-      )}
+    <AuthGuard>
+      <div className="flex h-screen flex-col bg-background">
+        <main className="flex-grow overflow-y-auto pb-40">
+          {children}
+        </main>
 
-      {showMbongoNav && <MbongoNavigation />}
-      
-      <HubNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
-    </div>
+        {showMasoloButton && (
+          <div className="fixed bottom-24 right-4 z-50 flex items-center gap-3">
+            <MasoloFloatingButton />
+          </div>
+        )}
+
+        {showMbongoNav && <MbongoNavigation />}
+
+        <HubNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
+      </div>
+    </AuthGuard>
   );
 }

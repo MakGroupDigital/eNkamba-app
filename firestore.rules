@@ -1,0 +1,32 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Règles permissives pour le développement
+    // À SÉCURISER EN PRODUCTION
+    
+    match /{document=**} {
+      allow read, write: if true;
+    }
+    
+    // Collections spécifiques avec TTL pour les messages IA
+    match /conversations/{conversationId} {
+      allow read, write: if true;
+      
+      match /messages/{messageId} {
+        allow read, write: if true;
+      }
+    }
+    
+    match /aiChats/{aiChatId} {
+      allow read, write: if true;
+      
+      match /messages/{messageId} {
+        allow read, write: if true;
+      }
+    }
+    
+    match /users/{userId} {
+      allow read, write: if true;
+    }
+  }
+}
