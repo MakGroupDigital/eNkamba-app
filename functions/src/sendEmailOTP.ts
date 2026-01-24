@@ -521,6 +521,7 @@ export const getUserProfile = functions.https.onCall(
           fullName: userData.kyc?.identity?.fullName || null,
           dateOfBirth: userData.kyc?.identity?.dateOfBirth || null,
           country: userData.kyc?.identity?.country || null,
+          profileImage: userData.profileImage || null,
           kycStatus: userData.kycStatus || 'not_started',
           kycCompletedAt: userData.kycCompletedAt || null,
           kyc: userData.kyc || null,

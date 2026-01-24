@@ -10,7 +10,7 @@ import { AINavIcon } from '@/components/icons/service-icons';
 import { Send, Loader2 } from 'lucide-react';
 
 export default function AiChatDefaultPage() {
-  const { createAiChat } = useFirestoreAiChat();
+  const { createAiChat, sendAiMessage } = useFirestoreAiChat();
   const [inputValue, setInputValue] = useState('');
   const [isSending, setIsSending] = useState(false);
 
@@ -27,6 +27,9 @@ export default function AiChatDefaultPage() {
 
       // Obtenir la réponse de l'IA
       const aiResponse = await enkambaChat({ message: userMessage });
+
+      // Sauvegarder les messages dans le chat
+      await sendAiMessage(chatId, userMessage, aiResponse.response);
 
       // Rediriger vers le chat avec les messages
       window.location.href = `/dashboard/ai/chat/${chatId}`;

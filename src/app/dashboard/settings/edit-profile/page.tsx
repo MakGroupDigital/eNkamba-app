@@ -12,7 +12,7 @@ import { useUserProfile } from '@/hooks/useUserProfile';
 import { useAuth } from '@/hooks/useAuth';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '@/lib/firebase';
-import { ArrowLeft, Loader2, Upload, Camera } from 'lucide-react';
+import { ArrowLeft, Loader2, Upload } from 'lucide-react';
 import Link from 'next/link';
 
 export default function EditProfilePage() {
@@ -40,6 +40,10 @@ export default function EditProfilePage() {
         dateOfBirth: profile.dateOfBirth || '',
         country: profile.country || '',
       });
+      // Charger l'image existante du profil
+      if (profile.profileImage) {
+        setProfileImage(profile.profileImage);
+      }
     }
   }, [profile]);
 

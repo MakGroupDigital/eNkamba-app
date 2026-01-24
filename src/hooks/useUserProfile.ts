@@ -10,6 +10,7 @@ export interface UserProfile {
   fullName?: string;
   dateOfBirth?: string;
   country?: string;
+  profileImage?: string;
   kycStatus?: string;
   kycCompletedAt?: number;
   kyc?: {
