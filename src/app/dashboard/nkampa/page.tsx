@@ -118,20 +118,30 @@ export default function NkampaPage() {
   };
 
   const handleConfirmOrder = async () => {
-    // Simuler la commande
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Rediriger vers le paiement unifié avec contexte nkampa
+    // Le paiement sera traité via le système unifié
+    const paymentData = {
+      context: 'nkampa',
+      amount: cartTotal,
+      description: `Achat de ${cartItemsCount} article(s) sur Nkampa`,
+      metadata: {
+        items: cart.map(item => ({
+          id: item.id,
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price
+        })),
+        address,
+        phone,
+        paymentMethod
+      }
+    };
     
-    setShowCheckout(false);
-    setShowCart(false);
-    setShowSuccess(true);
-    setCart([]);
-    setAddress('');
-    setPhone('');
+    // Stocker les données de paiement dans sessionStorage
+    sessionStorage.setItem('nkampa_payment_data', JSON.stringify(paymentData));
     
-    toast({
-      title: "Commande confirmée !",
-      description: `Votre commande de ${formatPrice(cartTotal, 'CDF')} a été passée avec succès.`,
-    });
+    // Rediriger vers la page de paiement
+    window.location.href = '/dashboard/pay?context=nkampa';
   };
 
   return (

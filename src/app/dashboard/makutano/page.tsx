@@ -381,7 +381,25 @@ export default function MakutanoPage() {
                     </div>
                     <Button
                       className="w-full h-9 bg-gradient-to-r from-primary to-green-800 text-white hover:from-primary/90 hover:to-green-800/90"
-                      onClick={() => toast({ title: "Financement", description: "Redirection vers le paiement..." })}
+                      onClick={() => {
+                        // Préparer les données de paiement pour le financement du projet
+                        const paymentData = {
+                          context: 'makutano',
+                          description: 'Financement du projet: Four solaire local',
+                          metadata: {
+                            projectId: 'solar-project-1',
+                            projectName: 'Four solaire local',
+                            creator: 'Mukendi',
+                            type: 'project_funding'
+                          }
+                        };
+                        
+                        // Stocker les données
+                        sessionStorage.setItem('makutano_payment_data', JSON.stringify(paymentData));
+                        
+                        // Rediriger vers le paiement
+                        window.location.href = '/dashboard/pay?context=makutano';
+                      }}
                     >
                       Financer via eNkamba Pay
                     </Button>

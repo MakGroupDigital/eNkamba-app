@@ -103,28 +103,39 @@ export default function UgaviPage() {
     }
 
     setIsSubmitting(true);
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    setIsSubmitting(false);
-    setShowSendDialog(false);
-
-    const newTrackingNumber = `UGV-${Date.now().toString().slice(-8)}`;
-    setTrackingNumber(newTrackingNumber);
     
-    toast({
-      title: "Colis créé avec succès !",
-      description: `Votre colis a été enregistré. Numéro de suivi : ${newTrackingNumber}`,
-    });
+    // Calculer le prix de livraison
+    const basePrice = 5000;
+    const weightPrice = parseFloat(packageWeight) * 1000;
+    const distancePrice = shippingMethod === 'express' ? 25000 : 15000;
+    const totalPrice = basePrice + weightPrice + distancePrice;
 
-    // Reset form
-    setSenderName('');
-    setSenderAddress('');
-    setSenderPhone('');
-    setReceiverName('');
-    setReceiverAddress('');
-    setReceiverPhone('');
-    setPackageWeight('');
-    setPackageDescription('');
-    setShippingMethod('standard');
+    // Préparer les données de paiement
+    const paymentData = {
+      context: 'ugavi',
+      amount: totalPrice,
+      description: `Livraison de ${parseFloat(packageWeight)}kg - ${shippingMethod === 'express' ? 'Express' : 'Standard'}`,
+      metadata: {
+        senderName,
+        senderAddress,
+        senderPhone,
+        receiverName,
+        receiverAddress,
+        receiverPhone,
+        packageWeight,
+        packageDescription,
+        shippingMethod,
+        basePrice,
+        weightPrice,
+        distancePrice
+      }
+    };
+
+    // Stocker les données de paiement
+    sessionStorage.setItem('ugavi_payment_data', JSON.stringify(paymentData));
+    
+    // Rediriger vers la page de paiement
+    window.location.href = '/dashboard/pay?context=ugavi';
   };
 
   return (

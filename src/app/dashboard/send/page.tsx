@@ -1,311 +1,624 @@
 'use client';
 
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { 
-  ArrowLeft,
-  Send as SendIcon,
-  User,
-  Smartphone,
-  Landmark,
-  Globe,
-  Wallet,
-  Users,
-  Clock,
-  Info,
-  ArrowRight
-} from "lucide-react";
-import Link from "next/link";
-import { cn } from "@/lib/utils";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { useToast } from "@/hooks/use-toast";
+import { useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { useWalletTransactions } from '@/hooks/useWalletTransactions';
+import { ArrowLeft, Loader2, Mail, Phone, CreditCard, User, Smartphone, Zap, AlertCircle, CheckCircle2, Bluetooth, Wifi } from 'lucide-react';
+import Link from 'next/link';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '@/lib/firebase';
 
-type Currency = 'CDF' | 'USD' | 'EUR';
-type RecipientType = 'mbongo' | 'mobile-money' | 'bank' | 'international';
+type TransferMethod = 'email' | 'phone' | 'card' | 'account' | 'bluetooth' | 'wifi' | null;
 
-export default function SendMoneyPage() {
+export default function SendPage() {
+  const router = useRouter();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const { balance } = useWalletTransactions();
+
+  const [step, setStep] = useState<'method' | 'recipient' | 'amount' | 'confirm' | 'success'>('method');
+  const [transferMethod, setTransferMethod] = useState<TransferMethod>(null);
+  const [recipientIdentifier, setRecipientIdentifier] = useState('');
   const [amount, setAmount] = useState('');
-  const [currency, setCurrency] = useState<Currency>('CDF');
-  const [recipientType, setRecipientType] = useState<RecipientType | null>(null);
-  const [recipient, setRecipient] = useState('');
-  const [note, setNote] = useState('');
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [isSending, setIsSending] = useState(false);
+  const [description, setDescription] = useState('');
+  const [senderCurrency, setSenderCurrency] = useState('CDF');
+  const [isSearching, setIsSearching] = useState(false);
+  const [isTransferring, setIsTransferring] = useState(false);
+  const [recipientInfo, setRecipientInfo] = useState<any>(null);
+  const [transactionId, setTransactionId] = useState<string | null>(null);
 
-  const exchangeRates = {
-    CDF: { USD: 2500, EUR: 3000 },
-    USD: { CDF: 0.0004, EUR: 1.08 },
-    EUR: { CDF: 0.00033, USD: 0.93 }
+  const handleMethodSelect = (method: TransferMethod) => {
+    setTransferMethod(method);
+    setStep('recipient');
   };
 
-  const getEquivalentInCDF = () => {
-    if (!amount || isNaN(parseFloat(amount))) return null;
-    if (currency === 'CDF') return parseFloat(amount);
-    const rate = exchangeRates[currency].CDF;
-    return parseFloat(amount) / rate;
+  const searchRecipient = useCallback(async () => {
+    if (!recipientIdentifier.trim()) {
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Veuillez entrer une valeur',
+      });
+      return;
+    }
+
+    // Vérifier que l'utilisateur n'essaie pas de s'envoyer de l'argent à lui-même
+    if (recipientIdentifier.trim() === user?.email || recipientIdentifier.trim() === user?.phoneNumber) {
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Vous ne pouvez pas envoyer de l\'argent à vous-même',
+      });
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const searchFn = httpsCallable(functions, 'searchUserByIdentifier');
+      const result = await searchFn({
+        searchMethod: transferMethod,
+        searchQuery: recipientIdentifier.trim(),
+        currentUserId: user?.uid,
+      });
+
+      const data = result.data as any;
+
+      if (data.success && data.user) {
+        // Vérifier que ce n'est pas l'utilisateur lui-même
+        if (data.user.uid === user?.uid) {
+          toast({
+            variant: 'destructive',
+            title: 'Erreur',
+            description: 'Vous ne pouvez pas envoyer de l\'argent à vous-même',
+          });
+          return;
+        }
+        setRecipientInfo(data.user);
+        setStep('amount');
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Non trouvé',
+          description: 'Destinataire non trouvé',
+        });
+      }
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: error.message || 'Erreur lors de la recherche',
+      });
+    } finally {
+      setIsSearching(false);
+    }
+  }, [recipientIdentifier, transferMethod, user?.uid, user?.email, user?.phoneNumber, toast]);
+
+  const handleTransfer = async () => {
+    if (!amount || parseFloat(amount) <= 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Montant invalide',
+      });
+      return;
+    }
+
+    if (parseFloat(amount) > balance) {
+      toast({
+        variant: 'destructive',
+        title: 'Solde insuffisant',
+        description: `Vous avez ${balance.toLocaleString('fr-FR')} CDF. Veuillez ajouter des fonds.`,
+      });
+      return;
+    }
+
+    // Pour Bluetooth et WiFi, on va directement à la confirmation
+    if (transferMethod === 'bluetooth' || transferMethod === 'wifi') {
+      setStep('confirm');
+    } else {
+      setStep('confirm');
+    }
   };
 
-  const handleContinue = () => {
-    setShowConfirmDialog(true);
+  const confirmTransfer = async () => {
+    if (!user) return;
+
+    // Pour Bluetooth et WiFi, on n'a pas besoin de recipientInfo
+    if ((transferMethod === 'bluetooth' || transferMethod === 'wifi') && !recipientInfo) {
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Destinataire non spécifié',
+      });
+      return;
+    }
+
+    if (!recipientInfo && transferMethod !== 'bluetooth' && transferMethod !== 'wifi') return;
+
+    setIsTransferring(true);
+    try {
+      const sendMoneyFn = httpsCallable(functions, 'sendMoney');
+      const result = await sendMoneyFn({
+        senderId: user.uid,
+        amount: parseFloat(amount),
+        senderCurrency,
+        transferMethod,
+        recipientIdentifier: (transferMethod !== 'bluetooth' && transferMethod !== 'wifi') ? recipientIdentifier : undefined,
+        recipientId: recipientInfo?.uid,
+        description: description || undefined,
+      });
+
+      const data = result.data as any;
+
+      if (data.success) {
+        setTransactionId(data.transactionId);
+        setStep('success');
+
+        toast({
+          title: 'Succès',
+          description: `${parseFloat(amount).toLocaleString('fr-FR')} ${senderCurrency} envoyés${recipientInfo ? ` à ${recipientInfo.fullName}` : ''} (${data.amountReceived.toLocaleString('fr-FR')} ${data.recipientCurrency} reçus)`,
+          className: 'bg-green-600 text-white border-none',
+        });
+
+        setTimeout(() => {
+          router.push('/dashboard/wallet');
+        }, 3000);
+      }
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: error.message || 'Erreur lors de l\'envoi',
+      });
+    } finally {
+      setIsTransferring(false);
+    }
   };
 
-  const handleConfirmSend = async () => {
-    setIsSending(true);
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    setIsSending(false);
-    setShowConfirmDialog(false);
-    
-    toast({
-      title: "Envoi réussi !",
-      description: `${amount} ${currency} ont été envoyés à ${recipient}.`,
-    });
-
-    // Reset form
-    setAmount('');
-    setRecipient('');
-    setNote('');
-    setRecipientType(null);
-  };
+  if (!user) {
+    return null;
+  }
 
   return (
-    <div className="container mx-auto max-w-4xl p-4 space-y-6 animate-in fade-in duration-500">
-      <header className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" asChild>
-          <Link href="/dashboard/mbongo-dashboard">
-            <ArrowLeft />
-          </Link>
-        </Button>
-        <div className="flex items-center gap-2">
-          <SendIcon className="h-6 w-6 text-primary" />
-          <h1 className="font-headline text-xl font-bold text-primary">Envoyer de l'argent</h1>
-        </div>
-      </header>
-
-      {/* Main Send Form */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-headline text-lg">Nouveau transfert</CardTitle>
-          <CardDescription>Envoyez de l'argent rapidement et en toute sécurité.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Amount and Currency */}
-          <div className="space-y-2">
-            <Label htmlFor="amount">Montant à envoyer</Label>
-            <div className="flex gap-2">
-              <Input
-                id="amount"
-                type="number"
-                placeholder="0.00"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className="h-14 text-2xl font-bold flex-1"
-              />
-              <Select value={currency} onValueChange={(value) => setCurrency(value as Currency)}>
-                <SelectTrigger className="w-[120px] h-14 font-semibold">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="CDF">CDF</SelectItem>
-                  <SelectItem value="USD">USD</SelectItem>
-                  <SelectItem value="EUR">EUR</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            {currency !== 'CDF' && getEquivalentInCDF() && (
-              <p className="text-sm text-muted-foreground">
-                ≈ {getEquivalentInCDF()!.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} CDF
-              </p>
-            )}
+    <div className="min-h-screen bg-gradient-to-br from-background via-[#32BB78]/5 to-background">
+      <div className="container mx-auto max-w-2xl p-4 space-y-6 animate-in fade-in duration-500">
+        {/* Header */}
+        <header className="flex items-center gap-4 pt-4">
+          <Button variant="ghost" size="icon" asChild>
+            <Link href="/dashboard/wallet">
+              <ArrowLeft />
+            </Link>
+          </Button>
+          <div>
+            <h1 className="font-headline text-3xl font-bold bg-gradient-to-r from-[#32BB78] to-[#2a9d63] bg-clip-text text-transparent">
+              Envoyer de l'argent
+            </h1>
+            <p className="text-sm text-muted-foreground">Solde: {balance.toLocaleString('fr-FR')} CDF</p>
           </div>
+        </header>
 
-          {/* Recipient Type Selection */}
-          <div className="space-y-2">
-            <Label>Destinataire</Label>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <Button
-                variant={recipientType === 'mbongo' ? 'default' : 'outline'}
-                className={cn(
-                  "h-auto py-4 flex flex-col items-center gap-2",
-                  recipientType === 'mbongo' && "bg-primary"
-                )}
-                onClick={() => setRecipientType('mbongo')}
-              >
-                <User className="h-5 w-5" />
-                <span className="text-xs">Mbongo.io</span>
-              </Button>
-              <Button
-                variant={recipientType === 'mobile-money' ? 'default' : 'outline'}
-                className={cn(
-                  "h-auto py-4 flex flex-col items-center gap-2",
-                  recipientType === 'mobile-money' && "bg-primary"
-                )}
-                onClick={() => setRecipientType('mobile-money')}
-              >
-                <Smartphone className="h-5 w-5" />
-                <span className="text-xs">Mobile Money</span>
-              </Button>
-              <Button
-                variant={recipientType === 'bank' ? 'default' : 'outline'}
-                className={cn(
-                  "h-auto py-4 flex flex-col items-center gap-2",
-                  recipientType === 'bank' && "bg-primary"
-                )}
-                onClick={() => setRecipientType('bank')}
-              >
-                <Landmark className="h-5 w-5" />
-                <span className="text-xs">Banque</span>
-              </Button>
-              <Button
-                variant={recipientType === 'international' ? 'default' : 'outline'}
-                className={cn(
-                  "h-auto py-4 flex flex-col items-center gap-2",
-                  recipientType === 'international' && "bg-primary"
-                )}
-                onClick={() => setRecipientType('international')}
-              >
-                <Globe className="h-5 w-5" />
-                <span className="text-xs">International</span>
-              </Button>
-            </div>
-          </div>
-
-          {/* Recipient Details */}
-          {recipientType && (
-            <div className="space-y-2 animate-in fade-in-up">
-              <Label htmlFor="recipient">
-                {recipientType === 'mbongo' && "Numéro de téléphone ou email"}
-                {recipientType === 'mobile-money' && "Numéro Mobile Money"}
-                {recipientType === 'bank' && "Numéro de compte bancaire"}
-                {recipientType === 'international' && "Informations du bénéficiaire"}
-              </Label>
-              <Input
-                id="recipient"
-                placeholder={
-                  recipientType === 'mbongo' ? "+243 XXX XXX XXX ou email@exemple.com" :
-                  recipientType === 'mobile-money' ? "+243 XXX XXX XXX" :
-                  recipientType === 'bank' ? "Numéro de compte" :
-                  "Nom et coordonnées"
-                }
-                value={recipient}
-                onChange={(e) => setRecipient(e.target.value)}
-                className="h-12"
-              />
-            </div>
-          )}
-
-          {/* Note (Optional) */}
-          {recipientType && amount && (
-            <div className="space-y-2 animate-in fade-in-up">
-              <Label htmlFor="note">Note (optionnel)</Label>
-              <Input
-                id="note"
-                placeholder="Ajouter une note pour cette transaction"
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                className="h-12"
-              />
-            </div>
-          )}
-
-          {/* Info Alert */}
-          {currency !== 'CDF' && (
-            <Alert variant="default" className="border-primary/20 bg-primary/5">
-              <Info className="h-4 w-4 text-primary" />
-              <AlertTitle className="text-sm font-semibold text-primary">Conversion de devise</AlertTitle>
-              <AlertDescription className="text-xs">
-                Le bénéficiaire recevra le montant converti dans sa devise locale. Les frais de conversion seront calculés avant la confirmation.
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {/* Continue Button */}
-          {amount && recipientType && recipient && (
-            <Button 
-              size="lg" 
-              className="w-full"
-              onClick={handleContinue}
+        {/* Step 1: Method Selection */}
+        {step === 'method' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card
+              className="cursor-pointer border-2 hover:border-[#32BB78] transition-colors"
+              onClick={() => handleMethodSelect('email')}
             >
-              Continuer <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          )}
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center gap-4 text-center">
+                  <div className="p-4 rounded-full bg-[#32BB78]/20">
+                    <Mail className="w-8 h-8 text-[#32BB78]" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg">Par Email</h3>
+                    <p className="text-sm text-muted-foreground">Adresse email</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-          {/* Confirmation Dialog */}
-          <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Confirmer l'envoi</DialogTitle>
-                <DialogDescription>
-                  Vérifiez les détails avant de confirmer l'envoi.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="p-4 rounded-lg bg-muted space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Montant :</span>
-                    <span className="font-bold">{amount} {currency}</span>
+            <Card
+              className="cursor-pointer border-2 hover:border-[#32BB78] transition-colors"
+              onClick={() => handleMethodSelect('phone')}
+            >
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center gap-4 text-center">
+                  <div className="p-4 rounded-full bg-[#32BB78]/20">
+                    <Phone className="w-8 h-8 text-[#32BB78]" />
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Destinataire :</span>
-                    <span className="font-semibold">{recipient}</span>
+                  <div>
+                    <h3 className="font-semibold text-lg">Par Téléphone</h3>
+                    <p className="text-sm text-muted-foreground">Numéro de téléphone</p>
                   </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card
+              className="cursor-pointer border-2 hover:border-[#32BB78] transition-colors"
+              onClick={() => handleMethodSelect('card')}
+            >
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center gap-4 text-center">
+                  <div className="p-4 rounded-full bg-[#32BB78]/20">
+                    <CreditCard className="w-8 h-8 text-[#32BB78]" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg">Par Carte</h3>
+                    <p className="text-sm text-muted-foreground">Numéro de carte</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card
+              className="cursor-pointer border-2 hover:border-[#32BB78] transition-colors"
+              onClick={() => handleMethodSelect('account')}
+            >
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center gap-4 text-center">
+                  <div className="p-4 rounded-full bg-[#32BB78]/20">
+                    <User className="w-8 h-8 text-[#32BB78]" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg">Par Compte</h3>
+                    <p className="text-sm text-muted-foreground">Numéro ENK...</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card
+              className="cursor-pointer border-2 hover:border-[#32BB78] transition-colors"
+              onClick={() => handleMethodSelect('bluetooth')}
+            >
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center gap-4 text-center">
+                  <div className="p-4 rounded-full bg-[#32BB78]/20">
+                    <Bluetooth className="w-8 h-8 text-[#32BB78]" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg">Par Bluetooth</h3>
+                    <p className="text-sm text-muted-foreground">Proximité sans fil</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card
+              className="cursor-pointer border-2 hover:border-[#32BB78] transition-colors"
+              onClick={() => handleMethodSelect('wifi')}
+            >
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center gap-4 text-center">
+                  <div className="p-4 rounded-full bg-[#32BB78]/20">
+                    <Wifi className="w-8 h-8 text-[#32BB78]" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg">Par WiFi</h3>
+                    <p className="text-sm text-muted-foreground">Connexion locale</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Step 2: Recipient */}
+        {step === 'recipient' && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Destinataire</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {(transferMethod === 'bluetooth' || transferMethod === 'wifi') ? (
+                <>
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800 space-y-2">
+                    <p className="font-semibold">
+                      {transferMethod === 'bluetooth' ? '📱 Transfert par Bluetooth' : '📡 Transfert par WiFi'}
+                    </p>
+                    <ul className="space-y-1 list-disc list-inside">
+                      {transferMethod === 'bluetooth' ? (
+                        <>
+                          <li>Assurez-vous que Bluetooth est activé</li>
+                          <li>Approchez votre téléphone du destinataire</li>
+                          <li>Les appareils vont se détecter automatiquement</li>
+                          <li>Confirmez le transfert sur les deux appareils</li>
+                        </>
+                      ) : (
+                        <>
+                          <li>Assurez-vous que WiFi est activé</li>
+                          <li>Connectez-vous au même réseau WiFi</li>
+                          <li>Le destinataire recevra une notification</li>
+                          <li>Confirmez le transfert sur les deux appareils</li>
+                        </>
+                      )}
+                    </ul>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Montant (CDF)</label>
+                    <Input
+                      type="number"
+                      placeholder="Entrez le montant"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      className="text-lg"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Description (optionnel)</label>
+                    <Input
+                      type="text"
+                      placeholder="Ex: Remboursement, Partage de frais..."
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="flex gap-3">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setStep('method');
+                        setAmount('');
+                        setDescription('');
+                      }}
+                      className="flex-1"
+                    >
+                      Retour
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        if (!amount || parseFloat(amount) <= 0) {
+                          toast({
+                            variant: 'destructive',
+                            title: 'Erreur',
+                            description: 'Montant invalide',
+                          });
+                          return;
+                        }
+                        if (parseFloat(amount) > balance) {
+                          toast({
+                            variant: 'destructive',
+                            title: 'Solde insuffisant',
+                            description: `Vous avez ${balance.toLocaleString('fr-FR')} CDF. Veuillez ajouter des fonds.`,
+                          });
+                          return;
+                        }
+                        setStep('confirm');
+                      }}
+                      className="flex-1 bg-[#32BB78] hover:bg-[#2a9d63]"
+                    >
+                      Continuer
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">
+                      {transferMethod === 'email' && 'Email'}
+                      {transferMethod === 'phone' && 'Téléphone'}
+                      {transferMethod === 'card' && 'Numéro de carte'}
+                      {transferMethod === 'account' && 'Numéro de compte'}
+                    </label>
+                    <div className="flex gap-2">
+                      <Input
+                        type="text"
+                        placeholder={
+                          transferMethod === 'email' ? 'user@example.com' :
+                          transferMethod === 'phone' ? '+243812345678' :
+                          transferMethod === 'card' ? '1234 5678 9012 3456' :
+                          transferMethod === 'account' ? 'ENK000000000000' :
+                          'Identifiant'
+                        }
+                        value={recipientIdentifier}
+                        onChange={(e) => setRecipientIdentifier(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && searchRecipient()}
+                        className="flex-1"
+                      />
+                      <Button
+                        onClick={searchRecipient}
+                        disabled={isSearching}
+                        className="bg-[#32BB78] hover:bg-[#2a9d63]"
+                      >
+                        {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Chercher'}
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setStep('method');
+                        setRecipientIdentifier('');
+                      }}
+                      className="flex-1"
+                    >
+                      Retour
+                    </Button>
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Step 3: Amount */}
+        {step === 'amount' && recipientInfo && (
+          <div className="space-y-4">
+            <Card className="border-[#32BB78]/20 bg-gradient-to-br from-[#32BB78]/10 to-[#2a9d63]/5">
+              <CardContent className="pt-6">
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">Destinataire</p>
+                  <p className="text-lg font-semibold">{recipientInfo.fullName}</p>
+                  <p className="text-sm text-muted-foreground">{recipientInfo.email}</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Montant</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Devise</label>
+                  <select
+                    value={senderCurrency}
+                    onChange={(e) => setSenderCurrency(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#32BB78]"
+                  >
+                    <option value="CDF">CDF - Franc Congolais</option>
+                    <option value="USD">USD - Dollar Américain</option>
+                    <option value="EUR">EUR - Euro</option>
+                    <option value="GBP">GBP - Livre Sterling</option>
+                    <option value="ZAR">ZAR - Rand Sud-Africain</option>
+                    <option value="KES">KES - Shilling Kényan</option>
+                    <option value="UGX">UGX - Shilling Ougandais</option>
+                    <option value="RWF">RWF - Franc Rwandais</option>
+                    <option value="TZS">TZS - Shilling Tanzanien</option>
+                    <option value="XOF">XOF - Franc CFA Ouest</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Montant ({senderCurrency})</label>
+                  <Input
+                    type="number"
+                    placeholder="Entrez le montant"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    className="text-lg"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Description (optionnel)</label>
+                  <Input
+                    type="text"
+                    placeholder="Ex: Remboursement, Partage de frais..."
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                  />
+                </div>
+
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setStep('recipient');
+                      setAmount('');
+                      setDescription('');
+                    }}
+                    className="flex-1"
+                  >
+                    Retour
+                  </Button>
+                  <Button
+                    onClick={handleTransfer}
+                    className="flex-1 bg-[#32BB78] hover:bg-[#2a9d63]"
+                  >
+                    Continuer
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Step 4: Confirm */}
+        {step === 'confirm' && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Confirmer l'envoi</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="bg-muted p-4 rounded-lg space-y-3">
+                {recipientInfo && (
+                  <>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Destinataire</span>
+                      <span className="font-semibold">{recipientInfo.fullName}</span>
+                    </div>
+                  </>
+                )}
+                {(transferMethod === 'bluetooth' || transferMethod === 'wifi') && (
                   <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Type :</span>
+                    <span className="text-muted-foreground">Méthode</span>
                     <span className="font-semibold">
-                      {recipientType === 'mbongo' && 'Mbongo.io'}
-                      {recipientType === 'mobile-money' && 'Mobile Money'}
-                      {recipientType === 'bank' && 'Banque'}
-                      {recipientType === 'international' && 'International'}
+                      {transferMethod === 'bluetooth' ? 'Bluetooth' : 'WiFi'}
                     </span>
                   </div>
-                  {note && (
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Note :</span>
-                      <span className="font-semibold text-right">{note}</span>
-                    </div>
-                  )}
+                )}
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Montant à envoyer</span>
+                  <span className="font-bold text-lg">{parseFloat(amount).toLocaleString('fr-FR')} {senderCurrency}</span>
+                </div>
+                <div className="border-t pt-3 flex justify-between font-bold">
+                  <span>Nouveau solde</span>
+                  <span className="text-[#32BB78]">{(balance - parseFloat(amount)).toLocaleString('fr-FR')} {senderCurrency}</span>
                 </div>
               </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setShowConfirmDialog(false)} disabled={isSending}>
-                  Annuler
-                </Button>
-                <Button onClick={handleConfirmSend} disabled={isSending}>
-                  {isSending ? "Envoi en cours..." : "Confirmer l'envoi"} <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </CardContent>
-      </Card>
 
-      {/* Quick Options */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-headline text-lg">Options rapides</CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Button variant="outline" className="h-auto py-4 justify-start">
-            <Users className="mr-2 h-5 w-5" />
-            <div className="text-left">
-              <div className="font-semibold">Transfert Multiple</div>
-              <div className="text-xs text-muted-foreground">Envoyez à plusieurs contacts</div>
-            </div>
-          </Button>
-          <Button variant="outline" className="h-auto py-4 justify-start">
-            <Clock className="mr-2 h-5 w-5" />
-            <div className="text-left">
-              <div className="font-semibold">Envoi Programmé</div>
-              <div className="text-xs text-muted-foreground">Planifiez un envoi futur</div>
-            </div>
-          </Button>
-        </CardContent>
-      </Card>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
+                <p className="font-semibold mb-2">💱 Conversion de devises</p>
+                <p>Le montant sera converti automatiquement selon les taux de change actuels de Google Finance.</p>
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setStep(recipientInfo ? 'amount' : 'recipient')}
+                  className="flex-1"
+                  disabled={isTransferring}
+                >
+                  Retour
+                </Button>
+                <Button
+                  onClick={confirmTransfer}
+                  className="flex-1 bg-[#32BB78] hover:bg-[#2a9d63]"
+                  disabled={isTransferring}
+                >
+                  {isTransferring ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Envoi...
+                    </>
+                  ) : (
+                    'Confirmer'
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Step 5: Success */}
+        {step === 'success' && (
+          <Card className="border-green-200 bg-green-50">
+            <CardContent className="pt-6">
+              <div className="flex flex-col items-center gap-4 text-center">
+                <CheckCircle2 className="w-12 h-12 text-green-600" />
+                <div>
+                  <h3 className="font-semibold text-lg text-green-900">Argent envoyé!</h3>
+                  <p className="text-sm text-green-700 mt-2">
+                    {parseFloat(amount).toLocaleString('fr-FR')} CDF ont été envoyés à {recipientInfo?.fullName}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 }

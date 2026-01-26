@@ -86,7 +86,23 @@ export default function MiyikiChatPage() {
               <p className="text-xs text-white/70">Messagerie unifiée</p>
             </div>
         </div>
-        <Button size="icon" className="rounded-full bg-accent text-accent-foreground hover:bg-accent/90 w-12 h-12 shadow-lg">
+        <Button size="icon" className="rounded-full bg-accent text-accent-foreground hover:bg-accent/90 w-12 h-12 shadow-lg" onClick={() => {
+          // Préparer les données de paiement pour un service
+          const paymentData = {
+            context: 'miyiki',
+            description: 'Paiement de service via Miyiki-Chat',
+            metadata: {
+              type: 'service_payment',
+              serviceType: 'chat_service'
+            }
+          };
+          
+          // Stocker les données
+          sessionStorage.setItem('miyiki_payment_data', JSON.stringify(paymentData));
+          
+          // Rediriger vers le paiement
+          window.location.href = '/dashboard/pay?context=miyiki';
+        }}>
           <NewChatIcon size={24} />
           <span className="sr-only">Nouvelle conversation</span>
         </Button>

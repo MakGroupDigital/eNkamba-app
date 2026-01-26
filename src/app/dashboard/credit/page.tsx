@@ -369,21 +369,28 @@ export default function CreditPage() {
             <Button 
               onClick={async () => {
                 setIsSubmitting(true);
-                // Simuler la demande
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                setIsSubmitting(false);
-                setShowConfirmDialog(false);
                 
-                toast({
-                  title: "Demande de crédit envoyée !",
-                  description: "Votre demande est en cours d'évaluation. Vous recevrez une notification dans les prochaines heures.",
-                });
+                // Préparer les données de paiement pour le crédit
+                const paymentData = {
+                  context: 'credit',
+                  amount: parseFloat(amount),
+                  description: `Demande de crédit: ${selectedOffer?.name}`,
+                  metadata: {
+                    offerId: selectedOffer?.id,
+                    offerName: selectedOffer?.name,
+                    interestRate: selectedOffer?.interestRate,
+                    duration: selectedOffer?.duration,
+                    totalAmount: simulation?.totalAmount,
+                    monthlyPayment: simulation?.monthlyPayment,
+                    type: 'credit_request'
+                  }
+                };
 
-                // Reset form
-                setAmount('');
-                setSelectedOffer(null);
-                setSimulation(null);
-                setIsEligible(null);
+                // Stocker les données
+                sessionStorage.setItem('credit_payment_data', JSON.stringify(paymentData));
+                
+                // Rediriger vers le paiement
+                window.location.href = '/dashboard/pay?context=credit';
               }}
               disabled={isSubmitting}
             >

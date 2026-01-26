@@ -89,24 +89,26 @@ export default function TontinePage() {
       return;
     }
 
-    setIsCreating(true);
-    // Simuler la création
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    setIsCreating(false);
-    setShowCreateForm(false);
-    
-    toast({
-      title: "Tontine créée avec succès !",
-      description: `La tontine "${tontineName}" a été créée. Vous pouvez maintenant inviter des membres.`,
-    });
+    // Préparer les données de paiement pour la tontine
+    const paymentData = {
+      context: 'tontine',
+      amount: parseFloat(tontineAmount),
+      description: `Création de tontine: ${tontineName}`,
+      metadata: {
+        tontineName,
+        tontineAmount: parseFloat(tontineAmount),
+        tontineCurrency,
+        tontineFrequency,
+        maxMembers: parseInt(maxMembers),
+        type: 'tontine_creation'
+      }
+    };
 
-    // Reset form
-    setTontineName('');
-    setTontineAmount('');
-    setTontineCurrency('CDF');
-    setTontineFrequency('monthly');
-    setMaxMembers('10');
+    // Stocker les données
+    sessionStorage.setItem('tontine_payment_data', JSON.stringify(paymentData));
+    
+    // Rediriger vers le paiement
+    window.location.href = '/dashboard/pay?context=tontine';
   };
 
   const handleJoinByLink = async () => {

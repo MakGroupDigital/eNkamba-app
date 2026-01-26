@@ -1,9 +1,9 @@
-import AiChatClient from './ai-chat-client';
+import AiChatEnhanced from './ai-chat-enhanced';
 
 export function generateStaticParams() {
   return [];
 }
 
 export default function AiChatPage() {
-  return <AiChatClient />;
+  return <AiChatEnhanced />;
 }
