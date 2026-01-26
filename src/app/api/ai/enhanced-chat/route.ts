@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { remote_web_search } from '@/lib/web-search';
 
 interface RequestBody {
   message: string;
@@ -18,6 +19,22 @@ export async function POST(request: NextRequest) {
     const body: RequestBody = await request.json();
     const { message, options } = body;
 
+    // Effectuer la recherche web si demandée
+    let searchContext = '';
+    if (options.searchWeb) {
+      try {
+        const searchResults = await remote_web_search({ query: message });
+        if (searchResults && searchResults.length > 0) {
+          searchContext = '\n\nRésultats de recherche web:\n';
+          searchResults.forEach((result: any, idx: number) => {
+            searchContext += `${idx + 1}. ${result.title}\n   ${result.snippet}\n   Source: ${result.url}\n`;
+          });
+        }
+      } catch (error) {
+        console.error('Erreur lors de la recherche web:', error);
+      }
+    }
+
     // Construire le prompt avec les options
     let systemPrompt = 'Tu es un assistant IA utile et informatif. Réponds en français.';
     
@@ -31,6 +48,9 @@ export async function POST(request: NextRequest) {
       systemPrompt += ' Si pertinent, fournis des exemples de code.';
     }
 
+    // Ajouter le contexte de recherche au message
+    const fullMessage = searchContext ? `${message}${searchContext}` : message;
+
     const model = genai.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     // Créer un stream de réponse
@@ -38,7 +58,7 @@ export async function POST(request: NextRequest) {
     const stream = new ReadableStream({
       async start(controller) {
         try {
-          const result = await model.generateContentStream(message);
+          const result = await model.generateContentStream(fullMessage);
 
           for await (const chunk of result.stream) {
             const text = typeof chunk.text === 'function' ? chunk.text() : chunk.text;
