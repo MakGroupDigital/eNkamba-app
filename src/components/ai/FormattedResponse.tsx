@@ -181,17 +181,17 @@ export function FormattedResponse({
 
       {/* Boutons d'action */}
       {!isStreaming && displayedContent && (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 mt-4">
           <Button
             onClick={handleCopy}
             variant="outline"
             size="sm"
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 hover:bg-primary hover:text-white transition-all"
           >
             {copied ? (
               <>
                 <Check className="h-4 w-4" />
-                Copié
+                Copié!
               </>
             ) : (
               <>
@@ -204,25 +204,37 @@ export function FormattedResponse({
             onClick={handleExportPDF}
             variant="outline"
             size="sm"
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 hover:bg-red-500 hover:text-white transition-all"
           >
-            📄 PDF
+            <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-8-6z" />
+              <text x="9" y="16" fontSize="8" fontWeight="bold" fill="currentColor">PDF</text>
+            </svg>
+            PDF
           </Button>
           <Button
             onClick={handleExportWord}
             variant="outline"
             size="sm"
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 hover:bg-blue-500 hover:text-white transition-all"
           >
-            📝 Word
+            <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-8-6z" />
+              <text x="8" y="16" fontSize="8" fontWeight="bold" fill="currentColor">W</text>
+            </svg>
+            Word
           </Button>
           <Button
             onClick={handleExportExcel}
             variant="outline"
             size="sm"
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 hover:bg-green-500 hover:text-white transition-all"
           >
-            📊 Excel
+            <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-8-6z" />
+              <text x="8" y="16" fontSize="8" fontWeight="bold" fill="currentColor">X</text>
+            </svg>
+            Excel
           </Button>
         </div>
       )}

@@ -25,7 +25,14 @@ export async function POST(request: NextRequest) {
     
     if (options.searchWeb) {
       try {
-        const searchResults = await remote_web_search({ query: message });
+        // Ajouter un timeout pour la recherche web
+        const searchPromise = remote_web_search({ query: message });
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Search timeout')), 5000)
+        );
+        
+        const searchResults = await Promise.race([searchPromise, timeoutPromise]) as any[];
+        
         if (searchResults && searchResults.length > 0) {
           hasSearchResults = true;
           searchContext = '\n\n=== RÉSULTATS DE RECHERCHE WEB EN TEMPS RÉEL ===\n';
@@ -39,11 +46,12 @@ export async function POST(request: NextRequest) {
         }
       } catch (error) {
         console.error('Erreur lors de la recherche web:', error);
+        // Continuer sans résultats de recherche
       }
     }
 
     // Construire le prompt avec les options
-    let systemPrompt = 'Tu es un assistant IA utile et informatif. Réponds en français.';
+    let systemPrompt = 'Tu es eNkamba AI, un assistant IA intelligent développé par Global Solution and Services SARL. Tu es un modèle LLM avancé conçu pour aider les utilisateurs avec leurs questions et tâches. Réponds toujours en français de manière professionnelle et utile.';
     
     if (options.reflection) {
       systemPrompt += ' Réfléchis profondément à la question avant de répondre.';
@@ -87,7 +95,10 @@ export async function POST(request: NextRequest) {
           controller.close();
         } catch (error) {
           console.error('Erreur Gemini:', error);
-          controller.error(error);
+          // Envoyer un message d'erreur au client
+          const errorMessage = `Erreur: ${error instanceof Error ? error.message : 'Erreur inconnue'}`;
+          controller.enqueue(encoder.encode(errorMessage));
+          controller.close();
         }
       },
     });
@@ -102,7 +113,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Erreur API:', error);
     return NextResponse.json(
-      { error: 'Erreur lors du traitement de la requête' },
+      { error: `Erreur: ${error instanceof Error ? error.message : 'Erreur inconnue'}` },
       { status: 500 }
     );
   }
