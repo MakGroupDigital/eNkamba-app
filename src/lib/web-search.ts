@@ -1,29 +1,50 @@
-import { TavilyClient } from '@tavily/core';
-
-const tavilyClient = new TavilyClient({
-  apiKey: process.env.TAVILY_API_KEY || '',
-});
+import axios from 'axios';
 
 export async function remote_web_search(params: { query: string }) {
   try {
-    // Si pas de clé Tavily, retourner des résultats mockés
-    if (!process.env.TAVILY_API_KEY) {
-      console.warn('TAVILY_API_KEY not set, using mock results');
+    // Utiliser DuckDuckGo API (gratuit, pas de clé requise)
+    const response = await axios.get('https://api.duckduckgo.com/', {
+      params: {
+        q: params.query,
+        format: 'json',
+        no_html: 1,
+        skip_disambig: 1,
+      },
+      timeout: 5000,
+    });
+
+    const results = [];
+
+    // Ajouter le résumé principal si disponible
+    if (response.data.AbstractText) {
+      results.push({
+        title: response.data.Heading || params.query,
+        url: response.data.AbstractURL || '#',
+        snippet: response.data.AbstractText,
+      });
+    }
+
+    // Ajouter les résultats de recherche
+    if (response.data.RelatedTopics && response.data.RelatedTopics.length > 0) {
+      response.data.RelatedTopics.slice(0, 4).forEach((topic: any) => {
+        if (topic.Text && !topic.Topics) {
+          results.push({
+            title: topic.FirstURL?.split('/').pop() || 'Résultat',
+            url: topic.FirstURL || '#',
+            snippet: topic.Text,
+          });
+        }
+      });
+    }
+
+    // Si pas de résultats, retourner des résultats mockés
+    if (results.length === 0) {
       return getMockResults(params.query);
     }
 
-    const response = await tavilyClient.search(params.query, {
-      maxResults: 5,
-      includeAnswer: true,
-    });
-
-    return response.results.map((result: any) => ({
-      title: result.title,
-      url: result.url,
-      snippet: result.snippet || result.content,
-    }));
+    return results.slice(0, 5);
   } catch (error) {
-    console.error('Erreur recherche web Tavily:', error);
+    console.error('Erreur recherche DuckDuckGo:', error);
     // Fallback sur les résultats mockés
     return getMockResults(params.query);
   }
