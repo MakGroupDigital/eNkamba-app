@@ -21,14 +21,21 @@ export async function POST(request: NextRequest) {
 
     // Effectuer la recherche web si demandée
     let searchContext = '';
+    let hasSearchResults = false;
+    
     if (options.searchWeb) {
       try {
         const searchResults = await remote_web_search({ query: message });
         if (searchResults && searchResults.length > 0) {
-          searchContext = '\n\nRésultats de recherche web:\n';
+          hasSearchResults = true;
+          searchContext = '\n\n=== RÉSULTATS DE RECHERCHE WEB EN TEMPS RÉEL ===\n';
           searchResults.forEach((result: any, idx: number) => {
-            searchContext += `${idx + 1}. ${result.title}\n   ${result.snippet}\n   Source: ${result.url}\n`;
+            searchContext += `\n[${idx + 1}] ${result.title}\n`;
+            searchContext += `Contenu: ${result.snippet}\n`;
+            searchContext += `Source: ${result.url}\n`;
           });
+          searchContext += '\n=== FIN DES RÉSULTATS DE RECHERCHE ===\n';
+          searchContext += '\nIMPORTANT: Utilise les informations ci-dessus pour répondre à la question. Ces résultats sont en temps réel et à jour.\n';
         }
       } catch (error) {
         console.error('Erreur lors de la recherche web:', error);
@@ -48,8 +55,18 @@ export async function POST(request: NextRequest) {
       systemPrompt += ' Si pertinent, fournis des exemples de code.';
     }
 
-    // Ajouter le contexte de recherche au message
-    const fullMessage = searchContext ? `${message}${searchContext}` : message;
+    // Si recherche web activée, ajouter une instruction spéciale
+    if (hasSearchResults) {
+      systemPrompt += ' Tu as accès à des résultats de recherche web en temps réel. Utilise-les pour fournir des informations actuelles et précises.';
+    }
+
+    // Construire le message final
+    let finalMessage = message;
+    if (searchContext) {
+      finalMessage = `${systemPrompt}\n\n${message}${searchContext}`;
+    } else {
+      finalMessage = `${systemPrompt}\n\n${message}`;
+    }
 
     const model = genai.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
@@ -58,7 +75,7 @@ export async function POST(request: NextRequest) {
     const stream = new ReadableStream({
       async start(controller) {
         try {
-          const result = await model.generateContentStream(fullMessage);
+          const result = await model.generateContentStream(finalMessage);
 
           for await (const chunk of result.stream) {
             const text = typeof chunk.text === 'function' ? chunk.text() : chunk.text;
