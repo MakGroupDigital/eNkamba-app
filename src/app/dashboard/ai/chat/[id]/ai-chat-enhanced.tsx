@@ -80,6 +80,10 @@ export default function AiChatEnhanced() {
         }
       );
 
+      if (!aiResponse || !aiResponse.response) {
+        throw new Error('Réponse IA vide');
+      }
+
       // Ajouter la réponse IA
       const aiMsg = {
         id: Date.now().toString() + '_ai',
@@ -92,9 +96,22 @@ export default function AiChatEnhanced() {
       setMessages((prev) => [...prev, aiMsg]);
 
       // Sauvegarder dans Firestore
-      await sendAiMessage(aiChatId, userMessage, aiResponse.response);
+      try {
+        await sendAiMessage(aiChatId, userMessage, aiResponse.response);
+      } catch (saveError) {
+        console.warn('Erreur sauvegarde Firestore:', saveError);
+        // Continuer même si la sauvegarde échoue
+      }
     } catch (error) {
       console.error('Erreur envoi message IA:', error);
+      // Ajouter un message d'erreur
+      const errorMsg = {
+        id: Date.now().toString() + '_error',
+        role: 'assistant',
+        text: `Erreur: ${error instanceof Error ? error.message : 'Impossible de générer une réponse'}`,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMsg]);
       setInputValue(userMessage);
     } finally {
       setIsSending(false);

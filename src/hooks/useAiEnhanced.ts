@@ -43,7 +43,7 @@ export function useAiEnhanced() {
 
       try {
         // Simuler la phase de réflexion
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
 
         setIsThinking(false);
         setIsStreaming(true);
@@ -61,7 +61,8 @@ export function useAiEnhanced() {
         });
 
         if (!response.ok) {
-          throw new Error('Failed to get AI response');
+          const errorText = await response.text();
+          throw new Error(`API Error: ${response.status} - ${errorText}`);
         }
 
         // Traiter le streaming
@@ -90,6 +91,7 @@ export function useAiEnhanced() {
       } catch (error) {
         setIsThinking(false);
         setIsStreaming(false);
+        console.error('Error in generateResponse:', error);
         throw error;
       }
     },
