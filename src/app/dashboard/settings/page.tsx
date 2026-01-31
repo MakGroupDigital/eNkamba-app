@@ -16,6 +16,7 @@ import {
   AlertCircle,
   CheckCircle2,
   Loader2,
+  Shield,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
@@ -192,15 +193,10 @@ export default function SettingsPage() {
                   {userData.phone && (
                     <p className="text-sm text-muted-foreground mt-1">{userData.phone}</p>
                   )}
-                  {isKycCompleted ? (
+                  {isKycCompleted && (
                     <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
                       <CheckCircle2 size={14} />
                       Profil vérifié
-                    </p>
-                  ) : (
-                    <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
-                      <AlertCircle size={14} />
-                      Profil non vérifié
                     </p>
                   )}
                 </div>
@@ -302,19 +298,18 @@ export default function SettingsPage() {
             </>
           )}
         </CardContent>
-        <CardFooter>
-          {!isKycCompleted ? (
-            <Button className="gap-2 bg-amber-600 hover:bg-amber-700" asChild>
+        <CardFooter className="flex-col gap-2">
+          <Button variant="outline" className="gap-2 w-full" asChild>
+            <Link href="/dashboard/settings/edit-profile">
+              <UserProfileIcon size={18} />
+              Modifier le Profil
+            </Link>
+          </Button>
+          {!isKycCompleted && (
+            <Button variant="ghost" className="gap-2 w-full text-muted-foreground" asChild>
               <Link href="/kyc">
-                <AlertCircle size={18} />
-                Vérifier le KYC
-              </Link>
-            </Button>
-          ) : (
-            <Button variant="outline" className="gap-2" asChild>
-              <Link href="/dashboard/settings/edit-profile">
-                <UserProfileIcon size={18} />
-                Modifier le Profil
+                <Shield size={18} />
+                Vérification KYC (Optionnel)
               </Link>
             </Button>
           )}

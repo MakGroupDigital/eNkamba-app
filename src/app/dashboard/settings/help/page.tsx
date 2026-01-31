@@ -14,7 +14,7 @@ const faqs = [
     questions: [
       {
         q: "Comment créer un compte eNkamba ?",
-        a: "Pour créer un compte, rendez-vous sur la page d'inscription et remplissez le formulaire avec vos informations. Vous devrez ensuite compléter la vérification KYC.",
+        a: "Pour créer un compte, rendez-vous sur la page d'inscription et remplissez le formulaire avec vos informations. Vous pouvez ensuite compléter la vérification KYC de manière optionnelle pour des fonctionnalités avancées.",
       },
       {
         q: "Comment réinitialiser mon mot de passe ?",

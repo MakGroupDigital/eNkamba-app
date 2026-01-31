@@ -6,7 +6,7 @@ import { BadgePercent, Gift, Zap } from "lucide-react";
 const bonuses = [
     {
         title: "Bonus de Bienvenue",
-        description: "Terminez la vérification de votre compte et recevez 5 USD pour votre premier dépôt.",
+        description: "Complétez votre profil et effectuez votre premier dépôt pour recevoir 5 USD de bonus.",
         status: "Réclamé",
         icon: Gift,
         claimed: true,
