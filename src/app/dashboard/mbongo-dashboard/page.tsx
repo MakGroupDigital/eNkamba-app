@@ -36,8 +36,9 @@ const WalletIcon = () => (
   </svg>
 );
 
-// Actions rapides principales (3 boutons simples)
+// Actions rapides principales (4 boutons simples)
 const quickActions = [
+  { icon: ScannerIcon, label: 'Scanner', href: '/dashboard/scanner', gradient: 'from-[#32BB78] to-[#2a9d63]' },
   { icon: PayReceiveIcon, label: 'Payer/Recevoir', href: '/dashboard/pay-receive', gradient: 'from-[#32BB78] to-[#2a9d63]' },
   { icon: RequestIcon, label: 'Envoi', href: '/dashboard/send', gradient: 'from-[#32BB78] to-[#2a9d63]' },
   { icon: WalletIcon, label: 'Portefeuille', href: '/dashboard/wallet', gradient: 'from-[#32BB78] to-[#2a9d63]' },
@@ -129,44 +130,9 @@ export default function MbongoDashboard() {
     <>
       <DashboardHeader />
       <div className="container mx-auto max-w-4xl p-4 space-y-6 animate-in fade-in duration-500 pt-20">
-        {/* Section QR Code */}
-        <div className="grid grid-cols-1 gap-3">
-          {/* QR Code */}
-          <Card className="bg-gradient-to-br from-[#32BB78]/10 via-[#32BB78]/5 to-transparent border-[#32BB78]/20 overflow-hidden">
-            <CardContent className="p-3">
-              <div className="flex items-center gap-3">
-                <div className="relative group flex-shrink-0">
-                  <div className="bg-white p-2 rounded-xl shadow-lg border-2 border-[#32BB78]/20 group-hover:border-[#32BB78]/40 transition-all duration-300">
-                    {qrCode ? (
-                      <img src={qrCode} alt="Mon QR Code" className="w-20 h-20" />
-                    ) : (
-                      <div className="w-20 h-20 bg-gray-100 rounded-lg animate-pulse" />
-                    )}
-                  </div>
-                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-[#32BB78] rounded-full flex items-center justify-center shadow-lg">
-                    <QrCode className="w-2.5 h-2.5 text-white" />
-                  </div>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-xs text-foreground mb-0.5 truncate">Mon QR Code</h3>
-                  <p className="text-[10px] text-muted-foreground mb-2 truncate">{accountNumber || 'Chargement...'}</p>
-                  <div className="flex gap-1">
-                    <Button size="sm" variant="outline" onClick={handleDownloadQR} disabled={!qrCode} className="flex-1 h-7 text-[10px] px-2 border-[#32BB78]/30 hover:bg-[#32BB78]/10">
-                      <Download className="w-3 h-3" />
-                    </Button>
-                    <Button size="sm" onClick={handleShareQR} disabled={!qrCode} className="flex-1 h-7 text-[10px] px-2 bg-[#32BB78] hover:bg-[#2a9d63]">
-                      <Share2 className="w-3 h-3" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
         <div className="space-y-6">
           {/* Actions Rapides Principales */}
-          <div className="grid grid-cols-3 gap-4 sm:gap-6">
+          <div className="grid grid-cols-4 gap-4 sm:gap-6">
             {quickActions.map((action) => {
               const Icon = action.icon;
               return (

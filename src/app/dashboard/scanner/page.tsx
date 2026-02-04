@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { QrCode, Upload, Camera, ArrowLeft, Loader2, User, AlertCircle, User as UserIcon } from 'lucide-react';
+import { QrCode, Upload, Camera, ArrowLeft, Loader2, User, AlertCircle, User as UserIcon, Download, Share2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -13,6 +13,8 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import Link from 'next/link';
 import jsQR from 'jsqr';
+import QRCodeLib from 'qrcode';
+import { useUserProfile } from '@/hooks/useUserProfile';
 
 type Currency = 'CDF' | 'USD' | 'EUR';
 
@@ -36,11 +38,37 @@ export default function ScannerPage() {
   const [isImporting, setIsImporting] = useState(false);
   const [importProgress, setImportProgress] = useState(0);
   const [importedImageData, setImportedImageData] = useState<string | null>(null);
+  const [myQrCode, setMyQrCode] = useState<string>('');
+  const [myAccountNumber, setMyAccountNumber] = useState<string>('');
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const animationFrameRef = useRef<number | null>(null);
   const { toast } = useToast();
+  const { profile } = useUserProfile();
+
+  // Générer le QR code de l'utilisateur
+  useEffect(() => {
+    if (profile?.uid) {
+      const hash = profile.uid.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      const accountNum = `ENK${String(hash).padStart(12, '0')}`;
+      const fullName = profile.name || profile.fullName || 'eNkamba User';
+      const email = profile.email || '';
+      
+      setMyAccountNumber(accountNum);
+
+      const qrData = `${accountNum}|${fullName}|${email}`;
+
+      QRCodeLib.toDataURL(qrData, {
+        width: 300,
+        margin: 2,
+        color: {
+          dark: '#32BB78',
+          light: '#ffffff',
+        },
+      }).then(setMyQrCode);
+    }
+  }, [profile?.uid, profile?.name, profile?.fullName, profile?.email]);
 
   // Extraire et valider les données du QR code eNkamba
   const parseQRData = (data: string): ScannedQRData | null => {
@@ -385,6 +413,36 @@ export default function ScannerPage() {
     setIsScanning(true);
   };
 
+  // Télécharger mon QR code
+  const handleDownloadMyQR = () => {
+    const link = document.createElement('a');
+    link.href = myQrCode;
+    link.download = `mon-qrcode-${myAccountNumber}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast({ title: 'QR Code téléchargé!', description: 'Enregistré avec succès' });
+  };
+
+  // Partager mon QR code
+  const handleShareMyQR = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Mon QR Code eNkamba',
+          text: `Scannez mon code QR pour m'envoyer de l'argent: ${myAccountNumber}`,
+          url: window.location.href,
+        });
+      } catch (error: any) {
+        if (error.name !== 'AbortError') {
+          handleDownloadMyQR();
+        }
+      }
+    } else {
+      handleDownloadMyQR();
+    }
+  };
+
   return (
     <div className="container mx-auto max-w-md p-4 flex flex-col h-screen bg-muted/20">
       <style>{`
@@ -415,6 +473,38 @@ export default function ScannerPage() {
             </Button>
             <h1 className="font-headline text-xl font-bold text-primary">Scanner QR Code eNkamba</h1>
         </header>
+
+        {/* Mon QR Code */}
+        <Card className="bg-gradient-to-br from-[#32BB78]/10 via-[#32BB78]/5 to-transparent border-[#32BB78]/20 overflow-hidden mb-4">
+          <CardContent className="p-3">
+            <div className="flex items-center gap-3">
+              <div className="relative group flex-shrink-0">
+                <div className="bg-white p-2 rounded-xl shadow-lg border-2 border-[#32BB78]/20 group-hover:border-[#32BB78]/40 transition-all duration-300">
+                  {myQrCode ? (
+                    <img src={myQrCode} alt="Mon QR Code" className="w-16 h-16" />
+                  ) : (
+                    <div className="w-16 h-16 bg-gray-100 rounded-lg animate-pulse" />
+                  )}
+                </div>
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#32BB78] rounded-full flex items-center justify-center shadow-lg">
+                  <QrCode className="w-2 h-2 text-white" />
+                </div>
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-xs text-foreground mb-0.5 truncate">Mon QR Code</h3>
+                <p className="text-[10px] text-muted-foreground mb-2 truncate">{myAccountNumber || 'Chargement...'}</p>
+                <div className="flex gap-1">
+                  <Button size="sm" variant="outline" onClick={handleDownloadMyQR} disabled={!myQrCode} className="flex-1 h-6 text-[10px] px-2 border-[#32BB78]/30 hover:bg-[#32BB78]/10">
+                    <Download className="w-3 h-3" />
+                  </Button>
+                  <Button size="sm" onClick={handleShareMyQR} disabled={!myQrCode} className="flex-1 h-6 text-[10px] px-2 bg-[#32BB78] hover:bg-[#2a9d63]">
+                    <Share2 className="w-3 h-3" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
       <Card className="flex-1 flex flex-col">
         <CardContent className="p-4 flex-1 flex flex-col items-center justify-center gap-4">
