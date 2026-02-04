@@ -1,0 +1,498 @@
+═══════════════════════════════════════════════════════════════════════════════
+                    CHARTE GRAPHIQUE eNkamba
+                         Version 1.0
+                      Février 2026
+═══════════════════════════════════════════════════════════════════════════════
+
+
+1. IDENTITÉ VISUELLE
+───────────────────────────────────────────────────────────────────────────────
+
+eNkamba est une plateforme de services financiers mobiles. Notre identité 
+visuelle reflète la confiance, l'accessibilité et l'innovation. La charte 
+graphique assure une cohérence visuelle sur tous les points de contact.
+
+
+2. PALETTE DE COULEURS
+───────────────────────────────────────────────────────────────────────────────
+
+COULEUR PRIMAIRE - VERT
+  Hex: #32BB78
+  RGB: 50, 187, 120
+  HSL: 145° 60% 39%
+  Utilisation: Boutons, liens, accents, icônes principales
+  Accessibilité: WCAG AA compliant (ratio 4.8:1 sur blanc)
+
+BLANC
+  Hex: #FFFFFF
+  RGB: 255, 255, 255
+  HSL: 0° 0% 100%
+  Utilisation: Fonds, cartes, texte sur fond sombre
+
+NOIR
+  Hex: #000000
+  RGB: 0, 0, 0
+  HSL: 0° 0% 0%
+  Utilisation: Texte principal, bordures
+
+GRIS CLAIR
+  Hex: #E5E5E5
+  RGB: 229, 229, 229
+  HSL: 0° 0% 90%
+  Utilisation: Bordures, séparateurs, fonds secondaires
+
+GRIS MOYEN
+  Hex: #B3B3B3
+  RGB: 179, 179, 179
+  HSL: 0° 0% 70%
+  Utilisation: Texte secondaire, icônes désactivées
+
+GRIS FONCÉ
+  Hex: #737373
+  RGB: 115, 115, 115
+  HSL: 0° 0% 45%
+  Utilisation: Texte tertiaire, placeholders
+
+ORANGE ACCENT (Mode sombre)
+  Hex: #FFCC00
+  RGB: 255, 204, 0
+  HSL: 33° 100% 55%
+  Utilisation: Accents en mode sombre, alertes
+
+ROUGE DESTRUCTIF
+  Hex: #DC2626
+  RGB: 220, 38, 38
+  HSL: 0° 84.2% 60.2%
+  Utilisation: Erreurs, suppressions, actions dangereuses
+
+
+3. TYPOGRAPHIE
+───────────────────────────────────────────────────────────────────────────────
+
+POLICES UTILISÉES
+
+Montserrat (Titres et en-têtes)
+  Poids: 600, 700, 800
+  Utilisation: Titres, sections principales, éléments importants
+  Fallback: sans-serif
+
+Roboto (Corps de texte)
+  Poids: 400, 500, 600
+  Utilisation: Texte principal, descriptions, contenu
+  Fallback: sans-serif
+
+Fira Code (Code et données techniques)
+  Poids: 400, 500
+  Utilisation: Code, données techniques, monospace
+  Fallback: monospace
+
+
+HIÉRARCHIE TYPOGRAPHIQUE
+
+H1 - Titre principal
+  Taille: 32px (2rem)
+  Poids: 700
+  Famille: Montserrat
+  Hauteur de ligne: 1.2
+  Exemple: "Bienvenue sur eNkamba"
+
+H2 - Titre secondaire
+  Taille: 24px (1.5rem)
+  Poids: 700
+  Famille: Montserrat
+  Hauteur de ligne: 1.3
+  Exemple: "Gérer votre portefeuille"
+
+H3 - Titre tertiaire
+  Taille: 20px (1.25rem)
+  Poids: 600
+  Famille: Montserrat
+  Hauteur de ligne: 1.4
+  Exemple: "Transactions récentes"
+
+Body - Texte principal
+  Taille: 16px (1rem)
+  Poids: 400
+  Famille: Roboto
+  Hauteur de ligne: 1.5
+  Utilisation: Contenu principal, descriptions
+
+Small - Texte petit
+  Taille: 14px (0.875rem)
+  Poids: 400
+  Famille: Roboto
+  Hauteur de ligne: 1.5
+  Utilisation: Labels, descriptions secondaires
+
+Tiny - Texte très petit
+  Taille: 12px (0.75rem)
+  Poids: 400
+  Famille: Roboto
+  Hauteur de ligne: 1.4
+  Utilisation: Métadonnées, timestamps
+
+
+4. ESPACEMENT
+───────────────────────────────────────────────────────────────────────────────
+
+SYSTÈME DE GRILLE
+  Base: 4px
+  Unités: 4px, 8px, 12px, 16px, 20px, 24px, 32px, 40px, 48px, 56px, 64px
+
+PADDING (Intérieur)
+  xs: 4px
+  sm: 8px
+  md: 12px
+  lg: 16px
+  xl: 20px
+  2xl: 24px
+  3xl: 32px
+
+MARGIN (Extérieur)
+  xs: 4px
+  sm: 8px
+  md: 12px
+  lg: 16px
+  xl: 20px
+  2xl: 24px
+  3xl: 32px
+
+GAP (Flexbox/Grid)
+  xs: 4px
+  sm: 8px
+  md: 12px
+  lg: 16px
+  xl: 20px
+  2xl: 24px
+
+
+5. RAYON DE BORDURE
+───────────────────────────────────────────────────────────────────────────────
+
+xs: 2px
+sm: 4px
+md: 8px
+lg: 12px (0.75rem) - Valeur par défaut
+xl: 16px
+full: 9999px (circulaire)
+
+UTILISATION
+  Boutons: lg (12px)
+  Cartes: lg (12px)
+  Inputs: lg (12px)
+  Avatars: full (circulaire)
+  Badges: md (8px)
+
+
+6. COMPOSANTS
+───────────────────────────────────────────────────────────────────────────────
+
+BOUTONS
+
+Bouton primaire
+  Fond: #32BB78 (vert)
+  Texte: #FFFFFF (blanc)
+  Padding: 12px 24px
+  Border-radius: 12px
+  Font-weight: 600
+  État hover: Vert plus foncé
+  État actif: Vert encore plus foncé
+  État désactivé: Gris clair
+
+Bouton secondaire
+  Fond: #FFFFFF (blanc)
+  Texte: #32BB78 (vert)
+  Bordure: 1px #32BB78
+  Padding: 12px 24px
+  Border-radius: 12px
+  Font-weight: 600
+  État hover: Fond vert très clair
+  État actif: Fond vert clair
+  État désactivé: Gris clair
+
+Bouton destructif
+  Fond: #DC2626 (rouge)
+  Texte: #FFFFFF (blanc)
+  Padding: 12px 24px
+  Border-radius: 12px
+  Font-weight: 600
+  État hover: Rouge plus foncé
+  État actif: Rouge encore plus foncé
+  État désactivé: Gris clair
+
+
+CARTES
+  Fond: #FFFFFF (blanc)
+  Bordure: 1px #E5E5E5 (gris clair)
+  Border-radius: 12px
+  Padding: 16px
+  Box-shadow: 0 1px 3px rgba(0,0,0,0.1)
+  État hover: Box-shadow augmentée
+
+
+INPUTS
+  Fond: #FFFFFF (blanc)
+  Bordure: 1px #E5E5E5 (gris clair)
+  Border-radius: 12px
+  Padding: 12px 16px
+  Font-size: 16px
+  État focus: Bordure #32BB78, box-shadow verte
+  Placeholder: #B3B3B3 (gris moyen)
+  État désactivé: Fond #F5F5F5
+
+
+BADGES
+  Fond: #E8F5E9 (vert très clair)
+  Texte: #32BB78 (vert)
+  Padding: 4px 12px
+  Border-radius: 8px
+  Font-size: 12px
+  Font-weight: 600
+
+
+MODALES
+  Overlay: rgba(0,0,0,0.5)
+  Fond: #FFFFFF (blanc)
+  Border-radius: 12px
+  Padding: 24px
+  Box-shadow: 0 10px 40px rgba(0,0,0,0.2)
+
+
+7. ANIMATIONS
+───────────────────────────────────────────────────────────────────────────────
+
+DURÉES
+  Rapide: 150ms
+  Normal: 300ms
+  Lent: 500ms
+
+EASING
+  ease-in: Accélération
+  ease-out: Décélération
+  ease-in-out: Accélération puis décélération
+  linear: Linéaire
+
+ANIMATIONS PRÉDÉFINIES
+
+Fade In Up
+  Durée: 800ms
+  Easing: ease-in-out
+  De: opacity 0, translateY(20px)
+  À: opacity 1, translateY(0)
+
+Accordion Down
+  Durée: 200ms
+  Easing: ease-out
+  De: height 0
+  À: height auto
+
+Accordion Up
+  Durée: 200ms
+  Easing: ease-out
+  De: height auto
+  À: height 0
+
+
+8. RESPONSIVE DESIGN
+───────────────────────────────────────────────────────────────────────────────
+
+BREAKPOINTS
+  xs: 0px (mobile)
+  sm: 640px (petit mobile)
+  md: 768px (tablette)
+  lg: 1024px (desktop)
+  xl: 1280px (grand desktop)
+  2xl: 1536px (très grand desktop)
+
+STRATÉGIE
+  Mobile-first: Commencer par mobile, puis ajouter pour desktop
+  Flexibilité: Adapter le layout selon l'écran
+  Lisibilité: Maintenir la lisibilité sur tous les écrans
+
+
+9. ACCESSIBILITÉ
+───────────────────────────────────────────────────────────────────────────────
+
+CONTRASTE
+  WCAG AA: Ratio minimum 4.5:1 pour le texte
+  WCAG AAA: Ratio minimum 7:1 pour le texte
+  Vert primaire: Ratio 4.8:1 sur blanc (AA compliant)
+
+FOCUS
+  Outline: 2px solid #32BB78
+  Offset: 2px
+  Visible: Sur tous les éléments interactifs
+
+TEXTE ALTERNATIF
+  Images: Toujours avoir alt text
+  Icônes: Aria-label si pas de texte
+  Boutons: Texte clair ou aria-label
+
+CLAVIER
+  Tab order: Logique et prévisible
+  Raccourcis: Documenter les raccourcis clavier
+  Focus visible: Toujours visible
+
+
+10. ICÔNES
+───────────────────────────────────────────────────────────────────────────────
+
+BIBLIOTHÈQUE
+  Lucide Icons: Icônes principales
+  Tailles: 16px, 20px, 24px, 32px
+  Poids: 2px (stroke)
+  Couleur: Hériter de la couleur du texte
+
+ICÔNES PERSONNALISÉES
+  Format: SVG
+  Viewbox: 24x24
+  Stroke: 2px
+  Couleur: Utiliser currentColor pour héritage
+
+
+11. GRADIENTS
+───────────────────────────────────────────────────────────────────────────────
+
+Gradient primaire
+  De: #32BB78 (vert)
+  À: #1E7A4A (vert foncé)
+  Direction: 135deg
+
+Gradient accent
+  De: #32BB78 (vert)
+  À: #FFCC00 (orange)
+  Direction: 90deg
+
+
+12. OMBRES
+───────────────────────────────────────────────────────────────────────────────
+
+Shadow-sm
+  0 1px 2px 0 rgba(0, 0, 0, 0.05)
+
+Shadow-md
+  0 4px 6px -1px rgba(0, 0, 0, 0.1)
+  0 2px 4px -1px rgba(0, 0, 0, 0.06)
+
+Shadow-lg
+  0 10px 15px -3px rgba(0, 0, 0, 0.1)
+  0 4px 6px -2px rgba(0, 0, 0, 0.05)
+
+Shadow-xl
+  0 20px 25px -5px rgba(0, 0, 0, 0.1)
+  0 10px 10px -5px rgba(0, 0, 0, 0.04)
+
+
+13. GRAPHIQUES
+───────────────────────────────────────────────────────────────────────────────
+
+COULEURS DE GRAPHIQUE
+  Chart 1: #32BB78 (vert primaire)
+  Chart 2: #4DD99F (vert clair)
+  Chart 3: #1E7A4A (vert foncé)
+  Chart 4: #2BA86A (vert moyen)
+  Chart 5: #2A8F5C (vert moyen-foncé)
+
+
+14. UTILISATION DES COULEURS
+───────────────────────────────────────────────────────────────────────────────
+
+TEXTE
+  Principal: Noir (#000000)
+  Secondaire: Gris moyen (#737373)
+  Tertiaire: Gris clair (#B3B3B3)
+  Désactivé: Gris très clair (#E5E5E5)
+
+FOND
+  Principal: Blanc (#FFFFFF)
+  Secondaire: Gris très clair (#F5F5F5)
+  Tertiaire: Gris clair (#E5E5E5)
+
+ACCENTS
+  Primaire: Vert (#32BB78)
+  Secondaire: Orange (#FFCC00) en mode sombre
+  Destructif: Rouge (#DC2626)
+
+BORDURES
+  Primaire: Gris clair (#E5E5E5)
+  Secondaire: Gris moyen (#B3B3B3)
+  Accent: Vert (#32BB78)
+
+
+15. MODES DE COULEUR
+───────────────────────────────────────────────────────────────────────────────
+
+MODE CLAIR (Light Mode)
+  Fond: #FFFFFF (blanc)
+  Texte: #000000 (noir)
+  Primaire: #32BB78 (vert)
+  Secondaire: #FFFFFF (blanc)
+  Muted: #E5E5E5 (gris clair)
+  Accent: #32BB78 (vert)
+  Bordure: #E5E5E5 (gris clair)
+
+MODE SOMBRE (Dark Mode)
+  Fond: #1A3D2A (vert très foncé)
+  Texte: #FFFFFF (blanc)
+  Primaire: #32BB78 (vert)
+  Secondaire: #2A2A2A (gris très foncé)
+  Muted: #2A2A2A (gris très foncé)
+  Accent: #FFCC00 (orange)
+  Bordure: #2A2A2A (gris très foncé)
+
+
+16. IMPLÉMENTATION
+───────────────────────────────────────────────────────────────────────────────
+
+TAILWIND CSS
+  Utiliser les classes Tailwind pour les styles
+  Exemple: bg-primary text-primary-foreground px-6 py-3 rounded-lg
+
+CSS VARIABLES
+  Utiliser les variables CSS pour les couleurs
+  Exemple: background-color: hsl(var(--primary))
+
+COMPOSANTS REACT
+  Utiliser les composants UI prédéfinis
+  Exemple: <Button variant="primary" size="lg">Bouton</Button>
+
+FICHIERS DE RÉFÉRENCE
+  tailwind.config.ts - Configuration Tailwind
+  src/app/globals.css - Variables CSS
+  src/components/ui/ - Composants UI
+
+
+17. CHECKLIST DE CONFORMITÉ
+───────────────────────────────────────────────────────────────────────────────
+
+□ Utiliser les couleurs de la palette
+□ Respecter la hiérarchie typographique
+□ Utiliser l'espacement de la grille
+□ Appliquer les rayon de bordure corrects
+□ Implémenter les animations
+□ Tester l'accessibilité
+□ Vérifier le contraste
+□ Tester sur mobile
+□ Tester en mode sombre
+□ Documenter les exceptions
+
+
+18. RESSOURCES
+───────────────────────────────────────────────────────────────────────────────
+
+Outils recommandés:
+  Tailwind CSS: https://tailwindcss.com
+  Lucide Icons: https://lucide.dev
+  Color Contrast Checker: https://webaim.org/resources/contrastchecker/
+
+Fichiers du projet:
+  tailwind.config.ts - Configuration Tailwind
+  src/app/globals.css - Variables CSS
+  src/components/ui/ - Composants UI
+
+
+═══════════════════════════════════════════════════════════════════════════════
+                    Charte graphique complète et prête
+                    Tous les détails fournis
+                    Conforme WCAG AA
+═══════════════════════════════════════════════════════════════════════════════

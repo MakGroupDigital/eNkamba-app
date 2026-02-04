@@ -11,6 +11,8 @@ import {
   Filter,
   ArrowUp,
   ArrowDown,
+  ArrowDownLeft,
+  ArrowUpRight,
   Send,
   Receipt,
   Wallet,
@@ -270,52 +272,36 @@ export default function HistoryPage() {
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {filteredTransactions.map((tx) => (
-                <div
-                  key={tx.id}
-                  onClick={() => setSelectedTransaction(tx)}
-                  className={cn(
-                    "flex items-center gap-4 p-4 rounded-xl border border-border hover:border-[#32BB78]/50 hover:shadow-md transition-all cursor-pointer",
-                    tx.status === 'pending' && 'bg-yellow-50/50 dark:bg-yellow-900/10',
-                    tx.status === 'failed' && 'bg-red-50/50 dark:bg-red-900/10',
-                    tx.status === 'cancelled' && 'bg-gray-50/50 dark:bg-gray-900/10'
-                  )}
-                >
-                  {/* Icon */}
-                  <div className="flex-shrink-0">
-                    {getTransactionIcon(tx.type)}
-                  </div>
-
-                  {/* Details */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="font-semibold text-foreground truncate">{tx.description}</p>
-                      {getStatusBadge(tx.status)}
+            <div className="space-y-3">
+              {filteredTransactions.map((tx) => {
+                const isIncoming = tx.type === 'deposit' || tx.type === 'transfer_received' || tx.type === 'money_request_received';
+                const Icon = isIncoming ? ArrowDownLeft : ArrowUpRight;
+                const formattedDate = tx.timestamp?.toDate?.() 
+                  ? new Date(tx.timestamp.toDate()).toLocaleDateString('fr-FR')
+                  : new Date(tx.createdAt).toLocaleDateString('fr-FR');
+                
+                return (
+                  <div
+                    key={tx.id}
+                    onClick={() => setSelectedTransaction(tx)}
+                    className="flex items-center gap-4 p-4 rounded-xl hover:bg-muted/50 transition-colors group cursor-pointer border border-border/50 hover:border-[#32BB78]/50"
+                  >
+                    <div className={`p-3 rounded-full flex-shrink-0 ${isIncoming ? 'bg-[#32BB78]/20' : 'bg-red-100'}`}>
+                      <Icon className={`w-5 h-5 ${isIncoming ? 'text-[#32BB78]' : 'text-red-600'}`} />
                     </div>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        {new Date(tx.createdAt).toLocaleDateString('fr-FR')}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {new Date(tx.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-                      </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm">{tx.description}</p>
+                      <p className="text-xs text-muted-foreground">{formattedDate}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        {getStatusBadge(tx.status)}
+                      </div>
                     </div>
-                  </div>
-
-                  {/* Amount */}
-                  <div className="flex-shrink-0 text-right">
-                    <p className={cn(
-                      "text-lg font-bold",
-                      (tx.type === 'deposit' || tx.type === 'transfer_received' || tx.type === 'money_request_received') ? 'text-green-600' : 'text-foreground'
-                    )}>
-                      {(tx.type === 'deposit' || tx.type === 'transfer_received' || tx.type === 'money_request_received') ? '+' : '-'} {tx.amount.toLocaleString('fr-FR')} {tx.currency || 'CDF'}
+                    <p className={`font-bold text-sm flex-shrink-0 ${isIncoming ? 'text-[#32BB78]' : 'text-foreground'}`}>
+                      {isIncoming ? '+' : '-'} {tx.amount.toLocaleString('fr-FR')} {tx.currency || 'CDF'}
                     </p>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>

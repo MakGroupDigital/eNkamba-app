@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { useFirestoreAiChat } from '@/hooks/useFirestoreAiChat';
-import { enkambaChat } from '@/ai/flows/enkamba-chat-flow';
 import { AINavIcon } from '@/components/icons/service-icons';
 import { Send, Loader2 } from 'lucide-react';
 
@@ -25,11 +24,41 @@ export default function AiChatDefaultPage() {
       // Créer un nouveau chat
       const chatId = await createAiChat(userMessage.substring(0, 50));
 
-      // Obtenir la réponse de l'IA
-      const aiResponse = await enkambaChat({ message: userMessage });
+      // Obtenir la réponse de l'IA via Groq API
+      let aiResponseText = '';
+      const response = await fetch('/api/ai/enhanced-chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: userMessage,
+          options: {
+            searchWeb: false,
+            analysis: false,
+            reflection: false,
+            code: false,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de l\'appel à l\'API');
+      }
+
+      // Lire le stream
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error('Pas de réponse');
+
+      const decoder = new TextDecoder();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        aiResponseText += decoder.decode(value);
+      }
 
       // Sauvegarder les messages dans le chat
-      await sendAiMessage(chatId, userMessage, aiResponse.response);
+      await sendAiMessage(chatId, userMessage, aiResponseText);
 
       // Rediriger vers le chat avec les messages
       window.location.href = `/dashboard/ai/chat/${chatId}`;
@@ -106,7 +135,7 @@ export default function AiChatDefaultPage() {
               placeholder="Posez votre question..."
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              onKeyPress={(e) => {
+              onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
                   handleSendMessage();

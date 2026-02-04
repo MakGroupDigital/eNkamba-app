@@ -83,20 +83,38 @@ export function FormattedResponse({
   };
 
   const handleExportWord = async () => {
-    const doc = new Document({
-      sections: [
-        {
-          children: parseContentToDocx(displayedContent),
-        },
-      ],
-    });
+    try {
+      const doc = new Document({
+        sections: [
+          {
+            children: parseContentToDocx(displayedContent),
+          },
+        ],
+      });
 
-    const blob = await Packer.toBlob(doc);
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'response.docx';
-    link.click();
+      const blob = await Packer.toBlob(doc);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'response.docx';
+      
+      // Ajouter au DOM, cliquer, puis nettoyer
+      if (document.body.contains(link)) {
+        document.body.removeChild(link);
+      }
+      document.body.appendChild(link);
+      link.click();
+      
+      // Nettoyer avec délai
+      setTimeout(() => {
+        if (document.body.contains(link)) {
+          document.body.removeChild(link);
+        }
+        window.URL.revokeObjectURL(url);
+      }, 100);
+    } catch (error) {
+      console.error('Erreur export Word:', error);
+    }
   };
 
   const handleExportExcel = () => {

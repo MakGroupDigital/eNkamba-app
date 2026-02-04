@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { remote_web_search } from '@/lib/web-search';
 
 interface RequestBody {
@@ -11,8 +10,6 @@ interface RequestBody {
     code: boolean;
   };
 }
-
-const genai = new GoogleGenerativeAI(process.env.GOOGLE_GENAI_API_KEY || '');
 
 export async function POST(request: NextRequest) {
   try {
@@ -71,31 +68,85 @@ export async function POST(request: NextRequest) {
     // Construire le message final
     let finalMessage = message;
     if (searchContext) {
-      finalMessage = `${systemPrompt}\n\n${message}${searchContext}`;
-    } else {
-      finalMessage = `${systemPrompt}\n\n${message}`;
+      finalMessage = `${message}${searchContext}`;
     }
 
-    const model = genai.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    // Appeler Groq API
+    const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gemma2-9b-it', // Groq model - Gemma 2 9B (currently available)
+        messages: [
+          {
+            role: 'system',
+            content: systemPrompt,
+          },
+          {
+            role: 'user',
+            content: finalMessage,
+          },
+        ],
+        temperature: 0.7,
+        max_tokens: 2048,
+        stream: true,
+      }),
+    });
+
+    if (!groqResponse.ok) {
+      const error = await groqResponse.text();
+      console.error('Erreur Groq:', error);
+      return NextResponse.json(
+        { error: 'Erreur lors de l\'appel à Groq API' },
+        { status: groqResponse.status }
+      );
+    }
 
     // Créer un stream de réponse
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
       async start(controller) {
         try {
-          const result = await model.generateContentStream(finalMessage);
+          const reader = groqResponse.body?.getReader();
+          if (!reader) {
+            throw new Error('Pas de reader disponible');
+          }
 
-          for await (const chunk of result.stream) {
-            const text = typeof chunk.text === 'function' ? chunk.text() : chunk.text;
-            if (text) {
-              controller.enqueue(encoder.encode(text));
+          const decoder = new TextDecoder();
+          let buffer = '';
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                const data = line.slice(6);
+                if (data === '[DONE]') continue;
+
+                try {
+                  const parsed = JSON.parse(data);
+                  const content = parsed.choices?.[0]?.delta?.content;
+                  if (content) {
+                    controller.enqueue(encoder.encode(content));
+                  }
+                } catch (e) {
+                  // Ignorer les erreurs de parsing
+                }
+              }
             }
           }
 
           controller.close();
-        } catch (error) {
-          console.error('Erreur Gemini:', error);
-          // Envoyer un message d'erreur au client
+        } catch (error: any) {
+          console.error('Erreur stream Groq:', error);
           const errorMessage = `Erreur: ${error instanceof Error ? error.message : 'Erreur inconnue'}`;
           controller.enqueue(encoder.encode(errorMessage));
           controller.close();

@@ -9,3 +9,5 @@ export * from './generateReceipt';
 export * from './paymentProcessing';
 export * from './unifiedPayment';
 export * from './savingsManagement';
+export * from './addFunds';
+export * from './withdrawFunds';

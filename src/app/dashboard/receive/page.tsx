@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
@@ -9,6 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 
 export default function ReceivePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
 
   if (!user) {
@@ -35,6 +36,7 @@ export default function ReceivePage() {
 
         {/* Unified Receive Flow */}
         <UnifiedReceiveFlow
+          initialMethod={searchParams.get('method') || undefined}
           context="wallet"
           onSuccess={(linkId) => {
             console.log('Lien de paiement créé:', linkId);

@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react';
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/lib/firebase';
-import { useAuth } from './useAuth';
+import { collection, onSnapshot, query, orderBy, limit, doc } from 'firebase/firestore';
+import { db, auth } from '@/lib/firebase';
 
 export interface Transaction {
   id: string;
   type: 'transfer_sent' | 'transfer_received' | 'deposit' | 'withdrawal' | 'payment_link' | 'contact_payment' | 'money_request_sent' | 'money_request_received';
   amount: number;
-  amountInCDF: number;
+  amountInCDF?: number;
   currency?: string;
   status: 'completed' | 'pending' | 'failed' | 'cancelled';
   description: string;
@@ -31,47 +30,56 @@ export interface Transaction {
 }
 
 export function useAllTransactions() {
-  const { user } = useAuth();
+  const currentUser = auth.currentUser;
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user?.uid) {
+    if (!currentUser?.uid) {
       setLoading(false);
       return;
     }
 
-    const fetchTransactions = async () => {
-      try {
-        setLoading(true);
-        const getTransactionHistoryFn = httpsCallable(functions, 'getTransactionHistory');
-        const result = await getTransactionHistoryFn({
-          userId: user.uid,
-          limit: 100,
-        });
+    try {
+      setLoading(true);
+      
+      // Écouter les transactions en temps réel depuis Firestore
+      const q = query(
+        collection(doc(collection(db, 'users'), currentUser.uid), 'transactions'),
+        orderBy('timestamp', 'desc'),
+        limit(100)
+      );
 
-        const data = result.data as any;
-        if (data.success && data.transactions) {
-          // Trier par date décroissante
-          const sorted = data.transactions.sort((a: Transaction, b: Transaction) => {
-            const dateA = a.timestamp?.toDate?.() || new Date(a.createdAt);
-            const dateB = b.timestamp?.toDate?.() || new Date(b.createdAt);
-            return dateB.getTime() - dateA.getTime();
+      const unsubscribe = onSnapshot(
+        q,
+        (snapshot) => {
+          const txs: Transaction[] = [];
+          snapshot.forEach((docSnapshot) => {
+            const data = docSnapshot.data();
+            txs.push({
+              id: docSnapshot.id,
+              ...data,
+            } as Transaction);
           });
-          setTransactions(sorted);
+          setTransactions(txs);
+          setError(null);
+          setLoading(false);
+        },
+        (err) => {
+          console.error('Erreur écoute transactions:', err);
+          setError('Erreur lors du chargement des transactions');
+          setLoading(false);
         }
-        setError(null);
-      } catch (err: any) {
-        console.error('Erreur récupération transactions:', err);
-        setError(err.message || 'Erreur lors de la récupération des transactions');
-      } finally {
-        setLoading(false);
-      }
-    };
+      );
 
-    fetchTransactions();
-  }, [user?.uid]);
+      return () => unsubscribe();
+    } catch (err: any) {
+      console.error('Erreur setup transactions:', err);
+      setError(err.message || 'Erreur lors de la récupération des transactions');
+      setLoading(false);
+    }
+  }, [currentUser?.uid]);
 
   return { transactions, loading, error };
 }

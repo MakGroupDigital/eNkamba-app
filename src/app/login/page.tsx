@@ -25,7 +25,8 @@ import {
   signInAnonymously
 } from "firebase/auth";
 import { httpsCallable } from "firebase/functions";
-import { auth, functions } from "@/lib/firebase";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { auth, functions, db } from "@/lib/firebase";
 
 // Authentification Email (Custom/Simulated in Dev)
 import {
@@ -68,20 +69,41 @@ export default function LoginPage() {
   // Refs
   const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
 
+  // Helper: Créer ou mettre à jour le profil utilisateur avec fallback Firestore
+  const createOrUpdateProfile = async (userId: string, userEmail: string) => {
+    try {
+      // Essayer d'abord avec Cloud Function
+      const createUserProfileFn = httpsCallable(functions, 'createOrUpdateUserProfile');
+      await createUserProfileFn({ email: userEmail });
+      console.log("Profil utilisateur créé avec succès via Cloud Function");
+    } catch (err: any) {
+      console.warn("Erreur Cloud Function, utilisation du fallback Firestore:", err.message);
+      
+      // Fallback: Créer directement dans Firestore
+      try {
+        await setDoc(doc(db, 'users', userId), {
+          email: userEmail,
+          uid: userId,
+          createdAt: serverTimestamp(),
+          kycStatus: 'not_started',
+          lastLogin: serverTimestamp(),
+        }, { merge: true });
+        console.log("Profil utilisateur créé avec succès via Firestore");
+      } catch (firestoreErr: any) {
+        console.error("Erreur création profil Firestore:", firestoreErr);
+        // Ne pas bloquer la connexion si la création du profil échoue
+      }
+    }
+  };
+
   // Initialiser reCAPTCHA pour le téléphone
   useEffect(() => {
-    // Activer le mode test en développement pour contourner le reCAPTCHA réel
-    // Utilisez le numéro +1 650-555-1234 et le code 123456 pour tester
-    if (process.env.NODE_ENV === 'development') {
-      auth.settings.appVerificationDisabledForTesting = true;
-    }
-
     if (!window.recaptchaVerifier && method === "PHONE") {
       try {
         auth.languageCode = 'fr'; // Définir la langue en français
 
         const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-          'size': 'normal', // 'invisible' -> 'normal' pour voir la checkbox et debugger
+          'size': 'invisible', // Mode invisible pour une meilleure UX
           'callback': () => {
             // reCAPTCHA solved
             console.log("reCAPTCHA résolu");
@@ -112,13 +134,7 @@ export default function LoginPage() {
       const result = await signInWithPopup(auth, provider);
 
       // Créer le profil utilisateur dans Firestore
-      try {
-        const createUserProfileFn = httpsCallable(functions, 'createOrUpdateUserProfile');
-        await createUserProfileFn({ email: result.user.email });
-        console.log("Profil utilisateur créé avec succès");
-      } catch (err) {
-        console.error("Erreur création profil utilisateur:", err);
-      }
+      await createOrUpdateProfile(result.user.uid, result.user.email || '');
 
       toast({
         title: "Connexion réussie",
@@ -129,11 +145,39 @@ export default function LoginPage() {
       router.push("/dashboard");
     } catch (error: any) {
       console.error("Google Login Error:", error);
-      toast({
-        variant: "destructive",
-        title: "Erreur de connexion",
-        description: error.message || "Impossible de se connecter avec Google."
-      });
+      
+      // Gestion spécifique des erreurs
+      if (error.code === 'auth/popup-blocked') {
+        toast({
+          variant: "destructive",
+          title: "Popup bloquée",
+          description: "Veuillez autoriser les popups pour ce site dans votre navigateur, puis réessayez.",
+        });
+      } else if (error.code === 'auth/cancelled-popup-request') {
+        toast({
+          variant: "destructive",
+          title: "Connexion annulée",
+          description: "Vous avez fermé la fenêtre de connexion.",
+        });
+      } else if (error.code === 'auth/network-request-failed') {
+        toast({
+          variant: "destructive",
+          title: "Problème de connexion",
+          description: "Vérifiez votre connexion internet et réessayez. Si le problème persiste, vérifiez que vous pouvez accéder à google.com et firebase.google.com",
+        });
+      } else if (error.code === 'auth/internal-error') {
+        toast({
+          variant: "destructive",
+          title: "Erreur interne",
+          description: "Problème de connexion aux serveurs Firebase. Vérifiez votre connexion internet.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Erreur de connexion",
+          description: error.message || "Impossible de se connecter avec Google."
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -206,13 +250,7 @@ export default function LoginPage() {
             console.log("Connexion Firebase Anonyme réussie pour l'accès Firestore");
             
             // Créer le profil utilisateur dans Firestore
-            try {
-              const createUserProfileFn = httpsCallable(functions, 'createOrUpdateUserProfile');
-              await createUserProfileFn({ email });
-              console.log("Profil utilisateur créé avec succès");
-            } catch (err) {
-              console.error("Erreur création profil utilisateur:", err);
-            }
+            await createOrUpdateProfile(result.user.uid, email);
           } catch (err) {
             console.error("Erreur connexion anonyme:", err);
           }
@@ -286,13 +324,7 @@ export default function LoginPage() {
       const result = await confirmationResult.confirm(otpCode);
 
       // Créer le profil utilisateur dans Firestore
-      try {
-        const createUserProfileFn = httpsCallable(functions, 'createOrUpdateUserProfile');
-        await createUserProfileFn({ email: result.user.email || phone });
-        console.log("Profil utilisateur créé avec succès");
-      } catch (err) {
-        console.error("Erreur création profil utilisateur:", err);
-      }
+      await createOrUpdateProfile(result.user.uid, result.user.email || phone);
 
       toast({
         title: "Connexion réussie",

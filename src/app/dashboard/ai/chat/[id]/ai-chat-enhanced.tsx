@@ -6,17 +6,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { useFirestoreAiChat } from '@/hooks/useFirestoreAiChat';
-import { useAiEnhanced, type AiOptions } from '@/hooks/useAiEnhanced';
+import { useAiEnhanced } from '@/hooks/useAiEnhanced';
 import { FormattedResponse } from '@/components/ai/FormattedResponse';
 import { SearchOptions, type SearchOptionsState } from '@/components/ai/SearchOptions';
-import { Send, Loader2, Brain, MessageCircle } from 'lucide-react';
+import { Send, Loader2, Brain } from 'lucide-react';
 
 export default function AiChatEnhanced() {
   const params = useParams();
   const aiChatId = params.id as string;
 
   const { loadAiMessages, sendAiMessage } = useFirestoreAiChat();
-  const { generateResponse, isThinking, isStreaming, currentResponse } = useAiEnhanced();
+  const { generateResponse, isThinking, isStreaming } = useAiEnhanced();
 
   const [messages, setMessages] = useState<any[]>([]);
   const [inputValue, setInputValue] = useState('');
@@ -194,7 +194,7 @@ export default function AiChatEnhanced() {
             placeholder="Posez votre question..."
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            onKeyPress={(e) => {
+            onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 handleSendMessage();

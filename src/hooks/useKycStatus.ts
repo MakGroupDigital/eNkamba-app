@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import { functions, db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/useAuth';
 
 const KYC_STATUS_KEY = 'enkamba_kyc_status';
@@ -82,19 +83,45 @@ export function useKycStatus() {
           }
         } catch (firebaseErr: any) {
           console.warn('Cloud Function non disponible:', firebaseErr.message);
-          // Fallback sur localStorage SEULEMENT si Firebase échoue
+          
+          // Fallback: Récupérer directement depuis Firestore
           try {
-            const stored = localStorage.getItem(KYC_STATUS_KEY);
-            if (stored) {
-              const parsed = JSON.parse(stored);
-              setKycStatus(parsed);
+            const userDoc = await getDoc(doc(db, 'users', user.uid));
+            if (userDoc.exists()) {
+              const userData = userDoc.data();
+              const newStatus: KycStatus = {
+                isCompleted: userData.kycStatus === 'verified',
+                completedAt: userData.kycCompletedAt?.toMillis?.() || undefined,
+              };
+              setKycStatus(newStatus);
+              
+              // Sauvegarder en localStorage
+              try {
+                localStorage.setItem(KYC_STATUS_KEY, JSON.stringify(newStatus));
+                localStorage.setItem(KYC_STATUS_TIMESTAMP_KEY, Date.now().toString());
+              } catch (e) {
+                console.warn('Erreur sauvegarde localStorage:', e);
+              }
             } else {
-              // Pas de données du tout, réinitialiser
+              // Document n'existe pas, KYC non commencé
               setKycStatus({ isCompleted: false });
             }
-          } catch (e) {
-            console.warn('Erreur lecture localStorage:', e);
-            setKycStatus({ isCompleted: false });
+          } catch (firestoreErr: any) {
+            console.error('Erreur récupération Firestore:', firestoreErr);
+            // En dernier recours, utiliser localStorage
+            try {
+              const stored = localStorage.getItem(KYC_STATUS_KEY);
+              if (stored) {
+                const parsed = JSON.parse(stored);
+                setKycStatus(parsed);
+              } else {
+                // Pas de données du tout, réinitialiser
+                setKycStatus({ isCompleted: false });
+              }
+            } catch (e) {
+              console.warn('Erreur lecture localStorage:', e);
+              setKycStatus({ isCompleted: false });
+            }
           }
         }
 

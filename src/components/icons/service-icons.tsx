@@ -1608,3 +1608,133 @@ export const ServiceIcons = {
   calculator: CalculatorIcon,
   mapPin: MapPinIcon,
 };
+
+
+// ==================== ACTIONS RAPIDES PERSONNALISÉES ====================
+
+// Envoyer - Flèche d'envoi stylisée
+export const SendIcon = ({ className, size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={cn("", className)}
+  >
+    <defs>
+      <linearGradient id="sendGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#32BB78" />
+        <stop offset="100%" stopColor="#0E5A59" />
+      </linearGradient>
+    </defs>
+    {/* Enveloppe */}
+    <path d="M6 12H42V36C42 38.2 40.2 40 38 40H10C7.8 40 6 38.2 6 36V12Z" fill="url(#sendGrad)" />
+    {/* Rabat */}
+    <path d="M6 12L24 26L42 12" stroke="#fff" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+    {/* Flèche d'envoi */}
+    <path d="M28 32L38 22L36 24L28 32Z" fill="#FF8C00" />
+    <path d="M28 32L38 22" stroke="#FF8C00" strokeWidth="2.5" strokeLinecap="round" />
+    {/* Sparkle */}
+    <circle cx="42" cy="8" r="2" fill="#FF8C00" />
+  </svg>
+);
+
+// Recevoir - Flèche de réception
+export const ReceiveIcon = ({ className, size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={cn("", className)}
+  >
+    <defs>
+      <linearGradient id="receiveGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#4FC3F7" />
+        <stop offset="100%" stopColor="#0288D1" />
+      </linearGradient>
+    </defs>
+    {/* Boîte de réception */}
+    <path d="M6 14H42V32C42 34.2 40.2 36 38 36H10C7.8 36 6 34.2 6 32V14Z" fill="url(#receiveGrad)" />
+    {/* Rabat */}
+    <path d="M6 14L24 22L42 14" stroke="#fff" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+    {/* Flèche descendante */}
+    <path d="M24 10V28" stroke="#fff" strokeWidth="3" strokeLinecap="round" />
+    <path d="M18 22L24 28L30 22" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    {/* Sparkle */}
+    <circle cx="8" cy="8" r="2" fill="#32BB78" />
+  </svg>
+);
+
+// Payer en Masse - Personnes avec argent
+export const BulkPayIcon = ({ className, size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={cn("", className)}
+  >
+    <defs>
+      <linearGradient id="bulkPayGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#9C27B0" />
+        <stop offset="100%" stopColor="#7B1FA2" />
+      </linearGradient>
+    </defs>
+    {/* Personne 1 */}
+    <circle cx="12" cy="10" r="4" fill="#32BB78" />
+    <path d="M8 16C8 14 10 14 12 14C14 14 16 14 16 16V22H8V16Z" fill="#32BB78" />
+    {/* Personne 2 */}
+    <circle cx="24" cy="8" r="5" fill="url(#bulkPayGrad)" />
+    <path d="M18 16C18 13 21 13 24 13C27 13 30 13 30 16V24H18V16Z" fill="url(#bulkPayGrad)" />
+    {/* Personne 3 */}
+    <circle cx="36" cy="10" r="4" fill="#FF8C00" />
+    <path d="M32 16C32 14 34 14 36 14C38 14 40 14 40 16V22H32V16Z" fill="#FF8C00" />
+    {/* Billets d'argent */}
+    <rect x="10" y="28" width="12" height="8" rx="1" fill="#32BB78" />
+    <text x="16" y="34" textAnchor="middle" fontSize="5" fill="#fff" fontWeight="bold">$</text>
+    <rect x="24" y="30" width="12" height="8" rx="1" fill="#FF8C00" />
+    <text x="30" y="36" textAnchor="middle" fontSize="5" fill="#fff" fontWeight="bold">$</text>
+    <rect x="38" y="28" width="8" height="8" rx="1" fill="#0E5A59" />
+    <text x="42" y="34" textAnchor="middle" fontSize="4" fill="#fff" fontWeight="bold">$</text>
+    {/* Flèches de distribution */}
+    <path d="M16 26L16 28" stroke="#32BB78" strokeWidth="1.5" strokeLinecap="round" />
+    <path d="M30 28L30 30" stroke="#FF8C00" strokeWidth="1.5" strokeLinecap="round" />
+    <path d="M42 26L42 28" stroke="#0E5A59" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+);
+
+// Demander - Main avec demande
+export const RequestIcon = ({ className, size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={cn("", className)}
+  >
+    <defs>
+      <linearGradient id="requestGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#FF8C00" />
+        <stop offset="100%" stopColor="#E67E00" />
+      </linearGradient>
+    </defs>
+    {/* Main ouverte */}
+    <path d="M8 24L8 12C8 10 10 8 12 8C14 8 16 10 16 12V20" stroke="url(#requestGrad)" strokeWidth="3" fill="none" strokeLinecap="round" />
+    <path d="M20 24L20 10C20 8 22 6 24 6C26 6 28 8 28 10V20" stroke="url(#requestGrad)" strokeWidth="3" fill="none" strokeLinecap="round" />
+    <path d="M32 24L32 12C32 10 34 8 36 8C38 8 40 10 40 12V20" stroke="url(#requestGrad)" strokeWidth="3" fill="none" strokeLinecap="round" />
+    {/* Paume */}
+    <path d="M8 24C8 28 12 32 20 34C28 32 32 28 32 24H8Z" fill="url(#requestGrad)" />
+    {/* Poignet */}
+    <rect x="12" y="34" width="16" height="8" rx="2" fill="#0E5A59" />
+    {/* Point d'interrogation */}
+    <text x="24" y="38" textAnchor="middle" fontSize="8" fill="#fff" fontWeight="bold">?</text>
+    {/* Bulle de demande */}
+    <path d="M36 6C38 6 40 8 40 10V14C40 16 38 18 36 18L34 20L36 18H32C30 18 28 16 28 14V10C28 8 30 6 32 6H36Z" fill="#32BB78" />
+    <circle cx="34" cy="12" r="1.5" fill="#fff" />
+  </svg>
+);

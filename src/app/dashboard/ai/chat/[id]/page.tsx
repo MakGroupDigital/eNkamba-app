@@ -1,9 +1,9 @@
-import AiChatEnhanced from './ai-chat-enhanced';
+import EnkambaAIModule from './enkamba-ai-module';
 
 export function generateStaticParams() {
   return [];
 }
 
-export default function AiChatPage() {
-  return <AiChatEnhanced />;
+export default function AiChatPage({ params }: { params: { id: string } }) {
+  return <EnkambaAIModule params={params} />;
 }

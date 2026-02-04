@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { httpsCallable } from 'firebase/functions';
 import { functions, db, auth } from '@/lib/firebase';
-import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, limit, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 export interface Transaction {
   id: string;
@@ -37,22 +37,48 @@ export function useWalletTransactions() {
   const [error, setError] = useState<string | null>(null);
   const currentUser = auth.currentUser;
 
-  // Charger le solde
+  // Charger et écouter le solde depuis Firestore directement (évite CORS)
   useEffect(() => {
     if (!currentUser) return;
 
+    const userDocRef = doc(db, 'users', currentUser.uid);
+
+    // Charger le solde initial
     const loadBalance = async () => {
       try {
-        const getBalanceFn = httpsCallable(functions, 'getWalletBalance');
-        const result = await getBalanceFn({ userId: currentUser.uid });
-        const data = result.data as any;
-        setBalance(data.balance);
+        const userDoc = await getDoc(userDocRef);
+        
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          setBalance(userData?.walletBalance || 0);
+        } else {
+          // Si le document n'existe pas, créer avec solde 0
+          await setDoc(userDocRef, {
+            uid: currentUser.uid,
+            walletBalance: 0,
+            createdAt: serverTimestamp(),
+          });
+          setBalance(0);
+        }
       } catch (err) {
         console.error('Erreur chargement solde:', err);
+        setBalance(0);
       }
     };
 
     loadBalance();
+
+    // Écouter les changements de solde en temps réel
+    const unsubscribe = onSnapshot(userDocRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        setBalance(data?.walletBalance || 0);
+      }
+    }, (err) => {
+      console.error('Erreur listener solde:', err);
+    });
+
+    return () => unsubscribe();
   }, [currentUser]);
 
   // Écouter les transactions en temps réel
@@ -114,16 +140,31 @@ export function useWalletTransactions() {
       setError(null);
 
       try {
-        const addFundsFn = httpsCallable(functions, 'addFundsToWallet');
-        const result = await addFundsFn({
-          userId: currentUser.uid,
-          amount,
-          paymentMethod,
-          phoneNumber: details.phoneNumber,
-          cardDetails: details.cardDetails,
+        // Obtenir le token d'authentification
+        const token = await currentUser.getIdToken();
+
+        // Appeler l'API route Next.js (pas de CORS côté serveur)
+        const response = await fetch('/api/wallet/add-funds', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            userId: currentUser.uid,
+            amount,
+            paymentMethod,
+            phoneNumber: details.phoneNumber,
+            cardDetails: details.cardDetails,
+          }),
         });
 
-        const data = result.data as any;
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Erreur lors de l\'ajout de fonds');
+        }
+
+        const data = await response.json();
         setBalance(data.newBalance);
 
         return {
@@ -151,21 +192,36 @@ export function useWalletTransactions() {
       setError(null);
 
       try {
-        const withdrawFn = httpsCallable(functions, 'withdrawFundsFromWallet');
-        const result = await withdrawFn({
-          userId: currentUser.uid,
-          amount,
-          withdrawalMethod,
-          phoneNumber: details.phoneNumber,
-          provider: details.provider,
-          providerName: details.providerName,
-          agentCode: details.agentCode,
-          agentLocation: details.agentLocation,
-          agentId: details.agentId,
-          agentName: details.agentName,
+        // Obtenir le token d'authentification
+        const token = await currentUser.getIdToken();
+
+        // Appeler l'API route Next.js (pas de CORS côté serveur)
+        const response = await fetch('/api/wallet/withdraw-funds', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            userId: currentUser.uid,
+            amount,
+            withdrawalMethod,
+            phoneNumber: details.phoneNumber,
+            provider: details.provider,
+            providerName: details.providerName,
+            agentCode: details.agentCode,
+            agentLocation: details.agentLocation,
+            agentId: details.agentId,
+            agentName: details.agentName,
+          }),
         });
 
-        const data = result.data as any;
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Erreur lors du retrait');
+        }
+
+        const data = await response.json();
         setBalance(data.newBalance);
 
         return {

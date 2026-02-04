@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import { functions, db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/useAuth';
 
 export interface UserProfile {
@@ -55,20 +56,62 @@ export function useUserProfile() {
           return;
         }
 
-        // Appeler une Cloud Function pour récupérer le profil utilisateur
+        // Essayer d'abord Firestore directement (évite CORS en dev)
         try {
-          const getUserProfileFn = httpsCallable(functions, 'getUserProfile');
-          const result = await getUserProfileFn({ userId: user.uid });
-          const data = result.data as any;
-
-          if (data.success) {
-            setProfile(data.profile);
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            setProfile({
+              uid: user.uid,
+              email: user.email || userData.email || '',
+              phone: userData.phone,
+              fullName: userData.fullName || user.displayName || '',
+              dateOfBirth: userData.dateOfBirth,
+              country: userData.country,
+              profileImage: user.photoURL || userData.profileImage,
+              kycStatus: userData.kycStatus,
+              kycCompletedAt: userData.kycCompletedAt,
+              kyc: userData.kyc,
+              createdAt: userData.createdAt?.toMillis?.() || Date.now(),
+              lastLogin: userData.lastLogin?.toMillis?.() || Date.now(),
+            });
           } else {
-            throw new Error(data.message || 'Erreur lors de la récupération du profil');
+            // Créer un profil basique depuis Firebase Auth
+            setProfile({
+              uid: user.uid,
+              email: user.email || '',
+              fullName: user.displayName || '',
+              profileImage: user.photoURL || undefined,
+              createdAt: Date.now(),
+              lastLogin: Date.now(),
+            });
           }
-        } catch (firebaseErr: any) {
-          console.warn('Erreur récupération profil:', firebaseErr.message);
-          setError(firebaseErr.message);
+        } catch (firestoreErr: any) {
+          console.warn('Erreur Firestore, essai Cloud Function:', firestoreErr.message);
+          
+          // Fallback: Essayer Cloud Function
+          try {
+            const getUserProfileFn = httpsCallable(functions, 'getUserProfile');
+            const result = await getUserProfileFn({ userId: user.uid });
+            const data = result.data as any;
+
+            if (data.success) {
+              setProfile(data.profile);
+            } else {
+              throw new Error(data.message || 'Erreur lors de la récupération du profil');
+            }
+          } catch (cloudErr: any) {
+            console.error('Erreur Cloud Function:', cloudErr);
+            // En dernier recours, utiliser les données de Firebase Auth
+            setProfile({
+              uid: user.uid,
+              email: user.email || '',
+              fullName: user.displayName || '',
+              profileImage: user.photoURL || undefined,
+              createdAt: Date.now(),
+              lastLogin: Date.now(),
+            });
+          }
         }
 
         setIsLoading(false);

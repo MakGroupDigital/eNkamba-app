@@ -26,6 +26,7 @@ interface PaymentLink {
 }
 
 interface UnifiedReceiveFlowProps {
+  initialMethod?: string;
   context?: string;
   onSuccess?: (linkId: string) => void;
   onError?: (error: Error) => void;
@@ -37,6 +38,7 @@ export function UnifiedReceiveFlow({
   onSuccess,
   onError,
   onBack,
+  initialMethod,
 }: UnifiedReceiveFlowProps) {
   const { toast } = useToast();
   const { user } = useAuth();
@@ -53,6 +55,13 @@ export function UnifiedReceiveFlow({
   const [nfcSupported, setNfcSupported] = useState(false);
   const [bluetoothSupported, setBluetoothSupported] = useState(false);
   const [codeTimeLeft, setCodeTimeLeft] = useState(300);
+
+  useEffect(() => {
+    if (initialMethod && ['link', 'qr', 'phone', 'code', 'nfc', 'bluetooth', 'wifi'].includes(initialMethod)) {
+      setReceiveMethod(initialMethod as ReceiveMethod);
+      setStep('details');
+    }
+  }, [initialMethod]);
 
   const handleMethodSelect = (method: ReceiveMethod) => {
     setReceiveMethod(method);
@@ -179,9 +188,22 @@ export function UnifiedReceiveFlow({
     const link = document.createElement('a');
     link.href = qrCodeImage;
     link.download = `payment-qr-${paymentLink?.code}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    
+    try {
+      document.body.appendChild(link);
+      link.click();
+      
+      setTimeout(() => {
+        if (document.body.contains(link)) {
+          document.body.removeChild(link);
+        }
+      }, 100);
+    } catch (error) {
+      console.error('Erreur téléchargement QR:', error);
+      if (document.body.contains(link)) {
+        document.body.removeChild(link);
+      }
+    }
 
     toast({
       title: 'Succès',

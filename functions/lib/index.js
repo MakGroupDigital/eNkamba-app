@@ -25,4 +25,6 @@ __exportStar(require("./generateReceipt"), exports);
 __exportStar(require("./paymentProcessing"), exports);
 __exportStar(require("./unifiedPayment"), exports);
 __exportStar(require("./savingsManagement"), exports);
+__exportStar(require("./addFunds"), exports);
+__exportStar(require("./withdrawFunds"), exports);
 //# sourceMappingURL=index.js.map

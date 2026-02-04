@@ -4,7 +4,6 @@ import MasoloFloatingButton from '@/components/masolo/masolo-floating-button';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import HubNavigation from '@/components/dashboard/hub-navigation';
-import MbongoNavigation from '@/components/dashboard/mbongo-navigation';
 import AuthGuard from '@/components/auth-guard';
 import { ModuleKycGate } from '@/components/module-kyc-gate';
 
@@ -41,8 +40,7 @@ export default function DashboardLayout({
     else setActiveTab('Paiement');
   }, [pathname]);
 
-  const showMasoloButton = !pathname.includes('/miyiki-chat') && !pathname.includes('/ai');
-  const showMbongoNav = activeTab === 'Paiement';
+  const showMasoloButton = !pathname.includes('/miyiki-chat');
 
   return (
     <AuthGuard>
@@ -57,8 +55,6 @@ export default function DashboardLayout({
               <MasoloFloatingButton />
             </div>
           )}
-
-          {showMbongoNav && <MbongoNavigation />}
 
           <HubNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
         </div>
