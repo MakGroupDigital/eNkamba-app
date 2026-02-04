@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Card } from '@/components/ui/card';
 import { useFirestoreConversations } from '@/hooks/useFirestoreConversations';
-import { useFirestoreContacts } from '@/hooks/useFirestoreContacts';
 import { useAuth } from '@/hooks/useAuth';
 import { ChatNavIcon } from '@/components/icons/service-icons';
 import { ChevronLeft, Send, Loader2, Mail, Phone, Mic, Video, MapPin, DollarSign, Paperclip, Plus, X, Check, Square } from 'lucide-react';
@@ -19,7 +20,6 @@ export default function ConversationClient() {
     const conversationId = params.id as string;
 
     const { loadMessages, sendMessage } = useFirestoreConversations();
-    const { contacts } = useFirestoreContacts();
     const { user: currentUser } = useAuth();
     
     const [messages, setMessages] = useState<any[]>([]);
@@ -40,13 +40,41 @@ export default function ConversationClient() {
     const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
     const videoPreviewRef = useRef<HTMLVideoElement>(null);
 
-    // Trouver le contact basé sur conversationId
+    // Charger les infos de la conversation et du contact
     useEffect(() => {
-        if (conversationId && contacts.length > 0) {
-            const foundContact = contacts.find(c => c.id === conversationId);
-            setContact(foundContact);
-        }
-    }, [conversationId, contacts]);
+        const loadConversationData = async () => {
+            if (!conversationId || !currentUser) return;
+
+            try {
+                const convRef = doc(db, 'conversations', conversationId);
+                const convSnap = await getDoc(convRef);
+
+                if (convSnap.exists()) {
+                    const convData = convSnap.data();
+                    
+                    const participants = convData.participants || [];
+                    const participantNames = convData.participantNames || [];
+
+                    // Trouver l'autre participant (celui qui n'est pas l'utilisateur courant)
+                    const otherParticipantIdx = participants.findIndex((id: string) => id !== currentUser.uid);
+                    
+                    if (otherParticipantIdx !== -1 && participantNames[otherParticipantIdx]) {
+                        const contactData = {
+                            id: participants[otherParticipantIdx],
+                            name: participantNames[otherParticipantIdx],
+                            phoneNumber: convData.phoneNumber || '',
+                            email: convData.email || '',
+                        };
+                        setContact(contactData);
+                    }
+                }
+            } catch (error) {
+                console.error('Erreur chargement conversation:', error);
+            }
+        };
+
+        loadConversationData();
+    }, [conversationId, currentUser]);
 
     // Charger les messages
     useEffect(() => {

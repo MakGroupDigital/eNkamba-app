@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { useConversations } from '@/hooks/useConversations';
+import { useFirestoreContacts } from '@/hooks/useFirestoreContacts';
 import { ChatContactsDialog } from '@/components/chat-contacts-dialog';
 import { StartChatEmptyState } from '@/components/start-chat-empty-state';
 import {
@@ -29,12 +30,14 @@ const filters = [
   { label: "ChatAI", icon: EnkambaAIIcon, href: "/dashboard/ai", color: "from-primary to-green-800" },
 ];
 
+
 export default function MiyikiChatPage() {
   const {
     conversations,
     isLoading: conversationsLoading,
     hasConversations,
   } = useConversations();
+  const { contacts, isLoading: contactsLoading } = useFirestoreContacts();
 
   const [showChatContactsDialog, setShowChatContactsDialog] = useState(false);
 
@@ -42,6 +45,16 @@ export default function MiyikiChatPage() {
   const handleStartChat = () => {
     setShowChatContactsDialog(true);
   };
+
+  // Helper pour trouver le nom du contact à partir du numéro de téléphone
+  function getContactNameByPhone(phone: string | undefined): string | undefined {
+    if (!phone) return undefined;
+    const normalized = phone.replace(/\D/g, '').replace(/^0/, '+243');
+    const found = contacts.find(
+      c => c.phoneNumber.replace(/\D/g, '').replace(/^0/, '+243') === normalized
+    );
+    return found?.name;
+  }
 
   return (
     <div className="flex h-screen flex-col bg-background text-foreground animate-in fade-in duration-500">
@@ -104,40 +117,54 @@ export default function MiyikiChatPage() {
           </div>
 
           {/* Afficher les conversations réelles ou l'état vide */}
-          {conversationsLoading ? (
+          {conversationsLoading || contactsLoading ? (
             <div className="text-center py-8">
               <p className="text-muted-foreground">Chargement des conversations...</p>
             </div>
           ) : !hasConversations ? (
             <StartChatEmptyState onStartChat={handleStartChat} />
           ) : (
-            /* Conversations List */
+            // Liste des conversations existantes
             <div className="space-y-2">
-              {conversations.map((convo, i) => (
-                <Link href={convo.href || `/dashboard/miyiki-chat/${convo.id}`} key={convo.id} className="block">
-                   <Card 
-                    className="p-3 rounded-2xl transition-all duration-300 hover:shadow-lg hover:scale-[1.02] animate-in fade-in-up"
-                    style={{animationDelay: `${i * 100}ms`}}
-                  >
-                    <div className="flex items-center gap-4">
-                      <Avatar className="h-12 w-12 border-2 border-primary/10">
-                        <AvatarImage src={convo.avatar} alt={convo.name} />
-                        <AvatarFallback>{convo.name.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <p className="font-headline font-bold text-foreground">{convo.name}</p>
-                        <p className="text-sm text-muted-foreground truncate">{convo.lastMessage}</p>
+              {conversations.map((convo, i) => {
+                // Pour les conversations 1-1, on tente de récupérer le nom du contact
+                let displayName = convo.name;
+                if (!convo.isGroup && convo.participants && convo.participants.length === 2) {
+                  // On cherche le numéro de téléphone de l'autre participant
+                  const otherIdx = convo.participants.findIndex(
+                    id => id !== undefined && id !== '' && id !== (typeof window !== 'undefined' ? window.localStorage.getItem('uid') : undefined)
+                  );
+                  // On tente de trouver le nom du contact par le champ participantNames (si c'est un numéro)
+                  const phone = convo.participantNames?.[otherIdx];
+                  const contactName = getContactNameByPhone(phone);
+                  if (contactName) displayName = contactName;
+                }
+                return (
+                  <Link href={convo.href || `/dashboard/miyiki-chat/${convo.id}`} key={convo.id} className="block">
+                    <Card
+                      className="p-3 rounded-2xl transition-all duration-300 hover:shadow-lg hover:scale-[1.02] animate-in fade-in-up"
+                      style={{ animationDelay: `${i * 100}ms` }}
+                    >
+                      <div className="flex items-center gap-4">
+                        <Avatar className="h-12 w-12 border-2 border-primary/10">
+                          <AvatarImage src={convo.avatar || undefined} alt={displayName} />
+                          <AvatarFallback>{displayName?.charAt(0) || '?'}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <p className="font-headline font-bold text-foreground">{displayName}</p>
+                          <p className="text-sm text-muted-foreground truncate">{convo.lastMessage}</p>
+                        </div>
+                        <div className="text-right flex flex-col items-end h-full">
+                          <p className="text-xs text-muted-foreground mb-1">{convo.time}</p>
+                          {!!convo.unread && convo.unread > 0 && (
+                            <Badge className="bg-accent text-accent-foreground rounded-full h-6 w-6 flex items-center justify-center">{convo.unread}</Badge>
+                          )}
+                        </div>
                       </div>
-                      <div className="text-right flex flex-col items-end h-full">
-                         <p className="text-xs text-muted-foreground mb-1">{convo.time}</p>
-                         {convo.unread && (
-                           <Badge className="bg-accent text-accent-foreground rounded-full h-6 w-6 flex items-center justify-center">{convo.unread}</Badge>
-                         )}
-                      </div>
-                    </div>
-                  </Card>
-                </Link>
-              ))}
+                    </Card>
+                  </Link>
+                );
+              })}
             </div>
           )}
         </div>

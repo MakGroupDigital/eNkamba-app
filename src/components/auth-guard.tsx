@@ -94,6 +94,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
                                     width={160}
                                     height={160}
                                     className="drop-shadow-lg object-cover w-full h-full"
+                                    style={{ color: 'transparent' }}
                                     priority
                                 />
                             </div>

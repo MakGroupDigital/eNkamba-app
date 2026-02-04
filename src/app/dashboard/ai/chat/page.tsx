@@ -6,12 +6,14 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { useFirestoreAiChat } from '@/hooks/useFirestoreAiChat';
 import { AINavIcon } from '@/components/icons/service-icons';
-import { Send, Loader2 } from 'lucide-react';
+import { Send, Loader2, MessageSquare, Trash2, Clock } from 'lucide-react';
+import Link from 'next/link';
 
 export default function AiChatDefaultPage() {
-  const { createAiChat, sendAiMessage } = useFirestoreAiChat();
+  const { createAiChat, sendAiMessage, aiChats, isLoading, deleteAiChat } = useFirestoreAiChat();
   const [inputValue, setInputValue] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return;

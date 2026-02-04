@@ -11,6 +11,7 @@ import {
   serverTimestamp,
   Timestamp,
   getDocs,
+  getDoc,
   setDoc,
 } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
@@ -97,8 +98,29 @@ export function useFirestoreConversations() {
 
   // Créer une nouvelle conversation
   const createConversation = useCallback(
-    async (otherUserId: string, otherUserName: string) => {
+    async (otherUserIdentifier: string, otherUserName: string, identifierType: 'uid' | 'email' | 'phone' = 'uid') => {
       if (!currentUser) throw new Error('Utilisateur non authentifié');
+
+      let otherUserId = otherUserIdentifier;
+      // Si l'identifiant n'est pas un uid, le convertir
+      if (identifierType !== 'uid') {
+        const usersRef = collection(db, 'users');
+        let q;
+        if (identifierType === 'email') {
+          q = query(usersRef, where('email', '==', otherUserIdentifier.toLowerCase()));
+        } else if (identifierType === 'phone') {
+          q = query(usersRef, where('phoneNumber', '==', otherUserIdentifier));
+        }
+        const snapshot = await getDocs(q);
+        if (snapshot.empty) throw new Error('Utilisateur destinataire introuvable');
+        const userDoc = snapshot.docs[0];
+        otherUserId = userDoc.id;
+        // Optionnel: récupérer le nom réel
+        if (!otherUserName) {
+          const userData = userDoc.data();
+          otherUserName = userData.fullName || userData.displayName || userData.email || 'Utilisateur';
+        }
+      }
 
       try {
         // Vérifier si la conversation existe déjà
@@ -135,28 +157,35 @@ export function useFirestoreConversations() {
 
   // Envoyer un message
   const sendMessage = useCallback(
-    async (conversationId: string, text: string, messageType: 'text' | 'voice' | 'video' | 'location' | 'money' | 'file' = 'text', metadata?: any) => {
+    async (
+      conversationId: string,
+      text: string,
+      messageType: 'text' | 'voice' | 'video' | 'location' | 'money' | 'file' = 'text',
+      metadata?: any,
+      otherUserId?: string,
+      otherUserName?: string
+    ) => {
       if (!currentUser) throw new Error('Utilisateur non authentifié');
 
       try {
-        // S'assurer que la conversation existe
-        try {
-          const docSnap = await getDocs(query(collection(db, 'conversations'), where('id', '==', conversationId)));
-          
-          if (docSnap.empty) {
-            // Créer une conversation par défaut
-            await addDoc(collection(db, 'conversations'), {
-              id: conversationId,
-              participants: [currentUser.uid, conversationId],
-              participantNames: [currentUser.displayName || 'Vous', 'Utilisateur'],
-              lastMessage: text || `[${messageType}]`,
-              lastMessageTime: serverTimestamp(),
-              createdAt: serverTimestamp(),
-              unreadCount: 0,
-            });
+        // Vérifier que la conversation existe
+        const convRef = doc(db, 'conversations', conversationId);
+        let convSnap = await getDoc(convRef);
+        
+        if (!convSnap.exists()) {
+          // Créer la conversation si possible
+          if (!otherUserId) {
+            throw new Error("La conversation n'existe pas et l'identifiant du destinataire est inconnu.");
           }
-        } catch (e) {
-          console.error('Erreur vérification conversation:', e);
+          await setDoc(convRef, {
+            participants: [currentUser.uid, otherUserId],
+            participantNames: [currentUser.displayName || 'Utilisateur', otherUserName || 'Utilisateur'],
+            lastMessage: text || `[${messageType}]`,
+            lastMessageTime: serverTimestamp(),
+            createdAt: serverTimestamp(),
+            unreadCount: 0,
+          });
+          convSnap = await getDoc(convRef);
         }
 
         // Construire le message en filtrant les valeurs undefined
@@ -169,9 +198,21 @@ export function useFirestoreConversations() {
           isRead: false,
         };
 
-        // Ajouter metadata seulement si défini
-        if (metadata) {
-          messageData.metadata = metadata;
+        // Ajouter metadata seulement si défini et valide
+        if (metadata && typeof metadata === 'object') {
+          // Nettoyer metadata pour ne garder que les données sérialisables
+          const cleanMetadata: any = {};
+          for (const [key, value] of Object.entries(metadata)) {
+            // Ne garder que les types sérialisables
+            if (value === null || typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+              cleanMetadata[key] = value;
+            } else if (Array.isArray(value) && value.every(v => typeof v === 'string' || typeof v === 'number')) {
+              cleanMetadata[key] = value;
+            }
+          }
+          if (Object.keys(cleanMetadata).length > 0) {
+            messageData.metadata = cleanMetadata;
+          }
         }
 
         // Ajouter le message
@@ -180,10 +221,10 @@ export function useFirestoreConversations() {
           messageData
         );
 
-        // Mettre à jour le dernier message (utiliser setDoc with merge pour éviter l'erreur)
+        // Mettre à jour le dernier message
         try {
           const messagePreview = text || `[${messageType}]`;
-          await updateDoc(doc(db, 'conversations', conversationId), {
+          await updateDoc(convRef, {
             lastMessage: messagePreview,
             lastMessageTime: serverTimestamp(),
           });
