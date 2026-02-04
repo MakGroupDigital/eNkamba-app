@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Scan, Mail, Phone, CreditCard as CreditCardIcon, Hash, Smartphone, QrCode, ArrowUpRight, ArrowDownLeft, Download, Share2, Wallet } from "lucide-react";
+import { Sparkles, Scan, Mail, Phone, CreditCard as CreditCardIcon, Hash, Smartphone, QrCode, ArrowUpRight, ArrowDownLeft, Download, Share2, Wallet, ArrowLeftRight, Send } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import DashboardHeader from "@/components/dashboard/dashboard-header";
@@ -11,37 +11,12 @@ import { SavingsIcon, CreditIcon, TontineIcon, ConversionIcon, ReferralIcon, Age
 import { useUserProfile } from '@/hooks/useUserProfile';
 import QRCodeLib from 'qrcode';
 
-// Icônes personnalisées avec strokeWidth 2.5
-const ScannerIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-6 h-6">
-    <path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M3 12h18M9 3v18M15 3v18" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
-const PayReceiveIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-6 h-6">
-    <path d="M7 16V4m0 12l-3-3m3 3l3-3M17 8v12m0-12l3 3m-3-3l-3 3" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
-const RequestIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-6 h-6">
-    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3v6M9 12h6" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
-const WalletIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-6 h-6">
-    <path d="M21 12a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6zM3 6h18a2 2 0 0 1 2 2v1H1V8a2 2 0 0 1 2-2zm16 9h-1" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
 // Actions rapides principales (4 boutons simples)
 const quickActions = [
-  { icon: ScannerIcon, label: 'Scanner', href: '/dashboard/scanner', gradient: 'from-[#32BB78] to-[#2a9d63]' },
-  { icon: PayReceiveIcon, label: 'Payer/Recevoir', href: '/dashboard/pay-receive', gradient: 'from-[#32BB78] to-[#2a9d63]' },
-  { icon: RequestIcon, label: 'Envoi', href: '/dashboard/send', gradient: 'from-[#32BB78] to-[#2a9d63]' },
-  { icon: WalletIcon, label: 'Portefeuille', href: '/dashboard/wallet', gradient: 'from-[#32BB78] to-[#2a9d63]' },
+  { icon: QrCode, label: 'Scanner', href: '/dashboard/scanner', gradient: 'from-[#32BB78] to-[#2a9d63]' },
+  { icon: ArrowLeftRight, label: 'Payer/Recevoir', href: '/dashboard/pay-receive', gradient: 'from-[#32BB78] to-[#2a9d63]' },
+  { icon: Send, label: 'Encaisser', href: '/dashboard/send', gradient: 'from-[#32BB78] to-[#2a9d63]' },
+  { icon: Wallet, label: 'Portefeuille', href: '/dashboard/wallet', gradient: 'from-[#32BB78] to-[#2a9d63]' },
 ];
 
 const financialServices = [
@@ -93,7 +68,43 @@ export default function MbongoDashboard() {
           dark: '#32BB78',
           light: '#ffffff',
         },
-      }).then(setQrCode);
+      }).then((qrImageUrl) => {
+        // Ajouter le logo officiel eNkamba au centre du QR code
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        const qrImage = new Image();
+        qrImage.onload = () => {
+          canvas.width = 300;
+          canvas.height = 300;
+
+          // Dessiner le QR code
+          ctx.drawImage(qrImage, 0, 0);
+
+          // Charger et dessiner le logo officiel
+          const logoImg = new Image();
+          logoImg.onload = () => {
+            const logoSize = 60;
+            const x = 150 - logoSize / 2;
+            const y = 150 - logoSize / 2;
+
+            // Fond blanc pour le logo
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.roundRect(x - 5, y - 5, logoSize + 10, logoSize + 10, 6);
+            ctx.fill();
+
+            // Dessiner le logo
+            ctx.drawImage(logoImg, x, y, logoSize, logoSize);
+
+            const finalQrCode = canvas.toDataURL();
+            setQrCode(finalQrCode);
+          };
+          logoImg.src = '/enkamba-logo.png';
+        };
+        qrImage.src = qrImageUrl;
+      });
     }
   }, [profile?.uid, profile?.name, profile?.fullName, profile?.email]);
 
@@ -145,7 +156,7 @@ export default function MbongoDashboard() {
                       
                       {/* Icon Background */}
                       <div className={`relative flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br ${action.gradient} shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300`}>
-                        <Icon />
+                        <Icon className="w-6 h-6 text-white" strokeWidth={2.5} />
                       </div>
                     </div>
                     

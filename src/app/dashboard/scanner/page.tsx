@@ -47,7 +47,7 @@ export default function ScannerPage() {
   const { toast } = useToast();
   const { profile } = useUserProfile();
 
-  // Générer le QR code de l'utilisateur
+  // Générer le QR code de l'utilisateur avec logo
   useEffect(() => {
     if (profile?.uid) {
       const hash = profile.uid.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
@@ -66,7 +66,43 @@ export default function ScannerPage() {
           dark: '#32BB78',
           light: '#ffffff',
         },
-      }).then(setMyQrCode);
+      }).then((qrImageUrl) => {
+        // Ajouter le logo officiel eNkamba au centre du QR code
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        const qrImage = new Image();
+        qrImage.onload = () => {
+          canvas.width = 300;
+          canvas.height = 300;
+
+          // Dessiner le QR code
+          ctx.drawImage(qrImage, 0, 0);
+
+          // Charger et dessiner le logo officiel
+          const logoImg = new Image();
+          logoImg.onload = () => {
+            const logoSize = 60;
+            const x = 150 - logoSize / 2;
+            const y = 150 - logoSize / 2;
+
+            // Fond blanc pour le logo
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.roundRect(x - 5, y - 5, logoSize + 10, logoSize + 10, 6);
+            ctx.fill();
+
+            // Dessiner le logo
+            ctx.drawImage(logoImg, x, y, logoSize, logoSize);
+
+            const finalQrCode = canvas.toDataURL();
+            setMyQrCode(finalQrCode);
+          };
+          logoImg.src = '/enkamba-logo.png';
+        };
+        qrImage.src = qrImageUrl;
+      });
     }
   }, [profile?.uid, profile?.name, profile?.fullName, profile?.email]);
 
@@ -444,7 +480,7 @@ export default function ScannerPage() {
   };
 
   return (
-    <div className="container mx-auto max-w-md p-4 flex flex-col h-screen bg-muted/20">
+    <div className="container mx-auto max-w-md p-4 flex flex-col min-h-screen bg-muted/20 overflow-y-auto">
       <style>{`
         @keyframes scanLine {
           0% { transform: translateY(-100%); }
@@ -465,7 +501,7 @@ export default function ScannerPage() {
           animation: scanLine 2s linear infinite;
         }
       `}</style>
-       <header className="flex items-center gap-4 mb-4">
+       <header className="flex items-center gap-4 mb-4 flex-shrink-0">
             <Button variant="ghost" size="icon" asChild>
                 <Link href="/dashboard/mbongo-dashboard">
                     <ArrowLeft />
@@ -474,31 +510,53 @@ export default function ScannerPage() {
             <h1 className="font-headline text-xl font-bold text-primary">Scanner QR Code eNkamba</h1>
         </header>
 
-        {/* Mon QR Code */}
-        <Card className="bg-gradient-to-br from-[#32BB78]/10 via-[#32BB78]/5 to-transparent border-[#32BB78]/20 overflow-hidden mb-4">
-          <CardContent className="p-3">
-            <div className="flex items-center gap-3">
-              <div className="relative group flex-shrink-0">
-                <div className="bg-white p-2 rounded-xl shadow-lg border-2 border-[#32BB78]/20 group-hover:border-[#32BB78]/40 transition-all duration-300">
+        {/* Mon QR Code - Compact et Visible */}
+        <Card className="bg-gradient-to-br from-[#32BB78]/10 via-[#32BB78]/5 to-transparent border-2 border-[#32BB78]/30 overflow-visible mb-4 shadow-lg flex-shrink-0">
+          <CardContent className="p-4 space-y-3">
+            <h3 className="font-semibold text-sm flex items-center gap-2 text-foreground">
+              <QrCode className="w-4 h-4 text-[#32BB78]" />
+              Mes informations de reçu
+            </h3>
+            
+            {/* QR Code et Infos */}
+            <div className="flex flex-col items-center gap-3">
+              <div className="relative">
+                {/* Glow Effect */}
+                <div className="absolute -inset-2 bg-gradient-to-r from-[#32BB78]/30 to-[#2a9d63]/20 rounded-xl blur-lg animate-pulse" />
+                
+                {/* QR Code Container */}
+                <div className="relative bg-white p-3 rounded-xl shadow-lg border-2 border-[#32BB78]/20">
                   {myQrCode ? (
-                    <img src={myQrCode} alt="Mon QR Code" className="w-16 h-16" />
+                    <img src={myQrCode} alt="Mon QR Code" className="w-40 h-40" />
                   ) : (
-                    <div className="w-16 h-16 bg-gray-100 rounded-lg animate-pulse" />
+                    <div className="w-40 h-40 bg-gray-100 rounded-lg animate-pulse" />
                   )}
                 </div>
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#32BB78] rounded-full flex items-center justify-center shadow-lg">
-                  <QrCode className="w-2 h-2 text-white" />
-                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-xs text-foreground mb-0.5 truncate">Mon QR Code</h3>
-                <p className="text-[10px] text-muted-foreground mb-2 truncate">{myAccountNumber || 'Chargement...'}</p>
-                <div className="flex gap-1">
-                  <Button size="sm" variant="outline" onClick={handleDownloadMyQR} disabled={!myQrCode} className="flex-1 h-6 text-[10px] px-2 border-[#32BB78]/30 hover:bg-[#32BB78]/10">
-                    <Download className="w-3 h-3" />
+
+              {/* Numéro et Boutons */}
+              <div className="w-full text-center space-y-2">
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Compte</p>
+                  <p className="font-mono font-bold text-sm text-foreground">{myAccountNumber || 'Chargement...'}</p>
+                </div>
+                <div className="flex gap-2 justify-center w-full">
+                  <Button 
+                    onClick={handleDownloadMyQR} 
+                    disabled={!myQrCode} 
+                    variant="outline"
+                    className="flex-1 border-[#32BB78]/30 hover:bg-[#32BB78]/10 hover:border-[#32BB78]/50"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Télécharger
                   </Button>
-                  <Button size="sm" onClick={handleShareMyQR} disabled={!myQrCode} className="flex-1 h-6 text-[10px] px-2 bg-[#32BB78] hover:bg-[#2a9d63]">
-                    <Share2 className="w-3 h-3" />
+                  <Button 
+                    onClick={handleShareMyQR} 
+                    disabled={!myQrCode}
+                    className="flex-1 bg-[#32BB78] hover:bg-[#2a9d63] text-white"
+                  >
+                    <Share2 className="w-4 h-4 mr-2" />
+                    Partager
                   </Button>
                 </div>
               </div>
