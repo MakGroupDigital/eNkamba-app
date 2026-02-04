@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gemma2-9b-it', // Groq model - Gemma 2 9B (currently available)
+        model: 'mixtral-8x7b-32768', // Groq model - Mixtral 8x7B (stable, fast, available)
         messages: [
           {
             role: 'system',
