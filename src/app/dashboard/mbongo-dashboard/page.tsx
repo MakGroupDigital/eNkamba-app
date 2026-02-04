@@ -36,11 +36,10 @@ const WalletIcon = () => (
   </svg>
 );
 
-// Actions rapides principales (4 boutons simples)
+// Actions rapides principales (3 boutons simples)
 const quickActions = [
-  { icon: ScannerIcon, label: 'Scanner', href: '/dashboard/scanner', gradient: 'from-[#32BB78] to-[#2a9d63]' },
   { icon: PayReceiveIcon, label: 'Payer/Recevoir', href: '/dashboard/pay-receive', gradient: 'from-[#32BB78] to-[#2a9d63]' },
-  { icon: RequestIcon, label: 'Demander/Encaisser', href: '/dashboard/send', gradient: 'from-[#32BB78] to-[#2a9d63]' },
+  { icon: RequestIcon, label: 'Envoi', href: '/dashboard/send', gradient: 'from-[#32BB78] to-[#2a9d63]' },
   { icon: WalletIcon, label: 'Portefeuille', href: '/dashboard/wallet', gradient: 'from-[#32BB78] to-[#2a9d63]' },
 ];
 
@@ -167,7 +166,7 @@ export default function MbongoDashboard() {
 
         <div className="space-y-6">
           {/* Actions Rapides Principales */}
-          <div className="grid grid-cols-4 gap-4 sm:gap-6">
+          <div className="grid grid-cols-3 gap-4 sm:gap-6">
             {quickActions.map((action) => {
               const Icon = action.icon;
               return (
