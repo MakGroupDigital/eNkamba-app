@@ -11,6 +11,7 @@ import {
   serverTimestamp,
   Timestamp,
   getDocs,
+  setDoc,
 } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 
@@ -60,10 +61,10 @@ export function useFirestoreConversations() {
     setError(null);
 
     try {
+      // Simple query without orderBy to avoid requiring a composite index
       const q = query(
         collection(db, 'conversations'),
-        where('participants', 'array-contains', currentUser.uid),
-        orderBy('lastMessageTime', 'desc')
+        where('participants', 'array-contains', currentUser.uid)
       );
 
       const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -74,6 +75,14 @@ export function useFirestoreConversations() {
             ...doc.data(),
           } as Conversation);
         });
+        
+        // Sort by lastMessageTime client-side
+        convos.sort((a, b) => {
+          const aTime = a.lastMessageTime?.toMillis?.() || 0;
+          const bTime = b.lastMessageTime?.toMillis?.() || 0;
+          return bTime - aTime;
+        });
+        
         setConversations(convos);
         setIsLoading(false);
       });
@@ -126,27 +135,61 @@ export function useFirestoreConversations() {
 
   // Envoyer un message
   const sendMessage = useCallback(
-    async (conversationId: string, text: string) => {
+    async (conversationId: string, text: string, messageType: 'text' | 'voice' | 'video' | 'location' | 'money' | 'file' = 'text', metadata?: any) => {
       if (!currentUser) throw new Error('Utilisateur non authentifié');
 
       try {
+        // S'assurer que la conversation existe
+        try {
+          const docSnap = await getDocs(query(collection(db, 'conversations'), where('id', '==', conversationId)));
+          
+          if (docSnap.empty) {
+            // Créer une conversation par défaut
+            await addDoc(collection(db, 'conversations'), {
+              id: conversationId,
+              participants: [currentUser.uid, conversationId],
+              participantNames: [currentUser.displayName || 'Vous', 'Utilisateur'],
+              lastMessage: text || `[${messageType}]`,
+              lastMessageTime: serverTimestamp(),
+              createdAt: serverTimestamp(),
+              unreadCount: 0,
+            });
+          }
+        } catch (e) {
+          console.error('Erreur vérification conversation:', e);
+        }
+
+        // Construire le message en filtrant les valeurs undefined
+        const messageData: any = {
+          senderId: currentUser.uid,
+          senderName: currentUser.displayName || 'Utilisateur',
+          text: text || `[${messageType}]`,
+          messageType,
+          timestamp: serverTimestamp(),
+          isRead: false,
+        };
+
+        // Ajouter metadata seulement si défini
+        if (metadata) {
+          messageData.metadata = metadata;
+        }
+
         // Ajouter le message
         await addDoc(
           collection(db, 'conversations', conversationId, 'messages'),
-          {
-            senderId: currentUser.uid,
-            senderName: currentUser.displayName || 'Utilisateur',
-            text,
-            timestamp: serverTimestamp(),
-            isRead: false,
-          }
+          messageData
         );
 
-        // Mettre à jour le dernier message de la conversation
-        await updateDoc(doc(db, 'conversations', conversationId), {
-          lastMessage: text,
-          lastMessageTime: serverTimestamp(),
-        });
+        // Mettre à jour le dernier message (utiliser setDoc with merge pour éviter l'erreur)
+        try {
+          const messagePreview = text || `[${messageType}]`;
+          await updateDoc(doc(db, 'conversations', conversationId), {
+            lastMessage: messagePreview,
+            lastMessageTime: serverTimestamp(),
+          });
+        } catch (updateErr) {
+          console.warn('Mise à jour conversation (non critique):', updateErr);
+        }
       } catch (err) {
         console.error('Erreur envoi message:', err);
         throw err;

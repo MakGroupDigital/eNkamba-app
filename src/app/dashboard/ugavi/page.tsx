@@ -17,13 +17,17 @@ import {
   UgaviIcon,
   SendPackageIcon,
   TrackPackageIcon,
-  CalculatorIcon,
-  MapPinIcon,
-  HistoryNavIcon,
   SearchIcon,
+  WorldShippingIconBrand,
+  DeliveryMethodsIconBrand,
+  CalculateFeesIconBrand,
+  RelayPointIconBrand,
+  ShippingHistoryIconBrand,
 } from "@/components/icons/service-icons";
 
 type Currency = 'CDF' | 'USD' | 'EUR';
+
+// Icônes supprimées - utiliser celles du service-icons à la place
 
 const UgaviLogo = () => (
   <div className="flex items-center gap-3">
@@ -38,14 +42,14 @@ const UgaviLogo = () => (
 );
 
 const coreServices = [
-  { title: "Monde → Monde", description: "Expédiez vos colis partout dans le monde en toute simplicité.", icon: "✈️" },
-  { title: "Express & Standard", description: "Choisissez le mode de livraison adapté à vos besoins.", icon: "🌍" }
+  { title: "Monde → Monde", description: "Expédiez vos colis partout dans le monde en toute simplicité.", icon: WorldShippingIconBrand },
+  { title: "Express & Standard", description: "Choisissez le mode de livraison adapté à vos besoins.", icon: DeliveryMethodsIconBrand }
 ];
 
 const features = [
-  { icon: CalculatorIcon, label: "Calculer les frais", href: "#" },
-  { icon: MapPinIcon, label: "Trouver un point relais", href: "#" },
-  { icon: HistoryNavIcon, label: "Historique d'envoi", href: "#" }
+  { icon: CalculateFeesIconBrand, label: "Calculer les frais", href: "#" },
+  { icon: RelayPointIconBrand, label: "Trouver un point relais", href: "#" },
+  { icon: ShippingHistoryIconBrand, label: "Historique d'envoi", href: "#" }
 ];
 
 export default function UgaviPage() {
@@ -238,18 +242,21 @@ export default function UgaviPage() {
 
           {/* Core Services */}
           <div className="space-y-4 animate-in fade-in-up duration-500" style={{animationDelay: '300ms'}}>
-            {coreServices.map(service => (
-              <Card key={service.title}>
-                <CardContent className="p-4 flex items-center gap-4">
-                  <div className="text-4xl">{service.icon}</div>
-                  <div>
-                    <p className="font-headline font-bold text-primary">{service.title}</p>
-                    <p className="text-sm text-muted-foreground">{service.description}</p>
-                  </div>
-                  <ArrowRight className="ml-auto h-5 w-5 text-muted-foreground" />
-                </CardContent>
-              </Card>
-            ))}
+            {coreServices.map(service => {
+              const IconComponent = service.icon;
+              return (
+                <Card key={service.title}>
+                  <CardContent className="p-4 flex items-center gap-4">
+                    <IconComponent size={48} />
+                    <div className="flex-1">
+                      <p className="font-headline font-bold text-primary">{service.title}</p>
+                      <p className="text-sm text-muted-foreground">{service.description}</p>
+                    </div>
+                    <ArrowRight className="ml-auto h-5 w-5 text-muted-foreground" />
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
           
           {/* Key Features */}

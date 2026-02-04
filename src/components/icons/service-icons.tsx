@@ -1738,3 +1738,406 @@ export const RequestIcon = ({ className, size = 24 }: IconProps) => (
     <circle cx="34" cy="12" r="1.5" fill="#fff" />
   </svg>
 );
+
+// ==================== LOGISTIQUE - UGAVI ====================
+
+// Monde → Monde - Globe avec paquet
+export const WorldShippingIconBrand = ({ className, size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={cn("", className)}
+  >
+    <defs>
+      <linearGradient id="worldShippingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#32BB78" />
+        <stop offset="100%" stopColor="#0E5A59" />
+      </linearGradient>
+    </defs>
+    {/* Globe */}
+    <circle cx="18" cy="18" r="14" fill="url(#worldShippingGrad)" />
+    {/* Continents/Lignes */}
+    <path d="M8 18C8 18 18 10 28 18" stroke="#fff" strokeWidth="1.5" fill="none" opacity="0.6" />
+    <path d="M10 24L22 20L28 26" stroke="#fff" strokeWidth="1.5" fill="none" opacity="0.6" />
+    <circle cx="18" cy="18" r="14" stroke="#0E5A59" strokeWidth="2" fill="none" />
+    {/* Paquet/Boîte */}
+    <path d="M32 10L40 14V26H32V10Z" fill="#FF8C00" />
+    <path d="M40 14L44 18V30L40 26V14Z" fill="#E67E00" />
+    <path d="M32 10L36 6L44 10L40 14L32 10Z" fill="#FFB347" />
+    {/* Ruban */}
+    <rect x="36" y="6" width="2" height="20" fill="#32BB78" />
+    <ellipse cx="37" cy="26" rx="3" ry="1.5" fill="#32BB78" />
+    {/* Flèche direction */}
+    <path d="M24 30L28 34L26 32L30 36" stroke="#32BB78" strokeWidth="2" fill="none" strokeLinecap="round" />
+  </svg>
+);
+
+// Express & Standard - Camion de livraison
+export const DeliveryMethodsIconBrand = ({ className, size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={cn("", className)}
+  >
+    <defs>
+      <linearGradient id="deliveryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#FF8C00" />
+        <stop offset="100%" stopColor="#E67E00" />
+      </linearGradient>
+    </defs>
+    {/* Carrosserie camion */}
+    <path d="M8 22L12 14H32V32L8 32V22Z" fill="url(#deliveryGrad)" />
+    {/* Cabine */}
+    <rect x="30" y="14" width="10" height="10" rx="1" fill="#0E5A59" />
+    {/* Vitres cabine */}
+    <rect x="32" y="16" width="3" height="4" fill="#4FC3F7" opacity="0.8" />
+    <rect x="37" y="16" width="3" height="4" fill="#4FC3F7" opacity="0.8" />
+    {/* Roue avant */}
+    <circle cx="16" cy="32" r="5" fill="#333" />
+    <circle cx="16" cy="32" r="2.5" fill="#666" />
+    {/* Roue arrière */}
+    <circle cx="32" cy="32" r="5" fill="#333" />
+    <circle cx="32" cy="32" r="2.5" fill="#666" />
+    {/* Pare-chocs/Tuyau */}
+    <rect x="8" y="30" width="4" height="2" fill="#0E5A59" />
+    {/* Lumière/Signal */}
+    <circle cx="42" cy="20" r="2" fill="#FF8C00" opacity="0.8" />
+    {/* Flèches vitesse */}
+    <path d="M38 24L42 24M38 27L42 27" stroke="#32BB78" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+);
+
+// Calculer les frais - Calculatrice
+export const CalculateFeesIconBrand = ({ className, size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={cn("", className)}
+  >
+    <defs>
+      <linearGradient id="calculatorGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#32BB78" />
+        <stop offset="100%" stopColor="#0E5A59" />
+      </linearGradient>
+    </defs>
+    {/* Corps calculatrice */}
+    <rect x="8" y="6" width="32" height="38" rx="3" fill="url(#calculatorGrad)" />
+    {/* Écran */}
+    <rect x="12" y="10" width="24" height="8" rx="1" fill="#0E5A59" />
+    {/* Texte écran */}
+    <text x="24" y="16" textAnchor="middle" fontSize="5" fill="#32BB78" fontWeight="bold">28,750</text>
+    {/* Grille de boutons */}
+    <rect x="12" y="20" width="5" height="4" rx="1" fill="#0E5A59" stroke="#32BB78" strokeWidth="1" />
+    <rect x="19" y="20" width="5" height="4" rx="1" fill="#0E5A59" stroke="#32BB78" strokeWidth="1" />
+    <rect x="26" y="20" width="5" height="4" rx="1" fill="#0E5A59" stroke="#32BB78" strokeWidth="1" />
+    <rect x="33" y="20" width="3" height="4" rx="1" fill="#FF8C00" />
+    {/* Deuxième rangée */}
+    <rect x="12" y="26" width="5" height="4" rx="1" fill="#0E5A59" stroke="#32BB78" strokeWidth="1" />
+    <rect x="19" y="26" width="5" height="4" rx="1" fill="#0E5A59" stroke="#32BB78" strokeWidth="1" />
+    <rect x="26" y="26" width="5" height="4" rx="1" fill="#0E5A59" stroke="#32BB78" strokeWidth="1" />
+    <rect x="33" y="26" width="3" height="4" rx="1" fill="#FF8C00" />
+    {/* Troisième rangée */}
+    <rect x="12" y="32" width="5" height="4" rx="1" fill="#0E5A59" stroke="#32BB78" strokeWidth="1" />
+    <rect x="19" y="32" width="5" height="4" rx="1" fill="#0E5A59" stroke="#32BB78" strokeWidth="1" />
+    <rect x="26" y="32" width="5" height="4" rx="1" fill="#0E5A59" stroke="#32BB78" strokeWidth="1" />
+    <rect x="33" y="32" width="3" height="8" rx="1" fill="#FF8C00" />
+    {/* Boutons */}
+    <circle cx="14.5" cy="22" r="1.5" fill="#fff" opacity="0.6" />
+    <circle cx="21.5" cy="22" r="1.5" fill="#fff" opacity="0.6" />
+  </svg>
+);
+
+// Trouver un point relais - Boîte postale/Locales
+export const RelayPointIconBrand = ({ className, size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={cn("", className)}
+  >
+    <defs>
+      <linearGradient id="relayGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#FF8C00" />
+        <stop offset="100%" stopColor="#E67E00" />
+      </linearGradient>
+    </defs>
+    {/* Bâtiment */}
+    <path d="M8 28H40V42H8V28Z" fill="url(#relayGrad)" />
+    {/* Toit */}
+    <path d="M8 28L24 12L40 28" stroke="#0E5A59" strokeWidth="2" fill="none" />
+    <path d="M10 28L24 16L38 28" fill="#E67E00" opacity="0.7" />
+    {/* Porte */}
+    <rect x="20" y="32" width="8" height="10" rx="1" fill="#0E5A59" />
+    <circle cx="26" cy="37" r="1" fill="#FF8C00" />
+    {/* Fenêtres */}
+    <rect x="12" y="20" width="4" height="4" fill="#0E5A59" />
+    <rect x="32" y="20" width="4" height="4" fill="#0E5A59" />
+    <line x1="14" y1="20" x2="14" y2="24" stroke="#4FC3F7" strokeWidth="0.5" />
+    <line x1="12" y1="22" x2="16" y2="22" stroke="#4FC3F7" strokeWidth="0.5" />
+    {/* Drapeau/Indicateur */}
+    <rect x="38" y="16" width="2" height="6" fill="#0E5A59" />
+    <path d="M40 16C42 16 44 16 44 18C44 20 42 20 40 20Z" fill="#32BB78" />
+    {/* Marqueur localisation */}
+    <circle cx="24" cy="10" r="3" fill="#32BB78" stroke="#fff" strokeWidth="1" />
+  </svg>
+);
+
+// Historique d'envoi - Horloge/Timeline
+export const ShippingHistoryIconBrand = ({ className, size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={cn("", className)}
+  >
+    <defs>
+      <linearGradient id="historyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#32BB78" />
+        <stop offset="100%" stopColor="#0E5A59" />
+      </linearGradient>
+    </defs>
+    {/* Horloge */}
+    <circle cx="20" cy="20" r="14" fill="url(#historyGrad)" />
+    <circle cx="20" cy="20" r="12" stroke="#fff" strokeWidth="1" fill="none" opacity="0.3" />
+    {/* Aiguilles */}
+    <line x1="20" y1="20" x2="20" y2="10" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
+    <line x1="20" y1="20" x2="26" y2="20" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" />
+    <circle cx="20" cy="20" r="2" fill="#fff" />
+    {/* Marques horaires */}
+    <circle cx="20" cy="8" r="1" fill="#fff" opacity="0.7" />
+    <circle cx="32" cy="20" r="1" fill="#fff" opacity="0.7" />
+    <circle cx="20" cy="32" r="1" fill="#fff" opacity="0.7" />
+    <circle cx="8" cy="20" r="1" fill="#fff" opacity="0.7" />
+    {/* Flèche de progression */}
+    <path d="M32 10L38 16L32 18" stroke="#FF8C00" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+    {/* Points de timeline */}
+    <circle cx="36" cy="28" r="2" fill="#FF8C00" />
+    <circle cx="38" cy="36" r="2" fill="#FF8C00" opacity="0.6" />
+    <line x1="36" y1="30" x2="38" y2="34" stroke="#FF8C00" strokeWidth="1" opacity="0.6" />
+  </svg>
+);
+
+// ==================== CATÉGORIES E-COMMERCE ====================
+
+// Électronique - Écran/Monitor
+export const ElectronicsIconBrand = ({ className, size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={cn("", className)}
+  >
+    <defs>
+      <linearGradient id="electronicsGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#32BB78" />
+        <stop offset="100%" stopColor="#0E5A59" />
+      </linearGradient>
+    </defs>
+    {/* Écran */}
+    <rect x="8" y="6" width="32" height="24" rx="2" fill="url(#electronicsGrad)" />
+    {/* Contenu écran */}
+    <rect x="12" y="10" width="24" height="16" fill="#0E5A59" />
+    {/* Cercles (boutons/interface) */}
+    <circle cx="16" cy="14" r="3" fill="#32BB78" opacity="0.8" />
+    <circle cx="24" cy="14" r="3" fill="#FF8C00" opacity="0.8" />
+    <circle cx="32" cy="14" r="3" fill="#32BB78" opacity="0.8" />
+    {/* Barres de contenu */}
+    <rect x="14" y="20" width="6" height="2" rx="1" fill="#32BB78" opacity="0.6" />
+    <rect x="24" y="20" width="8" height="2" rx="1" fill="#FF8C00" opacity="0.6" />
+    {/* Pied */}
+    <rect x="18" y="30" width="12" height="4" fill="#0E5A59" />
+    {/* Support */}
+    <rect x="20" y="34" width="8" height="3" rx="1" fill="#0E5A59" />
+    {/* Reflet brillant */}
+    <ellipse cx="20" cy="12" rx="4" ry="2" fill="#fff" opacity="0.3" />
+  </svg>
+);
+
+// Mode & Vêtements - Robe/Habit
+export const FashionIconBrand = ({ className, size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={cn("", className)}
+  >
+    <defs>
+      <linearGradient id="fashionGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#FF8C00" />
+        <stop offset="100%" stopColor="#E67E00" />
+      </linearGradient>
+    </defs>
+    {/* Cintres */}
+    <path d="M12 8C10 8 9 9 9 11L9 30C9 32 11 34 13 34L35 34C37 34 39 32 39 30L39 11C39 9 38 8 36 8" stroke="url(#fashionGrad)" strokeWidth="2" fill="none" strokeLinecap="round" />
+    {/* Robe */}
+    <path d="M18 12H30L28 20L26 32C25 34 24 35 24 35C24 35 23 34 22 32L20 20L18 12Z" fill="url(#fashionGrad)" />
+    {/* Nœud/détail */}
+    <circle cx="24" cy="10" r="3" fill="#32BB78" />
+    {/* Plis */}
+    <path d="M22 15V25" stroke="#E67E00" strokeWidth="1.5" opacity="0.7" />
+    <path d="M26 15V25" stroke="#E67E00" strokeWidth="1.5" opacity="0.7" />
+    {/* Boutons */}
+    <circle cx="24" cy="18" r="1.5" fill="#fff" opacity="0.8" />
+    <circle cx="24" cy="23" r="1.5" fill="#fff" opacity="0.8" />
+    {/* Ceinture */}
+    <ellipse cx="24" cy="19" rx="8" ry="1.5" fill="#32BB78" />
+  </svg>
+);
+
+// Maison & Cuisine - Maison avec ustensiles
+export const HomeKitchenIconBrand = ({ className, size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={cn("", className)}
+  >
+    <defs>
+      <linearGradient id="homeKitchenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#32BB78" />
+        <stop offset="100%" stopColor="#0E5A59" />
+      </linearGradient>
+    </defs>
+    {/* Maison */}
+    <path d="M6 24L24 8L42 24V40H6V24Z" fill="url(#homeKitchenGrad)" />
+    {/* Toit */}
+    <path d="M6 24L24 8L42 24" stroke="#0E5A59" strokeWidth="2" fill="none" />
+    {/* Porte */}
+    <rect x="20" y="28" width="8" height="12" rx="1" fill="#0E5A59" />
+    <circle cx="26" cy="34" r="1.5" fill="#FF8C00" />
+    {/* Fenêtres */}
+    <rect x="10" y="20" width="6" height="6" rx="1" fill="#0E5A59" />
+    <rect x="32" y="20" width="6" height="6" rx="1" fill="#0E5A59" />
+    {/* Fourchette */}
+    <line x1="12" y1="14" x2="12" y2="22" stroke="#FF8C00" strokeWidth="1.5" strokeLinecap="round" />
+    <circle cx="11" cy="14" r="1" fill="#FF8C00" />
+    <circle cx="13" cy="14" r="1" fill="#FF8C00" />
+    {/* Couteau */}
+    <path d="M36 12L36 22L34 20" stroke="#32BB78" strokeWidth="2" strokeLinecap="round" />
+    {/* Pot */}
+    <ellipse cx="24" cy="12" rx="4" ry="3" fill="#0E5A59" opacity="0.7" />
+    <line x1="21" y1="12" x2="27" y2="12" stroke="#FF8C00" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+);
+
+// Beauté & Soins - Lotion/Produit beauté
+export const BeautyIconBrand = ({ className, size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={cn("", className)}
+  >
+    <defs>
+      <linearGradient id="beautyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#FF8C00" />
+        <stop offset="100%" stopColor="#E67E00" />
+      </linearGradient>
+    </defs>
+    {/* Bouteille */}
+    <rect x="14" y="10" width="20" height="24" rx="2" fill="url(#beautyGrad)" />
+    {/* Contenu brillant */}
+    <rect x="16" y="12" width="16" height="20" rx="1" fill="#E67E00" opacity="0.6" />
+    {/* Bouchon */}
+    <rect x="18" y="6" width="12" height="4" rx="1" fill="#0E5A59" />
+    {/* Spray/Pompe */}
+    <rect x="22" y="4" width="4" height="2" fill="#32BB78" />
+    {/* Étoiles/Sparkles */}
+    <circle cx="32" cy="18" r="1.5" fill="#32BB78" />
+    <path d="M32 16L33 18L35 19L33 20L32 22L31 20L29 19L31 18L32 16Z" stroke="#32BB78" strokeWidth="0.5" fill="#32BB78" opacity="0.8" />
+    {/* Paillettes */}
+    <circle cx="20" cy="15" r="1" fill="#32BB78" opacity="0.6" />
+    <circle cx="26" cy="22" r="1" fill="#32BB78" opacity="0.6" />
+    {/* Reflet */}
+    <ellipse cx="18" cy="12" rx="3" ry="2" fill="#fff" opacity="0.4" />
+  </svg>
+);
+
+// Sport & Loisirs - Balle/Sports
+export const SportsIconBrand = ({ className, size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={cn("", className)}
+  >
+    <defs>
+      <linearGradient id="sportsGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#32BB78" />
+        <stop offset="100%" stopColor="#0E5A59" />
+      </linearGradient>
+    </defs>
+    {/* Balle/Sphère */}
+    <circle cx="24" cy="18" r="12" fill="url(#sportsGrad)" />
+    {/* Lignes de balle */}
+    <path d="M14 18C14 18 18 14 24 14C30 14 34 18 34 18" stroke="#fff" strokeWidth="2" fill="none" strokeLinecap="round" opacity="0.7" />
+    <path d="M14 18C14 18 18 22 24 22C30 22 34 18 34 18" stroke="#fff" strokeWidth="2" fill="none" strokeLinecap="round" opacity="0.7" />
+    {/* Reflet brillant */}
+    <circle cx="19" cy="11" r="3" fill="#fff" opacity="0.5" />
+    {/* Raquette */}
+    <rect x="32" y="6" width="3" height="12" fill="#0E5A59" rx="1" />
+    <circle cx="33.5" cy="4" r="3" fill="#0E5A59" />
+    {/* Cordage */}
+    <path d="M31 4.5H36M31 6H36M31 7.5H36" stroke="#FF8C00" strokeWidth="0.5" opacity="0.8" />
+    {/* Chaussure */}
+    <path d="M8 30C6 28 6 34 8 36C12 38 18 36 20 32" fill="#FF8C00" opacity="0.7" />
+    <ellipse cx="10" cy="33" rx="2" ry="1.5" fill="#32BB78" />
+  </svg>
+);
+
+// Autres - Boîte/Paquet
+export const OthersIconBrand = ({ className, size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={cn("", className)}
+  >
+    <defs>
+      <linearGradient id="othersGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#FF8C00" />
+        <stop offset="100%" stopColor="#E67E00" />
+      </linearGradient>
+    </defs>
+    {/* Boîte arrière */}
+    <path d="M8 28L8 12C8 10 10 8 12 8L36 8C38 8 40 10 40 12L40 28" fill="url(#othersGrad)" opacity="0.7" />
+    {/* Boîte avant */}
+    <path d="M8 28L14 36C14 38 16 40 18 40L30 40C32 40 34 38 34 36L40 28" fill="url(#othersGrad)" />
+    {/* Couvercle */}
+    <path d="M10 10L24 4L38 10V12L24 6L10 12V10Z" fill="#0E5A59" />
+    {/* Ruban/Nœud */}
+    <rect x="22" y="4" width="4" height="20" fill="#32BB78" />
+    <ellipse cx="24" cy="24" rx="4" ry="2" fill="#32BB78" />
+    {/* Ombres */}
+    <path d="M8 28L14 36" stroke="#0E5A59" strokeWidth="1" opacity="0.5" />
+    <path d="M40 28L34 36" stroke="#0E5A59" strokeWidth="1" opacity="0.5" />
+    {/* Points de scellage */}
+    <circle cx="16" cy="20" r="1" fill="#fff" opacity="0.6" />
+    <circle cx="32" cy="20" r="1" fill="#fff" opacity="0.6" />
+  </svg>
+);

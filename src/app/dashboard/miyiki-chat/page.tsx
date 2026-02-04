@@ -1,16 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
-import { useContacts } from '@/hooks/useContacts';
 import { useConversations } from '@/hooks/useConversations';
-import { ContactsPermissionDialog } from '@/components/contacts-permission-dialog';
-import { ContactsList } from '@/components/contacts-list';
+import { ChatContactsDialog } from '@/components/chat-contacts-dialog';
 import { StartChatEmptyState } from '@/components/start-chat-empty-state';
 import {
   MiyikiChatIcon,
@@ -33,44 +31,16 @@ const filters = [
 
 export default function MiyikiChatPage() {
   const {
-    enkambaContacts,
-    nonEnkambaContacts,
-    hasPermission,
-    isLoading: contactsLoading,
-    requestContactsPermission,
-    sendInvitation,
-  } = useContacts();
-
-  const {
     conversations,
     isLoading: conversationsLoading,
     hasConversations,
   } = useConversations();
 
-  const [showPermissionDialog, setShowPermissionDialog] = useState(false);
-  const [showContactsList, setShowContactsList] = useState(false);
+  const [showChatContactsDialog, setShowChatContactsDialog] = useState(false);
 
-  // Afficher le dialog si l'utilisateur clique sur "Commencer"
+  // Afficher le dialog quand on clique sur "Commencer"
   const handleStartChat = () => {
-    if (!hasPermission) {
-      setShowPermissionDialog(true);
-    } else {
-      setShowContactsList(true);
-    }
-  };
-
-  // Gérer l'autorisation des contacts
-  const handleAllowContacts = async () => {
-    await requestContactsPermission();
-    setShowPermissionDialog(false);
-    setShowContactsList(true);
-  };
-
-  // Gérer l'envoi d'invitation
-  const handleSendInvitation = async (contact: any) => {
-    // Récupérer le code de parrainage de l'utilisateur actuel
-    const userReferralCode = localStorage.getItem('enkamba_referral_code') || 'ENKAMBA';
-    await sendInvitation(contact, userReferralCode);
+    setShowChatContactsDialog(true);
   };
 
   return (
@@ -86,23 +56,11 @@ export default function MiyikiChatPage() {
               <p className="text-xs text-white/70">Messagerie unifiée</p>
             </div>
         </div>
-        <Button size="icon" className="rounded-full bg-accent text-accent-foreground hover:bg-accent/90 w-12 h-12 shadow-lg" onClick={() => {
-          // Préparer les données de paiement pour un service
-          const paymentData = {
-            context: 'miyiki',
-            description: 'Paiement de service via Miyiki-Chat',
-            metadata: {
-              type: 'service_payment',
-              serviceType: 'chat_service'
-            }
-          };
-          
-          // Stocker les données
-          sessionStorage.setItem('miyiki_payment_data', JSON.stringify(paymentData));
-          
-          // Rediriger vers le paiement
-          window.location.href = '/dashboard/pay?context=miyiki';
-        }}>
+        <Button 
+          size="icon" 
+          className="rounded-full bg-accent text-accent-foreground hover:bg-accent/90 w-12 h-12 shadow-lg"
+          onClick={handleStartChat}
+        >
           <NewChatIcon size={24} />
           <span className="sr-only">Nouvelle conversation</span>
         </Button>
@@ -150,15 +108,8 @@ export default function MiyikiChatPage() {
             <div className="text-center py-8">
               <p className="text-muted-foreground">Chargement des conversations...</p>
             </div>
-          ) : !hasConversations && !showContactsList ? (
-            <StartChatEmptyState onStartChat={handleStartChat} isLoading={contactsLoading} />
-          ) : showContactsList ? (
-            <ContactsList
-              enkambaContacts={enkambaContacts}
-              nonEnkambaContacts={nonEnkambaContacts}
-              onSendInvitation={handleSendInvitation}
-              isLoading={contactsLoading}
-            />
+          ) : !hasConversations ? (
+            <StartChatEmptyState onStartChat={handleStartChat} />
           ) : (
             /* Conversations List */
             <div className="space-y-2">
@@ -192,12 +143,10 @@ export default function MiyikiChatPage() {
         </div>
       </main>
 
-      {/* Permission Dialog */}
-      <ContactsPermissionDialog
-        open={showPermissionDialog}
-        onOpenChange={setShowPermissionDialog}
-        onAllow={handleAllowContacts}
-        isLoading={contactsLoading}
+      {/* Chat Contacts Dialog */}
+      <ChatContactsDialog
+        open={showChatContactsDialog}
+        onOpenChange={setShowChatContactsDialog}
       />
     </div>
   );

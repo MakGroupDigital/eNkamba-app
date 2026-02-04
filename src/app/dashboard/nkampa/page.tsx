@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { ArrowRight, Star, ShoppingCart, X, Plus, Minus, MapPin, CreditCard, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { NkampaIcon, SearchIcon } from "@/components/icons/service-icons";
+import { NkampaIcon, SearchIcon, ElectronicsIconBrand, FashionIconBrand, HomeKitchenIconBrand, BeautyIconBrand, SportsIconBrand, OthersIconBrand } from "@/components/icons/service-icons";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -35,14 +35,26 @@ interface Product {
   rating: number;
 }
 
-const categories = [
-  { name: "Électronique", icon: "💻" },
-  { name: "Mode & Vêtements", icon: "👗" },
-  { name: "Maison & Cuisine", icon: "🍳" },
-  { name: "Beauté & Soins", icon: "💄" },
-  { name: "Sport & Loisirs", icon: "⚽" },
-  { name: "Autres", icon: "📦" },
+const allCategories = [
+  { name: "Électronique", icon: ElectronicsIconBrand },
+  { name: "Mode & Vêtements", icon: FashionIconBrand },
+  { name: "Maison & Cuisine", icon: HomeKitchenIconBrand },
+  { name: "Beauté & Soins", icon: BeautyIconBrand },
+  { name: "Sport & Loisirs", icon: SportsIconBrand },
+  { name: "Livres & Médias", icon: OthersIconBrand },
+  { name: "Jouets & Enfants", icon: OthersIconBrand },
+  { name: "Santé & Wellness", icon: OthersIconBrand },
+  { name: "Automobile & Moto", icon: OthersIconBrand },
+  { name: "Jardin & Extérieur", icon: OthersIconBrand },
+  { name: "Fournitures Bureau", icon: OthersIconBrand },
+  { name: "Animaux & Accessoires", icon: OthersIconBrand },
+  { name: "Art & Loisirs Créatifs", icon: OthersIconBrand },
+  { name: "Musique & Instruments", icon: OthersIconBrand },
+  { name: "Gourmet & Vins", icon: OthersIconBrand },
+  { name: "Autres", icon: OthersIconBrand },
 ];
+
+const categories = allCategories.slice(0, 6);
 
 const products: Product[] = [
   { id: '1', name: "Smartphone Pro X", price: 1125000, currency: 'CDF', image: "https://picsum.photos/seed/phone1/400/400", rating: 4.5 },
@@ -56,8 +68,7 @@ export default function NkampaPage() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [showCart, setShowCart] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [address, setAddress] = useState('');
+  const [showSuccess, setShowSuccess] = useState(false);  const [showAllCategories, setShowAllCategories] = useState(false);  const [address, setAddress] = useState('');
   const [phone, setPhone] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<'mbongo' | 'card'>('mbongo');
 
@@ -207,19 +218,22 @@ export default function NkampaPage() {
           <section className="animate-in fade-in-up" style={{animationDelay: '150ms'}}>
             <div className="flex justify-between items-center mb-4">
               <h2 className="font-headline text-2xl font-bold text-primary">Catégories</h2>
-              <Button variant="ghost" size="sm" className="text-primary">
+              <Button variant="ghost" size="sm" className="text-primary" onClick={() => setShowAllCategories(true)}>
                 Tout voir <ArrowRight className="ml-1 h-4 w-4" />
               </Button>
             </div>
             <div className="grid grid-cols-3 sm:grid-cols-6 gap-4 text-center">
-              {categories.map(cat => (
-                <button key={cat.name} className="group">
-                  <Card className="p-4 flex flex-col items-center justify-center gap-2 rounded-2xl h-full transition-all duration-300 hover:shadow-xl hover:scale-105 hover:border-primary/50">
-                    <div className="text-3xl">{cat.icon}</div>
-                    <p className="text-sm font-medium text-foreground transition-colors group-hover:text-primary">{cat.name}</p>
-                  </Card>
-                </button>
-              ))}
+              {categories.map(cat => {
+                const IconComponent = cat.icon;
+                return (
+                  <button key={cat.name} className="group">
+                    <Card className="p-4 flex flex-col items-center justify-center gap-3 rounded-2xl h-full transition-all duration-300 hover:shadow-xl hover:scale-105 hover:border-primary/50">
+                      <IconComponent size={40} />
+                      <p className="text-sm font-medium text-foreground transition-colors group-hover:text-primary">{cat.name}</p>
+                    </Card>
+                  </button>
+                );
+              })}
             </div>
           </section>
 
@@ -428,6 +442,29 @@ export default function NkampaPage() {
               Parfait
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* All Categories Dialog */}
+      <Dialog open={showAllCategories} onOpenChange={setShowAllCategories}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Toutes les catégories</DialogTitle>
+            <DialogDescription>Explorez toutes nos catégories de produits.</DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-3 md:grid-cols-4 gap-4 py-6">
+            {allCategories.map(cat => {
+              const IconComponent = cat.icon;
+              return (
+                <button key={cat.name} className="group">
+                  <Card className="p-4 flex flex-col items-center justify-center gap-3 rounded-2xl h-full transition-all duration-300 hover:shadow-xl hover:scale-105 hover:border-primary/50">
+                    <IconComponent size={40} />
+                    <p className="text-sm font-medium text-foreground text-center transition-colors group-hover:text-primary">{cat.name}</p>
+                  </Card>
+                </button>
+              );
+            })}
+          </div>
         </DialogContent>
       </Dialog>
     </div>

@@ -274,64 +274,63 @@ export default function WalletPage() {
 
                       <div className="relative z-10 flex flex-col h-full">
                         {/* TOP - Logo and Brand */}
-                        <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-start justify-between mb-3 sm:mb-4">
                           <div>
-                            <p className="text-xs font-bold opacity-70 tracking-widest uppercase">eNkamba</p>
-                            <p className="text-2xl font-bold tracking-wider">PAY</p>
+                            <p className="text-[10px] sm:text-xs font-bold opacity-70 tracking-widest uppercase">eNkamba</p>
+                            <p className="text-xl sm:text-2xl font-bold tracking-wider">PAY</p>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Image src="/enkamba-logo.png" alt="eNkamba" width={40} height={40} className="drop-shadow-lg w-10 h-10" />
-                            <div className="w-8 h-6 rounded-md bg-orange-400/30 border border-orange-300/50"></div>
+                          <div className="flex items-center gap-1 sm:gap-2">
+                            <Image src="/enkamba-logo.png" alt="eNkamba" width={40} height={40} className="drop-shadow-lg w-12 h-12 sm:w-14 sm:h-14" />
                           </div>
                         </div>
 
-                        {/* MIDDLE - Two Columns Layout */}
-                        <div className="flex-1 flex gap-4 items-center">
+                        {/* MIDDLE - Vertical Layout for Mobile, Two Columns for Desktop */}
+                        <div className="flex-1 flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center justify-between">
                           {/* LEFT - Card Number & Info */}
                           <div className="flex-1 flex flex-col justify-between">
                             {/* Card Number */}
-                            <div>
-                              <p className="text-xs opacity-60 mb-1 uppercase tracking-widest font-semibold">Numéro</p>
-                              <p className="text-lg sm:text-xl font-mono font-bold tracking-wider">
+                            <div className="mb-2">
+                              <p className="text-[9px] sm:text-xs opacity-60 mb-0.5 uppercase tracking-widest font-semibold">Numéro</p>
+                              <p className="text-sm sm:text-lg font-mono font-bold tracking-wider break-all sm:break-normal">
                                 {cardNumber ? cardNumber.split(' ').map((group, i) => (
                                   <span key={i}>{group}{i < 3 ? ' ' : ''}</span>
                                 )) : '•••• •••• •••• ••••'}
                               </p>
                             </div>
 
-                            {/* Holder & Expiry */}
-                            <div className="grid grid-cols-2 gap-3">
+                            {/* Holder & Expiry - Vertical on Mobile */}
+                            <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-2">
                               <div>
-                                <p className="text-xs opacity-60 mb-0.5 uppercase tracking-widest font-semibold">Titulaire</p>
-                                <p className="text-xs font-semibold truncate">{profile?.fullName?.substring(0, 12).toUpperCase() || 'UTILISATEUR'}</p>
+                                <p className="text-[9px] sm:text-xs opacity-60 mb-0.5 uppercase tracking-widest font-semibold">Titulaire</p>
+                                <p className="text-[10px] sm:text-xs font-semibold truncate">{profile?.fullName?.substring(0, 12).toUpperCase() || 'UTILISATEUR'}</p>
                               </div>
                               <div className="text-right">
-                                <p className="text-xs opacity-60 mb-0.5 uppercase tracking-widest font-semibold">Valide</p>
-                                <p className="text-xs font-mono font-semibold">{expiryDate}</p>
+                                <p className="text-[9px] sm:text-xs opacity-60 mb-0.5 uppercase tracking-widest font-semibold">Valide</p>
+                                <p className="text-[10px] sm:text-xs font-mono font-semibold">{expiryDate}</p>
                               </div>
                             </div>
 
                             {/* Account & Balance */}
-                            <div className="grid grid-cols-2 gap-3 pt-2 border-t border-white/20">
+                            <div className="grid grid-cols-2 gap-2 sm:gap-3 pt-2 border-t border-white/20">
                               <div>
-                                <p className="text-xs opacity-60 mb-0.5 uppercase tracking-widest font-semibold">Compte</p>
-                                <p className="text-xs font-mono font-bold">{accountNumber?.slice(-8) || '00000000'}</p>
+                                <p className="text-[9px] sm:text-xs opacity-60 mb-0.5 uppercase tracking-widest font-semibold">Compte</p>
+                                <p className="text-[10px] sm:text-xs font-mono font-bold">{accountNumber?.slice(-8) || '00000000'}</p>
                               </div>
                               <div className="text-right">
-                                <p className="text-xs opacity-60 mb-0.5 uppercase tracking-widest font-semibold">Solde</p>
+                                <p className="text-[9px] sm:text-xs opacity-60 mb-0.5 uppercase tracking-widest font-semibold">Solde</p>
                                 <div className="flex items-center justify-end gap-1">
-                                  <p className="text-xs font-mono font-bold">{displayBalance}</p>
+                                  <p className="text-[10px] sm:text-xs font-mono font-bold">{displayBalance}</p>
                                   <button onClick={(e) => { e.stopPropagation(); setIsBalanceVisible(!isBalanceVisible); }} className="p-0.5 hover:bg-white/20 rounded transition-colors">
-                                    {isBalanceVisible ? <Eye className="w-2.5 h-2.5" /> : <EyeOff className="w-2.5 h-2.5" />}
+                                    {isBalanceVisible ? <Eye className="w-3 h-3 sm:w-4 sm:h-4" /> : <EyeOff className="w-3 h-3 sm:w-4 sm:h-4" />}
                                   </button>
                                 </div>
                               </div>
                             </div>
                           </div>
 
-                          {/* RIGHT - QR Code (Larger) */}
+                          {/* RIGHT - QR Code (Visible everywhere) */}
                           {qrCode && (
-                            <div className="flex flex-col items-center gap-2">
+                            <div className="flex flex-col items-center gap-2 flex-shrink-0">
                               <div className="bg-white p-2 rounded-lg">
                                 <Image src={qrCode} alt="QR Code" width={80} height={80} className="w-16 h-16 sm:w-20 sm:h-20" />
                               </div>

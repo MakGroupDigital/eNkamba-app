@@ -676,3 +676,27 @@ E0124 15:08:20.897606    1137 watch.go:116] watchAllDir unable to walk dir `/Use
 [debug] [2026-01-24T14:09:20.895Z] E0124 15:09:20.895206    1137 watch.go:40] Failed to load config from "/Users/mac/eNkamba/dataconnect": could not find dataconnect.yaml in `/Users/mac/eNkamba/dataconnect`
 E0124 15:09:20.895178    1137 watch.go:116] watchAllDir unable to walk dir `/Users/mac/eNkamba/dataconnect`: lstat /Users/mac/eNkamba/dataconnect: no such file or directory
  {"metadata":{"emulator":{"name":"dataconnect"},"message":"E0124 15:09:20.895206    1137 watch.go:40] Failed to load config from \"/Users/mac/eNkamba/dataconnect\": could not find dataconnect.yaml in `/Users/mac/eNkamba/dataconnect`\nE0124 15:09:20.895178    1137 watch.go:116] watchAllDir unable to walk dir `/Users/mac/eNkamba/dataconnect`: lstat /Users/mac/eNkamba/dataconnect: no such file or directory\n"}}
+[debug] [2026-02-04T11:30:44.038Z] [Firebase Plugin] Activating Firebase extension.
+[debug] [2026-02-04T11:30:53.651Z] [Firebase Plugin] requireAuthWrapper
+[debug] [2026-02-04T11:30:53.655Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-02-04T11:30:53.656Z] > authorizing via signed-in user (contact.makgroup.digital@gmail.com)
+[debug] [2026-02-04T11:30:53.662Z] Checked if tokens are valid: false, expires at: 1770173035417
+[debug] [2026-02-04T11:30:53.663Z] Checked if tokens are valid: false, expires at: 1770173035417
+[debug] [2026-02-04T11:30:53.663Z] > refreshing access token with scopes: []
+[debug] [2026-02-04T11:30:53.666Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-02-04T11:30:53.667Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-02-04T11:30:53.682Z] [Firebase Plugin] VSCode notification server listening on port 40001
+[info] [Firebase Plugin] Starting Data Connect toolkit (version 3.1.0) on port 50001
+[info] i  dataconnect: downloading dataconnect-emulator-3.1.0... {"metadata":{"emulator":{"name":"dataconnect"},"message":"downloading dataconnect-emulator-3.1.0..."}}
+[debug] [2026-02-04T11:30:54.584Z] >>> [apiv2][query] GET https://storage.googleapis.com/firemat-preview-drop/emulator/dataconnect-emulator-macos-amd64-v3.1.0 
+[debug] [2026-02-04T11:30:58.019Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2026-02-04T11:30:58.019Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-02-04T11:30:58.059Z] [Firebase Plugin] User found:  contact.makgroup.digital@gmail.com
+[info] [Firebase Plugin] (Core:Project) New user detected, fetching projects
+[debug] [2026-02-04T11:30:58.061Z] Checked if tokens are valid: true, expires at: 1770208257020
+[debug] [2026-02-04T11:30:58.062Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects pageSize=1000
+[debug] [2026-02-04T11:31:00.549Z] <<< [apiv2][status] GET https://storage.googleapis.com/firemat-preview-drop/emulator/dataconnect-emulator-macos-amd64-v3.1.0 200
+[debug] [2026-02-04T11:31:00.550Z] <<< [apiv2][body] GET https://storage.googleapis.com/firemat-preview-drop/emulator/dataconnect-emulator-macos-amd64-v3.1.0 [stream]
+[debug] [2026-02-04T11:31:02.484Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects 200
+[debug] [2026-02-04T11:31:02.485Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects [omitted]
+[info] [Firebase Plugin] Stopping Data Connect toolkit

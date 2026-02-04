@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Contacts } from '@capacitor-community/contacts';
+import { useFirestoreContacts, FirestoreContact } from './useFirestoreContacts';
 
 export interface Contact {
   id: string;
@@ -41,14 +42,68 @@ export function useContacts() {
     error: null,
   });
 
+  // Utiliser le hook Firestore
+  const {
+    contacts: firestoreContacts,
+    isLoading: firestoreLoading,
+    error: firestoreError,
+    addContact,
+    updateContact,
+    deleteContact,
+  } = useFirestoreContacts();
+
   // Vérifier la permission au montage
   useEffect(() => {
     const savedPermission = localStorage.getItem(PERMISSION_STORAGE_KEY);
     if (savedPermission === 'true') {
       setState(prev => ({ ...prev, hasPermission: true }));
       loadCachedContacts();
+    } else {
+      // Charger les contacts Firestore par défaut
+      loadFirestoreContacts();
     }
   }, []);
+
+  // Charger les contacts Firestore
+  const loadFirestoreContacts = useCallback(() => {
+    if (firestoreContacts && firestoreContacts.length > 0) {
+      const enkamba = firestoreContacts.filter(c => c.isOnEnkamba);
+      const nonEnkamba = firestoreContacts.filter(c => !c.isOnEnkamba);
+      
+      setState(prev => ({
+        ...prev,
+        contacts: firestoreContacts.map(fc => ({
+          id: fc.id,
+          name: fc.name,
+          phoneNumber: fc.phoneNumber,
+          isOnEnkamba: fc.isOnEnkamba,
+          referralCode: fc.referralCode,
+        })),
+        enkambaContacts: enkamba.map(fc => ({
+          id: fc.id,
+          name: fc.name,
+          phoneNumber: fc.phoneNumber,
+          isOnEnkamba: fc.isOnEnkamba,
+          referralCode: fc.referralCode,
+        })),
+        nonEnkambaContacts: nonEnkamba.map(fc => ({
+          id: fc.id,
+          name: fc.name,
+          phoneNumber: fc.phoneNumber,
+          isOnEnkamba: fc.isOnEnkamba,
+          referralCode: fc.referralCode,
+        })),
+        isLoading: firestoreLoading,
+        hasPermission: true,
+        error: firestoreError,
+      }));
+    }
+  }, [firestoreContacts, firestoreLoading, firestoreError]);
+
+  // Synchroniser avec Firestore
+  useEffect(() => {
+    loadFirestoreContacts();
+  }, [loadFirestoreContacts]);
 
   // Charger les contacts en cache
   const loadCachedContacts = useCallback(() => {
@@ -61,38 +116,42 @@ export function useContacts() {
           contacts: parsed.contacts || [],
           enkambaContacts: parsed.enkambaContacts || [],
           nonEnkambaContacts: parsed.nonEnkambaContacts || [],
+          hasPermission: true,
         }));
       }
+      // Charger aussi les contacts Firestore en arrière-plan
+      loadFirestoreContacts();
     } catch (error) {
       console.error('Erreur chargement contacts en cache:', error);
+      loadFirestoreContacts();
     }
-  }, []);
+  }, [loadFirestoreContacts]);
 
   // Demander l'accès aux contacts
   const requestContactsPermission = useCallback(async () => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      // Utiliser Capacitor Contacts pour accéder aux vrais contacts du téléphone
-      const result = await Contacts.getContacts({
-        projection: {
-          name: true,
-          phones: true,
-          emails: true,
-        },
-      });
+      // Essayer Capacitor Contacts d'abord (pour mobile)
+      let processedContacts = { all: [], enkamba: [], nonEnkamba: [] };
+      let successCapacitor = false;
 
-      if (!result.contacts || result.contacts.length === 0) {
-        setState(prev => ({
-          ...prev,
-          isLoading: false,
-          error: 'Aucun contact trouvé sur votre téléphone',
-        }));
-        return;
+      try {
+        const result = await Contacts.getContacts({
+          projection: {
+            name: true,
+            phones: true,
+            emails: true,
+          },
+        });
+
+        if (result.contacts && result.contacts.length > 0) {
+          processedContacts = processContacts(result.contacts);
+          successCapacitor = true;
+        }
+      } catch (capacitorError) {
+        console.log('Capacitor Contacts non disponible, utilisation de Firestore:', capacitorError);
       }
-
-      // Traiter les contacts
-      const processedContacts = processContacts(result.contacts);
 
       // Sauvegarder
       localStorage.setItem(PERMISSION_STORAGE_KEY, 'true');
@@ -103,23 +162,36 @@ export function useContacts() {
         lastUpdated: Date.now(),
       }));
 
-      setState(prev => ({
-        ...prev,
-        contacts: processedContacts.all,
-        enkambaContacts: processedContacts.enkamba,
-        nonEnkambaContacts: processedContacts.nonEnkamba,
-        hasPermission: true,
-        isLoading: false,
-      }));
+      // Si succès avec Capacitor, mettre à jour l'état
+      if (successCapacitor) {
+        setState(prev => ({
+          ...prev,
+          contacts: processedContacts.all,
+          enkambaContacts: processedContacts.enkamba,
+          nonEnkambaContacts: processedContacts.nonEnkamba,
+          hasPermission: true,
+          isLoading: false,
+        }));
+      } else {
+        // Sinon, utiliser les contacts Firestore
+        setState(prev => ({
+          ...prev,
+          hasPermission: true,
+          isLoading: false,
+        }));
+        loadFirestoreContacts();
+      }
     } catch (error: any) {
-      console.error('Erreur accès contacts Capacitor:', error);
+      console.error('Erreur accès contacts:', error);
+      // Fallback à Firestore en cas d'erreur
       setState(prev => ({
         ...prev,
         isLoading: false,
-        error: error.message || 'Erreur lors de l\'accès aux contacts. Assurez-vous que l\'app a la permission d\'accéder aux contacts.',
+        hasPermission: true,
       }));
+      loadFirestoreContacts();
     }
-  }, []);
+  }, [loadFirestoreContacts]);
 
   // Traiter les contacts pour identifier ceux sur eNkamba
   const processContacts = (rawContacts: any[]) => {
@@ -212,10 +284,33 @@ export function useContacts() {
     });
   }, []);
 
+  // Ajouter un contact via Firestore
+  const addContactToFirestore = useCallback(async (name: string, phoneNumber: string, email?: string) => {
+    return await addContact({
+      name,
+      phoneNumber,
+      email,
+      isOnEnkamba: false,
+    });
+  }, [addContact]);
+
+  // Mettre à jour un contact via Firestore
+  const updateContactInFirestore = useCallback(async (contactId: string, updates: Partial<Omit<FirestoreContact, 'id' | 'userId' | 'createdAt' | 'updatedAt'>>) => {
+    return await updateContact(contactId, updates);
+  }, [updateContact]);
+
+  // Supprimer un contact via Firestore
+  const deleteContactFromFirestore = useCallback(async (contactId: string) => {
+    return await deleteContact(contactId);
+  }, [deleteContact]);
+
   return {
     ...state,
     requestContactsPermission,
     sendInvitation,
     resetPermissions,
+    addContactToFirestore,
+    updateContactInFirestore,
+    deleteContactFromFirestore,
   };
 }
