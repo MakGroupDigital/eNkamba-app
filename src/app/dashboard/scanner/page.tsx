@@ -16,6 +16,7 @@ import jsQR from 'jsqr';
 import QRCodeLib from 'qrcode';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useMoneyTransfer } from '@/hooks/useMoneyTransfer';
+import { PinVerification } from '@/components/payment/PinVerification';
 
 type Currency = 'CDF' | 'USD' | 'EUR';
 
@@ -23,6 +24,7 @@ interface ScannedQRData {
   accountNumber: string;
   fullName: string;
   email?: string;
+  uid?: string;
   isValid: boolean;
 }
 
@@ -42,6 +44,7 @@ export default function ScannerPage() {
   const [myQrCode, setMyQrCode] = useState<string>('');
   const [myAccountNumber, setMyAccountNumber] = useState<string>('');
   const [showMyQrDialog, setShowMyQrDialog] = useState(false);
+  const [showPinDialog, setShowPinDialog] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -60,7 +63,8 @@ export default function ScannerPage() {
       
       setMyAccountNumber(accountNum);
 
-      const qrData = `${accountNum}|${fullName}|${email}`;
+      // Format: accountNumber|fullName|email|uid
+      const qrData = `${accountNum}|${fullName}|${email}|${profile.uid}`;
 
       QRCodeLib.toDataURL(qrData, {
         width: 300,
@@ -114,11 +118,20 @@ export default function ScannerPage() {
     try {
       // Vérifier si c'est un format eNkamba valide
       if (data.startsWith('ENK')) {
-        // Format avec infos: ENK{accountNumber}|{fullName}|{email}
+        // Format avec infos: ENK{accountNumber}|{fullName}|{email}|{uid}
         const parts = data.split('|');
         
-        if (parts.length >= 2) {
-          // Format complet avec nom et email
+        if (parts.length >= 4) {
+          // Format complet avec nom, email et UID
+          return {
+            accountNumber: parts[0],
+            fullName: parts[1],
+            email: parts[2] || undefined,
+            uid: parts[3],
+            isValid: true,
+          };
+        } else if (parts.length >= 2) {
+          // Format ancien avec nom et email (sans UID)
           return {
             accountNumber: parts[0],
             fullName: parts[1],
@@ -432,6 +445,17 @@ export default function ScannerPage() {
       });
       return;
     }
+    // Ouvrir d'abord la vérification PIN
+    setShowPinDialog(true);
+  };
+
+  const handlePinSuccess = async () => {
+    // PIN vérifié, afficher le récapitulatif
+    setShowPinDialog(false);
+    
+    // Petit délai pour laisser le dialog se fermer proprement
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
     setShowConfirmDialog(true);
   };
 
@@ -456,11 +480,14 @@ export default function ScannerPage() {
     console.log('Appel de sendMoney...');
     
     // Effectuer le vrai transfert
+    // Si on a l'UID, on l'utilise directement (plus fiable)
+    // Sinon on utilise l'accountNumber
     const success = await sendMoney({
       amount: parseFloat(amount),
       senderCurrency: currency,
-      transferMethod: 'account',
-      recipientIdentifier: scannedData.accountNumber,
+      transferMethod: scannedData.uid ? 'account' : 'account',
+      recipientIdentifier: scannedData.uid ? undefined : scannedData.accountNumber,
+      recipientId: scannedData.uid || undefined,
       description: `Paiement de ${amount} ${currency} à ${scannedData.fullName}`,
     });
 
@@ -486,13 +513,32 @@ export default function ScannerPage() {
 
   // Télécharger mon QR code
   const handleDownloadMyQR = () => {
+    if (!myQrCode) return;
+    
     const link = document.createElement('a');
     link.href = myQrCode;
     link.download = `mon-qrcode-${myAccountNumber}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    toast({ title: 'QR Code téléchargé!', description: 'Enregistré avec succès' });
+    
+    // Utiliser une approche plus sûre pour le téléchargement
+    try {
+      document.body.appendChild(link);
+      link.click();
+      
+      // Retirer le lien après un court délai
+      setTimeout(() => {
+        if (document.body.contains(link)) {
+          document.body.removeChild(link);
+        }
+      }, 100);
+      
+      toast({ title: 'QR Code téléchargé!', description: 'Enregistré avec succès' });
+    } catch (error) {
+      console.error('Erreur téléchargement QR:', error);
+      // Nettoyer en cas d'erreur
+      if (document.body.contains(link)) {
+        document.body.removeChild(link);
+      }
+    }
   };
 
   // Partager mon QR code
@@ -837,6 +883,21 @@ export default function ScannerPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Dialog Vérification PIN */}
+      {showPinDialog && (
+        <PinVerification
+          key={`pin-${Date.now()}`}
+          isOpen={showPinDialog}
+          onClose={() => setShowPinDialog(false)}
+          onSuccess={handlePinSuccess}
+          paymentDetails={scannedData ? {
+            recipient: scannedData.fullName,
+            amount: amount,
+            currency: currency,
+          } : undefined}
+        />
+      )}
 
       {/* Dialog Mon QR Code */}
       <Dialog open={showMyQrDialog} onOpenChange={setShowMyQrDialog}>

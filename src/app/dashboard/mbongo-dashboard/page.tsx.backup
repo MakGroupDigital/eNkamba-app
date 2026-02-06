@@ -59,7 +59,8 @@ export default function MbongoDashboard() {
       
       setAccountNumber(accountNum);
 
-      const qrData = `${accountNum}|${fullName}|${email}`;
+      // Format: accountNumber|fullName|email|uid
+      const qrData = `${accountNum}|${fullName}|${email}|${profile.uid}`;
 
       QRCodeLib.toDataURL(qrData, {
         width: 300,

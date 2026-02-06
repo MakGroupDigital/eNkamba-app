@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction } from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogFooter, AlertDialogAction } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { CheckCircle2, DollarSign, User } from 'lucide-react';
@@ -56,7 +56,7 @@ export function TransferNotificationModal() {
           </AlertDialogTitle>
         </AlertDialogHeader>
 
-        <AlertDialogDescription className="space-y-4">
+        <div className="space-y-4">
           <Card className="bg-green-50/50 border-green-200 p-4 space-y-3">
             {/* Montant */}
             <div className="flex items-center justify-between">
@@ -69,7 +69,7 @@ export function TransferNotificationModal() {
                   {currentNotification.amount?.toLocaleString('fr-FR') || '0'}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {currentNotification.currency || currentNotification.senderCurrency || 'CDF'}
+                  {currentNotification.currency || 'CDF'}
                 </p>
               </div>
             </div>
@@ -100,7 +100,7 @@ export function TransferNotificationModal() {
               ℹ️ Veuillez confirmer la réception de ce transfert en cliquant sur "OK". Cette notification restera visible jusqu'à votre confirmation.
             </p>
           </div>
-        </AlertDialogDescription>
+        </div>
 
         <AlertDialogFooter className="flex gap-2">
           <Button

@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useUnifiedPayment, PaymentMethod, PaymentContext } from '@/hooks/useUnifiedPayment';
 import { QRScannerComponent } from './QRScannerComponent';
+import { PinVerification } from './PinVerification';
 import {
   ArrowLeft,
   Loader2,
@@ -54,6 +55,7 @@ export function UnifiedPaymentFlow(props: UnifiedPaymentFlowProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [transactionId, setTransactionId] = useState<string>('');
+  const [showPinDialog, setShowPinDialog] = useState(false);
 
   const paymentMethods = [
     { id: 'qrcode' as PaymentMethod, icon: QrCode, label: 'Scanner QR Code', description: 'Scannez le code QR' },
@@ -108,6 +110,17 @@ export function UnifiedPaymentFlow(props: UnifiedPaymentFlowProps) {
       });
       return;
     }
+
+    // Ouvrir la vérification PIN
+    setShowPinDialog(true);
+  };
+
+  const handlePinSuccess = async () => {
+    // PIN vérifié, procéder au paiement
+    setShowPinDialog(false);
+    
+    // Petit délai pour laisser le dialog se fermer proprement
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     const success = await processPayment({
       amount: parseFloat(amount),
@@ -384,6 +397,18 @@ export function UnifiedPaymentFlow(props: UnifiedPaymentFlowProps) {
           </CardContent>
         </Card>
       )}
+
+      {/* Dialog Vérification PIN */}
+      <PinVerification
+        isOpen={showPinDialog}
+        onClose={() => setShowPinDialog(false)}
+        onSuccess={handlePinSuccess}
+        paymentDetails={recipientInfo ? {
+          recipient: recipientInfo.fullName,
+          amount: amount,
+          currency: 'CDF',
+        } : undefined}
+      />
     </div>
   );
 }

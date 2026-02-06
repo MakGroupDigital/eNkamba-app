@@ -11,6 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useMoneyTransfer } from '@/hooks/useMoneyTransfer';
 import { useToast } from '@/hooks/use-toast';
+import { PinVerification } from '@/components/payment/PinVerification';
 import QRCodeLib from 'qrcode';
 import jsQR from 'jsqr';
 import { Card, CardContent } from '@/components/ui/card';
@@ -51,6 +52,7 @@ export default function PayReceivePage() {
   const [paymentCurrency, setPaymentCurrency] = useState<Currency>('CDF');
   const [paymentDestination, setPaymentDestination] = useState('');
   const [isPaying, setIsPaying] = useState(false);
+  const [showPinDialog, setShowPinDialog] = useState(false);
   
   // États pour paiement multiple
   const [multiPayRecipients, setMultiPayRecipients] = useState<Array<{id: string; accountNumber: string; fullName: string; amount: string}>>([]);
@@ -72,7 +74,8 @@ export default function PayReceivePage() {
       setAccountNumber(accountNum);
       setAccountName(fullName);
 
-      const qrData = `${accountNum}|${fullName}|${email}`;
+      // Format: accountNumber|fullName|email|uid
+      const qrData = `${accountNum}|${fullName}|${email}|${profile.uid}`;
       
       QRCodeLib.toDataURL(qrData, {
         width: 300,
@@ -283,13 +286,28 @@ export default function PayReceivePage() {
 
   const downloadQRCode = async () => {
     if (!qrCode) return;
+    
     const link = document.createElement('a');
     link.href = qrCode;
     link.download = `eNkamba-QR-${accountNumber}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    toast({ title: 'QR Code Téléchargé ✅' });
+    
+    try {
+      document.body.appendChild(link);
+      link.click();
+      
+      setTimeout(() => {
+        if (document.body.contains(link)) {
+          document.body.removeChild(link);
+        }
+      }, 100);
+      
+      toast({ title: 'QR Code Téléchargé ✅' });
+    } catch (error) {
+      console.error('Erreur téléchargement QR:', error);
+      if (document.body.contains(link)) {
+        document.body.removeChild(link);
+      }
+    }
   };
 
   const shareQRCode = async () => {
@@ -323,6 +341,17 @@ export default function PayReceivePage() {
       return;
     }
 
+    // Ouvrir la vérification PIN
+    setShowPinDialog(true);
+  };
+
+  const handlePinSuccess = async () => {
+    // PIN vérifié, procéder au paiement
+    setShowPinDialog(false);
+    
+    // Petit délai pour laisser le dialog se fermer proprement
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
     setIsPaying(true);
     console.log('Appel de sendMoney...');
     
@@ -872,6 +901,21 @@ export default function PayReceivePage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Dialog Vérification PIN */}
+      {showPinDialog && (
+        <PinVerification
+          key={`pin-${Date.now()}`}
+          isOpen={showPinDialog}
+          onClose={() => setShowPinDialog(false)}
+          onSuccess={handlePinSuccess}
+          paymentDetails={scannedData ? {
+            recipient: scannedData.fullName,
+            amount: paymentAmount,
+            currency: paymentCurrency,
+          } : undefined}
+        />
+      )}
     </div>
   );
 }

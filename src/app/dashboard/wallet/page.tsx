@@ -88,7 +88,8 @@ export default function WalletPage() {
       // Générer QR code avec données complètes: ENK{accountNumber}|{fullName}|{email}
       const fullName = profile.name || profile.fullName || 'eNkamba User';
       const email = profile.email || '';
-      const qrData = `${accountNum}|${fullName}|${email}`;
+      // Format: accountNumber|fullName|email|uid
+      const qrData = `${accountNum}|${fullName}|${email}|${profile.uid}`;
 
       QRCode.toDataURL(qrData, {
         width: 200,
