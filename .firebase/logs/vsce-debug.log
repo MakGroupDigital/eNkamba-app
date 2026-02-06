@@ -700,3 +700,27 @@ E0124 15:09:20.895178    1137 watch.go:116] watchAllDir unable to walk dir `/Use
 [debug] [2026-02-04T11:31:02.484Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects 200
 [debug] [2026-02-04T11:31:02.485Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects [omitted]
 [info] [Firebase Plugin] Stopping Data Connect toolkit
+[debug] [2026-02-05T13:16:16.267Z] [Firebase Plugin] Activating Firebase extension.
+[debug] [2026-02-05T13:16:34.534Z] [Firebase Plugin] requireAuthWrapper
+[debug] [2026-02-05T13:16:34.536Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-02-05T13:16:34.536Z] > authorizing via signed-in user (contact.makgroup.digital@gmail.com)
+[debug] [2026-02-05T13:16:34.541Z] Checked if tokens are valid: false, expires at: 1770208257020
+[debug] [2026-02-05T13:16:34.542Z] Checked if tokens are valid: false, expires at: 1770208257020
+[debug] [2026-02-05T13:16:34.542Z] > refreshing access token with scopes: []
+[debug] [2026-02-05T13:16:34.546Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-02-05T13:16:34.547Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-02-05T13:16:34.563Z] [Firebase Plugin] VSCode notification server listening on port 40001
+[info] [Firebase Plugin] Starting Data Connect toolkit (version 3.1.0) on port 50001
+[info] i  dataconnect: downloading dataconnect-emulator-3.1.0... {"metadata":{"emulator":{"name":"dataconnect"},"message":"downloading dataconnect-emulator-3.1.0..."}}
+[debug] [2026-02-05T13:16:35.866Z] >>> [apiv2][query] GET https://storage.googleapis.com/firemat-preview-drop/emulator/dataconnect-emulator-macos-amd64-v3.1.0 
+[debug] [2026-02-05T13:16:39.297Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2026-02-05T13:16:39.298Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-02-05T13:16:39.332Z] [Firebase Plugin] User found:  contact.makgroup.digital@gmail.com
+[info] [Firebase Plugin] (Core:Project) New user detected, fetching projects
+[debug] [2026-02-05T13:16:39.334Z] Checked if tokens are valid: true, expires at: 1770300998298
+[debug] [2026-02-05T13:16:39.335Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects pageSize=1000
+[debug] [2026-02-05T13:16:39.601Z] <<< [apiv2][status] GET https://storage.googleapis.com/firemat-preview-drop/emulator/dataconnect-emulator-macos-amd64-v3.1.0 200
+[debug] [2026-02-05T13:16:39.610Z] <<< [apiv2][body] GET https://storage.googleapis.com/firemat-preview-drop/emulator/dataconnect-emulator-macos-amd64-v3.1.0 [stream]
+[debug] [2026-02-05T13:16:43.850Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects 200
+[debug] [2026-02-05T13:16:43.850Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects [omitted]
+[info] [Firebase Plugin] Stopping Data Connect toolkit

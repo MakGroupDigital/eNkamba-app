@@ -15,6 +15,7 @@ import Link from 'next/link';
 import jsQR from 'jsqr';
 import QRCodeLib from 'qrcode';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useMoneyTransfer } from '@/hooks/useMoneyTransfer';
 
 type Currency = 'CDF' | 'USD' | 'EUR';
 
@@ -40,12 +41,14 @@ export default function ScannerPage() {
   const [importedImageData, setImportedImageData] = useState<string | null>(null);
   const [myQrCode, setMyQrCode] = useState<string>('');
   const [myAccountNumber, setMyAccountNumber] = useState<string>('');
+  const [showMyQrDialog, setShowMyQrDialog] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const animationFrameRef = useRef<number | null>(null);
   const { toast } = useToast();
   const { profile } = useUserProfile();
+  const { sendMoney, isProcessing: isTransferring } = useMoneyTransfer();
 
   // Générer le QR code de l'utilisateur avec logo
   useEffect(() => {
@@ -433,20 +436,52 @@ export default function ScannerPage() {
   };
 
   const handleConfirmPayment = async () => {
-    setIsPaying(true);
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    setIsPaying(false);
-    setShowConfirmDialog(false);
+    console.log('=== handleConfirmPayment APPELÉE ===');
+    console.log('scannedData:', scannedData);
+    console.log('amount:', amount);
+    console.log('currency:', currency);
     
-    toast({
-      title: 'Paiement réussi ! ✅',
-      description: `Vous avez payé ${amount} ${currency} à ${scannedData?.fullName}.`,
+    if (!scannedData || !amount || parseFloat(amount) <= 0) {
+      console.log('Validation échouée');
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Données invalides',
+      });
+      return;
+    }
+
+    setIsPaying(true);
+    setShowConfirmDialog(false);
+    console.log('Appel de sendMoney...');
+    
+    // Effectuer le vrai transfert
+    const success = await sendMoney({
+      amount: parseFloat(amount),
+      senderCurrency: currency,
+      transferMethod: 'account',
+      recipientIdentifier: scannedData.accountNumber,
+      description: `Paiement de ${amount} ${currency} à ${scannedData.fullName}`,
     });
 
-    // Reset
-    setAmount('');
-    setScannedData(null);
-    setIsScanning(true);
+    setIsPaying(false);
+    console.log('Résultat de sendMoney:', success);
+    
+    if (success) {
+      console.log('Paiement réussi');
+      toast({
+        title: 'Paiement réussi ! ✅',
+        description: `Vous avez payé ${amount} ${currency} à ${scannedData.fullName}.`,
+      });
+
+      // Reset
+      setAmount('');
+      setScannedData(null);
+      setIsScanning(true);
+    } else {
+      console.log('Paiement échoué');
+      // Le toast d'erreur est déjà affiché par sendMoney
+    }
   };
 
   // Télécharger mon QR code
@@ -507,62 +542,17 @@ export default function ScannerPage() {
                     <ArrowLeft />
                 </Link>
             </Button>
-            <h1 className="font-headline text-xl font-bold text-primary">Scanner QR Code eNkamba</h1>
+            <h1 className="font-headline text-xl font-bold text-primary flex-1">Scanner QR Code eNkamba</h1>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setShowMyQrDialog(true)}
+              className="border-[#32BB78]/30 hover:bg-[#32BB78]/10 hover:border-[#32BB78]/50"
+            >
+              <QrCode className="w-4 h-4 mr-2" />
+              Mon QR
+            </Button>
         </header>
-
-        {/* Mon QR Code - Compact et Visible */}
-        <Card className="bg-gradient-to-br from-[#32BB78]/10 via-[#32BB78]/5 to-transparent border-2 border-[#32BB78]/30 overflow-visible mb-4 shadow-lg flex-shrink-0">
-          <CardContent className="p-4 space-y-3">
-            <h3 className="font-semibold text-sm flex items-center gap-2 text-foreground">
-              <QrCode className="w-4 h-4 text-[#32BB78]" />
-              Mes informations de reçu
-            </h3>
-            
-            {/* QR Code et Infos */}
-            <div className="flex flex-col items-center gap-3">
-              <div className="relative">
-                {/* Glow Effect */}
-                <div className="absolute -inset-2 bg-gradient-to-r from-[#32BB78]/30 to-[#2a9d63]/20 rounded-xl blur-lg animate-pulse" />
-                
-                {/* QR Code Container */}
-                <div className="relative bg-white p-3 rounded-xl shadow-lg border-2 border-[#32BB78]/20">
-                  {myQrCode ? (
-                    <img src={myQrCode} alt="Mon QR Code" className="w-40 h-40" />
-                  ) : (
-                    <div className="w-40 h-40 bg-gray-100 rounded-lg animate-pulse" />
-                  )}
-                </div>
-              </div>
-
-              {/* Numéro et Boutons */}
-              <div className="w-full text-center space-y-2">
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Compte</p>
-                  <p className="font-mono font-bold text-sm text-foreground">{myAccountNumber || 'Chargement...'}</p>
-                </div>
-                <div className="flex gap-2 justify-center w-full">
-                  <Button 
-                    onClick={handleDownloadMyQR} 
-                    disabled={!myQrCode} 
-                    variant="outline"
-                    className="flex-1 border-[#32BB78]/30 hover:bg-[#32BB78]/10 hover:border-[#32BB78]/50"
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Télécharger
-                  </Button>
-                  <Button 
-                    onClick={handleShareMyQR} 
-                    disabled={!myQrCode}
-                    className="flex-1 bg-[#32BB78] hover:bg-[#2a9d63] text-white"
-                  >
-                    <Share2 className="w-4 h-4 mr-2" />
-                    Partager
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
       <Card className="flex-1 flex flex-col">
         <CardContent className="p-4 flex-1 flex flex-col items-center justify-center gap-4">
@@ -847,6 +837,76 @@ export default function ScannerPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Dialog Mon QR Code */}
+      <Dialog open={showMyQrDialog} onOpenChange={setShowMyQrDialog}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <QrCode className="w-5 h-5 text-[#32BB78]" />
+              Mon QR Code eNkamba
+            </DialogTitle>
+            <DialogDescription>
+              Partagez ce QR code pour recevoir des paiements
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {/* QR Code */}
+            <div className="flex flex-col items-center gap-3">
+              <div className="relative">
+                <div className="absolute -inset-2 bg-gradient-to-r from-[#32BB78]/30 to-[#2a9d63]/20 rounded-xl blur-lg animate-pulse" />
+                <div className="relative bg-white p-4 rounded-xl shadow-lg border-2 border-[#32BB78]/20">
+                  {myQrCode ? (
+                    <img src={myQrCode} alt="Mon QR Code" className="w-48 h-48" />
+                  ) : (
+                    <div className="w-48 h-48 bg-gray-100 rounded-lg animate-pulse flex items-center justify-center">
+                      <QrCode className="w-12 h-12 text-gray-400" />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Numéro de compte */}
+              <div className="w-full text-center space-y-1">
+                <p className="text-xs text-muted-foreground">Numéro de compte</p>
+                <p className="font-mono font-bold text-foreground">{myAccountNumber || 'Chargement...'}</p>
+              </div>
+            </div>
+
+            {/* Boutons d'action */}
+            <div className="flex gap-2">
+              <Button 
+                onClick={handleDownloadMyQR} 
+                disabled={!myQrCode} 
+                variant="outline"
+                className="flex-1 border-[#32BB78]/30 hover:bg-[#32BB78]/10"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Télécharger
+              </Button>
+              <Button 
+                onClick={handleShareMyQR} 
+                disabled={!myQrCode}
+                className="flex-1 bg-[#32BB78] hover:bg-[#2a9d63] text-white"
+              >
+                <Share2 className="w-4 h-4 mr-2" />
+                Partager
+              </Button>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowMyQrDialog(false)}
+              className="w-full"
+            >
+              Fermer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

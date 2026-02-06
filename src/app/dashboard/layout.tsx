@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import HubNavigation from '@/components/dashboard/hub-navigation';
 import AuthGuard from '@/components/auth-guard';
 import { ModuleKycGate } from '@/components/module-kyc-gate';
+import { TransferNotificationModal } from '@/components/transfer-notification-modal';
 
 export default function DashboardLayout({
   children,
@@ -57,6 +58,9 @@ export default function DashboardLayout({
           )}
 
           <HubNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
+          
+          {/* Modal de notification de transfert reçu */}
+          <TransferNotificationModal />
         </div>
       </ModuleKycGate>
     </AuthGuard>

@@ -34,11 +34,17 @@ export default function ConversationClient() {
     const [recordingBlob, setRecordingBlob] = useState<Blob | null>(null);
     const [recordingDuration, setRecordingDuration] = useState(0);
     const [playingMessageId, setPlayingMessageId] = useState<string | null>(null);
+    const [replyingTo, setReplyingTo] = useState<any>(null);
+    const [audioAnalyser, setAudioAnalyser] = useState<AnalyserNode | null>(null);
+    const [frequencyData, setFrequencyData] = useState<Uint8Array | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const streamRef = useRef<MediaStream | null>(null);
     const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
     const videoPreviewRef = useRef<HTMLVideoElement>(null);
+    const audioContextRef = useRef<AudioContext | null>(null);
+    const analyserRef = useRef<AnalyserNode | null>(null);
+    const animationFrameRef = useRef<number | null>(null);
 
     // Charger les infos de la conversation et du contact
     useEffect(() => {
@@ -121,13 +127,49 @@ export default function ConversationClient() {
         setIsSending(true);
 
         try {
-            await sendMessage(conversationId, messageText, 'text');
+            const metadata = replyingTo ? { replyTo: replyingTo.id } : undefined;
+            await sendMessage(conversationId, messageText, 'text', metadata);
+            setReplyingTo(null);
         } catch (error) {
             console.error('Erreur envoi message:', error);
             setInputValue(messageText); // Restaurer le message en cas d'erreur
         } finally {
             setIsSending(false);
         }
+    };
+
+    // Initialiser l'analyseur audio pour le spectre
+    const initAudioAnalyser = (audioElement: HTMLAudioElement) => {
+        if (!audioContextRef.current) {
+            audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        }
+        
+        const audioContext = audioContextRef.current;
+        const source = audioContext.createMediaElementSource(audioElement);
+        const analyser = audioContext.createAnalyser();
+        analyser.fftSize = 256;
+        
+        source.connect(analyser);
+        analyser.connect(audioContext.destination);
+        
+        analyserRef.current = analyser;
+        return analyser;
+    };
+
+    // Mettre à jour le spectre audio
+    const updateAudioSpectrum = (analyser: AnalyserNode, messageId: string) => {
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        
+        const animate = () => {
+            analyser.getByteFrequencyData(dataArray);
+            setFrequencyData(new Uint8Array(dataArray));
+            
+            if (playingMessageId === messageId) {
+                animationFrameRef.current = requestAnimationFrame(animate);
+            }
+        };
+        
+        animate();
     };
 
     // Envoyer un message vocal
@@ -249,7 +291,8 @@ export default function ConversationClient() {
                 }, 200);
 
                 try {
-                    await sendMessage(conversationId, messageText, recordingType, { 
+                    const messageType = recordingType === 'audio' ? 'voice' : 'video';
+                    await sendMessage(conversationId, messageText, messageType, { 
                         [recordingType]: base64,
                         duration: recordingDuration
                     });
@@ -408,58 +451,123 @@ export default function ConversationClient() {
                         return (
                             <div
                                 key={message.id}
-                                className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
+                                className={`flex ${isOwn ? 'justify-end' : 'justify-start'} group`}
                             >
-                                <Card
-                                    className={`max-w-xs px-4 py-2 rounded-2xl ${
-                                        isOwn
-                                            ? 'bg-primary text-white rounded-br-none'
-                                            : 'bg-muted text-foreground rounded-bl-none'
-                                    }`}
-                                >
-                                    {isAudioMessage && audioData ? (
-                                        <div className="space-y-2">
-                                            <div className="flex items-center gap-2">
-                                                <Button
-                                                    size="sm"
-                                                    variant="ghost"
-                                                    className={`h-8 w-8 p-0 rounded-full flex items-center justify-center ${
-                                                        isOwn ? 'hover:bg-white/20 text-white' : 'hover:bg-gray-200'
-                                                    }`}
-                                                    onClick={() => setPlayingMessageId(isPlaying ? null : message.id)}
-                                                >
-                                                    {isPlaying ? (
-                                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                                    ) : (
-                                                        <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                                                            <path d="M8 5v14l11-7z" />
-                                                        </svg>
-                                                    )}
-                                                </Button>
-                                                <span className={`text-xs font-medium ${isOwn ? 'text-white' : ''}`}>
-                                                    {message.metadata?.duration ? `${Math.floor(message.metadata.duration / 60)}:${String(message.metadata.duration % 60).padStart(2, '0')}` : 'Vocal'}
-                                                </span>
+                                <div className="flex flex-col gap-1 w-full max-w-md">
+                                    {/* Reply Preview - Show the original message being replied to */}
+                                    {message.metadata?.replyTo && (() => {
+                                        const repliedMessage = messages.find(m => m.id === message.metadata.replyTo);
+                                        return (
+                                            <div className={`text-xs px-3 py-2 rounded-lg border-l-4 ${
+                                                isOwn 
+                                                    ? 'border-white/40 bg-white/10 text-white/80' 
+                                                    : 'border-primary/40 bg-primary/10 text-primary/80'
+                                            }`}>
+                                                <p className="font-semibold mb-1">
+                                                    {repliedMessage?.senderName || 'Utilisateur'}
+                                                </p>
+                                                <p className="truncate opacity-80">
+                                                    {repliedMessage?.text?.substring(0, 60) || 'Message audio/vidéo'}
+                                                </p>
                                             </div>
-                                            {audioData && (
-                                                <audio
-                                                    src={audioData}
-                                                    autoPlay={isPlaying}
-                                                    onEnded={() => setPlayingMessageId(null)}
-                                                    className="w-full h-6"
+                                        );
+                                    })()}
+                                    
+                                    <Card
+                                        className={`px-4 py-2 rounded-2xl cursor-pointer hover:shadow-md transition-shadow ${
+                                            isOwn
+                                                ? 'bg-primary text-white rounded-br-none'
+                                                : 'bg-muted text-foreground rounded-bl-none'
+                                        }`}
+                                        onContextMenu={(e) => {
+                                            e.preventDefault();
+                                            setReplyingTo(message);
+                                        }}
+                                    >
+                                        {isAudioMessage && audioData ? (
+                                            <div className="space-y-3 w-full">
+                                                <div className="flex items-center gap-3">
+                                                    <Button
+                                                        size="sm"
+                                                        variant="ghost"
+                                                        className={`h-10 w-10 p-0 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                                            isOwn ? 'hover:bg-white/20 text-white' : 'hover:bg-gray-200 text-gray-700'
+                                                        }`}
+                                                        onClick={() => {
+                                                            const audioElement = document.getElementById(`audio-${message.id}`) as HTMLAudioElement;
+                                                            if (audioElement) {
+                                                                if (isPlaying) {
+                                                                    audioElement.pause();
+                                                                    setPlayingMessageId(null);
+                                                                    if (animationFrameRef.current) {
+                                                                        cancelAnimationFrame(animationFrameRef.current);
+                                                                    }
+                                                                } else {
+                                                                    audioElement.play();
+                                                                    setPlayingMessageId(message.id);
+                                                                    const analyser = initAudioAnalyser(audioElement);
+                                                                    updateAudioSpectrum(analyser, message.id);
+                                                                }
+                                                            }
+                                                        }}
+                                                    >
+                                                        {isPlaying ? (
+                                                            <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                                                                <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+                                                            </svg>
+                                                        ) : (
+                                                            <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                                                                <path d="M8 5v14l11-7z" />
+                                                            </svg>
+                                                        )}
+                                                    </Button>
+                                                    <span className={`text-sm font-medium ${isOwn ? 'text-white' : 'text-gray-700'}`}>
+                                                        {message.metadata?.duration ? `${Math.floor(message.metadata.duration / 60)}:${String(message.metadata.duration % 60).padStart(2, '0')}` : 'Vocal'}
+                                                    </span>
+                                                </div>
+                                                
+                                                {/* Audio Spectrum Visualizer */}
+                                                {isPlaying && frequencyData && (
+                                                    <div className="flex items-center justify-center gap-0.5 h-12 bg-black/10 rounded-lg p-2">
+                                                        {Array.from({ length: 32 }).map((_, i) => {
+                                                            const index = Math.floor((i / 32) * frequencyData.length);
+                                                            const value = frequencyData[index] || 0;
+                                                            const height = (value / 255) * 100;
+                                                            return (
+                                                                <div
+                                                                    key={i}
+                                                                    className={`flex-1 rounded-full transition-all duration-75 ${
+                                                                        isOwn ? 'bg-white/60' : 'bg-primary/60'
+                                                                    }`}
+                                                                    style={{ height: `${Math.max(height, 10)}%` }}
+                                                                />
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
+                                                
+                                                {audioData && (
+                                                    <audio
+                                                        id={`audio-${message.id}`}
+                                                        src={audioData}
+                                                        onPlay={() => setPlayingMessageId(message.id)}
+                                                        onPause={() => setPlayingMessageId(null)}
+                                                        onEnded={() => setPlayingMessageId(null)}
+                                                        className="w-full h-8"
+                                                        controls
+                                                    />
+                                                )}
+                                            </div>
+                                        ) : isVideoMessage && videoData ? (
+                                            <div className="space-y-2">
+                                                <video
+                                                    src={videoData}
+                                                    className="w-full h-48 bg-black rounded-lg"
                                                     controls
                                                 />
-                                            )}
-                                        </div>
-                                    ) : isVideoMessage && videoData ? (
-                                        <div className="space-y-2">
-                                            <video
-                                                src={videoData}
-                                                className="w-full h-48 bg-black rounded-lg"
-                                                controls
-                                            />
-                                            <p className="text-xs text-center opacity-70">
-                                                {message.metadata?.duration ? `${Math.floor(message.metadata.duration / 60)}:${String(message.metadata.duration % 60).padStart(2, '0')}` : 'Vidéo'}
-                                            </p>
+                                                <p className="text-xs text-center opacity-70">
+                                                    {message.metadata?.duration ? `${Math.floor(message.metadata.duration / 60)}:${String(message.metadata.duration % 60).padStart(2, '0')}` : 'Vidéo'}
+                                                </p>
                                         </div>
                                     ) : (
                                         <p className="text-sm">{message.text}</p>
@@ -476,7 +584,20 @@ export default function ConversationClient() {
                                             minute: '2-digit'
                                         }) || ''}
                                     </p>
-                                </Card>
+                                    </Card>
+                                    
+                                    {/* Reply Button */}
+                                    <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className={`opacity-0 group-hover:opacity-100 transition-opacity text-xs h-6 ${
+                                            isOwn ? 'text-primary' : 'text-muted-foreground'
+                                        }`}
+                                        onClick={() => setReplyingTo(message)}
+                                    >
+                                        Répondre
+                                    </Button>
+                                </div>
                             </div>
                         );
                     })
@@ -487,6 +608,27 @@ export default function ConversationClient() {
             {/* Fixed Input Footer */}
             <footer className="flex-shrink-0 border-t bg-background space-y-3 z-20 shadow-lg flex flex-col max-h-[30vh] overflow-y-auto">
                 <div className="p-4 space-y-3">
+                
+                {/* Reply Preview */}
+                {replyingTo && (
+                    <div className={`border-l-4 border-primary rounded-lg p-3 bg-muted/50 flex items-start justify-between`}>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-xs font-semibold text-primary mb-1">Réponse à {replyingTo.senderName}</p>
+                            <p className="text-sm truncate text-muted-foreground">
+                                {replyingTo.text?.substring(0, 50) || 'Message audio'}
+                            </p>
+                        </div>
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-6 w-6 p-0 flex-shrink-0"
+                            onClick={() => setReplyingTo(null)}
+                        >
+                            <X className="h-4 w-4" />
+                        </Button>
+                    </div>
+                )}
+                
                 {/* Recording Preview */}
                 {recordingBlob && recordingType && (
                     <div className="bg-muted rounded-lg p-4 space-y-3">
@@ -681,13 +823,13 @@ export default function ConversationClient() {
 
                 {/* Recording Indicator - Video */}
                 {isRecording && recordingType === 'video' && !recordingBlob && (
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-3 space-y-3">
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4 space-y-4">
                         <div className="flex items-center gap-3">
-                            <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                            <span className="text-sm font-medium text-red-700 flex-1">
+                            <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                            <span className="text-base font-semibold text-red-700 flex-1">
                                 Enregistrement vidéo en cours...
                             </span>
-                            <span className="text-sm font-mono text-red-700">
+                            <span className="text-lg font-mono font-bold text-red-700 bg-red-100 px-3 py-1 rounded-md">
                                 {Math.floor(recordingDuration / 60)}:{String(recordingDuration % 60).padStart(2, '0')}
                             </span>
                         </div>
@@ -695,7 +837,7 @@ export default function ConversationClient() {
                         {/* Video Preview - Live Stream */}
                         <video
                             ref={videoPreviewRef}
-                            className="w-full h-48 bg-black rounded-lg transform -scale-x-100"
+                            className="w-full h-56 bg-black rounded-lg transform -scale-x-100"
                             autoPlay={true}
                             playsInline={true}
                             muted={true}
@@ -705,7 +847,7 @@ export default function ConversationClient() {
                         {/* Stop Button */}
                         <Button
                             size="sm"
-                            className="w-full gap-2 bg-red-500 hover:bg-red-600"
+                            className="w-full gap-2 bg-red-500 hover:bg-red-600 text-white font-semibold"
                             onClick={stopRecordingNow}
                         >
                             <Square className="h-4 w-4" fill="currentColor" />
@@ -716,26 +858,27 @@ export default function ConversationClient() {
 
                 {/* Recording Indicator - Audio */}
                 {isRecording && recordingType === 'audio' && !recordingBlob && (
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-3 space-y-3">
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4 space-y-4">
                         <div className="flex items-center gap-3">
-                            <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                            <span className="text-sm font-medium text-red-700 flex-1">
+                            <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                            <span className="text-base font-semibold text-red-700 flex-1">
                                 Enregistrement audio en cours...
                             </span>
-                            <span className="text-sm font-mono text-red-700">
+                            <span className="text-lg font-mono font-bold text-red-700 bg-red-100 px-3 py-1 rounded-md">
                                 {Math.floor(recordingDuration / 60)}:{String(recordingDuration % 60).padStart(2, '0')}
                             </span>
                         </div>
 
                         {/* Audio Visualizer */}
-                        <div className="flex items-center justify-center gap-1 h-8">
-                            {[...Array(12)].map((_, i) => (
+                        <div className="flex items-center justify-center gap-1 h-12">
+                            {[...Array(16)].map((_, i) => (
                                 <div
                                     key={i}
-                                    className="w-1 bg-red-500 rounded-full animate-pulse"
+                                    className="w-1.5 bg-red-500 rounded-full"
                                     style={{
-                                        height: `${Math.random() * 100 + 20}%`,
-                                        animationDelay: `${i * 0.1}s`
+                                        height: `${Math.random() * 100 + 30}%`,
+                                        animation: `pulse 0.6s ease-in-out infinite`,
+                                        animationDelay: `${i * 0.08}s`
                                     }}
                                 />
                             ))}
@@ -744,7 +887,7 @@ export default function ConversationClient() {
                         {/* Stop Button */}
                         <Button
                             size="sm"
-                            className="w-full gap-2 bg-red-500 hover:bg-red-600"
+                            className="w-full gap-2 bg-red-500 hover:bg-red-600 text-white font-semibold"
                             onClick={stopRecordingNow}
                         >
                             <Square className="h-4 w-4" fill="currentColor" />

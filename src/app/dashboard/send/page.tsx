@@ -228,11 +228,18 @@ export default function SendPage() {
   };
 
   const sendDemandMessage = async () => {
+    console.log('=== sendDemandMessage APPELÉE ===');
+    console.log('scannedUser:', scannedUser);
+    console.log('amount:', amount);
+    console.log('currency:', currency);
+    
     if (!scannedUser || !amount || parseFloat(amount) <= 0) {
+      console.log('Validation échouée');
       toast({ title: "Erreur", description: "Tous les champs sont requis", variant: "destructive" });
       return;
     }
 
+    console.log('Appel de sendMoney...');
     // Utiliser la Cloud Function sendMoney pour envoyer l'argent
     const success = await sendMoney({
       amount: parseFloat(amount),
@@ -242,9 +249,14 @@ export default function SendPage() {
       description: `Demande de ${amount} ${currency} à ${scannedUser.fullName}`,
     });
 
+    console.log('Résultat de sendMoney:', success);
+    
     if (success) {
+      console.log('Transfert réussi, affichage de la confirmation');
       setConfirmationMessage(`Envoi de ${amount} ${currency} à ${scannedUser.fullName} effectué avec succès`);
       setViewMode('sent');
+    } else {
+      console.log('Transfert échoué');
     }
   };
 

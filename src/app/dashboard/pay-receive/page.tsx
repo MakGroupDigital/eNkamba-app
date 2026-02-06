@@ -4,11 +4,12 @@ import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   ArrowLeft, QrCode, Mail, Phone, CreditCard, Hash, Download, Share2,
-  AlertCircle, Loader2, User, Upload
+  AlertCircle, Loader2, User, Upload, X
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useMoneyTransfer } from '@/hooks/useMoneyTransfer';
 import { useToast } from '@/hooks/use-toast';
 import QRCodeLib from 'qrcode';
 import jsQR from 'jsqr';
@@ -31,8 +32,10 @@ export default function PayReceivePage() {
   const { user } = useAuth();
   const { profile } = useUserProfile();
   const { toast } = useToast();
+  const { sendMoney, isProcessing: isTransferring, balance } = useMoneyTransfer();
   
-  const [mode, setMode] = useState<'receive' | 'pay' | 'scanner' | 'payment-method'>('receive');
+  const [mode, setMode] = useState<'receive' | 'pay' | 'scanner' | 'payment-method' | 'multi-pay'>('receive');
+  const [previousMode, setPreviousMode] = useState<'receive' | 'pay' | 'scanner' | 'payment-method' | 'multi-pay'>('receive');
   const [payMethod, setPayMethod] = useState<string | null>(null);
   const [qrCode, setQrCode] = useState<string>('');
   const [accountNumber, setAccountNumber] = useState<string>('');
@@ -48,6 +51,11 @@ export default function PayReceivePage() {
   const [paymentCurrency, setPaymentCurrency] = useState<Currency>('CDF');
   const [paymentDestination, setPaymentDestination] = useState('');
   const [isPaying, setIsPaying] = useState(false);
+  
+  // États pour paiement multiple
+  const [multiPayRecipients, setMultiPayRecipients] = useState<Array<{id: string; accountNumber: string; fullName: string; amount: string}>>([]);
+  const [multiPayTotalAmount, setMultiPayTotalAmount] = useState(0);
+  const [isProcessingMultiPay, setIsProcessingMultiPay] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -152,12 +160,50 @@ export default function PayReceivePage() {
         setScannedData(qrData);
         setIsScanning(false);
         setScanError(null);
-        setPaymentDestination(qrData.accountNumber);
-        toast({ title: 'QR Code Détecté ✅', description: `Destinataire: ${qrData.fullName}` });
+        
+        // Si on vient du mode multi-pay, ajouter directement à la liste
+        if (previousMode === 'multi-pay') {
+          handleAddRecipientToMultiPay(qrData);
+        } else {
+          setPaymentDestination(qrData.accountNumber);
+          toast({ title: 'QR Code Détecté ✅', description: `Destinataire: ${qrData.fullName}` });
+        }
       }
     }
 
     animationFrameRef.current = requestAnimationFrame(scanQRFromVideo);
+  };
+
+  const handleAddRecipientToMultiPay = (qrData: ScannedQRData) => {
+    // Vérifier si le destinataire n'est pas déjà dans la liste
+    const alreadyAdded = multiPayRecipients.some(r => r.accountNumber === qrData.accountNumber);
+    if (alreadyAdded) {
+      toast({
+        variant: 'destructive',
+        title: 'Destinataire déjà ajouté',
+        description: `${qrData.fullName} est déjà dans la liste`,
+      });
+      return;
+    }
+
+    // Ajouter le destinataire
+    const newRecipient = {
+      id: Date.now().toString(),
+      accountNumber: qrData.accountNumber,
+      fullName: qrData.fullName,
+      amount: '',
+    };
+    
+    setMultiPayRecipients([...multiPayRecipients, newRecipient]);
+    toast({
+      title: 'Destinataire ajouté ✅',
+      description: `${qrData.fullName} ajouté à la liste`,
+    });
+    
+    // Retourner au mode multi-pay
+    setScannedData(null);
+    setPaymentDestination('');
+    setMode('multi-pay');
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -214,7 +260,13 @@ export default function PayReceivePage() {
             const qrData = parseQRData(code.data);
             if (qrData?.isValid) {
               setScannedData(qrData);
-              setPaymentDestination(qrData.accountNumber);
+              
+              // Si on vient du mode multi-pay, ajouter directement à la liste
+              if (previousMode === 'multi-pay') {
+                handleAddRecipientToMultiPay(qrData);
+              } else {
+                setPaymentDestination(qrData.accountNumber);
+              }
             }
           }
 
@@ -255,7 +307,14 @@ export default function PayReceivePage() {
   };
 
   const handlePayment = async () => {
+    console.log('=== handlePayment APPELÉE ===');
+    console.log('paymentDestination:', paymentDestination);
+    console.log('paymentAmount:', paymentAmount);
+    console.log('paymentCurrency:', paymentCurrency);
+    console.log('scannedData:', scannedData);
+    
     if (!paymentDestination || !paymentAmount || parseFloat(paymentAmount) <= 0) {
+      console.log('Validation échouée');
       toast({
         variant: 'destructive',
         title: 'Erreur',
@@ -265,18 +324,35 @@ export default function PayReceivePage() {
     }
 
     setIsPaying(true);
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    setIsPaying(false);
-
-    toast({
-      title: 'Paiement réussi ! ✅',
-      description: `${paymentAmount} ${paymentCurrency} envoyé à ${scannedData?.fullName || paymentDestination}`,
+    console.log('Appel de sendMoney...');
+    
+    // Effectuer le vrai transfert
+    const success = await sendMoney({
+      amount: parseFloat(paymentAmount),
+      senderCurrency: paymentCurrency,
+      transferMethod: payMethod === 'account' ? 'account' : payMethod === 'phone' ? 'phone' : payMethod === 'card' ? 'card' : 'email',
+      recipientIdentifier: paymentDestination,
+      description: `Paiement de ${paymentAmount} ${paymentCurrency} à ${scannedData?.fullName || paymentDestination}`,
     });
 
-    setMode('receive');
-    setScannedData(null);
-    setPaymentDestination('');
-    setPaymentAmount('');
+    setIsPaying(false);
+    console.log('Résultat de sendMoney:', success);
+
+    if (success) {
+      console.log('Paiement réussi');
+      toast({
+        title: 'Paiement réussi ! ✅',
+        description: `${paymentAmount} ${paymentCurrency} envoyé à ${scannedData?.fullName || paymentDestination}`,
+      });
+
+      setMode('receive');
+      setScannedData(null);
+      setPaymentDestination('');
+      setPaymentAmount('');
+    } else {
+      console.log('Paiement échoué');
+      // Le toast d'erreur est déjà affiché par sendMoney
+    }
   };
 
   if (!user) return null;
@@ -352,9 +428,20 @@ export default function PayReceivePage() {
 
                 <Button 
                   className="w-full bg-gradient-to-r from-primary to-green-800 hover:from-primary/90 hover:to-green-800/90 h-12 text-base font-bold"
-                  onClick={() => setMode('scanner')}
+                  onClick={() => {
+                    setPreviousMode('receive');
+                    setMode('scanner');
+                  }}
                 >
                   Payer quelqu'un
+                </Button>
+
+                <Button 
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 h-12 text-base font-bold"
+                  onClick={() => setMode('multi-pay')}
+                >
+                  <User className="w-5 h-5 mr-2" />
+                  Payer à plusieurs
                 </Button>
               </div>
             </>
@@ -424,36 +511,42 @@ export default function PayReceivePage() {
                 onChange={handleFileChange}
               />
 
-              <div className="border-t pt-4">
-                <p className="text-sm text-center text-muted-foreground mb-3">QR code introuvable ?</p>
-                <div className="space-y-2">
-                  {[
-                    { id: 'account', icon: Hash, label: 'Numéro de Compte' },
-                    { id: 'phone', icon: Phone, label: 'Numéro de Téléphone' },
-                    { id: 'card', icon: CreditCard, label: 'Numéro de Carte' },
-                    { id: 'email', icon: Mail, label: 'Adresse Email' },
-                  ].map(({ id, icon: Icon, label }) => (
-                    <Button
-                      key={id}
-                      variant="outline"
-                      className="w-full justify-start"
-                      onClick={() => {
-                        setPayMethod(id);
-                        setMode('payment-method');
-                      }}
-                    >
-                      <Icon className="w-4 h-4 mr-2" />
-                      {label}
-                    </Button>
-                  ))}
+              {previousMode !== 'multi-pay' && (
+                <div className="border-t pt-4">
+                  <p className="text-sm text-center text-muted-foreground mb-3">QR code introuvable ?</p>
+                  <div className="space-y-2">
+                    {[
+                      { id: 'account', icon: Hash, label: 'Numéro de Compte' },
+                      { id: 'phone', icon: Phone, label: 'Numéro de Téléphone' },
+                      { id: 'card', icon: CreditCard, label: 'Numéro de Carte' },
+                      { id: 'email', icon: Mail, label: 'Adresse Email' },
+                    ].map(({ id, icon: Icon, label }) => (
+                      <Button
+                        key={id}
+                        variant="outline"
+                        className="w-full justify-start"
+                        onClick={() => {
+                          setPayMethod(id);
+                          setMode('payment-method');
+                        }}
+                      >
+                        <Icon className="w-4 h-4 mr-2" />
+                        {label}
+                      </Button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               <Button 
                 variant="ghost" 
                 className="w-full"
                 onClick={() => {
-                  setMode('receive');
+                  if (previousMode === 'multi-pay') {
+                    setMode('multi-pay');
+                  } else {
+                    setMode('receive');
+                  }
                   setIsScanning(true);
                 }}
               >
@@ -560,6 +653,220 @@ export default function PayReceivePage() {
                 }}
               >
                 Annuler
+              </Button>
+            </div>
+          )}
+
+          {mode === 'multi-pay' && (
+            <div className="w-full max-w-sm space-y-4">
+              <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20 rounded-2xl p-4">
+                <h3 className="font-bold text-lg mb-3">Paiement Multiple</h3>
+                
+                {multiPayRecipients.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <User className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">Aucun destinataire ajouté</p>
+                    <p className="text-xs mt-1">Scannez un QR code pour commencer</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2 mb-4">
+                    {multiPayRecipients.map((recipient) => (
+                      <div key={recipient.id} className="bg-white rounded-lg p-3 flex items-center gap-3">
+                        <div className="bg-primary/10 rounded-full p-2">
+                          <User className="w-5 h-5 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-sm truncate">{recipient.fullName}</p>
+                          <p className="text-xs text-muted-foreground truncate">{recipient.accountNumber}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="number"
+                            placeholder="0"
+                            value={recipient.amount}
+                            onChange={(e) => {
+                              const newRecipients = multiPayRecipients.map(r => 
+                                r.id === recipient.id ? { ...r, amount: e.target.value } : r
+                              );
+                              setMultiPayRecipients(newRecipients);
+                              const total = newRecipients.reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
+                              setMultiPayTotalAmount(total);
+                            }}
+                            className="w-20 h-8 text-right text-sm"
+                          />
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                            onClick={() => {
+                              const newRecipients = multiPayRecipients.filter(r => r.id !== recipient.id);
+                              setMultiPayRecipients(newRecipients);
+                              const total = newRecipients.reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
+                              setMultiPayTotalAmount(total);
+                            }}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="bg-primary/5 rounded-lg p-3 mb-3">
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold">Total:</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl font-bold text-primary">
+                        {multiPayTotalAmount.toLocaleString('fr-FR')}
+                      </span>
+                      <Select value={paymentCurrency} onValueChange={(value) => setPaymentCurrency(value as Currency)}>
+                        <SelectTrigger className="w-[80px] h-8 text-sm font-semibold">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="CDF">CDF</SelectItem>
+                          <SelectItem value="USD">USD</SelectItem>
+                          <SelectItem value="EUR">EUR</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  {multiPayTotalAmount > balance && (
+                    <p className="text-xs text-red-500 mt-2">
+                      ⚠️ Solde insuffisant (disponible: {balance.toLocaleString('fr-FR')} CDF)
+                    </p>
+                  )}
+                </div>
+
+                <Button
+                  className="w-full mb-2"
+                  variant="outline"
+                  onClick={() => {
+                    setPreviousMode('multi-pay');
+                    setMode('scanner');
+                    setIsScanning(true);
+                  }}
+                >
+                  <QrCode className="w-4 h-4 mr-2" />
+                  Ajouter un destinataire
+                </Button>
+
+                {multiPayRecipients.length > 0 && (
+                  <Button
+                    className="w-full bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 h-12 text-base font-bold"
+                    onClick={async () => {
+                      console.log('=== DÉBUT PAIEMENT MULTIPLE ===');
+                      
+                      // Validation
+                      const invalidRecipients = multiPayRecipients.filter(r => !r.amount || parseFloat(r.amount) <= 0);
+                      if (invalidRecipients.length > 0) {
+                        toast({
+                          variant: 'destructive',
+                          title: 'Erreur',
+                          description: 'Tous les destinataires doivent avoir un montant valide',
+                        });
+                        return;
+                      }
+
+                      if (multiPayTotalAmount > balance) {
+                        toast({
+                          variant: 'destructive',
+                          title: 'Solde insuffisant',
+                          description: `Vous avez ${balance.toLocaleString('fr-FR')} CDF. Total requis: ${multiPayTotalAmount.toLocaleString('fr-FR')} CDF`,
+                        });
+                        return;
+                      }
+
+                      setIsProcessingMultiPay(true);
+                      let successCount = 0;
+                      let failCount = 0;
+                      const results: Array<{recipient: string; success: boolean; error?: string}> = [];
+
+                      for (let i = 0; i < multiPayRecipients.length; i++) {
+                        const recipient = multiPayRecipients[i];
+                        console.log(`Paiement ${i + 1}/${multiPayRecipients.length} à ${recipient.fullName}`);
+                        
+                        toast({
+                          title: `Paiement ${i + 1}/${multiPayRecipients.length}`,
+                          description: `Envoi à ${recipient.fullName}...`,
+                        });
+
+                        try {
+                          const success = await sendMoney({
+                            amount: parseFloat(recipient.amount),
+                            senderCurrency: paymentCurrency,
+                            transferMethod: 'account',
+                            recipientIdentifier: recipient.accountNumber,
+                            description: `Paiement multiple de ${recipient.amount} ${paymentCurrency}`,
+                          });
+
+                          if (success) {
+                            successCount++;
+                            results.push({ recipient: recipient.fullName, success: true });
+                          } else {
+                            failCount++;
+                            results.push({ recipient: recipient.fullName, success: false, error: 'Échec du transfert' });
+                          }
+                        } catch (error: any) {
+                          failCount++;
+                          results.push({ recipient: recipient.fullName, success: false, error: error.message });
+                          console.error(`Erreur paiement à ${recipient.fullName}:`, error);
+                        }
+
+                        // Petite pause entre les paiements
+                        if (i < multiPayRecipients.length - 1) {
+                          await new Promise(resolve => setTimeout(resolve, 500));
+                        }
+                      }
+
+                      setIsProcessingMultiPay(false);
+
+                      // Afficher le résumé
+                      if (failCount === 0) {
+                        toast({
+                          title: 'Tous les paiements réussis ! ✅',
+                          description: `${successCount} paiement(s) effectué(s) avec succès`,
+                          className: 'bg-green-600 text-white border-none',
+                        });
+                        setMultiPayRecipients([]);
+                        setMultiPayTotalAmount(0);
+                        setMode('receive');
+                      } else {
+                        toast({
+                          variant: 'destructive',
+                          title: 'Paiements terminés avec erreurs',
+                          description: `Réussis: ${successCount}, Échoués: ${failCount}`,
+                        });
+                        
+                        // Retirer les destinataires payés avec succès
+                        const failedRecipients = multiPayRecipients.filter((r, idx) => !results[idx].success);
+                        setMultiPayRecipients(failedRecipients);
+                        const newTotal = failedRecipients.reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
+                        setMultiPayTotalAmount(newTotal);
+                      }
+
+                      console.log('=== FIN PAIEMENT MULTIPLE ===');
+                      console.log('Résultats:', results);
+                    }}
+                    disabled={isProcessingMultiPay || multiPayRecipients.length === 0 || multiPayTotalAmount <= 0 || multiPayTotalAmount > balance}
+                  >
+                    {isProcessingMultiPay ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                    {isProcessingMultiPay ? 'Paiements en cours...' : `Payer ${multiPayRecipients.length} personne(s)`}
+                  </Button>
+                )}
+              </div>
+
+              <Button 
+                variant="ghost" 
+                className="w-full"
+                onClick={() => {
+                  setMode('receive');
+                  setMultiPayRecipients([]);
+                  setMultiPayTotalAmount(0);
+                }}
+              >
+                Retour
               </Button>
             </div>
           )}

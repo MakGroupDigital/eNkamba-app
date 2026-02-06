@@ -133,7 +133,7 @@ export function useWalletTransactions() {
 
   // Ajouter des fonds
   const addFunds = useCallback(
-    async (amount: number, paymentMethod: 'mobile_money' | 'credit_card' | 'debit_card', details: any) => {
+    async (amount: number, paymentMethod: 'mobile_money' | 'credit_card' | 'debit_card' | 'crypto', details: any) => {
       if (!currentUser) throw new Error('Utilisateur non authentifié');
 
       setIsLoading(true);
@@ -156,6 +156,7 @@ export function useWalletTransactions() {
             paymentMethod,
             phoneNumber: details.phoneNumber,
             cardDetails: details.cardDetails,
+            cryptoDetails: details.cryptoDetails,
           }),
         });
 

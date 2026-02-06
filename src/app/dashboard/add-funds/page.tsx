@@ -8,10 +8,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useWalletTransactions } from '@/hooks/useWalletTransactions';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { ArrowLeft, Loader2, Smartphone, CreditCard } from 'lucide-react';
+import { ArrowLeft, Loader2, Smartphone, CreditCard, Bitcoin } from 'lucide-react';
 import Link from 'next/link';
 
-type PaymentMethod = 'mobile_money' | 'credit_card' | 'debit_card';
+type PaymentMethod = 'mobile_money' | 'credit_card' | 'debit_card' | 'crypto';
 
 export default function AddFundsPage() {
   const router = useRouter();
@@ -28,6 +28,10 @@ export default function AddFundsPage() {
     expiryDate: '',
     cvv: '',
     cardholderName: '',
+  });
+  const [cryptoDetails, setCryptoDetails] = useState({
+    currency: 'BTC',
+    walletAddress: '',
   });
 
   const handleMethodSelect = (method: PaymentMethod) => {
@@ -57,7 +61,16 @@ export default function AddFundsPage() {
       return;
     }
 
-    if (paymentMethod !== 'mobile_money') {
+    if (paymentMethod === 'crypto' && !cryptoDetails.walletAddress) {
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Veuillez entrer votre adresse de portefeuille crypto',
+      });
+      return;
+    }
+
+    if (paymentMethod !== 'mobile_money' && paymentMethod !== 'crypto') {
       if (!cardDetails.cardNumber || !cardDetails.expiryDate || !cardDetails.cvv || !cardDetails.cardholderName) {
         toast({
           variant: 'destructive',
@@ -73,10 +86,15 @@ export default function AddFundsPage() {
 
   const handleConfirm = async () => {
     try {
-      const result = await addFunds(parseFloat(amount), paymentMethod!, {
-        phoneNumber,
-        cardDetails: paymentMethod !== 'mobile_money' ? cardDetails : undefined,
-      });
+      const result = await addFunds(
+        parseFloat(amount), 
+        paymentMethod as 'mobile_money' | 'credit_card' | 'debit_card' | 'crypto', 
+        {
+          phoneNumber,
+          cardDetails: paymentMethod !== 'mobile_money' && paymentMethod !== 'crypto' ? cardDetails : undefined,
+          cryptoDetails: paymentMethod === 'crypto' ? cryptoDetails : undefined,
+        }
+      );
 
       toast({
         title: 'Succès',
@@ -120,7 +138,7 @@ export default function AddFundsPage() {
 
         {/* Step 1: Payment Method Selection */}
         {step === 'method' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card
               className="cursor-pointer border-2 hover:border-[#32BB78] transition-colors"
               onClick={() => handleMethodSelect('mobile_money')}
@@ -150,6 +168,23 @@ export default function AddFundsPage() {
                   <div>
                     <h3 className="font-semibold text-lg">Carte Bancaire</h3>
                     <p className="text-sm text-muted-foreground">Visa, Mastercard</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card
+              className="cursor-pointer border-2 hover:border-[#32BB78] transition-colors"
+              onClick={() => handleMethodSelect('crypto')}
+            >
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center gap-4 text-center">
+                  <div className="p-4 rounded-full bg-[#FFA500]/20">
+                    <Bitcoin className="w-8 h-8 text-[#FFA500]" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg">Cryptomonnaie</h3>
+                    <p className="text-sm text-muted-foreground">Bitcoin, USDT, ETH...</p>
                   </div>
                 </div>
               </CardContent>
@@ -198,7 +233,11 @@ export default function AddFundsPage() {
           <Card>
             <CardHeader>
               <CardTitle>
-                {paymentMethod === 'mobile_money' ? 'Numéro de téléphone' : 'Détails de la carte'}
+                {paymentMethod === 'mobile_money' 
+                  ? 'Numéro de téléphone' 
+                  : paymentMethod === 'crypto'
+                  ? 'Détails Cryptomonnaie'
+                  : 'Détails de la carte'}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -212,6 +251,50 @@ export default function AddFundsPage() {
                     onChange={(e) => setPhoneNumber(e.target.value)}
                   />
                 </div>
+              ) : paymentMethod === 'crypto' ? (
+                <>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Cryptomonnaie</label>
+                    <select
+                      className="w-full p-2 border rounded-md bg-background"
+                      value={cryptoDetails.currency}
+                      onChange={(e) => setCryptoDetails({ ...cryptoDetails, currency: e.target.value })}
+                    >
+                      <option value="BTC">Bitcoin (BTC)</option>
+                      <option value="ETH">Ethereum (ETH)</option>
+                      <option value="USDT">Tether (USDT)</option>
+                      <option value="USDC">USD Coin (USDC)</option>
+                      <option value="BNB">Binance Coin (BNB)</option>
+                      <option value="XRP">Ripple (XRP)</option>
+                      <option value="ADA">Cardano (ADA)</option>
+                      <option value="SOL">Solana (SOL)</option>
+                      <option value="DOGE">Dogecoin (DOGE)</option>
+                      <option value="TRX">Tron (TRX)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Votre adresse de portefeuille</label>
+                    <Input
+                      type="text"
+                      placeholder="Entrez votre adresse crypto"
+                      value={cryptoDetails.walletAddress}
+                      onChange={(e) => setCryptoDetails({ ...cryptoDetails, walletAddress: e.target.value })}
+                    />
+                    <p className="text-xs text-muted-foreground mt-2">
+                      ⚠️ Vérifiez bien votre adresse. Les transactions crypto sont irréversibles.
+                    </p>
+                  </div>
+                  <div className="bg-[#FFA500]/10 border border-[#FFA500]/30 rounded-lg p-4 text-sm">
+                    <p className="font-semibold text-[#FFA500] mb-2">📌 Instructions:</p>
+                    <ol className="space-y-1 text-muted-foreground list-decimal list-inside">
+                      <li>Sélectionnez votre cryptomonnaie</li>
+                      <li>Entrez votre adresse de portefeuille</li>
+                      <li>Vous recevrez une adresse de dépôt eNkamba</li>
+                      <li>Envoyez vos crypto à cette adresse</li>
+                      <li>Les fonds seront convertis en CDF automatiquement</li>
+                    </ol>
+                  </div>
+                </>
               ) : (
                 <>
                   <div>
@@ -291,7 +374,11 @@ export default function AddFundsPage() {
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Méthode</span>
                   <span className="font-semibold">
-                    {paymentMethod === 'mobile_money' ? 'Mobile Money' : 'Carte bancaire'}
+                    {paymentMethod === 'mobile_money' 
+                      ? 'Mobile Money' 
+                      : paymentMethod === 'crypto'
+                      ? 'Cryptomonnaie'
+                      : 'Carte bancaire'}
                   </span>
                 </div>
                 {paymentMethod === 'mobile_money' && (
@@ -300,13 +387,36 @@ export default function AddFundsPage() {
                     <span className="font-semibold">{phoneNumber}</span>
                   </div>
                 )}
+                {paymentMethod === 'crypto' && (
+                  <>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Crypto</span>
+                      <span className="font-semibold">{cryptoDetails.currency}</span>
+                    </div>
+                    <div className="flex justify-between items-start">
+                      <span className="text-muted-foreground">Adresse</span>
+                      <span className="font-mono text-xs text-right max-w-[200px] break-all">
+                        {cryptoDetails.walletAddress.substring(0, 20)}...
+                      </span>
+                    </div>
+                  </>
+                )}
               </div>
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
                 <p>
                   ✓ Vos données sont sécurisées et chiffrées<br />
-                  ✓ Aucun frais supplémentaire<br />
-                  ✓ Fonds disponibles immédiatement
+                  {paymentMethod === 'crypto' ? (
+                    <>
+                      ✓ Conversion automatique au taux du marché<br />
+                      ✓ Fonds disponibles après confirmation blockchain
+                    </>
+                  ) : (
+                    <>
+                      ✓ Aucun frais supplémentaire<br />
+                      ✓ Fonds disponibles immédiatement
+                    </>
+                  )}
                 </p>
               </div>
 

@@ -51,11 +51,23 @@ export function useConversations() {
           snapshot.forEach((doc) => {
             const data = doc.data();
             
-            // Trouver le nom de l'autre participant
-            const otherParticipantIdx = data.participants?.findIndex((id: string) => id !== currentUser.uid);
-            const otherParticipantName = otherParticipantIdx !== -1 && otherParticipantIdx !== undefined
-              ? data.participantNames?.[otherParticipantIdx] || 'Utilisateur'
-              : 'Utilisateur';
+            // Déterminer si c'est un groupe
+            const isGroup = data.isGroup === true || (data.participants?.length || 0) > 2;
+            
+            // Pour les groupes, utiliser le nom du groupe
+            // Pour les conversations 1-1, trouver le nom de l'autre participant
+            let displayName: string;
+            
+            if (isGroup) {
+              // Pour les groupes, utiliser le champ 'name' du document
+              displayName = data.name || 'Groupe sans nom';
+            } else {
+              // Pour les conversations 1-1, trouver l'autre participant
+              const otherParticipantIdx = data.participants?.findIndex((id: string) => id !== currentUser.uid);
+              displayName = otherParticipantIdx !== -1 && otherParticipantIdx !== undefined
+                ? data.participantNames?.[otherParticipantIdx] || 'Utilisateur'
+                : 'Utilisateur';
+            }
 
             // Formater le temps
             const lastMessageTime = data.lastMessageTime?.toDate?.() || new Date();
@@ -74,12 +86,12 @@ export function useConversations() {
 
             convos.push({
               id: doc.id,
-              name: otherParticipantName,
+              name: displayName,
               lastMessage: data.lastMessage || 'Aucun message',
               time: timeStr,
-              avatar: undefined,
+              avatar: data.avatar || undefined,
               unread: data.unreadCount || 0,
-              isGroup: (data.participants?.length || 0) > 2,
+              isGroup: isGroup,
               href: `/dashboard/miyiki-chat/${doc.id}`,
               participants: data.participants,
               participantNames: data.participantNames,
