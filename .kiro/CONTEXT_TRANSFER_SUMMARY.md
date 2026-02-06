@@ -165,6 +165,81 @@
 
 ---
 
+## TASK 7: Refonte Page Scanner
+
+**STATUS**: ✅ COMPLETE
+
+**USER QUERIES**: 1 ("Il y a aussi des changements à faire sur la page Scanner...")
+
+**DETAILS**: 
+Refonte complète de la page Scanner avec nouveau système de navigation:
+
+**Nouveau Design**:
+- Affichage par défaut: QR code utilisateur (pas la caméra)
+- 3 boutons d'action (de haut en bas):
+  1. **Recevoir** (Bleu): Ouvre page détails complète
+  2. **Transférer** (Violet): Redirige vers module Transfer
+  3. **Payer** (Vert): Active le scanner caméra
+
+**Mode Recevoir (receive-details)**:
+- QR code téléchargeable
+- Toutes les infos utilisateur affichées:
+  - Numéro eNkamba (Hash icon, vert)
+  - Numéro de Carte (CreditCard icon, bleu)
+  - Email (Mail icon, orange)
+  - Téléphone (Phone icon, violet)
+- Bouton copier pour chaque champ avec animation Check ✓
+- Toast de confirmation après copie
+- Boutons Télécharger et Partager
+- Bouton Retour vers mode par défaut
+
+**Mode Payer (camera-scan)**:
+- Caméra activée uniquement en mode payer
+- Scanner QR en temps réel avec jsQR
+- Import d'image avec animation de scan progressive
+- Validation format eNkamba (ENK...)
+- Affichage erreur si QR invalide
+- Confirmation avec infos destinataire
+- Saisie montant et devise
+- Vérification PIN
+- Paiement sécurisé
+- Retour automatique après succès
+
+**Navigation Transfer**:
+- Bouton "Transférer" redirige vers `/dashboard/pay-receive?mode=transfer`
+- useSearchParams pour lire le paramètre mode
+- useEffect pour définir le mode initial
+- Affichage du composant TransferByIdentifier
+
+**Implémentation Technique**:
+- Nouveau système de modes: `ViewMode = 'default' | 'receive-details' | 'camera-scan'`
+- Fonction `handleCopy()` pour copier dans presse-papiers
+- État `copiedField` pour feedback visuel (2s)
+- État `myCardNumber` pour numéro de carte
+- Caméra activée à la demande (pas au chargement)
+- Cleanup proper des ressources caméra
+- Navigation Next.js avec paramètres URL
+
+**Design**:
+- Couleurs eNkamba: #32BB78, #2a9d63
+- Gradients modernes sur les boutons
+- Effet glow animé sur le QR code
+- Animations fluides (pulse, fade-in, scanLine)
+- Icônes Lucide cohérentes
+- Responsive design (max-w-md)
+
+**FILEPATHS**:
+- `src/app/dashboard/scanner/page.tsx` (refonte complète ~850 lignes)
+- `src/app/dashboard/pay-receive/page.tsx` (+ useSearchParams)
+- `.kiro/SCANNER_PAGE_REFONTE_COMPLETE.md`
+- `.kiro/SCANNER_TEST_GUIDE.md`
+- `.kiro/SESSION_SCANNER_REFONTE_FINAL.md`
+- `.kiro/SCANNER_VISUAL_STRUCTURE.md`
+- `.kiro/SCANNER_QUICK_REFERENCE.md`
+- `.kiro/CONTEXT_TRANSFER_SESSION_8.md`
+
+---
+
 **Statut Final**: ✅ Tâche complétée avec succès  
 **Commit**: 0c4f491  
 **Documentation**: Complète et à jour

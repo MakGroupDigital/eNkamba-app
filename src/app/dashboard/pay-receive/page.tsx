@@ -7,6 +7,7 @@ import {
   AlertCircle, Loader2, User, Upload, X, ArrowRightLeft
 } from 'lucide-react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useMoneyTransfer } from '@/hooks/useMoneyTransfer';
@@ -31,6 +32,7 @@ interface ScannedQRData {
 }
 
 export default function PayReceivePage() {
+  const searchParams = useSearchParams();
   const { user } = useAuth();
   const { profile } = useUserProfile();
   const { toast } = useToast();
@@ -64,6 +66,14 @@ export default function PayReceivePage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const animationFrameRef = useRef<number | null>(null);
+
+  // Lire le paramètre mode de l'URL au chargement
+  useEffect(() => {
+    const modeParam = searchParams.get('mode');
+    if (modeParam === 'transfer') {
+      setMode('transfer');
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (profile?.uid) {

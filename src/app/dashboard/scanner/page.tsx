@@ -1,17 +1,20 @@
-
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { QrCode, Upload, Camera, ArrowLeft, Loader2, User, AlertCircle, User as UserIcon, Download, Share2 } from 'lucide-react';
+import { 
+  QrCode, Upload, ArrowLeft, Loader2, User, AlertCircle, 
+  Download, Share2, Scan, ArrowRightLeft, Copy, Check,
+  Mail, Phone, CreditCard, Hash
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import jsQR from 'jsqr';
 import QRCodeLib from 'qrcode';
 import { useUserProfile } from '@/hooks/useUserProfile';
@@ -19,6 +22,7 @@ import { useMoneyTransfer } from '@/hooks/useMoneyTransfer';
 import { PinVerification } from '@/components/payment/PinVerification';
 
 type Currency = 'CDF' | 'USD' | 'EUR';
+type ViewMode = 'default' | 'receive-details' | 'camera-scan';
 
 interface ScannedQRData {
   accountNumber: string;
@@ -29,39 +33,44 @@ interface ScannedQRData {
 }
 
 export default function ScannerPage() {
+  const router = useRouter();
+  const [viewMode, setViewMode] = useState<ViewMode>('default');
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [scannedData, setScannedData] = useState<ScannedQRData | null>(null);
   const [amount, setAmount] = useState('');
   const [currency, setCurrency] = useState<Currency>('CDF');
-  const [isLoading, setIsLoading] = useState(false);
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [isPaying, setIsPaying] = useState(false);
-  const [isScanning, setIsScanning] = useState(true);
+  const [isScanning, setIsScanning] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [importProgress, setImportProgress] = useState(0);
   const [importedImageData, setImportedImageData] = useState<string | null>(null);
   const [myQrCode, setMyQrCode] = useState<string>('');
   const [myAccountNumber, setMyAccountNumber] = useState<string>('');
-  const [showMyQrDialog, setShowMyQrDialog] = useState(false);
+  const [myCardNumber, setMyCardNumber] = useState<string>('');
   const [showPinDialog, setShowPinDialog] = useState(false);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+  
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const animationFrameRef = useRef<number | null>(null);
   const { toast } = useToast();
   const { profile } = useUserProfile();
-  const { sendMoney, isProcessing: isTransferring } = useMoneyTransfer();
+  const { sendMoney } = useMoneyTransfer();
 
   // Générer le QR code de l'utilisateur avec logo
   useEffect(() => {
     if (profile?.uid) {
       const hash = profile.uid.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
       const accountNum = `ENK${String(hash).padStart(12, '0')}`;
+      const cardNum = String(hash).padStart(16, '0');
+      const formattedCardNum = cardNum.match(/.{1,4}/g)?.join(' ') || cardNum;
       const fullName = profile.name || profile.fullName || 'eNkamba User';
       const email = profile.email || '';
       
       setMyAccountNumber(accountNum);
+      setMyCardNumber(formattedCardNum);
 
       // Format: accountNumber|fullName|email|uid
       const qrData = `${accountNum}|${fullName}|${email}|${profile.uid}`;
@@ -211,6 +220,8 @@ export default function ScannerPage() {
   };
 
   useEffect(() => {
+    if (viewMode !== 'camera-scan' || !isScanning) return;
+
     const getCameraPermission = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ 
@@ -253,7 +264,7 @@ export default function ScannerPage() {
         stream.getTracks().forEach(track => track.stop());
       }
     };
-  }, [toast]);
+  }, [viewMode, isScanning, toast]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -308,80 +319,33 @@ export default function ScannerPage() {
             // Obtenir les données d'image
             let imageData = ctx.getImageData(0, 0, width, height);
             
-            console.log('Canvas size:', width, 'x', height);
-            console.log('Tentative 1: détection du QR code...');
-
             // Première tentative
             let code = jsQR(imageData.data, width, height);
 
             // Si pas détecté, améliorer le contraste et réessayer
             if (!code) {
-              console.log('Tentative 2: amélioration du contraste...');
-              
-              // Améliorer le contraste de l'image
               const data = imageData.data;
               for (let i = 0; i < data.length; i += 4) {
                 const r = data[i];
                 const g = data[i + 1];
                 const b = data[i + 2];
-                
-                // Convertir en grayscale
                 const gray = (r + g + b) / 3;
-                
-                // Augmenter le contraste (seuil binaire)
                 const threshold = 128;
                 const bw = gray > threshold ? 255 : 0;
-                
                 data[i] = bw;
                 data[i + 1] = bw;
                 data[i + 2] = bw;
               }
-              
-              // Redessiner avec image traitée
               ctx.putImageData(imageData, 0, 0);
               imageData = ctx.getImageData(0, 0, width, height);
-              
-              // Deuxième tentative
               code = jsQR(imageData.data, width, height);
             }
-
-            // Si toujours pas détecté, essayer une autre approche
-            if (!code) {
-              console.log('Tentative 3: rotation/zoom...');
-              
-              // Réinitialiser et redessiner l'image originale
-              canvas.width = width;
-              canvas.height = height;
-              ctx.drawImage(img, 0, 0, width, height);
-              
-              // Appliquer un filtre de clarté
-              const imageData2 = ctx.getImageData(0, 0, width, height);
-              const data = imageData2.data;
-              
-              for (let i = 0; i < data.length; i += 4) {
-                const r = data[i];
-                const g = data[i + 1];
-                const b = data[i + 2];
-                const gray = (r * 0.299 + g * 0.587 + b * 0.114);
-                
-                data[i] = gray > 200 ? 255 : gray < 100 ? 0 : gray;
-                data[i + 1] = gray > 200 ? 255 : gray < 100 ? 0 : gray;
-                data[i + 2] = gray > 200 ? 255 : gray < 100 ? 0 : gray;
-              }
-              
-              ctx.putImageData(imageData2, 0, 0);
-              code = jsQR(data, width, height);
-            }
-
-            console.log('QR Code détecté:', code?.data);
 
             setImportProgress(90);
 
             if (code) {
               const qrData = parseQRData(code.data);
               if (qrData) {
-                console.log('QR Data parsée:', qrData);
-                
                 setImportProgress(100);
                 
                 setTimeout(() => {
@@ -414,7 +378,7 @@ export default function ScannerPage() {
                 toast({
                   variant: 'destructive',
                   title: 'Erreur ⚠️',
-                  description: 'Aucun QR code trouvé. Assurez-vous que:\n• L\'image contient un QR code clair\n• Le QR code est bien éclairé\n• L\'image est nette',
+                  description: 'Aucun QR code trouvé.',
                 });
               }, 500);
             }
@@ -450,33 +414,13 @@ export default function ScannerPage() {
   };
 
   const handlePinSuccess = async () => {
-    // PIN vérifié, afficher le récapitulatif
+    // PIN vérifié, procéder au paiement
     setShowPinDialog(false);
     
     // Petit délai pour laisser le dialog se fermer proprement
     await new Promise(resolve => setTimeout(resolve, 100));
     
-    setShowConfirmDialog(true);
-  };
-
-  const handleConfirmPayment = async () => {
-    console.log('=== handleConfirmPayment APPELÉE ===');
-    console.log('scannedData:', scannedData);
-    console.log('amount:', amount);
-    console.log('currency:', currency);
-    
-    if (!scannedData || !amount || parseFloat(amount) <= 0) {
-      console.log('Validation échouée');
-      toast({
-        variant: 'destructive',
-        title: 'Erreur',
-        description: 'Données invalides',
-      });
-      return;
-    }
-
     setIsPaying(true);
-    setShowConfirmDialog(false);
     console.log('Appel de sendMoney...');
     
     // Effectuer le vrai transfert
@@ -485,10 +429,10 @@ export default function ScannerPage() {
     const success = await sendMoney({
       amount: parseFloat(amount),
       senderCurrency: currency,
-      transferMethod: scannedData.uid ? 'account' : 'account',
-      recipientIdentifier: scannedData.uid ? undefined : scannedData.accountNumber,
-      recipientId: scannedData.uid || undefined,
-      description: `Paiement de ${amount} ${currency} à ${scannedData.fullName}`,
+      transferMethod: scannedData?.uid ? 'account' : 'account',
+      recipientIdentifier: scannedData?.uid ? undefined : scannedData?.accountNumber,
+      recipientId: scannedData?.uid || undefined,
+      description: `Paiement de ${amount} ${currency} à ${scannedData?.fullName}`,
     });
 
     setIsPaying(false);
@@ -498,65 +442,35 @@ export default function ScannerPage() {
       console.log('Paiement réussi');
       toast({
         title: 'Paiement réussi ! ✅',
-        description: `Vous avez payé ${amount} ${currency} à ${scannedData.fullName}.`,
+        description: `Vous avez payé ${amount} ${currency} à ${scannedData?.fullName}.`,
       });
 
-      // Reset
+      // Reset et retour à l'écran par défaut
       setAmount('');
       setScannedData(null);
-      setIsScanning(true);
+      setViewMode('default');
     } else {
       console.log('Paiement échoué');
       // Le toast d'erreur est déjà affiché par sendMoney
     }
   };
 
-  // Télécharger mon QR code
-  const handleDownloadMyQR = () => {
-    if (!myQrCode) return;
-    
-    const link = document.createElement('a');
-    link.href = myQrCode;
-    link.download = `mon-qrcode-${myAccountNumber}.png`;
-    
-    // Utiliser une approche plus sûre pour le téléchargement
+  // Copier dans le presse-papiers
+  const handleCopy = async (text: string, fieldName: string) => {
     try {
-      document.body.appendChild(link);
-      link.click();
-      
-      // Retirer le lien après un court délai
-      setTimeout(() => {
-        if (document.body.contains(link)) {
-          document.body.removeChild(link);
-        }
-      }, 100);
-      
-      toast({ title: 'QR Code téléchargé!', description: 'Enregistré avec succès' });
+      await navigator.clipboard.writeText(text);
+      setCopiedField(fieldName);
+      toast({
+        title: 'Copié ! ✅',
+        description: `${fieldName} copié dans le presse-papiers`,
+      });
+      setTimeout(() => setCopiedField(null), 2000);
     } catch (error) {
-      console.error('Erreur téléchargement QR:', error);
-      // Nettoyer en cas d'erreur
-      if (document.body.contains(link)) {
-        document.body.removeChild(link);
-      }
-    }
-  };
-
-  // Partager mon QR code
-  const handleShareMyQR = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'Mon QR Code eNkamba',
-          text: `Scannez mon code QR pour m'envoyer de l'argent: ${myAccountNumber}`,
-          url: window.location.href,
-        });
-      } catch (error: any) {
-        if (error.name !== 'AbortError') {
-          handleDownloadMyQR();
-        }
-      }
-    } else {
-      handleDownloadMyQR();
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Impossible de copier',
+      });
     }
   };
 
@@ -582,303 +496,440 @@ export default function ScannerPage() {
           animation: scanLine 2s linear infinite;
         }
       `}</style>
-       <header className="flex items-center gap-4 mb-4 flex-shrink-0">
-            <Button variant="ghost" size="icon" asChild>
-                <Link href="/dashboard/mbongo-dashboard">
-                    <ArrowLeft />
-                </Link>
-            </Button>
-            <h1 className="font-headline text-xl font-bold text-primary flex-1">Scanner QR Code eNkamba</h1>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => setShowMyQrDialog(true)}
-              className="border-[#32BB78]/30 hover:bg-[#32BB78]/10 hover:border-[#32BB78]/50"
-            >
-              <QrCode className="w-4 h-4 mr-2" />
-              Mon QR
-            </Button>
-        </header>
+
+      <header className="flex items-center gap-4 mb-4 flex-shrink-0">
+        <Button variant="ghost" size="icon" asChild>
+          <Link href="/dashboard/mbongo-dashboard">
+            <ArrowLeft />
+          </Link>
+        </Button>
+        <h1 className="font-headline text-xl font-bold text-primary flex-1">
+          {viewMode === 'default' ? 'Scanner' : viewMode === 'receive-details' ? 'Recevoir' : 'Payer'}
+        </h1>
+      </header>
 
       <Card className="flex-1 flex flex-col">
         <CardContent className="p-4 flex-1 flex flex-col items-center justify-center gap-4">
           <canvas ref={canvasRef} className="hidden" />
           
-          {!scannedData ? (
-             <>
-                {/* Écran d'import avec animation */}
-                {isImporting && importedImageData ? (
-                  <div className="relative w-full max-w-sm aspect-square rounded-2xl overflow-hidden shadow-2xl bg-white flex items-center justify-center">
-                    {/* Image importée */}
-                    <img 
-                      src={importedImageData} 
-                      alt="Imported QR" 
-                      className="w-full h-full object-contain p-2 bg-white"
-                    />
-                    
-                    {/* Overlay sombre avec scan */}
-                    <div className="absolute inset-0 bg-black/30 flex flex-col items-center justify-center">
-                      {/* Ligne de scan horizontale futuriste */}
-                      <div 
-                        className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#32BB78] to-transparent shadow-lg shadow-[#32BB78]"
-                        style={{
-                          top: `${importProgress}%`,
-                          animation: 'none',
-                          transition: 'top 0.1s linear'
-                        }}
-                      />
-                      
-                      {/* Grille de scan */}
-                      <div className="absolute inset-0 pointer-events-none opacity-30">
-                        <svg width="100%" height="100%" className="w-full h-full">
-                          <defs>
-                            <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
-                              <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#32BB78" strokeWidth="0.5"/>
-                            </pattern>
-                          </defs>
-                          <rect width="100%" height="100%" fill="url(#grid)" />
-                        </svg>
+          {/* MODE PAR DÉFAUT: QR Code + 3 boutons */}
+          {viewMode === 'default' && (
+            <div className="w-full max-w-sm space-y-6">
+              {/* QR Code de l'utilisateur */}
+              <div className="flex flex-col items-center gap-4">
+                <div className="relative">
+                  <div className="absolute -inset-3 bg-gradient-to-r from-[#32BB78]/30 to-[#2a9d63]/20 rounded-2xl blur-xl animate-pulse" />
+                  <div className="relative bg-white p-6 rounded-2xl shadow-2xl border-2 border-[#32BB78]/30">
+                    {myQrCode ? (
+                      <img src={myQrCode} alt="Mon QR Code" className="w-56 h-56" />
+                    ) : (
+                      <div className="w-56 h-56 bg-gray-100 rounded-lg animate-pulse flex items-center justify-center">
+                        <QrCode className="w-16 h-16 text-gray-400" />
                       </div>
-
-                      {/* Cadre de scan avec coins lumineux */}
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="relative w-4/5 h-4/5 border-2 border-[#32BB78]/50">
-                          {/* Coins lumineux */}
-                          <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-[#32BB78] shadow-lg shadow-[#32BB78]/50"></div>
-                          <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-[#32BB78] shadow-lg shadow-[#32BB78]/50"></div>
-                          <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-[#32BB78] shadow-lg shadow-[#32BB78]/50"></div>
-                          <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-[#32BB78] shadow-lg shadow-[#32BB78]/50"></div>
-                        </div>
-                      </div>
-
-                      {/* Points de scan animés */}
-                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        {[0, 1, 2, 3, 4].map((i) => (
-                          <div
-                            key={i}
-                            className="absolute w-2 h-2 rounded-full bg-[#32BB78] shadow-lg shadow-[#32BB78]"
-                            style={{
-                              left: `${20 + i * 15}%`,
-                              top: `${importProgress}%`,
-                              opacity: Math.max(0, 1 - Math.abs(importProgress - 50) / 30),
-                              animation: 'pulse 1.5s ease-in-out infinite'
-                            }}
-                          />
-                        ))}
-                      </div>
-
-                      {/* Texte de scan */}
-                      <div className="absolute bottom-8 left-0 right-0 text-center text-white text-sm font-semibold">
-                        <p className="drop-shadow-lg">⚡ Scan en cours: {Math.round(importProgress)}%</p>
-                      </div>
-
-                      {/* Effet de flash final */}
-                      {importProgress >= 95 && (
-                        <div className="absolute inset-0 bg-[#32BB78]/20 animate-pulse"></div>
-                      )}
-                    </div>
+                    )}
                   </div>
-                ) : (
-                  /* Camera Preview - affichage normal */
-                  <div className="relative w-full max-w-sm aspect-square bg-black rounded-2xl overflow-hidden shadow-lg">
-                      <video 
-                        ref={videoRef} 
-                        className="w-full h-full object-cover" 
-                        autoPlay 
-                        playsInline 
-                        muted 
-                      />
-                      
-                      {hasCameraPermission === false && (
-                           <div className="absolute inset-0 flex items-center justify-center bg-black/70 p-4">
-                              <Alert variant="destructive">
-                                  <AlertCircle className="h-4 w-4" />
-                                  <AlertTitle>Accès Caméra Requis</AlertTitle>
-                                  <AlertDescription>
-                                      {scanError || 'Veuillez autoriser l\'accès à la caméra.'}
-                                  </AlertDescription>
-                              </Alert>
-                           </div>
-                      )}
-
-                      {scanError && hasCameraPermission && (
-                           <div className="absolute inset-0 flex items-center justify-center bg-red-500/20 p-4">
-                              <Alert variant="destructive">
-                                  <AlertCircle className="h-4 w-4" />
-                                  <AlertTitle>⚠️ QR Code Invalide</AlertTitle>
-                                  <AlertDescription>
-                                      {scanError}
-                                  </AlertDescription>
-                              </Alert>
-                           </div>
-                      )}
-
-                      {isScanning && hasCameraPermission && !scanError && (
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                          <div className="w-3/4 h-3/4 border-4 border-dashed border-green-500/70 rounded-2xl animate-pulse" />
-                        </div>
-                      )}
-
-                      {isScanning && (
-                        <div className="absolute bottom-4 left-0 right-0 text-center text-white text-xs">
-                          <p className="animate-pulse">🔍 Recherche de QR Code...</p>
-                        </div>
-                      )}
-                  </div>
-                )}
-
-                <div className="relative w-full max-w-sm">
-                    <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-card px-2 text-muted-foreground">Ou</span>
-                    </div>
                 </div>
 
-                <Button 
-                  variant="outline" 
-                  className="w-full max-w-sm" 
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isImporting}
+                <div className="text-center space-y-1">
+                  <p className="font-bold text-lg text-primary">
+                    {profile?.name || profile?.fullName || 'eNkamba User'}
+                  </p>
+                  <p className="text-sm text-muted-foreground font-mono">{myAccountNumber}</p>
+                </div>
+              </div>
+
+              {/* 3 Boutons principaux */}
+              <div className="space-y-3">
+                {/* Bouton Recevoir */}
+                <Button
+                  className="w-full h-14 bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white font-bold text-base shadow-lg"
+                  onClick={() => setViewMode('receive-details')}
                 >
-                    <Upload className="mr-2" />
-                    {isImporting ? 'Scan en cours...' : 'Importer une Image'}
+                  <Download className="w-5 h-5 mr-3" />
+                  Recevoir
                 </Button>
-                <input
-                    type="file"
-                    ref={fileInputRef}
-                    className="hidden"
-                    accept="image/png, image/jpeg"
-                    onChange={handleFileChange}
-                />
-            </>
-          ) : (
-             <div className="w-full max-w-sm text-center flex flex-col items-center gap-4 animate-in fade-in-up">
-                <div className="bg-primary/10 rounded-full p-4">
-                    <User className="h-16 w-16 text-primary"/>
-                </div>
-                
-                {scannedData.isValid ? (
-                  <>
-                    <p className="text-muted-foreground">Vous payez à :</p>
-                    <div className="space-y-1">
-                      <p className="font-headline text-2xl font-bold text-primary">{scannedData.fullName}</p>
-                      <p className="text-xs text-muted-foreground">Compte: {scannedData.accountNumber}</p>
-                      {scannedData.email && (
-                        <p className="text-xs text-muted-foreground">Email: {scannedData.email}</p>
-                      )}
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-destructive font-bold">❌ QR Code Invalide</p>
-                    <p className="text-sm text-muted-foreground">Ce n\'est pas un code eNkamba valide</p>
-                  </>
-                )}
-                
-                {scannedData.isValid && (
-                  <>
-                    <div className="w-full space-y-2 pt-4 border-t">
-                        <Label htmlFor="amount">Montant à envoyer</Label>
-                        <div className="flex gap-2">
-                            <Input 
-                                id="amount" 
-                                type="number" 
-                                placeholder="0.00" 
-                                value={amount}
-                                onChange={(e) => setAmount(e.target.value)}
-                                className="text-center text-2xl h-14 font-bold flex-1"
-                            />
-                            <Select value={currency} onValueChange={(value) => setCurrency(value as Currency)}>
-                                <SelectTrigger className="w-[100px] h-14 font-semibold">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="CDF">CDF</SelectItem>
-                                    <SelectItem value="USD">USD</SelectItem>
-                                    <SelectItem value="EUR">EUR</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        {currency !== 'CDF' && amount && !isNaN(parseFloat(amount)) && (
-                            <p className="text-xs text-muted-foreground text-center">
-                                ≈ {(parseFloat(amount) * (currency === 'USD' ? 2500 : 3000)).toLocaleString('fr-FR', { maximumFractionDigits: 0 })} CDF
-                            </p>
-                        )}
-                    </div>
 
-                     <Button 
-                       className="w-full bg-gradient-to-r from-primary to-green-800 hover:from-primary/90 hover:to-green-800/90" 
-                       size="lg" 
-                       onClick={handlePayment}
-                       disabled={!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0}
-                     >
-                        Envoyer l'argent
-                    </Button>
-                  </>
-                )}
-                
-                {/* Confirmation Dialog */}
-                <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Confirmer le paiement</DialogTitle>
-                      <DialogDescription>
-                        Vérifiez les détails avant de confirmer le paiement.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                      <div className="p-4 rounded-lg bg-muted space-y-2">
-                        <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">Destinataire :</span>
-                          <span className="font-bold">{scannedData.fullName}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">Compte :</span>
-                          <span className="text-xs font-mono">{scannedData.accountNumber}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">Montant :</span>
-                          <span className="font-bold text-primary">{amount} {currency}</span>
-                        </div>
-                        {currency !== 'CDF' && (
-                          <div className="flex justify-between pt-2 border-t">
-                            <span className="text-xs text-muted-foreground">En CDF :</span>
-                            <span className="text-xs font-semibold">
-                              ≈ {(parseFloat(amount) * (currency === 'USD' ? 2500 : 3000)).toLocaleString('fr-FR', { maximumFractionDigits: 0 })} CDF
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <DialogFooter>
-                      <Button variant="outline" onClick={() => setShowConfirmDialog(false)} disabled={isPaying}>
-                        Annuler
-                      </Button>
-                      <Button 
-                        onClick={handleConfirmPayment} 
-                        disabled={isPaying}
-                        className="bg-gradient-to-r from-primary to-green-800"
-                      >
-                        {isPaying ? "Paiement en cours..." : "Confirmer"}
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
+                {/* Bouton Transférer */}
+                <Button
+                  className="w-full h-14 bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-white font-bold text-base shadow-lg"
+                  onClick={() => router.push('/dashboard/pay-receive?mode=transfer')}
+                >
+                  <ArrowRightLeft className="w-5 h-5 mr-3" />
+                  Transférer
+                </Button>
 
-                <Button 
-                  variant="link" 
+                {/* Bouton Payer */}
+                <Button
+                  className="w-full h-14 bg-gradient-to-r from-[#32BB78] to-green-800 hover:from-[#2a9d63] hover:to-green-700 text-white font-bold text-base shadow-lg"
                   onClick={() => {
-                    setScannedData(null);
-                    setAmount('');
-                    setScanError(null);
+                    setViewMode('camera-scan');
                     setIsScanning(true);
                   }}
                 >
-                    Scanner un autre code
+                  <Scan className="w-5 h-5 mr-3" />
+                  Payer
                 </Button>
+              </div>
+            </div>
+          )}
 
+          {/* MODE RECEVOIR: Page détails complète */}
+          {viewMode === 'receive-details' && (
+            <div className="w-full max-w-sm space-y-6">
+              {/* QR Code téléchargeable */}
+              <div className="flex flex-col items-center gap-4">
+                <div className="relative">
+                  <div className="absolute -inset-3 bg-gradient-to-r from-[#32BB78]/30 to-[#2a9d63]/20 rounded-2xl blur-xl animate-pulse" />
+                  <div className="relative bg-white p-6 rounded-2xl shadow-2xl border-2 border-[#32BB78]/30">
+                    {myQrCode && <img src={myQrCode} alt="Mon QR Code" className="w-48 h-48" />}
+                  </div>
+                </div>
+
+                <div className="text-center space-y-1">
+                  <p className="font-bold text-xl text-primary">
+                    {profile?.name || profile?.fullName || 'eNkamba User'}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Partagez ces informations pour recevoir de l'argent</p>
+                </div>
+              </div>
+
+              {/* Toutes les informations avec boutons copier */}
+              <div className="space-y-3 bg-muted/50 rounded-xl p-4">
+                {/* Numéro eNkamba */}
+                <div className="flex items-center gap-3 bg-white rounded-lg p-3">
+                  <div className="bg-[#32BB78]/10 rounded-full p-2 flex-shrink-0">
+                    <Hash className="w-5 h-5 text-[#32BB78]" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-muted-foreground">Numéro eNkamba</p>
+                    <p className="font-semibold font-mono text-sm truncate">{myAccountNumber}</p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="flex-shrink-0"
+                    onClick={() => handleCopy(myAccountNumber, 'Numéro eNkamba')}
+                  >
+                    {copiedField === 'Numéro eNkamba' ? (
+                      <Check className="w-4 h-4 text-green-600" />
+                    ) : (
+                      <Copy className="w-4 h-4" />
+                    )}
+                  </Button>
+                </div>
+
+                {/* Numéro de carte */}
+                <div className="flex items-center gap-3 bg-white rounded-lg p-3">
+                  <div className="bg-blue-500/10 rounded-full p-2 flex-shrink-0">
+                    <CreditCard className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-muted-foreground">Numéro de Carte</p>
+                    <p className="font-semibold font-mono text-sm truncate">{myCardNumber}</p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="flex-shrink-0"
+                    onClick={() => handleCopy(myCardNumber, 'Numéro de Carte')}
+                  >
+                    {copiedField === 'Numéro de Carte' ? (
+                      <Check className="w-4 h-4 text-green-600" />
+                    ) : (
+                      <Copy className="w-4 h-4" />
+                    )}
+                  </Button>
+                </div>
+
+                {/* Email */}
+                {profile?.email && (
+                  <div className="flex items-center gap-3 bg-white rounded-lg p-3">
+                    <div className="bg-orange-500/10 rounded-full p-2 flex-shrink-0">
+                      <Mail className="w-5 h-5 text-orange-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-muted-foreground">Email</p>
+                      <p className="font-semibold text-sm truncate">{profile.email}</p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="flex-shrink-0"
+                      onClick={() => handleCopy(profile.email!, 'Email')}
+                    >
+                      {copiedField === 'Email' ? (
+                        <Check className="w-4 h-4 text-green-600" />
+                      ) : (
+                        <Copy className="w-4 h-4" />
+                      )}
+                    </Button>
+                  </div>
+                )}
+
+                {/* Téléphone */}
+                {profile?.phoneNumber && (
+                  <div className="flex items-center gap-3 bg-white rounded-lg p-3">
+                    <div className="bg-purple-500/10 rounded-full p-2 flex-shrink-0">
+                      <Phone className="w-5 h-5 text-purple-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-muted-foreground">Téléphone</p>
+                      <p className="font-semibold text-sm truncate">{profile.phoneNumber}</p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="flex-shrink-0"
+                      onClick={() => handleCopy(profile.phoneNumber!, 'Téléphone')}
+                    >
+                      {copiedField === 'Téléphone' ? (
+                        <Check className="w-4 h-4 text-green-600" />
+                      ) : (
+                        <Copy className="w-4 h-4" />
+                      )}
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              {/* Boutons d'action */}
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="flex-1 border-[#32BB78]/30 hover:bg-[#32BB78]/10"
+                  onClick={() => {
+                    const link = document.createElement('a');
+                    link.href = myQrCode;
+                    link.download = `eNkamba-QR-${myAccountNumber}.png`;
+                    document.body.appendChild(link);
+                    link.click();
+                    setTimeout(() => document.body.removeChild(link), 100);
+                    toast({ title: 'QR Code téléchargé ✅' });
+                  }}
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Télécharger QR
+                </Button>
+                <Button
+                  className="flex-1 bg-[#32BB78] hover:bg-[#2a9d63]"
+                  onClick={async () => {
+                    if (navigator.share) {
+                      try {
+                        await navigator.share({
+                          title: 'Mon QR Code eNkamba',
+                          text: `Envoyez-moi de l'argent via eNkamba. Compte: ${myAccountNumber}`,
+                        });
+                      } catch (error) {
+                        // Utilisateur a annulé
+                      }
+                    } else {
+                      handleCopy(myAccountNumber, 'Numéro de compte');
+                    }
+                  }}
+                >
+                  <Share2 className="w-4 h-4 mr-2" />
+                  Partager
+                </Button>
+              </div>
+
+              <Button
+                variant="ghost"
+                className="w-full"
+                onClick={() => setViewMode('default')}
+              >
+                Retour
+              </Button>
+            </div>
+          )}
+
+          {/* MODE PAYER: Scanner caméra */}
+          {viewMode === 'camera-scan' && !scannedData && (
+            <div className="w-full max-w-sm space-y-4">
+              {isImporting && importedImageData ? (
+                <div className="relative w-full aspect-square rounded-2xl overflow-hidden shadow-2xl bg-white flex items-center justify-center">
+                  <img 
+                    src={importedImageData} 
+                    alt="Imported QR" 
+                    className="w-full h-full object-contain p-2 bg-white"
+                  />
+                  <div className="absolute inset-0 bg-black/30 flex flex-col items-center justify-center">
+                    <div 
+                      className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#32BB78] to-transparent shadow-lg shadow-[#32BB78]"
+                      style={{
+                        top: `${importProgress}%`,
+                        transition: 'top 0.1s linear'
+                      }}
+                    />
+                    <div className="absolute bottom-8 left-0 right-0 text-center text-white text-sm font-semibold">
+                      <p className="drop-shadow-lg">⚡ Scan en cours: {Math.round(importProgress)}%</p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="relative w-full aspect-square bg-black rounded-2xl overflow-hidden shadow-lg">
+                  <video 
+                    ref={videoRef} 
+                    className="w-full h-full object-cover" 
+                    autoPlay 
+                    playsInline 
+                    muted 
+                  />
+                  
+                  {hasCameraPermission === false && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/70 p-4">
+                      <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>Accès Caméra Requis</AlertTitle>
+                        <AlertDescription>
+                          {scanError || 'Veuillez autoriser l\'accès à la caméra.'}
+                        </AlertDescription>
+                      </Alert>
+                    </div>
+                  )}
+
+                  {scanError && hasCameraPermission && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-red-500/20 p-4">
+                      <Alert variant="destructive">
+                        <AlertCircle className="h-4 h-4" />
+                        <AlertTitle>⚠️ QR Code Invalide</AlertTitle>
+                        <AlertDescription>{scanError}</AlertDescription>
+                      </Alert>
+                    </div>
+                  )}
+
+                  {isScanning && hasCameraPermission && !scanError && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="w-3/4 h-3/4 border-4 border-dashed border-green-500/70 rounded-2xl animate-pulse" />
+                    </div>
+                  )}
+
+                  {isScanning && (
+                    <div className="absolute bottom-4 left-0 right-0 text-center text-white text-xs">
+                      <p className="animate-pulse">🔍 Recherche de QR Code...</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="relative w-full max-w-sm">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-card px-2 text-muted-foreground">Ou</span>
+                </div>
+              </div>
+
+              <Button 
+                variant="outline" 
+                className="w-full" 
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isImporting}
+              >
+                <Upload className="mr-2" />
+                {isImporting ? 'Scan en cours...' : 'Importer une Image'}
+              </Button>
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept="image/png, image/jpeg"
+                onChange={handleFileChange}
+              />
+
+              <Button 
+                variant="ghost" 
+                className="w-full"
+                onClick={() => {
+                  setViewMode('default');
+                  setIsScanning(false);
+                }}
+              >
+                Retour
+              </Button>
+            </div>
+          )}
+
+          {/* MODE PAYER: Confirmation paiement */}
+          {viewMode === 'camera-scan' && scannedData && (
+            <div className="w-full max-w-sm text-center flex flex-col items-center gap-4 animate-in fade-in-up">
+              <div className="bg-primary/10 rounded-full p-4">
+                <User className="h-16 w-16 text-primary"/>
+              </div>
+              
+              {scannedData.isValid ? (
+                <>
+                  <p className="text-muted-foreground">Vous payez à :</p>
+                  <div className="space-y-1">
+                    <p className="font-headline text-2xl font-bold text-primary">{scannedData.fullName}</p>
+                    <p className="text-xs text-muted-foreground">Compte: {scannedData.accountNumber}</p>
+                    {scannedData.email && (
+                      <p className="text-xs text-muted-foreground">Email: {scannedData.email}</p>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="text-destructive font-bold">❌ QR Code Invalide</p>
+                  <p className="text-sm text-muted-foreground">Ce n\'est pas un code eNkamba valide</p>
+                </>
+              )}
+              
+              {scannedData.isValid && (
+                <>
+                  <div className="w-full space-y-2 pt-4 border-t">
+                    <Label htmlFor="amount">Montant à envoyer</Label>
+                    <div className="flex gap-2">
+                      <Input 
+                        id="amount" 
+                        type="number" 
+                        placeholder="0.00" 
+                        value={amount}
+                        onChange={(e) => setAmount(e.target.value)}
+                        className="text-center text-2xl h-14 font-bold flex-1"
+                      />
+                      <Select value={currency} onValueChange={(value) => setCurrency(value as Currency)}>
+                        <SelectTrigger className="w-[100px] h-14 font-semibold">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="CDF">CDF</SelectItem>
+                          <SelectItem value="USD">USD</SelectItem>
+                          <SelectItem value="EUR">EUR</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <Button 
+                    className="w-full bg-gradient-to-r from-primary to-green-800 hover:from-primary/90 hover:to-green-800/90" 
+                    size="lg" 
+                    onClick={handlePayment}
+                    disabled={!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0 || isPaying}
+                  >
+                    {isPaying ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Paiement en cours...
+                      </>
+                    ) : (
+                      'Envoyer l\'argent'
+                    )}
+                  </Button>
+                </>
+              )}
+
+              <Button 
+                variant="link" 
+                onClick={() => {
+                  setScannedData(null);
+                  setAmount('');
+                  setScanError(null);
+                  setIsScanning(true);
+                }}
+              >
+                Scanner un autre code
+              </Button>
             </div>
           )}
         </CardContent>
@@ -898,76 +949,6 @@ export default function ScannerPage() {
           } : undefined}
         />
       )}
-
-      {/* Dialog Mon QR Code */}
-      <Dialog open={showMyQrDialog} onOpenChange={setShowMyQrDialog}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <QrCode className="w-5 h-5 text-[#32BB78]" />
-              Mon QR Code eNkamba
-            </DialogTitle>
-            <DialogDescription>
-              Partagez ce QR code pour recevoir des paiements
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            {/* QR Code */}
-            <div className="flex flex-col items-center gap-3">
-              <div className="relative">
-                <div className="absolute -inset-2 bg-gradient-to-r from-[#32BB78]/30 to-[#2a9d63]/20 rounded-xl blur-lg animate-pulse" />
-                <div className="relative bg-white p-4 rounded-xl shadow-lg border-2 border-[#32BB78]/20">
-                  {myQrCode ? (
-                    <img src={myQrCode} alt="Mon QR Code" className="w-48 h-48" />
-                  ) : (
-                    <div className="w-48 h-48 bg-gray-100 rounded-lg animate-pulse flex items-center justify-center">
-                      <QrCode className="w-12 h-12 text-gray-400" />
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Numéro de compte */}
-              <div className="w-full text-center space-y-1">
-                <p className="text-xs text-muted-foreground">Numéro de compte</p>
-                <p className="font-mono font-bold text-foreground">{myAccountNumber || 'Chargement...'}</p>
-              </div>
-            </div>
-
-            {/* Boutons d'action */}
-            <div className="flex gap-2">
-              <Button 
-                onClick={handleDownloadMyQR} 
-                disabled={!myQrCode} 
-                variant="outline"
-                className="flex-1 border-[#32BB78]/30 hover:bg-[#32BB78]/10"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Télécharger
-              </Button>
-              <Button 
-                onClick={handleShareMyQR} 
-                disabled={!myQrCode}
-                className="flex-1 bg-[#32BB78] hover:bg-[#2a9d63] text-white"
-              >
-                <Share2 className="w-4 h-4 mr-2" />
-                Partager
-              </Button>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => setShowMyQrDialog(false)}
-              className="w-full"
-            >
-              Fermer
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
