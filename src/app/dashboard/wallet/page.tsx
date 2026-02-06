@@ -11,12 +11,11 @@ import {
   Eye,
   EyeOff,
   Shield,
-  ArrowUpRight,
-  ArrowDownLeft,
   Zap,
   TrendingUp,
   CreditCard,
 } from 'lucide-react';
+import { getTransactionIconConfig } from '@/lib/transaction-icons';
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
 import { useUserProfile } from '@/hooks/useUserProfile';
@@ -324,15 +323,15 @@ export default function WalletPage() {
 
                           {/* BOTTOM ROW - Account & Balance */}
                           <div className="grid grid-cols-2 gap-2 sm:gap-3 pt-2 border-t border-white/20">
-                            <div>
+                            <div className="min-w-0">
                               <p className="text-[9px] sm:text-xs opacity-60 mb-0.5 uppercase tracking-widest font-semibold">Compte</p>
-                              <p className="text-[10px] sm:text-xs font-mono font-bold">{accountNumber?.slice(-8) || '00000000'}</p>
+                              <p className="text-[10px] sm:text-xs font-mono font-bold truncate">{accountNumber?.slice(-8) || '00000000'}</p>
                             </div>
-                            <div className="text-right">
+                            <div className="text-right min-w-0">
                               <p className="text-[9px] sm:text-xs opacity-60 mb-0.5 uppercase tracking-widest font-semibold">Solde</p>
-                              <div className="flex items-center justify-end gap-1">
-                                <p className="text-[10px] sm:text-xs font-mono font-bold">{displayBalance}</p>
-                                <button onClick={(e) => { e.stopPropagation(); setIsBalanceVisible(!isBalanceVisible); }} className="p-0.5 hover:bg-white/20 rounded transition-colors">
+                              <div className="flex items-center justify-end gap-1 min-w-0">
+                                <p className="text-xs sm:text-sm font-mono font-bold truncate max-w-[120px] sm:max-w-none">{displayBalance}</p>
+                                <button onClick={(e) => { e.stopPropagation(); setIsBalanceVisible(!isBalanceVisible); }} className="p-0.5 hover:bg-white/20 rounded transition-colors flex-shrink-0">
                                   {isBalanceVisible ? <Eye className="w-3 h-3 sm:w-4 sm:h-4" /> : <EyeOff className="w-3 h-3 sm:w-4 sm:h-4" />}
                                 </button>
                               </div>
@@ -515,23 +514,24 @@ export default function WalletPage() {
               <div className="space-y-4">
                 {walletTransactions.length > 0 ? (
                   walletTransactions.map((tx) => {
-                    const isDeposit = tx.type === 'deposit';
-                    const Icon = isDeposit ? ArrowDownLeft : ArrowUpRight;
+                    const isIncoming = tx.type === 'deposit' || tx.type === 'transfer_received' || tx.type === 'money_request_received';
+                    const iconConfig = getTransactionIconConfig(tx.type as any);
+                    const Icon = iconConfig.icon;
                     const formattedDate = tx.timestamp?.toDate?.() 
                       ? new Date(tx.timestamp.toDate()).toLocaleDateString('fr-FR')
                       : 'Date inconnue';
                     
                     return (
                       <div key={tx.id} className="flex items-center gap-4 p-4 rounded-xl hover:bg-muted/50 transition-colors group cursor-pointer">
-                        <div className={`p-3 rounded-full ${isDeposit ? 'bg-[#32BB78]/20' : 'bg-red-100'}`}>
-                          <Icon className={`w-5 h-5 ${isDeposit ? 'text-[#32BB78]' : 'text-red-600'}`} />
+                        <div className={`p-3 rounded-full ${iconConfig.bgColor}`}>
+                          <Icon className={`w-5 h-5 ${iconConfig.iconColor}`} size={20} />
                         </div>
                         <div className="flex-1">
                           <p className="font-semibold text-sm">{tx.description}</p>
                           <p className="text-xs text-muted-foreground">{formattedDate}</p>
                         </div>
-                        <p className={`font-bold text-sm ${isDeposit ? 'text-[#32BB78]' : 'text-foreground'}`}>
-                          {isDeposit ? '+' : '-'} {tx.amount.toLocaleString('fr-FR')} CDF
+                        <p className={`font-bold text-sm ${isIncoming ? 'text-[#32BB78]' : 'text-foreground'}`}>
+                          {isIncoming ? '+' : '-'} {tx.amount.toLocaleString('fr-FR')} CDF
                         </p>
                       </div>
                     );

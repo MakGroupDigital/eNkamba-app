@@ -9,16 +9,6 @@ import {
   ArrowLeft, 
   Search, 
   Filter,
-  ArrowUp,
-  ArrowDown,
-  ArrowDownLeft,
-  ArrowUpRight,
-  Send,
-  Receipt,
-  Wallet,
-  ArrowRightLeft,
-  Calendar,
-  Clock,
   X,
   AlertCircle,
   CheckCircle2,
@@ -26,6 +16,7 @@ import {
   Trash2,
   Download
 } from "lucide-react";
+import { getTransactionIconConfig } from '@/lib/transaction-icons';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
@@ -38,29 +29,6 @@ import { httpsCallable } from 'firebase/functions';
 import { functions } from '@/lib/firebase';
 
 type TransactionTypeFilter = 'all' | 'transfer_sent' | 'transfer_received' | 'deposit' | 'withdrawal' | 'payment_link' | 'contact_payment' | 'money_request_sent' | 'money_request_received';
-
-const getTransactionIcon = (type: Transaction['type']) => {
-  switch (type) {
-    case 'deposit':
-      return <ArrowDown className="h-5 w-5 text-green-500" />;
-    case 'transfer_sent':
-      return <Send className="h-5 w-5 text-orange-500" />;
-    case 'transfer_received':
-      return <ArrowDown className="h-5 w-5 text-green-500" />;
-    case 'withdrawal':
-      return <ArrowUp className="h-5 w-5 text-red-500" />;
-    case 'payment_link':
-      return <Receipt className="h-5 w-5 text-blue-500" />;
-    case 'contact_payment':
-      return <Receipt className="h-5 w-5 text-blue-500" />;
-    case 'money_request_sent':
-      return <Send className="h-5 w-5 text-orange-500" />;
-    case 'money_request_received':
-      return <ArrowDown className="h-5 w-5 text-green-500" />;
-    default:
-      return <Wallet className="h-5 w-5" />;
-  }
-};
 
 const getStatusBadge = (status: Transaction['status']) => {
   const variants: Record<typeof status, { label: string; className: string }> = {
@@ -275,7 +243,8 @@ export default function HistoryPage() {
             <div className="space-y-3">
               {filteredTransactions.map((tx) => {
                 const isIncoming = tx.type === 'deposit' || tx.type === 'transfer_received' || tx.type === 'money_request_received';
-                const Icon = isIncoming ? ArrowDownLeft : ArrowUpRight;
+                const iconConfig = getTransactionIconConfig(tx.type as any);
+                const Icon = iconConfig.icon;
                 const formattedDate = tx.timestamp?.toDate?.() 
                   ? new Date(tx.timestamp.toDate()).toLocaleDateString('fr-FR')
                   : new Date(tx.createdAt).toLocaleDateString('fr-FR');
@@ -286,8 +255,8 @@ export default function HistoryPage() {
                     onClick={() => setSelectedTransaction(tx)}
                     className="flex items-center gap-4 p-4 rounded-xl hover:bg-muted/50 transition-colors group cursor-pointer border border-border/50 hover:border-[#32BB78]/50"
                   >
-                    <div className={`p-3 rounded-full flex-shrink-0 ${isIncoming ? 'bg-[#32BB78]/20' : 'bg-red-100'}`}>
-                      <Icon className={`w-5 h-5 ${isIncoming ? 'text-[#32BB78]' : 'text-red-600'}`} />
+                    <div className={`p-3 rounded-full flex-shrink-0 ${iconConfig.bgColor}`}>
+                      <Icon className={`w-5 h-5 ${iconConfig.iconColor}`} size={20} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-sm">{tx.description}</p>

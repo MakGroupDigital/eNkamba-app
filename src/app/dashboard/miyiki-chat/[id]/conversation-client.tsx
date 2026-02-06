@@ -11,8 +11,9 @@ import { Card } from '@/components/ui/card';
 import { useFirestoreConversations } from '@/hooks/useFirestoreConversations';
 import { useAuth } from '@/hooks/useAuth';
 import { ChatNavIcon } from '@/components/icons/service-icons';
-import { ChevronLeft, Send, Loader2, Mail, Phone, Mic, Video, MapPin, DollarSign, Paperclip, Plus, X, Check, Square } from 'lucide-react';
+import { ChevronLeft, Send, Loader2, Mail, Phone, Mic, Video, MapPin, DollarSign, Paperclip, Plus, X, Check, Square, Settings, Users } from 'lucide-react';
 import Link from 'next/link';
+import { GroupSettingsDialog } from '@/components/group-settings-dialog';
 
 export default function ConversationClient() {
     const params = useParams();
@@ -37,6 +38,9 @@ export default function ConversationClient() {
     const [replyingTo, setReplyingTo] = useState<any>(null);
     const [audioAnalyser, setAudioAnalyser] = useState<AnalyserNode | null>(null);
     const [frequencyData, setFrequencyData] = useState<Uint8Array | null>(null);
+    const [showGroupSettings, setShowGroupSettings] = useState(false);
+    const [groupData, setGroupData] = useState<any>(null);
+    const [isGroup, setIsGroup] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const streamRef = useRef<MediaStream | null>(null);
@@ -61,17 +65,39 @@ export default function ConversationClient() {
                     const participants = convData.participants || [];
                     const participantNames = convData.participantNames || [];
 
-                    // Trouver l'autre participant (celui qui n'est pas l'utilisateur courant)
-                    const otherParticipantIdx = participants.findIndex((id: string) => id !== currentUser.uid);
-                    
-                    if (otherParticipantIdx !== -1 && participantNames[otherParticipantIdx]) {
-                        const contactData = {
-                            id: participants[otherParticipantIdx],
-                            name: participantNames[otherParticipantIdx],
-                            phoneNumber: convData.phoneNumber || '',
-                            email: convData.email || '',
-                        };
-                        setContact(contactData);
+                    // Vérifier si c'est un groupe (plus de 2 participants ou a un nom de groupe)
+                    const isGroupConv = participants.length > 2 || convData.isGroup || convData.name;
+                    setIsGroup(isGroupConv);
+
+                    if (isGroupConv) {
+                        // C'est un groupe
+                        setGroupData({
+                            name: convData.name || 'Groupe',
+                            participants: participants,
+                            participantNames: participantNames,
+                            admins: convData.admins || [convData.createdBy],
+                            createdBy: convData.createdBy || participants[0],
+                            createdAt: convData.createdAt,
+                        });
+                        setContact({
+                            name: convData.name || 'Groupe',
+                            isGroup: true,
+                        });
+                    } else {
+                        // Conversation individuelle
+                        // Trouver l'autre participant (celui qui n'est pas l'utilisateur courant)
+                        const otherParticipantIdx = participants.findIndex((id: string) => id !== currentUser.uid);
+                        
+                        if (otherParticipantIdx !== -1 && participantNames[otherParticipantIdx]) {
+                            const contactData = {
+                                id: participants[otherParticipantIdx],
+                                name: participantNames[otherParticipantIdx],
+                                phoneNumber: convData.phoneNumber || '',
+                                email: convData.email || '',
+                                isGroup: false,
+                            };
+                            setContact(contactData);
+                        }
                     }
                 }
             } catch (error) {
@@ -381,32 +407,55 @@ export default function ConversationClient() {
                     <div className="flex items-center gap-3 flex-1">
                         <Avatar className="h-10 w-10 border-2 border-white/20">
                             <AvatarFallback className="bg-white/20 text-white">
-                                {contact?.name?.charAt(0)?.toUpperCase() || 'U'}
+                                {isGroup ? (
+                                    <Users className="h-5 w-5" />
+                                ) : (
+                                    contact?.name?.charAt(0)?.toUpperCase() || 'U'
+                                )}
                             </AvatarFallback>
                         </Avatar>
                         <div>
                             <h1 className="font-headline text-lg font-bold text-white">
                                 {contact?.name || 'Conversation'}
                             </h1>
-                            <p className="text-xs text-white/70">En ligne</p>
+                            <p className="text-xs text-white/70">
+                                {isGroup ? `${groupData?.participants?.length || 0} membres` : 'En ligne'}
+                            </p>
                         </div>
                     </div>
 
-                    {/* Call Buttons */}
-                    <Link href={`/dashboard/miyiki-chat/call/${conversationId}`}>
-                        <Button size="icon" variant="ghost" className="text-white hover:bg-white/20" title="Appel audio">
-                            <Phone className="h-5 w-5" />
+                    {/* Group Settings Button */}
+                    {isGroup && (
+                        <Button 
+                            size="icon" 
+                            variant="ghost" 
+                            className="text-white hover:bg-white/20" 
+                            title="Paramètres du groupe"
+                            onClick={() => setShowGroupSettings(true)}
+                        >
+                            <Settings className="h-5 w-5" />
                         </Button>
-                    </Link>
-                    <Link href={`/dashboard/miyiki-chat/videocall/${conversationId}`}>
-                        <Button size="icon" variant="ghost" className="text-white hover:bg-white/20" title="Appel vidéo">
-                            <Video className="h-5 w-5" />
-                        </Button>
-                    </Link>
+                    )}
+
+                    {/* Call Buttons - Only for individual conversations */}
+                    {!isGroup && (
+                        <>
+                            <Link href={`/dashboard/miyiki-chat/call/${conversationId}`}>
+                                <Button size="icon" variant="ghost" className="text-white hover:bg-white/20" title="Appel audio">
+                                    <Phone className="h-5 w-5" />
+                                </Button>
+                            </Link>
+                            <Link href={`/dashboard/miyiki-chat/videocall/${conversationId}`}>
+                                <Button size="icon" variant="ghost" className="text-white hover:bg-white/20" title="Appel vidéo">
+                                    <Video className="h-5 w-5" />
+                                </Button>
+                            </Link>
+                        </>
+                    )}
                 </div>
                 
-                {/* Contact Details */}
-                {contact && (
+                {/* Contact Details - Only for individual conversations */}
+                {contact && !isGroup && (
                     <div className="ml-14 space-y-1 pb-2 border-t border-white/20 pt-2">
                         {contact.phoneNumber && (
                             <div className="flex items-center gap-2 text-sm text-white/90">
@@ -897,6 +946,43 @@ export default function ConversationClient() {
                 )}
                 </div>
             </footer>
+
+            {/* Group Settings Dialog */}
+            {isGroup && groupData && (
+                <GroupSettingsDialog
+                    isOpen={showGroupSettings}
+                    onClose={() => setShowGroupSettings(false)}
+                    conversationId={conversationId}
+                    groupData={groupData}
+                    onUpdate={() => {
+                        // Recharger les données du groupe
+                        const loadConversationData = async () => {
+                            try {
+                                const convRef = doc(db, 'conversations', conversationId);
+                                const convSnap = await getDoc(convRef);
+                                if (convSnap.exists()) {
+                                    const convData = convSnap.data();
+                                    setGroupData({
+                                        name: convData.name || 'Groupe',
+                                        participants: convData.participants || [],
+                                        participantNames: convData.participantNames || [],
+                                        admins: convData.admins || [convData.createdBy],
+                                        createdBy: convData.createdBy,
+                                        createdAt: convData.createdAt,
+                                    });
+                                    setContact({
+                                        name: convData.name || 'Groupe',
+                                        isGroup: true,
+                                    });
+                                }
+                            } catch (error) {
+                                console.error('Erreur rechargement groupe:', error);
+                            }
+                        };
+                        loadConversationData();
+                    }}
+                />
+            )}
         </div>
     );
 }
