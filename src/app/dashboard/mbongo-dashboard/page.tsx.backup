@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Scan, Mail, Phone, CreditCard as CreditCardIcon, Hash, Smartphone, QrCode, ArrowUpRight, ArrowDownLeft, Download, Share2, Wallet, ArrowLeftRight , TrendingUp } from "lucide-react";
+import { Sparkles, Scan, Mail, Phone, CreditCard as CreditCardIcon, Hash, Smartphone, QrCode, ArrowUpRight, ArrowDownLeft, Download, Share2, Wallet, ArrowLeftRight, Send } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import DashboardHeader from "@/components/dashboard/dashboard-header";
@@ -15,7 +15,7 @@ import QRCodeLib from 'qrcode';
 const quickActions = [
   { icon: QrCode, label: 'Scanner', href: '/dashboard/scanner', gradient: 'from-[#32BB78] to-[#2a9d63]' },
   { icon: ArrowLeftRight, label: 'Payer/Recevoir', href: '/dashboard/pay-receive', gradient: 'from-[#32BB78] to-[#2a9d63]' },
-  { icon: TrendingUp, label: 'Investir', href: '/dashboard/invest', gradient: 'from-[#32BB78] to-[#2a9d63]' },
+  { icon: Send, label: 'Encaisser', href: '/dashboard/send', gradient: 'from-[#32BB78] to-[#2a9d63]' },
   { icon: Wallet, label: 'Portefeuille', href: '/dashboard/wallet', gradient: 'from-[#32BB78] to-[#2a9d63]' },
 ];
 
