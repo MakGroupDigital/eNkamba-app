@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   ArrowLeft, QrCode, Mail, Phone, CreditCard, Hash, Download, Share2,
-  AlertCircle, Loader2, User, Upload, X
+  AlertCircle, Loader2, User, Upload, X, ArrowRightLeft
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
@@ -12,6 +12,7 @@ import { useUserProfile } from '@/hooks/useUserProfile';
 import { useMoneyTransfer } from '@/hooks/useMoneyTransfer';
 import { useToast } from '@/hooks/use-toast';
 import { PinVerification } from '@/components/payment/PinVerification';
+import { TransferByIdentifier } from '@/components/payment/TransferByIdentifier';
 import QRCodeLib from 'qrcode';
 import jsQR from 'jsqr';
 import { Card, CardContent } from '@/components/ui/card';
@@ -35,8 +36,8 @@ export default function PayReceivePage() {
   const { toast } = useToast();
   const { sendMoney, isProcessing: isTransferring, balance } = useMoneyTransfer();
   
-  const [mode, setMode] = useState<'receive' | 'pay' | 'scanner' | 'payment-method' | 'multi-pay'>('receive');
-  const [previousMode, setPreviousMode] = useState<'receive' | 'pay' | 'scanner' | 'payment-method' | 'multi-pay'>('receive');
+  const [mode, setMode] = useState<'receive' | 'pay' | 'scanner' | 'payment-method' | 'multi-pay' | 'transfer'>('receive');
+  const [previousMode, setPreviousMode] = useState<'receive' | 'pay' | 'scanner' | 'payment-method' | 'multi-pay' | 'transfer'>('receive');
   const [payMethod, setPayMethod] = useState<string | null>(null);
   const [qrCode, setQrCode] = useState<string>('');
   const [accountNumber, setAccountNumber] = useState<string>('');
@@ -472,6 +473,14 @@ export default function PayReceivePage() {
                   <User className="w-5 h-5 mr-2" />
                   Payer à plusieurs
                 </Button>
+
+                <Button 
+                  className="w-full bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 h-12 text-base font-bold"
+                  onClick={() => setMode('transfer')}
+                >
+                  <ArrowRightLeft className="w-5 h-5 mr-2" />
+                  Transfer
+                </Button>
               </div>
             </>
           )}
@@ -898,6 +907,28 @@ export default function PayReceivePage() {
                 Retour
               </Button>
             </div>
+          )}
+
+          {mode === 'transfer' && (
+            <TransferByIdentifier
+              onCancel={() => setMode('receive')}
+              onTransferComplete={(userInfo, transferAmount, transferCurrency) => {
+                // Préparer les données pour le paiement
+                setScannedData({
+                  accountNumber: userInfo.enkNumber,
+                  fullName: userInfo.fullName,
+                  email: userInfo.email,
+                  isValid: true,
+                });
+                setPaymentDestination(userInfo.enkNumber);
+                setPaymentAmount(transferAmount);
+                setPaymentCurrency(transferCurrency);
+                setPayMethod('account');
+                
+                // Ouvrir directement la vérification PIN
+                setShowPinDialog(true);
+              }}
+            />
           )}
         </CardContent>
       </Card>
