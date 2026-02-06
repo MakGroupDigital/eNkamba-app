@@ -8,8 +8,7 @@ import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, User, Mail, Phone, CreditCard, Hash, Search, X, ArrowRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { resolveUserByIdentifier, isValidIdentifier } from '@/lib/user-resolver';
 
 type IdentifierType = 'phone' | 'email' | 'enkNumber' | 'cardNumber';
 type Currency = 'CDF' | 'USD' | 'EUR';
@@ -58,32 +57,23 @@ export function TransferByIdentifier({ onCancel, onTransferComplete }: TransferB
       return;
     }
 
+    // Valider le format
+    if (!isValidIdentifier(identifierValue)) {
+      toast({
+        variant: 'destructive',
+        title: 'Format invalide',
+        description: 'L\'identifiant saisi ne correspond à aucun format reconnu',
+      });
+      return;
+    }
+
     setIsSearching(true);
     try {
-      const usersRef = collection(db, 'users');
-      let q;
+      console.log('Recherche utilisateur avec:', identifierValue);
+      
+      const resolvedUser = await resolveUserByIdentifier(identifierValue);
 
-      // Construire la requête selon le type d'identifiant
-      switch (identifierType) {
-        case 'phone':
-          q = query(usersRef, where('phoneNumber', '==', identifierValue.trim()));
-          break;
-        case 'email':
-          q = query(usersRef, where('email', '==', identifierValue.trim().toLowerCase()));
-          break;
-        case 'enkNumber':
-          q = query(usersRef, where('accountNumber', '==', identifierValue.trim()));
-          break;
-        case 'cardNumber':
-          q = query(usersRef, where('cardNumber', '==', identifierValue.trim().replace(/\s/g, '')));
-          break;
-        default:
-          throw new Error('Type d\'identifiant invalide');
-      }
-
-      const snapshot = await getDocs(q);
-
-      if (snapshot.empty) {
+      if (!resolvedUser) {
         toast({
           variant: 'destructive',
           title: 'Utilisateur introuvable',
@@ -93,27 +83,27 @@ export function TransferByIdentifier({ onCancel, onTransferComplete }: TransferB
         return;
       }
 
-      // Récupérer les données de l'utilisateur
-      const userDoc = snapshot.docs[0];
-      const userData = userDoc.data();
+      console.log(`Utilisateur trouvé via ${resolvedUser.foundBy}:`, resolvedUser.uid);
+
+      const userData = resolvedUser.data;
 
       // Générer le numéro eNkamba si pas présent
       let enkNumber = userData.accountNumber;
       if (!enkNumber) {
-        const hash = userDoc.id.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
+        const hash = resolvedUser.uid.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
         enkNumber = `ENK${String(hash).padStart(12, '0')}`;
       }
 
       // Générer le numéro de carte si pas présent
       let cardNumber = userData.cardNumber;
       if (!cardNumber) {
-        const hash = userDoc.id.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
+        const hash = resolvedUser.uid.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
         const cardNum = String(hash).padStart(16, '0');
         cardNumber = cardNum.match(/.{1,4}/g)?.join(' ') || cardNum;
       }
 
       const foundUser: UserInfo = {
-        uid: userDoc.id,
+        uid: resolvedUser.uid,
         fullName: userData.fullName || userData.name || userData.displayName || 'Utilisateur eNkamba',
         email: userData.email || '',
         phoneNumber: userData.phoneNumber || '',
@@ -124,7 +114,7 @@ export function TransferByIdentifier({ onCancel, onTransferComplete }: TransferB
       setUserInfo(foundUser);
       toast({
         title: 'Utilisateur trouvé ✅',
-        description: `${foundUser.fullName}`,
+        description: `${foundUser.fullName} (trouvé via ${resolvedUser.foundBy})`,
         className: 'bg-green-600 text-white border-none',
       });
     } catch (error) {

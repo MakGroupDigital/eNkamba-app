@@ -5,7 +5,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useWalletTransactions } from '@/hooks/useWalletTransactions';
 import { db } from '@/lib/firebase';
-import { collection, doc, getDoc, updateDoc, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
+import { collection, doc, getDoc, updateDoc, addDoc, serverTimestamp } from 'firebase/firestore';
+import { resolveUserByIdentifier } from '@/lib/user-resolver';
 
 export type TransferMethod = 'email' | 'phone' | 'card' | 'account' | 'bluetooth' | 'wifi';
 
@@ -78,35 +79,29 @@ export function useMoneyTransferDirect() {
       let recipientId_final = data.recipientId;
       let recipientData: any = null;
 
-      // Trouver le destinataire
-      if (data.transferMethod !== 'bluetooth' && data.transferMethod !== 'wifi' && data.recipientIdentifier) {
-        let q: any = null;
-
-        switch (data.transferMethod) {
-          case 'email':
-            q = query(collection(db, 'users'), where('email', '==', data.recipientIdentifier.toLowerCase()));
-            break;
-          case 'phone':
-            q = query(collection(db, 'users'), where('phoneNumber', '==', data.recipientIdentifier));
-            break;
-          case 'account':
-            q = query(collection(db, 'users'), where('accountNumber', '==', data.recipientIdentifier.toUpperCase()));
-            break;
-          case 'card':
-            q = query(collection(db, 'users'), where('cardNumber', '==', data.recipientIdentifier));
-            break;
-          default:
-            throw new Error('Méthode de transfert invalide');
+      // Trouver le destinataire avec résolution multi-critères
+      if (data.recipientIdentifier) {
+        console.log('Recherche du destinataire par identifiant:', data.recipientIdentifier);
+        console.log('Type de transfert:', data.transferMethod);
+        
+        const resolvedUser = await resolveUserByIdentifier(data.recipientIdentifier);
+        
+        if (!resolvedUser) {
+          console.error('❌ Destinataire non trouvé avec l\'identifiant:', data.recipientIdentifier);
+          console.log('Vérifiez que l\'utilisateur existe dans Firestore avec ce numéro');
+          throw new Error(`Destinataire non trouvé avec l'identifiant: ${data.recipientIdentifier}`);
         }
 
-        if (q) {
-          const snapshot = await getDocs(q);
-          if (snapshot.empty) {
-            throw new Error('Destinataire non trouvé');
-          }
-          recipientId_final = snapshot.docs[0].id;
-          recipientData = snapshot.docs[0].data();
-        }
+        recipientId_final = resolvedUser.uid;
+        recipientData = resolvedUser.data;
+        
+        console.log(`✅ Destinataire trouvé via ${resolvedUser.foundBy}:`, recipientId_final);
+        console.log('Données destinataire:', {
+          uid: recipientId_final,
+          name: recipientData?.fullName || recipientData?.name,
+          email: recipientData?.email,
+          accountNumber: recipientData?.accountNumber,
+        });
       } else if (data.recipientId) {
         recipientId_final = data.recipientId;
         const recipientRef = doc(db, 'users', recipientId_final);
