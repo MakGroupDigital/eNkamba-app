@@ -4,14 +4,12 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
-  QrCode, Upload, ArrowLeft, Loader2, AlertCircle, 
-  Download, Share2, Copy, Check, Mail, Phone, CreditCard, Hash
+  QrCode, Upload, ArrowLeft, Loader2, AlertCircle
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import Link from 'next/link';
 import jsQR from 'jsqr';
-import QRCodeLib from 'qrcode';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useRouter } from 'next/navigation';
 
@@ -28,11 +26,6 @@ export default function ScannerSimplePage() {
   const { profile } = useUserProfile();
   const { toast } = useToast();
 
-  const [myQrCode, setMyQrCode] = useState<string>('');
-  const [myAccountNumber, setMyAccountNumber] = useState<string>('');
-  const [myCardNumber, setMyCardNumber] = useState<string>('');
-  const [copiedField, setCopiedField] = useState<string | null>(null);
-  
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [scannedData, setScannedData] = useState<ScannedQRData | null>(null);
   const [isScanning, setIsScanning] = useState(false);
@@ -45,32 +38,6 @@ export default function ScannerSimplePage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const animationFrameRef = useRef<number | null>(null);
-
-  // Générer le QR code de l'utilisateur
-  useEffect(() => {
-    if (profile?.uid) {
-      const hash = profile.uid.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-      const accountNum = `ENK${String(hash).padStart(12, '0')}`;
-      const cardNum = String(hash).padStart(16, '0');
-      const formattedCardNum = cardNum.match(/.{1,4}/g)?.join(' ') || cardNum;
-      const fullName = profile.name || profile.fullName || 'eNkamba User';
-      const email = profile.email || '';
-      
-      setMyAccountNumber(accountNum);
-      setMyCardNumber(formattedCardNum);
-
-      const qrData = `${accountNum}|${fullName}|${email}|${profile.uid}`;
-
-      QRCodeLib.toDataURL(qrData, {
-        width: 300,
-        margin: 2,
-        color: {
-          dark: '#32BB78',
-          light: '#ffffff',
-        },
-      }).then(setMyQrCode);
-    }
-  }, [profile?.uid, profile?.name, profile?.fullName, profile?.email]);
 
   const parseQRData = (data: string): ScannedQRData | null => {
     try {
@@ -264,24 +231,6 @@ export default function ScannerSimplePage() {
     reader.readAsDataURL(file);
   };
 
-  const handleCopy = async (text: string, fieldName: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopiedField(fieldName);
-      toast({
-        title: 'Copié ! ✅',
-        description: `${fieldName} copié`,
-      });
-      setTimeout(() => setCopiedField(null), 2000);
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Erreur',
-        description: 'Impossible de copier',
-      });
-    }
-  };
-
   return (
     <div className="container mx-auto max-w-md p-4 flex flex-col min-h-screen bg-muted/20">
       <style>{`
@@ -304,67 +253,8 @@ export default function ScannerSimplePage() {
         <CardContent className="p-4 flex-1 flex flex-col gap-4">
           <canvas ref={canvasRef} className="hidden" />
 
-          {/* Section Mon QR Code - Petit et compact */}
-          <div className="bg-gradient-to-br from-[#32BB78]/10 to-green-600/5 border border-[#32BB78]/20 rounded-xl p-4">
-            <div className="flex items-center gap-4">
-              {/* QR Code */}
-              <div className="flex-shrink-0">
-                <div className="bg-white p-2 rounded-lg shadow-md border border-[#32BB78]/20">
-                  {myQrCode ? (
-                    <img src={myQrCode} alt="Mon QR Code" className="w-24 h-24" />
-                  ) : (
-                    <div className="w-24 h-24 bg-gray-100 rounded animate-pulse flex items-center justify-center">
-                      <QrCode className="w-8 h-8 text-gray-400" />
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Infos et boutons */}
-              <div className="flex-1 min-w-0 space-y-2">
-                <div>
-                  <p className="text-xs text-muted-foreground">Votre compte</p>
-                  <p className="font-bold text-sm text-primary truncate">{myAccountNumber}</p>
-                </div>
-                
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="flex-1 h-8 text-xs"
-                    onClick={() => {
-                      const link = document.createElement('a');
-                      link.href = myQrCode;
-                      link.download = `eNkamba-QR-${myAccountNumber}.png`;
-                      document.body.appendChild(link);
-                      link.click();
-                      setTimeout(() => document.body.removeChild(link), 100);
-                      toast({ title: 'QR Code téléchargé ✅' });
-                    }}
-                  >
-                    <Download className="w-3 h-3 mr-1" />
-                    Télécharger
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="flex-1 h-8 text-xs"
-                    onClick={() => handleCopy(myAccountNumber, 'Compte')}
-                  >
-                    {copiedField === 'Compte' ? (
-                      <Check className="w-3 h-3 mr-1 text-green-600" />
-                    ) : (
-                      <Copy className="w-3 h-3 mr-1" />
-                    )}
-                    Copier
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-
           {/* Scanner principal */}
-          <div className="flex-1 flex flex-col gap-3">
+          <div className="flex-1 flex flex-col">
             {!scannedData ? (
               <>
                 {isImporting && importedImageData ? (
@@ -414,7 +304,7 @@ export default function ScannerSimplePage() {
                   </div>
                 )}
 
-                <div className="flex gap-2">
+                <div className="flex gap-2 mt-3">
                   <Button 
                     variant="outline" 
                     className="flex-1"

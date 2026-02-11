@@ -11,6 +11,8 @@ import { Card } from '@/components/ui/card';
 import { useFirestoreConversations } from '@/hooks/useFirestoreConversations';
 import { useAuth } from '@/hooks/useAuth';
 import { ChatNavIcon } from '@/components/icons/service-icons';
+import { LocationMessage } from '@/components/chat/LocationMessage';
+import { useLocationSharing } from '@/hooks/useLocationSharing';
 import { ChevronLeft, Send, Loader2, Mail, Phone, Mic, Video, MapPin, DollarSign, Paperclip, Plus, X, Check, Square, Settings, Users, Trash2, Edit2, MoreVertical } from 'lucide-react';
 import Link from 'next/link';
 import { GroupSettingsDialog } from '@/components/group-settings-dialog';
@@ -22,6 +24,7 @@ export default function ConversationClient() {
 
     const { loadMessages, sendMessage, deleteMessage, updateMessage } = useFirestoreConversations();
     const { user: currentUser } = useAuth();
+    const { getCurrentLocation } = useLocationSharing();
     
     const [messages, setMessages] = useState<any[]>([]);
     const [inputValue, setInputValue] = useState('');
@@ -398,14 +401,17 @@ export default function ConversationClient() {
     };
     const handleShareLocation = async () => {
         try {
-            const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-                navigator.geolocation.getCurrentPosition(resolve, reject);
-            });
+            const locationData = await getCurrentLocation();
+            if (!locationData) return;
 
-            const { latitude, longitude } = position.coords;
             setIsSending(true);
             try {
-                await sendMessage(conversationId, `📍 Localisation partagée`, 'location', { latitude, longitude });
+                await sendMessage(conversationId, `📍 Localisation partagée`, 'location', { 
+                    latitude: locationData.latitude, 
+                    longitude: locationData.longitude,
+                    address: locationData.address,
+                    accuracy: locationData.accuracy
+                });
             } finally {
                 setIsSending(false);
             }
@@ -686,6 +692,14 @@ export default function ConversationClient() {
                                                     {message.metadata?.duration ? `${Math.floor(message.metadata.duration / 60)}:${String(message.metadata.duration % 60).padStart(2, '0')}` : 'Vidéo'}
                                                 </p>
                                         </div>
+                                    ) : message.messageType === 'location' && message.metadata?.latitude && message.metadata?.longitude ? (
+                                        <LocationMessage
+                                            latitude={message.metadata.latitude}
+                                            longitude={message.metadata.longitude}
+                                            address={message.metadata.address}
+                                            senderName={message.senderName}
+                                            timestamp={message.timestamp?.toDate?.()}
+                                        />
                                     ) : (
                                         <p className="text-sm">{message.text}</p>
                                     )}

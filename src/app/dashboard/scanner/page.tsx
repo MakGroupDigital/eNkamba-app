@@ -6,8 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { 
   QrCode, Upload, ArrowLeft, Loader2, User, AlertCircle, 
-  Download, Share2, Scan, ArrowRightLeft, Copy, Check,
-  Mail, Phone, CreditCard, Hash
+  Scan
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
@@ -16,14 +15,13 @@ import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import jsQR from 'jsqr';
-import QRCodeLib from 'qrcode';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useMoneyTransfer } from '@/hooks/useMoneyTransfer';
 import { PinVerification } from '@/components/payment/PinVerification';
 import { useDevicePermission } from '@/hooks/useDevicePermission';
 
 type Currency = 'CDF' | 'USD' | 'EUR';
-type ViewMode = 'default' | 'receive-details' | 'camera-scan';
+type ViewMode = 'default' | 'camera-scan';
 
 interface ScannedQRData {
   accountNumber: string;
@@ -47,11 +45,7 @@ export default function ScannerPage() {
   const [isImporting, setIsImporting] = useState(false);
   const [importProgress, setImportProgress] = useState(0);
   const [importedImageData, setImportedImageData] = useState<string | null>(null);
-  const [myQrCode, setMyQrCode] = useState<string>('');
-  const [myAccountNumber, setMyAccountNumber] = useState<string>('');
-  const [myCardNumber, setMyCardNumber] = useState<string>('');
   const [showPinDialog, setShowPinDialog] = useState(false);
-  const [copiedField, setCopiedField] = useState<string | null>(null);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -60,69 +54,6 @@ export default function ScannerPage() {
   const { toast } = useToast();
   const { profile } = useUserProfile();
   const { sendMoney } = useMoneyTransfer();
-
-  // Générer le QR code de l'utilisateur avec logo
-  useEffect(() => {
-    if (profile?.uid) {
-      const hash = profile.uid.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-      const accountNum = `ENK${String(hash).padStart(12, '0')}`;
-      const cardNum = String(hash).padStart(16, '0');
-      const formattedCardNum = cardNum.match(/.{1,4}/g)?.join(' ') || cardNum;
-      const fullName = profile.name || profile.fullName || 'eNkamba User';
-      const email = profile.email || '';
-      
-      setMyAccountNumber(accountNum);
-      setMyCardNumber(formattedCardNum);
-
-      // Format: accountNumber|fullName|email|uid
-      const qrData = `${accountNum}|${fullName}|${email}|${profile.uid}`;
-
-      QRCodeLib.toDataURL(qrData, {
-        width: 300,
-        margin: 2,
-        color: {
-          dark: '#32BB78',
-          light: '#ffffff',
-        },
-      }).then((qrImageUrl) => {
-        // Ajouter le logo officiel eNkamba au centre du QR code
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-
-        const qrImage = new Image();
-        qrImage.onload = () => {
-          canvas.width = 300;
-          canvas.height = 300;
-
-          // Dessiner le QR code
-          ctx.drawImage(qrImage, 0, 0);
-
-          // Charger et dessiner le logo officiel
-          const logoImg = new Image();
-          logoImg.onload = () => {
-            const logoSize = 60;
-            const x = 150 - logoSize / 2;
-            const y = 150 - logoSize / 2;
-
-            // Fond blanc pour le logo
-            ctx.fillStyle = '#ffffff';
-            ctx.beginPath();
-            ctx.roundRect(x - 5, y - 5, logoSize + 10, logoSize + 10, 6);
-            ctx.fill();
-
-            // Dessiner le logo
-            ctx.drawImage(logoImg, x, y, logoSize, logoSize);
-
-            const finalQrCode = canvas.toDataURL();
-            setMyQrCode(finalQrCode);
-          };
-          logoImg.src = '/enkamba-logo.png';
-        };
-        qrImage.src = qrImageUrl;
-      });
-    }
-  }, [profile?.uid, profile?.name, profile?.fullName, profile?.email]);
 
   // Extraire et valider les données du QR code eNkamba
   const parseQRData = (data: string): ScannedQRData | null => {
@@ -472,25 +403,6 @@ export default function ScannerPage() {
     }
   };
 
-  // Copier dans le presse-papiers
-  const handleCopy = async (text: string, fieldName: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopiedField(fieldName);
-      toast({
-        title: 'Copié ! ✅',
-        description: `${fieldName} copié dans le presse-papiers`,
-      });
-      setTimeout(() => setCopiedField(null), 2000);
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Erreur',
-        description: 'Impossible de copier',
-      });
-    }
-  };
-
   return (
     <div className="container mx-auto max-w-md p-4 flex flex-col min-h-screen bg-muted/20 overflow-y-auto">
       <style>{`
@@ -521,7 +433,7 @@ export default function ScannerPage() {
           </Link>
         </Button>
         <h1 className="font-headline text-xl font-bold text-primary flex-1">
-          {viewMode === 'default' ? 'Scanner' : viewMode === 'receive-details' ? 'Recevoir' : 'Payer'}
+          {viewMode === 'default' ? 'Scanner' : 'Payer'}
         </h1>
       </header>
 
@@ -529,232 +441,18 @@ export default function ScannerPage() {
         <CardContent className="p-4 flex-1 flex flex-col items-center justify-center gap-4">
           <canvas ref={canvasRef} className="hidden" />
           
-          {/* MODE PAR DÉFAUT: QR Code + 3 boutons */}
+          {/* MODE PAR DÉFAUT: Scanner uniquement */}
           {viewMode === 'default' && (
-            <div className="w-full max-w-sm space-y-6">
-              {/* QR Code de l'utilisateur */}
-              <div className="flex flex-col items-center gap-4">
-                <div className="relative">
-                  <div className="absolute -inset-3 bg-gradient-to-r from-[#32BB78]/30 to-[#2a9d63]/20 rounded-2xl blur-xl animate-pulse" />
-                  <div className="relative bg-white p-6 rounded-2xl shadow-2xl border-2 border-[#32BB78]/30">
-                    {myQrCode ? (
-                      <img src={myQrCode} alt="Mon QR Code" className="w-56 h-56" />
-                    ) : (
-                      <div className="w-56 h-56 bg-gray-100 rounded-lg animate-pulse flex items-center justify-center">
-                        <QrCode className="w-16 h-16 text-gray-400" />
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="text-center space-y-1">
-                  <p className="font-bold text-lg text-primary">
-                    {profile?.name || profile?.fullName || 'eNkamba User'}
-                  </p>
-                  <p className="text-sm text-muted-foreground font-mono">{myAccountNumber}</p>
-                </div>
-              </div>
-
-              {/* 3 Boutons principaux */}
-              <div className="space-y-3">
-                {/* Bouton Recevoir */}
-                <Button
-                  className="w-full h-14 bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white font-bold text-base shadow-lg"
-                  onClick={() => setViewMode('receive-details')}
-                >
-                  <Download className="w-5 h-5 mr-3" />
-                  Recevoir
-                </Button>
-
-                {/* Bouton Transférer */}
-                <Button
-                  className="w-full h-14 bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-white font-bold text-base shadow-lg"
-                  onClick={() => router.push('/dashboard/pay-receive?mode=transfer')}
-                >
-                  <ArrowRightLeft className="w-5 h-5 mr-3" />
-                  Transférer
-                </Button>
-
-                {/* Bouton Payer */}
-                <Button
-                  className="w-full h-14 bg-gradient-to-r from-[#32BB78] to-green-800 hover:from-[#2a9d63] hover:to-green-700 text-white font-bold text-base shadow-lg"
-                  onClick={() => {
-                    setViewMode('camera-scan');
-                    setIsScanning(true);
-                  }}
-                >
-                  <Scan className="w-5 h-5 mr-3" />
-                  Payer
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* MODE RECEVOIR: Page détails complète */}
-          {viewMode === 'receive-details' && (
-            <div className="w-full max-w-sm space-y-6">
-              {/* QR Code téléchargeable */}
-              <div className="flex flex-col items-center gap-4">
-                <div className="relative">
-                  <div className="absolute -inset-3 bg-gradient-to-r from-[#32BB78]/30 to-[#2a9d63]/20 rounded-2xl blur-xl animate-pulse" />
-                  <div className="relative bg-white p-6 rounded-2xl shadow-2xl border-2 border-[#32BB78]/30">
-                    {myQrCode && <img src={myQrCode} alt="Mon QR Code" className="w-48 h-48" />}
-                  </div>
-                </div>
-
-                <div className="text-center space-y-1">
-                  <p className="font-bold text-xl text-primary">
-                    {profile?.name || profile?.fullName || 'eNkamba User'}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Partagez ces informations pour recevoir de l'argent</p>
-                </div>
-              </div>
-
-              {/* Toutes les informations avec boutons copier */}
-              <div className="space-y-3 bg-muted/50 rounded-xl p-4">
-                {/* Numéro eNkamba */}
-                <div className="flex items-center gap-3 bg-white rounded-lg p-3">
-                  <div className="bg-[#32BB78]/10 rounded-full p-2 flex-shrink-0">
-                    <Hash className="w-5 h-5 text-[#32BB78]" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-muted-foreground">Numéro eNkamba</p>
-                    <p className="font-semibold font-mono text-sm truncate">{myAccountNumber}</p>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="flex-shrink-0"
-                    onClick={() => handleCopy(myAccountNumber, 'Numéro eNkamba')}
-                  >
-                    {copiedField === 'Numéro eNkamba' ? (
-                      <Check className="w-4 h-4 text-green-600" />
-                    ) : (
-                      <Copy className="w-4 h-4" />
-                    )}
-                  </Button>
-                </div>
-
-                {/* Numéro de carte */}
-                <div className="flex items-center gap-3 bg-white rounded-lg p-3">
-                  <div className="bg-blue-500/10 rounded-full p-2 flex-shrink-0">
-                    <CreditCard className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-muted-foreground">Numéro de Carte</p>
-                    <p className="font-semibold font-mono text-sm truncate">{myCardNumber}</p>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="flex-shrink-0"
-                    onClick={() => handleCopy(myCardNumber, 'Numéro de Carte')}
-                  >
-                    {copiedField === 'Numéro de Carte' ? (
-                      <Check className="w-4 h-4 text-green-600" />
-                    ) : (
-                      <Copy className="w-4 h-4" />
-                    )}
-                  </Button>
-                </div>
-
-                {/* Email */}
-                {profile?.email && (
-                  <div className="flex items-center gap-3 bg-white rounded-lg p-3">
-                    <div className="bg-orange-500/10 rounded-full p-2 flex-shrink-0">
-                      <Mail className="w-5 h-5 text-orange-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-muted-foreground">Email</p>
-                      <p className="font-semibold text-sm truncate">{profile.email}</p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="flex-shrink-0"
-                      onClick={() => handleCopy(profile.email!, 'Email')}
-                    >
-                      {copiedField === 'Email' ? (
-                        <Check className="w-4 h-4 text-green-600" />
-                      ) : (
-                        <Copy className="w-4 h-4" />
-                      )}
-                    </Button>
-                  </div>
-                )}
-
-                {/* Téléphone */}
-                {profile?.phoneNumber && (
-                  <div className="flex items-center gap-3 bg-white rounded-lg p-3">
-                    <div className="bg-purple-500/10 rounded-full p-2 flex-shrink-0">
-                      <Phone className="w-5 h-5 text-purple-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-muted-foreground">Téléphone</p>
-                      <p className="font-semibold text-sm truncate">{profile.phoneNumber}</p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="flex-shrink-0"
-                      onClick={() => handleCopy(profile.phoneNumber!, 'Téléphone')}
-                    >
-                      {copiedField === 'Téléphone' ? (
-                        <Check className="w-4 h-4 text-green-600" />
-                      ) : (
-                        <Copy className="w-4 h-4" />
-                      )}
-                    </Button>
-                  </div>
-                )}
-              </div>
-
-              {/* Boutons d'action */}
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  className="flex-1 border-[#32BB78]/30 hover:bg-[#32BB78]/10"
-                  onClick={() => {
-                    const link = document.createElement('a');
-                    link.href = myQrCode;
-                    link.download = `eNkamba-QR-${myAccountNumber}.png`;
-                    document.body.appendChild(link);
-                    link.click();
-                    setTimeout(() => document.body.removeChild(link), 100);
-                    toast({ title: 'QR Code téléchargé ✅' });
-                  }}
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  Télécharger QR
-                </Button>
-                <Button
-                  className="flex-1 bg-[#32BB78] hover:bg-[#2a9d63]"
-                  onClick={async () => {
-                    if (navigator.share) {
-                      try {
-                        await navigator.share({
-                          title: 'Mon QR Code eNkamba',
-                          text: `Envoyez-moi de l'argent via eNkamba. Compte: ${myAccountNumber}`,
-                        });
-                      } catch (error) {
-                        // Utilisateur a annulé
-                      }
-                    } else {
-                      handleCopy(myAccountNumber, 'Numéro de compte');
-                    }
-                  }}
-                >
-                  <Share2 className="w-4 h-4 mr-2" />
-                  Partager
-                </Button>
-              </div>
-
+            <div className="w-full max-w-sm flex flex-col items-center justify-center gap-4">
               <Button
-                variant="ghost"
-                className="w-full"
-                onClick={() => setViewMode('default')}
+                className="w-full h-14 bg-gradient-to-r from-[#32BB78] to-green-800 hover:from-[#2a9d63] hover:to-green-700 text-white font-bold text-base shadow-lg"
+                onClick={() => {
+                  setViewMode('camera-scan');
+                  setIsScanning(true);
+                }}
               >
-                Retour
+                <Scan className="w-5 h-5 mr-3" />
+                Scanner
               </Button>
             </div>
           )}
