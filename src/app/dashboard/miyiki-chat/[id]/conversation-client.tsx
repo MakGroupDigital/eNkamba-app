@@ -11,7 +11,7 @@ import { Card } from '@/components/ui/card';
 import { useFirestoreConversations } from '@/hooks/useFirestoreConversations';
 import { useAuth } from '@/hooks/useAuth';
 import { ChatNavIcon } from '@/components/icons/service-icons';
-import { ChevronLeft, Send, Loader2, Mail, Phone, Mic, Video, MapPin, DollarSign, Paperclip, Plus, X, Check, Square, Settings, Users } from 'lucide-react';
+import { ChevronLeft, Send, Loader2, Mail, Phone, Mic, Video, MapPin, DollarSign, Paperclip, Plus, X, Check, Square, Settings, Users, Trash2, Edit2, MoreVertical } from 'lucide-react';
 import Link from 'next/link';
 import { GroupSettingsDialog } from '@/components/group-settings-dialog';
 
@@ -20,7 +20,7 @@ export default function ConversationClient() {
     const router = useRouter();
     const conversationId = params.id as string;
 
-    const { loadMessages, sendMessage } = useFirestoreConversations();
+    const { loadMessages, sendMessage, deleteMessage, updateMessage } = useFirestoreConversations();
     const { user: currentUser } = useAuth();
     
     const [messages, setMessages] = useState<any[]>([]);
@@ -41,6 +41,8 @@ export default function ConversationClient() {
     const [showGroupSettings, setShowGroupSettings] = useState(false);
     const [groupData, setGroupData] = useState<any>(null);
     const [isGroup, setIsGroup] = useState(false);
+    const [editingMessage, setEditingMessage] = useState<any>(null);
+    const [showMessageMenu, setShowMessageMenu] = useState<string | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const streamRef = useRef<MediaStream | null>(null);
@@ -137,6 +139,18 @@ export default function ConversationClient() {
         }
     }, [recordingType, isRecording]);
 
+    // Close message menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (showMessageMenu) {
+                setShowMessageMenu(null);
+            }
+        };
+        
+        document.addEventListener('click', handleClickOutside);
+        return () => document.removeEventListener('click', handleClickOutside);
+    }, [showMessageMenu]);
+
     // Auto scroll to bottom when messages change
     useEffect(() => {
         setTimeout(() => {
@@ -153,15 +167,58 @@ export default function ConversationClient() {
         setIsSending(true);
 
         try {
-            const metadata = replyingTo ? { replyTo: replyingTo.id } : undefined;
-            await sendMessage(conversationId, messageText, 'text', metadata);
-            setReplyingTo(null);
+            // Si on est en mode édition
+            if (editingMessage) {
+                await updateMessage(conversationId, editingMessage.id, messageText);
+                setEditingMessage(null);
+            } else {
+                // Attacher le message original complet si on répond à un message
+                const metadata = replyingTo ? {
+                    replyTo: replyingTo.id,
+                    repliedMessage: {
+                        id: replyingTo.id,
+                        text: replyingTo.text,
+                        senderName: replyingTo.senderName,
+                        senderId: replyingTo.senderId,
+                        messageType: replyingTo.messageType
+                    }
+                } : undefined;
+                
+                await sendMessage(conversationId, messageText, 'text', metadata);
+                setReplyingTo(null);
+            }
         } catch (error) {
             console.error('Erreur envoi message:', error);
             setInputValue(messageText); // Restaurer le message en cas d'erreur
         } finally {
             setIsSending(false);
         }
+    };
+
+    // Supprimer un message
+    const handleDeleteMessage = async (messageId: string) => {
+        if (!confirm('Voulez-vous vraiment supprimer ce message ?')) return;
+
+        try {
+            await deleteMessage(conversationId, messageId);
+            setShowMessageMenu(null);
+        } catch (error) {
+            console.error('Erreur suppression message:', error);
+            alert('Impossible de supprimer le message');
+        }
+    };
+
+    // Commencer l'édition d'un message
+    const handleEditMessage = (message: any) => {
+        setEditingMessage(message);
+        setInputValue(message.text);
+        setShowMessageMenu(null);
+    };
+
+    // Annuler l'édition
+    const cancelEdit = () => {
+        setEditingMessage(null);
+        setInputValue('');
     };
 
     // Initialiser l'analyseur audio pour le spectre
@@ -500,12 +557,20 @@ export default function ConversationClient() {
                         return (
                             <div
                                 key={message.id}
-                                className={`flex ${isOwn ? 'justify-end' : 'justify-start'} group`}
+                                className={`flex ${isOwn ? 'justify-end' : 'justify-start'} group relative`}
                             >
-                                <div className="flex flex-col gap-1 w-full max-w-md">
+                                <div className="flex flex-col gap-1 w-full max-w-md relative">
+                                    {/* Nom de l'expéditeur pour les groupes (sauf pour ses propres messages) */}
+                                    {isGroup && !isOwn && message.senderName && (
+                                        <p className="text-xs font-semibold text-primary px-3">
+                                            {message.senderName}
+                                        </p>
+                                    )}
+                                    
                                     {/* Reply Preview - Show the original message being replied to */}
                                     {message.metadata?.replyTo && (() => {
-                                        const repliedMessage = messages.find(m => m.id === message.metadata.replyTo);
+                                        // Utiliser le message attaché dans metadata au lieu de chercher dans le tableau
+                                        const repliedMessage = message.metadata.repliedMessage || messages.find(m => m.id === message.metadata.replyTo);
                                         return (
                                             <div className={`text-xs px-3 py-2 rounded-lg border-l-4 ${
                                                 isOwn 
@@ -522,17 +587,20 @@ export default function ConversationClient() {
                                         );
                                     })()}
                                     
-                                    <Card
-                                        className={`px-4 py-2 rounded-2xl cursor-pointer hover:shadow-md transition-shadow ${
-                                            isOwn
-                                                ? 'bg-primary text-white rounded-br-none'
-                                                : 'bg-muted text-foreground rounded-bl-none'
-                                        }`}
-                                        onContextMenu={(e) => {
-                                            e.preventDefault();
-                                            setReplyingTo(message);
-                                        }}
-                                    >
+                                    <div className="relative flex items-start gap-2">
+                                        <Card
+                                            className={`px-4 py-2 rounded-2xl cursor-pointer hover:shadow-md transition-shadow flex-1 ${
+                                                isOwn
+                                                    ? 'bg-primary text-white rounded-br-none'
+                                                    : 'bg-muted text-foreground rounded-bl-none'
+                                            } ${message.isDeleted ? 'opacity-60 italic' : ''}`}
+                                            onContextMenu={(e) => {
+                                                e.preventDefault();
+                                                if (!message.isDeleted) {
+                                                    setReplyingTo(message);
+                                                }
+                                            }}
+                                        >
                                         {isAudioMessage && audioData ? (
                                             <div className="space-y-3 w-full">
                                                 <div className="flex items-center gap-3">
@@ -632,20 +700,62 @@ export default function ConversationClient() {
                                             hour: '2-digit',
                                             minute: '2-digit'
                                         }) || ''}
+                                        {message.isEdited && <span className="ml-2">(modifié)</span>}
                                     </p>
                                     </Card>
                                     
+                                    {/* Message Actions Menu */}
+                                    {isOwn && !message.isDeleted && (
+                                        <div className="relative flex-shrink-0">
+                                            <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                className={`opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0 ${
+                                                    isOwn ? 'text-white hover:bg-white/20' : 'text-muted-foreground hover:bg-muted'
+                                                }`}
+                                                onClick={() => setShowMessageMenu(showMessageMenu === message.id ? null : message.id)}
+                                            >
+                                                <MoreVertical className="h-4 w-4" />
+                                            </Button>
+                                            
+                                            {/* Dropdown Menu */}
+                                            {showMessageMenu === message.id && (
+                                                <div className="absolute right-0 top-full mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50 min-w-[150px]">
+                                                    {message.messageType === 'text' && (
+                                                        <button
+                                                            className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                                                            onClick={() => handleEditMessage(message)}
+                                                        >
+                                                            <Edit2 className="h-4 w-4" />
+                                                            Modifier
+                                                        </button>
+                                                    )}
+                                                    <button
+                                                        className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 text-red-600"
+                                                        onClick={() => handleDeleteMessage(message.id)}
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                        Supprimer
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                    </div>
+                                    
                                     {/* Reply Button */}
-                                    <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        className={`opacity-0 group-hover:opacity-100 transition-opacity text-xs h-6 ${
-                                            isOwn ? 'text-primary' : 'text-muted-foreground'
-                                        }`}
-                                        onClick={() => setReplyingTo(message)}
-                                    >
-                                        Répondre
-                                    </Button>
+                                    {!message.isDeleted && (
+                                        <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className={`opacity-0 group-hover:opacity-100 transition-opacity text-xs h-6 ${
+                                                isOwn ? 'text-primary' : 'text-muted-foreground'
+                                            }`}
+                                            onClick={() => setReplyingTo(message)}
+                                        >
+                                            Répondre
+                                        </Button>
+                                    )}
                                 </div>
                             </div>
                         );
@@ -657,6 +767,26 @@ export default function ConversationClient() {
             {/* Fixed Input Footer */}
             <footer className="flex-shrink-0 border-t bg-background space-y-3 z-20 shadow-lg flex flex-col max-h-[30vh] overflow-y-auto">
                 <div className="p-4 space-y-3">
+                
+                {/* Edit Preview */}
+                {editingMessage && (
+                    <div className={`border-l-4 border-orange-500 rounded-lg p-3 bg-orange-50 dark:bg-orange-900/20 flex items-start justify-between`}>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-xs font-semibold text-orange-600 dark:text-orange-400 mb-1">Modification du message</p>
+                            <p className="text-sm truncate text-muted-foreground">
+                                {editingMessage.text?.substring(0, 50)}
+                            </p>
+                        </div>
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-6 w-6 p-0 flex-shrink-0"
+                            onClick={cancelEdit}
+                        >
+                            <X className="h-4 w-4" />
+                        </Button>
+                    </div>
+                )}
                 
                 {/* Reply Preview */}
                 {replyingTo && (

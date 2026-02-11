@@ -410,15 +410,30 @@ export default function PayReceivePage() {
         }
       `}</style>
 
-      <header className="flex items-center gap-4 mb-4 pt-4">
-        <Button variant="ghost" size="icon" asChild>
-          <Link href="/dashboard/mbongo-dashboard">
-            <ArrowLeft />
-          </Link>
-        </Button>
-        <h1 className="font-headline text-xl font-bold text-primary">
-          {mode === 'receive' ? 'Recevoir de l\'argent' : 'Scanner QR'}
-        </h1>
+      <header className="flex items-center justify-between gap-4 mb-4 pt-4">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" asChild>
+            <Link href="/dashboard/mbongo-dashboard">
+              <ArrowLeft />
+            </Link>
+          </Button>
+          <h1 className="font-headline text-xl font-bold text-primary">
+            {mode === 'receive' ? 'Recevoir de l\'argent' : 'Scanner QR'}
+          </h1>
+        </div>
+        {mode === 'receive' && (
+          <Button 
+            size="icon" 
+            className="bg-[#32BB78] hover:bg-[#2a9d63] text-white"
+            onClick={() => {
+              setPreviousMode('receive');
+              setMode('scanner');
+              setIsScanning(true);
+            }}
+          >
+            <QrCode className="w-5 h-5" />
+          </Button>
+        )}
       </header>
 
       <Card className="flex-1 flex flex-col">

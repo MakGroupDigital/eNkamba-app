@@ -203,10 +203,13 @@ export function useFirestoreConversations() {
           // Nettoyer metadata pour ne garder que les données sérialisables
           const cleanMetadata: any = {};
           for (const [key, value] of Object.entries(metadata)) {
-            // Ne garder que les types sérialisables
+            // Ne garder que les types sérialisables (y compris les objets imbriqués)
             if (value === null || typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
               cleanMetadata[key] = value;
             } else if (Array.isArray(value) && value.every(v => typeof v === 'string' || typeof v === 'number')) {
+              cleanMetadata[key] = value;
+            } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+              // Permettre les objets imbriqués (comme repliedMessage)
               cleanMetadata[key] = value;
             }
           }
@@ -269,12 +272,82 @@ export function useFirestoreConversations() {
     []
   );
 
+  // Supprimer un message
+  const deleteMessage = useCallback(
+    async (conversationId: string, messageId: string) => {
+      if (!currentUser) throw new Error('Utilisateur non authentifié');
+
+      try {
+        const messageRef = doc(db, 'conversations', conversationId, 'messages', messageId);
+        const messageSnap = await getDoc(messageRef);
+
+        if (!messageSnap.exists()) {
+          throw new Error('Message introuvable');
+        }
+
+        const messageData = messageSnap.data();
+        
+        // Vérifier que l'utilisateur est l'auteur du message
+        if (messageData.senderId !== currentUser.uid) {
+          throw new Error('Vous ne pouvez supprimer que vos propres messages');
+        }
+
+        // Marquer le message comme supprimé au lieu de le supprimer complètement
+        await updateDoc(messageRef, {
+          text: 'Message supprimé',
+          isDeleted: true,
+          deletedAt: serverTimestamp(),
+        });
+      } catch (err) {
+        console.error('Erreur suppression message:', err);
+        throw err;
+      }
+    },
+    [currentUser]
+  );
+
+  // Modifier un message
+  const updateMessage = useCallback(
+    async (conversationId: string, messageId: string, newText: string) => {
+      if (!currentUser) throw new Error('Utilisateur non authentifié');
+
+      try {
+        const messageRef = doc(db, 'conversations', conversationId, 'messages', messageId);
+        const messageSnap = await getDoc(messageRef);
+
+        if (!messageSnap.exists()) {
+          throw new Error('Message introuvable');
+        }
+
+        const messageData = messageSnap.data();
+        
+        // Vérifier que l'utilisateur est l'auteur du message
+        if (messageData.senderId !== currentUser.uid) {
+          throw new Error('Vous ne pouvez modifier que vos propres messages');
+        }
+
+        // Mettre à jour le message
+        await updateDoc(messageRef, {
+          text: newText,
+          isEdited: true,
+          editedAt: serverTimestamp(),
+        });
+      } catch (err) {
+        console.error('Erreur modification message:', err);
+        throw err;
+      }
+    },
+    [currentUser]
+  );
+
   return {
     conversations,
     isLoading,
     error,
     createConversation,
     sendMessage,
+    deleteMessage,
+    updateMessage,
     loadMessages,
   };
 }

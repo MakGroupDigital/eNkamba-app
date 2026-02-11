@@ -37,10 +37,12 @@ export function PinVerification({ isOpen, onClose, onSuccess, paymentDetails }: 
   const [mounted, setMounted] = useState(false);
   const maxAttempts = 3;
 
+  // Gérer le montage du composant
   useEffect(() => {
     if (isOpen) {
       setMounted(true);
     } else {
+      // Délai avant de démonter pour éviter les erreurs DOM
       const timer = setTimeout(() => setMounted(false), 300);
       return () => clearTimeout(timer);
     }
@@ -70,6 +72,7 @@ export function PinVerification({ isOpen, onClose, onSuccess, paymentDetails }: 
       checkPinExists();
     }
     
+    // Reset les états quand le dialog se ferme
     if (!isOpen) {
       setPin('');
       setConfirmPin('');
@@ -81,6 +84,7 @@ export function PinVerification({ isOpen, onClose, onSuccess, paymentDetails }: 
   const createPin = async () => {
     if (!user) return;
 
+    // Validation
     if (pin.length !== 4 || !/^\d{4}$/.test(pin)) {
       toast({
         variant: 'destructive',

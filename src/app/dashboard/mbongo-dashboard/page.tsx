@@ -3,20 +3,34 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Scan, Mail, Phone, CreditCard as CreditCardIcon, Hash, Smartphone, QrCode, ArrowUpRight, ArrowDownLeft, Download, Share2, Wallet, ArrowLeftRight , TrendingUp } from "lucide-react";
+import { Sparkles, QrCode, ArrowLeftRight, TrendingUp, Wallet } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import DashboardHeader from "@/components/dashboard/dashboard-header";
 import { SavingsIcon, CreditIcon, TontineIcon, ConversionIcon, ReferralIcon, AgentIcon, LinkAccountIcon, BonusIcon, TaxIcon, YangoIcon, WaterIcon, TvIcon, AcademicIcon, SchoolIcon, FlightIcon, HotelIcon, EventIcon, PhoneCreditIcon, InsuranceIcon, DonationIcon } from "@/components/icons/service-icons";
 import { useUserProfile } from '@/hooks/useUserProfile';
-import QRCodeLib from 'qrcode';
 
-// Actions rapides principales (4 boutons simples)
 const quickActions = [
-  { icon: QrCode, label: 'Scanner', href: '/dashboard/scanner', gradient: 'from-[#32BB78] to-[#2a9d63]' },
-  { icon: ArrowLeftRight, label: 'Payer/Recevoir', href: '/dashboard/pay-receive', gradient: 'from-[#32BB78] to-[#2a9d63]' },
-  { icon: TrendingUp, label: 'Investir', href: '/dashboard/invest', gradient: 'from-[#32BB78] to-[#2a9d63]' },
-  { icon: Wallet, label: 'Portefeuille', href: '/dashboard/wallet', gradient: 'from-[#32BB78] to-[#2a9d63]' },
+  { 
+    icon: QrCode,
+    label: 'Scanner',
+    href: '/dashboard/scanner-simple'
+  },
+  { 
+    icon: ArrowLeftRight,
+    label: 'Payer/Recevoir',
+    href: '/dashboard/pay-receive'
+  },
+  { 
+    icon: TrendingUp,
+    label: 'Investir',
+    href: '/dashboard/invest'
+  },
+  { 
+    icon: Wallet,
+    label: 'Portefeuille',
+    href: '/dashboard/wallet'
+  },
 ];
 
 const financialServices = [
@@ -37,7 +51,7 @@ const bills = [
   { icon: TvIcon, label: 'Canal+', href: '/dashboard/pay-bill?type=tv' },
   { icon: AcademicIcon, label: 'Frais Académiques', href: '/dashboard/pay-bill?type=academic' },
   { icon: SchoolIcon, label: 'Frais Scolaires', href: '/dashboard/pay-bill?type=school' },
-  { icon: FlightIcon, label: 'Billet d avion', href: '/dashboard/pay-bill?type=flight' },
+  { icon: FlightIcon, label: 'Billet d\'avion', href: '/dashboard/pay-bill?type=flight' },
   { icon: HotelIcon, label: 'Hôtel', href: '/dashboard/pay-bill?type=hotel' },
   { icon: EventIcon, label: 'Événements', href: '/dashboard/pay-bill?type=event' },
   { icon: PhoneCreditIcon, label: 'Crédit Téléphone', href: '/dashboard/pay-bill?type=phone' },
@@ -46,129 +60,32 @@ const bills = [
 ];
 
 export default function MbongoDashboard() {
-  const [qrCode, setQrCode] = useState<string>('');
-  const [accountNumber, setAccountNumber] = useState<string>('');
   const { profile } = useUserProfile();
-
-  useEffect(() => {
-    if (profile?.uid) {
-      const hash = profile.uid.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-      const accountNum = `ENK${String(hash).padStart(12, '0')}`;
-      const fullName = profile.name || profile.fullName || 'eNkamba User';
-      const email = profile.email || '';
-      
-      setAccountNumber(accountNum);
-
-      const qrData = `${accountNum}|${fullName}|${email}`;
-
-      QRCodeLib.toDataURL(qrData, {
-        width: 300,
-        margin: 2,
-        color: {
-          dark: '#32BB78',
-          light: '#ffffff',
-        },
-      }).then((qrImageUrl) => {
-        // Ajouter le logo officiel eNkamba au centre du QR code
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-
-        const qrImage = new Image();
-        qrImage.onload = () => {
-          canvas.width = 300;
-          canvas.height = 300;
-
-          // Dessiner le QR code
-          ctx.drawImage(qrImage, 0, 0);
-
-          // Charger et dessiner le logo officiel
-          const logoImg = new Image();
-          logoImg.onload = () => {
-            const logoSize = 60;
-            const x = 150 - logoSize / 2;
-            const y = 150 - logoSize / 2;
-
-            // Fond blanc pour le logo
-            ctx.fillStyle = '#ffffff';
-            ctx.beginPath();
-            ctx.roundRect(x - 5, y - 5, logoSize + 10, logoSize + 10, 6);
-            ctx.fill();
-
-            // Dessiner le logo
-            ctx.drawImage(logoImg, x, y, logoSize, logoSize);
-
-            const finalQrCode = canvas.toDataURL();
-            setQrCode(finalQrCode);
-          };
-          logoImg.src = '/enkamba-logo.png';
-        };
-        qrImage.src = qrImageUrl;
-      });
-    }
-  }, [profile?.uid, profile?.name, profile?.fullName, profile?.email]);
-
-  const handleDownloadQR = () => {
-    if (!qrCode) return;
-    const link = document.createElement('a');
-    link.download = `enkamba-qr-${accountNumber}.png`;
-    link.href = qrCode;
-    link.click();
-  };
-
-  const handleShareQR = async () => {
-    if (!qrCode) return;
-    try {
-      const blob = await (await fetch(qrCode)).blob();
-      const file = new File([blob], `enkamba-qr-${accountNumber}.png`, { type: 'image/png' });
-      
-      if (navigator.share) {
-        await navigator.share({
-          title: 'Mon QR Code eNkamba',
-          text: `Mon compte eNkamba: ${accountNumber}`,
-          files: [file],
-        });
-      } else {
-        handleDownloadQR();
-      }
-    } catch (error) {
-      console.error('Erreur de partage:', error);
-      handleDownloadQR();
-    }
-  };
 
   return (
     <>
       <DashboardHeader />
       <div className="container mx-auto max-w-4xl p-4 space-y-6 animate-in fade-in duration-500 pt-20">
-        <div className="space-y-6">
-          {/* Actions Rapides Principales */}
-          <div className="grid grid-cols-4 gap-4 sm:gap-6">
-            {quickActions.map((action) => {
-              const Icon = action.icon;
-              return (
-                <Link key={action.label} href={action.href}>
-                  <div className="group flex flex-col items-center gap-3 text-center">
-                    {/* Icon Container with Glow Effect */}
-                    <div className="relative">
-                      {/* Glow Effect */}
-                      <div className="absolute inset-0 bg-gradient-to-br from-[#32BB78]/40 to-[#2a9d63]/20 rounded-full blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      
-                      {/* Icon Background */}
-                      <div className={`relative flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br ${action.gradient} shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300`}>
-                        <Icon className="w-6 h-6 text-white" strokeWidth={2.5} />
-                      </div>
-                    </div>
-                    
-                    {/* Label */}
-                    <p className="text-xs font-semibold text-foreground group-hover:text-[#32BB78] transition-colors duration-300">{action.label}</p>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
+        {/* Quick Actions - 4 Circles */}
+        <div className="grid grid-cols-4 gap-4">
+          {quickActions.map((action) => {
+            const IconComponent = action.icon;
+            
+            return (
+              <Link key={action.label} href={action.href} className="flex flex-col items-center gap-2 group">
+                {/* Icon Circle - Green background */}
+                <div className="flex items-center justify-center w-16 h-16 rounded-full bg-[#32BB78] hover:bg-[#2a9d63] transition-all duration-300 hover:scale-110 flex-shrink-0 shadow-md text-white">
+                  <IconComponent size={32} className="text-white" />
+                </div>
+                {/* Label */}
+                <p className="text-xs font-medium text-gray-800 text-center">{action.label}</p>
+              </Link>
+            );
+          })}
         </div>
 
+        {/* Section QR Code Personnel - REMOVED */}
+        {/* Assistant Financier IA */}
         <Card className="bg-gradient-to-r from-primary to-green-800 text-primary-foreground shadow-lg overflow-hidden relative">
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iNCIvPjwvZz48L2c+PC9zdmc+')] opacity-50" />
           <CardHeader className="relative">
