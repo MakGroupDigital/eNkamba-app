@@ -5,12 +5,20 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MapPin, Navigation, Copy, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { LocationMapView } from './LocationMapView';
+import { LocationDirectionsView } from './LocationDirectionsView';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface LocationMessageProps {
   latitude: number;
   longitude: number;
   address?: string;
   senderName?: string;
+  senderPhoto?: string;
+  receiverName?: string;
+  receiverPhoto?: string;
+  receiverLatitude?: number;
+  receiverLongitude?: number;
   timestamp?: Date;
 }
 
@@ -19,18 +27,17 @@ export function LocationMessage({
   longitude,
   address,
   senderName,
+  senderPhoto,
+  receiverName,
+  receiverPhoto,
+  receiverLatitude,
+  receiverLongitude,
   timestamp,
 }: LocationMessageProps) {
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
-  const [mapUrl, setMapUrl] = useState('');
+  const [showMap, setShowMap] = useState(false);
   const [showDirections, setShowDirections] = useState(false);
-
-  useEffect(() => {
-    // Créer l'URL de la carte OpenStreetMap
-    const osmUrl = `https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}&zoom=15&layers=M`;
-    setMapUrl(osmUrl);
-  }, [latitude, longitude]);
 
   const handleCopyCoordinates = () => {
     const coords = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
@@ -44,23 +51,61 @@ export function LocationMessage({
   };
 
   const handleOpenMap = () => {
-    window.open(mapUrl, '_blank');
+    setShowMap(true);
   };
 
   const handleGetDirections = () => {
-    // Ouvrir Google Maps ou Apple Maps avec les directions
-    const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
-    window.open(mapsUrl, '_blank');
+    if (receiverLatitude && receiverLongitude) {
+      setShowDirections(true);
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Localisation du destinataire non disponible',
+      });
+    }
   };
 
-  const handleOpenInOSM = () => {
-    window.open(mapUrl, '_blank');
-  };
+  if (showMap) {
+    return (
+      <LocationMapView
+        senderLatitude={latitude}
+        senderLongitude={longitude}
+        senderName={senderName || 'Utilisateur'}
+        senderPhoto={senderPhoto}
+        receiverLatitude={receiverLatitude}
+        receiverLongitude={receiverLongitude}
+        receiverName={receiverName}
+        receiverPhoto={receiverPhoto}
+        onBack={() => setShowMap(false)}
+        onGetDirections={() => {
+          setShowMap(false);
+          setShowDirections(true);
+        }}
+      />
+    );
+  }
+
+  if (showDirections && receiverLatitude && receiverLongitude) {
+    return (
+      <LocationDirectionsView
+        senderLatitude={latitude}
+        senderLongitude={longitude}
+        senderName={senderName || 'Utilisateur'}
+        senderPhoto={senderPhoto}
+        receiverLatitude={receiverLatitude}
+        receiverLongitude={receiverLongitude}
+        receiverName={receiverName || 'Destinataire'}
+        receiverPhoto={receiverPhoto}
+        onBack={() => setShowDirections(false)}
+      />
+    );
+  }
 
   return (
-    <Card className="w-full max-w-sm overflow-hidden bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200">
+    <Card className="w-full max-w-sm overflow-hidden bg-gradient-to-br from-green-50 to-emerald-50 border-primary/30">
       {/* En-tête */}
-      <div className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white p-3 flex items-center gap-2">
+      <div className="bg-gradient-to-r from-primary via-primary to-green-700 text-white p-3 flex items-center gap-2">
         <MapPin className="h-5 w-5" />
         <div className="flex-1">
           <p className="font-semibold text-sm">Localisation partagée</p>
@@ -70,39 +115,57 @@ export function LocationMessage({
 
       {/* Contenu */}
       <div className="p-4 space-y-3">
-        {/* Aperçu de la carte statique */}
-        <div className="relative w-full h-48 bg-gray-200 rounded-lg overflow-hidden border-2 border-blue-200">
-          <iframe
-            width="100%"
-            height="100%"
-            frameBorder="0"
-            src={`https://www.openstreetmap.org/export/embed.html?bbox=${(longitude - 0.01).toFixed(6)},${(latitude - 0.01).toFixed(6)},${(longitude + 0.01).toFixed(6)},${(latitude + 0.01).toFixed(6)}&layer=mapnik&marker=${latitude},${longitude}`}
-            style={{ border: 0 }}
-            allowFullScreen={false}
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-          />
-          {/* Overlay avec gradient */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+        {/* Profils */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 flex-1">
+            <Avatar className="h-8 w-8 border-2 border-primary">
+              <AvatarImage src={senderPhoto} />
+              <AvatarFallback className="bg-primary text-white text-xs">
+                {senderName?.charAt(0).toUpperCase() || 'U'}
+              </AvatarFallback>
+            </Avatar>
+            <div className="min-w-0">
+              <p className="text-xs font-semibold text-gray-800 truncate">{senderName}</p>
+              <p className="text-xs text-gray-600">Expéditeur</p>
+            </div>
+          </div>
+
+          {receiverName && (
+            <>
+              <div className="text-gray-400">→</div>
+              <div className="flex items-center gap-2 flex-1">
+                <Avatar className="h-8 w-8 border-2 border-primary">
+                  <AvatarImage src={receiverPhoto} />
+                  <AvatarFallback className="bg-primary text-white text-xs">
+                    {receiverName.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-gray-800 truncate">{receiverName}</p>
+                  <p className="text-xs text-gray-600">Destinataire</p>
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Coordonnées */}
-        <div className="bg-white rounded-lg p-3 space-y-2">
+        <div className="bg-white rounded-lg p-3 space-y-2 border border-primary/20">
           <p className="text-xs text-gray-600 font-semibold">Coordonnées GPS</p>
           <div className="flex items-center justify-between gap-2">
-            <code className="text-xs bg-gray-100 px-2 py-1 rounded flex-1 font-mono">
+            <code className="text-xs bg-gray-100 px-2 py-1 rounded flex-1 font-mono text-gray-800">
               {latitude.toFixed(6)}, {longitude.toFixed(6)}
             </code>
             <Button
               size="sm"
               variant="ghost"
-              className="h-8 w-8 p-0"
+              className="h-8 w-8 p-0 hover:bg-primary/10"
               onClick={handleCopyCoordinates}
             >
               {copied ? (
-                <Check className="h-4 w-4 text-green-600" />
+                <Check className="h-4 w-4 text-primary" />
               ) : (
-                <Copy className="h-4 w-4" />
+                <Copy className="h-4 w-4 text-gray-600" />
               )}
             </Button>
           </div>
@@ -110,7 +173,7 @@ export function LocationMessage({
 
         {/* Adresse si disponible */}
         {address && (
-          <div className="bg-white rounded-lg p-3">
+          <div className="bg-white rounded-lg p-3 border border-primary/20">
             <p className="text-xs text-gray-600 font-semibold mb-1">Adresse</p>
             <p className="text-sm text-gray-800">{address}</p>
           </div>
@@ -121,7 +184,7 @@ export function LocationMessage({
           <Button
             size="sm"
             variant="outline"
-            className="gap-2 border-blue-300 hover:bg-blue-50"
+            className="gap-2 border-primary text-primary hover:bg-primary/10"
             onClick={handleOpenMap}
           >
             <MapPin className="h-4 w-4" />
@@ -129,8 +192,9 @@ export function LocationMessage({
           </Button>
           <Button
             size="sm"
-            className="gap-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white"
+            className="gap-2 bg-gradient-to-r from-primary to-green-700 hover:from-primary/90 hover:to-green-700/90 text-white"
             onClick={handleGetDirections}
+            disabled={!receiverLatitude || !receiverLongitude}
           >
             <Navigation className="h-4 w-4" />
             Itinéraire

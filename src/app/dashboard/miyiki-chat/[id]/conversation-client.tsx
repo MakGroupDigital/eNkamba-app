@@ -698,6 +698,11 @@ export default function ConversationClient() {
                                             longitude={message.metadata.longitude}
                                             address={message.metadata.address}
                                             senderName={message.senderName}
+                                            senderPhoto={message.senderPhoto}
+                                            receiverName={contact?.name}
+                                            receiverPhoto={contact?.photoURL}
+                                            receiverLatitude={currentUser?.latitude}
+                                            receiverLongitude={currentUser?.longitude}
                                             timestamp={message.timestamp?.toDate?.()}
                                         />
                                     ) : (
