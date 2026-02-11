@@ -13,7 +13,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { ChatNavIcon } from '@/components/icons/service-icons';
 import { LocationMessage } from '@/components/chat/LocationMessage';
 import { FileMessage } from '@/components/chat/FileMessage';
+import { MoneyTransferMessage } from '@/components/chat/MoneyTransferMessage';
 import { useLocationSharing } from '@/hooks/useLocationSharing';
+import { useChatMoneyTransfer } from '@/hooks/useChatMoneyTransfer';
 import { ChevronLeft, Send, Loader2, Mail, Phone, Mic, Video, MapPin, DollarSign, Paperclip, Plus, X, Check, Square, Settings, Users, Trash2, Edit2, MoreVertical } from 'lucide-react';
 import Link from 'next/link';
 import { GroupSettingsDialog } from '@/components/group-settings-dialog';
@@ -26,6 +28,7 @@ export default function ConversationClient() {
     const { loadMessages, sendMessage, deleteMessage, updateMessage } = useFirestoreConversations();
     const { user: currentUser } = useAuth();
     const { getCurrentLocation } = useLocationSharing();
+    const { sendMoney, acceptTransfer, rejectTransfer } = useChatMoneyTransfer();
     
     const [messages, setMessages] = useState<any[]>([]);
     const [inputValue, setInputValue] = useState('');
@@ -424,14 +427,51 @@ export default function ConversationClient() {
 
     // Envoyer de l'argent
     const handleSendMoney = async () => {
-        const amount = prompt('Montant à envoyer (en FC):');
-        if (amount) {
-            setIsSending(true);
-            try {
-                await sendMessage(conversationId, `💰 Transfert de ${amount} FC`, 'money', { amount });
-            } finally {
-                setIsSending(false);
+        const amountStr = prompt('Montant à envoyer (en FC):');
+        if (!amountStr) return;
+
+        const amount = parseFloat(amountStr);
+        if (isNaN(amount) || amount <= 0) {
+            alert('Montant invalide');
+            return;
+        }
+
+        setIsSending(true);
+        try {
+            // Vérifier que c'est une conversation individuelle
+            if (isGroup) {
+                alert('Les transferts d\'argent ne sont possibles qu\'en conversation individuelle');
+                return;
             }
+
+            if (!contact?.id) {
+                alert('Destinataire non trouvé');
+                return;
+            }
+
+            // Envoyer l'argent via l'API
+            const result = await sendMoney(
+                amount,
+                contact.id,
+                contact.name,
+                conversationId
+            );
+
+            // Envoyer le message de transfert
+            await sendMessage(conversationId, `💰 Transfert de ${amount} FC`, 'money', {
+                amount,
+                recipientId: contact.id,
+                recipientName: contact.name,
+                transactionId: result.transactionId,
+                status: 'pending',
+            });
+
+            alert(`Transfert de ${amount} FC envoyé à ${contact.name}`);
+        } catch (error) {
+            console.error('Erreur transfert:', error);
+            alert(error instanceof Error ? error.message : 'Erreur lors du transfert');
+        } finally {
+            setIsSending(false);
         }
     };
 
@@ -707,8 +747,6 @@ export default function ConversationClient() {
                                             senderPhoto={message.senderPhoto}
                                             receiverName={contact?.name}
                                             receiverPhoto={contact?.photoURL}
-                                            receiverLatitude={currentUser?.latitude}
-                                            receiverLongitude={currentUser?.longitude}
                                             timestamp={message.timestamp?.toDate?.()}
                                         />
                                     ) : message.messageType === 'file' && message.metadata?.fileName ? (
@@ -719,6 +757,30 @@ export default function ConversationClient() {
                                             fileSize={message.metadata.fileSize}
                                             senderName={message.senderName}
                                             timestamp={message.timestamp?.toDate?.()}
+                                        />
+                                    ) : message.messageType === 'money' && message.metadata?.amount ? (
+                                        <MoneyTransferMessage
+                                            amount={message.metadata.amount}
+                                            currency={message.metadata.currency || 'FC'}
+                                            senderName={message.senderName}
+                                            senderPhoto={message.senderPhoto}
+                                            receiverName={contact?.name}
+                                            receiverPhoto={contact?.photoURL}
+                                            status={message.metadata.status || 'pending'}
+                                            transactionId={message.metadata.transactionId}
+                                            timestamp={message.timestamp?.toDate?.()}
+                                            isReceiver={!isOwn}
+                                            onAccept={async () => {
+                                                await acceptTransfer(
+                                                    message.id,
+                                                    conversationId,
+                                                    message.metadata.amount,
+                                                    message.senderId
+                                                );
+                                            }}
+                                            onReject={async () => {
+                                                await rejectTransfer(message.id, conversationId);
+                                            }}
                                         />
                                     ) : (
                                         <p className="text-sm">{message.text}</p>
