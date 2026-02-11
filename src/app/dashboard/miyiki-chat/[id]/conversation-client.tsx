@@ -12,6 +12,7 @@ import { useFirestoreConversations } from '@/hooks/useFirestoreConversations';
 import { useAuth } from '@/hooks/useAuth';
 import { ChatNavIcon } from '@/components/icons/service-icons';
 import { LocationMessage } from '@/components/chat/LocationMessage';
+import { FileMessage } from '@/components/chat/FileMessage';
 import { useLocationSharing } from '@/hooks/useLocationSharing';
 import { ChevronLeft, Send, Loader2, Mail, Phone, Mic, Video, MapPin, DollarSign, Paperclip, Plus, X, Check, Square, Settings, Users, Trash2, Edit2, MoreVertical } from 'lucide-react';
 import Link from 'next/link';
@@ -446,7 +447,12 @@ export default function ConversationClient() {
                     const reader = new FileReader();
                     reader.onload = async () => {
                         const base64 = reader.result?.toString().split(',')[1];
-                        await sendMessage(conversationId, `📎 ${file.name}`, 'file', { fileName: file.name, fileType: file.type, fileData: base64 });
+                        await sendMessage(conversationId, `📎 ${file.name}`, 'file', { 
+                            fileName: file.name, 
+                            fileType: file.type, 
+                            fileData: base64,
+                            fileSize: file.size
+                        });
                     };
                     reader.readAsDataURL(file);
                 } finally {
@@ -703,6 +709,15 @@ export default function ConversationClient() {
                                             receiverPhoto={contact?.photoURL}
                                             receiverLatitude={currentUser?.latitude}
                                             receiverLongitude={currentUser?.longitude}
+                                            timestamp={message.timestamp?.toDate?.()}
+                                        />
+                                    ) : message.messageType === 'file' && message.metadata?.fileName ? (
+                                        <FileMessage
+                                            fileName={message.metadata.fileName}
+                                            fileType={message.metadata.fileType}
+                                            fileData={message.metadata.fileData}
+                                            fileSize={message.metadata.fileSize}
+                                            senderName={message.senderName}
                                             timestamp={message.timestamp?.toDate?.()}
                                         />
                                     ) : (
