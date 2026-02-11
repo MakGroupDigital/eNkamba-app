@@ -744,9 +744,9 @@ export default function ScannerPage() {
 
           {/* MODE PAYER: Scanner caméra */}
           {viewMode === 'camera-scan' && !scannedData && (
-            <div className="w-full max-w-sm space-y-4">
+            <div className="w-full space-y-4 flex flex-col items-center">
               {isImporting && importedImageData ? (
-                <div className="relative w-full aspect-square rounded-2xl overflow-hidden shadow-2xl bg-white flex items-center justify-center">
+                <div className="relative w-full max-w-sm aspect-square rounded-2xl overflow-hidden shadow-2xl bg-white flex items-center justify-center">
                   <img 
                     src={importedImageData} 
                     alt="Imported QR" 
@@ -766,7 +766,7 @@ export default function ScannerPage() {
                   </div>
                 </div>
               ) : (
-                <div className="relative w-full aspect-square bg-black rounded-2xl overflow-hidden shadow-lg">
+                <div className="relative w-full max-w-sm aspect-square bg-black rounded-2xl overflow-hidden shadow-lg">
                   <video 
                     ref={videoRef} 
                     className="w-full h-full object-cover" 
@@ -843,6 +843,7 @@ export default function ScannerPage() {
                 onClick={() => {
                   setViewMode('default');
                   setIsScanning(false);
+                  setScanError(null);
                 }}
               >
                 Retour

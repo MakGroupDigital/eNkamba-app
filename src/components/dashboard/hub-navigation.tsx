@@ -9,6 +9,7 @@ import {
   ShopNavIcon,
   LogisticsNavIcon,
   PaymentNavIcon,
+  EStreamNavIcon,
   SocialNavIcon,
   AINavIcon,
   SettingsNavIcon,
@@ -19,6 +20,7 @@ const navItems = [
   { name: 'E-comm', icon: ShopNavIcon, href: '/dashboard/nkampa', color: '#FF8C00' },
   { name: 'Logistique', icon: LogisticsNavIcon, href: '/dashboard/ugavi', color: '#0E5A59' },
   { name: 'Paiement', icon: PaymentNavIcon, href: '/dashboard/mbongo-dashboard', color: '#32BB78' },
+  { name: 'eStream', icon: EStreamNavIcon, href: '/dashboard/estream', color: '#FF6B6B' },
   { name: 'Connexion', icon: SocialNavIcon, href: '/dashboard/makutano', color: '#9C27B0' },
   { name: 'Paramètres', icon: SettingsNavIcon, href: '/dashboard/settings', color: '#666' },
 ];
@@ -53,7 +55,7 @@ export default function HubNavigation({
       <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
       
       <div className="relative mx-auto max-w-lg px-2 py-2 md:py-3">
-        <div className="grid h-16 grid-cols-6 items-stretch gap-1 md:h-20">
+        <div className="grid h-16 grid-cols-7 items-stretch gap-1 md:h-20">
           {navItems.map((item, index) => {
             const isActive = activeTab === item.name;
             const IconComponent = item.icon;

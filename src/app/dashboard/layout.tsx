@@ -21,6 +21,7 @@ export default function DashboardLayout({
     else if (pathname.includes('/nkampa')) setActiveTab('E-comm');
     else if (pathname.includes('/ugavi')) setActiveTab('Logistique');
     else if (pathname.includes('/mbongo-dashboard') || pathname.endsWith('/dashboard')) setActiveTab('Paiement');
+    else if (pathname.includes('/estream')) setActiveTab('eStream');
     else if (pathname.includes('/makutano')) setActiveTab('Connexion');
     else if (pathname.includes('/ai')) setActiveTab('AI');
     else if (pathname.includes('/settings')) setActiveTab('Paramètres');

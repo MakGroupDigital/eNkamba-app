@@ -641,7 +641,193 @@ export const DonationIcon = ({ className, size = 24 }: IconProps) => (
   </svg>
 );
 
+// ==================== ESTREAM ICONS ====================
+
+// Like Icon - Cœur moderne
+export const EStreamLikeIcon = ({ className, size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={cn("", className)}
+  >
+    <defs>
+      <linearGradient id="estreamLikeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#FF6B6B" />
+        <stop offset="100%" stopColor="#FF4757" />
+      </linearGradient>
+    </defs>
+    <path
+      d="M24 42C24 42 6 30 6 20C6 14 10 10 14 10C17 10 20 12 24 15C28 12 31 10 34 10C38 10 42 14 42 20C42 30 24 42 24 42Z"
+      fill="url(#estreamLikeGrad)"
+      stroke="url(#estreamLikeGrad)"
+      strokeWidth="1.5"
+    />
+  </svg>
+);
+
+// Comment Icon - Bulle de chat moderne
+export const EStreamCommentIcon = ({ className, size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={cn("", className)}
+  >
+    <defs>
+      <linearGradient id="estreamCommentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#32BB78" />
+        <stop offset="100%" stopColor="#2a9d63" />
+      </linearGradient>
+    </defs>
+    <path
+      d="M8 10C8 8 9 6 11 6H37C39 6 40 8 40 10V28C40 30 39 32 37 32H16L10 38V32H11C9 32 8 30 8 28V10Z"
+      fill="url(#estreamCommentGrad)"
+      stroke="url(#estreamCommentGrad)"
+      strokeWidth="1.5"
+    />
+    <circle cx="16" cy="18" r="2" fill="white" opacity="0.8" />
+    <circle cx="24" cy="18" r="2" fill="white" opacity="0.8" />
+    <circle cx="32" cy="18" r="2" fill="white" opacity="0.8" />
+  </svg>
+);
+
+// Share Icon - Partage moderne
+export const EStreamShareIcon = ({ className, size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={cn("", className)}
+  >
+    <defs>
+      <linearGradient id="estreamShareGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#FFB84D" />
+        <stop offset="100%" stopColor="#FF9800" />
+      </linearGradient>
+    </defs>
+    {/* Cercle haut */}
+    <circle cx="36" cy="10" r="5" fill="url(#estreamShareGrad)" stroke="url(#estreamShareGrad)" strokeWidth="1.5" />
+    {/* Cercle bas gauche */}
+    <circle cx="12" cy="32" r="5" fill="url(#estreamShareGrad)" stroke="url(#estreamShareGrad)" strokeWidth="1.5" />
+    {/* Cercle bas droit */}
+    <circle cx="36" cy="32" r="5" fill="url(#estreamShareGrad)" stroke="url(#estreamShareGrad)" strokeWidth="1.5" />
+    {/* Lignes de connexion */}
+    <path d="M33 13L15 29" stroke="url(#estreamShareGrad)" strokeWidth="2" strokeLinecap="round" opacity="0.8" />
+    <path d="M33 13L33 29" stroke="url(#estreamShareGrad)" strokeWidth="2" strokeLinecap="round" opacity="0.8" />
+  </svg>
+);
+
+// Sound Icon - Son moderne
+export const EStreamSoundIcon = ({ className, size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={cn("", className)}
+  >
+    <defs>
+      <linearGradient id="estreamSoundGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#5B9BFF" />
+        <stop offset="100%" stopColor="#4A7FD7" />
+      </linearGradient>
+    </defs>
+    {/* Haut-parleur */}
+    <path
+      d="M12 16V32C12 34 13 36 15 36H20L30 42V6L20 12H15C13 12 12 14 12 16Z"
+      fill="url(#estreamSoundGrad)"
+      stroke="url(#estreamSoundGrad)"
+      strokeWidth="1.5"
+    />
+    {/* Ondes sonores */}
+    <path d="M34 14C36 16 37 19 37 24C37 29 36 32 34 34" stroke="url(#estreamSoundGrad)" strokeWidth="2" strokeLinecap="round" opacity="0.8" />
+    <path d="M38 10C41 13 42 18 42 24C42 30 41 35 38 38" stroke="url(#estreamSoundGrad)" strokeWidth="2" strokeLinecap="round" opacity="0.6" />
+  </svg>
+);
+
+// Mute Icon - Muet moderne
+export const EStreamMuteIcon = ({ className, size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={cn("", className)}
+  >
+    <defs>
+      <linearGradient id="estreamMuteGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#FF6B6B" />
+        <stop offset="100%" stopColor="#FF4757" />
+      </linearGradient>
+    </defs>
+    {/* Haut-parleur */}
+    <path
+      d="M12 16V32C12 34 13 36 15 36H20L30 42V6L20 12H15C13 12 12 14 12 16Z"
+      fill="url(#estreamMuteGrad)"
+      stroke="url(#estreamMuteGrad)"
+      strokeWidth="1.5"
+    />
+    {/* Ligne de prohibition */}
+    <circle cx="36" cy="24" r="12" fill="none" stroke="url(#estreamMuteGrad)" strokeWidth="2" />
+    <path d="M28 32L44 16" stroke="url(#estreamMuteGrad)" strokeWidth="2.5" strokeLinecap="round" />
+  </svg>
+);
+
 // ==================== NAVIGATION ICONS ====================
+
+// eStream - Icône Play moderne
+export const EStreamNavIcon = ({ className, size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={cn("", className)}
+  >
+    <defs>
+      <linearGradient id="estreamPlayGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#32BB78" />
+        <stop offset="100%" stopColor="#FFC107" />
+      </linearGradient>
+      <filter id="estreamGlow">
+        <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
+        <feMerge>
+          <feMergeNode in="coloredBlur"/>
+          <feMergeNode in="SourceGraphic"/>
+        </feMerge>
+      </filter>
+    </defs>
+    
+    {/* Cercle de fond avec dégradé */}
+    <circle cx="24" cy="24" r="20" fill="url(#estreamPlayGrad)" opacity="0.15" />
+    
+    {/* Bouton Play principal - Triangle */}
+    <path 
+      d="M18 16L18 32L34 24Z" 
+      fill="url(#estreamPlayGrad)" 
+      filter="url(#estreamGlow)"
+    />
+    
+    {/* Contour du triangle pour plus de définition */}
+    <path 
+      d="M18 16L18 32L34 24Z" 
+      fill="none" 
+      stroke="url(#estreamPlayGrad)" 
+      strokeWidth="1.5"
+      opacity="0.6"
+    />
+  </svg>
+);
 
 // Home - Maison moderne
 export const HomeNavIcon = ({ className, size = 24 }: IconProps) => (
@@ -2139,5 +2325,36 @@ export const OthersIconBrand = ({ className, size = 24 }: IconProps) => (
     {/* Points de scellage */}
     <circle cx="16" cy="20" r="1" fill="#fff" opacity="0.6" />
     <circle cx="32" cy="20" r="1" fill="#fff" opacity="0.6" />
+  </svg>
+);
+
+// eStream Post Video Icon
+export const EStreamPostIcon = ({ className, size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={cn("", className)}
+  >
+    <defs>
+      <linearGradient id="postGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#32BB78" />
+        <stop offset="100%" stopColor="#2a9d63" />
+      </linearGradient>
+    </defs>
+    {/* Caméra principale */}
+    <rect x="8" y="12" width="32" height="24" rx="3" fill="none" stroke="url(#postGrad)" strokeWidth="2" />
+    {/* Objectif */}
+    <circle cx="24" cy="24" r="8" fill="none" stroke="url(#postGrad)" strokeWidth="2" />
+    <circle cx="24" cy="24" r="5" fill="url(#postGrad)" opacity="0.3" />
+    {/* Flash */}
+    <rect x="12" y="14" width="4" height="4" rx="1" fill="url(#postGrad)" opacity="0.8" />
+    {/* Bouton enregistrement */}
+    <circle cx="36" cy="16" r="3" fill="#FF6B6B" />
+    <circle cx="36" cy="16" r="4" fill="none" stroke="#FF6B6B" strokeWidth="1" opacity="0.5" />
+    {/* Indicateur actif */}
+    <circle cx="36" cy="16" r="5" fill="none" stroke="#FF6B6B" strokeWidth="0.5" opacity="0.3" />
   </svg>
 );

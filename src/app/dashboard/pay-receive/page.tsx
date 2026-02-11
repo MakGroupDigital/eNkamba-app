@@ -422,17 +422,19 @@ export default function PayReceivePage() {
           </h1>
         </div>
         {mode === 'receive' && (
-          <Button 
-            size="icon" 
-            className="bg-[#32BB78] hover:bg-[#2a9d63] text-white"
-            onClick={() => {
-              setPreviousMode('receive');
-              setMode('scanner');
-              setIsScanning(true);
-            }}
-          >
-            <QrCode className="w-5 h-5" />
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              size="icon" 
+              className="bg-[#32BB78] hover:bg-[#2a9d63] text-white"
+              onClick={() => {
+                setPreviousMode('receive');
+                setMode('scanner');
+                setIsScanning(true);
+              }}
+            >
+              <QrCode className="w-5 h-5" />
+            </Button>
+          </div>
         )}
       </header>
 
