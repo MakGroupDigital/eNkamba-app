@@ -5,21 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ChevronLeft, Navigation, RotateCcw, MapPin } from 'lucide-react';
-import dynamic from 'next/dynamic';
-import L from 'leaflet';
-
-// Corriger les icônes par défaut de Leaflet
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-});
-
-const MapContainer = dynamic(() => import('react-leaflet').then(m => m.MapContainer), { ssr: false });
-const TileLayer = dynamic(() => import('react-leaflet').then(m => m.TileLayer), { ssr: false });
-const Marker = dynamic(() => import('react-leaflet').then(m => m.Marker), { ssr: false });
-const Popup = dynamic(() => import('react-leaflet').then(m => m.Popup), { ssr: false });
 
 interface LocationMapViewProps {
   senderLatitude: number;
@@ -104,52 +89,17 @@ export function LocationMapView({
       </div>
 
       {/* Map Container */}
-      <div className="flex-1 relative overflow-hidden">
-        <MapContainer
-          center={[centerLat, centerLon]}
-          zoom={13}
-          style={{ height: '100%', width: '100%' }}
-          ref={mapRef}
-        >
-          <TileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            attribution='&copy; OpenStreetMap contributors'
-          />
-
-          {/* Marqueur expéditeur */}
-          <Marker position={[senderLatitude, senderLongitude]}>
-            <Popup>
-              <div className="text-center">
-                <Avatar className="h-10 w-10 mx-auto mb-2">
-                  <AvatarImage src={senderPhoto} />
-                  <AvatarFallback className="bg-primary text-white">
-                    {senderName.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <p className="font-semibold text-sm">{senderName}</p>
-                <p className="text-xs text-gray-600">Expéditeur</p>
-              </div>
-            </Popup>
-          </Marker>
-
-          {/* Marqueur destinataire */}
-          {receiverLatitude && receiverLongitude && (
-            <Marker position={[receiverLatitude, receiverLongitude]}>
-              <Popup>
-                <div className="text-center">
-                  <Avatar className="h-10 w-10 mx-auto mb-2">
-                    <AvatarImage src={receiverPhoto} />
-                    <AvatarFallback className="bg-primary text-white">
-                      {receiverName?.charAt(0).toUpperCase() || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <p className="font-semibold text-sm">{receiverName || 'Destinataire'}</p>
-                  <p className="text-xs text-gray-600">Destinataire</p>
-                </div>
-              </Popup>
-            </Marker>
-          )}
-        </MapContainer>
+      <div className="flex-1 relative overflow-hidden bg-gray-100">
+        <iframe
+          width="100%"
+          height="100%"
+          frameBorder="0"
+          src={`https://www.openstreetmap.org/export/embed.html?bbox=${(centerLon - 0.02).toFixed(6)},${(centerLat - 0.02).toFixed(6)},${(centerLon + 0.02).toFixed(6)},${(centerLat + 0.02).toFixed(6)}&layer=mapnik&marker=${senderLatitude},${senderLongitude}`}
+          style={{ border: 0 }}
+          allowFullScreen={false}
+          loading="lazy"
+          referrerPolicy="no-referrer-when-downgrade"
+        />
       </div>
 
       {/* Actions Footer */}

@@ -5,22 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ChevronLeft, Navigation, RotateCcw, Clock, MapPin, AlertCircle } from 'lucide-react';
-import dynamic from 'next/dynamic';
-import L from 'leaflet';
-
-// Corriger les icônes par défaut de Leaflet
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-});
-
-const MapContainer = dynamic(() => import('react-leaflet').then(m => m.MapContainer), { ssr: false });
-const TileLayer = dynamic(() => import('react-leaflet').then(m => m.TileLayer), { ssr: false });
-const Marker = dynamic(() => import('react-leaflet').then(m => m.Marker), { ssr: false });
-const Popup = dynamic(() => import('react-leaflet').then(m => m.Popup), { ssr: false });
-const Polyline = dynamic(() => import('react-leaflet').then(m => m.Polyline), { ssr: false });
 
 interface LocationDirectionsViewProps {
   senderLatitude: number;
@@ -137,7 +121,7 @@ export function LocationDirectionsView({
       </div>
 
       {/* Map Container */}
-      <div className="flex-1 relative overflow-hidden">
+      <div className="flex-1 relative overflow-hidden bg-gray-100">
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
@@ -158,60 +142,16 @@ export function LocationDirectionsView({
             </Card>
           </div>
         ) : (
-          <MapContainer
-            center={[centerLat, centerLon]}
-            zoom={12}
-            style={{ height: '100%', width: '100%' }}
-            ref={mapRef}
-          >
-            <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution='&copy; OpenStreetMap contributors'
-            />
-
-            {/* Ligne de l'itinéraire */}
-            {routeCoordinates.length > 0 && (
-              <Polyline
-                positions={routeCoordinates}
-                color="#32BB78"
-                weight={4}
-                opacity={0.8}
-                dashArray="5, 5"
-              />
-            )}
-
-            {/* Marqueur départ */}
-            <Marker position={[senderLatitude, senderLongitude]}>
-              <Popup>
-                <div className="text-center">
-                  <Avatar className="h-10 w-10 mx-auto mb-2">
-                    <AvatarImage src={senderPhoto} />
-                    <AvatarFallback className="bg-primary text-white">
-                      {senderName.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <p className="font-semibold text-sm">{senderName}</p>
-                  <p className="text-xs text-gray-600">Départ</p>
-                </div>
-              </Popup>
-            </Marker>
-
-            {/* Marqueur arrivée */}
-            <Marker position={[receiverLatitude, receiverLongitude]}>
-              <Popup>
-                <div className="text-center">
-                  <Avatar className="h-10 w-10 mx-auto mb-2">
-                    <AvatarImage src={receiverPhoto} />
-                    <AvatarFallback className="bg-primary text-white">
-                      {receiverName.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <p className="font-semibold text-sm">{receiverName}</p>
-                  <p className="text-xs text-gray-600">Arrivée</p>
-                </div>
-              </Popup>
-            </Marker>
-          </MapContainer>
+          <iframe
+            width="100%"
+            height="100%"
+            frameBorder="0"
+            src={`https://www.openstreetmap.org/export/embed.html?bbox=${(centerLon - 0.02).toFixed(6)},${(centerLat - 0.02).toFixed(6)},${(centerLon + 0.02).toFixed(6)},${(centerLat + 0.02).toFixed(6)}&layer=mapnik&marker=${senderLatitude},${senderLongitude}`}
+            style={{ border: 0 }}
+            allowFullScreen={false}
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+          />
         )}
       </div>
 
