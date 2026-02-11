@@ -20,6 +20,7 @@ import QRCodeLib from 'qrcode';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useMoneyTransfer } from '@/hooks/useMoneyTransfer';
 import { PinVerification } from '@/components/payment/PinVerification';
+import { useDevicePermission } from '@/hooks/useDevicePermission';
 
 type Currency = 'CDF' | 'USD' | 'EUR';
 type ViewMode = 'default' | 'receive-details' | 'camera-scan';
@@ -34,6 +35,7 @@ interface ScannedQRData {
 
 export default function ScannerPage() {
   const router = useRouter();
+  const cameraPermission = useDevicePermission('camera');
   const [viewMode, setViewMode] = useState<ViewMode>('default');
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [scannedData, setScannedData] = useState<ScannedQRData | null>(null);
@@ -224,6 +226,21 @@ export default function ScannerPage() {
 
     const getCameraPermission = async () => {
       try {
+        // Vérifier et demander la permission caméra si nécessaire
+        if (!cameraPermission.isGranted && cameraPermission.shouldPrompt) {
+          const granted = await cameraPermission.requestPermission();
+          if (!granted) {
+            setHasCameraPermission(false);
+            setScanError('Accès caméra refusé. Veuillez autoriser l\'accès dans les paramètres.');
+            toast({
+              variant: 'destructive',
+              title: 'Accès Caméra Refusé',
+              description: 'Veuillez autoriser l\'accès à la caméra.',
+            });
+            return;
+          }
+        }
+
         const stream = await navigator.mediaDevices.getUserMedia({ 
           video: { 
             facingMode: 'environment',
@@ -264,7 +281,7 @@ export default function ScannerPage() {
         stream.getTracks().forEach(track => track.stop());
       }
     };
-  }, [viewMode, isScanning, toast]);
+  }, [viewMode, isScanning, toast, cameraPermission]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { X, Play, Pause, Square, RotateCcw, Send, Settings, Zap, Volume2, VolumeX } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useDevicePermission } from '@/hooks/useDevicePermission';
 
 interface ProCameraRecorderProps {
   onClose: () => void;
@@ -12,6 +13,8 @@ interface ProCameraRecorderProps {
 
 export const ProCameraRecorder = ({ onClose, onPublish, isPublishing = false }: ProCameraRecorderProps) => {
   const { toast } = useToast();
+  const cameraPermission = useDevicePermission('camera');
+  const microphonePermission = useDevicePermission('microphone');
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -37,6 +40,33 @@ export const ProCameraRecorder = ({ onClose, onPublish, isPublishing = false }: 
   useEffect(() => {
     const initCamera = async () => {
       try {
+        // Vérifier les permissions
+        if (!cameraPermission.isGranted && cameraPermission.shouldPrompt) {
+          const granted = await cameraPermission.requestPermission();
+          if (!granted) {
+            toast({
+              variant: 'destructive',
+              title: 'Permission refusée',
+              description: 'Accès à la caméra requis pour enregistrer',
+            });
+            onClose();
+            return;
+          }
+        }
+
+        if (!microphonePermission.isGranted && microphonePermission.shouldPrompt) {
+          const granted = await microphonePermission.requestPermission();
+          if (!granted) {
+            toast({
+              variant: 'destructive',
+              title: 'Permission refusée',
+              description: 'Accès au microphone requis pour enregistrer',
+            });
+            onClose();
+            return;
+          }
+        }
+
         const stream = await navigator.mediaDevices.getUserMedia({
           video: {
             facingMode,
@@ -94,7 +124,7 @@ export const ProCameraRecorder = ({ onClose, onPublish, isPublishing = false }: 
         clearTimeout(timerRef.current);
       }
     };
-  }, [facingMode, onClose, toast]);
+  }, [facingMode, onClose, toast, cameraPermission, microphonePermission]);
 
   // Gérer le minuteur
   useEffect(() => {
