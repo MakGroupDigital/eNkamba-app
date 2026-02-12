@@ -4,7 +4,8 @@ import { useAuth } from '@/hooks/useAuth';
 
 interface TransferData {
   amount: number;
-  recipientId: string;
+  recipientId?: string;
+  recipientIdentifier?: string;
   recipientName: string;
   conversationId: string;
   messageId: string;
@@ -17,7 +18,12 @@ export function useChatMoneyTransfer() {
 
   // Envoyer de l'argent via le chat
   const sendMoney = useCallback(
-    async (amount: number, recipientId: string, recipientName: string, conversationId: string) => {
+    async (
+      amount: number,
+      recipientIdOrIdentifier: string,
+      recipientName: string,
+      conversationId: string
+    ) => {
       if (!currentUser) {
         throw new Error('Utilisateur non authentifié');
       }
@@ -26,8 +32,15 @@ export function useChatMoneyTransfer() {
         throw new Error('Le montant doit être supérieur à 0');
       }
 
+      if (!recipientIdOrIdentifier) {
+        throw new Error('Destinataire non spécifié');
+      }
+
       setIsProcessing(true);
       try {
+        // Déterminer si c'est un ID ou un identifiant
+        const isUid = recipientIdOrIdentifier.length === 28 && /^[a-zA-Z0-9]+$/.test(recipientIdOrIdentifier);
+        
         // Appeler l'API de transfert
         const response = await fetch('/api/chat/transfer-money', {
           method: 'POST',
@@ -36,7 +49,7 @@ export function useChatMoneyTransfer() {
           },
           body: JSON.stringify({
             amount,
-            recipientId,
+            ...(isUid ? { recipientId: recipientIdOrIdentifier } : { recipientIdentifier: recipientIdOrIdentifier }),
             recipientName,
             conversationId,
             senderId: currentUser.uid,

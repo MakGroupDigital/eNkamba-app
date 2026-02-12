@@ -995,16 +995,19 @@ export default function ConversationClient() {
                             <MapPin className="h-4 w-4" />
                             Localisation
                         </Button>
-                        <Button
-                            size="sm"
-                            variant="outline"
-                            className="gap-2"
-                            onClick={handleSendMoney}
-                            disabled={isSending}
-                        >
-                            <DollarSign className="h-4 w-4" />
-                            Argent
-                        </Button>
+                        {/* Money Transfer Button - Only for individual conversations */}
+                        {!isGroup && (
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="gap-2"
+                                onClick={handleSendMoney}
+                                disabled={isSending}
+                            >
+                                <DollarSign className="h-4 w-4" />
+                                Argent
+                            </Button>
+                        )}
                         <Button
                             size="sm"
                             variant="outline"

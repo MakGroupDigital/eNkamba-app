@@ -1,0 +1,105 @@
+================================================================================
+FIRESTORE RULES - À AJOUTER À firestore.rules
+================================================================================
+
+Ajouter ces règles à votre fichier firestore.rules existant :
+
+================================================================================
+
+// Business Requests Collection
+match /business_requests/{document=**} {
+  // Les utilisateurs peuvent lire leurs propres demandes
+  allow read: if request.auth.uid != null && 
+              resource.data.userId == request.auth.uid;
+  
+  // Les utilisateurs peuvent créer/mettre à jour leurs propres demandes
+  allow create, update: if request.auth.uid != null && 
+                           request.resource.data.userId == request.auth.uid &&
+                           request.resource.data.status == 'PENDING';
+  
+  // Les admins peuvent lire toutes les demandes
+  allow read: if request.auth.uid != null && 
+              exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+  
+  // Les admins peuvent mettre à jour le statut
+  allow update: if request.auth.uid != null && 
+                exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+}
+
+// Businesses Collection (Verified)
+match /businesses/{document=**} {
+  // Les utilisateurs peuvent lire les profils entreprise publics
+  allow read: if true;
+  
+  // Les propriétaires peuvent lire leurs propres données
+  allow read: if request.auth.uid != null && 
+              resource.data.userId == request.auth.uid;
+  
+  // Les admins peuvent gérer les profils
+  allow read, write: if request.auth.uid != null && 
+                      exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+}
+
+// Storage Rules pour les documents d'entreprise
+match /b/{bucket}/o/business_docs/{userId}/{allPaths=**} {
+  // Les utilisateurs peuvent uploader leurs propres documents
+  allow write: if request.auth.uid == userId;
+  
+  // Les utilisateurs peuvent lire leurs propres documents
+  allow read: if request.auth.uid == userId;
+  
+  // Les admins peuvent lire tous les documents
+  allow read: if exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+}
+
+================================================================================
+FIRESTORE INDEXES - À AJOUTER À firestore.indexes.json
+================================================================================
+
+Ajouter ces indexes à votre fichier firestore.indexes.json existant :
+
+================================================================================
+
+{
+  "indexes": [
+    {
+      "collectionGroup": "business_requests",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "userId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "business_requests",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "submittedAt",
+          "order": "DESCENDING"
+        }
+      ]
+    }
+  ]
+}
+
+================================================================================
+NOTES
+================================================================================
+
+1. Les règles Storage doivent être dans votre firebase.json ou storage.rules
+2. Les indexes peuvent être créés automatiquement par Firebase ou manuellement
+3. Après modification, déployer avec : firebase deploy --only firestore:rules
+4. Pour les indexes : firebase deploy --only firestore:indexes
+
+================================================================================

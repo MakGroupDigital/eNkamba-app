@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import { doc, getDoc, updateDoc, increment, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { resolveUserByIdentifier } from '@/lib/user-resolver';
 
 export async function POST(request: NextRequest) {
   try {
     const {
       amount,
       recipientId,
+      recipientIdentifier,
       recipientName,
       conversationId,
       senderId,
@@ -21,9 +23,44 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!recipientId || !senderId) {
+    if (!senderId) {
       return NextResponse.json(
-        { message: 'Données utilisateur manquantes' },
+        { message: 'Expéditeur non identifié' },
+        { status: 400 }
+      );
+    }
+
+    // Résoudre le destinataire si un identifiant est fourni
+    let finalRecipientId = recipientId;
+    let finalRecipientName = recipientName;
+
+    if (recipientIdentifier && !recipientId) {
+      console.log('[transfer-money] Résolution du destinataire:', recipientIdentifier);
+      const resolvedUser = await resolveUserByIdentifier(recipientIdentifier);
+      
+      if (!resolvedUser) {
+        return NextResponse.json(
+          { message: 'Destinataire non trouvé. Vérifiez le numéro de téléphone, email ou numéro eNkamba.' },
+          { status: 404 }
+        );
+      }
+
+      finalRecipientId = resolvedUser.uid;
+      finalRecipientName = resolvedUser.data.displayName || resolvedUser.data.email || recipientIdentifier;
+      console.log('[transfer-money] Destinataire résolu:', finalRecipientId);
+    }
+
+    if (!finalRecipientId) {
+      return NextResponse.json(
+        { message: 'Destinataire non identifié' },
+        { status: 400 }
+      );
+    }
+
+    // Vérifier que l'expéditeur et le destinataire sont différents
+    if (senderId === finalRecipientId) {
+      return NextResponse.json(
+        { message: 'Vous ne pouvez pas envoyer de l\'argent à vous-même' },
         { status: 400 }
       );
     }
@@ -49,7 +86,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Vérifier que le destinataire existe
-    const recipientWalletRef = doc(db, 'wallets', recipientId);
+    const recipientWalletRef = doc(db, 'wallets', finalRecipientId);
     const recipientWalletSnap = await getDoc(recipientWalletRef);
 
     if (!recipientWalletSnap.exists()) {
@@ -65,8 +102,8 @@ export async function POST(request: NextRequest) {
       type: 'chat_transfer',
       senderId,
       senderName,
-      recipientId,
-      recipientName,
+      recipientId: finalRecipientId,
+      recipientName: finalRecipientName,
       amount,
       status: 'pending',
       conversationId,
@@ -85,8 +122,8 @@ export async function POST(request: NextRequest) {
       text: `💰 Transfert de ${amount} FC`,
       metadata: {
         amount,
-        recipientId,
-        recipientName,
+        recipientId: finalRecipientId,
+        recipientName: finalRecipientName,
         transactionId,
         status: 'pending',
       },
@@ -98,6 +135,8 @@ export async function POST(request: NextRequest) {
       success: true,
       transactionId,
       messageId: messageDoc.id,
+      recipientId: finalRecipientId,
+      recipientName: finalRecipientName,
       message: 'Transfert créé avec succès',
     });
   } catch (error) {

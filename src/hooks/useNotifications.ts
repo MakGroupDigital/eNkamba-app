@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 
 export interface Notification {
   id: string;
-  type: 'transfer_received' | 'transfer_sent' | 'payment_request' | 'system';
+  type: 'transfer_received' | 'transfer_sent' | 'payment_request' | 'system' | 'BUSINESS_APPROVED' | 'BUSINESS_REJECTED';
   title: string;
   message: string;
   amount?: number;
@@ -15,10 +15,17 @@ export interface Notification {
   senderName?: string;
   senderId?: string;
   transactionId?: string;
+  businessName?: string;
+  businessType?: string;
+  businessId?: string;
+  rejectionReason?: string;
+  actionUrl?: string;
+  actionLabel?: string;
+  icon?: string;
   read: boolean;
   acknowledged?: boolean;
-  timestamp: Timestamp;
-  createdAt: string;
+  timestamp?: Timestamp;
+  createdAt?: string | Timestamp;
 }
 
 export function useNotifications() {

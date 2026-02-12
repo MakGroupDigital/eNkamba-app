@@ -18,6 +18,10 @@ export function NotificationsPanel() {
         return <AlertCircle className="w-5 h-5 text-blue-600" />;
       case 'payment_request':
         return <Info className="w-5 h-5 text-orange-600" />;
+      case 'BUSINESS_APPROVED':
+        return <CheckCircle2 className="w-5 h-5 text-green-600" />;
+      case 'BUSINESS_REJECTED':
+        return <AlertCircle className="w-5 h-5 text-red-600" />;
       default:
         return <Bell className="w-5 h-5 text-gray-600" />;
     }
@@ -31,6 +35,10 @@ export function NotificationsPanel() {
         return 'bg-blue-50 border-blue-200';
       case 'payment_request':
         return 'bg-orange-50 border-orange-200';
+      case 'BUSINESS_APPROVED':
+        return 'bg-green-50 border-green-200';
+      case 'BUSINESS_REJECTED':
+        return 'bg-red-50 border-red-200';
       default:
         return 'bg-gray-50 border-gray-200';
     }
@@ -105,6 +113,19 @@ export function NotificationsPanel() {
                           }}
                         >
                           Confirmer réception
+                        </Button>
+                      )}
+                      {notif.actionUrl && notif.actionLabel && (
+                        <Button
+                          size="sm"
+                          className="mt-2 w-full bg-primary hover:bg-primary/90 text-white h-7"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            markAsRead(notif.id);
+                            window.location.href = notif.actionUrl;
+                          }}
+                        >
+                          {notif.actionLabel}
                         </Button>
                       )}
                     </div>

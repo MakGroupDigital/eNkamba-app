@@ -316,6 +316,31 @@ export default function SettingsPage() {
         </CardFooter>
       </Card>
 
+      {/* Business Account */}
+      <Card className="overflow-hidden border-2 border-primary/20">
+        <CardHeader className="bg-gradient-to-r from-primary/10 to-transparent">
+          <CardTitle className="font-headline text-lg flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-primary" />
+            Compte Entreprise
+          </CardTitle>
+          <CardDescription>Gérez votre compte professionnel eNkamba</CardDescription>
+        </CardHeader>
+        <CardContent className="p-0">
+          <SettingsItem
+            icon={DocumentIcon}
+            title="Obtenir un compte entreprise"
+            description="Demandez un compte professionnel pour accéder aux modules avancés."
+            action={
+              <Button variant="ghost" size="icon" className="rounded-xl" asChild>
+                <Link href="/dashboard/settings/business-account">
+                  <ChevronRight />
+                </Link>
+              </Button>
+            }
+          />
+        </CardContent>
+      </Card>
+
       {/* Preferences & Security */}
       <Card className="overflow-hidden">
         <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent">

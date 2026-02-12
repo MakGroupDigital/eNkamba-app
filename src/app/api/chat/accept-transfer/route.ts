@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
-import { doc, getDoc, updateDoc, increment, collection, query, where, getDocs, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, increment, collection, query, where, getDocs, serverTimestamp, addDoc } from 'firebase/firestore';
 
 export async function POST(request: NextRequest) {
   try {
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
 
     // 5. Créer une transaction d'historique
     const historyRef = collection(db, 'transactions');
-    await historyRef.add({
+    await addDoc(historyRef, {
       type: 'transfer',
       senderId,
       recipientId,
