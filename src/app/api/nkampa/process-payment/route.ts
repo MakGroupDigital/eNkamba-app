@@ -3,24 +3,54 @@ import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
 
-// Initialize Firebase Admin
-const firebaseAdminConfig = {
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-  privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-};
+// Initialize Firebase Admin - only on server side
+let db: any;
+let auth: any;
+let initialized = false;
 
-if (!getApps().length) {
-  initializeApp({
-    credential: cert(firebaseAdminConfig as any),
-  });
+function initializeFirebaseAdmin() {
+  if (initialized) return;
+
+  try {
+    const firebaseAdminConfig = {
+      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+    };
+
+    // Validate config - skip if not properly configured
+    if (!firebaseAdminConfig.projectId || !firebaseAdminConfig.clientEmail || !firebaseAdminConfig.privateKey) {
+      console.warn('Firebase Admin SDK credentials are not properly configured');
+      return;
+    }
+
+    const apps = getApps();
+    if (!apps.length) {
+      initializeApp({
+        credential: cert(firebaseAdminConfig as any),
+      });
+    }
+
+    db = getFirestore();
+    auth = getAuth();
+    initialized = true;
+  } catch (error) {
+    console.error('Firebase Admin initialization error:', error);
+  }
 }
-
-const db = getFirestore();
-const auth = getAuth();
 
 export async function POST(request: NextRequest) {
   try {
+    // Initialize Firebase Admin
+    initializeFirebaseAdmin();
+
+    if (!db || !auth) {
+      return NextResponse.json(
+        { error: 'Service non disponible - Firebase Admin SDK non configuré' },
+        { status: 503 }
+      );
+    }
+
     // Vérifier l'authentification
     const authHeader = request.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
