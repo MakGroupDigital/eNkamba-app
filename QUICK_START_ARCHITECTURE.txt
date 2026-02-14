@@ -1,0 +1,256 @@
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                                                                                ║
+║              ARCHITECTURE - COMPTE ENTREPRISE eNkamba                          ║
+║                          GUIDE RAPIDE                                          ║
+║                                                                                ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+
+📍 LOCALISATION DES FICHIERS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Chemin complet: /Users/mac/eNkamba/
+
+Fichiers créés:
+  ✓ BUSINESS_ACCOUNT_ARCHITECTURE.html      (23 KB)  - Document principal
+  ✓ convert-to-pdf.sh                       (2.8 KB) - Script conversion
+  ✓ convert-to-pdf-alternative.sh           (3.1 KB) - Script alternatif
+  ✓ ARCHITECTURE_README.md                  (7.3 KB) - Documentation
+  ✓ QUICK_START_ARCHITECTURE.txt            (Ce fichier)
+
+
+🔄 CONVERSION EN PDF (3 MÉTHODES)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+MÉTHODE 1: Script Automatique (Recommandé)
+───────────────────────────────────────────
+$ chmod +x convert-to-pdf-alternative.sh
+$ ./convert-to-pdf-alternative.sh
+
+Outils supportés (par ordre de préférence):
+  1. wkhtmltopdf (meilleure qualité)
+  2. weasyprint (bonne qualité)
+  3. Chromium/Chrome (très bonne qualité)
+
+
+MÉTHODE 2: Installation des Outils
+───────────────────────────────────
+macOS:
+  $ brew install wkhtmltopdf
+  $ ./convert-to-pdf.sh
+
+Ubuntu/Debian:
+  $ sudo apt-get install wkhtmltopdf
+  $ ./convert-to-pdf.sh
+
+Fedora/RHEL:
+  $ sudo dnf install wkhtmltopdf
+  $ ./convert-to-pdf.sh
+
+
+MÉTHODE 3: Conversion Manuelle (Sans Script)
+──────────────────────────────────────────────
+1. Ouvrir le fichier HTML:
+   $ open BUSINESS_ACCOUNT_ARCHITECTURE.html
+
+2. Appuyer sur Cmd+P (macOS) ou Ctrl+P (Windows/Linux)
+
+3. Sélectionner "Enregistrer en PDF"
+
+4. Choisir le dossier de destination
+
+5. Cliquer sur "Enregistrer"
+
+
+💾 TÉLÉCHARGEMENT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Depuis le Terminal:
+  $ cp BUSINESS_ACCOUNT_ARCHITECTURE.html ~/Downloads/
+
+Depuis le Navigateur:
+  1. Clic droit sur le fichier
+  2. Sélectionner "Enregistrer le lien sous..."
+  3. Choisir le dossier de destination
+
+
+🖨️ IMPRESSION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Depuis le Navigateur:
+  1. Ouvrir le fichier HTML
+  2. Appuyer sur Cmd+P (macOS) ou Ctrl+P (Windows/Linux)
+  3. Configurer:
+     - Marges: Normal
+     - Orientation: Portrait
+     - Papier: A4
+  4. Cliquer sur "Imprimer"
+
+Depuis le PDF:
+  1. Ouvrir le PDF généré
+  2. Appuyer sur Cmd+P (macOS) ou Ctrl+P (Windows/Linux)
+  3. Sélectionner l'imprimante
+  4. Cliquer sur "Imprimer"
+
+
+🎨 DESIGN ET CHARTE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Palette de Couleurs:
+  Primaire:    #32BB78 (Vert Enkamba)
+  Blanc:       #FFFFFF
+  Noir:        #000000
+  Gris clair:  #E5E5E5
+  Gris moyen:  #B3B3B3
+  Gris foncé:  #737373
+  Orange:      #FFCC00
+  Rouge:       #DC2626
+
+Typographie:
+  Titres:      Montserrat (600, 700, 800)
+  Corps:       Roboto (400, 500, 600)
+  Code:        Fira Code (400, 500)
+
+Animations:
+  Header:      Fade In Down (0.8s)
+  Cartes:      Fade In Up (0.6s)
+  Hover:       Transform + Shadow (0.3s)
+  Print:       Animations désactivées
+
+
+📊 CONTENU DU DOCUMENT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Vue d'Ensemble
+   - Objectif du système
+   - Performance en temps réel
+   - Sécurité et authentification
+
+2. Flux d'Approbation (5 étapes)
+   Soumission → En Attente → Approbation → Notification → Accès
+
+3. Dashboards Métier (3 types)
+   - Commerce (Catalogue, Commandes, Pricing B2B, Marketing)
+   - Logistique (Flotte, QR Scanner, Tracking, Stock)
+   - Paiement (API Keys, Webhooks, Balance, Rapports)
+
+4. Stack Technique
+   - Frontend: React + Next.js 14
+   - Base de données: Firestore (NoSQL)
+   - Authentification: Firebase Auth
+   - Temps réel: Firestore Listeners
+   - Styling: Tailwind CSS
+   - Icônes: Lucide Icons
+
+5. Système de Notifications (6 étapes)
+   Admin approuve → Firestore met à jour → Notification créée
+   → Listeners détectent → Utilisateur notifié → Dashboard se met à jour
+
+6. Structure des Fichiers
+   - Arborescence du projet
+   - Chemins des composants
+   - Organisation des hooks
+
+7. Caractéristiques Clés (8 badges)
+   ✓ Temps réel
+   ✓ Sans Cloud Functions
+   ✓ Notifications instantanées
+   ✓ 3 Dashboards spécialisés
+   ✓ Statuts dynamiques
+   ✓ Boutons CTA
+   ✓ Design moderne
+   ✓ Responsive
+
+
+🐛 DÉPANNAGE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Le script ne fonctionne pas:
+  $ chmod +x convert-to-pdf-alternative.sh
+  $ bash convert-to-pdf-alternative.sh
+
+Aucun outil de conversion trouvé:
+  macOS:  $ brew install wkhtmltopdf
+  Ubuntu: $ sudo apt-get install wkhtmltopdf
+  Fedora: $ sudo dnf install wkhtmltopdf
+
+Le PDF est vide ou mal formaté:
+  1. Vérifier que le fichier HTML est valide
+  2. Essayer une autre méthode de conversion
+  3. Utiliser la conversion manuelle via le navigateur
+
+Les couleurs ne sont pas correctes:
+  1. Vérifier les paramètres d'impression
+  2. Désactiver "Économiser l'encre"
+  3. Utiliser "Couleur" au lieu de "Noir et blanc"
+
+
+📱 PARTAGE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Email:
+  Attacher le PDF
+  Sujet: Architecture - Compte Entreprise eNkamba
+
+Cloud Storage:
+  Google Drive, Dropbox, OneDrive, AWS S3
+
+Collaboration:
+  $ git add BUSINESS_ACCOUNT_ARCHITECTURE.*
+  $ git commit -m "docs: add business account architecture"
+  $ git push origin main
+
+
+✨ CARACTÉRISTIQUES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✓ Design moderne et professionnel
+✓ Graphiques et diagrammes intégrés
+✓ Animations CSS fluides
+✓ Responsive (mobile, tablet, desktop)
+✓ Couleurs selon charte Enkamba
+✓ Typographie Montserrat + Roboto
+✓ Optimisé pour impression/PDF
+✓ Auto-contenu (pas de dépendances)
+✓ Texte sélectionnable
+✓ Images nettes (300 DPI)
+
+
+📝 NOTES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+- Le fichier HTML est auto-contenu (pas de dépendances externes)
+- Le PDF est optimisé pour l'impression (marges, couleurs)
+- Les animations CSS sont converties en images statiques dans le PDF
+- Le design est responsive et s'adapte à tous les écrans
+- La charte graphique Enkamba est respectée (couleurs, typographie)
+
+
+🎯 PROCHAINES ÉTAPES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. ✓ Télécharger le fichier HTML
+2. ✓ Convertir en PDF (script ou manuel)
+3. ✓ Vérifier la qualité
+4. ✓ Imprimer ou partager
+5. ✓ Archiver pour documentation
+
+
+📞 SUPPORT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Pour toute question ou problème:
+  1. Consulter ARCHITECTURE_README.md
+  2. Vérifier les logs du script
+  3. Essayer une autre méthode de conversion
+  4. Contacter l'équipe de développement
+
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                                                                                ║
+║                    ✅ Document prêt à l'emploi                                ║
+║                                                                                ║
+║                    Créé: Février 2026 | Version 1.0                           ║
+║                    Charte: eNkamba v1.0                                        ║
+║                                                                                ║
+╚════════════════════════════════════════════════════════════════════════════════╝
