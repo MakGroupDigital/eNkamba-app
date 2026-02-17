@@ -29,6 +29,8 @@ import {
 import { useNkampaEcommerce } from '@/hooks/useNkampaEcommerce';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useNkampaCart } from '@/hooks/useNkampaCart';
+import { FloatingCart } from '@/components/nkampa/FloatingCart';
 
 // Catégories principales avec icônes modernes
 const MAIN_CATEGORIES = [
@@ -295,20 +297,14 @@ const ALL_PRODUCTS = [
   },
 ];
 
-interface CartItem {
-  product: any;
-  quantity: number;
-}
-
 export default function NkampaPage() {
   const router = useRouter();
   const { user } = useAuth();
   const { toast } = useToast();
   const { contactSeller, buyProduct } = useNkampaEcommerce();
+  const { cart, isOpen, setIsOpen, addToCart, removeFromCart, updateQuantity, total, itemCount } = useNkampaCart();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [showCart, setShowCart] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [quantity, setQuantity] = useState(1);
@@ -401,18 +397,7 @@ export default function NkampaPage() {
   };
 
   const handleAddToCart = (product: any) => {
-    const existingItem = cart.find((item) => item.product.id === product.id);
-    if (existingItem) {
-      setCart(
-        cart.map((item) =>
-          item.product.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        )
-      );
-    } else {
-      setCart([...cart, { product, quantity: 1 }]);
-    }
+    addToCart(product, 1);
     toast({
       title: 'Ajouté au panier',
       description: `${product.name} a été ajouté au panier`,
@@ -423,6 +408,19 @@ export default function NkampaPage() {
     setSelectedProduct(product);
     setQuantity(1);
     setShowCheckout(true);
+  };
+
+  const handleCheckoutFromCart = () => {
+    if (cart.length === 0) {
+      toast({
+        title: 'Panier vide',
+        description: 'Ajoutez des produits avant de passer la commande',
+        variant: 'destructive',
+      });
+      return;
+    }
+    setShowCheckout(true);
+    setIsOpen(false);
   };
 
   const handleProcessPayment = async () => {
@@ -627,21 +625,6 @@ export default function NkampaPage() {
         </div>
       </div>
 
-      {/* Panier flottant */}
-      {cart.length > 0 && (
-        <div className="fixed bottom-6 right-6 z-20">
-          <Button
-            onClick={() => setShowCart(true)}
-            className="rounded-full w-14 h-14 bg-primary hover:bg-primary/90 text-white shadow-lg flex items-center justify-center relative"
-          >
-            <ShoppingCart className="w-6 h-6" />
-            <Badge className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs">
-              {cart.length}
-            </Badge>
-          </Button>
-        </div>
-      )}
-
       {/* Contenu principal */}
       <div className="space-y-6 pb-8">
         {/* Catégories principales */}
@@ -836,70 +819,6 @@ export default function NkampaPage() {
       </div>
 
       {/* Modal Panier */}
-      {showCart && (
-        <div className="fixed inset-0 bg-black/50 z-30 flex items-end">
-          <div className="bg-white w-full rounded-t-2xl p-4 max-h-[80vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold">Mon Panier ({cart.length})</h2>
-              <button onClick={() => setShowCart(false)}>
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            {cart.length === 0 ? (
-              <div className="text-center py-8">
-                <ShoppingCart className="w-12 h-12 text-gray-300 mx-auto mb-2" />
-                <p className="text-gray-500">Votre panier est vide</p>
-              </div>
-            ) : (
-              <>
-                <div className="space-y-3 mb-4">
-                  {cart.map((item) => (
-                    <Card key={item.product.id}>
-                      <CardContent className="p-3 flex gap-3">
-                        <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
-                          <Image
-                            src={item.product.image}
-                            alt={item.product.name}
-                            width={64}
-                            height={64}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-sm">{item.product.name}</h3>
-                          <p className="text-sm text-primary font-bold">
-                            {item.product.price.toLocaleString()} {item.product.currency}
-                          </p>
-                          <p className="text-xs text-gray-600">Quantité: {item.quantity}</p>
-                        </div>
-                        <button
-                          onClick={() =>
-                            setCart(cart.filter((i) => i.product.id !== item.product.id))
-                          }
-                        >
-                          <X className="w-4 h-4 text-gray-400" />
-                        </button>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-                <Button
-                  className="w-full bg-primary hover:bg-primary/90 text-white"
-                  onClick={() => {
-                    setShowCart(false);
-                    toast({
-                      title: 'Fonctionnalité en développement',
-                      description: 'Le paiement du panier sera bientôt disponible',
-                    });
-                  }}
-                >
-                  Procéder au paiement
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Modal Checkout */}
       {showCheckout && selectedProduct && (
@@ -1002,6 +921,18 @@ export default function NkampaPage() {
           </Card>
         </div>
       )}
+
+      {/* Floating Cart */}
+      <FloatingCart
+        items={cart}
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        onUpdateQuantity={updateQuantity}
+        onRemove={removeFromCart}
+        onCheckout={handleCheckoutFromCart}
+        total={total}
+        itemCount={itemCount}
+      />
     </div>
   );
 }
