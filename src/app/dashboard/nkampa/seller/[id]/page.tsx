@@ -572,38 +572,103 @@ export default function SellerPortalPage({ params }: { params: Promise<{ id: str
             <div>
               <h3 className="font-bold mb-4">À propos</h3>
               <ul className="space-y-2 text-sm text-gray-400">
-                <li><a href="#" className="hover:text-white">Qui sommes-nous</a></li>
-                <li><a href="#" className="hover:text-white">Notre histoire</a></li>
-                <li><a href="#" className="hover:text-white">Carrières</a></li>
+                <li>
+                  <button 
+                    onClick={() => setActiveTab('about')}
+                    className="hover:text-white transition-colors"
+                  >
+                    Qui sommes-nous
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => setActiveTab('experience')}
+                    className="hover:text-white transition-colors"
+                  >
+                    Notre histoire
+                  </button>
+                </li>
+                <li>
+                  <a href="mailto:careers@enkamba.com" className="hover:text-white transition-colors">
+                    Carrières
+                  </a>
+                </li>
               </ul>
             </div>
             <div>
               <h3 className="font-bold mb-4">Support</h3>
               <ul className="space-y-2 text-sm text-gray-400">
-                <li><a href="#" className="hover:text-white">Contact</a></li>
-                <li><a href="#" className="hover:text-white">FAQ</a></li>
-                <li><a href="#" className="hover:text-white">Retours</a></li>
+                <li>
+                  <button 
+                    onClick={handleContactSeller}
+                    className="hover:text-white transition-colors"
+                  >
+                    Contact
+                  </button>
+                </li>
+                <li>
+                  <Link href="/enkamba-faq" className="hover:text-white transition-colors">
+                    FAQ
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/enkamba-returns" className="hover:text-white transition-colors">
+                    Retours
+                  </Link>
+                </li>
               </ul>
             </div>
             <div>
               <h3 className="font-bold mb-4">Légal</h3>
               <ul className="space-y-2 text-sm text-gray-400">
-                <li><a href="#" className="hover:text-white">Conditions</a></li>
-                <li><a href="#" className="hover:text-white">Confidentialité</a></li>
-                <li><a href="#" className="hover:text-white">Cookies</a></li>
+                <li>
+                  <Link href="/enkamba-terms" className="hover:text-white transition-colors">
+                    Conditions
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/enkamba-privacy" className="hover:text-white transition-colors">
+                    Confidentialité
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/enkamba-cookies" className="hover:text-white transition-colors">
+                    Cookies
+                  </Link>
+                </li>
               </ul>
             </div>
             <div>
               <h3 className="font-bold mb-4">Suivez-nous</h3>
               <ul className="space-y-2 text-sm text-gray-400">
-                <li><a href="#" className="hover:text-white">Facebook</a></li>
-                <li><a href="#" className="hover:text-white">Instagram</a></li>
-                <li><a href="#" className="hover:text-white">Twitter</a></li>
+                <li>
+                  <a href="https://facebook.com/enkamba" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+                    Facebook
+                  </a>
+                </li>
+                <li>
+                  <a href="https://instagram.com/enkamba" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+                    Instagram
+                  </a>
+                </li>
+                <li>
+                  <a href="https://twitter.com/enkamba" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+                    Twitter
+                  </a>
+                </li>
               </ul>
             </div>
           </div>
-          <div className="border-t border-gray-800 pt-8 text-center text-sm text-gray-400">
-            <p>&copy; 2024 {seller.name}. Tous droits réservés. | Propulsé par eNKAMBA</p>
+          <div className="border-t border-gray-800 pt-8 space-y-4">
+            <div className="text-center text-sm text-gray-400">
+              <p>&copy; 2024 {seller.name}. Tous droits réservés. | Propulsé par eNKAMBA</p>
+            </div>
+            <div className="text-center text-xs text-gray-500 space-y-1">
+              <p><strong>Guangzhou eNKAMBA International Company CO., Ltd</strong></p>
+              <p>Plateforme ecommerce pour partenaires établissements</p>
+              <p>Email: support@enkamba.com | Tél: +33 (0)1 XX XX XX XX</p>
+              <p>Adresse: Guangzhou, Chine</p>
+            </div>
           </div>
         </div>
       </footer>
