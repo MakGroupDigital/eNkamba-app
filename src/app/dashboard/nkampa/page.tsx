@@ -163,67 +163,64 @@ const ALL_SUPPLIERS = [
 
 // Données de démonstration avec types et sous-catégories
 const ALL_PRODUCTS = [
-  // Fournisseurs
+  // Produits de Kasang Elektronique (seller-1)
   {
-    id: 'p-1',
-    name: 'Milo - Poudre Chocolatée',
-    price: 8500,
+    id: 'prod-1',
+    name: 'iPhone 15 Pro Max',
+    price: 1299000,
     currency: 'CDF',
-    image: 'https://picsum.photos/seed/milo/300/300',
-    moq: '100 cartons',
-    location: 'Kinshasa',
-    type: 'product',
-    subcategory: 'alimentaire',
-    sellerId: 'seller-1',
-    sellerName: 'Fournisseur Premium',
-    rating: 4.6,
-    reviews: 23,
-  },
-  {
-    id: 'p-2',
-    name: 'Riz Blanc Premium',
-    price: 45000,
-    currency: 'CDF',
-    image: 'https://picsum.photos/seed/rice/300/300',
-    moq: '50 sacs',
-    location: 'Goma',
-    type: 'product',
-    subcategory: 'alimentaire',
-    sellerId: 'seller-2',
-    sellerName: 'Grossiste Goma',
-    rating: 4.7,
-    reviews: 34,
-  },
-  {
-    id: 'p-3',
-    name: 'Huile Bio Pressée à Froid',
-    price: 12000,
-    currency: 'CDF',
-    image: 'https://picsum.photos/seed/oil/300/300',
-    moq: '20 bouteilles',
-    location: 'Bukavu',
-    type: 'product',
-    subcategory: 'bio',
-    sellerId: 'seller-3',
-    sellerName: 'Producteur Bio Bukavu',
-    rating: 4.9,
-    reviews: 45,
-  },
-  // Détaillants
-  {
-    id: 'p-4',
-    name: 'Téléphone Smartphone Pro',
-    price: 250000,
-    currency: 'CDF',
-    image: 'https://picsum.photos/seed/phone1/300/300',
+    image: 'https://picsum.photos/seed/iphone15/300/300',
     location: 'Kinshasa',
     type: 'product',
     subcategory: 'tech',
-    sellerId: 'seller-4',
-    sellerName: 'ElectroShop',
+    sellerId: 'seller-1',
+    sellerName: 'Kasang Elektronique',
     rating: 4.8,
-    reviews: 45,
+    reviews: 234,
   },
+  {
+    id: 'prod-2',
+    name: 'Samsung Galaxy S24',
+    price: 999000,
+    currency: 'CDF',
+    image: 'https://picsum.photos/seed/samsung-s24/300/300',
+    location: 'Kinshasa',
+    type: 'product',
+    subcategory: 'tech',
+    sellerId: 'seller-1',
+    sellerName: 'Kasang Elektronique',
+    rating: 4.7,
+    reviews: 189,
+  },
+  {
+    id: 'prod-3',
+    name: 'MacBook Pro 16"',
+    price: 2499000,
+    currency: 'CDF',
+    image: 'https://picsum.photos/seed/macbook/300/300',
+    location: 'Kinshasa',
+    type: 'product',
+    subcategory: 'tech',
+    sellerId: 'seller-1',
+    sellerName: 'Kasang Elektronique',
+    rating: 4.9,
+    reviews: 156,
+  },
+  {
+    id: 'prod-4',
+    name: 'iPad Air',
+    price: 599000,
+    currency: 'CDF',
+    image: 'https://picsum.photos/seed/ipad/300/300',
+    location: 'Kinshasa',
+    type: 'product',
+    subcategory: 'tech',
+    sellerId: 'seller-1',
+    sellerName: 'Kasang Elektronique',
+    rating: 4.6,
+    reviews: 98,
+  },
+  // Autres produits (pour démonstration)
   {
     id: 'p-5',
     name: 'Montre Connectée',
@@ -537,75 +534,83 @@ export default function NkampaPage() {
   );
 
   const ProductCard = ({ product }: { product: any }) => (
-    <Card className="rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
-      <div className="relative w-full h-40 bg-gray-100">
-        <Image
-          src={product.image}
-          alt={product.name}
-          fill
-          className="object-cover"
-        />
-      </div>
-      <CardContent className="p-3 space-y-2">
-        <h3 className="font-semibold text-sm text-gray-900 line-clamp-2">
-          {product.name}
-        </h3>
-        <div className="flex items-center gap-1">
-          <PriceIcon className="w-4 h-4 text-primary" />
-          <span className="text-lg font-bold text-primary">
-            {product.price.toLocaleString()}
-          </span>
-          <span className="text-xs text-gray-600">{product.currency}</span>
+    <Link href={`/dashboard/nkampa/product/${product.id}`}>
+      <Card className="rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer h-full">
+        <div className="relative w-full h-40 bg-gray-100">
+          <Image
+            src={product.image}
+            alt={product.name}
+            fill
+            className="object-cover"
+          />
         </div>
-        {product.moq && (
-          <div className="flex items-center gap-1 text-xs text-gray-600">
-            <MOQIcon className="w-3 h-3" />
-            <span>MOQ: {product.moq}</span>
+        <CardContent className="p-3 space-y-2">
+          <h3 className="font-semibold text-sm text-gray-900 line-clamp-2">
+            {product.name}
+          </h3>
+          <div className="flex items-center gap-1">
+            <PriceIcon className="w-4 h-4 text-primary" />
+            <span className="text-lg font-bold text-primary">
+              {product.price.toLocaleString()}
+            </span>
+            <span className="text-xs text-gray-600">{product.currency}</span>
           </div>
-        )}
-        <div className="flex items-center gap-1 text-xs text-gray-600">
-          <LocationIcon className="w-3 h-3" />
-          <span>{product.location}</span>
-        </div>
-        {product.rating && (
-          <div className="flex items-center gap-1 text-xs">
-            <div className="flex gap-0.5">
-              {[...Array(5)].map((_, i) => (
-                <StarIcon
-                  key={i}
-                  className={`w-3 h-3 ${
-                    i < Math.floor(product.rating)
-                      ? 'text-yellow-400'
-                      : 'text-gray-300'
-                  }`}
-                />
-              ))}
+          {product.moq && (
+            <div className="flex items-center gap-1 text-xs text-gray-600">
+              <MOQIcon className="w-3 h-3" />
+              <span>MOQ: {product.moq}</span>
             </div>
-            {product.reviews !== undefined && (
-              <span className="text-gray-600">({product.reviews})</span>
-            )}
+          )}
+          <div className="flex items-center gap-1 text-xs text-gray-600">
+            <LocationIcon className="w-3 h-3" />
+            <span>{product.location}</span>
           </div>
-        )}
-        <div className="flex gap-2 pt-2">
-          <Button
-            size="sm"
-            variant="outline"
-            className="flex-1 text-xs h-8"
-            onClick={() => handleAddToCart(product)}
-          >
-            <ShoppingCart className="w-3 h-3 mr-1" />
-            Panier
-          </Button>
-          <Button
-            size="sm"
-            className="flex-1 bg-primary hover:bg-primary/90 text-white text-xs h-8"
-            onClick={() => handleBuyNow(product)}
-          >
-            Acheter
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+          {product.rating && (
+            <div className="flex items-center gap-1 text-xs">
+              <div className="flex gap-0.5">
+                {[...Array(5)].map((_, i) => (
+                  <StarIcon
+                    key={i}
+                    className={`w-3 h-3 ${
+                      i < Math.floor(product.rating)
+                        ? 'text-yellow-400'
+                        : 'text-gray-300'
+                    }`}
+                  />
+                ))}
+              </div>
+              {product.reviews !== undefined && (
+                <span className="text-gray-600">({product.reviews})</span>
+              )}
+            </div>
+          )}
+          <div className="flex gap-2 pt-2">
+            <Button
+              size="sm"
+              variant="outline"
+              className="flex-1 text-xs h-8"
+              onClick={(e) => {
+                e.preventDefault();
+                handleAddToCart(product);
+              }}
+            >
+              <ShoppingCart className="w-3 h-3 mr-1" />
+              Panier
+            </Button>
+            <Button
+              size="sm"
+              className="flex-1 bg-primary hover:bg-primary/90 text-white text-xs h-8"
+              onClick={(e) => {
+                e.preventDefault();
+                handleBuyNow(product);
+              }}
+            >
+              Acheter
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </Link>
   );
 
   return (
