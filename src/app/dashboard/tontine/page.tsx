@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useRouter } from 'next/navigation';
 
 type Currency = 'CDF' | 'USD' | 'EUR';
 type Frequency = 'daily' | 'weekly' | 'monthly';
@@ -59,6 +60,7 @@ const mockMyTontines: Tontine[] = [];
 
 export default function TontinePage() {
   const { toast } = useToast();
+  const router = useRouter();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showJoinForm, setShowJoinForm] = useState(false);
   const [tontineName, setTontineName] = useState('');
@@ -108,7 +110,7 @@ export default function TontinePage() {
     sessionStorage.setItem('tontine_payment_data', JSON.stringify(paymentData));
     
     // Rediriger vers le paiement
-    window.location.href = '/dashboard/pay?context=tontine';
+    router.push('/dashboard/pay?context=tontine');
   };
 
   const handleJoinByLink = async () => {

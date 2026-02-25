@@ -136,8 +136,28 @@ export function useWalletTransactions() {
     async (amount: number, paymentMethod: 'mobile_money' | 'credit_card' | 'debit_card' | 'crypto', details: any) => {
       if (!currentUser) throw new Error('Utilisateur non authentifié');
 
+      const previousBalance = balance;
+      const optimisticId = `optimistic-deposit-${Date.now()}`;
+      const optimisticNewBalance = previousBalance + amount;
+
       setIsLoading(true);
       setError(null);
+      setBalance(optimisticNewBalance);
+      setTransactions((prev) => [
+        {
+          id: optimisticId,
+          type: 'deposit',
+          amount,
+          paymentMethod,
+          status: 'pending',
+          description: 'Ajout de fonds en cours...',
+          previousBalance,
+          newBalance: optimisticNewBalance,
+          timestamp: new Date(),
+          createdAt: new Date().toISOString(),
+        } as Transaction,
+        ...prev,
+      ].slice(0, 20));
 
       try {
         // Obtenir le token d'authentification
@@ -167,6 +187,18 @@ export function useWalletTransactions() {
 
         const data = await response.json();
         setBalance(data.newBalance);
+        setTransactions((prev) =>
+          prev.map((tx) =>
+            tx.id === optimisticId
+              ? {
+                  ...tx,
+                  status: 'completed',
+                  description: 'Ajout de fonds confirmé',
+                  newBalance: data.newBalance,
+                }
+              : tx
+          )
+        );
 
         return {
           success: true,
@@ -176,21 +208,44 @@ export function useWalletTransactions() {
       } catch (err: any) {
         const errorMessage = err.message || 'Erreur lors de l\'ajout de fonds';
         setError(errorMessage);
+        setBalance(previousBalance);
+        setTransactions((prev) => prev.filter((tx) => tx.id !== optimisticId));
         throw err;
       } finally {
         setIsLoading(false);
       }
     },
-    [currentUser]
+    [balance, currentUser]
   );
 
   // Retirer des fonds
   const withdrawFunds = useCallback(
     async (amount: number, withdrawalMethod: 'mobile_money' | 'agent', details: any) => {
       if (!currentUser) throw new Error('Utilisateur non authentifié');
+      if (amount > balance) throw new Error('Solde insuffisant');
+
+      const previousBalance = balance;
+      const optimisticId = `optimistic-withdraw-${Date.now()}`;
+      const optimisticNewBalance = Math.max(0, previousBalance - amount);
 
       setIsLoading(true);
       setError(null);
+      setBalance(optimisticNewBalance);
+      setTransactions((prev) => [
+        {
+          id: optimisticId,
+          type: 'withdrawal',
+          amount,
+          withdrawalMethod,
+          status: 'pending',
+          description: 'Retrait en cours...',
+          previousBalance,
+          newBalance: optimisticNewBalance,
+          timestamp: new Date(),
+          createdAt: new Date().toISOString(),
+        } as Transaction,
+        ...prev,
+      ].slice(0, 20));
 
       try {
         // Obtenir le token d'authentification
@@ -224,6 +279,18 @@ export function useWalletTransactions() {
 
         const data = await response.json();
         setBalance(data.newBalance);
+        setTransactions((prev) =>
+          prev.map((tx) =>
+            tx.id === optimisticId
+              ? {
+                  ...tx,
+                  status: 'completed',
+                  description: 'Retrait confirmé',
+                  newBalance: data.newBalance,
+                }
+              : tx
+          )
+        );
 
         return {
           success: true,
@@ -233,12 +300,14 @@ export function useWalletTransactions() {
       } catch (err: any) {
         const errorMessage = err.message || 'Erreur lors du retrait';
         setError(errorMessage);
+        setBalance(previousBalance);
+        setTransactions((prev) => prev.filter((tx) => tx.id !== optimisticId));
         throw err;
       } finally {
         setIsLoading(false);
       }
     },
-    [currentUser]
+    [balance, currentUser]
   );
 
   return {

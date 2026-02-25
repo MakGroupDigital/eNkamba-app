@@ -37,7 +37,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
                 setIsLoading(false);
             } else {
                 // Pas d'utilisateur connecté
-                router.push("/login");
+                router.replace("/login");
             }
         });
 

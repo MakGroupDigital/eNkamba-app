@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Zap, Search, Star, ArrowRight, Clock, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useRouter } from 'next/navigation';
 
 type ServiceStatus = 'active' | 'inactive' | 'coming-soon';
 
@@ -135,6 +136,7 @@ const mockServices: Service[] = [
 
 export default function PartnerServicesPage() {
   const { toast } = useToast();
+  const router = useRouter();
   const [services, setServices] = useState<Service[]>(mockServices);
   const [showBookDialog, setShowBookDialog] = useState(false);
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
@@ -197,7 +199,7 @@ export default function PartnerServicesPage() {
     sessionStorage.setItem('services_payment_data', JSON.stringify(paymentData));
     
     // Rediriger vers le paiement
-    window.location.href = '/dashboard/pay?context=services';
+    router.push('/dashboard/pay?context=services');
   };
 
   return (

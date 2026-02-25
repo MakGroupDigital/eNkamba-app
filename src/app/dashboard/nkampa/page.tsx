@@ -459,9 +459,7 @@ export default function NkampaPage() {
       setShippingPhone('');
 
       // Rediriger vers le chat avec le vendeur
-      setTimeout(() => {
-        router.push(`/dashboard/miyiki-chat/${result.conversationId}`);
-      }, 1500);
+      router.push(`/dashboard/miyiki-chat/${result.conversationId}`);
     } catch (error: any) {
       toast({
         title: 'Erreur',

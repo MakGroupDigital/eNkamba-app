@@ -250,9 +250,7 @@ export default function WithdrawPage() {
         className: 'bg-green-600 text-white border-none',
       });
 
-      setTimeout(() => {
-        router.push('/dashboard/wallet');
-      }, 2000);
+      router.push('/dashboard/wallet');
     } catch (error: any) {
       toast({
         variant: 'destructive',

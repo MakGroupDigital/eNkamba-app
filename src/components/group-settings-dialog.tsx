@@ -29,6 +29,7 @@ import { doc, updateDoc, arrayUnion, arrayRemove, getDoc } from 'firebase/firest
 import { useToast } from '@/hooks/use-toast';
 import QRCode from 'qrcode';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 interface GroupSettingsDialogProps {
   isOpen: boolean;
@@ -55,6 +56,7 @@ export function GroupSettingsDialog({
   const { user } = useAuth();
   const { contacts } = useFirestoreContacts();
   const { toast } = useToast();
+  const router = useRouter();
 
   const [groupName, setGroupName] = useState(groupData.name);
   const [isEditingName, setIsEditingName] = useState(false);
@@ -279,7 +281,7 @@ export function GroupSettingsDialog({
 
       onClose();
       // Rediriger vers la liste des conversations
-      window.location.href = '/dashboard/miyiki-chat';
+      router.push('/dashboard/miyiki-chat');
     } catch (error) {
       console.error('Erreur quitter groupe:', error);
       toast({

@@ -28,7 +28,7 @@ interface TrackingInfo {
   }>;
 }
 
-export default function PackageTrackingPage() {
+export default function UgaviTrackingPage() {
   const searchParams = useSearchParams();
   const { toast } = useToast();
   const [trackingNumber, setTrackingNumber] = useState('');
@@ -48,10 +48,8 @@ export default function PackageTrackingPage() {
     setSearchError(null);
 
     try {
-      // Simuler une recherche (à remplacer par un vrai appel API)
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise((resolve) => setTimeout(resolve, 1100));
 
-      // Données de démonstration
       const mockData: TrackingInfo = {
         trackingNumber: numberToSearch,
         status: 'in_transit',
@@ -59,26 +57,26 @@ export default function PackageTrackingPage() {
         recipient: 'Votre Nom',
         origin: 'Kinshasa',
         destination: 'Goma',
-        estimatedDelivery: '2026-02-20',
-        lastUpdate: '2026-02-16 14:30',
+        estimatedDelivery: '2026-02-27',
+        lastUpdate: '2026-02-25 14:30',
         events: [
           {
-            date: '2026-02-16',
+            date: '2026-02-25',
             time: '14:30',
             status: 'En transit',
             location: 'Kinshasa - Centre de distribution',
           },
           {
-            date: '2026-02-15',
+            date: '2026-02-25',
             time: '09:15',
             status: 'Colis reçu',
             location: 'Kinshasa - Entrepôt principal',
           },
           {
-            date: '2026-02-14',
+            date: '2026-02-24',
             time: '16:45',
             status: 'Colis préparé',
-            location: 'Fournisseur Premium',
+            location: 'Point de départ',
           },
         ],
       };
@@ -88,7 +86,7 @@ export default function PackageTrackingPage() {
         title: 'Colis trouvé ✅',
         description: `Numéro de suivi: ${numberToSearch}`,
       });
-    } catch (error) {
+    } catch {
       setSearchError('Erreur lors de la recherche. Veuillez réessayer.');
       toast({
         variant: 'destructive',
@@ -111,13 +109,13 @@ export default function PackageTrackingPage() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'delivered':
-        return <CheckCircle className="w-6 h-6 text-green-600" />;
+        return <CheckCircle className="h-6 w-6 text-green-600" />;
       case 'in_transit':
-        return <Clock className="w-6 h-6 text-blue-600" />;
+        return <Clock className="h-6 w-6 text-blue-600" />;
       case 'failed':
-        return <AlertCircle className="w-6 h-6 text-red-600" />;
+        return <AlertCircle className="h-6 w-6 text-red-600" />;
       default:
-        return <Package className="w-6 h-6 text-gray-600" />;
+        return <Package className="h-6 w-6 text-gray-600" />;
     }
   };
 
@@ -136,44 +134,25 @@ export default function PackageTrackingPage() {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'delivered':
-        return 'bg-green-50 border-green-200';
-      case 'in_transit':
-        return 'bg-blue-50 border-blue-200';
-      case 'failed':
-        return 'bg-red-50 border-red-200';
-      default:
-        return 'bg-gray-50 border-gray-200';
-    }
-  };
-
   return (
-    <div className="container mx-auto max-w-2xl p-4 flex flex-col min-h-screen bg-muted/20">
-      {/* Header */}
-      <header className="flex items-center gap-4 mb-6 flex-shrink-0">
+    <div className="container mx-auto flex min-h-screen max-w-2xl flex-col bg-muted/20 p-4">
+      <header className="mb-6 flex items-center gap-4">
         <Button variant="ghost" size="icon" asChild>
           <Link href="/dashboard/ugavi">
             <ArrowLeft />
           </Link>
         </Button>
-        <h1 className="font-headline text-2xl font-bold text-primary flex-1">
-          Suivi de Colis
-        </h1>
+        <h1 className="flex-1 text-2xl font-bold text-primary">Suivi de Colis Ugavi</h1>
       </header>
 
-      {/* Search Section */}
       {!trackingInfo && (
         <Card className="mb-6">
-          <CardContent className="p-6 space-y-4">
+          <CardContent className="space-y-4 p-6">
             <div>
               <Label htmlFor="tracking" className="text-base font-semibold">
                 Numéro de Suivi
               </Label>
-              <p className="text-sm text-gray-600 mt-1">
-                Entrez le numéro de suivi de votre colis
-              </p>
+              <p className="mt-1 text-sm text-gray-600">Entrez le numéro de suivi de votre colis</p>
             </div>
 
             <div className="flex gap-2">
@@ -185,26 +164,23 @@ export default function PackageTrackingPage() {
                   setTrackingNumber(e.target.value);
                   setSearchError(null);
                 }}
-                onKeyPress={(e) => {
+                onKeyDown={(e) => {
                   if (e.key === 'Enter') {
-                    handleSearch();
+                    void handleSearch();
                   }
                 }}
-                className="flex-1 h-12 text-base"
+                className="h-12 flex-1 text-base"
               />
               <Button
                 onClick={() => void handleSearch()}
                 disabled={isSearching || !trackingNumber.trim()}
-                className="bg-primary hover:bg-primary/90 text-white h-12 px-6"
+                className="h-12 bg-primary px-6 text-white hover:bg-primary/90"
               >
                 {isSearching ? (
-                  <>
-                    <div className="animate-spin mr-2">⏳</div>
-                    Recherche...
-                  </>
+                  <>Recherche...</>
                 ) : (
                   <>
-                    <Search className="w-4 h-4 mr-2" />
+                    <Search className="mr-2 h-4 w-4" />
                     Rechercher
                   </>
                 )}
@@ -222,20 +198,16 @@ export default function PackageTrackingPage() {
         </Card>
       )}
 
-      {/* Tracking Info */}
       {trackingInfo && (
-        <div className="space-y-6 flex-1">
-          {/* Status Card */}
-          <Card className={`border-2 ${getStatusColor(trackingInfo.status)}`}>
+        <div className="flex-1 space-y-6">
+          <Card className="border-2 border-blue-200 bg-blue-50">
             <CardContent className="p-6">
-              <div className="flex items-start justify-between mb-4">
+              <div className="mb-4 flex items-start justify-between">
                 <div className="flex items-center gap-3">
                   {getStatusIcon(trackingInfo.status)}
                   <div>
                     <p className="text-sm text-gray-600">État du colis</p>
-                    <p className="text-2xl font-bold text-gray-900">
-                      {getStatusLabel(trackingInfo.status)}
-                    </p>
+                    <p className="text-2xl font-bold text-gray-900">{getStatusLabel(trackingInfo.status)}</p>
                   </div>
                 </div>
               </div>
@@ -245,119 +217,41 @@ export default function PackageTrackingPage() {
             </CardContent>
           </Card>
 
-          {/* Delivery Info */}
           <Card>
-            <CardContent className="p-6 space-y-4">
-              <h3 className="font-semibold text-lg">Informations de Livraison</h3>
-
+            <CardContent className="space-y-4 p-6">
+              <h3 className="text-lg font-semibold">Informations de Livraison</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs text-gray-600 mb-1">Expéditeur</p>
+                  <p className="mb-1 text-xs text-gray-600">Expéditeur</p>
                   <p className="font-semibold text-gray-900">{trackingInfo.sender}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-600 mb-1">Destinataire</p>
+                  <p className="mb-1 text-xs text-gray-600">Destinataire</p>
                   <p className="font-semibold text-gray-900">{trackingInfo.recipient}</p>
                 </div>
               </div>
-
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs text-gray-600 mb-1">Origine</p>
+                  <p className="mb-1 text-xs text-gray-600">Origine</p>
                   <div className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-primary" />
+                    <MapPin className="h-4 w-4 text-primary" />
                     <p className="font-semibold text-gray-900">{trackingInfo.origin}</p>
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-600 mb-1">Destination</p>
+                  <p className="mb-1 text-xs text-gray-600">Destination</p>
                   <div className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-primary" />
+                    <MapPin className="h-4 w-4 text-primary" />
                     <p className="font-semibold text-gray-900">{trackingInfo.destination}</p>
                   </div>
                 </div>
               </div>
-
-              <div className="grid grid-cols-2 gap-4 pt-2 border-t">
-                <div>
-                  <p className="text-xs text-gray-600 mb-1">Livraison Estimée</p>
-                  <p className="font-semibold text-gray-900">{trackingInfo.estimatedDelivery}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 mb-1">Dernière Mise à Jour</p>
-                  <p className="font-semibold text-gray-900">{trackingInfo.lastUpdate}</p>
-                </div>
-              </div>
             </CardContent>
           </Card>
 
-          {/* Timeline */}
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="font-semibold text-lg mb-6">Historique du Suivi</h3>
-
-              <div className="space-y-6">
-                {trackingInfo.events.map((event, index) => (
-                  <div key={index} className="flex gap-4">
-                    <div className="flex flex-col items-center">
-                      <div className="w-4 h-4 rounded-full bg-primary" />
-                      {index < trackingInfo.events.length - 1 && (
-                        <div className="w-0.5 h-12 bg-gray-200 mt-2" />
-                      )}
-                    </div>
-                    <div className="pb-6">
-                      <p className="font-semibold text-gray-900">{event.status}</p>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {event.date} à {event.time}
-                      </p>
-                      <div className="flex items-center gap-2 mt-2 text-sm text-gray-600">
-                        <MapPin className="w-4 h-4" />
-                        {event.location}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Action Buttons */}
-          <div className="flex gap-3 pb-6">
-            <Button
-              variant="outline"
-              className="flex-1"
-              onClick={() => {
-                setTrackingInfo(null);
-                setTrackingNumber('');
-                setSearchError(null);
-              }}
-            >
-              Nouveau Suivi
-            </Button>
-            <Button
-              className="flex-1 bg-primary hover:bg-primary/90 text-white"
-              asChild
-            >
-              <Link href="/dashboard/nkampa">
-                Retour à Nkampa
-              </Link>
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Empty State */}
-      {!trackingInfo && !isSearching && (
-        <div className="flex-1 flex flex-col items-center justify-center text-center py-12">
-          <div className="bg-primary/10 rounded-full p-6 mb-4">
-            <Package className="w-12 h-12 text-primary" />
-          </div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
-            Suivez votre Colis
-          </h2>
-          <p className="text-gray-600 max-w-sm">
-            Entrez votre numéro de suivi pour connaître l'état de votre livraison en temps réel
-          </p>
+          <Button variant="outline" onClick={() => setTrackingInfo(null)} className="w-full">
+            Nouveau Suivi
+          </Button>
         </div>
       )}
     </div>

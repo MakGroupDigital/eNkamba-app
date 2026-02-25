@@ -130,9 +130,7 @@ export default function RequestPage() {
           className: 'bg-green-600 text-white border-none',
         });
 
-        setTimeout(() => {
-          router.push('/dashboard/wallet');
-        }, 3000);
+        router.push('/dashboard/wallet');
       }
     } catch (error: any) {
       toast({

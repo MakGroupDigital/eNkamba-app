@@ -1,22 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   MessageCircle,
   Share2,
   Heart,
-  Image as ImageIcon,
+  Music2,
   Plus,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import Image from 'next/image';
+import { collection, onSnapshot, orderBy, query, limit } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useRouter } from 'next/navigation';
 import {
   MakutanoIcon,
   HomeNavIcon,
@@ -71,56 +69,121 @@ interface Post {
   id: string;
   author: { name: string; location: string; avatar: string };
   text: string;
-  image: string;
+  mediaUrl: string;
+  mediaType: 'image' | 'video' | 'audio';
   likes: number;
   comments: number;
   isLiked: boolean;
+  createdAt?: any;
   category: 'Accueil' | 'Savoir' | 'Entrepreneur' | 'Projets' | 'Local';
 }
 
-const initialPosts: Post[] = [
-  {
-    id: '1',
-    author: { name: 'Alice Kabila', location: 'Doctor, Kinshasa', avatar: 'https://picsum.photos/seed/alice/40/40' },
-    text: 'Rassemblement au village ce matin pour discuter des nouveaux projets agricoles.',
-    image: 'https://picsum.photos/seed/village-meeting/500/800',
-    likes: 120,
-    comments: 15,
-    isLiked: false,
-    category: 'Local',
-  },
-  {
-    id: '2',
-    author: { name: 'Joseph Tamale', location: 'Tailleur, Kinshasa', avatar: 'https://picsum.photos/seed/joseph/40/40' },
-    text: 'Nouvelle collection de vêtements traditionnels disponible maintenant!',
-    image: 'https://picsum.photos/seed/fashion/500/800',
-    likes: 245,
-    comments: 32,
-    isLiked: false,
-    category: 'Entrepreneur',
-  },
-  {
-    id: '3',
-    author: { name: 'Mukendi', location: 'Innovateur, Goma', avatar: 'https://picsum.photos/seed/mukendi/40/40' },
-    text: 'Projet de four solaire local - Besoin de financement pour démarrer!',
-    image: 'https://picsum.photos/seed/solar/500/800',
-    likes: 752,
-    comments: 24,
-    isLiked: false,
-    category: 'Projets',
-  },
-];
+const postCategories: Array<Post['category']> = ['Savoir', 'Entrepreneur', 'Projets', 'Local', 'Accueil'];
+
+function inferMediaType(mediaUrl: string): 'image' | 'video' | 'audio' {
+  const lowerUrl = mediaUrl.toLowerCase();
+  if (
+    lowerUrl.includes('.mp3') ||
+    lowerUrl.includes('.wav') ||
+    lowerUrl.includes('.ogg') ||
+    lowerUrl.includes('.m4a') ||
+    lowerUrl.includes('/audio/')
+  ) {
+    return 'audio';
+  }
+  if (
+    lowerUrl.includes('.mp4') ||
+    lowerUrl.includes('.webm') ||
+    lowerUrl.includes('.mov') ||
+    lowerUrl.includes('.m3u8') ||
+    lowerUrl.includes('/video/')
+  ) {
+    return 'video';
+  }
+  return 'image';
+}
+
+function MakutanoAudioPlayer({ src }: { src: string }) {
+  return (
+    <div className="relative flex h-full w-full items-center justify-center bg-gradient-to-br from-emerald-700 via-teal-700 to-cyan-700">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.18),transparent_60%)]" />
+      <div className="relative z-10 flex w-[78%] flex-col items-center gap-5 rounded-2xl border border-white/25 bg-black/25 p-5 backdrop-blur-md">
+        <div className="flex items-end gap-1.5">
+          <span className="h-4 w-1.5 animate-pulse rounded-full bg-emerald-200 [animation-delay:0ms]" />
+          <span className="h-7 w-1.5 animate-pulse rounded-full bg-emerald-100 [animation-delay:120ms]" />
+          <span className="h-10 w-1.5 animate-pulse rounded-full bg-white [animation-delay:240ms]" />
+          <span className="h-6 w-1.5 animate-pulse rounded-full bg-emerald-100 [animation-delay:360ms]" />
+          <span className="h-9 w-1.5 animate-pulse rounded-full bg-emerald-200 [animation-delay:480ms]" />
+          <span className="h-5 w-1.5 animate-pulse rounded-full bg-white [animation-delay:600ms]" />
+          <span className="h-8 w-1.5 animate-pulse rounded-full bg-emerald-100 [animation-delay:720ms]" />
+        </div>
+        <div className="rounded-full bg-white/20 p-3">
+          <Music2 className="h-6 w-6 text-white" />
+        </div>
+        <audio src={src} controls autoPlay loop className="w-full" />
+      </div>
+    </div>
+  );
+}
 
 export default function MakutanoPage() {
   const { toast } = useToast();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState('Accueil');
-  const [posts, setPosts] = useState<Post[]>(initialPosts);
-  const [showCreatePost, setShowCreatePost] = useState(false);
-  const [postText, setPostText] = useState('');
-  const [postImage, setPostImage] = useState('');
-  const [isPublishing, setIsPublishing] = useState(false);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [isLoadingPosts, setIsLoadingPosts] = useState(true);
 
   const filteredPosts = posts.filter(post => post.category === activeTab || activeTab === 'Accueil');
+
+  useEffect(() => {
+    const postsQuery = query(
+      collection(db, 'makutano_posts'),
+      orderBy('createdAt', 'desc'),
+      limit(100)
+    );
+
+    const unsubscribe = onSnapshot(
+      postsQuery,
+      (snapshot) => {
+        const loadedPosts: Post[] = snapshot.docs.map((docSnapshot) => {
+          const data = docSnapshot.data() as any;
+          const mediaUrl = data.mediaUrl || data.image || '';
+          const category = postCategories.includes(data.category) ? data.category : 'Accueil';
+
+          return {
+            id: docSnapshot.id,
+            author: {
+              name: data.author?.name || data.authorName || 'Utilisateur eNkamba',
+              location: data.author?.location || data.authorLocation || 'RDC',
+              avatar: data.author?.avatar || data.authorAvatar || 'https://picsum.photos/seed/default-user/40/40',
+            },
+            text: data.text || data.caption || '',
+            mediaUrl,
+            mediaType: data.mediaType || inferMediaType(mediaUrl),
+            likes: Number(data.likes || 0),
+            comments: Number(data.comments || 0),
+            isLiked: false,
+            createdAt: data.createdAt,
+            category,
+          };
+        });
+
+        setPosts(loadedPosts);
+        setIsLoadingPosts(false);
+      },
+      (error) => {
+        console.error('Erreur chargement posts Makutano:', error);
+        setIsLoadingPosts(false);
+        toast({
+          variant: 'destructive',
+          title: 'Erreur',
+          description: 'Impossible de récupérer les posts Makutano depuis Firebase.',
+        });
+      }
+    );
+
+    return () => unsubscribe();
+  }, [toast]);
 
   const handleLike = (id: string) => {
     setPosts(posts.map(post => {
@@ -151,50 +214,10 @@ export default function MakutanoPage() {
     });
   };
 
-  const handleCreatePost = async () => {
-    if (!postText.trim()) {
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Veuillez écrire quelque chose.",
-      });
-      return;
-    }
-
-    setIsPublishing(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    const newPost: Post = {
-      id: Date.now().toString(),
-      author: {
-        name: 'Vous',
-        location: 'Kinshasa, RDC',
-        avatar: 'https://picsum.photos/seed/user/40/40'
-      },
-      text: postText,
-      image: postImage || 'https://picsum.photos/seed/new-post/500/800',
-      likes: 0,
-      comments: 0,
-      isLiked: false,
-      category: 'Accueil',
-    };
-
-    setPosts([newPost, ...posts]);
-    setIsPublishing(false);
-    setShowCreatePost(false);
-    setPostText('');
-    setPostImage('');
-
-    toast({
-      title: "Post publié !",
-      description: "Votre post a été publié.",
-    });
-  };
-
   return (
-    <div className="flex flex-col h-screen bg-black overflow-hidden">
+    <div className="flex h-screen flex-col overflow-hidden bg-gradient-to-b from-emerald-50 via-white to-orange-50">
       {/* Header avec catégories */}
-      <header className="sticky top-0 z-20 w-full bg-gradient-to-r from-primary via-primary to-green-800 text-white shadow-lg">
+      <header className="fixed left-0 right-0 top-0 z-50 w-full border-b border-white/20 bg-gradient-to-r from-primary via-primary to-green-800 text-white shadow-lg backdrop-blur">
         <div className="px-4 py-3">
           <div className="flex items-center gap-3 mb-4">
             <div className="h-10 w-10 rounded-lg bg-white/20 backdrop-blur flex items-center justify-center">
@@ -233,40 +256,99 @@ export default function MakutanoPage() {
         <div className="absolute top-4 right-4 z-30">
           <Button
             size="icon"
-            className="h-12 w-12 rounded-full bg-gradient-to-r from-primary to-green-800 text-white shadow-xl hover:scale-110 transition-transform"
-            onClick={() => setShowCreatePost(true)}
+            className="relative h-12 w-12 rounded-full border border-white/50 bg-gradient-to-r from-emerald-400 via-emerald-500 to-teal-600 text-white shadow-2xl transition-transform hover:scale-110"
+            onClick={() => router.push('/dashboard/makutano/create')}
           >
-            <Plus className="w-6 h-6" />
+            <span className="pointer-events-none absolute inset-0 rounded-full bg-white/20 animate-ping" />
+            <div className="relative z-10 flex items-center gap-0.5">
+              <Plus className="h-5 w-5" />
+              <Music2 className="h-3.5 w-3.5" />
+            </div>
           </Button>
         </div>
       </header>
 
-      {/* Feed vertical TikTok-style */}
-      <main className="flex-1 overflow-y-scroll snap-y snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-        {filteredPosts.length === 0 ? (
-          <div className="h-full flex items-center justify-center text-white/50">
-            <p>Aucun post dans cette catégorie</p>
+      {/* Feed vertical TikTok-style avec cartes compactes type Instagram */}
+      <div className="pointer-events-none fixed left-4 top-44 z-10 hidden w-52 rounded-2xl border border-emerald-200/70 bg-white/80 p-4 shadow-xl backdrop-blur lg:block">
+        <p className="mb-3 text-sm font-bold text-emerald-800">Rubriques</p>
+        <div className="space-y-2 text-xs text-emerald-900">
+          <div className="rounded-lg bg-emerald-100/80 px-3 py-2">Communauté locale</div>
+          <div className="rounded-lg bg-orange-100/80 px-3 py-2">Opportunités business</div>
+          <div className="rounded-lg bg-violet-100/80 px-3 py-2">Projets à financer</div>
+          <div className="rounded-lg bg-sky-100/80 px-3 py-2">Conseils & savoir</div>
+        </div>
+      </div>
+
+      <div className="pointer-events-none fixed right-4 top-44 z-10 hidden w-52 rounded-2xl border border-orange-200/70 bg-white/80 p-4 shadow-xl backdrop-blur lg:block">
+        <p className="mb-3 text-sm font-bold text-orange-800">Tendances</p>
+        <div className="space-y-2 text-xs text-orange-900">
+          <div className="rounded-lg bg-orange-100/80 px-3 py-2">#MakutanoRDC</div>
+          <div className="rounded-lg bg-emerald-100/80 px-3 py-2">#MarchéLocal</div>
+          <div className="rounded-lg bg-blue-100/80 px-3 py-2">#Innovation</div>
+          <div className="rounded-lg bg-fuchsia-100/80 px-3 py-2">#Solidarité</div>
+        </div>
+      </div>
+
+      <main className="flex-1 overflow-y-scroll snap-y snap-mandatory px-3 pb-4 pt-40 md:pt-44 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        {isLoadingPosts ? (
+          <div className="flex h-full items-center justify-center text-emerald-900/60">
+            <p>Chargement des posts Firebase...</p>
+          </div>
+        ) : filteredPosts.length === 0 ? (
+          <div className="flex h-full items-center justify-center text-emerald-900/60">
+            <p>Aucun post réel trouvé dans cette catégorie.</p>
           </div>
         ) : (
           filteredPosts.map((post) => (
-            <div key={post.id} className="relative w-full h-screen snap-start flex items-center justify-center bg-black">
+            <section
+              key={post.id}
+              className="group relative mx-auto mb-6 flex h-[78vh] w-full max-w-md snap-start items-center justify-center overflow-hidden rounded-3xl border border-emerald-200/80 bg-white shadow-2xl ring-1 ring-white/70"
+            >
               {/* Image de fond */}
               <div className="absolute inset-0">
-                <Image
-                  src={post.image}
-                  alt={post.text}
-                  fill
-                  className="object-cover"
-                  priority
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                {post.mediaUrl ? (
+                  post.mediaType === 'audio' ? (
+                    <MakutanoAudioPlayer src={post.mediaUrl} />
+                  ) : post.mediaType === 'video' ? (
+                    <video
+                      src={post.mediaUrl}
+                      className="h-full w-full object-cover"
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      preload="metadata"
+                    />
+                  ) : (
+                    <img
+                      src={post.mediaUrl}
+                      alt={post.text}
+                      className="h-full w-full object-cover"
+                      loading="lazy"
+                    />
+                  )
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-emerald-200 to-teal-300 text-sm font-semibold text-emerald-900">
+                    Média indisponible
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
               </div>
 
               {/* Contenu */}
-              <div className="absolute inset-0 flex flex-col justify-between p-4 pb-32">
+              <div className="absolute inset-0 flex flex-col justify-between p-4 pb-24">
+                <div className="flex items-center justify-between">
+                  <span className="rounded-full bg-white/85 px-3 py-1 text-[11px] font-semibold text-emerald-700">
+                    {post.category}
+                  </span>
+                  <span className="rounded-full bg-black/35 px-3 py-1 text-[11px] font-medium text-white backdrop-blur">
+                    {post.mediaType === 'audio' ? 'Audio' : 'En direct'}
+                  </span>
+                </div>
+
                 {/* Header du post */}
                 <div className="flex items-center gap-3">
-                  <Avatar className="h-12 w-12 ring-2 ring-white">
+                  <Avatar className="h-10 w-10 ring-2 ring-white">
                     <AvatarImage src={post.author.avatar} />
                     <AvatarFallback>{post.author.name.charAt(0)}</AvatarFallback>
                   </Avatar>
@@ -280,21 +362,26 @@ export default function MakutanoPage() {
                 </div>
 
                 {/* Texte du post */}
-                <div className="text-white max-w-xs">
-                  <p className="text-base font-medium leading-relaxed drop-shadow-lg">{post.text}</p>
+                <div className="max-w-[72%] rounded-2xl bg-black/30 p-3 text-white backdrop-blur-sm">
+                  <p className="text-sm font-medium leading-relaxed drop-shadow-lg">{post.text}</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <span className="rounded-full bg-white/85 px-2.5 py-1 text-[10px] font-semibold text-emerald-700">Communauté</span>
+                    <span className="rounded-full bg-white/85 px-2.5 py-1 text-[10px] font-semibold text-orange-700">Actualité</span>
+                    <span className="rounded-full bg-white/85 px-2.5 py-1 text-[10px] font-semibold text-violet-700">Découverte</span>
+                  </div>
                 </div>
               </div>
 
               {/* Actions (droite) */}
-              <div className="absolute right-4 bottom-24 flex flex-col gap-6 z-10">
+              <div className="absolute bottom-20 right-3 z-10 flex flex-col gap-4 rounded-2xl bg-black/20 px-2 py-3 backdrop-blur-sm">
                 <button
                   onClick={() => handleLike(post.id)}
                   className="flex flex-col items-center gap-2 group"
                 >
-                  <div className="bg-white/20 backdrop-blur rounded-full p-3 group-hover:bg-white/30 transition-all">
+                  <div className="rounded-full bg-white/20 p-2.5 backdrop-blur transition-all group-hover:bg-white/30">
                     <Heart
                       className={cn(
-                        "w-6 h-6 text-white transition-all",
+                        "h-5 w-5 text-white transition-all",
                         post.isLiked && "fill-red-500 text-red-500"
                       )}
                     />
@@ -306,8 +393,8 @@ export default function MakutanoPage() {
                   onClick={() => handleComment(post.id)}
                   className="flex flex-col items-center gap-2 group"
                 >
-                  <div className="bg-white/20 backdrop-blur rounded-full p-3 group-hover:bg-white/30 transition-all">
-                    <MessageCircle className="w-6 h-6 text-white" />
+                  <div className="rounded-full bg-white/20 p-2.5 backdrop-blur transition-all group-hover:bg-white/30">
+                    <MessageCircle className="h-5 w-5 text-white" />
                   </div>
                   <span className="text-white text-xs font-semibold drop-shadow">{post.comments}</span>
                 </button>
@@ -316,68 +403,16 @@ export default function MakutanoPage() {
                   onClick={() => handleShare(post.id)}
                   className="flex flex-col items-center gap-2 group"
                 >
-                  <div className="bg-white/20 backdrop-blur rounded-full p-3 group-hover:bg-white/30 transition-all">
-                    <Share2 className="w-6 h-6 text-white" />
+                  <div className="rounded-full bg-white/20 p-2.5 backdrop-blur transition-all group-hover:bg-white/30">
+                    <Share2 className="h-5 w-5 text-white" />
                   </div>
                   <span className="text-white text-xs font-semibold drop-shadow">Partager</span>
                 </button>
               </div>
-            </div>
+            </section>
           ))
         )}
       </main>
-
-      {/* Create Post Dialog */}
-      <Dialog open={showCreatePost} onOpenChange={setShowCreatePost}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Créer un nouveau post</DialogTitle>
-            <DialogDescription>
-              Partagez vos pensées, photos et expériences avec la communauté.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Textarea
-                placeholder="Quoi de neuf ?"
-                value={postText}
-                onChange={(e) => setPostText(e.target.value)}
-                className="min-h-[120px] resize-none"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="post-image">URL de l'image (optionnel)</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="post-image"
-                  placeholder="https://..."
-                  value={postImage}
-                  onChange={(e) => setPostImage(e.target.value)}
-                />
-                <Button variant="outline" size="icon">
-                  <ImageIcon className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              setShowCreatePost(false);
-              setPostText('');
-              setPostImage('');
-            }} disabled={isPublishing}>
-              Annuler
-            </Button>
-            <Button
-              onClick={handleCreatePost}
-              disabled={isPublishing || !postText.trim()}
-              className="bg-gradient-to-r from-primary to-green-800"
-            >
-              {isPublishing ? "Publication..." : "Publier"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

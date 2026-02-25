@@ -36,6 +36,7 @@ export default function HubNavigation({
 
   const handleNav = (tabName: string, href: string) => {
     setActiveTab(tabName);
+    router.prefetch(href);
     router.push(href);
   };
 
@@ -62,6 +63,8 @@ export default function HubNavigation({
               <motion.button
                 key={item.name}
                 onClick={() => handleNav(item.name, item.href)}
+                onMouseEnter={() => router.prefetch(item.href)}
+                onTouchStart={() => router.prefetch(item.href)}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}

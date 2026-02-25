@@ -118,9 +118,6 @@ export function UnifiedPaymentFlow(props: UnifiedPaymentFlowProps) {
   const handlePinSuccess = async () => {
     // PIN vérifié, procéder au paiement
     setShowPinDialog(false);
-    
-    // Petit délai pour laisser le dialog se fermer proprement
-    await new Promise(resolve => setTimeout(resolve, 100));
 
     const success = await processPayment({
       amount: parseFloat(amount),

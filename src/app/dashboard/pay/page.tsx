@@ -38,9 +38,7 @@ export default function PayPage() {
           context="wallet"
           customLabel="Payer"
           onSuccess={(transactionId) => {
-            setTimeout(() => {
-              router.push('/dashboard/wallet');
-            }, 2000);
+            router.push('/dashboard/wallet');
           }}
           onError={(error) => {
             console.error('Erreur de paiement:', error);

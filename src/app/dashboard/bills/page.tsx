@@ -12,6 +12,7 @@ import { FileText, Plus, Search, Calendar, DollarSign, CheckCircle2, Clock, Aler
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useRouter } from 'next/navigation';
 
 type BillStatus = 'pending' | 'paid' | 'overdue';
 type Currency = 'CDF' | 'USD' | 'EUR';
@@ -72,6 +73,7 @@ const mockBills: Bill[] = [
 
 export default function BillsPage() {
   const { toast } = useToast();
+  const router = useRouter();
   const [bills, setBills] = useState<Bill[]>(mockBills);
   const [showPayDialog, setShowPayDialog] = useState(false);
   const [selectedBillId, setSelectedBillId] = useState<string | null>(null);
@@ -148,7 +150,7 @@ export default function BillsPage() {
     sessionStorage.setItem('bills_payment_data', JSON.stringify(paymentData));
     
     // Rediriger vers le paiement
-    window.location.href = '/dashboard/pay?context=bills';
+    router.push('/dashboard/pay?context=bills');
   };
 
   return (

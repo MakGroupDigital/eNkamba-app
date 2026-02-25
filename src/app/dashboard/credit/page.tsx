@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { useRouter } from 'next/navigation';
 
 type Currency = 'CDF' | 'USD' | 'EUR';
 
@@ -48,6 +49,7 @@ const creditOffers: CreditOffer[] = [
 
 export default function CreditPage() {
   const { toast } = useToast();
+  const router = useRouter();
   const [amount, setAmount] = useState('');
   const [currency, setCurrency] = useState<Currency>('CDF');
   const [selectedOffer, setSelectedOffer] = useState<CreditOffer | null>(null);
@@ -390,7 +392,7 @@ export default function CreditPage() {
                 sessionStorage.setItem('credit_payment_data', JSON.stringify(paymentData));
                 
                 // Rediriger vers le paiement
-                window.location.href = '/dashboard/pay?context=credit';
+                router.push('/dashboard/pay?context=credit');
               }}
               disabled={isSubmitting}
             >

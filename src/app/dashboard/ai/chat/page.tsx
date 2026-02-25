@@ -8,9 +8,11 @@ import { useFirestoreAiChat } from '@/hooks/useFirestoreAiChat';
 import { AINavIcon } from '@/components/icons/service-icons';
 import { Send, Loader2, MessageSquare, Trash2, Clock } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function AiChatDefaultPage() {
   const { createAiChat, sendAiMessage, aiChats, isLoading, deleteAiChat } = useFirestoreAiChat();
+  const router = useRouter();
   const [inputValue, setInputValue] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -25,45 +27,45 @@ export default function AiChatDefaultPage() {
     try {
       // Créer un nouveau chat
       const chatId = await createAiChat(userMessage.substring(0, 50));
+      router.push(`/dashboard/ai/chat/${chatId}`);
 
-      // Obtenir la réponse de l'IA via Groq API
-      let aiResponseText = '';
-      const response = await fetch('/api/ai/enhanced-chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: userMessage,
-          options: {
-            searchWeb: false,
-            analysis: false,
-            reflection: false,
-            code: false,
+      // Exécuter la réponse IA en arrière-plan pendant que l'utilisateur est déjà sur la page cible.
+      void (async () => {
+        let aiResponseText = '';
+        const response = await fetch('/api/ai/enhanced-chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
           },
-        }),
+          body: JSON.stringify({
+            message: userMessage,
+            options: {
+              searchWeb: false,
+              analysis: false,
+              reflection: false,
+              code: false,
+            },
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Erreur lors de l\'appel à l\'API');
+        }
+
+        const reader = response.body?.getReader();
+        if (!reader) throw new Error('Pas de réponse');
+
+        const decoder = new TextDecoder();
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          aiResponseText += decoder.decode(value);
+        }
+
+        await sendAiMessage(chatId, userMessage, aiResponseText);
+      })().catch((error) => {
+        console.error('Erreur traitement IA en arrière-plan:', error);
       });
-
-      if (!response.ok) {
-        throw new Error('Erreur lors de l\'appel à l\'API');
-      }
-
-      // Lire le stream
-      const reader = response.body?.getReader();
-      if (!reader) throw new Error('Pas de réponse');
-
-      const decoder = new TextDecoder();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        aiResponseText += decoder.decode(value);
-      }
-
-      // Sauvegarder les messages dans le chat
-      await sendAiMessage(chatId, userMessage, aiResponseText);
-
-      // Rediriger vers le chat avec les messages
-      window.location.href = `/dashboard/ai/chat/${chatId}`;
     } catch (error) {
       console.error('Erreur:', error);
       setInputValue(userMessage);

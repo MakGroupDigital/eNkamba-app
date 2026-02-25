@@ -5,10 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export function NotificationsPanel() {
   const { notifications, unreadCount, markAsRead, acknowledgeNotification } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -122,7 +124,14 @@ export function NotificationsPanel() {
                           onClick={(e) => {
                             e.stopPropagation();
                             markAsRead(notif.id);
-                            window.location.href = notif.actionUrl;
+                            const actionUrl = notif.actionUrl;
+                            if (!actionUrl) return;
+                            const isInternal = actionUrl.startsWith('/');
+                            if (isInternal) {
+                              router.push(actionUrl);
+                              return;
+                            }
+                            window.location.href = actionUrl;
                           }}
                         >
                           {notif.actionLabel}

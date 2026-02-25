@@ -1,7 +1,7 @@
 'use client';
 
 import MasoloFloatingButton from '@/components/masolo/masolo-floating-button';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import HubNavigation from '@/components/dashboard/hub-navigation';
 import AuthGuard from '@/components/auth-guard';
@@ -14,6 +14,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState('Paiement');
 
   useEffect(() => {
@@ -41,6 +42,22 @@ export default function DashboardLayout({
     else if (pathname.includes('/bonus')) setActiveTab('Paiement');
     else setActiveTab('Paiement');
   }, [pathname]);
+
+  useEffect(() => {
+    const highTrafficRoutes = [
+      '/dashboard/mbongo-dashboard',
+      '/dashboard/wallet',
+      '/dashboard/pay-receive',
+      '/dashboard/history',
+      '/dashboard/scanner-simple',
+      '/dashboard/miyiki-chat',
+      '/dashboard/nkampa',
+      '/dashboard/ugavi',
+      '/dashboard/settings',
+    ];
+
+    highTrafficRoutes.forEach((route) => router.prefetch(route));
+  }, [router]);
 
   const showMasoloButton = !pathname.includes('/miyiki-chat');
 

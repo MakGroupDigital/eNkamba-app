@@ -217,9 +217,6 @@ export function useMoneyTransferDirect() {
 
       console.log('Notification destinataire créée:', recipientNotificationDoc.id);
 
-      // Attendre un peu pour s'assurer que Firestore a bien enregistré les données
-      await new Promise(resolve => setTimeout(resolve, 500));
-
       toast({
         title: 'Succès',
         description: `Envoi de ${data.amount.toLocaleString('fr-FR')} ${data.senderCurrency} effectué avec succès`,
