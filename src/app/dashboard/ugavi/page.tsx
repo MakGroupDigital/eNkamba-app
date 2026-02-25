@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState, type ComponentType } from 'react';
+import { useEffect, useMemo, useRef, useState, type ComponentType } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -236,6 +236,7 @@ export default function UgaviPage() {
   const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
   const [isRouteStarted, setIsRouteStarted] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const speechPrimedRef = useRef(false);
   const [userPosition, setUserPosition] = useState<GeoPoint>(KINSHASA_CENTER);
   const [missionNote, setMissionNote] = useState('');
   const [clientAddress, setClientAddress] = useState('Position du client en cours...');
@@ -353,21 +354,82 @@ export default function UgaviPage() {
     return frenchFemaleVoice ?? voices.find((voice) => voice.lang.toLowerCase().startsWith('fr')) ?? voices[0];
   };
 
-  const speakRoute = (destinationLabel: string, info: RouteInfo) => {
-    if (!voiceEnabled || typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+  const isMobileSpeechRuntime = (): boolean => {
+    if (typeof window === 'undefined') return false;
+    const ua = window.navigator.userAgent || '';
+    const isMobileUA = /iPhone|iPad|iPod|Android|Mobile/i.test(ua);
+    const isCapacitorRuntime = Boolean((window as any).Capacitor);
+    return isMobileUA || isCapacitorRuntime;
+  };
 
-    window.speechSynthesis.cancel();
+  const primeSpeechIfNeeded = () => {
+    if (!voiceEnabled || typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    if (speechPrimedRef.current) return;
+    const synth = window.speechSynthesis;
+    try {
+      synth.getVoices();
+      synth.resume();
+      const unlockUtterance = new SpeechSynthesisUtterance('.');
+      unlockUtterance.volume = 0.01;
+      unlockUtterance.rate = 1;
+      unlockUtterance.pitch = 1;
+      synth.speak(unlockUtterance);
+      speechPrimedRef.current = true;
+    } catch {
+      // noop
+    }
+  };
+
+  const speakTextWithRetry = (text: string) => {
+    if (!voiceEnabled || typeof window === 'undefined' || !('speechSynthesis' in window) || !text.trim()) return;
+    const synth = window.speechSynthesis;
     const voice = pickFemaleVoice();
+    let retries = 0;
+
+    const doSpeak = () => {
+      try {
+        synth.resume();
+        synth.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = voice?.lang ?? 'fr-FR';
+        utterance.rate = 0.98;
+        utterance.pitch = 1.2;
+        if (voice) utterance.voice = voice;
+        synth.speak(utterance);
+
+        window.setTimeout(() => {
+          if (!synth.speaking && retries < 2) {
+            retries += 1;
+            doSpeak();
+          }
+        }, 420);
+      } catch {
+        // noop
+      }
+    };
+
+    doSpeak();
+  };
+
+  const speakRoute = (destinationLabel: string, info: RouteInfo) => {
+    if (!voiceEnabled) return;
     const startText = `Votre itinéraire a commencé ${modeLabelMap[transportMode]} vers ${destinationLabel}.`;
     const summaryText = `Distance ${info.distanceKm.toFixed(1)} kilomètres. Temps estimé ${info.durationMin} minutes.`;
     const firstStep = info.steps[0] ? `Première instruction: ${info.steps[0]}.` : '';
-    const utterance = new SpeechSynthesisUtterance(`${startText} ${summaryText} ${firstStep}`.trim());
-    utterance.lang = voice?.lang ?? 'fr-FR';
-    utterance.rate = 0.98;
-    utterance.pitch = 1.2;
-    if (voice) utterance.voice = voice;
-    window.speechSynthesis.speak(utterance);
+    speakTextWithRetry(`${startText} ${summaryText} ${firstStep}`.trim());
   };
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    const handler = () => primeSpeechIfNeeded();
+    window.addEventListener('touchstart', handler, { passive: true });
+    window.addEventListener('click', handler, { passive: true });
+    window.speechSynthesis.getVoices();
+    return () => {
+      window.removeEventListener('touchstart', handler);
+      window.removeEventListener('click', handler);
+    };
+  }, [voiceEnabled]);
 
   const reverseGeocode = async (point: GeoPoint): Promise<string> => {
     try {
@@ -498,6 +560,11 @@ export default function UgaviPage() {
   };
 
   const handleStartItinerary = async () => {
+    primeSpeechIfNeeded();
+    if (isMobileSpeechRuntime() && voiceEnabled) {
+      speakTextWithRetry('Itinéraire démarré. Calcul en cours.');
+    }
+
     if (!selectedPoint) {
       toast({
         variant: 'destructive',
