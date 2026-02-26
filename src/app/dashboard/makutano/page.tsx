@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useUserProfile';
-import { addDoc, collection, doc, getDocs, increment, limit, onSnapshot, orderBy, query, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, increment, limit, onSnapshot, orderBy, query, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import {
@@ -150,8 +150,10 @@ export default function MakutanoPage() {
   const [commentInputByPost, setCommentInputByPost] = useState<Record<string, string>>({});
   const [isLoadingCommentsByPost, setIsLoadingCommentsByPost] = useState<Record<string, boolean>>({});
   const [isSubmittingCommentByPost, setIsSubmittingCommentByPost] = useState<Record<string, boolean>>({});
+  const [likedPostIds, setLikedPostIds] = useState<Set<string>>(new Set());
 
   const filteredPosts = posts.filter(post => post.category === activeTab || activeTab === 'Accueil');
+  const postIdsKey = posts.map((post) => post.id).join('|');
 
   useEffect(() => {
     const postsQuery = query(
@@ -203,17 +205,108 @@ export default function MakutanoPage() {
     return () => unsubscribe();
   }, [toast]);
 
-  const handleLike = (id: string) => {
-    setPosts(posts.map(post => {
-      if (post.id === id) {
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadLikedPosts = async () => {
+      if (!user?.uid || posts.length === 0) {
+        setLikedPostIds(new Set());
+        return;
+      }
+
+      try {
+        const likedIds = new Set<string>();
+        await Promise.all(
+          posts.map(async (post) => {
+            const likeDoc = await getDoc(doc(db, 'makutano_posts', post.id, 'likes', user.uid));
+            if (likeDoc.exists()) likedIds.add(post.id);
+          })
+        );
+        if (!cancelled) setLikedPostIds(likedIds);
+      } catch (error) {
+        console.error('Erreur chargement likes utilisateur:', error);
+      }
+    };
+
+    void loadLikedPosts();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.uid, postIdsKey]);
+
+  useEffect(() => {
+    setPosts((prev) => prev.map((post) => ({ ...post, isLiked: likedPostIds.has(post.id) })));
+  }, [likedPostIds]);
+
+  const handleLike = async (postId: string) => {
+    if (!user?.uid) {
+      toast({
+        variant: 'destructive',
+        title: 'Connexion requise',
+        description: 'Connecte-toi pour liker.',
+      });
+      return;
+    }
+
+    const wasLiked = likedPostIds.has(postId);
+
+    setLikedPostIds((prev) => {
+      const next = new Set(prev);
+      if (wasLiked) next.delete(postId);
+      else next.add(postId);
+      return next;
+    });
+    setPosts((prev) =>
+      prev.map((post) => {
+        if (post.id !== postId) return post;
+        const nextLikes = wasLiked ? Math.max(0, Number(post.likes || 0) - 1) : Number(post.likes || 0) + 1;
         return {
           ...post,
-          likes: post.isLiked ? post.likes - 1 : post.likes + 1,
-          isLiked: !post.isLiked
+          likes: nextLikes,
+          isLiked: !wasLiked,
         };
+      })
+    );
+
+    try {
+      const postRef = doc(db, 'makutano_posts', postId);
+      const likeRef = doc(db, 'makutano_posts', postId, 'likes', user.uid);
+
+      if (wasLiked) {
+        await deleteDoc(likeRef);
+        await updateDoc(postRef, { likes: increment(-1) });
+      } else {
+        await setDoc(likeRef, {
+          userId: user.uid,
+          createdAt: serverTimestamp(),
+        });
+        await updateDoc(postRef, { likes: increment(1) });
       }
-      return post;
-    }));
+    } catch (error) {
+      console.error('Erreur like/unlike:', error);
+      setLikedPostIds((prev) => {
+        const next = new Set(prev);
+        if (wasLiked) next.add(postId);
+        else next.delete(postId);
+        return next;
+      });
+      setPosts((prev) =>
+        prev.map((post) => {
+          if (post.id !== postId) return post;
+          const revertedLikes = wasLiked ? Number(post.likes || 0) + 1 : Math.max(0, Number(post.likes || 0) - 1);
+          return {
+            ...post,
+            likes: revertedLikes,
+            isLiked: wasLiked,
+          };
+        })
+      );
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Impossible de mettre à jour le like.',
+      });
+    }
   };
 
   const loadComments = async (postId: string) => {
@@ -308,6 +401,8 @@ export default function MakutanoPage() {
       }).catch((error) => {
         console.warn('Impossible de mettre à jour le compteur de commentaires:', error);
       });
+
+      setActiveCommentPostId(null);
     } catch (error) {
       console.error('Erreur ajout commentaire:', error);
       toast({
@@ -488,7 +583,7 @@ export default function MakutanoPage() {
               {/* Actions (droite) */}
               <div className="absolute bottom-20 right-3 z-10 flex flex-col gap-4 rounded-2xl bg-black/20 px-2 py-3 backdrop-blur-sm">
                 <button
-                  onClick={() => handleLike(post.id)}
+                  onClick={() => void handleLike(post.id)}
                   className="flex flex-col items-center gap-2 group"
                 >
                   <div className="rounded-full bg-white/20 p-2.5 backdrop-blur transition-all group-hover:bg-white/30">
