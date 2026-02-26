@@ -193,6 +193,20 @@ export default function MakutanoCreatePage() {
     };
   }, [previewUrl, mediaType]);
 
+  useEffect(() => {
+    const cameraVideo = cameraVideoRef.current;
+    if (!cameraVideo || !cameraStream) return;
+
+    cameraVideo.srcObject = cameraStream;
+    cameraVideo.play().catch(() => undefined);
+
+    return () => {
+      if (cameraVideo.srcObject === cameraStream) {
+        cameraVideo.srcObject = null;
+      }
+    };
+  }, [cameraStream]);
+
   const togglePreviewPlay = async () => {
     const media = previewMediaRef.current;
     if (!media) return;
@@ -252,7 +266,6 @@ export default function MakutanoCreatePage() {
       });
       setCameraStream(stream);
       setMediaType('video');
-      if (cameraVideoRef.current) cameraVideoRef.current.srcObject = stream;
     } catch (error) {
       toast({ variant: 'destructive', title: 'Caméra indisponible', description: 'Impossible de démarrer la caméra.' });
     }
@@ -389,7 +402,13 @@ export default function MakutanoCreatePage() {
 
       const payload = await response.json();
       if (!response.ok || !payload?.mediaUrl) {
-        throw new Error(payload?.error || payload?.details?.join(' | ') || 'Upload média impossible');
+        throw new Error(
+          payload?.error ||
+            payload?.details?.error?.message ||
+            payload?.details?.message ||
+            (Array.isArray(payload?.details) ? payload.details.join(' | ') : '') ||
+            'Upload média impossible'
+        );
       }
 
       return payload.mediaUrl as string;
@@ -439,7 +458,7 @@ export default function MakutanoCreatePage() {
       console.error('Erreur publication Makutano:', error);
       const errorMessage =
         typeof error === 'object' && error && 'code' in error
-          ? `${(error as { code?: string }).code || 'Erreur inconnue'} - vérifiez bucket/règles Storage`
+          ? `${(error as { code?: string }).code || 'Erreur inconnue'} - vérifiez la configuration Cloudinary`
           : 'Publication impossible pour le moment.';
       toast({ variant: 'destructive', title: 'Erreur', description: errorMessage });
     } finally {

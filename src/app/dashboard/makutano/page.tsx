@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   MessageCircle,
@@ -12,7 +13,9 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { collection, onSnapshot, orderBy, query, limit } from 'firebase/firestore';
+import { useAuth } from '@/hooks/useAuth';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { addDoc, collection, doc, getDocs, increment, limit, onSnapshot, orderBy, query, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import {
@@ -78,6 +81,14 @@ interface Post {
   category: 'Accueil' | 'Savoir' | 'Entrepreneur' | 'Projets' | 'Local';
 }
 
+interface PostComment {
+  id: string;
+  text: string;
+  authorId: string;
+  authorName: string;
+  authorAvatar: string;
+}
+
 const postCategories: Array<Post['category']> = ['Savoir', 'Entrepreneur', 'Projets', 'Local', 'Accueil'];
 
 function inferMediaType(mediaUrl: string): 'image' | 'video' | 'audio' {
@@ -129,9 +140,16 @@ function MakutanoAudioPlayer({ src }: { src: string }) {
 export default function MakutanoPage() {
   const { toast } = useToast();
   const router = useRouter();
+  const { user } = useAuth();
+  const { profile } = useUserProfile();
   const [activeTab, setActiveTab] = useState('Accueil');
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoadingPosts, setIsLoadingPosts] = useState(true);
+  const [activeCommentPostId, setActiveCommentPostId] = useState<string | null>(null);
+  const [commentsByPost, setCommentsByPost] = useState<Record<string, PostComment[]>>({});
+  const [commentInputByPost, setCommentInputByPost] = useState<Record<string, string>>({});
+  const [isLoadingCommentsByPost, setIsLoadingCommentsByPost] = useState<Record<string, boolean>>({});
+  const [isSubmittingCommentByPost, setIsSubmittingCommentByPost] = useState<Record<string, boolean>>({});
 
   const filteredPosts = posts.filter(post => post.category === activeTab || activeTab === 'Accueil');
 
@@ -198,13 +216,108 @@ export default function MakutanoPage() {
     }));
   };
 
-  const handleComment = (id: string) => {
-    setPosts(posts.map(p => {
-      if (p.id === id) {
-        return { ...p, comments: p.comments + 1 };
-      }
-      return p;
-    }));
+  const loadComments = async (postId: string) => {
+    setIsLoadingCommentsByPost((prev) => ({ ...prev, [postId]: true }));
+    try {
+      const commentsQuery = query(
+        collection(db, 'makutano_posts', postId, 'comments'),
+        orderBy('createdAt', 'desc'),
+        limit(30)
+      );
+      const snapshot = await getDocs(commentsQuery);
+      const loadedComments: PostComment[] = snapshot.docs.map((docSnapshot) => {
+        const data = docSnapshot.data() as any;
+        return {
+          id: docSnapshot.id,
+          text: data.text || '',
+          authorId: data.authorId || '',
+          authorName: data.author?.name || 'Utilisateur',
+          authorAvatar: data.author?.avatar || '',
+        };
+      });
+      setCommentsByPost((prev) => ({ ...prev, [postId]: loadedComments }));
+    } catch (error) {
+      console.error('Erreur chargement commentaires:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Impossible de charger les commentaires.',
+      });
+    } finally {
+      setIsLoadingCommentsByPost((prev) => ({ ...prev, [postId]: false }));
+    }
+  };
+
+  const handleComment = async (postId: string) => {
+    const nextOpenPostId = activeCommentPostId === postId ? null : postId;
+    setActiveCommentPostId(nextOpenPostId);
+    if (nextOpenPostId && !commentsByPost[postId]) {
+      await loadComments(postId);
+    }
+  };
+
+  const submitComment = async (postId: string) => {
+    const commentText = (commentInputByPost[postId] || '').trim();
+    if (!commentText) return;
+
+    if (!user?.uid) {
+      toast({
+        variant: 'destructive',
+        title: 'Connexion requise',
+        description: 'Connecte-toi pour commenter.',
+      });
+      return;
+    }
+
+    setIsSubmittingCommentByPost((prev) => ({ ...prev, [postId]: true }));
+    try {
+      const authorName = profile?.fullName || profile?.name || user.displayName || 'Utilisateur eNkamba';
+      const authorAvatar = profile?.profileImage || user.photoURL || '';
+
+      const commentRef = await addDoc(collection(db, 'makutano_posts', postId, 'comments'), {
+        text: commentText,
+        authorId: user.uid,
+        author: {
+          name: authorName,
+          avatar: authorAvatar,
+        },
+        createdAt: serverTimestamp(),
+      });
+
+      setCommentInputByPost((prev) => ({ ...prev, [postId]: '' }));
+      setCommentsByPost((prev) => ({
+        ...prev,
+        [postId]: [
+          {
+            id: commentRef.id,
+            text: commentText,
+            authorId: user.uid,
+            authorName,
+            authorAvatar,
+          },
+          ...(prev[postId] || []),
+        ],
+      }));
+
+      setPosts((prev) =>
+        prev.map((post) => (post.id === postId ? { ...post, comments: Number(post.comments || 0) + 1 } : post))
+      );
+
+      updateDoc(doc(db, 'makutano_posts', postId), {
+        comments: increment(1),
+      }).catch((error) => {
+        console.warn('Impossible de mettre à jour le compteur de commentaires:', error);
+      });
+    } catch (error) {
+      console.error('Erreur ajout commentaire:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Impossible d’ajouter le commentaire.',
+      });
+    } finally {
+      setIsSubmittingCommentByPost((prev) => ({ ...prev, [postId]: false }));
+    }
   };
 
   const handleShare = (id: string) => {
@@ -217,7 +330,7 @@ export default function MakutanoPage() {
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-gradient-to-b from-emerald-50 via-white to-orange-50">
       {/* Header avec catégories */}
-      <header className="fixed left-0 right-0 top-0 z-50 w-full border-b border-white/20 bg-gradient-to-r from-primary via-primary to-green-800 text-white shadow-lg backdrop-blur">
+      <header className="sticky top-0 z-50 w-full border-b border-white/20 bg-gradient-to-r from-primary via-primary to-green-800 pt-[env(safe-area-inset-top)] text-white shadow-lg backdrop-blur">
         <div className="px-4 py-3">
           <div className="flex items-center gap-3 mb-4">
             <div className="h-10 w-10 rounded-lg bg-white/20 backdrop-blur flex items-center justify-center">
@@ -253,7 +366,7 @@ export default function MakutanoPage() {
         </div>
 
         {/* Bouton créer post */}
-        <div className="absolute top-4 right-4 z-30">
+        <div className="absolute right-4 top-[calc(env(safe-area-inset-top)+1rem)] z-30">
           <Button
             size="icon"
             className="relative h-12 w-12 rounded-full border border-white/50 bg-gradient-to-r from-emerald-400 via-emerald-500 to-teal-600 text-white shadow-2xl transition-transform hover:scale-110"
@@ -269,7 +382,7 @@ export default function MakutanoPage() {
       </header>
 
       {/* Feed vertical TikTok-style avec cartes compactes type Instagram */}
-      <div className="pointer-events-none fixed left-4 top-44 z-10 hidden w-52 rounded-2xl border border-emerald-200/70 bg-white/80 p-4 shadow-xl backdrop-blur lg:block">
+      <div className="pointer-events-none fixed left-4 top-[calc(env(safe-area-inset-top)+11rem)] z-10 hidden w-52 rounded-2xl border border-emerald-200/70 bg-white/80 p-4 shadow-xl backdrop-blur lg:block">
         <p className="mb-3 text-sm font-bold text-emerald-800">Rubriques</p>
         <div className="space-y-2 text-xs text-emerald-900">
           <div className="rounded-lg bg-emerald-100/80 px-3 py-2">Communauté locale</div>
@@ -279,7 +392,7 @@ export default function MakutanoPage() {
         </div>
       </div>
 
-      <div className="pointer-events-none fixed right-4 top-44 z-10 hidden w-52 rounded-2xl border border-orange-200/70 bg-white/80 p-4 shadow-xl backdrop-blur lg:block">
+      <div className="pointer-events-none fixed right-4 top-[calc(env(safe-area-inset-top)+11rem)] z-10 hidden w-52 rounded-2xl border border-orange-200/70 bg-white/80 p-4 shadow-xl backdrop-blur lg:block">
         <p className="mb-3 text-sm font-bold text-orange-800">Tendances</p>
         <div className="space-y-2 text-xs text-orange-900">
           <div className="rounded-lg bg-orange-100/80 px-3 py-2">#MakutanoRDC</div>
@@ -289,7 +402,7 @@ export default function MakutanoPage() {
         </div>
       </div>
 
-      <main className="flex-1 overflow-y-scroll snap-y snap-mandatory px-3 pb-4 pt-40 md:pt-44 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <main className="flex-1 overflow-y-scroll snap-y snap-mandatory px-3 pb-4 pt-4 md:pt-5 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {isLoadingPosts ? (
           <div className="flex h-full items-center justify-center text-emerald-900/60">
             <p>Chargement des posts Firebase...</p>
@@ -390,7 +503,7 @@ export default function MakutanoPage() {
                 </button>
 
                 <button
-                  onClick={() => handleComment(post.id)}
+                  onClick={() => void handleComment(post.id)}
                   className="flex flex-col items-center gap-2 group"
                 >
                   <div className="rounded-full bg-white/20 p-2.5 backdrop-blur transition-all group-hover:bg-white/30">
@@ -409,6 +522,50 @@ export default function MakutanoPage() {
                   <span className="text-white text-xs font-semibold drop-shadow">Partager</span>
                 </button>
               </div>
+
+              {activeCommentPostId === post.id && (
+                <div className="absolute bottom-3 left-3 right-16 z-20 rounded-2xl border border-white/20 bg-black/55 p-3 backdrop-blur">
+                  <p className="mb-2 text-xs font-semibold text-white/90">Commentaires</p>
+                  <div className="mb-3 max-h-28 space-y-2 overflow-y-auto pr-1">
+                    {isLoadingCommentsByPost[post.id] ? (
+                      <p className="text-xs text-white/70">Chargement...</p>
+                    ) : (commentsByPost[post.id] || []).length === 0 ? (
+                      <p className="text-xs text-white/70">Aucun commentaire pour le moment.</p>
+                    ) : (
+                      (commentsByPost[post.id] || []).map((comment) => (
+                        <div key={comment.id} className="rounded-lg bg-white/10 px-2 py-1.5 text-white">
+                          <p className="text-[11px] font-semibold">{comment.authorName}</p>
+                          <p className="text-xs text-white/90">{comment.text}</p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={commentInputByPost[post.id] || ''}
+                      onChange={(e) =>
+                        setCommentInputByPost((prev) => ({ ...prev, [post.id]: e.target.value }))
+                      }
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          void submitComment(post.id);
+                        }
+                      }}
+                      placeholder="Écris un commentaire..."
+                      className="h-8 border-white/20 bg-white/90 text-xs text-emerald-900 placeholder:text-emerald-700/70"
+                    />
+                    <Button
+                      size="sm"
+                      className="h-8 px-3 text-xs"
+                      onClick={() => void submitComment(post.id)}
+                      disabled={isSubmittingCommentByPost[post.id]}
+                    >
+                      {isSubmittingCommentByPost[post.id] ? '...' : 'Envoyer'}
+                    </Button>
+                  </div>
+                </div>
+              )}
             </section>
           ))
         )}
