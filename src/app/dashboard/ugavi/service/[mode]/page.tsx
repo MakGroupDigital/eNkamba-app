@@ -137,10 +137,10 @@ export default function UgaviServiceModePage() {
   const nearestCourier = couriersByDistance[0];
 
   useEffect(() => {
-    const fromQueryId = searchParams.get('courierId');
+    const fromQueryId = searchParams?.get('courierId');
     if (fromQueryId && COURIERS.some((courier) => courier.id === fromQueryId)) {
       setSelectedCourierId(fromQueryId);
-      const note = searchParams.get('note');
+      const note = searchParams?.get('note');
       if (note) setServiceInstructions(note);
       return;
     }

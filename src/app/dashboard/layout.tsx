@@ -7,15 +7,19 @@ import HubNavigation from '@/components/dashboard/hub-navigation';
 import AuthGuard from '@/components/auth-guard';
 import { ModuleKycGate } from '@/components/module-kyc-gate';
 import { TransferNotificationModal } from '@/components/transfer-notification-modal';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { useSupabaseNotifications } from '@/hooks/useSupabaseNotifications';
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? '';
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('Paiement');
+  usePushNotifications();
+  useSupabaseNotifications();
 
   useEffect(() => {
     if (pathname.includes('/miyiki-chat')) setActiveTab('Chat');

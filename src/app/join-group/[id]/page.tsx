@@ -14,7 +14,7 @@ import Link from 'next/link';
 export default function JoinGroupPage() {
   const params = useParams();
   const router = useRouter();
-  const groupId = params.id as string;
+  const groupId = (params?.id as string) || '';
   const { user } = useAuth();
 
   const [groupData, setGroupData] = useState<any>(null);

@@ -22,7 +22,7 @@ const conversationsData: { [key: string]: any } = {
 export default function AudioCallClient() {
     const router = useRouter();
     const params = useParams();
-    const chatId = params.id as string;
+    const chatId = (params?.id as string) || '';
     const contact = conversationsData[chatId] || { name: "Inconnu", avatar: '' };
 
     const { toast } = useToast();

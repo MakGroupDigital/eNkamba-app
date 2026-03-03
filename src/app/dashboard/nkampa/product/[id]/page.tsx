@@ -33,6 +33,11 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const { user } = useAuth();
   const { toast } = useToast();
   const { addToCart } = useNkampaCart();
+  const [quantity, setQuantity] = useState(1);
+  const [selectedImage, setSelectedImage] = useState(0);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [selectedShipping, setSelectedShipping] = useState(0);
+  const [selectedPayment, setSelectedPayment] = useState(0);
 
   // Get product with seller info from centralized data
   const product = getProductWithSeller(id);
@@ -47,12 +52,6 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
       </div>
     );
   }
-
-  const [quantity, setQuantity] = useState(1);
-  const [selectedImage, setSelectedImage] = useState(0);
-  const [isFavorite, setIsFavorite] = useState(false);
-  const [selectedShipping, setSelectedShipping] = useState(0);
-  const [selectedPayment, setSelectedPayment] = useState(0);
 
   const discount = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
 

@@ -69,7 +69,7 @@ export default function PayReceivePage() {
 
   // Lire le paramètre mode de l'URL au chargement
   useEffect(() => {
-    const modeParam = searchParams.get('mode');
+    const modeParam = searchParams?.get('mode');
     if (modeParam === 'transfer') {
       setMode('transfer');
     }

@@ -105,10 +105,8 @@ export function useFirestoreConversations() {
       // Si l'identifiant n'est pas un uid, le convertir
       if (identifierType !== 'uid') {
         const usersRef = collection(db, 'users');
-        let q;
-        if (identifierType === 'email') {
-          q = query(usersRef, where('email', '==', otherUserIdentifier.toLowerCase()));
-        } else if (identifierType === 'phone') {
+        let q = query(usersRef, where('email', '==', otherUserIdentifier.toLowerCase()));
+        if (identifierType === 'phone') {
           q = query(usersRef, where('phoneNumber', '==', otherUserIdentifier));
         }
         const snapshot = await getDocs(q);

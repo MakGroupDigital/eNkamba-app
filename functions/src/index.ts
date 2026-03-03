@@ -11,3 +11,4 @@ export * from './unifiedPayment';
 export * from './savingsManagement';
 export * from './addFunds';
 export * from './withdrawFunds';
+export * from './pushNotifications';

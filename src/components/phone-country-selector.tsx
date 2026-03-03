@@ -49,7 +49,7 @@ interface PhoneCountrySelectorProps {
   phone: string;
   onPhoneChange: (phone: string) => void;
   selectedCountry: Country | null;
-  onCountrySelect: (country: Country) => void;
+  onCountrySelect: (country: Country | null) => void;
   isLoading?: boolean;
 }
 

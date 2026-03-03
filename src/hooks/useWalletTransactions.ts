@@ -5,7 +5,17 @@ import { collection, onSnapshot, query, orderBy, limit, doc, getDoc, setDoc, ser
 
 export interface Transaction {
   id: string;
-  type: 'deposit' | 'withdrawal' | 'transfer' | 'payment';
+  type:
+    | 'deposit'
+    | 'withdrawal'
+    | 'transfer'
+    | 'payment'
+    | 'transfer_sent'
+    | 'transfer_received'
+    | 'money_request_sent'
+    | 'money_request_received'
+    | 'payment_link'
+    | 'contact_payment';
   amount: number;
   paymentMethod?: string;
   withdrawalMethod?: string;

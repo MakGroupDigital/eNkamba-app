@@ -133,7 +133,11 @@ export function useContacts() {
 
     try {
       // Essayer Capacitor Contacts d'abord (pour mobile)
-      let processedContacts = { all: [], enkamba: [], nonEnkamba: [] };
+      let processedContacts: { all: Contact[]; enkamba: Contact[]; nonEnkamba: Contact[] } = {
+        all: [],
+        enkamba: [],
+        nonEnkamba: [],
+      };
       let successCapacitor = false;
 
       try {

@@ -27,4 +27,5 @@ __exportStar(require("./unifiedPayment"), exports);
 __exportStar(require("./savingsManagement"), exports);
 __exportStar(require("./addFunds"), exports);
 __exportStar(require("./withdrawFunds"), exports);
+__exportStar(require("./pushNotifications"), exports);
 //# sourceMappingURL=index.js.map

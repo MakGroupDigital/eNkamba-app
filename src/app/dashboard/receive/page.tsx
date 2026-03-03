@@ -36,7 +36,7 @@ export default function ReceivePage() {
 
         {/* Unified Receive Flow */}
         <UnifiedReceiveFlow
-          initialMethod={searchParams.get('method') || undefined}
+          initialMethod={searchParams?.get('method') || undefined}
           context="wallet"
           onSuccess={(linkId) => {
             console.log('Lien de paiement créé:', linkId);

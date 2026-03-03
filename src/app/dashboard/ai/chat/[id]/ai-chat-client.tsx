@@ -10,7 +10,7 @@ import { Send, Loader2 } from 'lucide-react';
 
 export default function AiChatClient() {
     const params = useParams();
-    const aiChatId = params.id as string;
+    const aiChatId = (params?.id as string) || '';
 
     const { loadAiMessages, sendAiMessage } = useFirestoreAiChat();
     const [messages, setMessages] = useState<any[]>([]);

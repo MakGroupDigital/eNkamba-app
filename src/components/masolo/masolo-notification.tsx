@@ -1,8 +1,12 @@
 'use client';
 
-import { type NotificationState } from '@/app/dashboard/layout';
 import { cn } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
+
+type NotificationState = {
+  message: string;
+  source: string;
+};
 
 export default function MasoloNotification({
   notification,

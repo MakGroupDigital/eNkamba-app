@@ -35,7 +35,7 @@ function PayBillContent() {
   const { toast } = useToast();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const billType = (searchParams.get('type') || 'tax') as BillType;
+  const billType = (searchParams?.get('type') || 'tax') as BillType;
   const billInfo = billTypes[billType];
   
   const [amount, setAmount] = useState('');

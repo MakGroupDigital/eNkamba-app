@@ -23,7 +23,7 @@ import { GroupSettingsDialog } from '@/components/group-settings-dialog';
 export default function ConversationClient() {
     const params = useParams();
     const router = useRouter();
-    const conversationId = params.id as string;
+    const conversationId = (params?.id as string) || '';
 
     const { loadMessages, sendMessage, deleteMessage, updateMessage } = useFirestoreConversations();
     const { user: currentUser } = useAuth();

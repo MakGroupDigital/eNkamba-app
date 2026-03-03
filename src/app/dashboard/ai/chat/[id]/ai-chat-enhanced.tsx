@@ -13,7 +13,7 @@ import { Send, Loader2, Brain } from 'lucide-react';
 
 export default function AiChatEnhanced() {
   const params = useParams();
-  const aiChatId = params.id as string;
+  const aiChatId = (params?.id as string) || '';
 
   const { loadAiMessages, sendAiMessage } = useFirestoreAiChat();
   const { generateResponse, isThinking, isStreaming } = useAiEnhanced();

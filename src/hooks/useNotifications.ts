@@ -53,9 +53,9 @@ export function useNotifications() {
       const unsubscribe = onSnapshot(notificationsRef, (snapshot) => {
         console.log('useNotifications: Snapshot reçu, nombre de docs:', snapshot.docs.length);
         console.log('useNotifications: Snapshot reçu, nombre de docs:', snapshot.docs.length);
-        const allNotifs = snapshot.docs.map(doc => ({
+        const allNotifs: Notification[] = snapshot.docs.map((doc) => ({
           id: doc.id,
-          ...doc.data(),
+          ...(doc.data() as Omit<Notification, 'id'>),
         }));
         console.log('useNotifications: Toutes les notifications:', allNotifs);
         

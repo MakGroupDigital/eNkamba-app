@@ -4,6 +4,8 @@ export function generateStaticParams() {
   return [];
 }
 
-export default function AiChatPage({ params }: { params: { id: string } }) {
-  return <EnkambaAIModule params={params} />;
+export default async function AiChatPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
+
+  return <EnkambaAIModule params={resolvedParams} />;
 }

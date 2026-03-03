@@ -14,7 +14,7 @@ interface ReportData {
 
 function ReportView() {
   const searchParams = useSearchParams();
-  const data = searchParams.get('data');
+  const data = searchParams?.get('data');
   let report: ReportData | null = null;
   let error: string | null = null;
 

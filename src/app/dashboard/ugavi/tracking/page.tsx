@@ -99,7 +99,7 @@ export default function UgaviTrackingPage() {
   };
 
   useEffect(() => {
-    const prefilledTracking = (searchParams.get('tracking') || '').trim();
+    const prefilledTracking = (searchParams?.get('tracking') || '').trim();
     if (!prefilledTracking || hasAutoSearched.current) return;
     hasAutoSearched.current = true;
     setTrackingNumber(prefilledTracking);

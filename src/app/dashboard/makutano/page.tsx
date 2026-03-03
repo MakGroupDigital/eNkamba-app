@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -114,7 +114,22 @@ function inferMediaType(mediaUrl: string): 'image' | 'video' | 'audio' {
   return 'image';
 }
 
-function MakutanoAudioPlayer({ src }: { src: string }) {
+function MakutanoAudioPlayer({ src, isActive }: { src: string; isActive: boolean }) {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    if (isActive) {
+      audio.play().catch(() => undefined);
+      return;
+    }
+
+    audio.pause();
+    audio.currentTime = 0;
+  }, [isActive, src]);
+
   return (
     <div className="relative flex h-full w-full items-center justify-center bg-gradient-to-br from-emerald-700 via-teal-700 to-cyan-700">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.18),transparent_60%)]" />
@@ -131,9 +146,38 @@ function MakutanoAudioPlayer({ src }: { src: string }) {
         <div className="rounded-full bg-white/20 p-3">
           <Music2 className="h-6 w-6 text-white" />
         </div>
-        <audio src={src} controls autoPlay loop className="w-full" />
+        <audio ref={audioRef} src={src} controls loop className="w-full" />
       </div>
     </div>
+  );
+}
+
+function MakutanoVideoPlayer({ src, isActive }: { src: string; isActive: boolean }) {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (isActive) {
+      video.play().catch(() => undefined);
+      return;
+    }
+
+    video.pause();
+    video.currentTime = 0;
+  }, [isActive, src]);
+
+  return (
+    <video
+      ref={videoRef}
+      src={src}
+      className="h-full w-full object-cover"
+      muted
+      loop
+      playsInline
+      preload="metadata"
+    />
   );
 }
 
@@ -151,9 +195,52 @@ export default function MakutanoPage() {
   const [isLoadingCommentsByPost, setIsLoadingCommentsByPost] = useState<Record<string, boolean>>({});
   const [isSubmittingCommentByPost, setIsSubmittingCommentByPost] = useState<Record<string, boolean>>({});
   const [likedPostIds, setLikedPostIds] = useState<Set<string>>(new Set());
+  const [activePostId, setActivePostId] = useState<string | null>(null);
+  const mainFeedRef = useRef<HTMLElement | null>(null);
+  const postRefs = useRef<Record<string, HTMLElement | null>>({});
 
-  const filteredPosts = posts.filter(post => post.category === activeTab || activeTab === 'Accueil');
+  const filteredPosts = useMemo(
+    () => posts.filter((post) => post.category === activeTab || activeTab === 'Accueil'),
+    [posts, activeTab]
+  );
   const postIdsKey = posts.map((post) => post.id).join('|');
+  const filteredPostIdsKey = filteredPosts.map((post) => post.id).join('|');
+
+  useEffect(() => {
+    if (!filteredPosts.length) {
+      setActivePostId(null);
+      return;
+    }
+
+    const root = mainFeedRef.current;
+    if (!root) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visibleEntries = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+        if (!visibleEntries.length) return;
+        const visiblePostId = (visibleEntries[0].target as HTMLElement).dataset.postId || null;
+        if (visiblePostId) setActivePostId(visiblePostId);
+      },
+      {
+        root,
+        threshold: [0.45, 0.6, 0.75],
+      }
+    );
+
+    filteredPosts.forEach((post) => {
+      const node = postRefs.current[post.id];
+      if (node) observer.observe(node);
+    });
+
+    if (!activePostId && filteredPosts[0]) {
+      setActivePostId(filteredPosts[0].id);
+    }
+
+    return () => observer.disconnect();
+  }, [posts, filteredPosts, filteredPostIdsKey]);
 
   useEffect(() => {
     const postsQuery = query(
@@ -422,6 +509,11 @@ export default function MakutanoPage() {
     });
   };
 
+  const activatePost = (postId: string) => {
+    setActivePostId(postId);
+    postRefs.current[postId]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-gradient-to-b from-emerald-50 via-white to-orange-50">
       {/* Header avec catégories */}
@@ -497,7 +589,10 @@ export default function MakutanoPage() {
         </div>
       </div>
 
-      <main className="flex-1 overflow-y-scroll snap-y snap-mandatory px-3 pb-4 pt-4 md:pt-5 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <main
+        ref={mainFeedRef}
+        className="flex-1 touch-pan-y overflow-y-scroll snap-y snap-mandatory px-3 pb-4 pt-4 md:pt-5 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+      >
         {isLoadingPosts ? (
           <div className="flex h-full items-center justify-center text-emerald-900/60">
             <p>Chargement des posts Firebase...</p>
@@ -510,23 +605,20 @@ export default function MakutanoPage() {
           filteredPosts.map((post) => (
             <section
               key={post.id}
-              className="group relative mx-auto mb-6 flex h-[78vh] w-full max-w-md snap-start items-center justify-center overflow-hidden rounded-3xl border border-emerald-200/80 bg-white shadow-2xl ring-1 ring-white/70"
+              ref={(node) => {
+                postRefs.current[post.id] = node;
+              }}
+              data-post-id={post.id}
+              onClick={() => activatePost(post.id)}
+              className="group relative mx-auto mb-6 flex h-[78vh] w-full max-w-md snap-center snap-always items-center justify-center overflow-hidden rounded-3xl border border-emerald-200/80 bg-white shadow-2xl ring-1 ring-white/70"
             >
               {/* Image de fond */}
               <div className="absolute inset-0">
                 {post.mediaUrl ? (
                   post.mediaType === 'audio' ? (
-                    <MakutanoAudioPlayer src={post.mediaUrl} />
+                    <MakutanoAudioPlayer src={post.mediaUrl} isActive={activePostId === post.id} />
                   ) : post.mediaType === 'video' ? (
-                    <video
-                      src={post.mediaUrl}
-                      className="h-full w-full object-cover"
-                      autoPlay
-                      muted
-                      loop
-                      playsInline
-                      preload="metadata"
-                    />
+                    <MakutanoVideoPlayer src={post.mediaUrl} isActive={activePostId === post.id} />
                   ) : (
                     <img
                       src={post.mediaUrl}
@@ -583,7 +675,10 @@ export default function MakutanoPage() {
               {/* Actions (droite) */}
               <div className="absolute bottom-20 right-3 z-10 flex flex-col gap-4 rounded-2xl bg-black/20 px-2 py-3 backdrop-blur-sm">
                 <button
-                  onClick={() => void handleLike(post.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    void handleLike(post.id);
+                  }}
                   className="flex flex-col items-center gap-2 group"
                 >
                   <div className="rounded-full bg-white/20 p-2.5 backdrop-blur transition-all group-hover:bg-white/30">
@@ -598,7 +693,10 @@ export default function MakutanoPage() {
                 </button>
 
                 <button
-                  onClick={() => void handleComment(post.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    void handleComment(post.id);
+                  }}
                   className="flex flex-col items-center gap-2 group"
                 >
                   <div className="rounded-full bg-white/20 p-2.5 backdrop-blur transition-all group-hover:bg-white/30">
@@ -608,7 +706,10 @@ export default function MakutanoPage() {
                 </button>
 
                 <button
-                  onClick={() => handleShare(post.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleShare(post.id);
+                  }}
                   className="flex flex-col items-center gap-2 group"
                 >
                   <div className="rounded-full bg-white/20 p-2.5 backdrop-blur transition-all group-hover:bg-white/30">
@@ -619,7 +720,10 @@ export default function MakutanoPage() {
               </div>
 
               {activeCommentPostId === post.id && (
-                <div className="absolute bottom-3 left-3 right-16 z-20 rounded-2xl border border-white/20 bg-black/55 p-3 backdrop-blur">
+                <div
+                  className="absolute bottom-3 left-3 right-16 z-20 rounded-2xl border border-white/20 bg-black/55 p-3 backdrop-blur"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <p className="mb-2 text-xs font-semibold text-white/90">Commentaires</p>
                   <div className="mb-3 max-h-28 space-y-2 overflow-y-auto pr-1">
                     {isLoadingCommentsByPost[post.id] ? (
@@ -653,7 +757,10 @@ export default function MakutanoPage() {
                     <Button
                       size="sm"
                       className="h-8 px-3 text-xs"
-                      onClick={() => void submitComment(post.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        void submitComment(post.id);
+                      }}
                       disabled={isSubmittingCommentByPost[post.id]}
                     >
                       {isSubmittingCommentByPost[post.id] ? '...' : 'Envoyer'}

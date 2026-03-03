@@ -128,11 +128,7 @@ async function downloadIOS(blob: Blob, filename: string) {
 
           // Ouvrir le fichier
           if ((window as any).Capacitor?.isNativePlatform?.()) {
-            const { Share } = await import('@capacitor/share');
-            await Share.share({
-              files: [result.uri],
-              title: 'Reçu de transaction',
-            });
+            await tryShareFile(result.uri);
           }
         } catch (error) {
           console.error('Erreur iOS:', error);
@@ -241,11 +237,7 @@ async function downloadAndroid(blob: Blob, filename: string) {
           });
 
           // Partager le fichier
-          const { Share } = await import('@capacitor/share');
-          await Share.share({
-            files: [result.uri],
-            title: 'Reçu de transaction',
-          });
+          await tryShareFile(result.uri);
         } catch (error) {
           console.error('Erreur Android:', error);
           downloadStandard(blob, filename);
@@ -259,5 +251,27 @@ async function downloadAndroid(blob: Blob, filename: string) {
   } catch (error) {
     console.error('Erreur Android:', error);
     downloadStandard(blob, filename);
+  }
+}
+
+/**
+ * Partage un fichier via Capacitor si disponible, sinon via Web Share API.
+ */
+async function tryShareFile(fileUri: string) {
+  const sharePlugin = (window as any).Capacitor?.Plugins?.Share;
+
+  if (sharePlugin?.share) {
+    await sharePlugin.share({
+      files: [fileUri],
+      title: 'Reçu de transaction',
+    });
+    return;
+  }
+
+  if (navigator.share) {
+    await navigator.share({
+      title: 'Reçu de transaction',
+      url: fileUri,
+    });
   }
 }
