@@ -4,12 +4,6 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { MapPin, X, Check, Loader2 } from 'lucide-react';
 import { useLocationTracking } from '@/hooks/useLocationTracking';
-import dynamic from 'next/dynamic';
-
-const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
-const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
-const Marker = dynamic(() => import('react-leaflet').then(mod => mod.Marker), { ssr: false });
-const Popup = dynamic(() => import('react-leaflet').then(mod => mod.Popup), { ssr: false });
 
 interface LocationStoryCreatorProps {
   onComplete: (location: { latitude: number; longitude: number; address?: string }) => void;
@@ -19,6 +13,9 @@ interface LocationStoryCreatorProps {
 export function LocationStoryCreator({ onComplete, onCancel }: LocationStoryCreatorProps) {
   const [isActive, setIsActive] = useState(true);
   const { location, error, isTracking } = useLocationTracking(isActive);
+  const mapSrc = location
+    ? `https://www.openstreetmap.org/export/embed.html?bbox=${location.longitude - 0.01}%2C${location.latitude - 0.01}%2C${location.longitude + 0.01}%2C${location.latitude + 0.01}&layer=mapnik&marker=${location.latitude}%2C${location.longitude}`
+    : '';
 
   const handleConfirm = () => {
     if (location) {
@@ -83,25 +80,12 @@ export function LocationStoryCreator({ onComplete, onCancel }: LocationStoryCrea
 
       {/* Map */}
       <div className="flex-1 relative">
-        <MapContainer
-          center={[location.latitude, location.longitude]}
-          zoom={15}
-          style={{ height: '100%', width: '100%' }}
-          zoomControl={false}
-        >
-          <TileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          />
-          <Marker position={[location.latitude, location.longitude]}>
-            <Popup>
-              <div className="text-center">
-                <p className="font-semibold">Ma position</p>
-                <p className="text-xs text-muted-foreground">{location.address}</p>
-              </div>
-            </Popup>
-          </Marker>
-        </MapContainer>
+        <iframe
+          title="Carte de position"
+          src={mapSrc}
+          className="h-full w-full border-0"
+          loading="lazy"
+        />
 
         {/* Location Info Overlay */}
         <div className="absolute bottom-24 left-4 right-4 bg-white/95 backdrop-blur rounded-2xl p-4 shadow-lg">

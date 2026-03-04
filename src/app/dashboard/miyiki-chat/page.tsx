@@ -252,23 +252,49 @@ export default function MiyikiChatPage() {
       <div className="space-y-4">
         {/* Ma Story */}
         <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide">
-          <button
-            onClick={handleCreateStory}
-            className="flex-shrink-0 flex flex-col items-center gap-2"
-          >
-            <div className="relative">
-              <Avatar className="h-16 w-16 border-2 border-dashed border-primary">
-                <AvatarImage src={profile?.photoURL || profile?.profileImage} />
-                <AvatarFallback className="bg-primary/10 text-primary">
-                  {profile?.displayName?.charAt(0) || profile?.fullName?.charAt(0) || 'U'}
-                </AvatarFallback>
-              </Avatar>
-              <div className="absolute -bottom-1 -right-1 bg-primary rounded-full p-1">
-                <Plus size={16} className="text-white" />
+          {/* Ma Story - Cliquer pour voir ou créer */}
+          {myStories.length > 0 ? (
+            <button
+              onClick={() => setViewingStories({ stories: myStories, index: 0 })}
+              className="flex-shrink-0 flex flex-col items-center gap-2"
+            >
+              <div className="relative">
+                <div className="p-0.5 rounded-full bg-gradient-to-tr from-purple-500 via-pink-500 to-red-500">
+                  <Avatar className="h-16 w-16 border-2 border-background">
+                    <AvatarImage src={profile?.photoURL || profile?.profileImage} />
+                    <AvatarFallback className="bg-primary/10 text-primary">
+                      {profile?.displayName?.charAt(0) || profile?.fullName?.charAt(0) || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
+                <div className="absolute -bottom-1 -right-1 bg-primary rounded-full p-1">
+                  <Plus size={16} className="text-white" onClick={(e) => {
+                    e.stopPropagation();
+                    handleCreateStory();
+                  }} />
+                </div>
               </div>
-            </div>
-            <span className="text-xs font-medium">Ma Story</span>
-          </button>
+              <span className="text-xs font-medium">Ma Story</span>
+            </button>
+          ) : (
+            <button
+              onClick={handleCreateStory}
+              className="flex-shrink-0 flex flex-col items-center gap-2"
+            >
+              <div className="relative">
+                <Avatar className="h-16 w-16 border-2 border-dashed border-primary">
+                  <AvatarImage src={profile?.photoURL || profile?.profileImage} />
+                  <AvatarFallback className="bg-primary/10 text-primary">
+                    {profile?.displayName?.charAt(0) || profile?.fullName?.charAt(0) || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="absolute -bottom-1 -right-1 bg-primary rounded-full p-1">
+                  <Plus size={16} className="text-white" />
+                </div>
+              </div>
+              <span className="text-xs font-medium">Ma Story</span>
+            </button>
+          )}
 
           {/* Stories des contacts */}
           {stories.map((contactStory) => (
