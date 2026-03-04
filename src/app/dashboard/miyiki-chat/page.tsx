@@ -9,6 +9,8 @@ import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { useConversations } from '@/hooks/useConversations';
 import { useFirestoreContacts } from '@/hooks/useFirestoreContacts';
+import { useAllTransactions } from '@/hooks/useAllTransactions';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import { ChatContactsDialog } from '@/components/chat-contacts-dialog';
 import { StartChatEmptyState } from '@/components/start-chat-empty-state';
 import {
@@ -16,16 +18,29 @@ import {
   NewChatIcon,
   SearchIcon,
 } from "@/components/icons/service-icons";
-import { MessageSquare, CheckCheck, Circle, Users, Plus } from 'lucide-react';
+import {
+  ChatDiscussionsIcon,
+  ChatStoriesIcon,
+  ChatTransactionsIcon,
+  ChatSettingsIcon,
+  ChatFilterAllIcon,
+  ChatFilterUnreadIcon,
+  ChatFilterReadIcon,
+  ChatFilterGroupsIcon,
+} from "@/components/icons/chat-icons";
+import { MessageSquare, CheckCheck, Circle, Users, Plus, TrendingUp, Settings, Edit, Zap, MapPin, ShoppingBag } from 'lucide-react';
 import { CreateGroupDialog } from '@/components/create-group-dialog';
+import { formatDistanceToNow } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
+type ChatTab = 'discussions' | 'stories' | 'transactions' | 'settings';
 type MessageFilter = 'all' | 'unread' | 'read' | 'groups';
 
 const messageFilters = [
-  { value: 'all' as MessageFilter, label: "Tout", icon: MessageSquare },
-  { value: 'unread' as MessageFilter, label: "Non lu", icon: Circle },
-  { value: 'read' as MessageFilter, label: "Lu", icon: CheckCheck },
-  { value: 'groups' as MessageFilter, label: "Groupes", icon: Users },
+  { value: 'all' as MessageFilter, label: "Tout", icon: ChatFilterAllIcon },
+  { value: 'unread' as MessageFilter, label: "Non lu", icon: ChatFilterUnreadIcon },
+  { value: 'read' as MessageFilter, label: "Lu", icon: ChatFilterReadIcon },
+  { value: 'groups' as MessageFilter, label: "Groupes", icon: ChatFilterGroupsIcon },
 ];
 
 export default function MiyikiChatPage() {
@@ -35,7 +50,10 @@ export default function MiyikiChatPage() {
     hasConversations,
   } = useConversations();
   const { contacts, isLoading: contactsLoading } = useFirestoreContacts();
+  const { transactions, loading: transactionsLoading } = useAllTransactions();
+  const { profile } = useUserProfile();
 
+  const [activeTab, setActiveTab] = useState<ChatTab>('discussions');
   const [showChatContactsDialog, setShowChatContactsDialog] = useState(false);
   const [showCreateGroupDialog, setShowCreateGroupDialog] = useState(false);
   const [activeFilter, setActiveFilter] = useState<MessageFilter>('all');
@@ -95,8 +113,258 @@ export default function MiyikiChatPage() {
     return filtered;
   }, [conversations, activeFilter, searchQuery]);
 
+  // Render functions for each tab
+  const renderDiscussions = () => {
+    if (conversationsLoading || contactsLoading) {
+      return (
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">Chargement des conversations...</p>
+        </div>
+      );
+    }
+
+    if (!hasConversations) {
+      return <StartChatEmptyState onStartChat={handleStartChat} />;
+    }
+
+    if (filteredConversations.length === 0) {
+      return (
+        <div className="text-center py-12">
+          <div className="mb-4">
+            <MessageSquare size={48} className="mx-auto text-muted-foreground opacity-50" />
+          </div>
+          <p className="text-muted-foreground text-lg font-semibold mb-2">
+            Aucune conversation trouvée
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {searchQuery ? 'Essayez une autre recherche' : 'Changez de filtre pour voir plus de conversations'}
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-2">
+        {filteredConversations.map((convo, i) => {
+          let displayName = convo.name;
+          
+          if (!convo.isGroup && convo.participants && convo.participants.length === 2) {
+            const otherIdx = convo.participants.findIndex(
+              id => id !== undefined && id !== '' && id !== (typeof window !== 'undefined' ? window.localStorage.getItem('uid') : undefined)
+            );
+            const phone = convo.participantNames?.[otherIdx];
+            const contactName = getContactNameByPhone(phone);
+            if (contactName) displayName = contactName;
+          }
+          
+          return (
+            <Link href={convo.href || `/dashboard/miyiki-chat/${convo.id}`} key={convo.id} className="block">
+              <Card className="p-4 rounded-2xl transition-all duration-300 hover:shadow-lg hover:scale-[1.01]">
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <Avatar className="h-14 w-14 border-2 border-primary/10">
+                      <AvatarImage src={convo.avatar || undefined} alt={displayName} />
+                      <AvatarFallback className="bg-primary/10 text-primary font-bold">{displayName?.charAt(0) || '?'}</AvatarFallback>
+                    </Avatar>
+                    {convo.isGroup && (
+                      <div className="absolute -bottom-1 -right-1 bg-primary rounded-full p-1">
+                        <Users size={12} className="text-white" />
+                      </div>
+                    )}
+                    <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-green-500 border-2 border-background"></div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="font-bold text-foreground truncate">{displayName}</p>
+                      {convo.isGroup && (
+                        <Badge variant="outline" className="text-xs">Groupe</Badge>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground truncate">{convo.lastMessage}</p>
+                  </div>
+                  <div className="text-right flex flex-col items-end gap-2">
+                    <p className="text-xs text-muted-foreground whitespace-nowrap">{convo.time}</p>
+                    {!!convo.unread && convo.unread > 0 ? (
+                      <Badge className="bg-red-500 text-white rounded-full h-6 min-w-[24px] px-2 flex items-center justify-center text-xs">
+                        {convo.unread}
+                      </Badge>
+                    ) : (
+                      <div className="flex items-center gap-1 text-xs text-green-600">
+                        <CheckCheck size={14} />
+                        <span className="font-medium">Lu</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            </Link>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const renderStories = () => {
+    return (
+      <div className="text-center py-12">
+        <Zap size={64} className="mx-auto text-primary mb-4" />
+        <h3 className="text-xl font-bold mb-2">Stories</h3>
+        <p className="text-muted-foreground mb-6">Partagez vos moments avec vos contacts</p>
+        <Button className="rounded-full">
+          <Plus size={20} className="mr-2" />
+          Créer une story
+        </Button>
+      </div>
+    );
+  };
+
+  const renderTransactions = () => {
+    if (transactionsLoading) {
+      return (
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">Chargement des transactions...</p>
+        </div>
+      );
+    }
+
+    if (transactions.length === 0) {
+      return (
+        <div className="text-center py-12">
+          <TrendingUp size={64} className="mx-auto text-muted-foreground mb-4" />
+          <h3 className="text-xl font-bold mb-2">Aucune transaction</h3>
+          <p className="text-muted-foreground">Vos transactions de paiement apparaîtront ici</p>
+        </div>
+      );
+    }
+
+    const getTransactionIcon = (type: string) => {
+      switch (type) {
+        case 'transfer_sent':
+        case 'transfer_received':
+          return <TrendingUp size={20} />;
+        case 'deposit':
+          return <Plus size={20} />;
+        case 'withdrawal':
+          return <TrendingUp size={20} className="rotate-180" />;
+        case 'payment_link':
+        case 'contact_payment':
+          return <ShoppingBag size={20} />;
+        default:
+          return <TrendingUp size={20} />;
+      }
+    };
+
+    const getTransactionLabel = (type: string) => {
+      switch (type) {
+        case 'transfer_sent': return 'Transfert envoyé';
+        case 'transfer_received': return 'Transfert reçu';
+        case 'deposit': return 'Dépôt';
+        case 'withdrawal': return 'Retrait';
+        case 'payment_link': return 'Paiement par lien';
+        case 'contact_payment': return 'Paiement contact';
+        case 'money_request_sent': return 'Demande envoyée';
+        case 'money_request_received': return 'Demande reçue';
+        default: return type;
+      }
+    };
+
+    return (
+      <div className="space-y-2">
+        {transactions.map((tx, i) => {
+          const isReceived = tx.type === 'transfer_received' || tx.type === 'deposit' || tx.type === 'money_request_received';
+          const displayName = isReceived ? tx.senderName : tx.recipientName;
+          
+          return (
+            <Card key={tx.id} className="p-4 rounded-2xl">
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <div className={`h-12 w-12 rounded-full flex items-center justify-center ${
+                    isReceived ? 'bg-green-100 text-green-600' : 'bg-primary/10 text-primary'
+                  }`}>
+                    {getTransactionIcon(tx.type)}
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 bg-primary rounded-full p-1">
+                    <span className="text-[8px] text-white font-bold">eNk</span>
+                  </div>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="font-bold text-foreground">eNkamba-Pay</p>
+                    <Badge variant={tx.status === 'completed' ? 'default' : 'secondary'} className="text-xs">
+                      {tx.status === 'completed' ? 'Confirmé' : tx.status}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground truncate">
+                    {getTransactionLabel(tx.type)} {displayName && `• ${displayName}`}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Transaction #{tx.id.slice(0, 8)}
+                  </p>
+                </div>
+                <div className="text-right flex flex-col items-end gap-1">
+                  <p className={`font-bold ${isReceived ? 'text-green-600' : 'text-foreground'}`}>
+                    {isReceived ? '+' : '-'} {tx.amount.toLocaleString()} {tx.currency || 'CDF'}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {tx.timestamp?.toDate ? formatDistanceToNow(tx.timestamp.toDate(), { addSuffix: true, locale: fr }) : tx.createdAt}
+                  </p>
+                </div>
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const renderSettings = () => {
+    return (
+      <div className="space-y-4">
+        <Card className="p-4 rounded-2xl">
+          <h3 className="font-bold text-lg mb-4">Paramètres du chat</h3>
+          <div className="space-y-3">
+            <Button variant="ghost" className="w-full justify-start">
+              <Edit size={20} className="mr-3" />
+              Modifier le profil
+            </Button>
+            <Button variant="ghost" className="w-full justify-start">
+              <Users size={20} className="mr-3" />
+              Gérer les groupes
+            </Button>
+            <Button variant="ghost" className="w-full justify-start">
+              <MapPin size={20} className="mr-3" />
+              Partage de localisation
+            </Button>
+          </div>
+        </Card>
+        
+        <Card className="p-4 rounded-2xl">
+          <h3 className="font-bold text-lg mb-4">Confidentialité</h3>
+          <div className="space-y-3">
+            <Button variant="ghost" className="w-full justify-start">
+              Statut en ligne
+            </Button>
+            <Button variant="ghost" className="w-full justify-start">
+              Confirmation de lecture
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  };
+
   return (
     <div className="flex h-screen flex-col bg-background text-foreground animate-in fade-in duration-500">
+      <style jsx global>{`
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
+      
       {/* Header */}
       <header className="sticky top-0 z-10 flex h-16 items-center justify-between bg-gradient-to-r from-primary via-primary to-green-800 px-4 shadow-lg">
         <div className="flex items-center gap-3">
@@ -105,7 +373,7 @@ export default function MiyikiChatPage() {
             </div>
             <div>
               <h1 className="font-headline text-xl font-bold text-white">Miyiki-Chat</h1>
-              <p className="text-xs text-white/70">Messagerie unifiée</p>
+              <p className="text-xs text-white/70">Communication intelligente</p>
             </div>
         </div>
         <div className="flex items-center gap-2">
@@ -126,27 +394,96 @@ export default function MiyikiChatPage() {
             <NewChatIcon size={24} />
             <span className="sr-only">Nouvelle conversation</span>
           </Button>
+          <Avatar className="h-10 w-10 border-2 border-white/30 shadow-lg cursor-pointer hover:scale-105 transition-transform">
+            <AvatarImage src={profile?.photoURL || undefined} alt={profile?.displayName || 'User'} />
+            <AvatarFallback className="bg-white/20 text-white font-bold">
+              {profile?.displayName?.charAt(0) || 'U'}
+            </AvatarFallback>
+          </Avatar>
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto">
-        <div className="container mx-auto max-w-4xl p-4 space-y-6">
+      <main className="flex-1 overflow-y-auto pb-32">
+        <div className="container mx-auto max-w-4xl p-4 space-y-4">
+          {/* Chat Navigation Tabs - Modern Design */}
+          <div className="sticky top-0 z-40 -mx-4 px-4 pt-2 pb-3 bg-background/95 backdrop-blur-lg border-b border-border/50">
+            <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+              <button
+                onClick={() => setActiveTab('discussions')}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-full font-medium text-sm transition-all whitespace-nowrap ${
+                  activeTab === 'discussions'
+                    ? 'bg-primary text-white shadow-lg shadow-primary/30'
+                    : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                }`}
+              >
+                <ChatDiscussionsIcon size={20} />
+                <span>Discussions</span>
+                {conversations.filter(c => c.unread && c.unread > 0).length > 0 && (
+                  <Badge className="bg-red-500 text-white rounded-full h-5 min-w-[20px] px-1.5 text-xs">
+                    {conversations.filter(c => c.unread && c.unread > 0).length}
+                  </Badge>
+                )}
+              </button>
+              
+              <button
+                onClick={() => setActiveTab('stories')}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-full font-medium text-sm transition-all whitespace-nowrap ${
+                  activeTab === 'stories'
+                    ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/30'
+                    : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                }`}
+              >
+                <ChatStoriesIcon size={20} />
+                <span>Stories</span>
+              </button>
+              
+              <button
+                onClick={() => setActiveTab('transactions')}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-full font-medium text-sm transition-all whitespace-nowrap ${
+                  activeTab === 'transactions'
+                    ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg shadow-green-600/30'
+                    : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                }`}
+              >
+                <ChatTransactionsIcon size={20} />
+                <span>Transactions</span>
+                {transactions.length > 0 && (
+                  <Badge className="bg-white/20 text-white rounded-full h-5 min-w-[20px] px-1.5 text-xs">
+                    {transactions.length > 9 ? '9+' : transactions.length}
+                  </Badge>
+                )}
+              </button>
+              
+              <button
+                onClick={() => setActiveTab('settings')}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-full font-medium text-sm transition-all whitespace-nowrap ${
+                  activeTab === 'settings'
+                    ? 'bg-gradient-to-r from-slate-700 to-slate-900 text-white shadow-lg shadow-slate-700/30'
+                    : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                }`}
+              >
+                <ChatSettingsIcon size={20} />
+                <span>Paramètres</span>
+              </button>
+            </div>
+          </div>
+
           {/* Search Bar */}
           <div className="relative">
             <div className="absolute left-4 top-1/2 -translate-y-1/2">
               <SearchIcon size={20} className="text-muted-foreground" />
             </div>
             <Input
-              placeholder="Rechercher une conversation..."
-              className="h-12 w-full rounded-full bg-muted pl-14 text-base shadow-inner"
+              placeholder={activeTab === 'discussions' ? "Rechercher message ou contact..." : activeTab === 'transactions' ? "Rechercher une transaction..." : "Rechercher..."}
+              className="h-12 w-full rounded-full bg-muted/50 pl-14 text-base shadow-inner border-0 focus-visible:ring-2 focus-visible:ring-primary/20"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
 
-          {/* Message Filters */}
-          <div>
-            <div className="flex space-x-2 overflow-x-auto pb-2 -mx-4 px-4">
+          {/* Message Filters - Only for discussions tab */}
+          {activeTab === 'discussions' && (
+            <div className="flex space-x-2 overflow-x-auto pb-2 scrollbar-hide">
               {messageFilters.map((filter) => {
                 const IconComponent = filter.icon;
                 const isActive = activeFilter === filter.value;
@@ -158,19 +495,18 @@ export default function MiyikiChatPage() {
                   <Button 
                     key={filter.value} 
                     variant={isActive ? "secondary" : "ghost"} 
-                    className={`flex-shrink-0 rounded-full h-12 px-4 space-x-2 border-transparent ${
+                    size="sm"
+                    className={`flex-shrink-0 rounded-full h-9 px-3 space-x-2 border-transparent ${
                       isActive 
-                        ? 'bg-gradient-to-r from-primary to-green-800 text-white shadow-md' 
-                        : 'text-muted-foreground hover:bg-muted'
+                        ? 'bg-primary/10 text-primary border border-primary/20' 
+                        : 'text-muted-foreground hover:bg-muted/50'
                     }`}
                     onClick={() => setActiveFilter(filter.value)}
                   >
-                    <div className={isActive ? "" : "opacity-70"}>
-                      <IconComponent size={20} />
-                    </div>
-                    <span className="font-headline text-sm">{filter.label}</span>
+                    <IconComponent size={16} />
+                    <span className="font-medium text-xs">{filter.label}</span>
                     {filter.value === 'unread' && unreadCount > 0 && (
-                      <Badge className="bg-red-500 text-white rounded-full h-5 w-5 flex items-center justify-center text-xs p-0">
+                      <Badge className="bg-red-500 text-white rounded-full h-4 w-4 flex items-center justify-center text-[10px] p-0">
                         {unreadCount}
                       </Badge>
                     )}
@@ -178,87 +514,13 @@ export default function MiyikiChatPage() {
                 );
               })}
             </div>
-          </div>
-
-          {/* Afficher les conversations réelles ou l'état vide */}
-          {conversationsLoading || contactsLoading ? (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">Chargement des conversations...</p>
-            </div>
-          ) : !hasConversations ? (
-            <StartChatEmptyState onStartChat={handleStartChat} />
-          ) : filteredConversations.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="mb-4">
-                <MessageSquare size={48} className="mx-auto text-muted-foreground opacity-50" />
-              </div>
-              <p className="text-muted-foreground text-lg font-semibold mb-2">
-                Aucune conversation trouvée
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {searchQuery ? 'Essayez une autre recherche' : 'Changez de filtre pour voir plus de conversations'}
-              </p>
-            </div>
-          ) : (
-            // Liste des conversations filtrées
-            <div className="space-y-2">
-              {filteredConversations.map((convo, i) => {
-                // Pour les conversations 1-1 UNIQUEMENT, on tente de récupérer le nom du contact
-                let displayName = convo.name;
-                
-                // Ne faire cette logique QUE si ce n'est PAS un groupe
-                if (!convo.isGroup && convo.participants && convo.participants.length === 2) {
-                  // On cherche le numéro de téléphone de l'autre participant
-                  const otherIdx = convo.participants.findIndex(
-                    id => id !== undefined && id !== '' && id !== (typeof window !== 'undefined' ? window.localStorage.getItem('uid') : undefined)
-                  );
-                  // On tente de trouver le nom du contact par le champ participantNames (si c'est un numéro)
-                  const phone = convo.participantNames?.[otherIdx];
-                  const contactName = getContactNameByPhone(phone);
-                  if (contactName) displayName = contactName;
-                }
-                // Pour les groupes, on garde simplement convo.name tel quel
-                
-                return (
-                  <Link href={convo.href || `/dashboard/miyiki-chat/${convo.id}`} key={convo.id} className="block">
-                    <Card
-                      className="p-3 rounded-2xl transition-all duration-300 hover:shadow-lg hover:scale-[1.02] animate-in fade-in-up"
-                      style={{ animationDelay: `${i * 100}ms` }}
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="relative">
-                          <Avatar className="h-12 w-12 border-2 border-primary/10">
-                            <AvatarImage src={convo.avatar || undefined} alt={displayName} />
-                            <AvatarFallback>{displayName?.charAt(0) || '?'}</AvatarFallback>
-                          </Avatar>
-                          {convo.isGroup && (
-                            <div className="absolute -bottom-1 -right-1 bg-primary rounded-full p-1">
-                              <Users size={12} className="text-white" />
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <p className="font-headline font-bold text-foreground">{displayName}</p>
-                            {convo.isGroup && (
-                              <Badge variant="outline" className="text-xs">Groupe</Badge>
-                            )}
-                          </div>
-                          <p className="text-sm text-muted-foreground truncate">{convo.lastMessage}</p>
-                        </div>
-                        <div className="text-right flex flex-col items-end h-full">
-                          <p className="text-xs text-muted-foreground mb-1">{convo.time}</p>
-                          {!!convo.unread && convo.unread > 0 && (
-                            <Badge className="bg-accent text-accent-foreground rounded-full h-6 w-6 flex items-center justify-center">{convo.unread}</Badge>
-                          )}
-                        </div>
-                      </div>
-                    </Card>
-                  </Link>
-                );
-              })}
-            </div>
           )}
+
+          {/* Content based on active tab */}
+          {activeTab === 'discussions' && renderDiscussions()}
+          {activeTab === 'stories' && renderStories()}
+          {activeTab === 'transactions' && renderTransactions()}
+          {activeTab === 'settings' && renderSettings()}
         </div>
       </main>
 
