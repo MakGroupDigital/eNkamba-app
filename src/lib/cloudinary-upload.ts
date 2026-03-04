@@ -1,9 +1,19 @@
 /**
  * Upload de médias vers Cloudinary pour les stories
  */
+import { auth } from '@/lib/firebase';
+import { decodeSecret } from './decode-secrets';
 
-const CLOUDINARY_CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'your-cloud-name';
-const CLOUDINARY_UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || 'stories_preset';
+// Décoder les variables Cloudinary
+const CLOUDINARY_CLOUD_NAME = 
+  process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 
+  decodeSecret(process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME_ENCODED) || 
+  'your-cloud-name';
+
+const CLOUDINARY_UPLOAD_PRESET = 
+  process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || 
+  decodeSecret(process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET_ENCODED) || 
+  'stories_preset';
 
 export interface CloudinaryUploadResult {
   url: string;
@@ -21,35 +31,46 @@ export async function uploadToCloudinary(
   file: File,
   resourceType: 'image' | 'video' | 'raw' = 'image'
 ): Promise<CloudinaryUploadResult> {
+  const currentUser = auth.currentUser;
+  if (!currentUser?.uid) {
+    throw new Error('Utilisateur non authentifié');
+  }
+
+  const idToken = await currentUser.getIdToken();
   const formData = new FormData();
   formData.append('file', file);
-  formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-  formData.append('folder', 'enkamba/stories');
+  formData.append('userId', currentUser.uid);
+  formData.append('resourceType', resourceType);
 
-  const endpoint = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/${resourceType}/upload`;
-
-  const response = await fetch(endpoint, {
+  const response = await fetch('/api/stories/upload-media', {
     method: 'POST',
+    headers: {
+      Authorization: `Bearer ${idToken}`,
+    },
     body: formData,
   });
 
+  const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error('Erreur upload Cloudinary');
+    const details =
+      payload?.details?.error?.message ||
+      payload?.details?.error ||
+      payload?.error ||
+      'Erreur upload Cloudinary';
+    throw new Error(`Erreur upload Cloudinary: ${details}`);
   }
 
-  const data = await response.json();
-
   return {
-    url: data.url,
-    secureUrl: data.secure_url,
-    publicId: data.public_id,
-    format: data.format,
-    resourceType: data.resource_type,
-    duration: data.duration,
-    width: data.width,
-    height: data.height,
-    thumbnailUrl: data.resource_type === 'video' 
-      ? `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/video/upload/so_0,w_400,h_400,c_fill/${data.public_id}.jpg`
+    url: payload.secureUrl,
+    secureUrl: payload.secureUrl,
+    publicId: payload.publicId,
+    format: payload.format,
+    resourceType: payload.resourceType,
+    duration: payload.duration ?? undefined,
+    width: payload.width ?? undefined,
+    height: payload.height ?? undefined,
+    thumbnailUrl: payload.resourceType === 'video'
+      ? `https://res.cloudinary.com/${payload.cloudName}/video/upload/so_0,w_400,h_400,c_fill/${payload.publicId}.jpg`
       : undefined,
   };
 }

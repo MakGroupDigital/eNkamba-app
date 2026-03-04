@@ -7,6 +7,7 @@ import { Camera, Video, Mic, MapPin, X, Check, Clock, Image as ImageIcon } from 
 import { useRouter } from 'next/navigation';
 import { useStories } from '@/hooks/useStories';
 import { StoryType, StoryDuration } from '@/types/story.types';
+import { LocationStoryCreator } from '@/components/stories/LocationStoryCreator';
 
 export default function CreateStoryPage() {
   const router = useRouter();
@@ -17,6 +18,7 @@ export default function CreateStoryPage() {
   const [isRecording, setIsRecording] = useState(false);
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<{ latitude: number; longitude: number; address?: string } | null>(null);
   const [loading, setLoading] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -98,15 +100,25 @@ export default function CreateStoryPage() {
     
     setLoading(true);
     try {
-      await createStory(mode, durationMinutes, mediaFile || undefined, undefined, caption);
+      await createStory(
+        mode,
+        durationMinutes,
+        mediaFile || undefined,
+        mode === 'location' ? selectedLocation || undefined : undefined,
+        caption
+      );
       router.push('/dashboard/miyiki-chat?tab=stories');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur publication:', error);
-      alert('Erreur lors de la publication de la story');
+      alert(error?.message || 'Erreur lors de la publication de la story');
     } finally {
       setLoading(false);
     }
   };
+
+  const locationPreviewSrc = selectedLocation
+    ? `https://www.openstreetmap.org/export/embed.html?bbox=${selectedLocation.longitude - 0.01}%2C${selectedLocation.latitude - 0.01}%2C${selectedLocation.longitude + 0.01}%2C${selectedLocation.latitude + 0.01}&layer=mapnik&marker=${selectedLocation.latitude}%2C${selectedLocation.longitude}`
+    : null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 flex flex-col">
@@ -187,12 +199,32 @@ export default function CreateStoryPage() {
               />
             </div>
           </div>
+        ) : mode === 'location' && !selectedLocation ? (
+          <div className="w-full max-w-md h-[70vh] rounded-3xl overflow-hidden">
+            <LocationStoryCreator
+              onComplete={(location) => setSelectedLocation(location)}
+              onCancel={() => setMode(null)}
+            />
+          </div>
         ) : (
           /* Preview & Settings */
           <div className="w-full max-w-md space-y-4">
             {previewUrl && (
               <div className="aspect-[9/16] rounded-3xl overflow-hidden bg-black">
                 <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+              </div>
+            )}
+            {mode === 'location' && locationPreviewSrc && (
+              <div className="aspect-[9/16] rounded-3xl overflow-hidden bg-black relative">
+                <iframe
+                  title="Aperçu position story"
+                  src={locationPreviewSrc}
+                  className="h-full w-full border-0"
+                  loading="lazy"
+                />
+                <div className="absolute bottom-3 left-3 right-3 rounded-xl bg-black/55 p-2 text-xs text-white">
+                  {selectedLocation?.address || `${selectedLocation?.latitude.toFixed(6)}, ${selectedLocation?.longitude.toFixed(6)}`}
+                </div>
               </div>
             )}
 

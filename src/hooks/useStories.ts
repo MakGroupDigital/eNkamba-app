@@ -84,6 +84,9 @@ export function useStories() {
     caption?: string
   ): Promise<string> => {
     if (!currentUser?.uid) throw new Error('Non authentifié');
+    if (type !== 'location' && !mediaFile) {
+      throw new Error('Média requis pour publier cette story');
+    }
 
     let mediaUrl: string | null = null;
     let thumbnailUrl: string | null = null;
@@ -94,6 +97,9 @@ export function useStories() {
       const uploadResult = await uploadToCloudinary(mediaFile, resourceType);
       mediaUrl = uploadResult.secureUrl;
       thumbnailUrl = uploadResult.thumbnailUrl || null;
+      if (!mediaUrl || !mediaUrl.includes('cloudinary.com')) {
+        throw new Error('Upload Cloudinary invalide');
+      }
     }
 
     const now = Timestamp.now();

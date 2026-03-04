@@ -9,12 +9,6 @@ import { X, Send, MapPin, Volume2, VolumeX } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import dynamic from 'next/dynamic';
-
-const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
-const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
-const Marker = dynamic(() => import('react-leaflet').then(mod => mod.Marker), { ssr: false });
-const Popup = dynamic(() => import('react-leaflet').then(mod => mod.Popup), { ssr: false });
 
 interface StoryViewerProps {
   stories: Story[];
@@ -86,6 +80,10 @@ export function StoryViewer({
   };
 
   if (!currentStory) return null;
+  const locationMapSrc =
+    currentStory.type === 'location' && currentStory.location
+      ? `https://www.openstreetmap.org/export/embed.html?bbox=${currentStory.location.longitude - 0.01}%2C${currentStory.location.latitude - 0.01}%2C${currentStory.location.longitude + 0.01}%2C${currentStory.location.latitude + 0.01}&layer=mapnik&marker=${currentStory.location.latitude}%2C${currentStory.location.longitude}`
+      : null;
 
   return (
     <div className="fixed inset-0 z-50 bg-black flex flex-col">
@@ -187,29 +185,12 @@ export function StoryViewer({
         
         {currentStory.type === 'location' && currentStory.location && (
           <div className="w-full h-full relative">
-            {/* Carte OpenStreetMap */}
-            <MapContainer
-              center={[currentStory.location.latitude, currentStory.location.longitude]}
-              zoom={15}
-              style={{ height: '100%', width: '100%' }}
-              zoomControl={false}
-              className="rounded-none"
-            >
-              <TileLayer
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-              />
-              <Marker position={[currentStory.location.latitude, currentStory.location.longitude]}>
-                <Popup>
-                  <div className="text-center">
-                    <p className="font-semibold">{currentStory.userName}</p>
-                    {currentStory.location.address && (
-                      <p className="text-xs text-muted-foreground">{currentStory.location.address}</p>
-                    )}
-                  </div>
-                </Popup>
-              </Marker>
-            </MapContainer>
+            <iframe
+              title="Carte story localisation"
+              src={locationMapSrc || ''}
+              className="h-full w-full border-0"
+              loading="lazy"
+            />
 
             {/* Overlay avec info de localisation */}
             <div className="absolute top-20 left-4 right-4 bg-gradient-to-br from-blue-600/90 to-cyan-600/90 backdrop-blur-lg rounded-2xl p-4 shadow-2xl border border-white/20">
