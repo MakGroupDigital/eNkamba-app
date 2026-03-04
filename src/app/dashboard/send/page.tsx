@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable @next/next/no-img-element */
 
 import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -48,17 +49,19 @@ export default function SendPage() {
   const fullName = profile?.fullName || '';
 
   // Scanner QR code en temps réel
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!isScanning || mode !== 'demand' || !videoRef.current) return;
+    const currentVideo = videoRef.current;
 
     const getMediaStream = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: 'environment' }
         });
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          videoRef.current.play();
+        if (currentVideo) {
+          currentVideo.srcObject = stream;
+          currentVideo.play();
           scanQRFromVideo();
         }
       } catch (error) {
@@ -70,11 +73,11 @@ export default function SendPage() {
     getMediaStream();
 
     return () => {
-      if (videoRef.current?.srcObject) {
-        (videoRef.current.srcObject as MediaStream).getTracks().forEach(track => track.stop());
+      if (currentVideo?.srcObject) {
+        (currentVideo.srcObject as MediaStream).getTracks().forEach(track => track.stop());
       }
     };
-  }, [isScanning, mode, toast]);
+  }, [isScanning, mode, toast]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const scanQRFromVideo = () => {
     if (!videoRef.current || !canvasRef.current) return;

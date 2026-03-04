@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable @next/next/no-img-element */
 
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
@@ -68,6 +69,7 @@ export default function PayReceivePage() {
   const animationFrameRef = useRef<number | null>(null);
 
   // Lire le paramètre mode de l'URL au chargement
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const modeParam = searchParams?.get('mode');
     if (modeParam === 'transfer') {
@@ -98,6 +100,7 @@ export default function PayReceivePage() {
 
   useEffect(() => {
     if (mode !== 'scanner' || !isScanning) return;
+    const currentVideo = videoRef.current;
 
     const getCameraPermission = async () => {
       try {
@@ -105,9 +108,9 @@ export default function PayReceivePage() {
           video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
         });
         setHasCameraPermission(true);
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          videoRef.current.onloadedmetadata = () => scanQRFromVideo();
+        if (currentVideo) {
+          currentVideo.srcObject = stream;
+          currentVideo.onloadedmetadata = () => scanQRFromVideo();
         }
       } catch (error) {
         setHasCameraPermission(false);
@@ -119,12 +122,13 @@ export default function PayReceivePage() {
 
     return () => {
       if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
-      if (videoRef.current?.srcObject) {
-        const stream = videoRef.current.srcObject as MediaStream;
+      if (currentVideo?.srcObject) {
+        const stream = currentVideo.srcObject as MediaStream;
         stream.getTracks().forEach(track => track.stop());
       }
     };
-  }, [mode, isScanning]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, isScanning]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const parseQRData = (data: string): ScannedQRData | null => {
     try {

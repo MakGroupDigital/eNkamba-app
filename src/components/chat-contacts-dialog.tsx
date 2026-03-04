@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Send, Mail } from 'lucide-react';
+import { Loader2, Plus, Send, Mail, Smartphone } from 'lucide-react';
 import { useFirestoreContacts } from '@/hooks/useFirestoreContacts';
 import { useFirestoreConversations } from '@/hooks/useFirestoreConversations';
 
@@ -17,17 +17,24 @@ interface ChatContactsDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+interface DeviceContact {
+  name: string;
+  phoneNumber: string;
+  email?: string;
+}
+
 export function ChatContactsDialog({ open, onOpenChange }: ChatContactsDialogProps) {
 
 
   // Always declare hooks first
   const router = useRouter();
-  const { contacts, isLoading, addContact, getContactStatus } = useFirestoreContacts();
+  const { contacts, isLoading, addContact, getContactStatus, normalizePhoneNumber } = useFirestoreContacts();
   const { createConversation } = useFirestoreConversations();
   const [showAddForm, setShowAddForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [addForm, setAddForm] = useState({ name: '', phoneNumber: '', email: '' });
   const [contactStatuses, setContactStatuses] = useState<Map<string, any>>(new Map());
+  const [isImportingDeviceContacts, setIsImportingDeviceContacts] = useState(false);
 
   // Ajouter un contact
   const handleAddContact = useCallback(async () => {
@@ -84,6 +91,97 @@ export function ChatContactsDialog({ open, onOpenChange }: ChatContactsDialogPro
 
   // ...existing logic for loading statuses, QR scan, handleAddContact, etc...
 
+  const importWebContacts = useCallback(async (): Promise<DeviceContact[]> => {
+    const nav = navigator as Navigator & {
+      contacts?: {
+        select?: (
+          properties: Array<'name' | 'tel' | 'email'>,
+          options?: { multiple?: boolean }
+        ) => Promise<Array<{ name?: string[]; tel?: string[]; email?: string[] }>>;
+      };
+    };
+
+    if (!nav.contacts?.select) {
+      return [];
+    }
+
+    const picked = await nav.contacts.select(['name', 'tel', 'email'], { multiple: true });
+    return picked
+      .map((c) => ({
+        name: c.name?.[0]?.trim() || '',
+        phoneNumber: c.tel?.[0]?.trim() || '',
+        email: c.email?.[0]?.trim() || undefined,
+      }))
+      .filter((c) => c.name && c.phoneNumber);
+  }, []);
+
+  const importCapacitorContacts = useCallback(async (): Promise<DeviceContact[]> => {
+    try {
+      const { Contacts } = await import('@capacitor-community/contacts');
+      const result = await Contacts.getContacts({
+        projection: { name: true, phones: true, emails: true },
+      });
+
+      return (result.contacts || [])
+        .map((c: any) => ({
+          name: c?.name?.display || c?.name?.formatted || '',
+          phoneNumber: c?.phones?.[0]?.number || '',
+          email: c?.emails?.[0]?.address || undefined,
+        }))
+        .filter((c: DeviceContact) => c.name && c.phoneNumber);
+    } catch (error) {
+      return [];
+    }
+  }, []);
+
+  const handleImportDeviceContacts = useCallback(async () => {
+    setIsImportingDeviceContacts(true);
+    try {
+      const webContacts = await importWebContacts();
+      const contactsFromDevice = webContacts.length > 0 ? webContacts : await importCapacitorContacts();
+
+      if (contactsFromDevice.length === 0) {
+        alert("Import non disponible sur cet appareil/navigateur. Utilisez 'Ajouter un contact' manuellement.");
+        return;
+      }
+
+      const existingPhones = new Set(
+        contacts
+          .map((c) => normalizePhoneNumber(c.phoneNumber))
+          .filter(Boolean)
+      );
+
+      let created = 0;
+      for (const contact of contactsFromDevice) {
+        const normalizedPhone = normalizePhoneNumber(contact.phoneNumber);
+        if (!normalizedPhone || existingPhones.has(normalizedPhone)) {
+          continue;
+        }
+
+        const statusInfo = await getContactStatus(normalizedPhone, contact.email);
+        await addContact({
+          name: contact.name,
+          phoneNumber: normalizedPhone,
+          email: contact.email,
+          isOnEnkamba: statusInfo.status === 'enkamba',
+        });
+        existingPhones.add(normalizedPhone);
+        created += 1;
+      }
+
+      if (created === 0) {
+        alert('Aucun nouveau contact importé (déjà présents ou numéros invalides).');
+      } else {
+        alert(`${created} contact(s) importé(s) depuis votre appareil.`);
+      }
+    } catch (error) {
+      console.error('Erreur import contacts appareil:', error);
+      alert("Impossible d'importer les contacts de l'appareil pour le moment.");
+    } finally {
+      setIsImportingDeviceContacts(false);
+    }
+  }, [importWebContacts, importCapacitorContacts, contacts, addContact, getContactStatus, normalizePhoneNumber]);
+
   // Inviter un contact non eNkamba
   const handleSendInvitation = useCallback((contact: any) => {
     try {
@@ -132,7 +230,25 @@ export function ChatContactsDialog({ open, onOpenChange }: ChatContactsDialogPro
 
         <div className="space-y-4">
           {/* Ajout bouton scanner QR code */}
-          <div className="flex justify-end">
+          <div className="flex flex-wrap gap-2 justify-end">
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={handleImportDeviceContacts}
+              disabled={isImportingDeviceContacts}
+            >
+              {isImportingDeviceContacts ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Import...
+                </>
+              ) : (
+                <>
+                  <Smartphone className="h-4 w-4" />
+                  Importer contacts appareil
+                </>
+              )}
+            </Button>
             <Button variant="outline" className="gap-2" onClick={() => {
               window.localStorage.setItem('enkamba_qr_return', window.location.pathname);
               router.push('/dashboard/scanner');

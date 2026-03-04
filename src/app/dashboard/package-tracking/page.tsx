@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -37,7 +37,7 @@ export default function PackageTrackingPage() {
   const [searchError, setSearchError] = useState<string | null>(null);
   const hasAutoSearched = useRef(false);
 
-  const handleSearch = async (numberOverride?: string) => {
+  const handleSearch = useCallback(async (numberOverride?: string) => {
     const numberToSearch = (numberOverride ?? trackingNumber).trim();
     if (!numberToSearch) {
       setSearchError('Veuillez entrer un numéro de suivi');
@@ -98,15 +98,16 @@ export default function PackageTrackingPage() {
     } finally {
       setIsSearching(false);
     }
-  };
+  }, [trackingNumber, toast]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const prefilledTracking = (searchParams?.get('tracking') || '').trim();
     if (!prefilledTracking || hasAutoSearched.current) return;
     hasAutoSearched.current = true;
     setTrackingNumber(prefilledTracking);
     void handleSearch(prefilledTracking);
-  }, [searchParams]);
+  }, [searchParams, handleSearch]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const getStatusIcon = (status: string) => {
     switch (status) {

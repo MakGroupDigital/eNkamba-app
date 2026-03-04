@@ -1,0 +1,22 @@
+// Règles Firestore pour les Stories
+// À ajouter dans firestore.rules
+
+match /stories/{storyId} {
+  // Lecture: tout utilisateur authentifié peut lire les stories non expirées
+  allow read: if request.auth != null 
+    && request.time < resource.data.expiresAt;
+  
+  // Création: utilisateur authentifié peut créer sa propre story
+  allow create: if request.auth != null 
+    && request.auth.uid == request.resource.data.userId
+    && request.resource.data.expiresAt > request.time;
+  
+  // Mise à jour: l'auteur peut mettre à jour (pour les vues et réponses)
+  allow update: if request.auth != null 
+    && (request.auth.uid == resource.data.userId 
+        || request.auth.uid in request.resource.data.views);
+  
+  // Suppression: seul l'auteur peut supprimer
+  allow delete: if request.auth != null 
+    && request.auth.uid == resource.data.userId;
+}

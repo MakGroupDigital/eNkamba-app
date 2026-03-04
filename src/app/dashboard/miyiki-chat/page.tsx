@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -11,8 +11,11 @@ import { useConversations } from '@/hooks/useConversations';
 import { useFirestoreContacts } from '@/hooks/useFirestoreContacts';
 import { useAllTransactions } from '@/hooks/useAllTransactions';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useStories } from '@/hooks/useStories';
 import { ChatContactsDialog } from '@/components/chat-contacts-dialog';
 import { StartChatEmptyState } from '@/components/start-chat-empty-state';
+import { StoriesOnboarding } from '@/components/stories/StoriesOnboarding';
+import { StoryViewer } from '@/components/stories/StoryViewer';
 import {
   MiyikiChatIcon,
   NewChatIcon,
@@ -28,10 +31,11 @@ import {
   ChatFilterReadIcon,
   ChatFilterGroupsIcon,
 } from "@/components/icons/chat-icons";
-import { MessageSquare, CheckCheck, Circle, Users, Plus, TrendingUp, Settings, Edit, Zap, MapPin, ShoppingBag } from 'lucide-react';
+import { MessageSquare, CheckCheck, Circle, Users, Plus, TrendingUp, Settings, Edit, Zap, MapPin, ShoppingBag, Video, Mic, Image as ImageIcon } from 'lucide-react';
 import { CreateGroupDialog } from '@/components/create-group-dialog';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { useRouter } from 'next/navigation';
 
 type ChatTab = 'discussions' | 'stories' | 'transactions' | 'settings';
 type MessageFilter = 'all' | 'unread' | 'read' | 'groups';
@@ -44,6 +48,7 @@ const messageFilters = [
 ];
 
 export default function MiyikiChatPage() {
+  const router = useRouter();
   const {
     conversations,
     isLoading: conversationsLoading,
@@ -52,12 +57,34 @@ export default function MiyikiChatPage() {
   const { contacts, isLoading: contactsLoading } = useFirestoreContacts();
   const { transactions, loading: transactionsLoading } = useAllTransactions();
   const { profile } = useUserProfile();
+  const { stories, myStories, loading: storiesLoading, markAsViewed, replyToStory } = useStories();
 
   const [activeTab, setActiveTab] = useState<ChatTab>('discussions');
   const [showChatContactsDialog, setShowChatContactsDialog] = useState(false);
   const [showCreateGroupDialog, setShowCreateGroupDialog] = useState(false);
   const [activeFilter, setActiveFilter] = useState<MessageFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [showStoriesOnboarding, setShowStoriesOnboarding] = useState(false);
+  const [viewingStories, setViewingStories] = useState<{ stories: any[]; index: number } | null>(null);
+
+  // Vérifier si c'est la première visite aux stories
+  useEffect(() => {
+    const hasSeenOnboarding = localStorage.getItem('stories_onboarding_seen');
+    if (!hasSeenOnboarding && activeTab === 'stories') {
+      setShowStoriesOnboarding(true);
+      localStorage.setItem('stories_onboarding_seen', 'true');
+    }
+  }, [activeTab]);
+  const profileDisplayName = profile?.fullName || profile?.name || 'User';
+  const profileAvatar = profile?.profileImage || undefined;
+
+  useEffect(() => {
+    const hasSeenOnboarding = localStorage.getItem('stories_onboarding_seen');
+    if (!hasSeenOnboarding && activeTab === 'stories') {
+      setShowStoriesOnboarding(true);
+      localStorage.setItem('stories_onboarding_seen', 'true');
+    }
+  }, [activeTab]);
 
   // Afficher le dialog quand on clique sur "Commencer"
   const handleStartChat = () => {
@@ -205,15 +232,104 @@ export default function MiyikiChatPage() {
   };
 
   const renderStories = () => {
+    const handleCreateStory = () => {
+      router.push('/dashboard/miyiki-chat/stories/create');
+    };
+
+    const handleViewStories = (contactStories: any, index: number = 0) => {
+      setViewingStories({ stories: contactStories.stories, index });
+    };
+
+    if (storiesLoading) {
+      return (
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">Chargement des stories...</p>
+        </div>
+      );
+    }
+
     return (
-      <div className="text-center py-12">
-        <Zap size={64} className="mx-auto text-primary mb-4" />
-        <h3 className="text-xl font-bold mb-2">Stories</h3>
-        <p className="text-muted-foreground mb-6">Partagez vos moments avec vos contacts</p>
-        <Button className="rounded-full">
-          <Plus size={20} className="mr-2" />
-          Créer une story
-        </Button>
+      <div className="space-y-4">
+        {/* Ma Story */}
+        <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide">
+          <button
+            onClick={handleCreateStory}
+            className="flex-shrink-0 flex flex-col items-center gap-2"
+          >
+            <div className="relative">
+              <Avatar className="h-16 w-16 border-2 border-dashed border-primary">
+                <AvatarImage src={profile?.photoURL || profile?.profileImage} />
+                <AvatarFallback className="bg-primary/10 text-primary">
+                  {profile?.displayName?.charAt(0) || profile?.fullName?.charAt(0) || 'U'}
+                </AvatarFallback>
+              </Avatar>
+              <div className="absolute -bottom-1 -right-1 bg-primary rounded-full p-1">
+                <Plus size={16} className="text-white" />
+              </div>
+            </div>
+            <span className="text-xs font-medium">Ma Story</span>
+          </button>
+
+          {/* Stories des contacts */}
+          {stories.map((contactStory) => (
+            <button
+              key={contactStory.userId}
+              onClick={() => handleViewStories(contactStory)}
+              className="flex-shrink-0 flex flex-col items-center gap-2"
+            >
+              <div className="relative">
+                <div className={`p-0.5 rounded-full ${contactStory.hasUnviewed ? 'bg-gradient-to-tr from-purple-500 via-pink-500 to-red-500' : 'bg-muted'}`}>
+                  <Avatar className="h-16 w-16 border-2 border-background">
+                    <AvatarImage src={contactStory.userAvatar} />
+                    <AvatarFallback className="bg-primary/10 text-primary">
+                      {contactStory.userName.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
+              </div>
+              <span className="text-xs font-medium max-w-[70px] truncate">
+                {contactStory.userName}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {/* Mes Stories publiées */}
+        {myStories.length > 0 && (
+          <Card className="p-4 rounded-2xl">
+            <h3 className="font-bold mb-3">Mes Stories ({myStories.length})</h3>
+            <div className="space-y-2">
+              {myStories.map((story) => (
+                <div key={story.id} className="flex items-center gap-3 p-2 rounded-xl hover:bg-muted/50">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                    {story.type === 'photo' && <ImageIcon size={20} className="text-white" />}
+                    {story.type === 'video' && <Video size={20} className="text-white" />}
+                    {story.type === 'audio' && <Mic size={20} className="text-white" />}
+                    {story.type === 'location' && <MapPin size={20} className="text-white" />}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{story.caption || 'Story sans légende'}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {story.views.length} vue{story.views.length > 1 ? 's' : ''}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
+
+        {stories.length === 0 && myStories.length === 0 && (
+          <div className="text-center py-12">
+            <Zap size={64} className="mx-auto text-primary mb-4" />
+            <h3 className="text-xl font-bold mb-2">Aucune story</h3>
+            <p className="text-muted-foreground mb-6">Soyez le premier à partager un moment</p>
+            <Button onClick={handleCreateStory} className="rounded-full">
+              <Plus size={20} className="mr-2" />
+              Créer une story
+            </Button>
+          </div>
+        )}
       </div>
     );
   };
@@ -395,9 +511,9 @@ export default function MiyikiChatPage() {
             <span className="sr-only">Nouvelle conversation</span>
           </Button>
           <Avatar className="h-10 w-10 border-2 border-white/30 shadow-lg cursor-pointer hover:scale-105 transition-transform">
-            <AvatarImage src={profile?.photoURL || undefined} alt={profile?.displayName || 'User'} />
+            <AvatarImage src={profileAvatar} alt={profileDisplayName} />
             <AvatarFallback className="bg-white/20 text-white font-bold">
-              {profile?.displayName?.charAt(0) || 'U'}
+              {profileDisplayName.charAt(0) || 'U'}
             </AvatarFallback>
           </Avatar>
         </div>
@@ -535,6 +651,31 @@ export default function MiyikiChatPage() {
         open={showCreateGroupDialog}
         onOpenChange={setShowCreateGroupDialog}
       />
+
+      {/* Stories Onboarding */}
+      {showStoriesOnboarding && (
+        <StoriesOnboarding onClose={() => setShowStoriesOnboarding(false)} />
+      )}
+
+      {/* Story Viewer */}
+      {viewingStories && (
+        <StoryViewer
+          stories={viewingStories.stories}
+          initialIndex={viewingStories.index}
+          onClose={() => setViewingStories(null)}
+          onMarkViewed={markAsViewed}
+          onReply={async (storyId, message) => {
+            // Trouver la conversation avec l'auteur de la story
+            const story = viewingStories.stories.find(s => s.id === storyId);
+            if (story) {
+              const conversation = conversations.find(c => 
+                c.participants?.includes(story.userId)
+              );
+              await replyToStory(storyId, message, conversation?.id);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

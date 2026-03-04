@@ -68,7 +68,7 @@ export function useChatMoneyTransfer() {
         setIsProcessing(false);
       }
     },
-    [currentUser, toast]
+    [currentUser]
   );
 
   // Accepter un transfert d'argent

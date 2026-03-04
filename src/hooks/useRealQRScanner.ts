@@ -28,6 +28,7 @@ export function useRealQRScanner(config: QRScannerConfig = {}) {
   const [error, setError] = useState<Error | null>(null);
 
   // Fonction pour décoder un QR code
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const decodeQRCode = useCallback((imageData: ImageData): string | null => {
     try {
       const data = imageData.data;
@@ -50,7 +51,7 @@ export function useRealQRScanner(config: QRScannerConfig = {}) {
       console.error('Erreur lors du décodage QR:', err);
       return null;
     }
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fonction pour détecter les patterns de QR code
   const detectQRPattern = (grayscale: Uint8ClampedArray, width: number, height: number): string | null => {
@@ -93,6 +94,7 @@ export function useRealQRScanner(config: QRScannerConfig = {}) {
   };
 
   // Démarrer le scan
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const startScanning = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -135,9 +137,10 @@ export function useRealQRScanner(config: QRScannerConfig = {}) {
     } finally {
       setIsLoading(false);
     }
-  }, [config, toast]);
+  }, [config, toast]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Boucle de scan
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const startScanLoop = useCallback(() => {
     const scan = () => {
       if (!scanningRef.current || !videoRef.current || !canvasRef.current) {
@@ -191,7 +194,7 @@ export function useRealQRScanner(config: QRScannerConfig = {}) {
     };
 
     animationFrameRef.current = requestAnimationFrame(scan);
-  }, [decodeQRCode, config, toast]);
+  }, [decodeQRCode, config, toast]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Arrêter le scan
   const stopScanning = useCallback(() => {

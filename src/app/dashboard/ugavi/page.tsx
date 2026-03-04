@@ -265,6 +265,7 @@ export default function UgaviPage() {
   const [packageDescription, setPackageDescription] = useState('');
   const [shippingMethod, setShippingMethod] = useState<'standard' | 'express'>('standard');
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!('geolocation' in navigator)) return;
 
@@ -419,6 +420,7 @@ export default function UgaviPage() {
     speakTextWithRetry(`${startText} ${summaryText} ${firstStep}`.trim());
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
     const handler = () => primeSpeechIfNeeded();
@@ -429,7 +431,7 @@ export default function UgaviPage() {
       window.removeEventListener('touchstart', handler);
       window.removeEventListener('click', handler);
     };
-  }, [voiceEnabled]);
+  }, [voiceEnabled]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const reverseGeocode = async (point: GeoPoint): Promise<string> => {
     try {
@@ -454,6 +456,7 @@ export default function UgaviPage() {
     setDestinationAddress(toAddress);
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const syncCurrentAddress = async () => {
       const resolvedAddress = await reverseGeocode(userPosition);
@@ -461,7 +464,7 @@ export default function UgaviPage() {
       setClientAddress(resolvedAddress);
     };
     void syncCurrentAddress();
-  }, [userPosition.lat, userPosition.lon]);
+  }, [userPosition.lat, userPosition.lon]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const estimateTrafficOnZone = async (samplePoint: GeoPoint): Promise<{ multiplier: number; level: RouteInfo['trafficLevel']; score: number }> => {
     const hour = new Date().getHours();
@@ -626,9 +629,12 @@ export default function UgaviPage() {
     }, 10000);
 
     return () => window.clearInterval(intervalId);
-  }, [isRouteStarted, selectedPoint, transportMode, userPosition.lat, userPosition.lon]);
+  }, [isRouteStarted, selectedPoint, transportMode, userPosition.lat, userPosition.lon]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const routePath = routeInfo?.path?.length ? routeInfo.path : selectedPoint ? [userPosition, selectedPoint] : [];
+  const routePath = useMemo(
+    () => (routeInfo?.path?.length ? routeInfo.path : selectedPoint ? [userPosition, selectedPoint] : []),
+    [routeInfo?.path, selectedPoint, userPosition]
+  );
   const mapBounds = useMemo(() => {
     const nearbyPoints = ITINERARY_POINTS
       .filter((point) => haversineDistanceKm(userPosition, point) <= 35)

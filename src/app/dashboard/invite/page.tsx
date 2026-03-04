@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -20,13 +20,7 @@ export default function InvitePage() {
   const [stats, setStats] = useState<any>(null);
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      loadReferralData();
-    }
-  }, [user]);
-
-  const loadReferralData = async () => {
+  const loadReferralData = useCallback(async () => {
     if (!user) return;
 
     setIsLoading(true);
@@ -50,7 +44,13 @@ export default function InvitePage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user, toast]);
+
+  useEffect(() => {
+    if (user) {
+      void loadReferralData();
+    }
+  }, [user, loadReferralData]);
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);

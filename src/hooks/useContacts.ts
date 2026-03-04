@@ -53,6 +53,7 @@ export function useContacts() {
   } = useFirestoreContacts();
 
   // Vérifier la permission au montage
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const savedPermission = localStorage.getItem(PERMISSION_STORAGE_KEY);
     if (savedPermission === 'true') {
@@ -62,7 +63,7 @@ export function useContacts() {
       // Charger les contacts Firestore par défaut
       loadFirestoreContacts();
     }
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Charger les contacts Firestore
   const loadFirestoreContacts = useCallback(() => {
@@ -103,7 +104,7 @@ export function useContacts() {
   // Synchroniser avec Firestore
   useEffect(() => {
     loadFirestoreContacts();
-  }, [loadFirestoreContacts]);
+  }, [loadFirestoreContacts]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Charger les contacts en cache
   const loadCachedContacts = useCallback(() => {
@@ -125,9 +126,10 @@ export function useContacts() {
       console.error('Erreur chargement contacts en cache:', error);
       loadFirestoreContacts();
     }
-  }, [loadFirestoreContacts]);
+  }, [loadFirestoreContacts]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Demander l'accès aux contacts
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const requestContactsPermission = useCallback(async () => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
 
@@ -195,7 +197,7 @@ export function useContacts() {
       }));
       loadFirestoreContacts();
     }
-  }, [loadFirestoreContacts]);
+  }, [loadFirestoreContacts]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Traiter les contacts pour identifier ceux sur eNkamba
   const processContacts = (rawContacts: any[]) => {

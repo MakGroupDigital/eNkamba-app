@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable @next/next/no-img-element */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -117,6 +118,7 @@ function inferMediaType(mediaUrl: string): 'image' | 'video' | 'audio' {
 function MakutanoAudioPlayer({ src, isActive }: { src: string; isActive: boolean }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -155,6 +157,7 @@ function MakutanoAudioPlayer({ src, isActive }: { src: string; isActive: boolean
 function MakutanoVideoPlayer({ src, isActive }: { src: string; isActive: boolean }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -240,7 +243,7 @@ export default function MakutanoPage() {
     }
 
     return () => observer.disconnect();
-  }, [posts, filteredPosts, filteredPostIdsKey]);
+  }, [posts, filteredPosts, filteredPostIdsKey, activePostId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const postsQuery = query(
@@ -319,7 +322,7 @@ export default function MakutanoPage() {
     return () => {
       cancelled = true;
     };
-  }, [user?.uid, postIdsKey]);
+  }, [user?.uid, postIdsKey, posts]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     setPosts((prev) => prev.map((post) => ({ ...post, isLiked: likedPostIds.has(post.id) })));

@@ -11,9 +11,11 @@ export interface UserProfile {
   phoneNumber?: string;
   fullName?: string;
   name?: string;
+  displayName?: string;
   dateOfBirth?: string;
   country?: string;
   profileImage?: string;
+  photoURL?: string;
   kycStatus?: string;
   kycCompletedAt?: number;
   accountNumber?: string;
@@ -226,7 +228,7 @@ export function useUserProfile() {
     };
 
     loadProfile();
-  }, [user?.uid, authLoading]);
+  }, [user?.uid, user?.displayName, user?.email, user?.photoURL, authLoading]);
 
   return {
     profile,

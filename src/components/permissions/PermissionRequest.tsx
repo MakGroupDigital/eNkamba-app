@@ -3,7 +3,7 @@
 import { useDevicePermission } from '@/hooks/useDevicePermission';
 import { PermissionType } from '@/lib/permissions-manager';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, CheckCircle2, XCircle, Loader2, Camera, Mic, MapPin, Image, Users, Clipboard } from 'lucide-react';
+import { AlertCircle, CheckCircle2, XCircle, Loader2, Camera, Mic, MapPin, Image as ImageIcon, Users, Clipboard } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 interface PermissionRequestProps {
@@ -19,7 +19,7 @@ const permissionIcons: Record<PermissionType, React.ReactNode> = {
   camera: <Camera className="w-5 h-5" />,
   microphone: <Mic className="w-5 h-5" />,
   location: <MapPin className="w-5 h-5" />,
-  photos: <Image className="w-5 h-5" />,
+  photos: <ImageIcon className="w-5 h-5" />,
   contacts: <Users className="w-5 h-5" />,
   calendar: <AlertCircle className="w-5 h-5" />,
   clipboard: <Clipboard className="w-5 h-5" />,

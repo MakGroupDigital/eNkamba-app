@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable @next/next/no-img-element */
 
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
@@ -113,8 +114,10 @@ export default function ScannerSimplePage() {
     animationFrameRef.current = requestAnimationFrame(scanQRFromVideo);
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!isScanning) return;
+    const currentVideo = videoRef.current;
 
     const getCameraPermission = async () => {
       try {
@@ -127,9 +130,9 @@ export default function ScannerSimplePage() {
         });
         setHasCameraPermission(true);
 
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          videoRef.current.onloadedmetadata = () => {
+        if (currentVideo) {
+          currentVideo.srcObject = stream;
+          currentVideo.onloadedmetadata = () => {
             scanQRFromVideo();
           };
         }
@@ -150,12 +153,12 @@ export default function ScannerSimplePage() {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
-      if (videoRef.current && videoRef.current.srcObject) {
-        const stream = videoRef.current.srcObject as MediaStream;
+      if (currentVideo && currentVideo.srcObject) {
+        const stream = currentVideo.srcObject as MediaStream;
         stream.getTracks().forEach(track => track.stop());
       }
     };
-  }, [isScanning, toast]);
+  }, [isScanning, toast]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

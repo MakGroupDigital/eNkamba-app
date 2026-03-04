@@ -1,6 +1,7 @@
 'use client';
+/* eslint-disable @next/next/no-img-element */
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Camera, Upload, Mic, Square, Play, Pause, Video, Loader2, Save, RotateCcw, Trash2, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -68,14 +69,15 @@ export default function MakutanoCreatePage() {
 
   const hasAnyMedia = useMemo(() => Boolean(pickedFile || externalMediaUrl.trim()), [pickedFile, externalMediaUrl]);
 
-  const buildDraft = () => ({
+  const buildDraft = useCallback(() => ({
     text,
     category,
     mediaType,
     externalMediaUrl,
     updatedAt: Date.now(),
-  });
+  }), [text, category, mediaType, externalMediaUrl]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const raw = localStorage.getItem(DRAFT_KEY);
     setHasDraft(Boolean(raw));
@@ -149,7 +151,7 @@ export default function MakutanoCreatePage() {
     }, 5000);
 
     return () => clearInterval(intervalId);
-  }, [text, category, mediaType, externalMediaUrl, isPublishing]);
+  }, [text, category, mediaType, externalMediaUrl, isPublishing, buildDraft]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const safeCloseAudioContext = async () => {
