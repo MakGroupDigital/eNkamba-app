@@ -1,16 +1,16 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { getSupabaseConfig } from './decode-secrets';
 
 let supabaseClient: SupabaseClient | null = null;
 
 export function getSupabaseClient(): SupabaseClient | null {
   if (supabaseClient) return supabaseClient;
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!supabaseUrl || !supabaseAnonKey) {
+  const { url, anonKey } = getSupabaseConfig();
+  if (!url || !anonKey) {
     return null;
   }
 
-  supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+  supabaseClient = createClient(url, anonKey);
   return supabaseClient;
 }
