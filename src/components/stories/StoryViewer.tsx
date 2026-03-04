@@ -9,6 +9,12 @@ import { X, Send, MapPin, Volume2, VolumeX } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import dynamic from 'next/dynamic';
+
+const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
+const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
+const Marker = dynamic(() => import('react-leaflet').then(mod => mod.Marker), { ssr: false });
+const Popup = dynamic(() => import('react-leaflet').then(mod => mod.Popup), { ssr: false });
 
 interface StoryViewerProps {
   stories: Story[];
@@ -180,14 +186,48 @@ export function StoryViewer({
         )}
         
         {currentStory.type === 'location' && currentStory.location && (
-          <div className="text-center text-white p-8">
-            <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center mb-4 mx-auto">
-              <MapPin size={64} className="text-white" />
+          <div className="w-full h-full relative">
+            {/* Carte OpenStreetMap */}
+            <MapContainer
+              center={[currentStory.location.latitude, currentStory.location.longitude]}
+              zoom={15}
+              style={{ height: '100%', width: '100%' }}
+              zoomControl={false}
+              className="rounded-none"
+            >
+              <TileLayer
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+              />
+              <Marker position={[currentStory.location.latitude, currentStory.location.longitude]}>
+                <Popup>
+                  <div className="text-center">
+                    <p className="font-semibold">{currentStory.userName}</p>
+                    {currentStory.location.address && (
+                      <p className="text-xs text-muted-foreground">{currentStory.location.address}</p>
+                    )}
+                  </div>
+                </Popup>
+              </Marker>
+            </MapContainer>
+
+            {/* Overlay avec info de localisation */}
+            <div className="absolute top-20 left-4 right-4 bg-gradient-to-br from-blue-600/90 to-cyan-600/90 backdrop-blur-lg rounded-2xl p-4 shadow-2xl border border-white/20">
+              <div className="flex items-start gap-3">
+                <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur flex items-center justify-center flex-shrink-0">
+                  <MapPin size={24} className="text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-white text-lg mb-1">Position en temps réel</p>
+                  {currentStory.location.address && (
+                    <p className="text-sm text-white/90 line-clamp-2">{currentStory.location.address}</p>
+                  )}
+                  <p className="text-xs text-white/70 mt-2">
+                    📍 {currentStory.location.latitude.toFixed(6)}, {currentStory.location.longitude.toFixed(6)}
+                  </p>
+                </div>
+              </div>
             </div>
-            <p className="text-2xl font-bold mb-2">Localisation partagée</p>
-            {currentStory.location.address && (
-              <p className="text-white/80">{currentStory.location.address}</p>
-            )}
           </div>
         )}
 

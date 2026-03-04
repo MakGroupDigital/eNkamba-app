@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
+import "leaflet/dist/leaflet.css";
 import { ThemeProvider } from "@/components/theme-provider";
 
 export const metadata: Metadata = {
