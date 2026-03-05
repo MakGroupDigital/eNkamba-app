@@ -30,6 +30,12 @@ function stripOptionalBrackets(value?: string): string {
 }
 
 function getCloudinaryConfig() {
+  const uploadPreset =
+    process.env.CLOUDINARY_UPLOAD_PRESET?.trim() ||
+    decodeSecret(process.env.CLOUDINARY_UPLOAD_PRESET_ENCODED) ||
+    process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET ||
+    decodeSecret(process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET_ENCODED);
+
   let cloudName =
     process.env.CLOUDINARY_CLOUD_NAME?.trim() ||
     decodeSecret(process.env.CLOUDINARY_CLOUD_NAME_ENCODED) ||
@@ -60,11 +66,24 @@ function getCloudinaryConfig() {
     }
   }
 
-  if (!cloudName || !apiKey || !apiSecret) {
-    throw new Error('Configuration Cloudinary incomplète');
+  if (!cloudName) {
+    throw new Error('Configuration Cloudinary incomplète: cloud name manquant');
   }
 
-  return { cloudName, apiKey, apiSecret };
+  const hasSignedCreds = Boolean(apiKey && apiSecret);
+  const hasUnsignedPreset = Boolean(uploadPreset);
+
+  if (!hasSignedCreds && !hasUnsignedPreset) {
+    throw new Error('Configuration Cloudinary incomplète: ajoute CLOUDINARY_URL ou CLOUDINARY_UPLOAD_PRESET');
+  }
+
+  return {
+    cloudName,
+    apiKey,
+    apiSecret,
+    uploadPreset: uploadPreset || '',
+    mode: hasSignedCreds ? 'signed' as const : 'unsigned' as const,
+  };
 }
 
 function buildCloudinarySignature(params: Record<string, string>, apiSecret: string): string {
@@ -97,31 +116,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Token invalide' }, { status: 401 });
     }
 
-    const { cloudName, apiKey, apiSecret } = getCloudinaryConfig();
+    const { cloudName, apiKey, apiSecret, uploadPreset, mode } = getCloudinaryConfig();
     const timestamp = Math.floor(Date.now() / 1000).toString();
     const folder = `enkamba/stories/${userId}`;
     const publicId = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
     const context = `uploader=${userId}|resourceType=${requestedType}`;
     const resourceType = requestedType === 'video' ? 'video' : requestedType === 'raw' ? 'raw' : 'image';
 
-    const signature = buildCloudinarySignature(
-      {
-        context,
-        folder,
-        public_id: publicId,
-        timestamp,
-      },
-      apiSecret
-    );
-
     const cloudinaryFormData = new FormData();
     cloudinaryFormData.append('file', file);
-    cloudinaryFormData.append('api_key', apiKey);
-    cloudinaryFormData.append('timestamp', timestamp);
-    cloudinaryFormData.append('signature', signature);
     cloudinaryFormData.append('folder', folder);
-    cloudinaryFormData.append('public_id', publicId);
-    cloudinaryFormData.append('context', context);
+    
+    if (mode === 'signed') {
+      const signature = buildCloudinarySignature(
+        {
+          context,
+          folder,
+          public_id: publicId,
+          timestamp,
+        },
+        apiSecret
+      );
+      cloudinaryFormData.append('api_key', apiKey);
+      cloudinaryFormData.append('timestamp', timestamp);
+      cloudinaryFormData.append('signature', signature);
+      cloudinaryFormData.append('public_id', publicId);
+      cloudinaryFormData.append('context', context);
+    } else {
+      cloudinaryFormData.append('upload_preset', uploadPreset);
+    }
 
     const uploadResponse = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`, {
       method: 'POST',
@@ -148,6 +171,7 @@ export async function POST(request: NextRequest) {
       width: result.width,
       height: result.height,
       cloudName,
+      mode,
     });
   } catch (error: any) {
     console.error('Erreur API stories/upload-media:', error);
