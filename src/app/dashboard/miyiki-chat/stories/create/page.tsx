@@ -3,7 +3,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Camera, Video, Mic, MapPin, X, Check, Clock, Upload } from 'lucide-react';
+import { Camera, Video, Mic, MapPin, X, Check, Clock, Upload, Square } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useStories } from '@/hooks/useStories';
 import { StoryType, StoryDuration } from '@/types/story.types';
@@ -22,6 +22,7 @@ export default function CreateStoryPage() {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [showMediaOptions, setShowMediaOptions] = useState(false);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
+  const [isRecording, setIsRecording] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -297,7 +298,7 @@ export default function CreateStoryPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <button
-                onClick={() => { resetMediaState(); setMode('photo'); startCamera(); }}
+                onClick={() => { resetMediaState(); setMode('photo'); setShowMediaOptions(true); }}
                 className="aspect-square rounded-3xl bg-white/10 backdrop-blur border-2 border-white/20 hover:bg-white/20 transition-all flex flex-col items-center justify-center gap-3 p-6"
               >
                 <Camera size={48} className="text-white" />
@@ -305,7 +306,7 @@ export default function CreateStoryPage() {
               </button>
 
               <button
-                onClick={() => { resetMediaState(); setMode('video'); setTimeout(() => handlePickFile(), 50); }}
+                onClick={() => { resetMediaState(); setMode('video'); setShowMediaOptions(true); }}
                 className="aspect-square rounded-3xl bg-white/10 backdrop-blur border-2 border-white/20 hover:bg-white/20 transition-all flex flex-col items-center justify-center gap-3 p-6"
               >
                 <Video size={48} className="text-white" />
@@ -313,7 +314,7 @@ export default function CreateStoryPage() {
               </button>
 
               <button
-                onClick={() => { resetMediaState(); setMode('audio'); setTimeout(() => handlePickFile(), 50); }}
+                onClick={() => { resetMediaState(); setMode('audio'); setShowMediaOptions(true); }}
                 className="aspect-square rounded-3xl bg-white/10 backdrop-blur border-2 border-white/20 hover:bg-white/20 transition-all flex flex-col items-center justify-center gap-3 p-6"
               >
                 <Mic size={48} className="text-white" />
@@ -341,11 +342,209 @@ export default function CreateStoryPage() {
             />
             <canvas ref={canvasRef} className="hidden" />
             
-            <div className="absolute bottom-8 left-0 right-0 flex justify-center">
+            {/* Bouton changer de caméra */}
+            <button
+              onClick={switchCamera}
+              className="absolute top-4 right-4 w-12 h-12 rounded-full bg-white/20 backdrop-blur flex items-center justify-center hover:bg-white/30 transition-all"
+            >
+              <Camera size={20} className="text-white" />
+            </button>
+            
+            <div className="absolute bottom-8 left-0 right-0 flex justify-center gap-4">
+              <button
+                onClick={() => { stopCamera(); setMode(null); }}
+                className="w-14 h-14 rounded-full bg-white/20 backdrop-blur flex items-center justify-center hover:bg-white/30 transition-all"
+              >
+                <X size={24} className="text-white" />
+              </button>
               <button
                 onClick={capturePhoto}
                 className="w-20 h-20 rounded-full bg-white border-4 border-white/50 hover:scale-110 transition-transform"
               />
+              <button
+                onClick={handlePickFile}
+                className="w-14 h-14 rounded-full bg-white/20 backdrop-blur flex items-center justify-center hover:bg-white/30 transition-all"
+              >
+                <Upload size={24} className="text-white" />
+              </button>
+            </div>
+          </div>
+        ) : showMediaOptions && mode === 'video' && !previewUrl ? (
+          /* Video Options Menu */
+          <div className="w-full max-w-md space-y-4">
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-white mb-2">Vidéo Story</h2>
+              <p className="text-white/80">Choisissez une option</p>
+            </div>
+            
+            <button
+              onClick={() => { setShowMediaOptions(false); startCamera(); }}
+              className="w-full p-6 rounded-3xl bg-white/10 backdrop-blur border-2 border-white/20 hover:bg-white/20 transition-all flex items-center gap-4"
+            >
+              <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center">
+                <Video size={32} className="text-white" />
+              </div>
+              <div className="flex-1 text-left">
+                <p className="text-white font-bold text-lg">Filmer maintenant</p>
+                <p className="text-white/70 text-sm">Enregistrer une vidéo en direct</p>
+              </div>
+            </button>
+            
+            <button
+              onClick={() => { setShowMediaOptions(false); handlePickFile(); }}
+              className="w-full p-6 rounded-3xl bg-white/10 backdrop-blur border-2 border-white/20 hover:bg-white/20 transition-all flex items-center gap-4"
+            >
+              <div className="w-16 h-16 rounded-full bg-blue-500/20 flex items-center justify-center">
+                <Upload size={32} className="text-white" />
+              </div>
+              <div className="flex-1 text-left">
+                <p className="text-white font-bold text-lg">Importer une vidéo</p>
+                <p className="text-white/70 text-sm">Choisir depuis la galerie</p>
+              </div>
+            </button>
+            
+            <button
+              onClick={() => { setShowMediaOptions(false); setMode(null); }}
+              className="w-full p-4 rounded-2xl bg-white/10 backdrop-blur border border-white/20 hover:bg-white/20 transition-all text-white font-semibold"
+            >
+              Annuler
+            </button>
+          </div>
+        ) : showMediaOptions && mode === 'audio' && !previewUrl ? (
+          /* Audio Options Menu */
+          <div className="w-full max-w-md space-y-4">
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-white mb-2">Audio Story</h2>
+              <p className="text-white/80">Choisissez une option</p>
+            </div>
+            
+            <button
+              onClick={() => { setShowMediaOptions(false); startAudioRecording(); }}
+              className="w-full p-6 rounded-3xl bg-white/10 backdrop-blur border-2 border-white/20 hover:bg-white/20 transition-all flex items-center gap-4"
+            >
+              <div className="w-16 h-16 rounded-full bg-purple-500/20 flex items-center justify-center">
+                <Mic size={32} className="text-white" />
+              </div>
+              <div className="flex-1 text-left">
+                <p className="text-white font-bold text-lg">Enregistrer maintenant</p>
+                <p className="text-white/70 text-sm">Enregistrer un message audio</p>
+              </div>
+            </button>
+            
+            <button
+              onClick={() => { setShowMediaOptions(false); handlePickFile(); }}
+              className="w-full p-6 rounded-3xl bg-white/10 backdrop-blur border-2 border-white/20 hover:bg-white/20 transition-all flex items-center gap-4"
+            >
+              <div className="w-16 h-16 rounded-full bg-blue-500/20 flex items-center justify-center">
+                <Upload size={32} className="text-white" />
+              </div>
+              <div className="flex-1 text-left">
+                <p className="text-white font-bold text-lg">Importer un audio</p>
+                <p className="text-white/70 text-sm">Choisir depuis les fichiers</p>
+              </div>
+            </button>
+            
+            <button
+              onClick={() => { setShowMediaOptions(false); setMode(null); }}
+              className="w-full p-4 rounded-2xl bg-white/10 backdrop-blur border border-white/20 hover:bg-white/20 transition-all text-white font-semibold"
+            >
+              Annuler
+            </button>
+          </div>
+        ) : mode === 'video' && !previewUrl && streamRef.current ? (
+          /* Video Recording View */
+          <div className="relative w-full max-w-md aspect-[9/16] rounded-3xl overflow-hidden bg-black">
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className="w-full h-full object-cover"
+            />
+            
+            {/* Bouton changer de caméra */}
+            <button
+              onClick={switchCamera}
+              className="absolute top-4 right-4 w-12 h-12 rounded-full bg-white/20 backdrop-blur flex items-center justify-center hover:bg-white/30 transition-all"
+            >
+              <Camera size={20} className="text-white" />
+            </button>
+            
+            {/* Timer si en enregistrement */}
+            {isRecording && (
+              <div className="absolute top-4 left-4 px-4 py-2 rounded-full bg-red-500 flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-white animate-pulse" />
+                <span className="text-white font-bold text-sm">REC</span>
+              </div>
+            )}
+            
+            <div className="absolute bottom-8 left-0 right-0 flex justify-center gap-4">
+              <button
+                onClick={() => { stopCamera(); setMode(null); }}
+                className="w-14 h-14 rounded-full bg-white/20 backdrop-blur flex items-center justify-center hover:bg-white/30 transition-all"
+              >
+                <X size={24} className="text-white" />
+              </button>
+              <button
+                onClick={isRecording ? stopVideoRecording : startVideoRecording}
+                className={`w-20 h-20 rounded-full border-4 border-white/50 hover:scale-110 transition-transform ${
+                  isRecording ? 'bg-red-500' : 'bg-white'
+                }`}
+              >
+                {isRecording && <div className="w-8 h-8 bg-white rounded-sm" />}
+              </button>
+              <button
+                onClick={handlePickFile}
+                className="w-14 h-14 rounded-full bg-white/20 backdrop-blur flex items-center justify-center hover:bg-white/30 transition-all"
+              >
+                <Upload size={24} className="text-white" />
+              </button>
+            </div>
+          </div>
+        ) : mode === 'audio' && !previewUrl && isRecording ? (
+          /* Audio Recording View */
+          <div className="w-full max-w-md rounded-3xl bg-gradient-to-br from-purple-600 to-pink-600 p-8">
+            <div className="text-center space-y-6">
+              <div className="w-32 h-32 mx-auto rounded-full bg-white/20 backdrop-blur flex items-center justify-center animate-pulse">
+                <Mic size={64} className="text-white" />
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
+                  <span className="text-white font-bold text-xl">Enregistrement...</span>
+                </div>
+                <p className="text-white/80 text-sm">Parlez maintenant</p>
+              </div>
+              
+              {/* Visualisation audio */}
+              <div className="flex items-center justify-center gap-1 h-16">
+                {[...Array(20)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="w-1 bg-white/60 rounded-full animate-pulse"
+                    style={{
+                      height: `${Math.random() * 60 + 10}px`,
+                      animationDelay: `${i * 0.05}s`
+                    }}
+                  />
+                ))}
+              </div>
+              
+              <div className="flex gap-4 justify-center pt-4">
+                <button
+                  onClick={() => { stopAudioRecording(); stopCamera(); setMode(null); }}
+                  className="px-6 py-3 rounded-full bg-white/20 backdrop-blur text-white font-semibold hover:bg-white/30 transition-all"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={stopAudioRecording}
+                  className="px-8 py-3 rounded-full bg-white text-purple-600 font-bold hover:bg-white/90 transition-all"
+                >
+                  Terminer
+                </button>
+              </div>
             </div>
           </div>
         ) : (mode === 'video' || mode === 'audio') && !previewUrl ? (
