@@ -3,7 +3,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Camera, Video, Mic, MapPin, X, Check, Clock, Image as ImageIcon } from 'lucide-react';
+import { Camera, Video, Mic, MapPin, X, Check, Clock, Upload } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useStories } from '@/hooks/useStories';
 import { StoryType, StoryDuration } from '@/types/story.types';
@@ -15,7 +15,6 @@ export default function CreateStoryPage() {
   const [mode, setMode] = useState<StoryType | null>(null);
   const [durationMinutes, setDurationMinutes] = useState<number>(60); // 1h par défaut
   const [caption, setCaption] = useState('');
-  const [isRecording, setIsRecording] = useState(false);
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<{ latitude: number; longitude: number; address?: string } | null>(null);
@@ -25,6 +24,7 @@ export default function CreateStoryPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const mediaInputRef = useRef<HTMLInputElement>(null);
 
   // Durée: 30 min à 3 jours (4320 minutes)
   const minDuration = 30; // 30 minutes
@@ -50,8 +50,11 @@ export default function CreateStoryPage() {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
       }
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
     };
-  }, []);
+  }, [previewUrl]);
 
   const startCamera = async () => {
     try {
@@ -96,8 +99,54 @@ export default function CreateStoryPage() {
     }
   };
 
+  const resetMediaState = () => {
+    stopCamera();
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setMediaFile(null);
+    setPreviewUrl(null);
+    setSelectedLocation(null);
+  };
+
+  const getAcceptForMode = (storyMode: StoryType): string => {
+    if (storyMode === 'video') return 'video/*';
+    if (storyMode === 'audio') return 'audio/*';
+    return 'image/*';
+  };
+
+  const handleMediaFileSelected = (file: File) => {
+    if (!mode) return;
+    if (mode === 'video' && !file.type.startsWith('video/')) {
+      alert('Veuillez sélectionner un fichier vidéo valide.');
+      return;
+    }
+    if (mode === 'audio' && !file.type.startsWith('audio/')) {
+      alert('Veuillez sélectionner un fichier audio valide.');
+      return;
+    }
+    if (mode === 'photo' && !file.type.startsWith('image/')) {
+      alert('Veuillez sélectionner une image valide.');
+      return;
+    }
+
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setMediaFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
+  };
+
+  const handlePickFile = () => {
+    mediaInputRef.current?.click();
+  };
+
   const handlePublish = async () => {
     if (!mode) return;
+    if (mode === 'location' && !selectedLocation) {
+      alert('Veuillez d’abord sélectionner votre position.');
+      return;
+    }
+    if (mode !== 'location' && !mediaFile) {
+      alert('Veuillez sélectionner un média avant publication.');
+      return;
+    }
     
     setLoading(true);
     try {
@@ -154,7 +203,7 @@ export default function CreateStoryPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <button
-                onClick={() => { setMode('photo'); startCamera(); }}
+                onClick={() => { resetMediaState(); setMode('photo'); startCamera(); }}
                 className="aspect-square rounded-3xl bg-white/10 backdrop-blur border-2 border-white/20 hover:bg-white/20 transition-all flex flex-col items-center justify-center gap-3 p-6"
               >
                 <Camera size={48} className="text-white" />
@@ -162,7 +211,7 @@ export default function CreateStoryPage() {
               </button>
 
               <button
-                onClick={() => setMode('video')}
+                onClick={() => { resetMediaState(); setMode('video'); setTimeout(() => handlePickFile(), 50); }}
                 className="aspect-square rounded-3xl bg-white/10 backdrop-blur border-2 border-white/20 hover:bg-white/20 transition-all flex flex-col items-center justify-center gap-3 p-6"
               >
                 <Video size={48} className="text-white" />
@@ -170,7 +219,7 @@ export default function CreateStoryPage() {
               </button>
 
               <button
-                onClick={() => setMode('audio')}
+                onClick={() => { resetMediaState(); setMode('audio'); setTimeout(() => handlePickFile(), 50); }}
                 className="aspect-square rounded-3xl bg-white/10 backdrop-blur border-2 border-white/20 hover:bg-white/20 transition-all flex flex-col items-center justify-center gap-3 p-6"
               >
                 <Mic size={48} className="text-white" />
@@ -178,7 +227,7 @@ export default function CreateStoryPage() {
               </button>
 
               <button
-                onClick={() => setMode('location')}
+                onClick={() => { resetMediaState(); setMode('location'); }}
                 className="aspect-square rounded-3xl bg-white/10 backdrop-blur border-2 border-white/20 hover:bg-white/20 transition-all flex flex-col items-center justify-center gap-3 p-6"
               >
                 <MapPin size={48} className="text-white" />
@@ -205,6 +254,16 @@ export default function CreateStoryPage() {
               />
             </div>
           </div>
+        ) : (mode === 'video' || mode === 'audio') && !previewUrl ? (
+          <div className="w-full max-w-md rounded-3xl border-2 border-dashed border-white/30 bg-white/10 p-8 text-center">
+            <p className="mb-4 text-white/90">
+              {mode === 'video' ? 'Sélectionnez une vidéo à publier' : 'Sélectionnez un audio à publier'}
+            </p>
+            <Button onClick={handlePickFile} className="gap-2 bg-white text-purple-700 hover:bg-white/90">
+              <Upload size={18} />
+              Choisir un fichier
+            </Button>
+          </div>
         ) : mode === 'location' && !selectedLocation ? (
           <div className="w-full max-w-md h-[70vh] rounded-3xl overflow-hidden">
             <LocationStoryCreator
@@ -215,9 +274,29 @@ export default function CreateStoryPage() {
         ) : (
           /* Preview & Settings */
           <div className="w-full max-w-md space-y-4">
+            <input
+              ref={mediaInputRef}
+              type="file"
+              accept={mode ? getAcceptForMode(mode) : '*/*'}
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleMediaFileSelected(file);
+                e.currentTarget.value = '';
+              }}
+            />
             {previewUrl && (
               <div className="aspect-[9/16] rounded-3xl overflow-hidden bg-black">
-                <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                {mode === 'audio' ? (
+                  <div className="flex h-full flex-col items-center justify-center gap-4 bg-gradient-to-br from-purple-700 to-pink-700 p-6">
+                    <Mic size={56} className="text-white" />
+                    <audio src={previewUrl} controls className="w-full" />
+                  </div>
+                ) : mode === 'video' ? (
+                  <video src={previewUrl} controls className="h-full w-full object-cover" />
+                ) : (
+                  <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                )}
               </div>
             )}
             {mode === 'location' && locationPreviewSrc && (
@@ -334,6 +413,16 @@ export default function CreateStoryPage() {
             >
               {loading ? 'Publication...' : 'Publier la Story'}
             </Button>
+            {(mode === 'video' || mode === 'audio') && (
+              <Button
+                variant="outline"
+                onClick={handlePickFile}
+                className="w-full gap-2 border-white/40 bg-white/10 text-white hover:bg-white/20"
+              >
+                <Upload size={16} />
+                Changer le fichier
+              </Button>
+            )}
           </div>
         )}
       </div>
@@ -348,6 +437,15 @@ export default function CreateStoryPage() {
             <div className="aspect-video rounded-2xl overflow-hidden bg-black">
               {previewUrl && mode === 'photo' && (
                 <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+              )}
+              {previewUrl && mode === 'video' && (
+                <video src={previewUrl} controls className="w-full h-full object-cover" />
+              )}
+              {previewUrl && mode === 'audio' && (
+                <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-purple-700 to-pink-700 p-4 gap-3">
+                  <Mic size={34} className="text-white" />
+                  <audio src={previewUrl} controls className="w-full" />
+                </div>
               )}
               {mode === 'location' && locationPreviewSrc && (
                 <iframe

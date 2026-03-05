@@ -7,6 +7,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useConversations } from '@/hooks/useConversations';
 import { useFirestoreContacts } from '@/hooks/useFirestoreContacts';
 import { useAllTransactions } from '@/hooks/useAllTransactions';
@@ -45,6 +52,7 @@ const messageFilters = [
   { value: 'unread' as MessageFilter, label: "Non lu", icon: ChatFilterUnreadIcon },
   { value: 'read' as MessageFilter, label: "Lu", icon: ChatFilterReadIcon },
   { value: 'groups' as MessageFilter, label: "Groupes", icon: ChatFilterGroupsIcon },
+  { value: 'add' as MessageFilter, label: "Plus", icon: Plus, isAction: true },
 ];
 
 export default function MiyikiChatPage() {
@@ -66,6 +74,7 @@ export default function MiyikiChatPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showStoriesOnboarding, setShowStoriesOnboarding] = useState(false);
   const [viewingStories, setViewingStories] = useState<{ stories: any[]; index: number } | null>(null);
+  const [showActionsMenu, setShowActionsMenu] = useState(false);
 
   // Vérifier si c'est la première visite aux stories
   useEffect(() => {
@@ -519,29 +528,16 @@ export default function MiyikiChatPage() {
             </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button 
-            size="icon" 
-            className="rounded-full bg-white/20 text-white hover:bg-white/30 w-10 h-10 shadow-lg"
-            onClick={handleCreateGroup}
-            title="Créer un groupe"
-          >
-            <Users size={20} />
-            <span className="sr-only">Créer un groupe</span>
-          </Button>
-          <Button 
-            size="icon" 
-            className="rounded-full bg-accent text-accent-foreground hover:bg-accent/90 w-12 h-12 shadow-lg"
-            onClick={handleStartChat}
-          >
-            <NewChatIcon size={24} />
-            <span className="sr-only">Nouvelle conversation</span>
-          </Button>
-          <Avatar className="h-10 w-10 border-2 border-white/30 shadow-lg cursor-pointer hover:scale-105 transition-transform">
-            <AvatarImage src={profileAvatar} alt={profileDisplayName} />
-            <AvatarFallback className="bg-white/20 text-white font-bold">
-              {profileDisplayName.charAt(0) || 'U'}
-            </AvatarFallback>
-          </Avatar>
+          <div className="relative">
+            <Avatar className="h-10 w-10 border-2 border-white/30 shadow-lg cursor-pointer hover:scale-105 transition-transform">
+              <AvatarImage src={profileAvatar} alt={profileDisplayName} />
+              <AvatarFallback className="bg-white/20 text-white font-bold">
+                {profileDisplayName.charAt(0) || 'U'}
+              </AvatarFallback>
+            </Avatar>
+            {/* Indicateur de connexion */}
+            <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-green-500 border-2 border-white"></div>
+          </div>
         </div>
       </header>
 
@@ -633,6 +629,22 @@ export default function MiyikiChatPage() {
                   ? conversations.filter(c => c.unread && c.unread > 0).length 
                   : 0;
                 
+                // Bouton "Plus" pour actions
+                if ((filter as any).isAction) {
+                  return (
+                    <Button 
+                      key={filter.value}
+                      variant="ghost"
+                      size="sm"
+                      className="flex-shrink-0 rounded-full h-9 px-3 space-x-2 border border-primary/30 bg-primary/5 text-primary hover:bg-primary/10"
+                      onClick={() => setShowActionsMenu(true)}
+                    >
+                      <IconComponent size={16} />
+                      <span className="font-medium text-xs">{filter.label}</span>
+                    </Button>
+                  );
+                }
+                
                 return (
                   <Button 
                     key={filter.value} 
@@ -702,6 +714,52 @@ export default function MiyikiChatPage() {
           }}
         />
       )}
+
+      {/* Actions Menu Dialog */}
+      <Dialog open={showActionsMenu} onOpenChange={setShowActionsMenu}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Actions rapides</DialogTitle>
+            <DialogDescription>
+              Choisissez une action pour commencer
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-3 py-4">
+            <button
+              onClick={() => {
+                setShowActionsMenu(false);
+                handleCreateGroup();
+              }}
+              className="w-full flex items-center gap-4 p-4 rounded-2xl hover:bg-primary/5 transition-all border-2 border-transparent hover:border-primary/20"
+            >
+              <div className="h-14 w-14 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg">
+                <Users size={24} className="text-white" />
+              </div>
+              <div className="flex-1 text-left">
+                <p className="font-bold text-base">Créer un groupe</p>
+                <p className="text-sm text-muted-foreground">Nouvelle conversation de groupe</p>
+              </div>
+            </button>
+            
+            <button
+              onClick={() => {
+                setShowActionsMenu(false);
+                handleStartChat();
+              }}
+              className="w-full flex items-center gap-4 p-4 rounded-2xl hover:bg-green-500/5 transition-all border-2 border-transparent hover:border-green-500/20"
+            >
+              <div className="h-14 w-14 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg">
+                <NewChatIcon size={24} className="text-white" />
+              </div>
+              <div className="flex-1 text-left">
+                <p className="font-bold text-base">Ajouter un contact</p>
+                <p className="text-sm text-muted-foreground">Démarrer une conversation</p>
+              </div>
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

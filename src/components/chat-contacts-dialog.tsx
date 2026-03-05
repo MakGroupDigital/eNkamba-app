@@ -107,6 +107,16 @@ export function ChatContactsDialog({ open, onOpenChange }: ChatContactsDialogPro
       return [];
     }
 
+    // Demande explicite de permission navigateur (quand disponible)
+    try {
+      const permissionsApi: any = (navigator as any).permissions;
+      if (permissionsApi?.query) {
+        await permissionsApi.query({ name: 'contacts' as PermissionName });
+      }
+    } catch {
+      // Certains navigateurs ne supportent pas permissions.contacts
+    }
+
     const picked = await nav.contacts.select(['name', 'tel', 'email'], { multiple: true });
     return picked
       .map((c) => ({
@@ -124,6 +134,10 @@ export function ChatContactsDialog({ open, onOpenChange }: ChatContactsDialogPro
         return [];
       }
       const { Contacts } = await import('@capacitor-community/contacts');
+      const contactsAny = Contacts as any;
+      if (typeof contactsAny.requestPermissions === 'function') {
+        await contactsAny.requestPermissions();
+      }
       const result = await Contacts.getContacts({
         projection: { name: true, phones: true, emails: true },
       });
@@ -221,7 +235,7 @@ export function ChatContactsDialog({ open, onOpenChange }: ChatContactsDialogPro
       const contactsFromDevice = webContacts.length > 0 ? webContacts : await importCapacitorContacts();
 
       if (contactsFromDevice.length === 0) {
-        alert("Accès direct aux contacts non supporté sur ce navigateur/PWA. Utilisez 'Importer fichier .vcf'.");
+        alert("Accès direct aux contacts non supporté sur ce navigateur/PWA. Sur iOS/Android PWA, utilisez 'Importer fichier .vcf' comme relais.");
         return;
       }
 
