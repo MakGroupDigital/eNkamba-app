@@ -270,17 +270,20 @@ export function ChatContactsDialog({ open, onOpenChange }: ChatContactsDialogPro
   const handleStartChat = useCallback(async (contact: any) => {
     try {
       setCreatingConversationId(contact.id);
-      let identifierType: 'uid' | 'email' | 'phone' = 'uid';
-      let identifierValue = contact.id;
-      // Si le contact a un email, on préfère l'email
-      if (contact.email) {
-        identifierType = 'email';
-        identifierValue = contact.email;
+
+      const resolvedStatus = contactStatuses.get(contact.id);
+      let conversationId = '';
+
+      if (resolvedStatus?.userId) {
+        conversationId = await createConversation(resolvedStatus.userId, contact.name, 'uid');
       } else if (contact.phoneNumber) {
-        identifierType = 'phone';
-        identifierValue = contact.phoneNumber;
+        conversationId = await createConversation(contact.phoneNumber, contact.name, 'phone');
+      } else if (contact.email) {
+        conversationId = await createConversation(contact.email, contact.name, 'email');
+      } else {
+        throw new Error('Aucun identifiant valide pour ce contact');
       }
-      const conversationId = await createConversation(identifierValue, contact.name, identifierType);
+
       onOpenChange(false);
       router.push(`/dashboard/miyiki-chat/${conversationId}`);
     } catch (error) {
@@ -289,7 +292,7 @@ export function ChatContactsDialog({ open, onOpenChange }: ChatContactsDialogPro
     } finally {
       setCreatingConversationId(null);
     }
-  }, [createConversation, onOpenChange, router]);
+  }, [createConversation, onOpenChange, router, contactStatuses]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

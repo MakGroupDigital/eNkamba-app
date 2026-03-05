@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import {
   collection,
   addDoc,
@@ -11,7 +11,6 @@ import {
   serverTimestamp,
   Timestamp,
   getDocs,
-  getDoc,
 } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 
@@ -33,13 +32,12 @@ export interface FirestoreContactsState {
   error: string | null;
 }
 
-const ENKAMBA_USERS = [
-  { phoneNumber: '+243812345678', name: 'Jean Dupont', referralCode: 'JEAN123' },
-  { phoneNumber: '+243987654321', name: 'Marie Martin', referralCode: 'MARIE456' },
-  { phoneNumber: '+243812111111', name: 'Pierre Bernard', referralCode: 'PIERRE789' },
-  { phoneNumber: '+243899999999', name: 'Alice Moreau', referralCode: 'ALICE999' },
-  { phoneNumber: '+243888888888', name: 'Bob Leclerc', referralCode: 'BOB888' },
-];
+export interface ContactStatusResult {
+  status: 'own' | 'enkamba' | 'invite';
+  referralCode?: string;
+  userId?: string;
+  displayName?: string;
+}
 
 export function useFirestoreContacts() {
   const [state, setState] = useState<FirestoreContactsState>({
@@ -49,6 +47,11 @@ export function useFirestoreContacts() {
   });
 
   const [currentUser, setCurrentUser] = useState(auth.currentUser);
+  const statusCacheRef = useRef<Map<string, ContactStatusResult>>(new Map());
+
+  useEffect(() => {
+    statusCacheRef.current.clear();
+  }, [currentUser?.uid, state.contacts.length]);
 
   // Écouter les changements d'authentification
   useEffect(() => {
@@ -124,108 +127,167 @@ export function useFirestoreContacts() {
 
   // Normaliser le numéro de téléphone
   const normalizePhoneNumber = useCallback((phone: string): string => {
-    const cleaned = phone.replace(/\D/g, '');
-    
-    if (cleaned.startsWith('0')) {
-      return '+243' + cleaned.substring(1);
+    const raw = (phone || '').trim();
+    if (!raw) return '';
+
+    const digits = raw.replace(/\D/g, '');
+    if (!digits) return '';
+
+    if (raw.startsWith('+')) {
+      return `+${digits}`;
     }
-    
-    if (!cleaned.startsWith('243') && !cleaned.startsWith('+')) {
-      return '+243' + cleaned;
+
+    if (digits.startsWith('243')) {
+      return `+${digits}`;
     }
-    
-    if (cleaned.startsWith('243') && !phone.startsWith('+')) {
-      return '+' + cleaned;
+
+    if (digits.startsWith('0')) {
+      return `+243${digits.slice(1)}`;
     }
-    
-    return phone;
+
+    if (digits.length === 9) {
+      return `+243${digits}`;
+    }
+
+    return `+${digits}`;
   }, []);
 
-  // Vérifier si un email existe dans la collection users (pour les comptes Google)
-  const checkEmailInFirestore = useCallback(async (email: string): Promise<boolean> => {
-    if (!email) return false;
-    
-    try {
-      const usersRef = collection(db, 'users');
-      const q = query(usersRef, where('email', '==', email.toLowerCase()));
-      const snapshot = await getDocs(q);
-      return snapshot.size > 0;
-    } catch (error) {
-      console.error('Erreur lors de la vérification de l\'email:', error);
-      return false;
+  const getPhoneCandidates = useCallback((phone: string): string[] => {
+    const normalized = normalizePhoneNumber(phone);
+    if (!normalized) return [];
+
+    const digits = normalized.replace(/\D/g, '');
+    const candidates = new Set<string>([normalized, digits, `+${digits}`]);
+
+    if (digits.startsWith('243')) {
+      const local = digits.slice(3);
+      if (local) {
+        candidates.add(local);
+        candidates.add(`0${local}`);
+      }
     }
-  }, []);
+
+    if (digits.startsWith('0') && digits.length > 1) {
+      const withoutZero = digits.slice(1);
+      candidates.add(`+243${withoutZero}`);
+      candidates.add(`243${withoutZero}`);
+    }
+
+    if (digits.length === 9) {
+      candidates.add(`+243${digits}`);
+      candidates.add(`243${digits}`);
+      candidates.add(`0${digits}`);
+    }
+
+    return Array.from(candidates).filter(Boolean);
+  }, [normalizePhoneNumber]);
+
+  // Vérifier si un email existe dans la collection users (pour les comptes Google)
+  const findUserInFirestore = useCallback(async (phoneNumber?: string, email?: string): Promise<ContactStatusResult | null> => {
+    const usersRef = collection(db, 'users');
+
+    try {
+      if (email) {
+        const normalizedEmail = email.trim().toLowerCase();
+        if (normalizedEmail) {
+          const qByEmail = query(usersRef, where('email', '==', normalizedEmail));
+          const emailSnapshot = await getDocs(qByEmail);
+          if (!emailSnapshot.empty) {
+            const userDoc = emailSnapshot.docs[0];
+            const userData = userDoc.data();
+            return {
+              status: 'enkamba',
+              userId: userDoc.id,
+              referralCode: userData.referralCode,
+              displayName: userData.fullName || userData.displayName || userData.name || userData.email || 'Utilisateur',
+            };
+          }
+        }
+      }
+
+      const candidates = getPhoneCandidates(phoneNumber || '');
+      if (candidates.length === 0) {
+        return null;
+      }
+
+      const phoneFields = ['phoneNumber', 'phone', 'kyc.linkedAccount.phoneNumber'] as const;
+      for (const candidate of candidates) {
+        for (const fieldName of phoneFields) {
+          const qByPhone = query(usersRef, where(fieldName, '==', candidate));
+          const phoneSnapshot = await getDocs(qByPhone);
+          if (!phoneSnapshot.empty) {
+            const userDoc = phoneSnapshot.docs[0];
+            const userData = userDoc.data();
+            return {
+              status: 'enkamba',
+              userId: userDoc.id,
+              referralCode: userData.referralCode,
+              displayName: userData.fullName || userData.displayName || userData.name || userData.email || 'Utilisateur',
+            };
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Erreur lors de la recherche utilisateur pour contact:', error);
+    }
+
+    return null;
+  }, [getPhoneCandidates]);
 
   // Vérifier le statut d'un contact: 'own' (son propre compte), 'enkamba' (utilisateur eNkamba), ou 'invite' (à inviter)
   // Version synchrone pour les vérifications rapides
-  const getContactStatusSync = useCallback((phoneNumber: string, email?: string): { status: 'own' | 'enkamba' | 'invite'; referralCode?: string } => {
+  const getContactStatusSync = useCallback((phoneNumber: string, email?: string): ContactStatusResult => {
     // 1. Vérifier si c'est le propre numéro/email de l'utilisateur
     if (currentUser?.phoneNumber) {
       const normalizedUserPhone = normalizePhoneNumber(currentUser.phoneNumber);
       const normalizedContactPhone = normalizePhoneNumber(phoneNumber);
-      if (normalizedUserPhone === normalizedContactPhone) {
-        return { status: 'own' };
+      if (normalizedUserPhone && normalizedUserPhone === normalizedContactPhone) {
+        return { status: 'own', userId: currentUser.uid };
       }
     }
 
     if (currentUser?.email && email && currentUser.email.toLowerCase() === email.toLowerCase()) {
-      return { status: 'own' };
+      return { status: 'own', userId: currentUser.uid };
     }
 
-    // 2. Vérifier si c'est un utilisateur eNkamba (liste hardcodée)
     const normalized = normalizePhoneNumber(phoneNumber);
-    const enkambaUser = ENKAMBA_USERS.find(
-      u => normalizePhoneNumber(u.phoneNumber) === normalized
+    const existingContact = state.contacts.find(
+      (contact) => normalizePhoneNumber(contact.phoneNumber) === normalized && contact.isOnEnkamba
     );
-    if (enkambaUser) {
-      return {
-        status: 'enkamba',
-        referralCode: enkambaUser.referralCode,
-      };
+    if (existingContact) {
+      return { status: 'enkamba', referralCode: existingContact.referralCode };
     }
 
-    // 3. Sinon, c'est un contact à inviter
     return { status: 'invite' };
-  }, [currentUser, normalizePhoneNumber]);
+  }, [currentUser, normalizePhoneNumber, state.contacts]);
 
   // Version asynchrone qui vérifie aussi les emails dans Firestore
-  const getContactStatus = useCallback(async (phoneNumber: string, email?: string): Promise<{ status: 'own' | 'enkamba' | 'invite'; referralCode?: string }> => {
+  const getContactStatus = useCallback(async (phoneNumber: string, email?: string): Promise<ContactStatusResult> => {
     // 1. Vérifier si c'est le propre numéro/email de l'utilisateur
     if (currentUser?.phoneNumber) {
       const normalizedUserPhone = normalizePhoneNumber(currentUser.phoneNumber);
       const normalizedContactPhone = normalizePhoneNumber(phoneNumber);
-      if (normalizedUserPhone === normalizedContactPhone) {
-        return { status: 'own' };
+      if (normalizedUserPhone && normalizedUserPhone === normalizedContactPhone) {
+        return { status: 'own', userId: currentUser.uid };
       }
     }
 
     if (currentUser?.email && email && currentUser.email.toLowerCase() === email.toLowerCase()) {
-      return { status: 'own' };
+      return { status: 'own', userId: currentUser.uid };
     }
 
-    // 2. Vérifier si c'est un utilisateur eNkamba (liste hardcodée)
-    const normalized = normalizePhoneNumber(phoneNumber);
-    const enkambaUser = ENKAMBA_USERS.find(
-      u => normalizePhoneNumber(u.phoneNumber) === normalized
-    );
-    if (enkambaUser) {
-      return {
-        status: 'enkamba',
-        referralCode: enkambaUser.referralCode,
-      };
+    const normalizedEmail = email?.trim().toLowerCase() || '';
+    const cacheKey = `${normalizePhoneNumber(phoneNumber)}|${normalizedEmail}`;
+    const cached = statusCacheRef.current.get(cacheKey);
+    if (cached) {
+      return cached;
     }
 
-    // 3. Vérifier si l'email existe dans la collection users (comptes Google)
-    if (email) {
-      const emailExists = await checkEmailInFirestore(email);
-      if (emailExists) {
-        return { status: 'enkamba' };
-      }
-    }
-
-    // 4. Sinon, c'est un contact à inviter
-    return { status: 'invite' };
-  }, [currentUser, normalizePhoneNumber, checkEmailInFirestore]);
+    const firestoreUser = await findUserInFirestore(phoneNumber, email);
+    const result = firestoreUser || { status: 'invite' as const };
+    statusCacheRef.current.set(cacheKey, result);
+    return result;
+  }, [currentUser, normalizePhoneNumber, findUserInFirestore]);
 
   // Vérifier si un contact est sur eNkamba (legacy - version synchrone rapide)
   const checkIfOnEnkamba = useCallback((phoneNumber: string, email?: string): { isOnEnkamba: boolean; referralCode?: string } => {
@@ -245,15 +307,16 @@ export function useFirestoreContacts() {
 
     try {
       const normalizedPhone = normalizePhoneNumber(contactData.phoneNumber);
-      const enkambaInfo = checkIfOnEnkamba(normalizedPhone);
+      const statusInfo = await getContactStatus(normalizedPhone, contactData.email);
+      const isOnEnkamba = statusInfo.status === 'enkamba';
 
       const docRef = await addDoc(collection(db, 'contacts'), {
         userId: currentUser.uid,
         name: contactData.name,
         phoneNumber: normalizedPhone,
         email: contactData.email || '',
-        isOnEnkamba: enkambaInfo.isOnEnkamba,
-        referralCode: enkambaInfo.referralCode || null,
+        isOnEnkamba,
+        referralCode: statusInfo.referralCode || null,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
@@ -264,8 +327,8 @@ export function useFirestoreContacts() {
         name: contactData.name,
         phoneNumber: normalizedPhone,
         email: contactData.email || '',
-        isOnEnkamba: enkambaInfo.isOnEnkamba,
-        referralCode: enkambaInfo.referralCode,
+        isOnEnkamba,
+        referralCode: statusInfo.referralCode,
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
       };
@@ -275,7 +338,7 @@ export function useFirestoreContacts() {
       console.error('Erreur ajout contact:', error);
       return null;
     }
-  }, [currentUser, normalizePhoneNumber, checkIfOnEnkamba]);
+  }, [currentUser, normalizePhoneNumber, getContactStatus]);
 
   // Modifier un contact
   const updateContact = useCallback(async (contactId: string, updates: Partial<Omit<FirestoreContact, 'id' | 'userId' | 'createdAt' | 'updatedAt'>>) => {
@@ -290,12 +353,20 @@ export function useFirestoreContacts() {
       if (updates.name) updateData.name = updates.name;
       if (updates.email) updateData.email = updates.email;
       
-      if (updates.phoneNumber) {
-        const normalizedPhone = normalizePhoneNumber(updates.phoneNumber);
-        const enkambaInfo = checkIfOnEnkamba(normalizedPhone);
-        updateData.phoneNumber = normalizedPhone;
-        updateData.isOnEnkamba = enkambaInfo.isOnEnkamba;
-        updateData.referralCode = enkambaInfo.referralCode || null;
+      const phoneToCheck = updates.phoneNumber ? normalizePhoneNumber(updates.phoneNumber) : undefined;
+      const emailToCheck = updates.email;
+      if (phoneToCheck) {
+        const statusInfo = await getContactStatus(phoneToCheck, emailToCheck);
+        updateData.phoneNumber = phoneToCheck;
+        updateData.isOnEnkamba = statusInfo.status === 'enkamba';
+        updateData.referralCode = statusInfo.referralCode || null;
+      } else if (emailToCheck) {
+        const existingContact = state.contacts.find((contact) => contact.id === contactId);
+        if (existingContact?.phoneNumber) {
+          const statusInfo = await getContactStatus(existingContact.phoneNumber, emailToCheck);
+          updateData.isOnEnkamba = statusInfo.status === 'enkamba';
+          updateData.referralCode = statusInfo.referralCode || null;
+        }
       }
 
       await updateDoc(doc(db, 'contacts', contactId), updateData);
@@ -306,7 +377,7 @@ export function useFirestoreContacts() {
       console.error('Erreur modification contact:', error);
       return false;
     }
-  }, [currentUser, normalizePhoneNumber, checkIfOnEnkamba]);
+  }, [currentUser, normalizePhoneNumber, getContactStatus, state.contacts]);
 
   // Supprimer un contact
   const deleteContact = useCallback(async (contactId: string) => {

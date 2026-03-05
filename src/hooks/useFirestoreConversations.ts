@@ -36,6 +36,50 @@ export interface Conversation {
   unreadCount: number;
 }
 
+function normalizePhoneForLookup(phone: string): string {
+  const raw = (phone || '').trim();
+  if (!raw) return '';
+
+  const digits = raw.replace(/\D/g, '');
+  if (!digits) return '';
+
+  if (raw.startsWith('+')) return `+${digits}`;
+  if (digits.startsWith('243')) return `+${digits}`;
+  if (digits.startsWith('0')) return `+243${digits.slice(1)}`;
+  if (digits.length === 9) return `+243${digits}`;
+  return `+${digits}`;
+}
+
+function getPhoneLookupCandidates(phone: string): string[] {
+  const normalized = normalizePhoneForLookup(phone);
+  if (!normalized) return [];
+
+  const digits = normalized.replace(/\D/g, '');
+  const candidates = new Set<string>([normalized, digits, `+${digits}`]);
+
+  if (digits.startsWith('243')) {
+    const local = digits.slice(3);
+    if (local) {
+      candidates.add(local);
+      candidates.add(`0${local}`);
+    }
+  }
+
+  if (digits.startsWith('0') && digits.length > 1) {
+    const withoutZero = digits.slice(1);
+    candidates.add(`+243${withoutZero}`);
+    candidates.add(`243${withoutZero}`);
+  }
+
+  if (digits.length === 9) {
+    candidates.add(`+243${digits}`);
+    candidates.add(`243${digits}`);
+    candidates.add(`0${digits}`);
+  }
+
+  return Array.from(candidates).filter(Boolean);
+}
+
 export function useFirestoreConversations() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -105,13 +149,39 @@ export function useFirestoreConversations() {
       // Si l'identifiant n'est pas un uid, le convertir
       if (identifierType !== 'uid') {
         const usersRef = collection(db, 'users');
-        let q = query(usersRef, where('email', '==', otherUserIdentifier.toLowerCase()));
-        if (identifierType === 'phone') {
-          q = query(usersRef, where('phoneNumber', '==', otherUserIdentifier));
+        let userDoc: any = null;
+
+        if (identifierType === 'email') {
+          const qByEmail = query(usersRef, where('email', '==', otherUserIdentifier.toLowerCase()));
+          const emailSnapshot = await getDocs(qByEmail);
+          if (!emailSnapshot.empty) {
+            userDoc = emailSnapshot.docs[0];
+          }
         }
-        const snapshot = await getDocs(q);
-        if (snapshot.empty) throw new Error('Utilisateur destinataire introuvable');
-        const userDoc = snapshot.docs[0];
+
+        if (identifierType === 'phone') {
+          const candidates = getPhoneLookupCandidates(otherUserIdentifier);
+          const phoneFields = ['phoneNumber', 'phone', 'kyc.linkedAccount.phoneNumber'] as const;
+
+          for (const candidate of candidates) {
+            for (const fieldName of phoneFields) {
+              const qByPhone = query(usersRef, where(fieldName, '==', candidate));
+              const phoneSnapshot = await getDocs(qByPhone);
+              if (!phoneSnapshot.empty) {
+                userDoc = phoneSnapshot.docs[0];
+                break;
+              }
+            }
+            if (userDoc) {
+              break;
+            }
+          }
+        }
+
+        if (!userDoc) {
+          throw new Error('Utilisateur destinataire introuvable');
+        }
+
         otherUserId = userDoc.id;
         // Optionnel: récupérer le nom réel
         if (!otherUserName) {
