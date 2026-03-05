@@ -20,10 +20,15 @@ export default function CreateStoryPage() {
   const [selectedLocation, setSelectedLocation] = useState<{ latitude: number; longitude: number; address?: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [showMediaOptions, setShowMediaOptions] = useState(false);
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaInputRef = useRef<HTMLInputElement>(null);
 
   // Durée: 30 min à 3 jours (4320 minutes)
@@ -59,8 +64,8 @@ export default function CreateStoryPage() {
   const startCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'user' }, 
-        audio: false 
+        video: { facingMode }, 
+        audio: mode === 'video' 
       });
       streamRef.current = stream;
       if (videoRef.current) {
@@ -68,7 +73,14 @@ export default function CreateStoryPage() {
       }
     } catch (error) {
       console.error('Erreur caméra:', error);
+      alert('Impossible d\'accéder à la caméra');
     }
+  };
+
+  const switchCamera = async () => {
+    stopCamera();
+    setFacingMode(prev => prev === 'user' ? 'environment' : 'user');
+    await startCamera();
   };
 
   const capturePhoto = () => {
@@ -87,8 +99,90 @@ export default function CreateStoryPage() {
           setMediaFile(file);
           setPreviewUrl(URL.createObjectURL(blob));
           stopCamera();
+          setShowMediaOptions(false);
         }
       }, 'image/jpeg');
+    }
+  };
+
+  const startVideoRecording = () => {
+    if (!streamRef.current) return;
+    
+    chunksRef.current = [];
+    const recorder = new MediaRecorder(streamRef.current);
+    
+    recorder.ondataavailable = (e) => {
+      if (e.data.size > 0) {
+        chunksRef.current.push(e.data);
+      }
+    };
+    
+    recorder.onstop = () => {
+      const blob = new Blob(chunksRef.current, { type: 'video/webm' });
+      const file = new File([blob], 'video.webm', { type: 'video/webm' });
+      setMediaFile(file);
+      setPreviewUrl(URL.createObjectURL(blob));
+      stopCamera();
+      setShowMediaOptions(false);
+      setIsRecording(false);
+    };
+    
+    recorder.start();
+    mediaRecorderRef.current = recorder;
+    setIsRecording(true);
+  };
+
+  const stopVideoRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
+  };
+
+  const startAudioRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      
+      chunksRef.current = [];
+      const recorder = new MediaRecorder(stream);
+      
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          chunksRef.current.push(e.data);
+        }
+      };
+      
+      recorder.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+        const file = new File([blob], 'audio.webm', { type: 'audio/webm' });
+        setMediaFile(file);
+        setPreviewUrl(URL.createObjectURL(blob));
+        stopCamera();
+        setShowMediaOptions(false);
+        setIsRecording(false);
+      };
+      
+      recorder.start();
+      mediaRecorderRef.current = recorder;
+      setIsRecording(true);
+    } catch (error) {
+      console.error('Erreur micro:', error);
+      alert('Impossible d\'accéder au microphone');
+    }
+  };
+
+  const stopAudioRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
+  };
+
+  const handleFileImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setMediaFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+      setShowMediaOptions(false);
     }
   };
 
