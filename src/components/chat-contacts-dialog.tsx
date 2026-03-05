@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { QrCode } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Send, Mail, Smartphone } from 'lucide-react';
+import { Loader2, Plus, Send, Mail, Smartphone, FileUp } from 'lucide-react';
 import { useFirestoreContacts } from '@/hooks/useFirestoreContacts';
 import { useFirestoreConversations } from '@/hooks/useFirestoreConversations';
 
@@ -35,6 +35,8 @@ export function ChatContactsDialog({ open, onOpenChange }: ChatContactsDialogPro
   const [addForm, setAddForm] = useState({ name: '', phoneNumber: '', email: '' });
   const [contactStatuses, setContactStatuses] = useState<Map<string, any>>(new Map());
   const [isImportingDeviceContacts, setIsImportingDeviceContacts] = useState(false);
+  const [isImportingVcf, setIsImportingVcf] = useState(false);
+  const vcfInputRef = useRef<HTMLInputElement>(null);
 
   // Ajouter un contact
   const handleAddContact = useCallback(async () => {
@@ -117,6 +119,10 @@ export function ChatContactsDialog({ open, onOpenChange }: ChatContactsDialogPro
 
   const importCapacitorContacts = useCallback(async (): Promise<DeviceContact[]> => {
     try {
+      const { Capacitor } = await import('@capacitor/core');
+      if (!Capacitor.isNativePlatform()) {
+        return [];
+      }
       const { Contacts } = await import('@capacitor-community/contacts');
       const result = await Contacts.getContacts({
         projection: { name: true, phones: true, emails: true },
@@ -134,6 +140,80 @@ export function ChatContactsDialog({ open, onOpenChange }: ChatContactsDialogPro
     }
   }, []);
 
+  const persistImportedContacts = useCallback(async (contactsFromDevice: DeviceContact[]) => {
+    const existingPhones = new Set(
+      contacts
+        .map((c) => normalizePhoneNumber(c.phoneNumber))
+        .filter(Boolean)
+    );
+
+    let created = 0;
+    for (const contact of contactsFromDevice) {
+      const normalizedPhone = normalizePhoneNumber(contact.phoneNumber);
+      if (!normalizedPhone || existingPhones.has(normalizedPhone)) {
+        continue;
+      }
+
+      const statusInfo = await getContactStatus(normalizedPhone, contact.email);
+      await addContact({
+        name: contact.name,
+        phoneNumber: normalizedPhone,
+        email: contact.email,
+        isOnEnkamba: statusInfo.status === 'enkamba',
+      });
+      existingPhones.add(normalizedPhone);
+      created += 1;
+    }
+
+    return created;
+  }, [contacts, normalizePhoneNumber, getContactStatus, addContact]);
+
+  const parseVcf = useCallback((vcfText: string): DeviceContact[] => {
+    const cards = vcfText.split('BEGIN:VCARD').slice(1);
+    const parsed: DeviceContact[] = [];
+
+    for (const card of cards) {
+      const lines = card.split('\n').map((l) => l.trim());
+      const nameLine = lines.find((line) => line.startsWith('FN:'));
+      const telLine = lines.find((line) => line.startsWith('TEL'));
+      const emailLine = lines.find((line) => line.startsWith('EMAIL'));
+
+      const name = nameLine?.split(':').slice(1).join(':').trim() || '';
+      const phoneNumber = telLine?.split(':').slice(1).join(':').trim() || '';
+      const email = emailLine?.split(':').slice(1).join(':').trim() || undefined;
+
+      if (name && phoneNumber) {
+        parsed.push({ name, phoneNumber, email });
+      }
+    }
+
+    return parsed;
+  }, []);
+
+  const handleImportVcfFile = useCallback(async (file: File) => {
+    setIsImportingVcf(true);
+    try {
+      const content = await file.text();
+      const parsedContacts = parseVcf(content);
+      if (parsedContacts.length === 0) {
+        alert('Aucun contact valide trouvé dans le fichier .vcf');
+        return;
+      }
+      const created = await persistImportedContacts(parsedContacts);
+      if (created === 0) {
+        alert('Aucun nouveau contact importé (déjà présents ou numéros invalides).');
+      } else {
+        alert(`${created} contact(s) importé(s) depuis le fichier .vcf.`);
+      }
+    } catch (error) {
+      console.error('Erreur import .vcf:', error);
+      alert("Impossible d'importer le fichier .vcf.");
+    } finally {
+      setIsImportingVcf(false);
+      if (vcfInputRef.current) vcfInputRef.current.value = '';
+    }
+  }, [parseVcf, persistImportedContacts]);
+
   const handleImportDeviceContacts = useCallback(async () => {
     setIsImportingDeviceContacts(true);
     try {
@@ -141,34 +221,11 @@ export function ChatContactsDialog({ open, onOpenChange }: ChatContactsDialogPro
       const contactsFromDevice = webContacts.length > 0 ? webContacts : await importCapacitorContacts();
 
       if (contactsFromDevice.length === 0) {
-        alert("Import non disponible sur cet appareil/navigateur. Utilisez 'Ajouter un contact' manuellement.");
+        alert("Accès direct aux contacts non supporté sur ce navigateur/PWA. Utilisez 'Importer fichier .vcf'.");
         return;
       }
 
-      const existingPhones = new Set(
-        contacts
-          .map((c) => normalizePhoneNumber(c.phoneNumber))
-          .filter(Boolean)
-      );
-
-      let created = 0;
-      for (const contact of contactsFromDevice) {
-        const normalizedPhone = normalizePhoneNumber(contact.phoneNumber);
-        if (!normalizedPhone || existingPhones.has(normalizedPhone)) {
-          continue;
-        }
-
-        const statusInfo = await getContactStatus(normalizedPhone, contact.email);
-        await addContact({
-          name: contact.name,
-          phoneNumber: normalizedPhone,
-          email: contact.email,
-          isOnEnkamba: statusInfo.status === 'enkamba',
-        });
-        existingPhones.add(normalizedPhone);
-        created += 1;
-      }
-
+      const created = await persistImportedContacts(contactsFromDevice);
       if (created === 0) {
         alert('Aucun nouveau contact importé (déjà présents ou numéros invalides).');
       } else {
@@ -180,7 +237,7 @@ export function ChatContactsDialog({ open, onOpenChange }: ChatContactsDialogPro
     } finally {
       setIsImportingDeviceContacts(false);
     }
-  }, [importWebContacts, importCapacitorContacts, contacts, addContact, getContactStatus, normalizePhoneNumber]);
+  }, [importWebContacts, importCapacitorContacts, persistImportedContacts]);
 
   // Inviter un contact non eNkamba
   const handleSendInvitation = useCallback((contact: any) => {
@@ -231,6 +288,16 @@ export function ChatContactsDialog({ open, onOpenChange }: ChatContactsDialogPro
         <div className="space-y-4">
           {/* Ajout bouton scanner QR code */}
           <div className="flex flex-wrap gap-2 justify-end">
+            <input
+              ref={vcfInputRef}
+              type="file"
+              accept=".vcf,text/vcard,text/x-vcard"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) void handleImportVcfFile(file);
+              }}
+            />
             <Button
               variant="outline"
               className="gap-2"
@@ -246,6 +313,24 @@ export function ChatContactsDialog({ open, onOpenChange }: ChatContactsDialogPro
                 <>
                   <Smartphone className="h-4 w-4" />
                   Importer contacts appareil
+                </>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() => vcfInputRef.current?.click()}
+              disabled={isImportingVcf}
+            >
+              {isImportingVcf ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Import .vcf...
+                </>
+              ) : (
+                <>
+                  <FileUp className="h-4 w-4" />
+                  Importer fichier .vcf
                 </>
               )}
             </Button>
