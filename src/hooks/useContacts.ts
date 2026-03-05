@@ -128,48 +128,73 @@ export function useContacts() {
     }
   }, [loadFirestoreContacts]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Demander l'accès aux contacts
+  // Demander l'accès aux contacts avec Contact Picker API (Web) ou Capacitor (Mobile)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const requestContactsPermission = useCallback(async () => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      // Essayer Capacitor Contacts d'abord (pour mobile)
       let processedContacts: { all: Contact[]; enkamba: Contact[]; nonEnkamba: Contact[] } = {
         all: [],
         enkamba: [],
         nonEnkamba: [],
       };
-      let successCapacitor = false;
+      let success = false;
 
-      try {
-        const result = await Contacts.getContacts({
-          projection: {
-            name: true,
-            phones: true,
-            emails: true,
-          },
-        });
-
-        if (result.contacts && result.contacts.length > 0) {
-          processedContacts = processContacts(result.contacts);
-          successCapacitor = true;
+      // 1. Essayer Contact Picker API (Chrome/Edge sur web)
+      if ('contacts' in navigator && 'ContactsManager' in window) {
+        try {
+          const props = ['name', 'tel'];
+          const opts = { multiple: true };
+          // @ts-ignore - Contact Picker API
+          const contacts = await navigator.contacts.select(props, opts);
+          
+          if (contacts && contacts.length > 0) {
+            const formattedContacts = contacts.map((contact: any, index: number) => ({
+              name: contact.name?.[0] || `Contact ${index + 1}`,
+              phones: contact.tel?.map((tel: string) => ({ number: tel })) || [],
+            }));
+            processedContacts = processContacts(formattedContacts);
+            success = true;
+          }
+        } catch (pickerError) {
+          console.log('Contact Picker API non disponible ou refusé:', pickerError);
         }
-      } catch (capacitorError) {
-        console.log('Capacitor Contacts non disponible, utilisation de Firestore:', capacitorError);
+      }
+
+      // 2. Essayer Capacitor Contacts (pour mobile)
+      if (!success) {
+        try {
+          const result = await Contacts.getContacts({
+            projection: {
+              name: true,
+              phones: true,
+              emails: true,
+            },
+          });
+
+          if (result.contacts && result.contacts.length > 0) {
+            processedContacts = processContacts(result.contacts);
+            success = true;
+          }
+        } catch (capacitorError) {
+          console.log('Capacitor Contacts non disponible:', capacitorError);
+        }
       }
 
       // Sauvegarder
       localStorage.setItem(PERMISSION_STORAGE_KEY, 'true');
-      localStorage.setItem(CONTACTS_STORAGE_KEY, JSON.stringify({
-        contacts: processedContacts.all,
-        enkambaContacts: processedContacts.enkamba,
-        nonEnkambaContacts: processedContacts.nonEnkamba,
-        lastUpdated: Date.now(),
-      }));
+      if (success) {
+        localStorage.setItem(CONTACTS_STORAGE_KEY, JSON.stringify({
+          contacts: processedContacts.all,
+          enkambaContacts: processedContacts.enkamba,
+          nonEnkambaContacts: processedContacts.nonEnkamba,
+          lastUpdated: Date.now(),
+        }));
+      }
 
-      // Si succès avec Capacitor, mettre à jour l'état
-      if (successCapacitor) {
+      // Mettre à jour l'état
+      if (success) {
         setState(prev => ({
           ...prev,
           contacts: processedContacts.all,
@@ -179,7 +204,7 @@ export function useContacts() {
           isLoading: false,
         }));
       } else {
-        // Sinon, utiliser les contacts Firestore
+        // Fallback à Firestore
         setState(prev => ({
           ...prev,
           hasPermission: true,

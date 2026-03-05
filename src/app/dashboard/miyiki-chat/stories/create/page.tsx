@@ -20,6 +20,7 @@ export default function CreateStoryPage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<{ latitude: number; longitude: number; address?: string } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -114,6 +115,11 @@ export default function CreateStoryPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleConfirmPublish = () => {
+    setShowConfirmation(false);
+    handlePublish();
   };
 
   const locationPreviewSrc = selectedLocation
@@ -322,7 +328,7 @@ export default function CreateStoryPage() {
 
             {/* Publish Button */}
             <Button
-              onClick={handlePublish}
+              onClick={() => setShowConfirmation(true)}
               disabled={loading}
               className="w-full h-14 rounded-2xl bg-white text-purple-600 hover:bg-white/90 font-bold text-lg"
             >
@@ -331,6 +337,63 @@ export default function CreateStoryPage() {
           </div>
         )}
       </div>
+
+      {/* Confirmation Modal */}
+      {showConfirmation && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-3xl p-6 max-w-md w-full space-y-4">
+            <h3 className="text-xl font-bold text-gray-900">Confirmer la publication</h3>
+            
+            {/* Preview miniature */}
+            <div className="aspect-video rounded-2xl overflow-hidden bg-black">
+              {previewUrl && mode === 'photo' && (
+                <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+              )}
+              {mode === 'location' && locationPreviewSrc && (
+                <iframe
+                  title="Aperçu"
+                  src={locationPreviewSrc}
+                  className="h-full w-full border-0"
+                  loading="lazy"
+                />
+              )}
+              {!previewUrl && mode !== 'location' && (
+                <div className="w-full h-full flex items-center justify-center text-white">
+                  {mode === 'audio' ? '🎵 Audio' : mode === 'video' ? '🎥 Vidéo' : '📷 Photo'}
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2 text-sm text-gray-600">
+              <p><strong>Type:</strong> {mode}</p>
+              <p><strong>Durée:</strong> {formatDuration(durationMinutes)}</p>
+              {caption && <p><strong>Légende:</strong> {caption}</p>}
+            </div>
+
+            <p className="text-sm text-gray-500">
+              Votre story sera visible par vos contacts pendant {formatDuration(durationMinutes)}.
+            </p>
+
+            <div className="flex gap-3">
+              <Button
+                onClick={() => setShowConfirmation(false)}
+                variant="outline"
+                className="flex-1"
+                disabled={loading}
+              >
+                Annuler
+              </Button>
+              <Button
+                onClick={handleConfirmPublish}
+                disabled={loading}
+                className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white"
+              >
+                {loading ? 'Publication...' : 'Confirmer'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
