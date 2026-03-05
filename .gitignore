@@ -27,7 +27,8 @@ yarn-error.log*
 
 # local env files
 .env*.local
-.env
+
+# Note: .env contient des secrets encodés en Base64 (safe pour GitHub)
 
 # vercel
 .vercel

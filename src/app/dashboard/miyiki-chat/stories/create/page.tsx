@@ -52,6 +52,11 @@ export default function CreateStoryPage() {
   };
 
   useEffect(() => {
+    // Démarrer la caméra automatiquement pour photo
+    if (mode === 'photo' && !previewUrl && !streamRef.current) {
+      startCamera();
+    }
+    
     return () => {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
@@ -60,7 +65,7 @@ export default function CreateStoryPage() {
         URL.revokeObjectURL(previewUrl);
       }
     };
-  }, [previewUrl]);
+  }, [mode, previewUrl]);
 
   const startCamera = async () => {
     try {
