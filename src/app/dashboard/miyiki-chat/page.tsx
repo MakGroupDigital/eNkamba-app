@@ -19,10 +19,12 @@ import { useFirestoreContacts } from '@/hooks/useFirestoreContacts';
 import { useAllTransactions } from '@/hooks/useAllTransactions';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useStories } from '@/hooks/useStories';
+import { useChatSettings } from '@/hooks/useChatSettings';
 import { ChatContactsDialog } from '@/components/chat-contacts-dialog';
 import { StartChatEmptyState } from '@/components/start-chat-empty-state';
 import { StoriesOnboarding } from '@/components/stories/StoriesOnboarding';
 import { StoryViewer } from '@/components/stories/StoryViewer';
+import { LocationSharingDialog } from '@/components/chat/LocationSharingDialog';
 import {
   MiyikiChatIcon,
   NewChatIcon,
@@ -38,7 +40,7 @@ import {
   ChatFilterReadIcon,
   ChatFilterGroupsIcon,
 } from "@/components/icons/chat-icons";
-import { MessageSquare, CheckCheck, Circle, Users, Plus, TrendingUp, Settings, Edit, Zap, MapPin, ShoppingBag, Video, Mic, Image as ImageIcon } from 'lucide-react';
+import { MessageSquare, CheckCheck, Circle, Users, Plus, TrendingUp, Settings, Edit, Zap, MapPin, ShoppingBag, Video, Mic, Image as ImageIcon, Eye, EyeOff } from 'lucide-react';
 import { CreateGroupDialog } from '@/components/create-group-dialog';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -66,6 +68,7 @@ export default function MiyikiChatPage() {
   const { transactions, loading: transactionsLoading } = useAllTransactions();
   const { profile } = useUserProfile();
   const { stories, myStories, loading: storiesLoading, markAsViewed, replyToStory } = useStories();
+  const { settings, loading: settingsLoading, updateSetting } = useChatSettings();
 
   const [activeTab, setActiveTab] = useState<ChatTab>('discussions');
   const [showChatContactsDialog, setShowChatContactsDialog] = useState(false);
@@ -75,6 +78,7 @@ export default function MiyikiChatPage() {
   const [showStoriesOnboarding, setShowStoriesOnboarding] = useState(false);
   const [viewingStories, setViewingStories] = useState<{ stories: any[]; index: number } | null>(null);
   const [showActionsMenu, setShowActionsMenu] = useState(false);
+  const [showLocationDialog, setShowLocationDialog] = useState(false);
 
   // Vérifier si c'est la première visite aux stories
   useEffect(() => {
@@ -334,21 +338,25 @@ export default function MiyikiChatPage() {
           <Card className="p-4 rounded-2xl">
             <h3 className="font-bold mb-3">Mes Stories ({myStories.length})</h3>
             <div className="space-y-2">
-              {myStories.map((story) => (
-                <div key={story.id} className="flex items-center gap-3 p-2 rounded-xl hover:bg-muted/50">
+              {myStories.map((story, storyIndex) => (
+                <button
+                  key={story.id}
+                  onClick={() => setViewingStories({ stories: myStories, index: storyIndex })}
+                  className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-muted/50 transition-all cursor-pointer"
+                >
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
                     {story.type === 'photo' && <ImageIcon size={20} className="text-white" />}
                     {story.type === 'video' && <Video size={20} className="text-white" />}
                     {story.type === 'audio' && <Mic size={20} className="text-white" />}
                     {story.type === 'location' && <MapPin size={20} className="text-white" />}
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 text-left">
                     <p className="text-sm font-medium">{story.caption || 'Story sans légende'}</p>
                     <p className="text-xs text-muted-foreground">
                       {story.views.length} vue{story.views.length > 1 ? 's' : ''}
                     </p>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           </Card>
@@ -469,37 +477,165 @@ export default function MiyikiChatPage() {
   };
 
   const renderSettings = () => {
+    const handleLocationShare = (location: { latitude: number; longitude: number; address?: string }) => {
+      console.log('Location shared:', location);
+      // TODO: Envoyer la localisation dans une conversation
+      alert(`Position partagée: ${location.latitude}, ${location.longitude}`);
+    };
+
     return (
       <div className="space-y-4">
         <Card className="p-4 rounded-2xl">
           <h3 className="font-bold text-lg mb-4">Paramètres du chat</h3>
           <div className="space-y-3">
-            <Button variant="ghost" className="w-full justify-start">
+            <Button 
+              variant="ghost" 
+              className="w-full justify-start"
+              onClick={() => router.push('/dashboard/settings/edit-profile')}
+            >
               <Edit size={20} className="mr-3" />
               Modifier le profil
             </Button>
-            <Button variant="ghost" className="w-full justify-start">
+            <Button 
+              variant="ghost" 
+              className="w-full justify-start"
+              onClick={() => handleCreateGroup()}
+            >
               <Users size={20} className="mr-3" />
               Gérer les groupes
             </Button>
-            <Button variant="ghost" className="w-full justify-start">
+            <Button 
+              variant="ghost" 
+              className="w-full justify-start"
+              onClick={() => setShowLocationDialog(true)}
+            >
               <MapPin size={20} className="mr-3" />
-              Partage de localisation
+              Partager ma localisation
             </Button>
           </div>
         </Card>
         
         <Card className="p-4 rounded-2xl">
           <h3 className="font-bold text-lg mb-4">Confidentialité</h3>
-          <div className="space-y-3">
-            <Button variant="ghost" className="w-full justify-start">
-              Statut en ligne
-            </Button>
-            <Button variant="ghost" className="w-full justify-start">
-              Confirmation de lecture
-            </Button>
+          <div className="space-y-4">
+            {/* Statut en ligne */}
+            <div className="flex items-center justify-between p-3 rounded-xl hover:bg-muted/50 transition-colors">
+              <div className="flex items-center gap-3">
+                <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
+                  settings.onlineStatus ? 'bg-green-100 text-green-600' : 'bg-muted text-muted-foreground'
+                }`}>
+                  {settings.onlineStatus ? <Eye size={20} /> : <EyeOff size={20} />}
+                </div>
+                <div>
+                  <p className="font-medium">Statut en ligne</p>
+                  <p className="text-xs text-muted-foreground">
+                    {settings.onlineStatus ? 'Visible par tous' : 'Masqué'}
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant={settings.onlineStatus ? "default" : "outline"}
+                size="sm"
+                onClick={() => updateSetting('onlineStatus', !settings.onlineStatus)}
+                disabled={settingsLoading}
+                className="rounded-full"
+              >
+                {settings.onlineStatus ? 'Activé' : 'Désactivé'}
+              </Button>
+            </div>
+
+            {/* Confirmation de lecture */}
+            <div className="flex items-center justify-between p-3 rounded-xl hover:bg-muted/50 transition-colors">
+              <div className="flex items-center gap-3">
+                <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
+                  settings.readReceipts ? 'bg-blue-100 text-blue-600' : 'bg-muted text-muted-foreground'
+                }`}>
+                  <CheckCheck size={20} />
+                </div>
+                <div>
+                  <p className="font-medium">Confirmation de lecture</p>
+                  <p className="text-xs text-muted-foreground">
+                    {settings.readReceipts ? 'Les autres voient quand vous lisez' : 'Masqué'}
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant={settings.readReceipts ? "default" : "outline"}
+                size="sm"
+                onClick={() => updateSetting('readReceipts', !settings.readReceipts)}
+                disabled={settingsLoading}
+                className="rounded-full"
+              >
+                {settings.readReceipts ? 'Activé' : 'Désactivé'}
+              </Button>
+            </div>
+
+            {/* Dernière connexion */}
+            <div className="flex items-center justify-between p-3 rounded-xl hover:bg-muted/50 transition-colors">
+              <div className="flex items-center gap-3">
+                <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
+                  settings.lastSeen ? 'bg-purple-100 text-purple-600' : 'bg-muted text-muted-foreground'
+                }`}>
+                  <Circle size={20} />
+                </div>
+                <div>
+                  <p className="font-medium">Dernière connexion</p>
+                  <p className="text-xs text-muted-foreground">
+                    {settings.lastSeen ? 'Visible par tous' : 'Masqué'}
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant={settings.lastSeen ? "default" : "outline"}
+                size="sm"
+                onClick={() => updateSetting('lastSeen', !settings.lastSeen)}
+                disabled={settingsLoading}
+                className="rounded-full"
+              >
+                {settings.lastSeen ? 'Activé' : 'Désactivé'}
+              </Button>
+            </div>
+
+            {/* Partage de localisation */}
+            <div className="flex items-center justify-between p-3 rounded-xl hover:bg-muted/50 transition-colors">
+              <div className="flex items-center gap-3">
+                <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
+                  settings.locationSharing ? 'bg-red-100 text-red-600' : 'bg-muted text-muted-foreground'
+                }`}>
+                  <MapPin size={20} />
+                </div>
+                <div>
+                  <p className="font-medium">Partage de localisation</p>
+                  <p className="text-xs text-muted-foreground">
+                    {settings.locationSharing ? 'Activé en temps réel' : 'Désactivé'}
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant={settings.locationSharing ? "default" : "outline"}
+                size="sm"
+                onClick={() => updateSetting('locationSharing', !settings.locationSharing)}
+                disabled={settingsLoading}
+                className="rounded-full"
+              >
+                {settings.locationSharing ? 'Activé' : 'Désactivé'}
+              </Button>
+            </div>
           </div>
         </Card>
+
+        <Card className="p-4 rounded-2xl bg-muted/30">
+          <p className="text-sm text-muted-foreground text-center">
+            💡 Ces paramètres affectent la façon dont les autres vous voient dans le chat
+          </p>
+        </Card>
+
+        {/* Location Sharing Dialog */}
+        <LocationSharingDialog
+          open={showLocationDialog}
+          onOpenChange={setShowLocationDialog}
+          onShareLocation={handleLocationShare}
+        />
       </div>
     );
   };
@@ -703,13 +839,17 @@ export default function MiyikiChatPage() {
           onClose={() => setViewingStories(null)}
           onMarkViewed={markAsViewed}
           onReply={async (storyId, message) => {
-            // Trouver la conversation avec l'auteur de la story
+            // Trouver la story pour obtenir les infos du propriétaire
             const story = viewingStories.stories.find(s => s.id === storyId);
             if (story) {
-              const conversation = conversations.find(c => 
-                c.participants?.includes(story.userId)
+              await replyToStory(
+                storyId, 
+                message, 
+                story.userId, 
+                story.userName,
+                story.mediaUrl,
+                story.type
               );
-              await replyToStory(storyId, message, conversation?.id);
             }
           }}
         />

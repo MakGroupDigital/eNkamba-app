@@ -10,8 +10,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useAuth } from '@/hooks/useAuth';
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/lib/firebase';
+import { doc, setDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { ArrowLeft, Loader2, Upload } from 'lucide-react';
 import Link from 'next/link';
 
@@ -103,25 +103,47 @@ export default function EditProfilePage() {
     setIsLoading(true);
 
     try {
-      const updateProfileFn = httpsCallable(functions, 'updateUserProfile');
-      const result = await updateProfileFn({
-        userId: user.uid,
-        ...formData,
-        profileImage: profileImage || undefined,
+      const userRef = doc(db, 'users', user.uid);
+      
+      // Préparer les données à enregistrer
+      const updateData: any = {
+        fullName: formData.fullName,
+        name: formData.fullName,
+        phone: formData.phone,
+        phoneNumber: formData.phone,
+        dateOfBirth: formData.dateOfBirth,
+        country: formData.country,
+        updatedAt: new Date(),
+      };
+
+      // Ajouter l'image si elle existe
+      if (profileImage) {
+        updateData.profileImage = profileImage;
+        updateData.photoURL = profileImage;
+      }
+
+      // Mettre à jour aussi dans kyc.identity si nécessaire
+      if (formData.fullName || formData.dateOfBirth || formData.country) {
+        updateData['kyc.identity'] = {
+          fullName: formData.fullName,
+          dateOfBirth: formData.dateOfBirth,
+          country: formData.country,
+        };
+      }
+
+      // Enregistrer dans Firestore avec merge pour ne pas écraser les autres champs
+      await setDoc(userRef, updateData, { merge: true });
+
+      toast({
+        title: 'Succès',
+        description: 'Profil mis à jour avec succès',
+        className: 'bg-green-600 text-white border-none',
       });
 
-      const data = result.data as any;
-
-      if (data.success) {
-        toast({
-          title: 'Succès',
-          description: 'Profil mis à jour avec succès',
-          className: 'bg-green-600 text-white border-none',
-        });
+      // Attendre un peu pour que le hook useUserProfile recharge les données
+      setTimeout(() => {
         router.push('/dashboard/settings');
-      } else {
-        throw new Error(data.message || 'Erreur lors de la mise à jour');
-      }
+      }, 500);
     } catch (error: any) {
       console.error('Erreur mise à jour profil:', error);
       toast({

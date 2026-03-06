@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, query, where, onSnapshot, addDoc, updateDoc, doc, arrayUnion, Timestamp, orderBy } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, addDoc, updateDoc, doc, arrayUnion, Timestamp, orderBy, getDocs } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { Story, StoryReply, ContactStories, StoryType, StoryDuration } from '@/types/story.types';
 import { uploadToCloudinary } from '@/lib/cloudinary-upload';
@@ -137,9 +137,10 @@ export function useStories() {
     });
   };
 
-  const replyToStory = async (storyId: string, message: string, conversationId?: string) => {
+  const replyToStory = async (storyId: string, message: string, storyOwnerId: string, storyOwnerName: string, storyMediaUrl?: string, storyType?: StoryType) => {
     if (!currentUser?.uid) throw new Error('Non authentifié');
 
+    // 1. Ajouter la réponse dans la story elle-même
     const reply: Omit<StoryReply, 'id'> = {
       userId: currentUser.uid,
       userName: currentUser.displayName || 'Utilisateur',
@@ -153,16 +154,71 @@ export function useStories() {
       replies: arrayUnion(reply),
     });
 
-    // Si conversationId fourni, envoyer aussi dans la conversation
-    if (conversationId) {
-      await addDoc(collection(db, 'conversations', conversationId, 'messages'), {
-        senderId: currentUser.uid,
-        text: `Réponse à story: ${message}`,
-        timestamp: Timestamp.now(),
-        type: 'story_reply',
-        storyId,
-      });
+    // 2. Chercher ou créer une conversation avec le propriétaire de la story
+    let conversationId: string | null = null;
+
+    // Chercher une conversation existante
+    const q = query(
+      collection(db, 'conversations'),
+      where('participants', 'array-contains', currentUser.uid)
+    );
+
+    const snapshot = await getDocs(q);
+    for (const docSnapshot of snapshot.docs) {
+      const data = docSnapshot.data();
+      if (data.participants.includes(storyOwnerId)) {
+        conversationId = docSnapshot.id;
+        break;
+      }
     }
+
+    // Si pas de conversation existante, en créer une
+    if (!conversationId) {
+      const docRef = await addDoc(collection(db, 'conversations'), {
+        participants: [currentUser.uid, storyOwnerId],
+        participantNames: [currentUser.displayName || 'Utilisateur', storyOwnerName],
+        lastMessage: '',
+        lastMessageTime: Timestamp.now(),
+        createdAt: Timestamp.now(),
+        unreadCount: 0,
+      });
+      conversationId = docRef.id;
+    }
+
+    // 3. Envoyer le message dans la conversation avec la référence à la story
+    const messageData: any = {
+      senderId: currentUser.uid,
+      senderName: currentUser.displayName || 'Utilisateur',
+      text: message,
+      messageType: 'story_reply',
+      timestamp: Timestamp.now(),
+      isRead: false,
+      metadata: {
+        storyId,
+        storyOwnerId,
+        storyOwnerName,
+      },
+    };
+
+    // Ajouter le média de la story si disponible
+    if (storyMediaUrl) {
+      messageData.metadata.storyMediaUrl = storyMediaUrl;
+    }
+
+    if (storyType) {
+      messageData.metadata.storyType = storyType;
+    }
+
+    await addDoc(collection(db, 'conversations', conversationId, 'messages'), messageData);
+
+    // 4. Mettre à jour le dernier message de la conversation
+    const convRef = doc(db, 'conversations', conversationId);
+    await updateDoc(convRef, {
+      lastMessage: `Réponse à story: ${message}`,
+      lastMessageTime: Timestamp.now(),
+    });
+
+    return conversationId;
   };
 
   return {

@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, Plus, Send, Mail, Smartphone, FileUp } from 'lucide-react';
 import { useFirestoreContacts } from '@/hooks/useFirestoreContacts';
 import { useFirestoreConversations } from '@/hooks/useFirestoreConversations';
+import { ContactQRScanner } from '@/components/contacts/ContactQRScanner';
 
 interface ChatContactsDialogProps {
   open: boolean;
@@ -36,6 +37,7 @@ export function ChatContactsDialog({ open, onOpenChange }: ChatContactsDialogPro
   const [contactStatuses, setContactStatuses] = useState<Map<string, any>>(new Map());
   const [isImportingDeviceContacts, setIsImportingDeviceContacts] = useState(false);
   const [isImportingVcf, setIsImportingVcf] = useState(false);
+  const [showQRScanner, setShowQRScanner] = useState(false);
   const vcfInputRef = useRef<HTMLInputElement>(null);
 
   // Ajouter un contact
@@ -351,10 +353,11 @@ export function ChatContactsDialog({ open, onOpenChange }: ChatContactsDialogPro
                 </>
               )}
             </Button>
-            <Button variant="outline" className="gap-2" onClick={() => {
-              window.localStorage.setItem('enkamba_qr_return', window.location.pathname);
-              router.push('/dashboard/scanner');
-            }}>
+            <Button 
+              variant="outline" 
+              className="gap-2" 
+              onClick={() => setShowQRScanner(true)}
+            >
               <QrCode className="h-4 w-4" />
               Scanner un QR code
             </Button>
@@ -508,6 +511,16 @@ export function ChatContactsDialog({ open, onOpenChange }: ChatContactsDialogPro
           </div>
         </div>
       </DialogContent>
+
+      {/* Scanner QR Code */}
+      <ContactQRScanner
+        open={showQRScanner}
+        onOpenChange={setShowQRScanner}
+        onContactFound={(userId, displayName) => {
+          // Rafraîchir la liste des contacts après ajout
+          setShowQRScanner(false);
+        }}
+      />
     </Dialog>
   );
 }

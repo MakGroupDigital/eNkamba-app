@@ -17,6 +17,7 @@ import {
   CheckCircle2,
   Loader2,
   Shield,
+  QrCode,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
@@ -26,6 +27,7 @@ import { useTheme } from 'next-themes';
 import { useState, useEffect } from 'react';
 import { useKycStatus } from '@/hooks/useKycStatus';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { ContactQRCode } from '@/components/settings/ContactQRCode';
 import {
   SettingsPageIcon,
   UserProfileIcon,
@@ -104,6 +106,8 @@ export default function SettingsPage() {
   const { profile, isLoading: profileLoading } = useUserProfile();
   const [isMounted, setIsMounted] = useState(false);
   const [userData, setUserData] = useState<UserData>(getDefaultUser());
+  const [showDetailedInfo, setShowDetailedInfo] = useState(false);
+  const [showQRCode, setShowQRCode] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -176,6 +180,7 @@ export default function SettingsPage() {
               <div className="flex items-center gap-4 mb-6">
                 <div className="relative">
                   <Avatar className="h-20 w-20 border-4 border-primary/20">
+                    <AvatarImage src={profile?.profileImage || profile?.photoURL || undefined} alt={userData.name} />
                     <AvatarFallback className="bg-gradient-to-br from-primary to-green-800 text-white text-lg font-bold">
                       {userData.name
                         .split(' ')
@@ -187,7 +192,7 @@ export default function SettingsPage() {
                   </Avatar>
                   <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-green-500 border-2 border-white" />
                 </div>
-                <div>
+                <div className="flex-1">
                   <p className="text-xl font-bold font-headline">{userData.name}</p>
                   <p className="text-muted-foreground">{userData.email}</p>
                   {userData.phone && (
@@ -200,11 +205,21 @@ export default function SettingsPage() {
                     </p>
                   )}
                 </div>
+                {/* QR Code Button */}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-12 w-12 rounded-full"
+                  onClick={() => setShowQRCode(true)}
+                  title="Mon QR Code"
+                >
+                  <QrCode className="h-5 w-5" />
+                </Button>
               </div>
 
-              {/* Detailed Information */}
-              {profile && (
-                <div className="space-y-4 border-t pt-6">
+              {/* Detailed Information - Collapsible */}
+              {showDetailedInfo && profile && (
+                <div className="space-y-4 border-t pt-6 animate-in fade-in slide-in-from-top-2 duration-300">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {profile.fullName && (
                       <div>
@@ -299,12 +314,22 @@ export default function SettingsPage() {
           )}
         </CardContent>
         <CardFooter className="flex-col gap-2">
-          <Button variant="outline" className="gap-2 w-full" asChild>
-            <Link href="/dashboard/settings/edit-profile">
-              <UserProfileIcon size={18} />
-              Modifier le Profil
-            </Link>
+          <Button 
+            variant="outline" 
+            className="gap-2 w-full" 
+            onClick={() => setShowDetailedInfo(!showDetailedInfo)}
+          >
+            <UserProfileIcon size={18} />
+            {showDetailedInfo ? 'Masquer mes informations' : 'Voir et modifier mes infos'}
           </Button>
+          {showDetailedInfo && (
+            <Button variant="default" className="gap-2 w-full" asChild>
+              <Link href="/dashboard/settings/edit-profile">
+                <UserProfileIcon size={18} />
+                Modifier le Profil
+              </Link>
+            </Button>
+          )}
           {!isKycCompleted && (
             <Button variant="ghost" className="gap-2 w-full text-muted-foreground" asChild>
               <Link href="/kyc">
@@ -449,6 +474,20 @@ export default function SettingsPage() {
           </Link>
         </Button>
       </div>
+
+      {/* Contact QR Code Dialog */}
+      {profile && (
+        <ContactQRCode
+          open={showQRCode}
+          onOpenChange={setShowQRCode}
+          userData={{
+            name: userData.name,
+            email: userData.email,
+            phone: userData.phone,
+            uid: profile.uid,
+          }}
+        />
+      )}
     </div>
   );
 }

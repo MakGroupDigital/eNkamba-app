@@ -9,7 +9,9 @@ import { Download, Eye, FileIcon, X, AlertCircle } from 'lucide-react';
 interface FileMessageProps {
   fileName: string;
   fileType: string;
-  fileData: string;
+  fileData?: string; // Legacy: base64 data
+  mediaUrl?: string; // New: Cloudinary URL
+  thumbnailUrl?: string; // Cloudinary thumbnail
   fileSize?: number;
   senderName?: string;
   timestamp?: Date;
@@ -19,12 +21,17 @@ export function FileMessage({
   fileName,
   fileType,
   fileData,
+  mediaUrl,
+  thumbnailUrl,
   fileSize,
   senderName,
   timestamp,
 }: FileMessageProps) {
   const [showPreview, setShowPreview] = useState(false);
   const [previewError, setPreviewError] = useState(false);
+
+  // Utiliser mediaUrl si disponible, sinon fallback sur fileData (legacy)
+  const fileUrl = mediaUrl || (fileData ? `data:${fileType};base64,${fileData}` : null);
 
   // Déterminer le type de fichier
   const isImage = fileType.startsWith('image/');
@@ -47,9 +54,12 @@ export function FileMessage({
   // Télécharger le fichier
   const handleDownload = () => {
     try {
+      if (!fileUrl) return;
+      
       const link = document.createElement('a');
-      link.href = `data:${fileType};base64,${fileData}`;
+      link.href = fileUrl;
       link.download = fileName;
+      link.target = '_blank'; // Pour les URLs Cloudinary
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -94,10 +104,10 @@ export function FileMessage({
           </div>
 
           {/* Aperçu pour les images */}
-          {isImage && showPreview && !previewError && (
+          {isImage && showPreview && !previewError && fileUrl && (
             <div className="relative w-full bg-black rounded-lg overflow-hidden">
               <img
-                src={`data:${fileType};base64,${fileData}`}
+                src={thumbnailUrl || fileUrl}
                 alt={fileName}
                 className="w-full h-auto max-h-64 object-contain"
                 onError={() => setPreviewError(true)}
@@ -106,10 +116,10 @@ export function FileMessage({
           )}
 
           {/* Aperçu pour les vidéos */}
-          {isVideo && showPreview && !previewError && (
+          {isVideo && showPreview && !previewError && fileUrl && (
             <div className="relative w-full bg-black rounded-lg overflow-hidden">
               <video
-                src={`data:${fileType};base64,${fileData}`}
+                src={fileUrl}
                 className="w-full h-auto max-h-64"
                 controls
                 onError={() => setPreviewError(true)}
@@ -118,10 +128,10 @@ export function FileMessage({
           )}
 
           {/* Aperçu pour l'audio */}
-          {isAudio && showPreview && !previewError && (
+          {isAudio && showPreview && !previewError && fileUrl && (
             <div className="w-full bg-white rounded-lg p-3 border border-primary/20">
               <audio
-                src={`data:${fileType};base64,${fileData}`}
+                src={fileUrl}
                 className="w-full"
                 controls
                 onError={() => setPreviewError(true)}
@@ -130,7 +140,7 @@ export function FileMessage({
           )}
 
           {/* Aperçu pour le texte */}
-          {isText && showPreview && !previewError && (
+          {isText && showPreview && !previewError && fileData && (
             <div className="w-full bg-white rounded-lg p-3 border border-primary/20 max-h-48 overflow-y-auto">
               <pre className="text-xs text-gray-800 whitespace-pre-wrap break-words font-mono">
                 {atob(fileData).substring(0, 500)}

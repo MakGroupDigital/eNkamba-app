@@ -16,6 +16,7 @@ import { FileMessage } from '@/components/chat/FileMessage';
 import { MoneyTransferMessage } from '@/components/chat/MoneyTransferMessage';
 import { useLocationSharing } from '@/hooks/useLocationSharing';
 import { useChatMoneyTransfer } from '@/hooks/useChatMoneyTransfer';
+import { uploadToCloudinary } from '@/lib/cloudinary-upload';
 import { ChevronLeft, Send, Loader2, Mail, Phone, Mic, Video, MapPin, DollarSign, Paperclip, Plus, X, Check, Square, Settings, Users, Trash2, Edit2, MoreVertical } from 'lucide-react';
 import Link from 'next/link';
 import { GroupSettingsDialog } from '@/components/group-settings-dialog';
@@ -367,36 +368,46 @@ export default function ConversationClient() {
         setIsSending(true);
         setSendingProgress(0);
         try {
-            const reader = new FileReader();
-            reader.onload = async () => {
-                const base64 = reader.result?.toString().split(',')[1];
-                const messageText = recordingType === 'audio' ? '🎤 Message vocal' : '🎥 Message vidéo';
-                
-                // Simuler une progression d'envoi
-                const progressInterval = setInterval(() => {
-                    setSendingProgress((prev) => {
-                        if (prev >= 90) return prev;
-                        return prev + Math.random() * 30;
-                    });
-                }, 200);
+            // Convertir le blob en fichier
+            const fileName = `${recordingType}-${Date.now()}.${recordingType === 'audio' ? 'wav' : 'webm'}`;
+            const file = new File([recordingBlob], fileName, { 
+                type: recordingType === 'audio' ? 'audio/wav' : 'video/webm' 
+            });
 
-                try {
-                    const messageType = recordingType === 'audio' ? 'voice' : 'video';
-                    await sendMessage(conversationId, messageText, messageType, { 
-                        [recordingType]: base64,
-                        duration: recordingDuration
-                    });
-                    setSendingProgress(100);
-                    setTimeout(() => {
-                        cancelRecording();
-                        setSendingProgress(0);
-                    }, 500);
-                } finally {
-                    clearInterval(progressInterval);
-                    setIsSending(false);
-                }
-            };
-            reader.readAsDataURL(recordingBlob);
+            const messageText = recordingType === 'audio' ? '🎤 Message vocal' : '🎥 Message vidéo';
+            
+            // Simuler une progression d'envoi
+            const progressInterval = setInterval(() => {
+                setSendingProgress((prev) => {
+                    if (prev >= 70) return prev;
+                    return prev + Math.random() * 20;
+                });
+            }, 200);
+
+            try {
+                // Upload vers Cloudinary
+                const resourceType = recordingType === 'audio' ? 'video' : 'video'; // Cloudinary traite audio comme video
+                const uploadResult = await uploadToCloudinary(file, resourceType);
+                
+                setSendingProgress(90);
+
+                // Envoyer le message avec l'URL Cloudinary
+                const messageType = recordingType === 'audio' ? 'voice' : 'video';
+                await sendMessage(conversationId, messageText, messageType, { 
+                    mediaUrl: uploadResult.secureUrl,
+                    duration: recordingDuration,
+                    thumbnailUrl: uploadResult.thumbnailUrl
+                });
+                
+                setSendingProgress(100);
+                setTimeout(() => {
+                    cancelRecording();
+                    setSendingProgress(0);
+                }, 500);
+            } finally {
+                clearInterval(progressInterval);
+                setIsSending(false);
+            }
         } catch (error) {
             console.error('Erreur envoi enregistrement:', error);
             setIsSending(false);
@@ -479,23 +490,61 @@ export default function ConversationClient() {
     const handleSendFile = async () => {
         const input = document.createElement('input');
         input.type = 'file';
+        input.accept = 'image/*,video/*,audio/*,.pdf,.doc,.docx,.txt';
         input.onchange = async (e) => {
             const file = (e.target as HTMLInputElement).files?.[0];
             if (file) {
                 setIsSending(true);
+                setSendingProgress(0);
+                
+                const progressInterval = setInterval(() => {
+                    setSendingProgress((prev) => {
+                        if (prev >= 70) return prev;
+                        return prev + Math.random() * 20;
+                    });
+                }, 200);
+
                 try {
-                    const reader = new FileReader();
-                    reader.onload = async () => {
-                        const base64 = reader.result?.toString().split(',')[1];
-                        await sendMessage(conversationId, `📎 ${file.name}`, 'file', { 
-                            fileName: file.name, 
-                            fileType: file.type, 
-                            fileData: base64,
-                            fileSize: file.size
-                        });
-                    };
-                    reader.readAsDataURL(file);
+                    // Déterminer le type de ressource pour Cloudinary
+                    let resourceType: 'image' | 'video' | 'raw' = 'raw';
+                    let messageType: 'file' | 'voice' | 'video' = 'file';
+                    let messageText = `📎 ${file.name}`;
+
+                    if (file.type.startsWith('image/')) {
+                        resourceType = 'image';
+                        messageText = `🖼️ ${file.name}`;
+                    } else if (file.type.startsWith('video/')) {
+                        resourceType = 'video';
+                        messageType = 'video';
+                        messageText = `🎥 ${file.name}`;
+                    } else if (file.type.startsWith('audio/')) {
+                        resourceType = 'video'; // Cloudinary traite audio comme video
+                        messageType = 'voice';
+                        messageText = `🎤 ${file.name}`;
+                    }
+
+                    // Upload vers Cloudinary
+                    const uploadResult = await uploadToCloudinary(file, resourceType);
+                    
+                    setSendingProgress(90);
+
+                    // Envoyer le message avec l'URL Cloudinary
+                    await sendMessage(conversationId, messageText, messageType, { 
+                        fileName: file.name, 
+                        fileType: file.type, 
+                        fileSize: file.size,
+                        mediaUrl: uploadResult.secureUrl,
+                        thumbnailUrl: uploadResult.thumbnailUrl
+                    });
+
+                    setSendingProgress(100);
+                    setTimeout(() => {
+                        setSendingProgress(0);
+                    }, 500);
+                } catch (error) {
+                    console.error('Erreur envoi fichier:', error);
                 } finally {
+                    clearInterval(progressInterval);
                     setIsSending(false);
                 }
             }
@@ -599,11 +648,16 @@ export default function ConversationClient() {
                 ) : (
                     messages.map((message) => {
                         const isOwn = message.senderId === currentUser?.uid;
-                        // Détecter les messages audio de deux façons: par messageType ou par le texte 🎤
-                        const isAudioMessage = (message.messageType === 'voice' || message.text?.includes('🎤')) && message.metadata?.audio;
-                        const isVideoMessage = (message.messageType === 'video' || message.text?.includes('🎥')) && message.metadata?.video;
-                        const audioData = message.metadata?.audio ? `data:audio/wav;base64,${message.metadata.audio}` : null;
-                        const videoData = message.metadata?.video ? `data:video/webm;base64,${message.metadata.video}` : null;
+                        // Messages audio/vidéo avec Cloudinary
+                        const isAudioMessage = message.messageType === 'voice' && message.metadata?.mediaUrl;
+                        const isVideoMessage = message.messageType === 'video' && message.metadata?.mediaUrl;
+                        
+                        // Support legacy: messages avec base64 (anciens messages)
+                        const isLegacyAudioMessage = (message.messageType === 'voice' || message.text?.includes('🎤')) && message.metadata?.audio;
+                        const isLegacyVideoMessage = (message.messageType === 'video' || message.text?.includes('🎥')) && message.metadata?.video;
+                        
+                        const audioUrl = message.metadata?.mediaUrl || (message.metadata?.audio ? `data:audio/wav;base64,${message.metadata.audio}` : null);
+                        const videoUrl = message.metadata?.mediaUrl || (message.metadata?.video ? `data:video/webm;base64,${message.metadata.video}` : null);
                         const isPlaying = playingMessageId === message.id;
 
                         return (
@@ -653,7 +707,7 @@ export default function ConversationClient() {
                                                 }
                                             }}
                                         >
-                                        {isAudioMessage && audioData ? (
+                                        {(isAudioMessage || isLegacyAudioMessage) && audioUrl ? (
                                             <div className="space-y-3 w-full">
                                                 <div className="flex items-center gap-3">
                                                     <Button
@@ -715,10 +769,10 @@ export default function ConversationClient() {
                                                     </div>
                                                 )}
                                                 
-                                                {audioData && (
+                                                {audioUrl && (
                                                     <audio
                                                         id={`audio-${message.id}`}
-                                                        src={audioData}
+                                                        src={audioUrl}
                                                         onPlay={() => setPlayingMessageId(message.id)}
                                                         onPause={() => setPlayingMessageId(null)}
                                                         onEnded={() => setPlayingMessageId(null)}
@@ -727,16 +781,55 @@ export default function ConversationClient() {
                                                     />
                                                 )}
                                             </div>
-                                        ) : isVideoMessage && videoData ? (
+                                        ) : (isVideoMessage || isLegacyVideoMessage) && videoUrl ? (
                                             <div className="space-y-2">
                                                 <video
-                                                    src={videoData}
+                                                    src={videoUrl}
                                                     className="w-full h-48 bg-black rounded-lg"
                                                     controls
                                                 />
                                                 <p className="text-xs text-center opacity-70">
                                                     {message.metadata?.duration ? `${Math.floor(message.metadata.duration / 60)}:${String(message.metadata.duration % 60).padStart(2, '0')}` : 'Vidéo'}
                                                 </p>
+                                        </div>
+                                    ) : message.messageType === 'story_reply' && message.metadata?.storyId ? (
+                                        <div className="space-y-2">
+                                            {/* Référence à la story */}
+                                            <div className="bg-black/10 dark:bg-white/10 rounded-lg p-2 border-l-4 border-purple-500">
+                                                <p className="text-xs font-semibold text-purple-600 dark:text-purple-400 mb-1">
+                                                    Réponse à une story
+                                                </p>
+                                                {message.metadata.storyMediaUrl && (
+                                                    <div className="relative w-full h-32 rounded overflow-hidden mb-2">
+                                                        {message.metadata.storyType === 'photo' ? (
+                                                            <img
+                                                                src={message.metadata.storyMediaUrl}
+                                                                alt="Story"
+                                                                className="w-full h-full object-cover"
+                                                            />
+                                                        ) : message.metadata.storyType === 'video' ? (
+                                                            <video
+                                                                src={message.metadata.storyMediaUrl}
+                                                                className="w-full h-full object-cover"
+                                                                muted
+                                                            />
+                                                        ) : message.metadata.storyType === 'audio' ? (
+                                                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-500 to-pink-500">
+                                                                <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                                                                </svg>
+                                                            </div>
+                                                        ) : null}
+                                                        <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                                                            <span className="text-white text-xs font-semibold bg-black/50 px-2 py-1 rounded">
+                                                                Story de {message.metadata.storyOwnerName}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            {/* Message de réponse */}
+                                            <p className="text-sm">{message.text}</p>
                                         </div>
                                     ) : message.messageType === 'location' && message.metadata?.latitude && message.metadata?.longitude ? (
                                         <LocationMessage
@@ -749,11 +842,13 @@ export default function ConversationClient() {
                                             receiverPhoto={contact?.photoURL}
                                             timestamp={message.timestamp?.toDate?.()}
                                         />
-                                    ) : message.messageType === 'file' && message.metadata?.fileName ? (
+                                    ) : message.messageType === 'file' && (message.metadata?.fileName || message.metadata?.mediaUrl) ? (
                                         <FileMessage
                                             fileName={message.metadata.fileName}
                                             fileType={message.metadata.fileType}
                                             fileData={message.metadata.fileData}
+                                            mediaUrl={message.metadata.mediaUrl}
+                                            thumbnailUrl={message.metadata.thumbnailUrl}
                                             fileSize={message.metadata.fileSize}
                                             senderName={message.senderName}
                                             timestamp={message.timestamp?.toDate?.()}

@@ -84,11 +84,12 @@ export default function WalletPage() {
       const expiry = new Date(now.getFullYear() + 2, now.getMonth());
       setExpiryDate(`${String(expiry.getMonth() + 1).padStart(2, '0')}/${String(expiry.getFullYear()).slice(-2)}`);
 
-      // Générer QR code avec données complètes: ENK{accountNumber}|{fullName}|{email}
+      // Générer QR code avec données complètes
       const fullName = profile.name || profile.fullName || 'eNkamba User';
       const email = profile.email || '';
-      // Format: accountNumber|fullName|email|uid
-      const qrData = `${accountNum}|${fullName}|${email}|${profile.uid}`;
+      const phone = profile.phone || profile.phoneNumber || '';
+      // Format: PAYMENT|accountNumber|name|email|uid
+      const qrData = `PAYMENT|${accountNum}|${fullName}|${email}|${profile.uid}`;
 
       QRCode.toDataURL(qrData, {
         width: 200,

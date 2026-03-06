@@ -7,12 +7,17 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ChatNavIcon, SocialNavIcon } from '@/components/icons/service-icons';
+import { VCFImportButton } from '@/components/contacts/VCFImportButton';
+import { ContactQRScanner } from '@/components/contacts/ContactQRScanner';
+import { MessageSquare, QrCode } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import type { Contact } from '@/hooks/useContacts';
 
 interface ContactsListProps {
   enkambaContacts: Contact[];
   nonEnkambaContacts: Contact[];
   onSendInvitation: (contact: Contact) => void;
+  onRefresh?: () => void;
   isLoading?: boolean;
 }
 
@@ -20,12 +25,37 @@ export function ContactsList({
   enkambaContacts,
   nonEnkambaContacts,
   onSendInvitation,
+  onRefresh,
   isLoading = false,
 }: ContactsListProps) {
   const [activeTab, setActiveTab] = useState<'enkamba' | 'invite'>('enkamba');
+  const [showQRScanner, setShowQRScanner] = useState(false);
+  const router = useRouter();
+
+  const handleStartChat = (contact: Contact) => {
+    // Rediriger vers la page de chat avec ce contact
+    router.push(`/dashboard/miyiki-chat/new?contact=${encodeURIComponent(contact.phoneNumber)}`);
+  };
 
   return (
     <div className="space-y-4">
+      {/* Boutons d'import */}
+      <div className="grid grid-cols-2 gap-2">
+        <VCFImportButton 
+          onImportComplete={onRefresh}
+          variant="outline"
+          className="w-full"
+        />
+        <Button
+          variant="outline"
+          onClick={() => setShowQRScanner(true)}
+          className="w-full gap-2"
+        >
+          <QrCode className="h-4 w-4" />
+          Scanner QR
+        </Button>
+      </div>
+
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'enkamba' | 'invite')}>
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="enkamba" className="flex items-center gap-2">
@@ -63,11 +93,12 @@ export function ContactsList({
                   </div>
                   <Button
                     size="sm"
-                    variant="ghost"
-                    className="flex-shrink-0"
+                    onClick={() => handleStartChat(contact)}
                     disabled={isLoading}
+                    className="flex-shrink-0 gap-1"
                   >
-                    <ChatNavIcon size={16} />
+                    <MessageSquare size={14} />
+                    <span className="text-xs">Discuter</span>
                   </Button>
                 </div>
               </Card>
@@ -102,9 +133,11 @@ export function ContactsList({
                     size="sm"
                     onClick={() => onSendInvitation(contact)}
                     disabled={isLoading}
-                    className="flex-shrink-0"
+                    className="flex-shrink-0 gap-1"
+                    variant="outline"
                   >
-                    <SocialNavIcon size={16} />
+                    <SocialNavIcon size={14} />
+                    <span className="text-xs">Inviter</span>
                   </Button>
                 </div>
               </Card>
@@ -112,6 +145,15 @@ export function ContactsList({
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Scanner QR Code */}
+      <ContactQRScanner
+        open={showQRScanner}
+        onOpenChange={setShowQRScanner}
+        onContactFound={(userId, displayName) => {
+          if (onRefresh) onRefresh();
+        }}
+      />
     </div>
   );
 }

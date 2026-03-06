@@ -63,7 +63,7 @@ const IdeaIcon = ({ size = 24 }: { size?: number }) => (
 
 const navItems = [
   { name: 'Accueil', icon: HomeNavIcon },
-  { name: 'Savoir', icon: BookIcon },
+  { name: 'Savoir', icon: BookIcon, link: '/dashboard/ai' },
   { name: 'Entrepreneur', icon: AgentIcon },
   { name: 'Projets', icon: IdeaIcon },
   { name: 'Local', icon: MapPinIcon },
@@ -493,6 +493,22 @@ export default function MakutanoPage() {
         <div className="px-4 pb-4 flex gap-2 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {navItems.map(item => {
             const IconComponent = item.icon;
+            
+            // Si l'item a un lien, c'est un lien externe (vers IA)
+            if (item.link) {
+              return (
+                <button
+                  key={item.name}
+                  onClick={() => router.push(item.link)}
+                  className="flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold transition-all whitespace-nowrap bg-white/10 text-white hover:bg-white/20"
+                >
+                  <IconComponent size={16} />
+                  <span>{item.name}</span>
+                </button>
+              );
+            }
+            
+            // Sinon, c'est un onglet de catégorie
             return (
               <button
                 key={item.name}

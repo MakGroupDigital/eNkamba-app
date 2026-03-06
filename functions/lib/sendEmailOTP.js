@@ -364,20 +364,33 @@ exports.updateUserProfile = functions.https.onCall(async (data, context) => {
         const db = admin.firestore();
         const userRef = db.collection('users').doc(userId);
         // Préparer les données à mettre à jour
-        const updateData = {};
-        if (fullName)
+        const updateData = {
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        };
+        if (fullName !== undefined) {
+            updateData.fullName = fullName;
+            updateData.name = fullName;
+            // Aussi mettre à jour dans kyc.identity si existe
             updateData['kyc.identity.fullName'] = fullName;
-        if (phone)
+        }
+        if (phone !== undefined) {
             updateData.phone = phone;
-        if (dateOfBirth)
+            updateData.phoneNumber = phone;
+        }
+        if (dateOfBirth !== undefined) {
+            updateData.dateOfBirth = dateOfBirth;
             updateData['kyc.identity.dateOfBirth'] = dateOfBirth;
-        if (country)
+        }
+        if (country !== undefined) {
+            updateData.country = country;
             updateData['kyc.identity.country'] = country;
-        if (profileImage)
+        }
+        if (profileImage !== undefined) {
             updateData.profileImage = profileImage;
-        updateData.updatedAt = admin.firestore.FieldValue.serverTimestamp();
-        // Mettre à jour le document
-        await userRef.update(updateData);
+            updateData.photoURL = profileImage;
+        }
+        // Utiliser set avec merge pour créer le document s'il n'existe pas
+        await userRef.set(updateData, { merge: true });
         return {
             success: true,
             message: 'Profil mis à jour avec succès',
