@@ -35,6 +35,7 @@
     "@capacitor/splash-screen": "^8.0.0",
     "@capacitor/status-bar": "^8.0.0",
     "@clerk/nextjs": "^6.36.9",
+    "@codetrix-studio/capacitor-google-auth": "^3.4.0-rc.4",
     "@genkit-ai/google-genai": "^1.20.0",
     "@genkit-ai/next": "^1.20.0",
     "@google/generative-ai": "^0.24.1",
