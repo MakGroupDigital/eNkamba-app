@@ -4,6 +4,13 @@ import { FieldValue } from 'firebase-admin/firestore';
 
 export async function POST(request: NextRequest) {
   try {
+    if (!adminAuth || !adminDb) {
+      return NextResponse.json(
+        { error: 'Service non disponible - Firebase Admin SDK non configuré' },
+        { status: 500 }
+      );
+    }
+
     // Vérifier l'authentification
     const authHeader = request.headers.get('authorization');
     if (!authHeader?.startsWith('Bearer ')) {
