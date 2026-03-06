@@ -146,6 +146,12 @@ export function useNkampaEcommerce() {
           throw new Error('Solde insuffisant. Veuillez ajouter des fonds.');
         }
 
+        // Générer un numéro de suivi unique
+        const year = new Date().getFullYear();
+        const timestamp = Date.now();
+        const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+        const trackingNumber = `ENK-${year}-${timestamp.toString().slice(-6)}${random}`;
+
         // Créer la commande
         const orderRef = await addDoc(collection(db, 'nkampa_orders'), {
           productId: product.id,
@@ -159,6 +165,7 @@ export function useNkampaEcommerce() {
           paymentMethod: 'wallet',
           shippingAddress,
           shippingPhone,
+          trackingNumber,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         });
@@ -177,6 +184,7 @@ export function useNkampaEcommerce() {
             sellerId: product.sellerId,
             amount: totalPrice,
             currency: product.currency,
+            trackingNumber,
           }),
         });
 
@@ -201,16 +209,17 @@ export function useNkampaEcommerce() {
           'uid'
         );
 
-        // Envoyer un message de confirmation
+        // Envoyer un message de confirmation avec le numéro de suivi
         await sendMessage(
           conversationId,
-          `Commande confirmée: ${product.name} x${quantity} - Total: ${totalPrice} ${product.currency}. Numéro de commande: ${orderRef.id}`,
+          `✅ Commande confirmée!\n\n📦 ${product.name} x${quantity}\n💰 Total: ${totalPrice} ${product.currency}\n📋 Commande: ${orderRef.id.substring(0, 8).toUpperCase()}\n🔍 Suivi: ${trackingNumber}\n\nVous pouvez suivre votre colis avec ce numéro.`,
           'text',
           {
             orderId: orderRef.id,
             productId: product.id,
             quantity,
             totalPrice,
+            trackingNumber,
           }
         );
 
@@ -219,6 +228,7 @@ export function useNkampaEcommerce() {
           orderId: orderRef.id,
           conversationId,
           transactionId: paymentData.transactionId,
+          trackingNumber,
         };
       } catch (err: any) {
         console.error('Erreur achat produit:', err);

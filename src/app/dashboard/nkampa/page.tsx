@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Mic, ShoppingCart, Phone, X, Loader2 } from 'lucide-react';
+import { Search, Mic, ShoppingCart, Phone, X, Loader2, Package, Store, Heart, User, ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -30,6 +30,7 @@ import { useNkampaEcommerce } from '@/hooks/useNkampaEcommerce';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useNkampaCart } from '@/hooks/useNkampaCart';
+import { useWalletTransactions } from '@/hooks/useWalletTransactions';
 import { FloatingCart } from '@/components/nkampa/FloatingCart';
 
 // Catégories principales avec icônes modernes
@@ -299,6 +300,7 @@ export default function NkampaPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { contactSeller, buyProduct } = useNkampaEcommerce();
+  const { balance, loading: balanceLoading } = useWalletTransactions();
   const { cart, isOpen, setIsOpen, addToCart, removeFromCart, updateQuantity, total, itemCount } = useNkampaCart();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -613,8 +615,65 @@ export default function NkampaPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Navigation Bar */}
+      <div className="sticky top-0 z-20 bg-gradient-to-r from-primary via-primary to-green-800 text-white shadow-lg">
+        <div className="flex items-center justify-between p-4">
+          <Link href="/dashboard">
+            <Button size="icon" variant="ghost" className="text-white hover:bg-white/20">
+              <ArrowLeft className="h-6 w-6" />
+            </Button>
+          </Link>
+          <h1 className="text-xl font-bold">eNkamba Shop</h1>
+          <div className="w-10" /> {/* Spacer */}
+        </div>
+
+        {/* Navigation Tabs */}
+        <div className="flex items-center gap-1 px-2 pb-2 overflow-x-auto scrollbar-hide">
+          <Link href="/dashboard/nkampa" className="flex-shrink-0">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-white hover:bg-white/20 gap-2"
+            >
+              <Store className="w-4 h-4" />
+              Boutique
+            </Button>
+          </Link>
+          <Link href="/dashboard/nkampa/orders" className="flex-shrink-0">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-white hover:bg-white/20 gap-2"
+            >
+              <Package className="w-4 h-4" />
+              Mes Commandes
+            </Button>
+          </Link>
+          <Link href="/dashboard/nkampa/favorites" className="flex-shrink-0">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-white hover:bg-white/20 gap-2"
+            >
+              <Heart className="w-4 h-4" />
+              Favoris
+            </Button>
+          </Link>
+          <Link href="/dashboard/nkampa/seller" className="flex-shrink-0">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-white hover:bg-white/20 gap-2"
+            >
+              <User className="w-4 h-4" />
+              Devenir Vendeur
+            </Button>
+          </Link>
+        </div>
+      </div>
+
       {/* Header avec recherche */}
-      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 p-4">
+      <div className="sticky top-[120px] z-10 bg-white border-b border-gray-200 p-4">
         <div className="flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-2">
           <Search className="w-5 h-5 text-gray-400" />
           <input
@@ -846,6 +905,54 @@ export default function NkampaPage() {
                 </p>
               </div>
 
+              {/* Solde du portefeuille */}
+              <div className="bg-gradient-to-r from-primary/10 to-green-800/10 p-4 rounded-lg border border-primary/20">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-600 mb-1">Solde disponible</p>
+                    <p className="text-2xl font-bold text-primary">
+                      {balanceLoading ? (
+                        <Loader2 className="w-6 h-6 animate-spin inline" />
+                      ) : (
+                        `${balance.toLocaleString()} CDF`
+                      )}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-gray-600 mb-1">Après achat</p>
+                    <p className={`text-lg font-semibold ${
+                      balance >= (selectedProduct.price * quantity) 
+                        ? 'text-green-600' 
+                        : 'text-red-600'
+                    }`}>
+                      {(balance - (selectedProduct.price * quantity)).toLocaleString()} CDF
+                    </p>
+                  </div>
+                </div>
+                {balance < (selectedProduct.price * quantity) && (
+                  <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded flex items-start gap-2">
+                    <span className="text-red-600 text-xs">⚠️</span>
+                    <div className="flex-1">
+                      <p className="text-xs text-red-700 font-semibold">Solde insuffisant</p>
+                      <p className="text-xs text-red-600 mt-1">
+                        Il vous manque {((selectedProduct.price * quantity) - balance).toLocaleString()} CDF
+                      </p>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="mt-2 text-xs h-7 border-red-300 text-red-700 hover:bg-red-50"
+                        onClick={() => {
+                          setShowCheckout(false);
+                          router.push('/dashboard/add-funds');
+                        }}
+                      >
+                        Ajouter des fonds
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Quantité */}
               <div>
                 <label className="text-sm font-semibold">Quantité</label>
@@ -906,17 +1013,19 @@ export default function NkampaPage() {
                   Annuler
                 </Button>
                 <Button
-                  className="flex-1 bg-primary hover:bg-primary/90 text-white"
+                  className="flex-1 bg-primary hover:bg-primary/90 text-white disabled:opacity-50"
                   onClick={handleProcessPayment}
-                  disabled={isProcessing}
+                  disabled={isProcessing || balance < (selectedProduct.price * quantity)}
                 >
                   {isProcessing ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       Traitement...
                     </>
+                  ) : balance < (selectedProduct.price * quantity) ? (
+                    'Solde insuffisant'
                   ) : (
-                    'Confirmer l\'achat'
+                    'Payer avec mon portefeuille'
                   )}
                 </Button>
               </div>

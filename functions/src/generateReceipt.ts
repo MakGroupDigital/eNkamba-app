@@ -188,6 +188,15 @@ export const generateReceiptPDF = functions.https.onCall(
         doc.text(`Méthode: ${transaction.transferMethod.charAt(0).toUpperCase() + transaction.transferMethod.slice(1)}`);
       }
 
+      // Numéro de suivi pour les commandes e-commerce
+      if (transaction.type === 'ecommerce_purchase' && transaction.metadata?.trackingNumber) {
+        doc.moveDown(0.3);
+        doc.fontSize(10).font('Helvetica-Bold').fillColor('#32BB78');
+        doc.text(`🔍 Numéro de suivi: ${transaction.metadata.trackingNumber}`);
+        doc.fontSize(8).font('Helvetica').fillColor('#666666');
+        doc.text('Utilisez ce numéro pour suivre votre colis', { indent: 20 });
+      }
+
       doc.moveDown(0.5);
 
       // ===== LIGNE DE SÉPARATION =====
