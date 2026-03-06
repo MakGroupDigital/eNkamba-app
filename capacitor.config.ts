@@ -6,9 +6,9 @@ const config: CapacitorConfig = {
   webDir: 'out',
   server: {
     androidScheme: 'https',
-    // Charger depuis le site de production
+    // Charger depuis le site de production (mode serveur)
     url: 'https://www.enkamba.io',
-    cleartext: true,
+    cleartext: false,
   },
   android: {
     allowMixedContent: true,
@@ -36,7 +36,7 @@ const config: CapacitorConfig = {
     },
     GoogleAuth: {
       scopes: ['profile', 'email'],
-      serverClientId: '60114170881-8ca20582qnod6vm84ebkesfk3v9s1ee9.apps.googleusercontent.com',
+      serverClientId: '60114170881-1h775tgj6rlku54t07dv2m12b47io2u3.apps.googleusercontent.com',
       forceCodeForRefreshToken: true,
     },
   },

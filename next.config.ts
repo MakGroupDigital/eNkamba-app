@@ -2,8 +2,8 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   /* config options here */
-  // Désactivé pour les pages dynamiques - utiliser le mode serveur pour Capacitor
-  // output: 'export',
+  // Mode serveur pour Capacitor - charge depuis URL de production
+  // output: 'export', // Désactivé car incompatible avec les routes API
   trailingSlash: true,
   typescript: {
     ignoreBuildErrors: true,
@@ -12,7 +12,7 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
-    unoptimized: true, // Requis pour l'export statique Capacitor
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
