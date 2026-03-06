@@ -6,9 +6,13 @@ const config: CapacitorConfig = {
   webDir: 'out',
   server: {
     androidScheme: 'https',
-    // Pour production, charge depuis le site déployé
-    // url: 'https://www.enkamba.io',
-    // cleartext: true // Désactivé pour utiliser l'URL de production
+    // Mode natif - charge les fichiers locaux
+    // Pas d'URL externe pour éviter la redirection vers Chrome
+  },
+  android: {
+    allowMixedContent: true,
+    captureInput: true,
+    webContentsDebuggingEnabled: false,
   },
   plugins: {
     SplashScreen: {
@@ -22,6 +26,12 @@ const config: CapacitorConfig = {
     StatusBar: {
       style: 'dark',
       backgroundColor: '#32BB78',
+      overlaysWebView: false,
+    },
+    Keyboard: {
+      resize: 'native',
+      style: 'dark',
+      resizeOnFullScreen: true,
     },
   },
 };
