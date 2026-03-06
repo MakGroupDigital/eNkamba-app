@@ -2,9 +2,8 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   /* config options here */
-  // Pour Capacitor avec URL externe, pas besoin d'export statique
-  // L'APK chargera directement depuis https://www.enkamba.io
-  // output: 'export', // Désactivé temporairement pour le build - à réactiver pour Capacitor
+  // Désactivé pour les pages dynamiques - utiliser le mode serveur pour Capacitor
+  // output: 'export',
   trailingSlash: true,
   typescript: {
     ignoreBuildErrors: true,

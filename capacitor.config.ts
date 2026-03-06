@@ -6,8 +6,9 @@ const config: CapacitorConfig = {
   webDir: 'out',
   server: {
     androidScheme: 'https',
-    // Mode natif - charge les fichiers locaux
-    // Pas d'URL externe pour éviter la redirection vers Chrome
+    // Charger depuis le site de production
+    url: 'https://www.enkamba.io',
+    cleartext: true,
   },
   android: {
     allowMixedContent: true,
