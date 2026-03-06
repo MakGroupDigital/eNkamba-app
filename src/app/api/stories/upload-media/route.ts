@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createHash } from 'crypto';
 import { decodeSecret } from '@/lib/decode-secrets';
-import { getCloudinaryCredentials } from '@/config/cloudinary.config';
 
 function decodeJwtPayload(token: string): Record<string, any> | null {
   try {
@@ -64,18 +63,6 @@ function getCloudinaryConfig() {
         apiSecret = stripOptionalBrackets(match[2]);
         cloudName = stripOptionalBrackets(match[3]);
       }
-    }
-  }
-
-  // Fallback: config hardcodée (safe pour GitHub car encodée en Base64)
-  if (!cloudName || !apiKey || !apiSecret) {
-    try {
-      const config = getCloudinaryCredentials();
-      cloudName = config.cloudName;
-      apiKey = config.apiKey;
-      apiSecret = config.apiSecret;
-    } catch (error) {
-      console.error('Erreur chargement config Cloudinary:', error);
     }
   }
 
