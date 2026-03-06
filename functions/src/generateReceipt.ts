@@ -31,8 +31,8 @@ export const generateReceiptPDF = functions.https.onCall(
     try {
       const db = admin.firestore();
 
-      // Récupérer la transaction
-      const transactionDoc = await db.collection('users').doc(userId)
+      // Récupérer la transaction depuis le wallet
+      const transactionDoc = await db.collection('wallets').doc(userId)
         .collection('transactions').doc(transactionId).get();
 
       if (!transactionDoc.exists) {

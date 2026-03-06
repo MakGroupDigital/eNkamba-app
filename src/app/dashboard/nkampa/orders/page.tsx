@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { useNkampaEcommerce } from '@/hooks/useNkampaEcommerce';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useReceiptDownload } from '@/hooks/useReceiptDownload';
 
 const STATUS_CONFIG = {
   pending: { label: 'En attente', color: 'bg-yellow-100 text-yellow-800', icon: Package },
@@ -24,16 +25,148 @@ export default function OrdersPage() {
   const { user } = useAuth();
   const { orders, isLoading } = useNkampaEcommerce();
   const { toast } = useToast();
+  const { downloadReceipt: downloadReceiptPDF } = useReceiptDownload();
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const filteredOrders = filterStatus === 'all' 
     ? orders 
     : orders.filter(order => order.status === filterStatus);
 
-  const downloadReceipt = (order: any) => {
-    // TODO: Générer et télécharger le reçu
-    console.log('Télécharger reçu pour commande:', order.id);
+  const downloadReceipt = async (order: any) => {
+    setIsDownloading(true);
+    try {
+      if (order.transactionId) {
+        // Si on a un transactionId, utiliser la méthode standard
+        await downloadReceiptPDF(
+          order.transactionId,
+          `recu-commande-${order.id.substring(0, 8)}.pdf`
+        );
+      } else {
+        // Sinon, générer un reçu simple directement
+        await generateSimpleReceipt(order);
+      }
+    } catch (error) {
+      console.error('Erreur téléchargement:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Impossible de télécharger le reçu',
+      });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const generateSimpleReceipt = async (order: any) => {
+    // Générer un reçu HTML simple et le télécharger
+    const receiptHTML = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>Reçu de Commande</title>
+        <style>
+          body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+          .header { background: #32BB78; color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+          .content { border: 2px solid #32BB78; padding: 30px; border-radius: 0 0 10px 10px; }
+          .section { margin: 20px 0; }
+          .label { color: #666; font-size: 14px; }
+          .value { font-size: 16px; font-weight: bold; margin-top: 5px; }
+          .total { background: #f0f9f4; padding: 20px; border-radius: 8px; margin: 20px 0; }
+          .footer { text-align: center; color: #666; margin-top: 30px; font-size: 12px; }
+          .tracking { background: #e3f2fd; padding: 15px; border-radius: 8px; border-left: 4px solid #2196F3; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>eNkamba</h1>
+          <p>Reçu de Commande</p>
+        </div>
+        <div class="content">
+          <div class="section">
+            <div class="label">Numéro de Commande</div>
+            <div class="value">#${order.id.substring(0, 8).toUpperCase()}</div>
+          </div>
+          
+          ${order.trackingNumber ? `
+          <div class="tracking">
+            <div class="label">🔍 Numéro de Suivi</div>
+            <div class="value" style="font-family: monospace;">${order.trackingNumber}</div>
+            <p style="margin: 10px 0 0 0; font-size: 12px;">Utilisez ce numéro pour suivre votre colis</p>
+          </div>
+          ` : ''}
+          
+          <div class="section">
+            <div class="label">Produit</div>
+            <div class="value">${order.productName}</div>
+          </div>
+          
+          <div class="section">
+            <div class="label">Quantité</div>
+            <div class="value">${order.quantity}</div>
+          </div>
+          
+          <div class="section">
+            <div class="label">Adresse de Livraison</div>
+            <div class="value">${order.shippingAddress}</div>
+          </div>
+          
+          <div class="section">
+            <div class="label">Téléphone</div>
+            <div class="value">${order.shippingPhone}</div>
+          </div>
+          
+          <div class="section">
+            <div class="label">Statut</div>
+            <div class="value">${STATUS_CONFIG[order.status as keyof typeof STATUS_CONFIG]?.label || order.status}</div>
+          </div>
+          
+          <div class="total">
+            <div class="label">Total Payé</div>
+            <div class="value" style="color: #32BB78; font-size: 24px;">
+              ${order.totalPrice.toLocaleString()} ${order.currency}
+            </div>
+          </div>
+          
+          <div class="section">
+            <div class="label">Date de Commande</div>
+            <div class="value">${order.createdAt?.toDate?.()?.toLocaleString('fr-FR') || 'N/A'}</div>
+          </div>
+          
+          <div class="section">
+            <div class="label">Méthode de Paiement</div>
+            <div class="value">Portefeuille eNkamba</div>
+          </div>
+        </div>
+        
+        <div class="footer">
+          <p>Ce reçu est une preuve officielle de votre commande.</p>
+          <p>Veuillez le conserver pour vos dossiers.</p>
+          <p style="margin-top: 20px;"><strong>eNkamba</strong> - La vie simplifiée et meilleure</p>
+          <p>www.enkamba.io</p>
+        </div>
+      </body>
+      </html>
+    `;
+
+    // Créer un blob et télécharger
+    const blob = new Blob([receiptHTML], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `recu-commande-${order.id.substring(0, 8)}.html`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: 'Succès',
+      description: 'Reçu téléchargé avec succès',
+      className: 'bg-green-600 text-white border-none',
+    });
   };
 
   const trackOrder = (order: any) => {
@@ -282,11 +415,12 @@ export default function OrdersPage() {
                   variant="outline"
                   className="flex-1 gap-2"
                   onClick={() => downloadReceipt(selectedOrder)}
+                  disabled={isDownloading}
                 >
                   <Download className="w-4 h-4" />
-                  Télécharger reçu
+                  {isDownloading ? 'Téléchargement...' : 'Télécharger reçu'}
                 </Button>
-                {(selectedOrder.status === 'shipped' || selectedOrder.status === 'paid') && (
+                {(selectedOrder.status === 'shipped' || selectedOrder.status === 'paid') && selectedOrder.trackingNumber && (
                   <Button
                     className="flex-1 gap-2 bg-primary"
                     onClick={() => trackOrder(selectedOrder)}
