@@ -23,6 +23,7 @@ export default function CreateStoryPage() {
   const [showMediaOptions, setShowMediaOptions] = useState(false);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   const [isRecording, setIsRecording] = useState(false);
+  const [isCameraActive, setIsCameraActive] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -52,10 +53,10 @@ export default function CreateStoryPage() {
   };
 
   useEffect(() => {
-    // Démarrer la caméra automatiquement pour photo
-    if (mode === 'photo' && !previewUrl && !streamRef.current) {
-      startCamera();
-    }
+    // Démarrer la caméra automatiquement pour photo (désactivé - on utilise maintenant le menu d'options)
+    // if (mode === 'photo' && !previewUrl && !streamRef.current) {
+    //   startCamera();
+    // }
     
     return () => {
       if (streamRef.current) {
@@ -67,6 +68,14 @@ export default function CreateStoryPage() {
     };
   }, [mode, previewUrl]);
 
+  // Connecter le stream au videoRef quand la caméra est active
+  useEffect(() => {
+    if (isCameraActive && streamRef.current && videoRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+      videoRef.current.play().catch(err => console.error('Erreur lecture vidéo:', err));
+    }
+  }, [isCameraActive]);
+
   const startCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
@@ -74,17 +83,17 @@ export default function CreateStoryPage() {
         audio: mode === 'video' 
       });
       streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
+      setIsCameraActive(true);
     } catch (error) {
       console.error('Erreur caméra:', error);
       alert('Impossible d\'accéder à la caméra');
+      setIsCameraActive(false);
     }
   };
 
   const switchCamera = async () => {
     stopCamera();
+    setIsCameraActive(false);
     setFacingMode(prev => prev === 'user' ? 'environment' : 'user');
     await startCamera();
   };
@@ -197,6 +206,7 @@ export default function CreateStoryPage() {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
     }
+    setIsCameraActive(false);
   };
 
   const resetMediaState = () => {
@@ -335,7 +345,48 @@ export default function CreateStoryPage() {
               </button>
             </div>
           </div>
-        ) : mode === 'photo' && !previewUrl ? (
+        ) : showMediaOptions && mode === 'photo' && !previewUrl ? (
+          /* Photo Options Menu */
+          <div className="w-full max-w-md space-y-4">
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-white mb-2">Photo Story</h2>
+              <p className="text-white/80">Choisissez une option</p>
+            </div>
+            
+            <button
+              onClick={() => { setShowMediaOptions(false); startCamera(); }}
+              className="w-full p-6 rounded-3xl bg-white/10 backdrop-blur border-2 border-white/20 hover:bg-white/20 transition-all flex items-center gap-4"
+            >
+              <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center">
+                <Camera size={32} className="text-white" />
+              </div>
+              <div className="flex-1 text-left">
+                <p className="text-white font-bold text-lg">Prendre une photo</p>
+                <p className="text-white/70 text-sm">Utiliser la caméra maintenant</p>
+              </div>
+            </button>
+            
+            <button
+              onClick={() => { setShowMediaOptions(false); handlePickFile(); }}
+              className="w-full p-6 rounded-3xl bg-white/10 backdrop-blur border-2 border-white/20 hover:bg-white/20 transition-all flex items-center gap-4"
+            >
+              <div className="w-16 h-16 rounded-full bg-blue-500/20 flex items-center justify-center">
+                <Upload size={32} className="text-white" />
+              </div>
+              <div className="flex-1 text-left">
+                <p className="text-white font-bold text-lg">Importer une photo</p>
+                <p className="text-white/70 text-sm">Choisir depuis la galerie</p>
+              </div>
+            </button>
+            
+            <button
+              onClick={() => { setShowMediaOptions(false); setMode(null); }}
+              className="w-full p-4 rounded-2xl bg-white/10 backdrop-blur border border-white/20 hover:bg-white/20 transition-all text-white font-semibold"
+            >
+              Annuler
+            </button>
+          </div>
+        ) : mode === 'photo' && !previewUrl && isCameraActive ? (
           /* Camera View */
           <div className="relative w-full max-w-md aspect-[9/16] rounded-3xl overflow-hidden bg-black">
             <video
@@ -456,7 +507,7 @@ export default function CreateStoryPage() {
               Annuler
             </button>
           </div>
-        ) : mode === 'video' && !previewUrl && streamRef.current ? (
+        ) : mode === 'video' && !previewUrl && isCameraActive ? (
           /* Video Recording View */
           <div className="relative w-full max-w-md aspect-[9/16] rounded-3xl overflow-hidden bg-black">
             <video
