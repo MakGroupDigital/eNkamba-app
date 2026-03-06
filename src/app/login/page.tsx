@@ -38,6 +38,9 @@ import {
   clearEmailAuthData
 } from "@/lib/email-auth";
 
+// Capacitor Google Auth pour mobile natif
+import { useCapacitorGoogleAuth } from "@/hooks/useCapacitorGoogleAuth";
+
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,6 +59,9 @@ type LoginMethod = "SELECT" | "EMAIL" | "PHONE" | "OTP_EMAIL" | "OTP_PHONE";
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
+  
+  // Hook Capacitor Google Auth
+  const { signInWithGoogle: capacitorSignInWithGoogle, isNative } = useCapacitorGoogleAuth();
 
   // États
   const [method, setMethod] = useState<LoginMethod>("SELECT");
@@ -126,12 +132,22 @@ export default function LoginPage() {
 
   // --- HANDLERS ---
 
-  // 1. Google Login
+  // 1. Google Login (avec support Capacitor pour mobile natif)
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     try {
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
+      let result;
+      
+      if (isNative) {
+        // Utiliser Capacitor Google Auth pour mobile natif
+        console.log("🔐 Authentification Google native (Capacitor)");
+        result = await capacitorSignInWithGoogle();
+      } else {
+        // Utiliser signInWithPopup pour web
+        console.log("🌐 Authentification Google web (popup)");
+        const provider = new GoogleAuthProvider();
+        result = await signInWithPopup(auth, provider);
+      }
 
       // Créer le profil utilisateur dans Firestore
       await createOrUpdateProfile(result.user.uid, result.user.email || '');
@@ -153,7 +169,7 @@ export default function LoginPage() {
           title: "Popup bloquée",
           description: "Veuillez autoriser les popups pour ce site dans votre navigateur, puis réessayez.",
         });
-      } else if (error.code === 'auth/cancelled-popup-request') {
+      } else if (error.code === 'auth/cancelled-popup-request' || error.error === 'popup_closed_by_user') {
         toast({
           variant: "destructive",
           title: "Connexion annulée",
@@ -163,13 +179,19 @@ export default function LoginPage() {
         toast({
           variant: "destructive",
           title: "Problème de connexion",
-          description: "Vérifiez votre connexion internet et réessayez. Si le problème persiste, vérifiez que vous pouvez accéder à google.com et firebase.google.com",
+          description: "Vérifiez votre connexion internet et réessayez.",
         });
       } else if (error.code === 'auth/internal-error') {
         toast({
           variant: "destructive",
           title: "Erreur interne",
           description: "Problème de connexion aux serveurs Firebase. Vérifiez votre connexion internet.",
+        });
+      } else if (error.error === 'DEVELOPER_ERROR' || error.message?.includes('CLIENT_ID')) {
+        toast({
+          variant: "destructive",
+          title: "Configuration manquante",
+          description: "L'authentification Google n'est pas encore configurée. Veuillez utiliser Email ou Téléphone.",
         });
       } else {
         toast({
