@@ -60,6 +60,22 @@ export default function OrdersPage() {
   };
 
   const generateSimpleReceipt = async (order: any) => {
+    // Générer les données du QR code (format JSON)
+    const qrData = JSON.stringify({
+      type: 'ECOMMERCE_ORDER',
+      orderId: order.id,
+      trackingNumber: order.trackingNumber || '',
+      productName: order.productName,
+      quantity: order.quantity,
+      totalPrice: order.totalPrice,
+      currency: order.currency,
+      status: order.status,
+      date: order.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+    });
+
+    // Générer le QR code en utilisant une API publique
+    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrData)}`;
+
     // Générer un reçu HTML simple et le télécharger
     const receiptHTML = `
       <!DOCTYPE html>
@@ -77,6 +93,12 @@ export default function OrdersPage() {
           .total { background: #f0f9f4; padding: 20px; border-radius: 8px; margin: 20px 0; }
           .footer { text-align: center; color: #666; margin-top: 30px; font-size: 12px; }
           .tracking { background: #e3f2fd; padding: 15px; border-radius: 8px; border-left: 4px solid #2196F3; }
+          .qr-section { text-align: center; margin: 30px 0; padding: 20px; background: #f5f5f5; border-radius: 8px; }
+          .qr-section img { border: 3px solid #32BB78; border-radius: 8px; padding: 10px; background: white; }
+          @media print {
+            body { margin: 0; padding: 10px; }
+            .no-print { display: none; }
+          }
         </style>
       </head>
       <body>
@@ -138,6 +160,14 @@ export default function OrdersPage() {
           <div class="section">
             <div class="label">Méthode de Paiement</div>
             <div class="value">Portefeuille eNkamba</div>
+          </div>
+
+          <div class="qr-section">
+            <div class="label" style="margin-bottom: 15px;">Scannez pour vérifier la commande</div>
+            <img src="${qrCodeUrl}" alt="QR Code Commande" width="200" height="200" />
+            <p style="margin-top: 15px; font-size: 12px; color: #666;">
+              Scannez ce QR code pour accéder aux détails de votre commande
+            </p>
           </div>
         </div>
         
