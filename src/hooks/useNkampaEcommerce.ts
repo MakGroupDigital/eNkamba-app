@@ -152,6 +152,9 @@ export function useNkampaEcommerce() {
         const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
         const trackingNumber = `ENK-${year}-${timestamp.toString().slice(-6)}${random}`;
 
+        // Générer un ID de transaction
+        const transactionId = `TXN_${timestamp}_${Math.random().toString(36).substr(2, 9)}`;
+
         // Créer la commande
         const orderRef = await addDoc(collection(db, 'nkampa_orders'), {
           productId: product.id,
@@ -166,39 +169,99 @@ export function useNkampaEcommerce() {
           shippingAddress,
           shippingPhone,
           trackingNumber,
+          transactionId,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         });
 
-        // Effectuer le paiement via API
-        const token = await currentUser.getIdToken();
-        const response = await fetch('/api/nkampa/process-payment', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            orderId: orderRef.id,
-            buyerId: currentUser.uid,
-            sellerId: product.sellerId,
-            amount: totalPrice,
-            currency: product.currency,
-            trackingNumber,
-          }),
-        });
+        // Effectuer le paiement directement avec Firestore
+        const buyerWalletRef = doc(db, 'wallets', currentUser.uid);
+        const sellerWalletRef = doc(db, 'wallets', product.sellerId);
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Erreur lors du paiement');
+        // Récupérer les wallets
+        const buyerWalletSnap = await getDoc(buyerWalletRef);
+        const sellerWalletSnap = await getDoc(sellerWalletRef);
+
+        if (!buyerWalletSnap.exists()) {
+          throw new Error('Portefeuille introuvable');
         }
 
-        const paymentData = await response.json();
+        const currentBalance = buyerWalletSnap.data()?.balance || 0;
+
+        if (currentBalance < totalPrice) {
+          throw new Error('Solde insuffisant');
+        }
+
+        // Mettre à jour les wallets
+        await updateDoc(buyerWalletRef, {
+          balance: currentBalance - totalPrice,
+          updatedAt: serverTimestamp(),
+        });
+
+        if (sellerWalletSnap.exists()) {
+          const sellerBalance = sellerWalletSnap.data()?.balance || 0;
+          await updateDoc(sellerWalletRef, {
+            balance: sellerBalance + totalPrice,
+            updatedAt: serverTimestamp(),
+          });
+        } else {
+          await setDoc(sellerWalletRef, {
+            userId: product.sellerId,
+            balance: totalPrice,
+            currency: product.currency,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          });
+        }
+
+        // Enregistrer les transactions
+        const buyerTransactionRef = doc(
+          db,
+          'wallets',
+          currentUser.uid,
+          'transactions',
+          transactionId
+        );
+
+        await setDoc(buyerTransactionRef, {
+          type: 'ecommerce_purchase',
+          amount: -totalPrice,
+          currency: product.currency,
+          status: 'completed',
+          orderId: orderRef.id,
+          sellerId: product.sellerId,
+          description: `Achat e-commerce - Commande ${orderRef.id}`,
+          metadata: {
+            trackingNumber,
+            orderId: orderRef.id,
+          },
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+
+        const sellerTransactionRef = doc(
+          db,
+          'wallets',
+          product.sellerId,
+          'transactions',
+          transactionId
+        );
+
+        await setDoc(sellerTransactionRef, {
+          type: 'ecommerce_sale',
+          amount: totalPrice,
+          currency: product.currency,
+          status: 'completed',
+          orderId: orderRef.id,
+          buyerId: currentUser.uid,
+          description: `Vente e-commerce - Commande ${orderRef.id}`,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
 
         // Mettre à jour la commande avec le statut de paiement
         await updateDoc(doc(db, 'nkampa_orders', orderRef.id), {
           status: 'paid',
-          transactionId: paymentData.transactionId,
           updatedAt: serverTimestamp(),
         });
 
@@ -227,7 +290,7 @@ export function useNkampaEcommerce() {
           success: true,
           orderId: orderRef.id,
           conversationId,
-          transactionId: paymentData.transactionId,
+          transactionId,
           trackingNumber,
         };
       } catch (err: any) {
