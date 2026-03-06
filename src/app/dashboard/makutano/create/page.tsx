@@ -15,6 +15,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { uploadToCloudinary } from '@/lib/cloudinary-upload';
 
 type MakutanoCategory = 'Accueil' | 'Savoir' | 'Entrepreneur' | 'Projets' | 'Local';
 type MediaType = 'image' | 'video' | 'audio';
@@ -384,36 +385,10 @@ export default function MakutanoCreatePage() {
 
   const uploadToStorage = async (): Promise<string> => {
     if (pickedFile) {
-      if (!user?.uid) {
-        throw new Error('Utilisateur non authentifié');
-      }
-
-      const token = await user.getIdToken();
-      const formData = new FormData();
-      formData.append('file', pickedFile);
-      formData.append('userId', user.uid);
-      formData.append('mediaType', mediaType);
-
-      const response = await fetch('/api/makutano/upload-media', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
-
-      const payload = await response.json();
-      if (!response.ok || !payload?.mediaUrl) {
-        throw new Error(
-          payload?.error ||
-            payload?.details?.error?.message ||
-            payload?.details?.message ||
-            (Array.isArray(payload?.details) ? payload.details.join(' | ') : '') ||
-            'Upload média impossible'
-        );
-      }
-
-      return payload.mediaUrl as string;
+      // Utiliser la même fonction que les stories pour l'upload Cloudinary
+      const resourceType = mediaType === 'image' ? 'image' : mediaType === 'video' ? 'video' : 'raw';
+      const uploadResult = await uploadToCloudinary(pickedFile, resourceType);
+      return uploadResult.secureUrl;
     }
     return externalMediaUrl.trim();
   };
