@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,10 +8,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useWalletTransactions } from '@/hooks/useWalletTransactions';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { ArrowLeft, Loader2, Smartphone, CreditCard, Bitcoin } from 'lucide-react';
+import { ArrowLeft, Loader2, Smartphone, CreditCard, Bitcoin, DollarSign } from 'lucide-react';
 import Link from 'next/link';
 
-type PaymentMethod = 'mobile_money' | 'credit_card' | 'debit_card' | 'crypto';
+type PaymentMethod = 'mobile_money' | 'credit_card' | 'debit_card' | 'crypto' | 'paypal';
 
 export default function AddFundsPage() {
   const router = useRouter();
@@ -33,6 +33,27 @@ export default function AddFundsPage() {
     currency: 'BTC',
     walletAddress: '',
   });
+  const [usdToCdfRate, setUsdToCdfRate] = useState<number>(2800);
+  const [isLoadingRate, setIsLoadingRate] = useState(false);
+
+  // Charger le taux de change USD/CDF pour PayPal
+  useEffect(() => {
+    if (paymentMethod === 'paypal') {
+      const loadExchangeRate = async () => {
+        setIsLoadingRate(true);
+        try {
+          const { getUsdToCdfRate } = await import('@/lib/exchange-rate');
+          const rate = await getUsdToCdfRate();
+          setUsdToCdfRate(rate);
+        } catch (error) {
+          console.error('Erreur chargement taux:', error);
+        } finally {
+          setIsLoadingRate(false);
+        }
+      };
+      loadExchangeRate();
+    }
+  }, [paymentMethod]);
 
   const handleMethodSelect = (method: PaymentMethod) => {
     setPaymentMethod(method);
@@ -48,7 +69,13 @@ export default function AddFundsPage() {
       });
       return;
     }
-    setStep('details');
+    
+    // Pour PayPal, passer directement à la confirmation
+    if (paymentMethod === 'paypal') {
+      setStep('confirm');
+    } else {
+      setStep('details');
+    }
   };
 
   const handleDetailsSubmit = async () => {
@@ -85,7 +112,43 @@ export default function AddFundsPage() {
   };
 
   const handleConfirm = async () => {
+    if (!user) return;
+    
     try {
+      // Si PayPal, rediriger vers le lien de paiement avec le montant pré-rempli
+      if (paymentMethod === 'paypal') {
+        const returnUrl = encodeURIComponent(`https://enkamba.io/ok?amount=${amount}&userId=${user.uid}`);
+        const cancelUrl = encodeURIComponent(`https://enkamba.io/cancel`);
+        
+        // Le lien PayPal avec les paramètres de retour
+        const paypalUrl = `https://www.paypal.com/ncp/payment/D723Q3TM3HQRW?return=${returnUrl}&cancel_return=${cancelUrl}`;
+        
+        // Ouvrir dans un navigateur in-app
+        if (typeof window !== 'undefined' && (window as any).Capacitor) {
+          try {
+            const { Browser } = await import('@capacitor/browser');
+            await Browser.open({ 
+              url: paypalUrl,
+              presentationStyle: 'popover'
+            });
+          } catch (err) {
+            // Fallback si Capacitor Browser n'est pas disponible
+            window.open(paypalUrl, '_blank');
+          }
+        } else {
+          // Fallback pour le web - ouvrir dans un nouvel onglet
+          window.open(paypalUrl, '_blank');
+        }
+        
+        toast({
+          title: 'Redirection PayPal',
+          description: 'Vous allez être redirigé vers PayPal pour finaliser le paiement',
+          className: 'bg-blue-600 text-white border-none',
+        });
+        
+        return;
+      }
+
       const result = await addFunds(
         parseFloat(amount), 
         paymentMethod as 'mobile_money' | 'credit_card' | 'debit_card' | 'crypto', 
@@ -136,19 +199,38 @@ export default function AddFundsPage() {
 
         {/* Step 1: Payment Method Selection */}
         {step === 'method' && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card
               className="cursor-pointer border-2 hover:border-[#32BB78] transition-colors"
               onClick={() => handleMethodSelect('mobile_money')}
             >
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center gap-4 text-center">
-                  <div className="p-4 rounded-full bg-[#32BB78]/20">
-                    <Smartphone className="w-8 h-8 text-[#32BB78]" />
+                  <div className="flex gap-2 items-center justify-center h-16">
+                    <div className="bg-red-600 text-white px-3 py-1 rounded font-bold text-sm">Vodacom</div>
+                    <div className="bg-red-500 text-white px-3 py-1 rounded font-bold text-sm">Airtel</div>
+                    <div className="bg-orange-500 text-white px-3 py-1 rounded font-bold text-sm">Orange</div>
                   </div>
                   <div>
                     <h3 className="font-semibold text-lg">Mobile Money</h3>
                     <p className="text-sm text-muted-foreground">Vodacom, Airtel, Orange</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card
+              className="cursor-pointer border-2 hover:border-[#0070BA] transition-colors"
+              onClick={() => handleMethodSelect('paypal')}
+            >
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center gap-4 text-center">
+                  <div className="flex items-center justify-center h-16">
+                    <div className="bg-[#0070BA] text-white px-6 py-3 rounded-lg font-bold text-2xl">PayPal</div>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg">PayPal</h3>
+                    <p className="text-sm text-muted-foreground">Paiement sécurisé</p>
                   </div>
                 </div>
               </CardContent>
@@ -160,8 +242,12 @@ export default function AddFundsPage() {
             >
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center gap-4 text-center">
-                  <div className="p-4 rounded-full bg-[#32BB78]/20">
-                    <CreditCard className="w-8 h-8 text-[#32BB78]" />
+                  <div className="flex gap-3 items-center justify-center h-16">
+                    <div className="bg-blue-600 text-white px-4 py-2 rounded font-bold text-lg">VISA</div>
+                    <div className="flex gap-1">
+                      <div className="w-6 h-6 rounded-full bg-red-500"></div>
+                      <div className="w-6 h-6 rounded-full bg-orange-500 -ml-3"></div>
+                    </div>
                   </div>
                   <div>
                     <h3 className="font-semibold text-lg">Carte Bancaire</h3>
@@ -172,13 +258,15 @@ export default function AddFundsPage() {
             </Card>
 
             <Card
-              className="cursor-pointer border-2 hover:border-[#32BB78] transition-colors"
+              className="cursor-pointer border-2 hover:border-[#FFA500] transition-colors"
               onClick={() => handleMethodSelect('crypto')}
             >
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center gap-4 text-center">
-                  <div className="p-4 rounded-full bg-[#FFA500]/20">
-                    <Bitcoin className="w-8 h-8 text-[#FFA500]" />
+                  <div className="flex gap-2 items-center justify-center h-16">
+                    <div className="text-4xl">₿</div>
+                    <div className="text-4xl">Ξ</div>
+                    <div className="text-4xl">💰</div>
                   </div>
                   <div>
                     <h3 className="font-semibold text-lg">Cryptomonnaie</h3>
@@ -194,18 +282,37 @@ export default function AddFundsPage() {
         {step === 'amount' && (
           <Card>
             <CardHeader>
-              <CardTitle>Montant à ajouter</CardTitle>
+              <CardTitle>
+                {paymentMethod === 'paypal' ? 'Montant à ajouter (USD)' : 'Montant à ajouter'}
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">Montant (CDF)</label>
+                <label className="text-sm font-medium mb-2 block">
+                  {paymentMethod === 'paypal' ? 'Montant (USD)' : 'Montant (CDF)'}
+                </label>
                 <Input
                   type="number"
-                  placeholder="Entrez le montant"
+                  placeholder={paymentMethod === 'paypal' ? 'Entrez le montant en USD' : 'Entrez le montant'}
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   className="text-lg"
                 />
+                {paymentMethod === 'paypal' && amount && parseFloat(amount) > 0 && (
+                  <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-muted-foreground">Vous recevrez environ:</p>
+                    <p className="text-xl font-bold text-[#32BB78]">
+                      {isLoadingRate ? (
+                        'Calcul...'
+                      ) : (
+                        `${(parseFloat(amount) * usdToCdfRate).toLocaleString('fr-FR')} CDF`
+                      )}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Taux: 1 USD = {usdToCdfRate.toLocaleString('fr-FR')} CDF
+                    </p>
+                  </div>
+                )}
               </div>
               <div className="flex gap-3">
                 <Button
@@ -232,14 +339,34 @@ export default function AddFundsPage() {
             <CardHeader>
               <CardTitle>
                 {paymentMethod === 'mobile_money' 
-                  ? 'Numéro de téléphone' 
+                  ? 'Numéro de téléphone'
+                  : paymentMethod === 'paypal'
+                  ? 'Paiement PayPal'
                   : paymentMethod === 'crypto'
                   ? 'Détails Cryptomonnaie'
                   : 'Détails de la carte'}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {paymentMethod === 'mobile_money' ? (
+              {paymentMethod === 'paypal' ? (
+                <div className="bg-[#0070BA]/10 border border-[#0070BA]/30 rounded-lg p-4">
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Vous serez redirigé vers PayPal pour finaliser votre paiement de manière sécurisée.
+                  </p>
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-green-600">✓</span>
+                    <span>Paiement 100% sécurisé</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-green-600">✓</span>
+                    <span>Protection des achats PayPal</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-green-600">✓</span>
+                    <span>Fonds disponibles immédiatement</span>
+                  </div>
+                </div>
+              ) : paymentMethod === 'mobile_money' ? (
                 <div>
                   <label className="text-sm font-medium mb-2 block">Numéro de téléphone</label>
                   <Input
@@ -367,13 +494,27 @@ export default function AddFundsPage() {
               <div className="bg-muted p-4 rounded-lg space-y-3">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Montant</span>
-                  <span className="font-bold text-lg">{parseFloat(amount).toLocaleString('fr-FR')} CDF</span>
+                  <span className="font-bold text-lg">
+                    {paymentMethod === 'paypal' 
+                      ? `$${parseFloat(amount).toLocaleString('en-US')} USD`
+                      : `${parseFloat(amount).toLocaleString('fr-FR')} CDF`}
+                  </span>
                 </div>
+                {paymentMethod === 'paypal' && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Équivalent CDF</span>
+                    <span className="font-bold text-[#32BB78]">
+                      {(parseFloat(amount) * usdToCdfRate).toLocaleString('fr-FR')} CDF
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Méthode</span>
                   <span className="font-semibold">
                     {paymentMethod === 'mobile_money' 
-                      ? 'Mobile Money' 
+                      ? 'Mobile Money'
+                      : paymentMethod === 'paypal'
+                      ? 'PayPal'
                       : paymentMethod === 'crypto'
                       ? 'Cryptomonnaie'
                       : 'Carte bancaire'}
