@@ -8,10 +8,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useWalletTransactions } from '@/hooks/useWalletTransactions';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { ArrowLeft, Loader2, Smartphone, CreditCard, Bitcoin, DollarSign } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
-type PaymentMethod = 'mobile_money' | 'credit_card' | 'debit_card' | 'crypto' | 'paypal';
+type PaymentMethod = 'mobile_money' | 'credit_card' | 'debit_card' | 'crypto' | 'paypal' | 'wonyapay';
 
 export default function AddFundsPage() {
   const router = useRouter();
@@ -32,6 +32,10 @@ export default function AddFundsPage() {
   const [cryptoDetails, setCryptoDetails] = useState({
     currency: 'BTC',
     walletAddress: '',
+  });
+  const [wonyaDetails, setWonyaDetails] = useState({
+    currency: 'CDF',
+    motif: '',
   });
   const [usdToCdfRate, setUsdToCdfRate] = useState<number>(2800);
   const [isLoadingRate, setIsLoadingRate] = useState(false);
@@ -79,7 +83,7 @@ export default function AddFundsPage() {
   };
 
   const handleDetailsSubmit = async () => {
-    if (paymentMethod === 'mobile_money' && !phoneNumber) {
+    if ((paymentMethod === 'mobile_money' || paymentMethod === 'wonyapay') && !phoneNumber) {
       toast({
         variant: 'destructive',
         title: 'Erreur',
@@ -97,7 +101,7 @@ export default function AddFundsPage() {
       return;
     }
 
-    if (paymentMethod !== 'mobile_money' && paymentMethod !== 'crypto') {
+    if (paymentMethod !== 'mobile_money' && paymentMethod !== 'crypto' && paymentMethod !== 'wonyapay') {
       if (!cardDetails.cardNumber || !cardDetails.expiryDate || !cardDetails.cvv || !cardDetails.cardholderName) {
         toast({
           variant: 'destructive',
@@ -123,22 +127,7 @@ export default function AddFundsPage() {
         // Le lien PayPal avec les paramètres de retour
         const paypalUrl = `https://www.paypal.com/ncp/payment/D723Q3TM3HQRW?return=${returnUrl}&cancel_return=${cancelUrl}`;
         
-        // Ouvrir dans un navigateur in-app
-        if (typeof window !== 'undefined' && (window as any).Capacitor) {
-          try {
-            const { Browser } = await import('@capacitor/browser');
-            await Browser.open({ 
-              url: paypalUrl,
-              presentationStyle: 'popover'
-            });
-          } catch (err) {
-            // Fallback si Capacitor Browser n'est pas disponible
-            window.open(paypalUrl, '_blank');
-          }
-        } else {
-          // Fallback pour le web - ouvrir dans un nouvel onglet
-          window.open(paypalUrl, '_blank');
-        }
+        window.open(paypalUrl, '_blank');
         
         toast({
           title: 'Redirection PayPal',
@@ -151,19 +140,28 @@ export default function AddFundsPage() {
 
       const result = await addFunds(
         parseFloat(amount), 
-        paymentMethod as 'mobile_money' | 'credit_card' | 'debit_card' | 'crypto', 
+        paymentMethod as 'mobile_money' | 'credit_card' | 'debit_card' | 'crypto' | 'wonyapay',
         {
           phoneNumber,
-          cardDetails: paymentMethod !== 'mobile_money' && paymentMethod !== 'crypto' ? cardDetails : undefined,
+          cardDetails: paymentMethod !== 'mobile_money' && paymentMethod !== 'crypto' && paymentMethod !== 'wonyapay' ? cardDetails : undefined,
           cryptoDetails: paymentMethod === 'crypto' ? cryptoDetails : undefined,
+          wonyaDetails: paymentMethod === 'wonyapay' ? wonyaDetails : undefined,
         }
       );
 
-      toast({
-        title: 'Succès',
-        description: `${parseFloat(amount).toLocaleString('fr-FR')} CDF ont été ajoutés à votre portefeuille`,
-        className: 'bg-green-600 text-white border-none',
-      });
+      if (result.transactionStatus === 'pending') {
+        toast({
+          title: 'Demande envoyée',
+          description: result.message || 'Votre dépôt WonyaPay est en attente de confirmation',
+          className: 'bg-amber-600 text-white border-none',
+        });
+      } else {
+        toast({
+          title: 'Succès',
+          description: `${parseFloat(amount).toLocaleString('fr-FR')} CDF ont été ajoutés à votre portefeuille`,
+          className: 'bg-green-600 text-white border-none',
+        });
+      }
 
       router.push('/dashboard/wallet');
     } catch (error: any) {
@@ -237,6 +235,25 @@ export default function AddFundsPage() {
             </Card>
 
             <Card
+              className="cursor-pointer border-2 hover:border-[#0B6E4F] transition-colors"
+              onClick={() => handleMethodSelect('wonyapay')}
+            >
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center gap-4 text-center">
+                  <div className="flex items-center justify-center h-16">
+                    <div className="rounded-xl bg-[#0B6E4F] px-5 py-3 text-xl font-bold text-white shadow-sm">
+                      WonyaPay
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg">WonyaPay</h3>
+                    <p className="text-sm text-muted-foreground">Dépôt Mobile Money via API</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card
               className="cursor-pointer border-2 hover:border-[#32BB78] transition-colors"
               onClick={() => handleMethodSelect('credit_card')}
             >
@@ -289,11 +306,21 @@ export default function AddFundsPage() {
             <CardContent className="space-y-4">
               <div>
                 <label className="text-sm font-medium mb-2 block">
-                  {paymentMethod === 'paypal' ? 'Montant (USD)' : 'Montant (CDF)'}
+                  {paymentMethod === 'paypal'
+                    ? 'Montant (USD)'
+                    : paymentMethod === 'wonyapay'
+                    ? `Montant (${wonyaDetails.currency})`
+                    : 'Montant (CDF)'}
                 </label>
                 <Input
                   type="number"
-                  placeholder={paymentMethod === 'paypal' ? 'Entrez le montant en USD' : 'Entrez le montant'}
+                  placeholder={
+                    paymentMethod === 'paypal'
+                      ? 'Entrez le montant en USD'
+                      : paymentMethod === 'wonyapay'
+                      ? `Entrez le montant en ${wonyaDetails.currency}`
+                      : 'Entrez le montant'
+                  }
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   className="text-lg"
@@ -342,6 +369,8 @@ export default function AddFundsPage() {
                   ? 'Numéro de téléphone'
                   : paymentMethod === 'paypal'
                   ? 'Paiement PayPal'
+                  : paymentMethod === 'wonyapay'
+                  ? 'Détails WonyaPay'
                   : paymentMethod === 'crypto'
                   ? 'Détails Cryptomonnaie'
                   : 'Détails de la carte'}
@@ -366,6 +395,47 @@ export default function AddFundsPage() {
                     <span>Fonds disponibles immédiatement</span>
                   </div>
                 </div>
+              ) : paymentMethod === 'wonyapay' ? (
+                <>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Devise</label>
+                    <select
+                      className="w-full rounded-md border bg-background p-2"
+                      value={wonyaDetails.currency}
+                      onChange={(e) => setWonyaDetails({ ...wonyaDetails, currency: e.target.value as 'CDF' | 'USD' })}
+                    >
+                      <option value="CDF">CDF</option>
+                      <option value="USD">USD</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Numéro Mobile Money</label>
+                    <Input
+                      type="tel"
+                      placeholder="0997654321"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                    />
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Format attendu: 10 chiffres, par exemple 0997654321.
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Motif (optionnel)</label>
+                    <Input
+                      type="text"
+                      placeholder="Dépôt portefeuille eNkamba"
+                      value={wonyaDetails.motif}
+                      onChange={(e) => setWonyaDetails({ ...wonyaDetails, motif: e.target.value })}
+                    />
+                  </div>
+                  <div className="rounded-lg border border-[#0B6E4F]/20 bg-[#0B6E4F]/5 p-4 text-sm">
+                    <p className="mb-2 font-semibold text-[#0B6E4F]">WonyaPay</p>
+                    <p className="text-muted-foreground">
+                      Le dépôt est initié en C2B et peut rester en attente jusqu&apos;à confirmation du réseau Mobile Money.
+                    </p>
+                  </div>
+                </>
               ) : paymentMethod === 'mobile_money' ? (
                 <div>
                   <label className="text-sm font-medium mb-2 block">Numéro de téléphone</label>
@@ -497,6 +567,8 @@ export default function AddFundsPage() {
                   <span className="font-bold text-lg">
                     {paymentMethod === 'paypal' 
                       ? `$${parseFloat(amount).toLocaleString('en-US')} USD`
+                      : paymentMethod === 'wonyapay'
+                      ? `${parseFloat(amount).toLocaleString('fr-FR')} ${wonyaDetails.currency}`
                       : `${parseFloat(amount).toLocaleString('fr-FR')} CDF`}
                   </span>
                 </div>
@@ -515,16 +587,32 @@ export default function AddFundsPage() {
                       ? 'Mobile Money'
                       : paymentMethod === 'paypal'
                       ? 'PayPal'
+                      : paymentMethod === 'wonyapay'
+                      ? 'WonyaPay'
                       : paymentMethod === 'crypto'
                       ? 'Cryptomonnaie'
                       : 'Carte bancaire'}
                   </span>
                 </div>
-                {paymentMethod === 'mobile_money' && (
+                {(paymentMethod === 'mobile_money' || paymentMethod === 'wonyapay') && (
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Téléphone</span>
                     <span className="font-semibold">{phoneNumber}</span>
                   </div>
+                )}
+                {paymentMethod === 'wonyapay' && (
+                  <>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Devise</span>
+                      <span className="font-semibold">{wonyaDetails.currency}</span>
+                    </div>
+                    {wonyaDetails.motif && (
+                      <div className="flex justify-between gap-4">
+                        <span className="text-muted-foreground">Motif</span>
+                        <span className="max-w-[220px] text-right font-semibold">{wonyaDetails.motif}</span>
+                      </div>
+                    )}
+                  </>
                 )}
                 {paymentMethod === 'crypto' && (
                   <>
@@ -550,6 +638,11 @@ export default function AddFundsPage() {
                       ✓ Conversion automatique au taux du marché<br />
                       ✓ Fonds disponibles après confirmation blockchain
                     </>
+                  ) : paymentMethod === 'wonyapay' ? (
+                    <>
+                      ✓ Dépôt initié via API sécurisée WonyaPay<br />
+                      ✓ Crédit portefeuille après confirmation opérateur
+                    </>
                   ) : (
                     <>
                       ✓ Aucun frais supplémentaire<br />
@@ -562,7 +655,7 @@ export default function AddFundsPage() {
               <div className="flex gap-3">
                 <Button
                   variant="outline"
-                  onClick={() => setStep('details')}
+                  onClick={() => setStep(paymentMethod === 'paypal' ? 'amount' : 'details')}
                   className="flex-1"
                   disabled={isLoading}
                 >

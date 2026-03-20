@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore, collection, doc, getDoc, updateDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { getFirestore, collection, doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
+import {
+  generateWonyaRefTransa,
+  getWonyaPayConfig,
+  isCompletedWonyaStatus,
+  normalizeWonyaPhoneNumber,
+} from '@/lib/wonyapay';
 
 // Initialiser Firebase avec la config publique
 const firebaseConfig = {
@@ -28,7 +33,7 @@ try {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userId, amount, paymentMethod, phoneNumber, cardDetails } = body;
+    const { userId, amount, paymentMethod, phoneNumber, cardDetails, wonyaDetails } = body;
 
     // Valider les paramètres requis
     if (!userId || !amount || !paymentMethod) {
@@ -54,8 +59,6 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       );
     }
-
-    const token = authHeader.substring(7);
 
     try {
       const db = getFirestore(app);
@@ -85,6 +88,116 @@ export async function POST(request: NextRequest) {
 
       // Créer la transaction
       const transactionRef = doc(collection(userRef, 'transactions'), transactionId);
+
+      if (paymentMethod === 'wonyapay') {
+        const config = getWonyaPayConfig();
+        const normalizedPhoneNumber = normalizeWonyaPhoneNumber(phoneNumber || '');
+        const currency = wonyaDetails?.currency === 'USD' ? 'USD' : 'CDF';
+        const motif = wonyaDetails?.motif?.trim() || 'Depot portefeuille eNkamba';
+
+        if (!config.token || !config.refPartenaire) {
+          return NextResponse.json(
+            { error: 'Configuration WonyaPay manquante. Vérifiez WONYAPAY_TOKEN et WONYAPAY_REF_PARTENAIRE.' },
+            { status: 500 }
+          );
+        }
+
+        if (!/^\d{10}$/.test(normalizedPhoneNumber)) {
+          return NextResponse.json(
+            { error: 'Le numéro WonyaPay doit contenir 10 chiffres au format local (ex: 0997654321).' },
+            { status: 400 }
+          );
+        }
+
+        const refTransa = generateWonyaRefTransa();
+        const wonyaPayload = {
+          RefPartenaire: config.refPartenaire,
+          RefTransa: refTransa,
+          Montant: amount,
+          Devise: currency,
+          Action: 'C2B',
+          MobileMoney: normalizedPhoneNumber,
+          Motif: motif,
+        };
+
+        const wonyaResponse = await fetch(`${config.baseUrl}/payment`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${config.token}`,
+          },
+          body: JSON.stringify(wonyaPayload),
+        });
+
+        let wonyaResult: any = null;
+        try {
+          wonyaResult = await wonyaResponse.json();
+        } catch {
+          wonyaResult = null;
+        }
+
+        if (!wonyaResponse.ok) {
+          const providerMessage =
+            wonyaResult?.message ||
+            wonyaResult?.error ||
+            `Erreur WonyaPay (${wonyaResponse.status})`;
+
+          return NextResponse.json(
+            { error: providerMessage },
+            { status: wonyaResponse.status }
+          );
+        }
+
+        const providerStatus = wonyaResult?.data?.status || 'pending';
+        const completed = isCompletedWonyaStatus(providerStatus);
+        const walletBalanceAfterPayment = completed ? currentBalance + amount : currentBalance;
+
+        const transactionData: any = {
+          id: transactionId,
+          type: 'deposit',
+          amount,
+          paymentMethod,
+          status: completed ? 'completed' : 'pending',
+          previousBalance: currentBalance,
+          newBalance: walletBalanceAfterPayment,
+          description: completed
+            ? 'Depot WonyaPay confirme'
+            : 'Depot WonyaPay initie, en attente de confirmation',
+          timestamp: new Date(),
+          createdAt: new Date().toISOString(),
+          phoneNumber: normalizedPhoneNumber,
+          provider: 'WonyaPay',
+          wonyaPay: {
+            refTransa,
+            refPartenaire: config.refPartenaire,
+            currency,
+            motif,
+            network: wonyaResult?.data?.network || null,
+            providerTransactionId: wonyaResult?.data?.transactionId || null,
+            providerStatus,
+            rawResponse: wonyaResult,
+          },
+        };
+
+        await setDoc(transactionRef, transactionData);
+
+        if (completed) {
+          await updateDoc(userRef, {
+            walletBalance: walletBalanceAfterPayment,
+            lastTransactionTime: new Date(),
+          });
+        }
+
+        return NextResponse.json({
+          success: true,
+          transactionId,
+          newBalance: walletBalanceAfterPayment,
+          amount,
+          message: wonyaResult?.message || 'Transaction WonyaPay initiée',
+          transactionStatus: completed ? 'completed' : 'pending',
+          providerReference: refTransa,
+        });
+      }
 
       const transactionData: any = {
         id: transactionId,
@@ -128,6 +241,7 @@ export async function POST(request: NextRequest) {
         newBalance,
         amount,
         message: 'Dépôt enregistré avec succès',
+        transactionStatus: 'completed',
       });
     } catch (error: any) {
       console.error('Erreur dépôt:', error);

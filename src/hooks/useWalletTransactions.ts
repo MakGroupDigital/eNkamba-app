@@ -47,6 +47,31 @@ export function useWalletTransactions() {
   const [error, setError] = useState<string | null>(null);
   const currentUser = auth.currentUser;
 
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const syncPendingWonyaDeposits = async () => {
+      try {
+        const token = await currentUser.getIdToken();
+        await fetch('/api/wallet/wonyapay/reconcile', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ userId: currentUser.uid }),
+        });
+      } catch (err) {
+        console.error('Erreur sync WonyaPay:', err);
+      }
+    };
+
+    syncPendingWonyaDeposits();
+    const intervalId = window.setInterval(syncPendingWonyaDeposits, 30000);
+
+    return () => window.clearInterval(intervalId);
+  }, [currentUser]);
+
   // Charger et écouter le solde depuis Firestore directement (évite CORS)
   useEffect(() => {
     if (!currentUser) return;
@@ -143,12 +168,16 @@ export function useWalletTransactions() {
 
   // Ajouter des fonds
   const addFunds = useCallback(
-    async (amount: number, paymentMethod: 'mobile_money' | 'credit_card' | 'debit_card' | 'crypto', details: any) => {
+    async (
+      amount: number,
+      paymentMethod: 'mobile_money' | 'credit_card' | 'debit_card' | 'crypto' | 'wonyapay',
+      details: any
+    ) => {
       if (!currentUser) throw new Error('Utilisateur non authentifié');
 
       const previousBalance = balance;
       const optimisticId = `optimistic-deposit-${Date.now()}`;
-      const optimisticNewBalance = previousBalance + amount;
+      const optimisticNewBalance = paymentMethod === 'wonyapay' ? previousBalance : previousBalance + amount;
 
       setIsLoading(true);
       setError(null);
@@ -160,7 +189,10 @@ export function useWalletTransactions() {
           amount,
           paymentMethod,
           status: 'pending',
-          description: 'Ajout de fonds en cours...',
+          description:
+            paymentMethod === 'wonyapay'
+              ? 'Depot WonyaPay initie, en attente de confirmation'
+              : 'Ajout de fonds en cours...',
           previousBalance,
           newBalance: optimisticNewBalance,
           timestamp: new Date(),
@@ -187,6 +219,7 @@ export function useWalletTransactions() {
             phoneNumber: details.phoneNumber,
             cardDetails: details.cardDetails,
             cryptoDetails: details.cryptoDetails,
+            wonyaDetails: details.wonyaDetails,
           }),
         });
 
@@ -202,8 +235,11 @@ export function useWalletTransactions() {
             tx.id === optimisticId
               ? {
                   ...tx,
-                  status: 'completed',
-                  description: 'Ajout de fonds confirmé',
+                  status: data.transactionStatus === 'pending' ? 'pending' : 'completed',
+                  description:
+                    data.transactionStatus === 'pending'
+                      ? data.message || 'Ajout de fonds en attente de confirmation'
+                      : 'Ajout de fonds confirmé',
                   newBalance: data.newBalance,
                 }
               : tx
@@ -214,6 +250,8 @@ export function useWalletTransactions() {
           success: true,
           transactionId: data.transactionId,
           newBalance: data.newBalance,
+          transactionStatus: data.transactionStatus,
+          message: data.message,
         };
       } catch (err: any) {
         const errorMessage = err.message || 'Erreur lors de l\'ajout de fonds';
