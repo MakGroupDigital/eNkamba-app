@@ -12,7 +12,15 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+// Utiliser l'app existante ou en créer une nouvelle
+let app;
+try {
+  app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+} catch (error) {
+  // Si getApp() échoue, initialiser une nouvelle app
+  app = initializeApp(firebaseConfig);
+}
+
 const ESIM_PRICE = 1000; // CDF
 
 /**

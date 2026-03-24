@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getApps, getApp, initializeApp } from 'firebase/app';
-import { getFirestore, collection, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore';
 
 const firebaseConfig = {
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
@@ -12,7 +12,14 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+// Utiliser l'app existante ou en créer une nouvelle
+let app;
+try {
+  app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+} catch (error) {
+  // Si getApp() échoue, initialiser une nouvelle app
+  app = initializeApp(firebaseConfig);
+}
 
 /**
  * GET /api/esim/list
@@ -43,8 +50,7 @@ export async function GET(request: NextRequest) {
     const esimsRef = collection(db, 'esims');
     const q = query(
       esimsRef,
-      where('userId', '==', userId),
-      orderBy('activatedAt', 'desc')
+      where('userId', '==', userId)
     );
 
     const snapshot = await getDocs(q);
@@ -55,6 +61,13 @@ export async function GET(request: NextRequest) {
         id: doc.id,
         ...doc.data(),
       });
+    });
+
+    // Trier par date d'activation côté client
+    esims.sort((a, b) => {
+      const dateA = new Date(a.activatedAt).getTime();
+      const dateB = new Date(b.activatedAt).getTime();
+      return dateB - dateA; // Plus récent en premier
     });
 
     return NextResponse.json({
