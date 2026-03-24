@@ -23,5 +23,11 @@ export function generateWonyaRefTransa() {
 }
 
 export function isCompletedWonyaStatus(status: string | undefined) {
-  return ['completed', 'success', 'successful', 'paid', 'confirmed'].includes((status || '').toLowerCase());
+  // Selon la doc WonyaPay: C2B succès = "Succes", B2C succès = "Reçu"
+  return ['succes', 'reçu', 'recu', 'completed', 'success', 'successful', 'paid', 'confirmed'].includes((status || '').toLowerCase());
+}
+
+export function isFailedWonyaStatus(status: string | undefined) {
+  // Selon la doc WonyaPay: échec = "Echec"
+  return ['echec', 'échec', 'failed', 'error', 'erreur'].includes((status || '').toLowerCase());
 }

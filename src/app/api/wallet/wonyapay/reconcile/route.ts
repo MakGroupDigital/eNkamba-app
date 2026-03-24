@@ -11,7 +11,7 @@ import {
   updateDoc,
   where,
 } from 'firebase/firestore';
-import { getWonyaPayConfig, isCompletedWonyaStatus } from '@/lib/wonyapay';
+import { getWonyaPayConfig, isCompletedWonyaStatus, isFailedWonyaStatus } from '@/lib/wonyapay';
 
 const firebaseConfig = {
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
@@ -53,77 +53,262 @@ export async function POST(request: NextRequest) {
     }
 
     const transactionsRef = collection(userRef, 'transactions');
-    const pendingQuery = query(
+    
+    // Récupérer les transactions en attente (dépôts et retraits)
+    const pendingDepositQuery = query(
       transactionsRef,
       where('paymentMethod', '==', 'wonyapay'),
       where('status', '==', 'pending')
     );
-    const pendingSnapshot = await getDocs(pendingQuery);
+    const pendingWithdrawalQuery = query(
+      transactionsRef,
+      where('withdrawalMethod', '==', 'mobile_money'),
+      where('status', '==', 'pending')
+    );
+    
+    const [depositSnapshot, withdrawalSnapshot] = await Promise.all([
+      getDocs(pendingDepositQuery),
+      getDocs(pendingWithdrawalQuery)
+    ]);
+    
+    const pendingSnapshot = {
+      docs: [...depositSnapshot.docs, ...withdrawalSnapshot.docs]
+    };
 
     let checked = 0;
     let updated = 0;
+    let failed = 0;
+
+    const now = Date.now();
 
     for (const txDoc of pendingSnapshot.docs) {
       const txData = txDoc.data() as any;
-      const refTransa = txData?.wonyPay?.refTransa;
+      const refTransa = txData?.wonyaPay?.refTransa;
 
       if (!refTransa) continue;
+
+      // Vérifier si la transaction a plus de 2 minutes
+      const txTimestamp = txData?.timestamp?.toMillis?.() || txData?.createdAt ? new Date(txData.createdAt).getTime() : 0;
+      const ageInMinutes = (now - txTimestamp) / (1000 * 60);
+
+      // Ne vérifier que les transactions de plus de 2 minutes
+      if (ageInMinutes < 2) {
+        continue;
+      }
+
       checked += 1;
 
-      const statusResponse = await fetch(`${config.baseUrl}/transactionStatus/status/${encodeURIComponent(refTransa)}`, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${config.token}`,
-        },
-      });
-
-      let statusPayload: any = null;
       try {
-        statusPayload = await statusResponse.json();
-      } catch {
-        statusPayload = null;
+        const statusResponse = await fetch(`${config.baseUrl}/transactionStatus/status/${encodeURIComponent(refTransa)}`, {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${config.token}`,
+          },
+        });
+
+        let statusPayload: any = null;
+        try {
+          statusPayload = await statusResponse.json();
+        } catch {
+          statusPayload = null;
+        }
+
+        if (!statusResponse.ok) {
+          // Si l'API retourne une erreur après 5 minutes, marquer comme échouée
+          if (ageInMinutes >= 5) {
+            await updateDoc(txDoc.ref, {
+              status: 'failed',
+              description: `Échec: Impossible de vérifier le statut (${statusResponse.status})`,
+              'wonyaPay.providerStatus': 'failed',
+              'wonyaPay.errorResponse': statusPayload,
+              failedAt: new Date().toISOString(),
+            });
+            failed += 1;
+          }
+          continue;
+        }
+
+        // Structure réelle de l'API WonyaPay selon la documentation
+        const statutWonya = statusPayload?.StatutWonya || statusPayload?.data?.StatutWonya || '';
+        const statutTransa = statusPayload?.StatutTransa || statusPayload?.data?.StatutTransa || '';
+        const refTransaResponse = statusPayload?.RefTransa || statusPayload?.data?.RefTransa || null;
+        const dateTransa = statusPayload?.DateTransa || statusPayload?.data?.DateTransa || null;
+        const action = statusPayload?.Action || statusPayload?.data?.Action || txData?.wonyaPay?.action || 'C2B';
+        const motif = statusPayload?.Motif || statusPayload?.data?.Motif || '';
+        
+        const isDeposit = txData.type === 'deposit' || txData.paymentMethod === 'wonyapay';
+        const isWithdrawal = txData.type === 'withdrawal' && txData.withdrawalMethod === 'mobile_money';
+
+        // Transaction réussie selon la doc WonyaPay
+        // C2B succès: StatutWonya = "Succes"
+        // B2C succès: StatutWonya = "Reçu"
+        if (isCompletedWonyaStatus(statutWonya)) {
+          if (isDeposit) {
+            // Pour les dépôts: créditer le portefeuille
+            const amountToCredit = txData.amount || 0;
+
+            await updateDoc(txDoc.ref, {
+              status: 'completed',
+              description: txData.originalCurrency === 'USD' 
+                ? `Dépôt Mobile Money confirmé (${txData.originalAmount} USD → ${amountToCredit.toLocaleString('fr-FR')} CDF)`
+                : 'Dépôt Mobile Money confirmé',
+              'wonyaPay.providerStatus': statutWonya,
+              'wonyaPay.statutTransa': statutTransa,
+              'wonyaPay.refTransaResponse': refTransaResponse,
+              'wonyaPay.dateTransa': dateTransa,
+              'wonyaPay.statusResponse': statusPayload,
+              creditedAt: new Date().toISOString(),
+            });
+
+            await updateDoc(userRef, {
+              walletBalance: increment(amountToCredit),
+              lastTransactionTime: new Date(),
+            });
+
+            const refreshedUserDoc = await getDoc(userRef);
+            const refreshedBalance = refreshedUserDoc.data()?.walletBalance || 0;
+            await updateDoc(txDoc.ref, {
+              newBalance: refreshedBalance,
+            });
+          } else if (isWithdrawal) {
+            // Pour les retraits: juste confirmer (le débit a déjà été fait)
+            await updateDoc(txDoc.ref, {
+              status: 'completed',
+              description: txData.originalCurrency === 'USD' 
+                ? `Retrait Mobile Money confirmé (${txData.originalAmount} USD, débit ${txData.amount.toLocaleString('fr-FR')} CDF)`
+                : 'Retrait Mobile Money confirmé',
+              'wonyaPay.providerStatus': statutWonya,
+              'wonyaPay.statutTransa': statutTransa,
+              'wonyaPay.refTransaResponse': refTransaResponse,
+              'wonyaPay.dateTransa': dateTransa,
+              'wonyaPay.statusResponse': statusPayload,
+              completedAt: new Date().toISOString(),
+            });
+          }
+
+          updated += 1;
+        }
+        // Transaction échouée selon la doc WonyaPay
+        // StatutWonya = "Echec"
+        else if (isFailedWonyaStatus(statutWonya) || statutTransa === 'Echec') {
+          const failureReason = motif || 'Transaction échouée par l\'opérateur mobile';
+          
+          // Pour les retraits échoués: rembourser le portefeuille
+          if (isWithdrawal) {
+            const amountToRefund = txData.amount || 0;
+            
+            await updateDoc(txDoc.ref, {
+              status: 'failed',
+              description: `Échec retrait: ${failureReason} (montant remboursé)`,
+              'wonyaPay.providerStatus': statutWonya,
+              'wonyaPay.statutTransa': statutTransa,
+              'wonyaPay.refTransaResponse': refTransaResponse,
+              'wonyaPay.statusResponse': statusPayload,
+              'wonyaPay.failureReason': failureReason,
+              failedAt: new Date().toISOString(),
+              refunded: true,
+            });
+            
+            // Rembourser le montant débité
+            await updateDoc(userRef, {
+              walletBalance: increment(amountToRefund),
+              lastTransactionTime: new Date(),
+            });
+          } else {
+            // Pour les dépôts échoués: juste marquer comme échoué
+            await updateDoc(txDoc.ref, {
+              status: 'failed',
+              description: `Échec: ${failureReason}`,
+              'wonyaPay.providerStatus': statutWonya,
+              'wonyaPay.statutTransa': statutTransa,
+              'wonyaPay.refTransaResponse': refTransaResponse,
+              'wonyaPay.statusResponse': statusPayload,
+              'wonyaPay.failureReason': failureReason,
+              failedAt: new Date().toISOString(),
+            });
+          }
+
+          failed += 1;
+        }
+        // Transaction expirée (plus de 10 minutes en attente sans statut clair)
+        else if (ageInMinutes >= 10 && !refTransaResponse) {
+          // Pour les retraits expirés: rembourser le portefeuille
+          if (isWithdrawal) {
+            const amountToRefund = txData.amount || 0;
+            
+            await updateDoc(txDoc.ref, {
+              status: 'failed',
+              description: 'Échec: Transaction expirée (délai dépassé, montant remboursé)',
+              'wonyaPay.providerStatus': 'expired',
+              'wonyaPay.statutTransa': 'Echec',
+              'wonyaPay.statusResponse': statusPayload,
+              expiredAt: new Date().toISOString(),
+              refunded: true,
+            });
+            
+            // Rembourser le montant débité
+            await updateDoc(userRef, {
+              walletBalance: increment(amountToRefund),
+              lastTransactionTime: new Date(),
+            });
+          } else {
+            await updateDoc(txDoc.ref, {
+              status: 'failed',
+              description: 'Échec: Transaction expirée (délai dépassé)',
+              'wonyaPay.providerStatus': 'expired',
+              'wonyaPay.statutTransa': 'Echec',
+              'wonyaPay.statusResponse': statusPayload,
+              expiredAt: new Date().toISOString(),
+            });
+          }
+
+          failed += 1;
+        }
+      } catch (error: any) {
+        console.error(`Erreur vérification transaction ${refTransa}:`, error);
+        
+        // Si erreur après 5 minutes, marquer comme échouée
+        if (ageInMinutes >= 5) {
+          const isWithdrawal = txData.type === 'withdrawal' && txData.withdrawalMethod === 'mobile_money';
+          
+          // Pour les retraits en erreur: rembourser le portefeuille
+          if (isWithdrawal) {
+            const amountToRefund = txData.amount || 0;
+            
+            await updateDoc(txDoc.ref, {
+              status: 'failed',
+              description: `Échec: ${error.message || 'Erreur de vérification'} (montant remboursé)`,
+              'wonyaPay.providerStatus': 'error',
+              'wonyaPay.error': error.message,
+              failedAt: new Date().toISOString(),
+              refunded: true,
+            });
+            
+            // Rembourser le montant débité
+            await updateDoc(userRef, {
+              walletBalance: increment(amountToRefund),
+              lastTransactionTime: new Date(),
+            });
+          } else {
+            await updateDoc(txDoc.ref, {
+              status: 'failed',
+              description: `Échec: ${error.message || 'Erreur de vérification'}`,
+              'wonyaPay.providerStatus': 'error',
+              'wonyaPay.error': error.message,
+              failedAt: new Date().toISOString(),
+            });
+          }
+          
+          failed += 1;
+        }
       }
-
-      if (!statusResponse.ok) {
-        continue;
-      }
-
-      const providerStatus =
-        statusPayload?.data?.status ||
-        statusPayload?.status ||
-        txData?.wonyPay?.providerStatus ||
-        'pending';
-
-      if (!isCompletedWonyaStatus(providerStatus)) {
-        continue;
-      }
-
-      await updateDoc(txDoc.ref, {
-        status: 'completed',
-        description: 'Depot WonyaPay confirme',
-        'wonyPay.providerStatus': providerStatus,
-        'wonyPay.statusResponse': statusPayload,
-        creditedAt: new Date().toISOString(),
-      });
-
-      await updateDoc(userRef, {
-        walletBalance: increment(txData.amount || 0),
-        lastTransactionTime: new Date(),
-      });
-
-      const refreshedUserDoc = await getDoc(userRef);
-      const refreshedBalance = refreshedUserDoc.data()?.walletBalance || 0;
-      await updateDoc(txDoc.ref, {
-        newBalance: refreshedBalance,
-      });
-
-      updated += 1;
     }
 
     return NextResponse.json({
       success: true,
       checked,
       updated,
+      failed,
     });
   } catch (error: any) {
     console.error('Erreur reconciliation WonyaPay:', error);

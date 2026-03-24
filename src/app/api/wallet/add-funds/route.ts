@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { initializeApp } from 'firebase/app';
+import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getFirestore, collection, doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
 import {
   generateWonyaRefTransa,
@@ -19,12 +19,8 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-let app: any;
-try {
-  app = initializeApp(firebaseConfig);
-} catch (e) {
-  console.log('Firebase already initialized');
-}
+// Utiliser l'app existante ou en créer une nouvelle
+const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
 /**
  * POST /api/wallet/add-funds
@@ -109,6 +105,31 @@ export async function POST(request: NextRequest) {
           );
         }
 
+        // Si la devise est USD, convertir en CDF pour le crédit du portefeuille
+        let amountInCDF = amount;
+        let exchangeRate = 1;
+        
+        if (currency === 'USD') {
+          try {
+            // Récupérer le taux de change USD → CDF
+            const rateResponse = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+            if (rateResponse.ok) {
+              const rateData = await rateResponse.json();
+              exchangeRate = rateData.rates?.CDF || 2800;
+              amountInCDF = Math.round(amount * exchangeRate);
+            } else {
+              // Taux de secours
+              exchangeRate = 2800;
+              amountInCDF = Math.round(amount * exchangeRate);
+            }
+          } catch (error) {
+            console.error('Erreur récupération taux de change:', error);
+            // Taux de secours
+            exchangeRate = 2800;
+            amountInCDF = Math.round(amount * exchangeRate);
+          }
+        }
+
         const refTransa = generateWonyaRefTransa();
         const wonyaPayload = {
           RefPartenaire: config.refPartenaire,
@@ -150,33 +171,47 @@ export async function POST(request: NextRequest) {
 
         const providerStatus = wonyaResult?.data?.status || 'pending';
         const completed = isCompletedWonyaStatus(providerStatus);
-        const walletBalanceAfterPayment = completed ? currentBalance + amount : currentBalance;
+        // Utiliser le montant converti en CDF pour le crédit du portefeuille
+        const walletBalanceAfterPayment = completed ? currentBalance + amountInCDF : currentBalance;
+
+        const wonyaPayData: any = {
+          refTransa,
+          refPartenaire: config.refPartenaire,
+          currency,
+          motif,
+          network: wonyaResult?.data?.network || null,
+          providerTransactionId: wonyaResult?.data?.transactionId || null,
+          providerStatus,
+          rawResponse: wonyaResult,
+        };
+
+        // Ajouter exchangeRate seulement si USD
+        if (currency === 'USD') {
+          wonyaPayData.exchangeRate = exchangeRate;
+        }
 
         const transactionData: any = {
           id: transactionId,
           type: 'deposit',
-          amount,
+          amount: amountInCDF, // Montant en CDF pour le portefeuille
+          originalAmount: amount, // Montant original (USD ou CDF)
+          originalCurrency: currency,
           paymentMethod,
           status: completed ? 'completed' : 'pending',
           previousBalance: currentBalance,
           newBalance: walletBalanceAfterPayment,
           description: completed
-            ? 'Depot WonyaPay confirme'
+            ? currency === 'USD' 
+              ? `Depot WonyaPay confirme (${amount} USD → ${amountInCDF.toLocaleString('fr-FR')} CDF)`
+              : 'Depot WonyaPay confirme'
+            : currency === 'USD'
+            ? `Depot WonyaPay initie (${amount} USD → ${amountInCDF.toLocaleString('fr-FR')} CDF), en attente`
             : 'Depot WonyaPay initie, en attente de confirmation',
           timestamp: new Date(),
           createdAt: new Date().toISOString(),
           phoneNumber: normalizedPhoneNumber,
           provider: 'WonyaPay',
-          wonyaPay: {
-            refTransa,
-            refPartenaire: config.refPartenaire,
-            currency,
-            motif,
-            network: wonyaResult?.data?.network || null,
-            providerTransactionId: wonyaResult?.data?.transactionId || null,
-            providerStatus,
-            rawResponse: wonyaResult,
-          },
+          wonyaPay: wonyaPayData,
         };
 
         await setDoc(transactionRef, transactionData);
@@ -188,15 +223,24 @@ export async function POST(request: NextRequest) {
           });
         }
 
-        return NextResponse.json({
+        const responseData: any = {
           success: true,
           transactionId,
           newBalance: walletBalanceAfterPayment,
-          amount,
+          amount: amountInCDF, // Retourner le montant en CDF
+          originalAmount: amount,
+          originalCurrency: currency,
           message: wonyaResult?.message || 'Transaction WonyaPay initiée',
           transactionStatus: completed ? 'completed' : 'pending',
           providerReference: refTransa,
-        });
+        };
+
+        // Ajouter exchangeRate seulement si USD
+        if (currency === 'USD') {
+          responseData.exchangeRate = exchangeRate;
+        }
+
+        return NextResponse.json(responseData);
       }
 
       const transactionData: any = {

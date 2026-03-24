@@ -66,7 +66,10 @@ export function useWalletTransactions() {
       }
     };
 
+    // Sync immédiat au chargement
     syncPendingWonyaDeposits();
+    
+    // Sync toutes les 30 secondes pour les transactions récentes
     const intervalId = window.setInterval(syncPendingWonyaDeposits, 30000);
 
     return () => window.clearInterval(intervalId);
@@ -268,7 +271,7 @@ export function useWalletTransactions() {
 
   // Retirer des fonds
   const withdrawFunds = useCallback(
-    async (amount: number, withdrawalMethod: 'mobile_money' | 'agent', details: any) => {
+    async (amount: number, withdrawalMethod: 'mobile_money' | 'agent' | 'card' | 'bank', details: any) => {
       if (!currentUser) throw new Error('Utilisateur non authentifié');
       if (amount > balance) throw new Error('Solde insuffisant');
 
@@ -299,7 +302,7 @@ export function useWalletTransactions() {
         // Obtenir le token d'authentification
         const token = await currentUser.getIdToken();
 
-        // Appeler l'API route Next.js (pas de CORS côté serveur)
+        // Appeler l'API route Next.js
         const response = await fetch('/api/wallet/withdraw-funds', {
           method: 'POST',
           headers: {
@@ -311,12 +314,13 @@ export function useWalletTransactions() {
             amount,
             withdrawalMethod,
             phoneNumber: details.phoneNumber,
-            provider: details.provider,
-            providerName: details.providerName,
-            agentCode: details.agentCode,
-            agentLocation: details.agentLocation,
-            agentId: details.agentId,
-            agentName: details.agentName,
+            currency: details.currency,
+            agentIdentifier: details.agentIdentifier,
+            cardNumber: details.cardNumber,
+            cardHolder: details.cardHolder,
+            bankName: details.bankName,
+            accountNumber: details.accountNumber,
+            accountHolder: details.accountHolder,
           }),
         });
 
@@ -332,8 +336,11 @@ export function useWalletTransactions() {
             tx.id === optimisticId
               ? {
                   ...tx,
-                  status: 'completed',
-                  description: 'Retrait confirmé',
+                  status: data.transactionStatus === 'pending' ? 'pending' : 'completed',
+                  description:
+                    data.transactionStatus === 'pending'
+                      ? data.message || 'Retrait en attente de confirmation'
+                      : 'Retrait confirmé',
                   newBalance: data.newBalance,
                 }
               : tx
