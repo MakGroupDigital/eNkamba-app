@@ -39,8 +39,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'userId requis' }, { status: 400 });
     }
 
-    const config = getWonyaPayConfig();
-    if (!config.token) {
+    // Vérifier la configuration WonyaPay avec gestion d'erreur
+    let config;
+    try {
+      config = getWonyaPayConfig();
+      if (!config.token || !config.baseUrl) {
+        console.log('Configuration WonyaPay incomplète, skip reconciliation');
+        return NextResponse.json({ success: true, updated: 0, checked: 0, skipped: true });
+      }
+    } catch (error) {
+      console.error('Erreur configuration WonyaPay:', error);
       return NextResponse.json({ success: true, updated: 0, checked: 0, skipped: true });
     }
 

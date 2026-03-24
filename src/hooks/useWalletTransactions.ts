@@ -53,7 +53,7 @@ export function useWalletTransactions() {
     const syncPendingWonyaDeposits = async () => {
       try {
         const token = await currentUser.getIdToken();
-        await fetch('/api/wallet/wonyapay/reconcile', {
+        const response = await fetch('/api/wallet/wonyapay/reconcile', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -61,8 +61,19 @@ export function useWalletTransactions() {
           },
           body: JSON.stringify({ userId: currentUser.uid }),
         });
+        
+        // Ne pas logger les erreurs si l'API retourne un succès avec skip
+        if (response.ok) {
+          const data = await response.json();
+          if (data.skipped) {
+            // Configuration WonyaPay non disponible, c'est normal
+            return;
+          }
+        }
       } catch (err) {
-        console.error('Erreur sync WonyaPay:', err);
+        // Ignorer silencieusement les erreurs de réconciliation
+        // pour ne pas perturber l'expérience utilisateur
+        console.debug('Sync WonyaPay skipped:', err);
       }
     };
 

@@ -1,11 +1,36 @@
 import { decodeSecret } from '@/lib/decode-secrets';
 
 export function getWonyaPayConfig() {
-  return {
-    baseUrl: (process.env.WONYAPAY_BASE_URL || 'https://app-api.wonyasoft.com').trim(),
-    token: (process.env.WONYAPAY_TOKEN || decodeSecret(process.env.WONYAPAY_TOKEN_ENCODED)).trim(),
-    refPartenaire: (process.env.WONYAPAY_REF_PARTENAIRE || decodeSecret(process.env.WONYAPAY_REF_PARTENAIRE_ENCODED)).trim(),
-  };
+  try {
+    const baseUrl = (process.env.WONYAPAY_BASE_URL || 'https://app-api.wonyasoft.com').trim();
+    
+    let token = '';
+    try {
+      token = (process.env.WONYAPAY_TOKEN || decodeSecret(process.env.WONYAPAY_TOKEN_ENCODED) || '').trim();
+    } catch (e) {
+      console.debug('Token WonyaPay non disponible');
+    }
+    
+    let refPartenaire = '';
+    try {
+      refPartenaire = (process.env.WONYAPAY_REF_PARTENAIRE || decodeSecret(process.env.WONYAPAY_REF_PARTENAIRE_ENCODED) || '').trim();
+    } catch (e) {
+      console.debug('RefPartenaire WonyaPay non disponible');
+    }
+    
+    return {
+      baseUrl,
+      token,
+      refPartenaire,
+    };
+  } catch (error) {
+    console.error('Erreur configuration WonyaPay:', error);
+    return {
+      baseUrl: 'https://app-api.wonyasoft.com',
+      token: '',
+      refPartenaire: '',
+    };
+  }
 }
 
 export function normalizeWonyaPhoneNumber(phoneNumber: string) {
