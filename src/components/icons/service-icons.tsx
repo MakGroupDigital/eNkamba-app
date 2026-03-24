@@ -611,6 +611,42 @@ export const InsuranceIcon = ({ className, size = 24 }: IconProps) => (
   </svg>
 );
 
+// eSIM-eNkamba - Carte SIM avec signal
+export const ESimIcon = ({ className, size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={cn("", className)}
+  >
+    <defs>
+      <linearGradient id="esimGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#32BB78" />
+        <stop offset="100%" stopColor="#0E5A59" />
+      </linearGradient>
+    </defs>
+    {/* Carte SIM */}
+    <rect x="10" y="8" width="28" height="36" rx="3" fill="url(#esimGrad)" />
+    {/* Coin coupé */}
+    <path d="M10 8L18 8L10 16Z" fill="#0E5A59" />
+    {/* Puce */}
+    <rect x="16" y="18" width="16" height="20" rx="2" fill="#FFD700" stroke="#E6C200" strokeWidth="1" />
+    {/* Lignes de la puce */}
+    <line x1="20" y1="18" x2="20" y2="38" stroke="#E6C200" strokeWidth="1" />
+    <line x1="24" y1="18" x2="24" y2="38" stroke="#E6C200" strokeWidth="1" />
+    <line x1="28" y1="18" x2="28" y2="38" stroke="#E6C200" strokeWidth="1" />
+    <line x1="16" y1="24" x2="32" y2="24" stroke="#E6C200" strokeWidth="1" />
+    <line x1="16" y1="30" x2="32" y2="30" stroke="#E6C200" strokeWidth="1" />
+    {/* Signal waves */}
+    <path d="M38 12C40 14 40 18 38 20" stroke="#32BB78" strokeWidth="2" strokeLinecap="round" fill="none" />
+    <path d="M42 8C45 11 45 21 42 24" stroke="#32BB78" strokeWidth="2" strokeLinecap="round" fill="none" />
+    {/* Texte eSIM */}
+    <text x="24" y="14" textAnchor="middle" fontSize="5" fill="#fff" fontWeight="bold">eSIM</text>
+  </svg>
+);
+
 // Donation - Mains avec cœur
 export const DonationIcon = ({ className, size = 24 }: IconProps) => (
   <svg

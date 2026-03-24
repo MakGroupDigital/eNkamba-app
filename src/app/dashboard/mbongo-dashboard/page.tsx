@@ -7,7 +7,7 @@ import { Sparkles, QrCode, ArrowLeftRight, TrendingUp, Wallet } from "lucide-rea
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import DashboardHeader from "@/components/dashboard/dashboard-header";
-import { SavingsIcon, CreditIcon, TontineIcon, ConversionIcon, ReferralIcon, AgentIcon, LinkAccountIcon, BonusIcon, TaxIcon, YangoIcon, WaterIcon, TvIcon, AcademicIcon, SchoolIcon, FlightIcon, HotelIcon, EventIcon, PhoneCreditIcon, InsuranceIcon, DonationIcon } from "@/components/icons/service-icons";
+import { SavingsIcon, CreditIcon, TontineIcon, ConversionIcon, ReferralIcon, AgentIcon, LinkAccountIcon, BonusIcon, TaxIcon, YangoIcon, WaterIcon, TvIcon, AcademicIcon, SchoolIcon, FlightIcon, HotelIcon, EventIcon, PhoneCreditIcon, InsuranceIcon, ESimIcon } from "@/components/icons/service-icons";
 import { useUserProfile } from '@/hooks/useUserProfile';
 
 const quickActions = [
@@ -45,6 +45,7 @@ const financialServices = [
 ];
 
 const bills = [
+  { icon: ESimIcon, label: 'eSIM-eNkamba', href: '/dashboard/partner-services' },
   { icon: TaxIcon, label: 'Impôts', href: '/dashboard/pay-bill?type=tax' },
   { icon: YangoIcon, label: 'Yango', href: '/dashboard/pay-bill?type=yango' },
   { icon: WaterIcon, label: 'Regideso', href: '/dashboard/pay-bill?type=water' },
@@ -56,7 +57,6 @@ const bills = [
   { icon: EventIcon, label: 'Événements', href: '/dashboard/pay-bill?type=event' },
   { icon: PhoneCreditIcon, label: 'Crédit Téléphone', href: '/dashboard/pay-bill?type=phone' },
   { icon: InsuranceIcon, label: 'Assurance', href: '/dashboard/pay-bill?type=insurance' },
-  { icon: DonationIcon, label: 'Donation', href: '/dashboard/pay-bill?type=donation' },
 ];
 
 export default function MbongoDashboard() {
@@ -126,7 +126,7 @@ export default function MbongoDashboard() {
           <CardHeader className="bg-gradient-to-r from-accent/10 to-transparent">
             <CardTitle className="font-headline flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-accent animate-pulse" />
-              Factures et Services Partenaires
+              Factures et autres Services
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-6">

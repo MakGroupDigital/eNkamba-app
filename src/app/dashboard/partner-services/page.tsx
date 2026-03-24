@@ -29,6 +29,19 @@ interface Service {
 
 const mockServices: Service[] = [
   {
+    id: 'esim',
+    name: 'eSIM-eNkamba',
+    category: 'Télécommunication',
+    description: 'Numéro virtuel RDC (+243 07...) - Activation instantanée',
+    price: 1000,
+    currency: 'CDF',
+    rating: 4.9,
+    reviews: 1247,
+    icon: '📱',
+    status: 'active',
+    provider: 'eNkamba Telecom',
+  },
+  {
     id: '1',
     name: 'Nettoyage Professionnel',
     category: 'Ménage',
@@ -179,6 +192,13 @@ export default function PartnerServicesPage() {
     const service = services.find(s => s.id === selectedServiceId);
     if (!service) return;
 
+    // Redirection spéciale pour eSIM
+    if (service.id === 'esim') {
+      router.push('/dashboard/esim/purchase');
+      setShowBookDialog(false);
+      return;
+    }
+
     // Préparer les données de paiement pour le service
     const paymentData = {
       context: 'services',
@@ -208,7 +228,7 @@ export default function PartnerServicesPage() {
       <header className="flex items-center gap-2">
         <Zap className="h-6 w-6 text-primary" />
         <h1 className="font-headline text-xl font-bold text-primary">
-          Services Partenaires
+          Factures et autres Services
         </h1>
       </header>
 
