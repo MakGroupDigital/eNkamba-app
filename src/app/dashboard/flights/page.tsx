@@ -52,8 +52,10 @@ export default function FlightsPage() {
     passengers: 1,
     cabinClass: 'economy',
   });
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchProgress, setSearchProgress] = useState(0);
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     // Validation
     if (!searchParams.from || !searchParams.to) {
       toast({
@@ -91,6 +93,28 @@ export default function FlightsPage() {
       return;
     }
 
+    // Afficher la barre de chargement
+    setIsSearching(true);
+    setSearchProgress(0);
+
+    // Simuler la progression de la recherche
+    const progressInterval = setInterval(() => {
+      setSearchProgress(prev => {
+        if (prev >= 90) {
+          clearInterval(progressInterval);
+          return 90;
+        }
+        return prev + 10;
+      });
+    }, 200);
+
+    // Attendre un peu pour montrer l'animation
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // Compléter la progression
+    setSearchProgress(100);
+    await new Promise(resolve => setTimeout(resolve, 300));
+
     // Redirection vers la page de résultats avec les paramètres
     const params = new URLSearchParams({
       from: searchParams.from,
@@ -119,6 +143,63 @@ export default function FlightsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-[#32BB78]/5 to-background">
+      {/* Overlay de recherche */}
+      {isSearching && (
+        <div className="fixed inset-0 bg-background/95 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="w-full max-w-md px-6 space-y-6">
+            <div className="text-center space-y-4">
+              <div className="relative w-20 h-20 mx-auto">
+                <div className="absolute inset-0 border-4 border-primary/20 rounded-full"></div>
+                <div className="absolute inset-0 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                <Plane className="absolute inset-0 m-auto w-10 h-10 text-primary" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-2xl font-bold">Recherche de vols en cours...</h3>
+                <p className="text-muted-foreground">
+                  Nous recherchons les meilleurs vols pour vous
+                </p>
+              </div>
+            </div>
+
+            {/* Barre de progression moderne */}
+            <div className="space-y-2">
+              <div className="h-2 bg-muted rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-primary to-green-600 transition-all duration-300 ease-out rounded-full"
+                  style={{ width: `${searchProgress}%` }}
+                >
+                  <div className="h-full w-full bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
+                </div>
+              </div>
+              <p className="text-center text-sm text-muted-foreground">
+                {searchProgress < 30 && "Connexion aux compagnies aériennes..."}
+                {searchProgress >= 30 && searchProgress < 60 && "Analyse des disponibilités..."}
+                {searchProgress >= 60 && searchProgress < 90 && "Comparaison des prix..."}
+                {searchProgress >= 90 && "Finalisation..."}
+              </p>
+            </div>
+
+            {/* Informations de recherche */}
+            <div className="p-4 rounded-lg bg-muted/50 space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Trajet:</span>
+                <span className="font-semibold">
+                  {AIRPORTS.find(a => a.code === searchParams.from)?.city} → {AIRPORTS.find(a => a.code === searchParams.to)?.city}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Passagers:</span>
+                <span className="font-semibold">{searchParams.passengers}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Classe:</span>
+                <span className="font-semibold">{cabinClassLabels[searchParams.cabinClass]}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="container mx-auto max-w-4xl p-4 space-y-6 animate-in fade-in duration-500">
         <header className="flex items-center gap-4 pt-4">
           <Button variant="ghost" size="icon" asChild>
@@ -364,9 +445,10 @@ export default function FlightsPage() {
             <Button 
               className="w-full h-12 text-lg bg-gradient-to-r from-primary to-green-800"
               onClick={handleSearch}
+              disabled={isSearching}
             >
               <Search className="w-5 h-5 mr-2" />
-              Rechercher des vols
+              {isSearching ? 'Recherche en cours...' : 'Rechercher des vols'}
             </Button>
           </CardContent>
         </Card>
