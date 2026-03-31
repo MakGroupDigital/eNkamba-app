@@ -54,6 +54,127 @@ const walletActions = [
   { icon: HistoryIcon, label: 'Historique', href: '/dashboard/history' },
 ];
 
+const LeopardAfricaArtwork = () => (
+  <svg viewBox="0 0 520 320" className="h-full w-full" aria-hidden="true">
+    <defs>
+      <linearGradient id="africaGold" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#fff4c4" />
+        <stop offset="22%" stopColor="#f7d87b" />
+        <stop offset="45%" stopColor="#cf9833" />
+        <stop offset="68%" stopColor="#8c5f16" />
+        <stop offset="100%" stopColor="#f6d879" />
+      </linearGradient>
+      <radialGradient id="furGold" cx="35%" cy="30%" r="75%">
+        <stop offset="0%" stopColor="#fff8d1" />
+        <stop offset="28%" stopColor="#f1cd6a" />
+        <stop offset="58%" stopColor="#c88e27" />
+        <stop offset="100%" stopColor="#5c390c" />
+      </radialGradient>
+      <radialGradient id="furShadow" cx="50%" cy="50%" r="80%">
+        <stop offset="0%" stopColor="rgba(0,0,0,0)" />
+        <stop offset="100%" stopColor="rgba(0,0,0,0.28)" />
+      </radialGradient>
+      <filter id="goldGlow" x="-40%" y="-40%" width="180%" height="180%">
+        <feGaussianBlur stdDeviation="6" result="blur" />
+        <feColorMatrix
+          in="blur"
+          type="matrix"
+          values="1 0 0 0 0.7  0 1 0 0 0.45  0 0 1 0 0.05  0 0 0 1 0"
+        />
+      </filter>
+      <linearGradient id="metalLine" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#fff6cf" />
+        <stop offset="35%" stopColor="#efca66" />
+        <stop offset="62%" stopColor="#a26d19" />
+        <stop offset="100%" stopColor="#fff0bd" />
+      </linearGradient>
+      <filter id="emboss" x="-20%" y="-20%" width="140%" height="140%">
+        <feOffset dx="0" dy="2" />
+        <feGaussianBlur stdDeviation="2.5" result="offset-blur" />
+        <feColorMatrix
+          in="offset-blur"
+          type="matrix"
+          values="0 0 0 0 0.12  0 0 0 0 0.07  0 0 0 0 0.01  0 0 0 0.65 0"
+        />
+      </filter>
+    </defs>
+
+    <path
+      d="M328 10l46 14 22 30-10 40 24 38-18 54 18 46-26 48-6 40-28-10-10-48-18-14-10-36-24-18-4-38-18-22 8-44 20-24 8-26 26-30z"
+      fill="url(#africaGold)"
+      opacity="0.9"
+      filter="url(#goldGlow)"
+    />
+    <path
+      d="M324 18l43 12 20 28-9 35 21 35-16 51 17 40-22 42-7 34-22-9-9-40-19-15-8-32-22-16-4-34-16-22 8-38 18-21 8-24 20-26z"
+      fill="url(#africaGold)"
+      opacity="0.98"
+    />
+
+    <g transform="translate(36 20)">
+      <path
+        d="M115 92c22-34 61-60 109-60 49 0 95 24 123 65 24 34 32 76 19 113-11 32-34 53-62 71-18 11-30 33-52 40-20 6-43-1-58-15-16-16-18-39-34-54-16-16-39-21-58-36-24-17-40-43-42-72-3-20 3-37 12-52 11-18 24-33 43-48z"
+        fill="url(#furGold)"
+        filter="url(#emboss)"
+      />
+      <path
+        d="M138 104c21-31 51-49 87-54 40-5 82 11 109 42 22 25 32 61 25 92-9 38-39 59-67 82-17 14-28 34-49 40-21 7-41-7-53-21-16-18-40-26-62-37-25-12-43-32-49-57-9-38 3-65 23-87 10-12 18-20 36-30z"
+        fill="rgba(40,22,1,0.16)"
+      />
+      <path
+        d="M130 120c12-37 46-74 86-88 31-10 73-6 105 12 25 14 48 40 57 70 9 29 4 56-5 74-13 25-36 46-63 57-23 9-49 10-72 5-26-5-49-17-70-35-31-26-50-71-38-118z"
+        fill="none"
+        stroke="url(#metalLine)"
+        strokeWidth="5"
+        strokeLinecap="round"
+        opacity="0.85"
+      />
+      <path
+        d="M173 140c22-31 56-47 90-44 31 3 60 20 78 46 13 19 18 40 12 58-6 17-17 26-30 35-15 9-31 18-51 16-16-1-28-8-41-14-20-10-40-9-58-1-13 5-24 15-39 15-14 0-26-9-34-22-14-22-7-52 10-75 14-18 24-27 44-37 6-4 12-6 19-8z"
+        fill="url(#furGold)"
+      />
+      <path
+        d="M185 156c18-24 44-37 73-38 31-1 62 13 81 35 16 19 22 48 10 67-11 16-31 25-49 29-17 3-31-2-47-7-18-6-35-5-51 2-11 4-21 12-33 11-12 0-21-8-27-18-10-18-6-42 7-59 12-15 20-23 36-31z"
+        fill="#f4d37a"
+        opacity="0.86"
+      />
+      <path d="M212 115c3-18 0-39-11-58-8-15-23-28-40-28-13 0-24 8-29 18-7 15-4 31 3 45 11 20 31 34 51 46" fill="url(#furGold)" filter="url(#emboss)" />
+      <path d="M206 126c-5-26-17-46-34-61-10-9-23-14-34-12-8 1-15 7-18 14-5 11-3 24 1 35 9 21 30 35 47 48" fill="rgba(33,18,1,0.18)" />
+      <path d="M229 133c8-10 20-16 34-17 16-1 31 7 40 19" stroke="#3a2100" strokeWidth="5" strokeLinecap="round" opacity="0.75" />
+      <path d="M203 146c-8 6-15 13-18 23" stroke="#3a2100" strokeWidth="5" strokeLinecap="round" opacity="0.65" />
+      <ellipse cx="294" cy="159" rx="8" ry="11" fill="#201202" />
+      <circle cx="297" cy="155" r="2.2" fill="#fff8d1" />
+      <path d="M305 170c13 4 31 16 42 28" stroke="#2a1700" strokeWidth="5" strokeLinecap="round" opacity="0.82" />
+      <path d="M224 189c17 5 31 11 42 20" stroke="#2a1700" strokeWidth="4" strokeLinecap="round" opacity="0.8" />
+      <path d="M260 190c12 7 28 9 40 7" stroke="#2a1700" strokeWidth="4" strokeLinecap="round" opacity="0.78" />
+      <path d="M269 202c8 11 22 17 36 19" stroke="#74480e" strokeWidth="4" strokeLinecap="round" />
+      <path d="M257 199c-8 9-21 14-34 15" stroke="#74480e" strokeWidth="4" strokeLinecap="round" />
+      <path d="M271 211c7 6 15 9 25 9 11 0 19-5 24-10" stroke="#2f1800" strokeWidth="4" strokeLinecap="round" />
+      {[
+        [226, 104], [252, 110], [281, 111], [197, 129], [230, 138], [260, 138],
+        [289, 139], [318, 131], [206, 165], [236, 168], [267, 169], [297, 166],
+        [327, 157], [198, 192], [228, 201], [260, 204], [293, 201], [323, 191],
+        [212, 223], [246, 228], [279, 228], [307, 220], [339, 180], [183, 176],
+        [171, 145], [345, 141]
+      ].map(([cx, cy], index) => (
+        <ellipse
+          key={index}
+          cx={cx}
+          cy={cy}
+          rx={index % 4 === 0 ? 9 : 7}
+          ry={index % 3 === 0 ? 5 : 4}
+          fill="#2a1600"
+          opacity="0.8"
+          transform={`rotate(${index % 2 === 0 ? 22 : -18} ${cx} ${cy})`}
+        />
+      ))}
+      <path d="M176 194c-18 29-39 52-68 66" stroke="#fff1bb" strokeWidth="3" strokeLinecap="round" opacity="0.78" />
+      <path d="M163 201c-28 29-62 54-102 68" stroke="#fff1bb" strokeWidth="2.4" strokeLinecap="round" opacity="0.6" />
+      <path d="M170 214c-16 15-35 28-59 39" stroke="#fff1bb" strokeWidth="2.2" strokeLinecap="round" opacity="0.58" />
+    </g>
+  </svg>
+);
+
 export default function WalletPage() {
   const { profile } = useUserProfile();
   const { balance: walletBalance, transactions: walletTransactions } = useWalletTransactions();
@@ -66,6 +187,8 @@ export default function WalletPage() {
   const [cardNumber, setCardNumber] = useState<string>('');
   const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
+  const cardFrontRef = useRef<HTMLDivElement>(null);
+  const cardBackRef = useRef<HTMLDivElement>(null);
   const [downloadProgress, setDownloadProgress] = useState(0);
 
   useEffect(() => {
@@ -106,26 +229,55 @@ export default function WalletPage() {
     navigator.clipboard.writeText(accountNumber);
   };
 
+  const captureCardFace = async (element: HTMLDivElement) => {
+    const canvas = await html2canvas(element, {
+      backgroundColor: null,
+      scale: 2,
+      logging: false,
+    });
+
+    return new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          reject(new Error('Impossible de generer l image de la carte'));
+          return;
+        }
+
+        resolve(blob);
+      }, 'image/png');
+    });
+  };
+
   // Long press handler pour télécharger la carte
   const handleCardMouseDown = () => {
     const timer = setTimeout(async () => {
-      if (cardRef.current) {
+      if (cardFrontRef.current && cardBackRef.current) {
         try {
+          const { default: JSZip } = await import('jszip');
+          const timestamp = new Date().getTime();
+
           setDownloadProgress(1);
-          const canvas = await html2canvas(cardRef.current, {
-            backgroundColor: null,
-            scale: 2,
-            logging: false,
-          });
-          
-          setDownloadProgress(50);
+          const frontBlob = await captureCardFace(cardFrontRef.current);
+          setDownloadProgress(40);
+
+          const backBlob = await captureCardFace(cardBackRef.current);
+          setDownloadProgress(75);
+
+          const zip = new JSZip();
+          zip.file(`enkamba-card-recto-${timestamp}.png`, frontBlob);
+          zip.file(`enkamba-card-verso-${timestamp}.png`, backBlob);
+
+          const zipBlob = await zip.generateAsync({ type: 'blob' });
+          setDownloadProgress(92);
+
           const link = document.createElement('a');
-          link.href = canvas.toDataURL('image/png');
-          link.download = `enkamba-card-${new Date().getTime()}.png`;
+          link.href = URL.createObjectURL(zipBlob);
+          link.download = `enkamba-card-${timestamp}.zip`;
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
-          
+          URL.revokeObjectURL(link.href);
+
           setDownloadProgress(100);
           setTimeout(() => setDownloadProgress(0), 1000);
         } catch (error) {
@@ -267,100 +419,86 @@ export default function WalletPage() {
                 </div>
               )}
               <div className={`card-inner ${isFlipped ? 'flipped' : ''}`}>
-                {/* FRONT - FUTURISTIC MODERN DESIGN */}
+                {/* FRONT - PREMIUM ENKAMBA PAY */}
                 <div className="card-front">
-                  <div className="relative w-full h-full rounded-3xl overflow-hidden shadow-2xl">
-                    {/* Animated Gradient Background */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#32BB78] via-[#2a9d63] to-[#1f7a4a]"></div>
-                    
-                    {/* Futuristic Grid Pattern */}
-                    <div className="absolute inset-0 opacity-10">
-                      <div className="absolute inset-0" style={{
-                        backgroundImage: 'linear-gradient(0deg, transparent 24%, rgba(255,255,255,.05) 25%, rgba(255,255,255,.05) 26%, transparent 27%, transparent 74%, rgba(255,255,255,.05) 75%, rgba(255,255,255,.05) 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, rgba(255,255,255,.05) 25%, rgba(255,255,255,.05) 26%, transparent 27%, transparent 74%, rgba(255,255,255,.05) 75%, rgba(255,255,255,.05) 76%, transparent 77%, transparent)',
-                        backgroundSize: '50px 50px'
-                      }}></div>
-                    </div>
+                  <div ref={cardFrontRef} className="relative w-full h-full rounded-3xl overflow-hidden shadow-2xl">
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_#1c7a50_0%,_#0f5739_36%,_#083624_100%)]"></div>
+                    <div className="absolute inset-0 bg-[linear-gradient(140deg,rgba(255,236,170,0.13)_0%,rgba(255,236,170,0)_22%,rgba(255,255,255,0.03)_48%,rgba(212,160,58,0.12)_78%,rgba(88,50,3,0.25)_100%)]"></div>
+                    <div className="absolute inset-0 opacity-[0.14]" style={{
+                      backgroundImage: 'linear-gradient(90deg, rgba(255,216,124,0.09) 1px, transparent 1px), linear-gradient(rgba(255,216,124,0.07) 1px, transparent 1px)',
+                      backgroundSize: '36px 36px'
+                    }}></div>
 
-                    {/* Modern Decorative Circles - Multiple Layers */}
-                    <div className="absolute top-8 right-12 w-32 h-32 bg-white rounded-full opacity-10 blur-2xl"></div>
-                    <div className="absolute top-20 right-20 w-24 h-24 bg-white rounded-full opacity-[0.08] blur-xl"></div>
-                    <div className="absolute bottom-16 left-8 w-40 h-40 bg-white rounded-full opacity-5 blur-3xl"></div>
-                    <div className="absolute bottom-8 right-16 w-28 h-28 bg-white rounded-full opacity-[0.07] blur-2xl"></div>
-                    <div className="absolute top-1/2 left-1/4 w-20 h-20 bg-white rounded-full opacity-[0.06] blur-xl"></div>
+                    <div className="absolute -left-16 -top-14 h-44 w-44 rounded-full bg-[#f7d87b]/12 blur-3xl"></div>
+                    <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-[#f7d87b]/10 blur-3xl"></div>
+                    <div className="absolute bottom-0 left-10 h-44 w-44 rounded-full bg-[#a36f19]/18 blur-3xl"></div>
 
-                    <div className="relative w-full h-full p-4 sm:p-6 flex flex-col text-white overflow-hidden">
-                      {/* Gradient Background - Modern Design */}
-                      <div className="absolute inset-0 bg-gradient-to-br from-[#32BB78] via-[#2a9d63] to-[#1f7a4a]"></div>
-                      
-                      {/* Decorative Elements - Circles like Visa/Mastercard */}
-                      <div className="absolute top-10 right-0 w-40 h-40 rounded-full bg-white opacity-[0.08] blur-3xl -mr-10"></div>
-                      <div className="absolute bottom-0 left-0 w-32 h-32 rounded-full bg-orange-400 opacity-[0.12] blur-3xl -mb-10 -ml-10"></div>
-                      <div className="absolute top-1/3 right-1/4 w-24 h-24 rounded-full bg-white opacity-[0.06] blur-2xl"></div>
+                    <div className="absolute left-[8%] top-[38%] h-[2px] w-[72%] rotate-[12deg] bg-gradient-to-r from-transparent via-[#ffd97a] to-transparent opacity-90 shadow-[0_0_22px_rgba(255,215,132,0.9)]"></div>
+                    <div className="absolute left-[24%] top-[55%] h-[2px] w-[58%] -rotate-[16deg] bg-gradient-to-r from-transparent via-[#ffd97a] to-transparent opacity-80 shadow-[0_0_18px_rgba(255,215,132,0.8)]"></div>
+                    <div className="absolute left-[15%] top-[64%] h-3 w-3 rounded-full bg-[#ffdf8f] shadow-[0_0_20px_rgba(255,223,143,0.95)]"></div>
+                    <div className="absolute right-[18%] top-[42%] h-3.5 w-3.5 rounded-full bg-[#ffdf8f] shadow-[0_0_22px_rgba(255,223,143,0.95)]"></div>
 
-                      <div className="relative z-10 flex flex-col h-full">
-                        {/* TOP - Logo and Brand */}
-                        <div className="flex items-start justify-between mb-3 sm:mb-4">
-                          <div>
-                            <p className="text-[10px] sm:text-xs font-bold opacity-70 tracking-widest uppercase">eNkamba</p>
-                            <p className="text-xl sm:text-2xl font-bold tracking-wider">PAY</p>
-                          </div>
-                          <div className="flex items-center gap-1 sm:gap-2">
-                            <Image src="/enkamba-logo.png" alt="eNkamba" width={40} height={40} className="drop-shadow-lg w-12 h-12 sm:w-14 sm:h-14" />
+                    <div className="relative z-10 flex h-full flex-col p-4 sm:p-6 text-white">
+                      <div className="flex items-start justify-between">
+                        <div className="rounded-2xl border border-[#f7d87b]/40 bg-[linear-gradient(145deg,#fff7cf_0%,#f1d06b_42%,#ba8020_74%,#fff0bf_100%)] p-2 shadow-[0_12px_28px_rgba(0,0,0,0.28),inset_0_1px_2px_rgba(255,255,255,0.9)]">
+                          <div className="grid grid-cols-3 gap-1">
+                            <span className="h-3 w-3 rounded-sm border border-[#8a6516]/60 bg-[#fff6d2]/90"></span>
+                            <span className="h-3 w-3 rounded-sm border border-[#8a6516]/60 bg-[#e6bc57]/80"></span>
+                            <span className="h-3 w-3 rounded-sm border border-[#8a6516]/60 bg-[#fff6d2]/90"></span>
+                            <span className="h-3 w-3 rounded-sm border border-[#8a6516]/60 bg-[#e6bc57]/80"></span>
+                            <span className="h-3 w-3 rounded-sm border border-[#8a6516]/60 bg-[#fff6d2]/90"></span>
+                            <span className="h-3 w-3 rounded-sm border border-[#8a6516]/60 bg-[#e6bc57]/80"></span>
                           </div>
                         </div>
 
-                        {/* MIDDLE - Vertical Layout for Mobile, Two Columns for Desktop */}
-                        <div className="flex-1 flex flex-col gap-3 sm:gap-4">
-                          {/* TOP ROW - Card Number & QR Code Side by Side */}
-                          <div className="flex gap-3 items-start justify-between">
-                            {/* LEFT - Card Number */}
-                            <div className="flex-1 min-w-0">
-                              <p className="text-[9px] sm:text-xs opacity-60 mb-0.5 uppercase tracking-widest font-semibold">Numéro</p>
-                              <p className="text-xs sm:text-lg font-mono font-bold tracking-wider break-all sm:break-normal">
-                                {cardNumber ? cardNumber.split(' ').map((group, i) => (
-                                  <span key={i}>{group}{i < 3 ? ' ' : ''}</span>
-                                )) : '•••• •••• •••• ••••'}
-                              </p>
-                            </div>
-
-                            {/* RIGHT - QR Code (Always Visible) */}
-                            {qrCode && (
-                              <div className="flex flex-col items-center gap-1 flex-shrink-0">
-                                <div className="bg-white p-1.5 sm:p-2 rounded-lg shadow-lg">
-                                  <Image src={qrCode} alt="QR Code" width={80} height={80} className="w-14 h-14 sm:w-20 sm:h-20" />
-                                </div>
-                                <p className="text-[8px] sm:text-xs opacity-60 uppercase tracking-widest font-semibold">Scan</p>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* MIDDLE ROW - Holder & Expiry */}
-                          <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                            <div>
-                              <p className="text-[9px] sm:text-xs opacity-60 mb-0.5 uppercase tracking-widest font-semibold">Titulaire</p>
-                              <p className="text-[10px] sm:text-xs font-semibold truncate">{profile?.fullName?.substring(0, 12).toUpperCase() || 'UTILISATEUR'}</p>
+                        <div className="flex flex-col items-end gap-2">
+                          <div className="flex items-center gap-2">
+                            <div className="overflow-hidden rounded-full border border-[#f7d87b]/35 shadow-[0_8px_18px_rgba(0,0,0,0.35)]">
+                              <Image src="/enkamba-logo.png" alt="eNkamba" width={48} height={48} className="h-10 w-10 object-cover sm:h-12 sm:w-12" />
                             </div>
                             <div className="text-right">
-                              <p className="text-[9px] sm:text-xs opacity-60 mb-0.5 uppercase tracking-widest font-semibold">Valide</p>
-                              <p className="text-[10px] sm:text-xs font-mono font-semibold">{expiryDate}</p>
+                              <p className="text-lg font-bold tracking-[0.24em] text-[#f5d27a] [text-shadow:0_2px_10px_rgba(0,0,0,0.45)] sm:text-xl">eNKAMBA</p>
                             </div>
                           </div>
+                        </div>
+                      </div>
 
-                          {/* BOTTOM ROW - Account & Balance */}
-                          <div className="grid grid-cols-2 gap-2 sm:gap-3 pt-2 border-t border-white/20">
-                            <div className="min-w-0">
-                              <p className="text-[9px] sm:text-xs opacity-60 mb-0.5 uppercase tracking-widest font-semibold">Compte</p>
-                              <p className="text-[10px] sm:text-xs font-mono font-bold truncate">{accountNumber?.slice(-8) || '00000000'}</p>
-                            </div>
-                            <div className="text-right min-w-0">
-                              <p className="text-[9px] sm:text-xs opacity-60 mb-0.5 uppercase tracking-widest font-semibold">Solde</p>
-                              <div className="flex items-center justify-end gap-1 min-w-0">
-                                <p className="text-xs sm:text-sm font-mono font-bold truncate max-w-[120px] sm:max-w-none">{displayBalance}</p>
-                                <button onClick={(e) => { e.stopPropagation(); setIsBalanceVisible(!isBalanceVisible); }} className="p-0.5 hover:bg-white/20 rounded transition-colors flex-shrink-0">
-                                  {isBalanceVisible ? <Eye className="w-3 h-3 sm:w-4 sm:h-4" /> : <EyeOff className="w-3 h-3 sm:w-4 sm:h-4" />}
-                                </button>
-                              </div>
-                            </div>
+                      <div className="relative flex-1">
+                        <div className="absolute inset-x-[12%] top-[2%] bottom-[11%]">
+                          <LeopardAfricaArtwork />
+                        </div>
+                      </div>
+
+                      <div className="relative z-10 max-w-[74%] space-y-3 sm:max-w-[68%] sm:space-y-4">
+                        <div>
+                          <p className="mb-1 text-[10px] uppercase tracking-[0.35em] text-[#fff1bf]/65">Numéro de carte</p>
+                          <p className="font-mono text-lg tracking-[0.18em] text-[#f7d87b] drop-shadow-[0_2px_10px_rgba(0,0,0,0.52)] sm:text-[1.95rem]">
+                            {cardNumber || '•••• •••• •••• ••••'}
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="text-sm font-medium text-[#fff1bf]/95 drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]">
+                            {profile?.fullName || profile?.name || 'Utilisateur eNkamba'}
+                          </p>
+                          <p className="mt-1 text-[11px] uppercase tracking-[0.3em] text-[#fff1bf]/72">
+                            eNkambaPay
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 grid grid-cols-2 gap-4 border-t border-[#f7d87b]/20 pt-4 text-[11px] sm:text-xs">
+                        <div className="min-w-0">
+                          <p className="uppercase tracking-[0.25em] text-[#fff1bf]/60">Compte</p>
+                          <p className="mt-1 truncate font-mono font-semibold text-[#f7d87b]">{accountNumber || 'ENK000000000000'}</p>
+                        </div>
+                        <div className="min-w-0 text-right">
+                          <p className="uppercase tracking-[0.25em] text-[#fff1bf]/60">Solde</p>
+                          <div className="mt-1 flex items-center justify-end gap-1.5">
+                            <p className="truncate font-mono font-semibold text-[#f7d87b]">{displayBalance} CDF</p>
+                            <button onClick={(e) => { e.stopPropagation(); setIsBalanceVisible(!isBalanceVisible); }} className="rounded-full p-1 text-[#f7d87b] transition-colors hover:bg-white/10">
+                              {isBalanceVisible ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -368,57 +506,60 @@ export default function WalletPage() {
                   </div>
                 </div>
 
-                {/* BACK - MODERN DESIGN */}
+                {/* BACK - PREMIUM INFO PANEL */}
                 <div className="card-back">
-                  <div className="relative w-full h-full rounded-3xl overflow-hidden shadow-2xl">
-                    {/* Gradient Background - Same as Front */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#32BB78] via-[#2a9d63] to-[#1f7a4a]"></div>
-                    
-                    {/* Decorative Elements */}
-                    <div className="absolute bottom-0 right-0 w-40 h-40 rounded-full bg-orange-400 opacity-[0.12] blur-3xl -mr-10 -mb-10"></div>
-                    <div className="absolute top-1/2 left-0 w-32 h-32 rounded-full bg-white opacity-[0.06] blur-2xl -ml-10"></div>
+                  <div ref={cardBackRef} className="relative w-full h-full rounded-3xl overflow-hidden shadow-2xl">
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_#185f3f_0%,_#0d432c_42%,_#071f14_100%)]"></div>
+                    <div className="absolute inset-0 bg-[linear-gradient(145deg,rgba(224,182,85,0.14)_0%,rgba(224,182,85,0)_35%,rgba(255,255,255,0.03)_100%)]"></div>
 
-                    <div className="relative w-full h-full p-4 sm:p-6 flex flex-col justify-between text-white">
-                      {/* Magnetic Strip */}
-                      <div className="w-full h-12 bg-gradient-to-r from-gray-900 to-gray-800 rounded-lg shadow-inner mb-6 border border-white/10" style={{
-                        backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 10px, rgba(255,255,255,0.05) 10px, rgba(255,255,255,0.05) 20px)'
-                      }}></div>
+                    <div className="absolute left-0 top-8 h-12 w-full bg-gradient-to-r from-black/85 via-[#2d2d2d] to-black/85 shadow-inner"></div>
+                    <div className="absolute right-0 bottom-0 h-40 w-40 rounded-full bg-[#e0b655]/10 blur-3xl"></div>
 
-                      {/* CVV Section - Main Focus */}
-                      <div className="flex-1 flex flex-col items-end justify-center pr-4 mb-6">
-                        <div className="w-full sm:w-3/4">
-                          <p className="text-xs opacity-60 mb-2 uppercase tracking-widest font-semibold text-right">CVV</p>
-                          <div className="bg-white text-[#1f7a4a] rounded-lg p-3 sm:p-4 shadow-lg">
-                            <p className="text-2xl sm:text-3xl font-mono font-bold tracking-widest text-center">{cvv}</p>
+                    <div className="relative flex h-full flex-col justify-between p-4 text-white sm:p-6">
+                      <div className="pt-24">
+                        <p className="text-[10px] uppercase tracking-[0.35em] text-[#fff1bf]/65">eNkambaPay</p>
+                        <p className="mt-2 text-sm font-semibold text-[#ffe9a3] sm:text-base">Carte portefeuille digitale</p>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1.15fr_0.85fr] sm:gap-4">
+                        <div className="space-y-4">
+                          <div>
+                            <p className="text-[10px] uppercase tracking-[0.3em] text-[#fff1bf]/60">Titulaire</p>
+                            <p className="mt-1 font-semibold text-[#ffe9a3]">
+                              {(profile?.fullName || profile?.name || 'Utilisateur eNkamba').toUpperCase()}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] uppercase tracking-[0.3em] text-[#fff1bf]/60">Numéro de compte</p>
+                            <p className="mt-1 font-mono text-sm font-semibold text-[#ffe9a3] sm:text-base">{accountNumber || 'ENK000000000000'}</p>
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <p className="text-[10px] uppercase tracking-[0.3em] text-[#fff1bf]/60">Validité</p>
+                              <p className="mt-1 font-mono font-semibold text-[#ffe9a3]">{expiryDate}</p>
+                            </div>
+                            <div>
+                              <p className="text-[10px] uppercase tracking-[0.3em] text-[#fff1bf]/60">CVV</p>
+                              <p className="mt-1 font-mono font-semibold text-[#ffe9a3]">{cvv}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col gap-3 sm:items-end sm:justify-between">
+                          {qrCode && (
+                            <div className="w-fit rounded-2xl border border-[#ffd784]/25 bg-white p-2 shadow-[0_10px_25px_rgba(0,0,0,0.25)] sm:self-end">
+                              <Image src={qrCode} alt="QR Code" width={104} height={104} className="h-16 w-16 rounded-md sm:h-20 sm:w-20" />
+                            </div>
+                          )}
+                          <div className="w-full rounded-2xl border border-[#ffd784]/20 bg-white/5 p-3 sm:text-right">
+                            <p className="text-[10px] uppercase tracking-[0.3em] text-[#fff1bf]/60">Numéro de carte</p>
+                            <p className="mt-1 font-mono text-xs font-semibold text-[#ffe9a3] sm:text-sm">{cardNumber || '•••• •••• •••• ••••'}</p>
                           </div>
                         </div>
                       </div>
 
-                      {/* Card Details - Minimal */}
-                      <div className="space-y-3 text-sm">
-                        {/* Row 1 */}
-                        <div className="flex items-center justify-between pb-3 border-t border-white/20">
-                          <div>
-                            <p className="text-xs opacity-60 uppercase tracking-widest font-semibold mb-1">Valide</p>
-                            <p className="font-mono font-bold">{expiryDate}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-xs opacity-60 uppercase tracking-widest font-semibold mb-1">Titulaire</p>
-                            <p className="font-bold">{profile?.fullName?.toUpperCase().substring(0, 20) || 'UTILISATEUR'}</p>
-                          </div>
-                        </div>
-
-                        {/* Row 2 - Account Number */}
-                        <div>
-                          <p className="text-xs opacity-60 uppercase tracking-widest font-semibold mb-1">Compte eNkamba</p>
-                          <p className="font-mono font-bold">{accountNumber || 'ENK000000000000'}</p>
-                        </div>
-
-                        {/* Row 3 - Footer Info */}
-                        <div className="text-center text-xs opacity-50 pt-2 border-t border-white/20 mt-2">
-                          <p>Cliquez pour voir le recto</p>
-                          <p className="mt-1">eNkamba © Digital Wallet</p>
-                        </div>
+                      <div className="border-t border-[#ffd784]/35 pt-2 text-center text-[10px] font-semibold uppercase tracking-[0.22em] text-[#fff2bd] drop-shadow-[0_1px_6px_rgba(0,0,0,0.5)]">
+                        Touchez la carte pour revenir au recto
                       </div>
                     </div>
                   </div>

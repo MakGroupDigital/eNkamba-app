@@ -37,7 +37,10 @@ export function normalizeWonyaPhoneNumber(phoneNumber: string) {
   const digits = phoneNumber.replace(/\D/g, '');
 
   if (digits.length === 10) return digits;
+  if (digits.length === 9) return `0${digits}`;
   if (digits.length === 12 && digits.startsWith('243')) return `0${digits.slice(3)}`;
+  if (digits.length === 13 && digits.startsWith('2430')) return digits.slice(3);
+  if (digits.length > 10 && digits.endsWith(digits.slice(-10))) return digits.slice(-10);
 
   return digits;
 }

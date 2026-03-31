@@ -7,21 +7,11 @@ import {
   isCompletedWonyaStatus,
   normalizeWonyaPhoneNumber,
 } from '@/lib/wonyapay';
-
-// Initialiser Firebase avec la config publique
-const firebaseConfig = {
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-};
+import { getFirebaseServerConfig } from '@/lib/firebase-server-config';
 
 function getFirebaseApp() {
   try {
-    return getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+    return getApps().length > 0 ? getApp() : initializeApp(getFirebaseServerConfig(), 'wallet-add-funds');
   } catch (error) {
     console.error('Erreur initialisation Firebase add-funds:', error);
     throw new Error('Initialisation Firebase impossible pour add-funds');

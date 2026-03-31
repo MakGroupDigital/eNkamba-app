@@ -212,48 +212,48 @@ export default function AddFundsPage() {
             >
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center gap-4 text-center">
-                  <div className="flex gap-3 items-center justify-center h-16 flex-wrap">
+                  <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-4">
                     {/* Airtel Money Logo */}
-                    <div className="flex items-center">
+                    <div className="flex min-h-14 items-center justify-center rounded-xl border border-border/60 bg-background/70 px-3 py-2">
                       <Image 
                         src="/logoairtel.png" 
                         alt="Airtel Money" 
                         width={80} 
                         height={40}
-                        className="object-contain"
+                        className="h-8 w-auto object-contain"
                       />
                     </div>
                     
                     {/* M-Pesa Logo */}
-                    <div className="flex items-center">
+                    <div className="flex min-h-14 items-center justify-center rounded-xl border border-border/60 bg-background/70 px-3 py-2">
                       <Image 
                         src="/logompsa.png" 
                         alt="M-Pesa" 
                         width={80} 
                         height={40}
-                        className="object-contain"
+                        className="h-8 w-auto object-contain"
                       />
                     </div>
                     
                     {/* Orange Money Logo */}
-                    <div className="flex items-center">
+                    <div className="flex min-h-14 items-center justify-center rounded-xl border border-border/60 bg-background/70 px-3 py-2">
                       <Image 
                         src="/logo-orange.png" 
                         alt="Orange Money" 
                         width={80} 
                         height={40}
-                        className="object-contain"
+                        className="h-8 w-auto object-contain"
                       />
                     </div>
                     
                     {/* Africell Logo */}
-                    <div className="flex items-center">
+                    <div className="flex min-h-14 items-center justify-center rounded-xl border border-border/60 bg-background/70 px-3 py-2">
                       <Image 
                         src="/logoafricell.png" 
                         alt="Africell Money" 
                         width={80} 
                         height={40}
-                        className="object-contain"
+                        className="h-8 w-auto object-contain"
                       />
                     </div>
                   </div>
