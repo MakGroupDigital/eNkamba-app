@@ -42,8 +42,17 @@ function PayBillContent() {
   const [currency, setCurrency] = useState<Currency>('CDF');
   const [field1, setField1] = useState('');
   const [field2, setField2] = useState('');
+  const [operator, setOperator] = useState('');
   const [showConfirm, setShowConfirm] = useState(false);
   const [isPaying, setIsPaying] = useState(false);
+
+  // Opérateurs téléphoniques RDC
+  const phoneOperators = [
+    { value: 'vodacom', label: 'Vodacom', icon: '📱' },
+    { value: 'airtel', label: 'Airtel', icon: '📶' },
+    { value: 'orange', label: 'Orange', icon: '🟠' },
+    { value: 'africell', label: 'Africell', icon: '📞' },
+  ];
 
   const handlePay = () => {
     if (!amount || !field1) {
@@ -54,6 +63,17 @@ function PayBillContent() {
       });
       return;
     }
+    
+    // Validation spécifique pour le crédit téléphone
+    if (billType === 'phone' && !operator) {
+      toast({
+        variant: "destructive",
+        title: "Opérateur manquant",
+        description: "Veuillez sélectionner un opérateur téléphonique.",
+      });
+      return;
+    }
+    
     setShowConfirm(true);
   };
 
@@ -72,6 +92,7 @@ function PayBillContent() {
     setAmount('');
     setField1('');
     setField2('');
+    setOperator('');
   };
 
   return (
@@ -131,6 +152,28 @@ function PayBillContent() {
               onChange={(e) => setField1(e.target.value)}
             />
           </div>
+
+          {/* Sélection d'opérateur pour le crédit téléphone */}
+          {billType === 'phone' && (
+            <div className="space-y-2">
+              <Label htmlFor="operator">Opérateur / Réseau *</Label>
+              <Select value={operator} onValueChange={setOperator}>
+                <SelectTrigger id="operator">
+                  <SelectValue placeholder="Sélectionnez un opérateur" />
+                </SelectTrigger>
+                <SelectContent>
+                  {phoneOperators.map(op => (
+                    <SelectItem key={op.value} value={op.value}>
+                      <div className="flex items-center gap-2">
+                        <span>{op.icon}</span>
+                        <span>{op.label}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           
           {billInfo.fields[1] && (
             <div className="space-y-2">
@@ -208,6 +251,14 @@ function PayBillContent() {
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">{billInfo.fields[0]} :</span>
                   <span className="font-semibold">{field1}</span>
+                </div>
+              )}
+              {billType === 'phone' && operator && (
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Opérateur :</span>
+                  <span className="font-semibold">
+                    {phoneOperators.find(op => op.value === operator)?.label}
+                  </span>
                 </div>
               )}
               {field2 && (
