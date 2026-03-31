@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { ArrowLeft, Search, Filter, MapPin, Star, Wifi, Coffee, Car, Utensils, ChevronRight } from "lucide-react";
+import { ArrowLeft, Search, Filter, MapPin, Star, Wifi, Coffee, Car, Utensils, ChevronRight, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import Image from 'next/image';
@@ -41,6 +41,47 @@ interface RoomType {
   available: number;
   description: string;
 }
+
+interface FeaturedOffer {
+  id: string;
+  title: string;
+  subtitle: string;
+  discount: string;
+  image: string;
+  hotelId: string;
+  gradient: string;
+}
+
+// Offres vedettes pour le carrousel
+const FEATURED_OFFERS: FeaturedOffer[] = [
+  {
+    id: 'offer-1',
+    title: 'Grand Hôtel Kinshasa',
+    subtitle: 'Séjour de luxe au bord du fleuve',
+    discount: '-30%',
+    image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800',
+    hotelId: 'hotel-001',
+    gradient: 'from-blue-600 to-blue-800',
+  },
+  {
+    id: 'offer-2',
+    title: 'Pullman Kinshasa',
+    subtitle: 'Expérience 5 étoiles exceptionnelle',
+    discount: '-25%',
+    image: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800',
+    hotelId: 'hotel-002',
+    gradient: 'from-purple-600 to-purple-800',
+  },
+  {
+    id: 'offer-3',
+    title: 'Hôtel Sultani Lubumbashi',
+    subtitle: 'Découvrez la capitale du cuivre',
+    discount: '-20%',
+    image: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800',
+    hotelId: 'hotel-005',
+    gradient: 'from-orange-600 to-orange-800',
+  },
+];
 
 // Base de données des hôtels
 const HOTELS: Hotel[] = [
@@ -188,6 +229,16 @@ export default function HotelsPage() {
   const [minRating, setMinRating] = useState<number>(0);
   const [sortBy, setSortBy] = useState<'price-asc' | 'price-desc' | 'rating' | 'name'>('rating');
   const [showFilters, setShowFilters] = useState(false);
+  const [currentOfferIndex, setCurrentOfferIndex] = useState(0);
+
+  // Auto-défilement du carrousel
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentOfferIndex((prev) => (prev + 1) % FEATURED_OFFERS.length);
+    }, 5000); // Change toutes les 5 secondes
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Extraire les valeurs uniques pour les filtres
   const continents = useMemo(() => ['all', ...new Set(HOTELS.map(h => h.continent))], []);
@@ -272,6 +323,76 @@ export default function HotelsPage() {
             </p>
           </div>
         </header>
+
+        {/* Carrousel d'offres vedettes */}
+        <div className="relative h-48 rounded-2xl overflow-hidden shadow-xl">
+          {FEATURED_OFFERS.map((offer, index) => (
+            <div
+              key={offer.id}
+              className={`absolute inset-0 transition-all duration-700 ease-in-out ${
+                index === currentOfferIndex 
+                  ? 'opacity-100 translate-x-0' 
+                  : index < currentOfferIndex 
+                    ? 'opacity-0 -translate-x-full' 
+                    : 'opacity-0 translate-x-full'
+              }`}
+            >
+              <div className="relative h-full w-full">
+                {/* Image de fond */}
+                <Image
+                  src={offer.image}
+                  alt={offer.title}
+                  fill
+                  className="object-cover"
+                />
+                {/* Overlay gradient */}
+                <div className={`absolute inset-0 bg-gradient-to-r ${offer.gradient} opacity-80`} />
+                
+                {/* Contenu */}
+                <div className="relative h-full flex items-center justify-between p-6 text-white">
+                  <div className="flex-1 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-5 h-5 text-yellow-300" />
+                      <Badge className="bg-yellow-400 text-yellow-900 hover:bg-yellow-400">
+                        Offre Vedette
+                      </Badge>
+                    </div>
+                    <h3 className="text-2xl font-bold">{offer.title}</h3>
+                    <p className="text-sm opacity-90">{offer.subtitle}</p>
+                    <Button 
+                      variant="secondary" 
+                      size="sm"
+                      onClick={() => router.push(`/dashboard/hotels/${offer.hotelId}`)}
+                      className="mt-2"
+                    >
+                      Voir l'offre
+                    </Button>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-5xl font-bold">{offer.discount}</div>
+                    <p className="text-sm opacity-90">de réduction</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {/* Indicateurs de pagination */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+            {FEATURED_OFFERS.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentOfferIndex(index)}
+                className={`h-2 rounded-full transition-all ${
+                  index === currentOfferIndex 
+                    ? 'w-8 bg-white' 
+                    : 'w-2 bg-white/50 hover:bg-white/75'
+                }`}
+                aria-label={`Aller à l'offre ${index + 1}`}
+              />
+            ))}
+          </div>
+        </div>
 
         {/* Barre de recherche et filtres */}
         <div className="space-y-3">
