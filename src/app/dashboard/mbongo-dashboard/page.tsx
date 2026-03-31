@@ -51,7 +51,7 @@ const bills = [
   { icon: WaterIcon, label: 'Regideso', href: '/dashboard/pay-bill?type=water' },
   { icon: TvIcon, label: 'Canal+', href: '/dashboard/pay-bill?type=tv' },
   { icon: AcademicIcon, label: 'Frais Académiques', href: '/dashboard/pay-bill?type=academic' },
-  { icon: SchoolIcon, label: 'Frais Scolaires', href: '/dashboard/pay-bill?type=school' },
+  { icon: SchoolIcon, label: 'Frais Scolaires', href: '/dashboard/school-fees' },
   { icon: FlightIcon, label: 'Billet d\'avion', href: '/dashboard/pay-bill?type=flight' },
   { icon: HotelIcon, label: 'Hôtel', href: '/dashboard/pay-bill?type=hotel' },
   { icon: EventIcon, label: 'Événements', href: '/dashboard/pay-bill?type=event' },
