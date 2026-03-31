@@ -89,14 +89,14 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-muted/30 to-background pb-20">
+    <div className="min-h-screen bg-gradient-to-b from-muted/30 to-background pb-20 overflow-x-hidden">
       {/* Header */}
       <div className="sticky top-0 z-40 bg-white border-b">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-          <button onClick={() => router.back()} className="p-2 hover:bg-muted rounded-lg">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
+          <button onClick={() => router.back()} className="p-2 hover:bg-muted rounded-lg flex-shrink-0">
             <X className="w-6 h-6" />
           </button>
-          <h1 className="text-lg font-bold flex-1 text-center">Détails du produit</h1>
+          <h1 className="text-lg font-bold flex-1 text-center truncate px-2">Détails du produit</h1>
           <button 
             onClick={() => {
               const productLink = `${window.location.origin}/dashboard/nkampa/product/${product.id}`;
@@ -120,7 +120,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 });
               }
             }}
-            className="p-2 hover:bg-muted rounded-lg transition-colors"
+            className="p-2 hover:bg-muted rounded-lg transition-colors flex-shrink-0"
           >
             <Share2 className="w-6 h-6" />
           </button>
@@ -221,53 +221,60 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
           {/* Seller Info */}
           <Card className="border-0 bg-gradient-to-r from-green-50 to-emerald-50">
             <CardContent className="p-4">
-              <div className="flex items-start justify-between">
+              <div className="space-y-4">
+                {/* Seller Header */}
                 <div className="flex items-start gap-3">
-                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
                     <span className="text-xl">🏪</span>
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-bold">{product.seller.name}</h3>
                       {product.seller.verified && (
-                        <Badge className="bg-green-600 text-white text-xs">✓ {product.seller.badge}</Badge>
+                        <Badge className="bg-green-600 text-white text-xs whitespace-nowrap">✓ {product.seller.badge}</Badge>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                      <div className="flex">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`w-3 h-3 ${
-                              i < Math.floor(product.seller.rating)
-                                ? 'fill-yellow-400 text-yellow-400'
-                                : 'text-gray-300'
-                            }`}
-                          />
-                        ))}
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1 flex-wrap">
+                      <div className="flex items-center gap-1">
+                        <div className="flex">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-3 h-3 ${
+                                i < Math.floor(product.seller.rating)
+                                  ? 'fill-yellow-400 text-yellow-400'
+                                  : 'text-gray-300'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <span className="whitespace-nowrap">{product.seller.rating} ({product.seller.reviews} avis)</span>
                       </div>
-                      <span>{product.seller.rating} ({product.seller.reviews} avis)</span>
-                      <MapPin className="w-3 h-3" />
-                      <span>{product.seller.location}</span>
+                      <div className="flex items-center gap-1">
+                        <MapPin className="w-3 h-3" />
+                        <span>{product.seller.location}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
+                
+                {/* Action Buttons */}
                 <div className="flex gap-2">
                   <Button
                     onClick={handleContactSeller}
                     variant="outline"
                     size="sm"
-                    className="gap-2"
+                    className="flex-1 gap-2"
                   >
                     <MessageCircle className="w-4 h-4" />
-                    Contacter
+                    <span className="hidden sm:inline">Contacter</span>
                   </Button>
                   <Button
                     onClick={() => router.push(`/dashboard/nkampa/seller/${product.seller.id}`)}
                     size="sm"
-                    className="gap-2 bg-gradient-to-r from-primary to-green-800 text-white"
+                    className="flex-1 gap-2 bg-gradient-to-r from-primary to-green-800 text-white"
                   >
-                    🏪 Voir la boutique
+                    🏪 <span className="hidden sm:inline">Voir la boutique</span><span className="sm:hidden">Boutique</span>
                   </Button>
                 </div>
               </div>
@@ -340,7 +347,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
         <Card>
           <CardContent className="p-4">
             <h3 className="font-bold mb-4">Moyens de paiement</h3>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {product.paymentMethods.map((method: any, idx: number) => (
                 <label
                   key={idx}
@@ -351,10 +358,10 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                     name="payment"
                     checked={selectedPayment === idx}
                     onChange={() => setSelectedPayment(idx)}
-                    className="w-4 h-4"
+                    className="w-4 h-4 flex-shrink-0"
                   />
-                  <span className="text-lg">{method.icon}</span>
-                  <span className="text-sm font-medium">{method.name}</span>
+                  <span className="text-lg flex-shrink-0">{method.icon}</span>
+                  <span className="text-sm font-medium truncate">{method.name}</span>
                 </label>
               ))}
             </div>

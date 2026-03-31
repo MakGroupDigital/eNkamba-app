@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Mic, ShoppingCart, Phone, X, Loader2, Package, Store, Heart, User, ArrowLeft } from 'lucide-react';
+import { Search, Mic, Phone, X, Loader2, Package, Store, Heart, User, ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -395,20 +395,6 @@ export default function NkampaPage() {
     }
   };
 
-  const handleAddToCart = (product: any) => {
-    addToCart(product, 1);
-    toast({
-      title: 'Ajouté au panier',
-      description: `${product.name} a été ajouté au panier`,
-    });
-  };
-
-  const handleBuyNow = (product: any) => {
-    setSelectedProduct(product);
-    setQuantity(1);
-    setShowCheckout(true);
-  };
-
   const handleCheckoutFromCart = () => {
     if (cart.length === 0) {
       toast({
@@ -584,30 +570,6 @@ export default function NkampaPage() {
               )}
             </div>
           )}
-          <div className="flex gap-2 pt-2">
-            <Button
-              size="sm"
-              variant="outline"
-              className="flex-1 text-xs h-8"
-              onClick={(e) => {
-                e.preventDefault();
-                handleAddToCart(product);
-              }}
-            >
-              <ShoppingCart className="w-3 h-3 mr-1" />
-              Panier
-            </Button>
-            <Button
-              size="sm"
-              className="flex-1 bg-primary hover:bg-primary/90 text-white text-xs h-8"
-              onClick={(e) => {
-                e.preventDefault();
-                handleBuyNow(product);
-              }}
-            >
-              Acheter
-            </Button>
-          </div>
         </CardContent>
       </Card>
     </Link>

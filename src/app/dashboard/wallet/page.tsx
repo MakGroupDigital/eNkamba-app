@@ -463,22 +463,22 @@ export default function WalletPage() {
                         </div>
                       </div>
 
-                      <div className="relative flex-1">
-                        <div className="absolute inset-x-[12%] top-[2%] bottom-[11%]">
+                      <div className="relative flex-1 min-h-0">
+                        <div className="absolute inset-x-[14%] top-[4%] bottom-[20%] sm:inset-x-[12%] sm:top-[2%] sm:bottom-[11%]">
                           <LeopardAfricaArtwork />
                         </div>
                       </div>
 
-                      <div className="relative z-10 max-w-[74%] space-y-3 sm:max-w-[68%] sm:space-y-4">
+                      <div className="relative z-10 max-w-[88%] space-y-2 sm:max-w-[68%] sm:space-y-4">
                         <div>
                           <p className="mb-1 text-[10px] uppercase tracking-[0.35em] text-[#fff1bf]/65">Numéro de carte</p>
-                          <p className="font-mono text-lg tracking-[0.18em] text-[#f7d87b] drop-shadow-[0_2px_10px_rgba(0,0,0,0.52)] sm:text-[1.95rem]">
+                          <p className="font-mono text-[0.92rem] tracking-[0.14em] text-[#f7d87b] drop-shadow-[0_2px_10px_rgba(0,0,0,0.52)] sm:text-[1.95rem] sm:tracking-[0.18em]">
                             {cardNumber || '•••• •••• •••• ••••'}
                           </p>
                         </div>
 
                         <div>
-                          <p className="text-sm font-medium text-[#fff1bf]/95 drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]">
+                          <p className="text-xs font-medium text-[#fff1bf]/95 drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)] sm:text-sm">
                             {profile?.fullName || profile?.name || 'Utilisateur eNkamba'}
                           </p>
                           <p className="mt-1 text-[11px] uppercase tracking-[0.3em] text-[#fff1bf]/72">
@@ -487,16 +487,16 @@ export default function WalletPage() {
                         </div>
                       </div>
 
-                      <div className="mt-4 grid grid-cols-2 gap-4 border-t border-[#f7d87b]/20 pt-4 text-[11px] sm:text-xs">
+                      <div className="mt-2 grid grid-cols-2 gap-2 border-t border-[#f7d87b]/20 pt-2 text-[10px] sm:mt-4 sm:gap-4 sm:pt-4 sm:text-xs">
                         <div className="min-w-0">
                           <p className="uppercase tracking-[0.25em] text-[#fff1bf]/60">Compte</p>
-                          <p className="mt-1 truncate font-mono font-semibold text-[#f7d87b]">{accountNumber || 'ENK000000000000'}</p>
+                          <p className="mt-1 truncate font-mono text-[11px] font-semibold text-[#f7d87b] sm:text-sm">{accountNumber || 'ENK000000000000'}</p>
                         </div>
                         <div className="min-w-0 text-right">
                           <p className="uppercase tracking-[0.25em] text-[#fff1bf]/60">Solde</p>
                           <div className="mt-1 flex items-center justify-end gap-1.5">
-                            <p className="truncate font-mono font-semibold text-[#f7d87b]">{displayBalance} CDF</p>
-                            <button onClick={(e) => { e.stopPropagation(); setIsBalanceVisible(!isBalanceVisible); }} className="rounded-full p-1 text-[#f7d87b] transition-colors hover:bg-white/10">
+                            <p className="truncate font-mono text-[11px] font-semibold text-[#f7d87b] sm:text-sm">{displayBalance} CDF</p>
+                            <button onClick={(e) => { e.stopPropagation(); setIsBalanceVisible(!isBalanceVisible); }} className="rounded-full p-0.5 text-[#f7d87b] transition-colors hover:bg-white/10 sm:p-1">
                               {isBalanceVisible ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
                             </button>
                           </div>

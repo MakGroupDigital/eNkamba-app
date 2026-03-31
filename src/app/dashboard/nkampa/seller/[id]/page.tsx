@@ -10,7 +10,6 @@ import {
   MapPin,
   Phone,
   MessageCircle,
-  ShoppingCart,
   Menu,
   ChevronDown,
   Users,
@@ -24,7 +23,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { useNkampaCart } from '@/hooks/useNkampaCart';
 import { useAuth } from '@/hooks/useAuth';
 import {
   StoreStatsIcon,
@@ -43,8 +41,6 @@ export default function SellerPortalPage({ params }: { params: Promise<{ id: str
   const router = useRouter();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { addToCart } = useNkampaCart();
-
   const seller = SELLERS_DATA[id] || SELLERS_DATA['seller-1'];
 
   // Get products for this seller
@@ -427,28 +423,6 @@ export default function SellerPortalPage({ params }: { params: Promise<{ id: str
                       <p className="text-sm font-bold text-primary">
                         {(product.price / 1000).toLocaleString()}K {product.currency}
                       </p>
-                      
-                      {/* Action Buttons */}
-                      <div className="flex gap-1.5 pt-1">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="flex-1 text-xs h-7 px-1"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            addToCart(product, 1);
-                          }}
-                        >
-                          <ShoppingCart className="w-2.5 h-2.5" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          className="flex-1 bg-primary hover:bg-primary/90 text-white text-xs h-7 px-1"
-                          onClick={(e) => e.preventDefault()}
-                        >
-                          Acheter
-                        </Button>
-                      </div>
                     </CardContent>
                   </Card>
                 </Link>

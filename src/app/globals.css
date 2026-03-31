@@ -76,11 +76,28 @@
 }
  
 @layer base {
+  html,
+  body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
+    overscroll-behavior-x: none;
+  }
+
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
+    position: relative;
+    min-height: 100dvh;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body > div,
+  main {
+    max-width: 100%;
   }
 }
 

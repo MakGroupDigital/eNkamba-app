@@ -70,6 +70,24 @@ export function useWalletTransactions() {
     }
   }, []);
 
+  const syncBalanceFromFirestore = useCallback(async (fallbackBalance?: number) => {
+    if (!currentUser) return;
+
+    try {
+      const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+      if (userDoc.exists()) {
+        setBalance(userDoc.data()?.walletBalance || 0);
+        return;
+      }
+    } catch (err) {
+      console.debug('Sync balance skipped:', err);
+    }
+
+    if (typeof fallbackBalance === 'number') {
+      setBalance(fallbackBalance);
+    }
+  }, [currentUser]);
+
   useEffect(() => {
     if (!currentUser) return;
 
@@ -283,6 +301,8 @@ export function useWalletTransactions() {
           )
         );
 
+        await syncBalanceFromFirestore(data.newBalance);
+
         return {
           success: true,
           transactionId: data.transactionId,
@@ -300,7 +320,7 @@ export function useWalletTransactions() {
         setIsLoading(false);
       }
     },
-    [balance, currentUser, parseApiResponse]
+    [balance, currentUser, parseApiResponse, syncBalanceFromFirestore]
   );
 
   // Retirer des fonds
@@ -381,6 +401,8 @@ export function useWalletTransactions() {
           )
         );
 
+        await syncBalanceFromFirestore(data.newBalance);
+
         return {
           success: true,
           transactionId: data.transactionId,
@@ -396,7 +418,7 @@ export function useWalletTransactions() {
         setIsLoading(false);
       }
     },
-    [balance, currentUser, parseApiResponse]
+    [balance, currentUser, parseApiResponse, syncBalanceFromFirestore]
   );
 
   return {
