@@ -52,7 +52,7 @@ const bills = [
   { icon: TvIcon, label: 'Canal+', href: '/dashboard/pay-bill?type=tv' },
   { icon: AcademicIcon, label: 'Frais Académiques', href: '/dashboard/academic-fees' },
   { icon: SchoolIcon, label: 'Frais Scolaires', href: '/dashboard/school-fees' },
-  { icon: FlightIcon, label: 'Billet d\'avion', href: '/dashboard/pay-bill?type=flight' },
+  { icon: FlightIcon, label: 'Billet d\'avion', href: '/dashboard/flights' },
   { icon: HotelIcon, label: 'Hôtel', href: '/dashboard/hotels' },
   { icon: EventIcon, label: 'Événements', href: '/dashboard/events' },
   { icon: PhoneCreditIcon, label: 'Crédit Téléphone', href: '/dashboard/pay-bill?type=phone' },
