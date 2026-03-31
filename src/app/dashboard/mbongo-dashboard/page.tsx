@@ -50,7 +50,7 @@ const bills = [
   { icon: YangoIcon, label: 'Yango', href: '/dashboard/pay-bill?type=yango' },
   { icon: WaterIcon, label: 'Regideso', href: '/dashboard/pay-bill?type=water' },
   { icon: TvIcon, label: 'Canal+', href: '/dashboard/pay-bill?type=tv' },
-  { icon: AcademicIcon, label: 'Frais Académiques', href: '/dashboard/pay-bill?type=academic' },
+  { icon: AcademicIcon, label: 'Frais Académiques', href: '/dashboard/academic-fees' },
   { icon: SchoolIcon, label: 'Frais Scolaires', href: '/dashboard/school-fees' },
   { icon: FlightIcon, label: 'Billet d\'avion', href: '/dashboard/pay-bill?type=flight' },
   { icon: HotelIcon, label: 'Hôtel', href: '/dashboard/pay-bill?type=hotel' },
