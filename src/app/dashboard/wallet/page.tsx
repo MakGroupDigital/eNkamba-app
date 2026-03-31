@@ -156,6 +156,30 @@ export default function WalletPage() {
     ? walletBalance.toLocaleString('fr-FR') 
     : '••••••••';
 
+  const getTransactionStatusUI = (status: string) => {
+    if (status === 'failed') {
+      return {
+        label: 'Échoué',
+        badgeClassName: 'bg-red-100 text-red-700',
+        amountClassName: 'text-red-600',
+      };
+    }
+
+    if (status === 'pending') {
+      return {
+        label: 'En attente',
+        badgeClassName: 'bg-yellow-100 text-yellow-700',
+        amountClassName: 'text-yellow-600',
+      };
+    }
+
+    return {
+      label: 'Terminé',
+      badgeClassName: 'bg-green-100 text-green-700',
+      amountClassName: 'text-[#32BB78]',
+    };
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-[#32BB78]/5 to-background">
       <style>{`
@@ -518,6 +542,7 @@ export default function WalletPage() {
                     const isIncoming = tx.type === 'deposit' || tx.type === 'transfer_received' || tx.type === 'money_request_received';
                     const iconConfig = getTransactionIconConfig(tx.type as any);
                     const Icon = iconConfig.icon;
+                    const statusUI = getTransactionStatusUI(tx.status);
                     const formattedDate = tx.timestamp?.toDate?.() 
                       ? new Date(tx.timestamp.toDate()).toLocaleDateString('fr-FR')
                       : 'Date inconnue';
@@ -529,9 +554,14 @@ export default function WalletPage() {
                         </div>
                         <div className="flex-1">
                           <p className="font-semibold text-sm">{tx.description}</p>
-                          <p className="text-xs text-muted-foreground">{formattedDate}</p>
+                          <div className="mt-1 flex items-center gap-2">
+                            <p className="text-xs text-muted-foreground">{formattedDate}</p>
+                            <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${statusUI.badgeClassName}`}>
+                              {statusUI.label}
+                            </span>
+                          </div>
                         </div>
-                        <p className={`font-bold text-sm ${isIncoming ? 'text-[#32BB78]' : 'text-foreground'}`}>
+                        <p className={`font-bold text-sm ${tx.status === 'failed' || tx.status === 'pending' ? statusUI.amountClassName : isIncoming ? 'text-[#32BB78]' : 'text-foreground'}`}>
                           {isIncoming ? '+' : '-'} {tx.amount.toLocaleString('fr-FR')} CDF
                         </p>
                       </div>

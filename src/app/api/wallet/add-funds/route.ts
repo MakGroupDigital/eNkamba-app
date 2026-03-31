@@ -19,8 +19,14 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Utiliser l'app existante ou en créer une nouvelle
-const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+function getFirebaseApp() {
+  try {
+    return getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+  } catch (error) {
+    console.error('Erreur initialisation Firebase add-funds:', error);
+    throw new Error('Initialisation Firebase impossible pour add-funds');
+  }
+}
 
 /**
  * POST /api/wallet/add-funds
@@ -57,7 +63,7 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      const db = getFirestore(app);
+      const db = getFirestore(getFirebaseApp());
       
       // Vérifier le token en obtenant les infos utilisateur depuis Firestore
       // (Si l'utilisateur ne peut pas lire son propre document, le token est invalide)
@@ -169,7 +175,12 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        const providerStatus = wonyaResult?.data?.status || 'pending';
+        const providerStatus =
+          wonyaResult?.StatutWonya ||
+          wonyaResult?.data?.StatutWonya ||
+          wonyaResult?.status ||
+          wonyaResult?.data?.status ||
+          'pending';
         const completed = isCompletedWonyaStatus(providerStatus);
         // Utiliser le montant converti en CDF pour le crédit du portefeuille
         const walletBalanceAfterPayment = completed ? currentBalance + amountInCDF : currentBalance;

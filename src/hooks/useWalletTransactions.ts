@@ -47,6 +47,29 @@ export function useWalletTransactions() {
   const [error, setError] = useState<string | null>(null);
   const currentUser = auth.currentUser;
 
+  const parseApiResponse = useCallback(async (response: Response) => {
+    const contentType = response.headers.get('content-type') || '';
+    const rawText = await response.text();
+
+    if (contentType.includes('application/json')) {
+      try {
+        return JSON.parse(rawText);
+      } catch {
+        throw new Error('Réponse JSON invalide du serveur');
+      }
+    }
+
+    if (rawText.trim().startsWith('<!DOCTYPE') || rawText.trim().startsWith('<html')) {
+      throw new Error('Le serveur a renvoyé une page HTML au lieu d’une réponse API. Vérifiez la route /api et la configuration de production WonyaPay.');
+    }
+
+    try {
+      return JSON.parse(rawText);
+    } catch {
+      throw new Error(rawText || 'Réponse invalide du serveur');
+    }
+  }, []);
+
   useEffect(() => {
     if (!currentUser) return;
 
@@ -237,12 +260,12 @@ export function useWalletTransactions() {
           }),
         });
 
+        const data = await parseApiResponse(response);
+
         if (!response.ok) {
-          const errorData = await response.json();
+          const errorData = data;
           throw new Error(errorData.error || 'Erreur lors de l\'ajout de fonds');
         }
-
-        const data = await response.json();
         setBalance(data.newBalance);
         setTransactions((prev) =>
           prev.map((tx) =>
@@ -277,7 +300,7 @@ export function useWalletTransactions() {
         setIsLoading(false);
       }
     },
-    [balance, currentUser]
+    [balance, currentUser, parseApiResponse]
   );
 
   // Retirer des fonds
@@ -335,12 +358,12 @@ export function useWalletTransactions() {
           }),
         });
 
+        const data = await parseApiResponse(response);
+
         if (!response.ok) {
-          const errorData = await response.json();
+          const errorData = data;
           throw new Error(errorData.error || 'Erreur lors du retrait');
         }
-
-        const data = await response.json();
         setBalance(data.newBalance);
         setTransactions((prev) =>
           prev.map((tx) =>
@@ -373,7 +396,7 @@ export function useWalletTransactions() {
         setIsLoading(false);
       }
     },
-    [balance, currentUser]
+    [balance, currentUser, parseApiResponse]
   );
 
   return {

@@ -19,8 +19,14 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Utiliser l'app existante ou en créer une nouvelle
-const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+function getFirebaseApp() {
+  try {
+    return getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+  } catch (error) {
+    console.error('Erreur initialisation Firebase withdraw-funds:', error);
+    throw new Error('Initialisation Firebase impossible pour withdraw-funds');
+  }
+}
 
 /**
  * POST /api/wallet/withdraw-funds
@@ -57,7 +63,7 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      const db = getFirestore(app);
+      const db = getFirestore(getFirebaseApp());
       
       // Vérifier l'utilisateur en lisant son document Firestore
       const userRef = doc(db, 'users', userId);
@@ -178,7 +184,12 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        const statutWonya = wonyaResult?.StatutWonya || wonyaResult?.data?.StatutWonya || 'pending';
+        const statutWonya =
+          wonyaResult?.StatutWonya ||
+          wonyaResult?.data?.StatutWonya ||
+          wonyaResult?.status ||
+          wonyaResult?.data?.status ||
+          'pending';
         const completed = isCompletedWonyaStatus(statutWonya);
         const newBalance = currentBalance - amountToDebit;
 

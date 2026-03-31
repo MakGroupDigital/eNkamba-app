@@ -23,9 +23,15 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-let app: any;
-app = getApps().find((candidate) => candidate.name === 'wallet-wonyapay-reconcile')
-  || (getApps().length > 0 ? getApp() : initializeApp(firebaseConfig, 'wallet-wonyapay-reconcile'));
+function getFirebaseApp() {
+  try {
+    return getApps().find((candidate) => candidate.name === 'wallet-wonyapay-reconcile')
+      || (getApps().length > 0 ? getApp() : initializeApp(firebaseConfig, 'wallet-wonyapay-reconcile'));
+  } catch (error) {
+    console.error('Erreur initialisation Firebase wonyapay reconcile:', error);
+    throw new Error('Initialisation Firebase impossible pour wonyapay reconcile');
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -52,7 +58,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, updated: 0, checked: 0, skipped: true });
     }
 
-    const db = getFirestore(app);
+    const db = getFirestore(getFirebaseApp());
     const userRef = doc(db, 'users', userId);
     const userDoc = await getDoc(userRef);
 
@@ -96,7 +102,9 @@ export async function POST(request: NextRequest) {
       if (!refTransa) continue;
 
       // Vérifier si la transaction a plus de 2 minutes
-      const txTimestamp = txData?.timestamp?.toMillis?.() || txData?.createdAt ? new Date(txData.createdAt).getTime() : 0;
+      const txTimestamp =
+        txData?.timestamp?.toMillis?.() ??
+        (txData?.createdAt ? new Date(txData.createdAt).getTime() : 0);
       const ageInMinutes = (now - txTimestamp) / (1000 * 60);
 
       // Ne vérifier que les transactions de plus de 2 minutes
@@ -137,8 +145,18 @@ export async function POST(request: NextRequest) {
         }
 
         // Structure réelle de l'API WonyaPay selon la documentation
-        const statutWonya = statusPayload?.StatutWonya || statusPayload?.data?.StatutWonya || '';
-        const statutTransa = statusPayload?.StatutTransa || statusPayload?.data?.StatutTransa || '';
+        const statutWonya =
+          statusPayload?.StatutWonya ||
+          statusPayload?.data?.StatutWonya ||
+          statusPayload?.status ||
+          statusPayload?.data?.status ||
+          '';
+        const statutTransa =
+          statusPayload?.StatutTransa ||
+          statusPayload?.data?.StatutTransa ||
+          statusPayload?.transactionStatus ||
+          statusPayload?.data?.transactionStatus ||
+          '';
         const refTransaResponse = statusPayload?.RefTransa || statusPayload?.data?.RefTransa || null;
         const dateTransa = statusPayload?.DateTransa || statusPayload?.data?.DateTransa || null;
         const action = statusPayload?.Action || statusPayload?.data?.Action || txData?.wonyaPay?.action || 'C2B';
@@ -198,7 +216,10 @@ export async function POST(request: NextRequest) {
         }
         // Transaction échouée selon la doc WonyaPay
         // StatutWonya = "Echec"
-        else if (isFailedWonyaStatus(statutWonya) || statutTransa === 'Echec') {
+        else if (
+          isFailedWonyaStatus(statutWonya) ||
+          ['echec', 'échec', 'failed', 'error'].includes((statutTransa || '').toLowerCase())
+        ) {
           const failureReason = motif || 'Transaction échouée par l\'opérateur mobile';
           
           // Pour les retraits échoués: rembourser le portefeuille
@@ -239,6 +260,18 @@ export async function POST(request: NextRequest) {
           failed += 1;
         }
         // Transaction expirée (plus de 10 minutes en attente sans statut clair)
+        else if (
+          ['pending', 'processing', 'en_attente', 'awaiting'].includes((statutWonya || '').toLowerCase()) ||
+          ['pending', 'processing', 'en_attente', 'awaiting'].includes((statutTransa || '').toLowerCase())
+        ) {
+          await updateDoc(txDoc.ref, {
+            'wonyaPay.providerStatus': statutWonya || 'pending',
+            'wonyaPay.statutTransa': statutTransa || 'pending',
+            'wonyaPay.refTransaResponse': refTransaResponse,
+            'wonyaPay.statusResponse': statusPayload,
+            lastStatusCheckAt: new Date().toISOString(),
+          });
+        }
         else if (ageInMinutes >= 10 && !refTransaResponse) {
           // Pour les retraits expirés: rembourser le portefeuille
           if (isWithdrawal) {
