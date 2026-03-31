@@ -26,6 +26,16 @@ import { useToast } from '@/hooks/use-toast';
 import { useNkampaCart } from '@/hooks/useNkampaCart';
 import { useAuth } from '@/hooks/useAuth';
 import { getProductWithSeller } from '@/lib/nkampa-data';
+import {
+  TruckDeliveryIcon,
+  PlaneExpressIcon,
+  ShipLogisticsIcon,
+  WalletPayIcon,
+  MobileMoneyIcon,
+  BankCardIcon,
+  CashOnDeliveryIcon,
+  VerifiedBadgeIcon,
+} from '@/components/icons/nkampa-icons';
 
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -41,6 +51,23 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
 
   // Get product with seller info from centralized data
   const product = getProductWithSeller(id);
+
+  // Mapping des icônes de livraison
+  const getShippingIcon = (name: string) => {
+    if (name.includes('Enkamba') || name.includes('Livraison')) return TruckDeliveryIcon;
+    if (name.includes('Express') || name.includes('Diaspora')) return PlaneExpressIcon;
+    if (name.includes('Logistics')) return ShipLogisticsIcon;
+    return TruckDeliveryIcon;
+  };
+
+  // Mapping des icônes de paiement
+  const getPaymentIcon = (name: string) => {
+    if (name.includes('eKAMBA') || name.includes('Pay')) return WalletPayIcon;
+    if (name.includes('Mobile')) return MobileMoneyIcon;
+    if (name.includes('Carte') || name.includes('bancaire')) return BankCardIcon;
+    if (name.includes('livraison') || name.includes('Paiement')) return CashOnDeliveryIcon;
+    return WalletPayIcon;
+  };
 
   if (!product) {
     return (
@@ -317,28 +344,36 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               Options de livraison
             </h3>
             <div className="space-y-2">
-              {product.shipping.map((option: any, idx: number) => (
-                <label
-                  key={idx}
-                  className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
-                >
-                  <input
-                    type="radio"
-                    name="shipping"
-                    checked={selectedShipping === idx}
-                    onChange={() => setSelectedShipping(idx)}
-                    className="w-4 h-4"
-                  />
-                  <span className="text-lg">{option.icon}</span>
-                  <div className="flex-1">
-                    <p className="font-semibold text-sm">{option.name}</p>
-                    <p className="text-xs text-muted-foreground">{option.days}</p>
-                  </div>
-                  {option.verified && (
-                    <Badge className="bg-green-100 text-green-700 text-xs">Vérifié</Badge>
-                  )}
-                </label>
-              ))}
+              {product.shipping.map((option: any, idx: number) => {
+                const ShippingIcon = getShippingIcon(option.name);
+                return (
+                  <label
+                    key={idx}
+                    className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                  >
+                    <input
+                      type="radio"
+                      name="shipping"
+                      checked={selectedShipping === idx}
+                      onChange={() => setSelectedShipping(idx)}
+                      className="w-4 h-4"
+                    />
+                    <div className="flex-shrink-0">
+                      <ShippingIcon className="w-6 h-6" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-semibold text-sm">{option.name}</p>
+                      <p className="text-xs text-muted-foreground">{option.days}</p>
+                    </div>
+                    {option.verified && (
+                      <div className="flex items-center gap-1">
+                        <VerifiedBadgeIcon className="w-4 h-4" />
+                        <span className="text-xs text-green-600 font-medium">Vérifié</span>
+                      </div>
+                    )}
+                  </label>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
@@ -348,22 +383,27 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
           <CardContent className="p-4">
             <h3 className="font-bold mb-4">Moyens de paiement</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {product.paymentMethods.map((method: any, idx: number) => (
-                <label
-                  key={idx}
-                  className="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
-                >
-                  <input
-                    type="radio"
-                    name="payment"
-                    checked={selectedPayment === idx}
-                    onChange={() => setSelectedPayment(idx)}
-                    className="w-4 h-4 flex-shrink-0"
-                  />
-                  <span className="text-lg flex-shrink-0">{method.icon}</span>
-                  <span className="text-sm font-medium truncate">{method.name}</span>
-                </label>
-              ))}
+              {product.paymentMethods.map((method: any, idx: number) => {
+                const PaymentIcon = getPaymentIcon(method.name);
+                return (
+                  <label
+                    key={idx}
+                    className="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                  >
+                    <input
+                      type="radio"
+                      name="payment"
+                      checked={selectedPayment === idx}
+                      onChange={() => setSelectedPayment(idx)}
+                      className="w-4 h-4 flex-shrink-0"
+                    />
+                    <div className="flex-shrink-0">
+                      <PaymentIcon className="w-5 h-5" />
+                    </div>
+                    <span className="text-sm font-medium truncate">{method.name}</span>
+                  </label>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
