@@ -384,7 +384,6 @@ export default function EventsPage() {
                 <div className="relative h-full flex items-center justify-between p-6 text-white">
                   <div className="flex-1 space-y-2">
                     <div className="flex items-center gap-2">
-                      <Sparkles className="w-5 h-5 text-yellow-300" />
                       <Badge className="bg-yellow-400 text-yellow-900 hover:bg-yellow-400">
                         Événement Vedette
                       </Badge>
