@@ -54,7 +54,7 @@ const bills = [
   { icon: SchoolIcon, label: 'Frais Scolaires', href: '/dashboard/school-fees' },
   { icon: FlightIcon, label: 'Billet d\'avion', href: '/dashboard/pay-bill?type=flight' },
   { icon: HotelIcon, label: 'Hôtel', href: '/dashboard/hotels' },
-  { icon: EventIcon, label: 'Événements', href: '/dashboard/pay-bill?type=event' },
+  { icon: EventIcon, label: 'Événements', href: '/dashboard/events' },
   { icon: PhoneCreditIcon, label: 'Crédit Téléphone', href: '/dashboard/pay-bill?type=phone' },
   { icon: InsuranceIcon, label: 'Assurance', href: '/dashboard/insurance' },
 ];
