@@ -5,6 +5,7 @@ import "./globals.css";
 import "leaflet/dist/leaflet.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { PendingPaymentWatcher } from "@/components/wallet/pending-payment-watcher";
+import { AccessCodeGate } from "@/components/access-code/AccessCodeGate";
 
 export const metadata: Metadata = {
   title: "eNkamba - La vie simplifiée et meilleure",
@@ -53,8 +54,10 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
-          <PendingPaymentWatcher />
+          <AccessCodeGate>
+            {children}
+            <PendingPaymentWatcher />
+          </AccessCodeGate>
           <Toaster />
         </ThemeProvider>
       </body>
