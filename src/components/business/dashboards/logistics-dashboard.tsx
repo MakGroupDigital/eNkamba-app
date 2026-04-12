@@ -10,7 +10,7 @@ interface LogisticsDashboardProps {
 
 export function LogisticsDashboard({ businessUser }: LogisticsDashboardProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'fleet' | 'shipments' | 'relay'>('overview');
-  const isRelay = businessUser.subCategory === 'RELAY';
+  const isRelay = businessUser.subCategory === 'RELAY' || businessUser.subCategory === 'RELAY_AGENT';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50">

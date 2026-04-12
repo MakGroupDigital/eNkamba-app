@@ -7,146 +7,89 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, ArrowRight, CheckCircle2, FileText, Calculator, CreditCard, Download } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, FileText, Calculator, CreditCard, Download, Building2 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 
-type TaxType = 'IPR' | 'ICA' | 'TVA' | 'IMPOT_FONCIER' | 'AUTRE';
-type DeclarationStep = 'type' | 'info' | 'revenue' | 'deductions' | 'summary' | 'payment' | 'success';
+type CompanyCategory = 'grande' | 'moyenne' | 'petite' | 'micro';
+type TaxType = 'IS_IBP' | 'TVA' | 'IPR' | 'IERE' | 'IMPOT_MOBILIER';
+type DeclarationStep = 'category' | 'taxType' | 'identification' | 'data' | 'calculation' | 'summary' | 'payment' | 'success';
 
-interface TaxDeclaration {
-  id?: string;
-  type: TaxType;
-  period: string;
-  year: string;
-  // Informations personnelles/entreprise
-  taxpayerName: string;
-  taxpayerNumber: string;
-  address: string;
-  phone: string;
-  // Revenus
-  grossRevenue: number;
-  otherRevenue: number;
-  totalRevenue: number;
-  // Déductions
-  professionalExpenses: number;
-  socialCharges: number;
-  otherDeductions: number;
-  totalDeductions: number;
-  // Calcul
-  taxableIncome: number;
-  taxRate: number;
-  taxAmount: number;
-  // Statut
-  status: 'draft' | 'submitted' | 'paid';
-  createdAt?: string;
-  submittedAt?: string;
-  paidAt?: string;
-}
+const categoryInfo = {
+  grande: { label: 'Grande Entreprise', description: 'Formulaires détaillés avec annexes' },
+  moyenne: { label: 'Moyenne Entreprise', description: 'Formulaires intermédiaires' },
+  petite: { label: 'Petite Entreprise', description: 'Formulaires simplifiés' },
+  micro: { label: 'Micro-Entreprise', description: 'Formulaires ultra-simplifiés' },
+};
 
-const taxTypes = {
-  IPR: { label: 'IPR - Impôt sur les Revenus des Personnes', rate: 0.30 },
-  ICA: { label: 'ICA - Impôt sur le Chiffre d\'Affaires', rate: 0.01 },
-  TVA: { label: 'TVA - Taxe sur la Valeur Ajoutée', rate: 0.16 },
-  IMPOT_FONCIER: { label: 'Impôt Foncier', rate: 0.01 },
-  AUTRE: { label: 'Autre type d\'impôt', rate: 0.10 },
+const taxTypeInfo = {
+  IS_IBP: { label: 'IS / IBP - Impôt sur les Sociétés / Impôt sur les Bénéfices Professionnels', deadline: '30 avril' },
+  TVA: { label: 'TVA - Taxe sur la Valeur Ajoutée', deadline: 'Mensuel' },
+  IPR: { label: 'IPR - Impôt Professionnel sur les Rémunérations', deadline: 'Mensuel' },
+  IERE: { label: 'IERE - Impôt Exceptionnel sur les Rémunérations des Expatriés (25%)', deadline: 'Mensuel' },
+  IMPOT_MOBILIER: { label: 'Impôt Mobilier', deadline: 'À la distribution' },
 };
 
 export default function TaxDeclarationPage() {
   const { toast } = useToast();
   const router = useRouter();
-  const [step, setStep] = useState<DeclarationStep>('type');
-  const [declaration, setDeclaration] = useState<TaxDeclaration>({
-    type: 'IPR',
-    period: 'mensuel',
-    year: new Date().getFullYear().toString(),
-    taxpayerName: '',
-    taxpayerNumber: '',
-    address: '',
-    phone: '',
-    grossRevenue: 0,
-    otherRevenue: 0,
-    totalRevenue: 0,
-    professionalExpenses: 0,
-    socialCharges: 0,
-    otherDeductions: 0,
-    totalDeductions: 0,
-    taxableIncome: 0,
-    taxRate: 0.30,
-    taxAmount: 0,
-    status: 'draft',
-  });
-
-  const calculateTax = () => {
-    const totalRevenue = declaration.grossRevenue + declaration.otherRevenue;
-    const totalDeductions = declaration.professionalExpenses + declaration.socialCharges + declaration.otherDeductions;
-    const taxableIncome = Math.max(0, totalRevenue - totalDeductions);
-    const taxRate = taxTypes[declaration.type].rate;
-    const taxAmount = taxableIncome * taxRate;
-
-    setDeclaration(prev => ({
-      ...prev,
-      totalRevenue,
-      totalDeductions,
-      taxableIncome,
-      taxRate,
-      taxAmount,
-    }));
-  };
+  const [step, setStep] = useState<DeclarationStep>('category');
+  const [category, setCategory] = useState<CompanyCategory>('grande');
+  const [taxType, setTaxType] = useState<TaxType>('IS_IBP');
+  const [nif, setNif] = useState('');
+  const [raisonSociale, setRaisonSociale] = useState('');
+  const [centreImpot, setCentreImpot] = useState('');
+  const [periode, setPeriode] = useState('');
+  const [adresse, setAdresse] = useState('');
+  const [telephone, setTelephone] = useState('');
+  const [email, setEmail] = useState('');
+  const [declarantName, setDeclarantName] = useState('');
+  const [montantTotal, setMontantTotal] = useState(0);
+  const [declarationId, setDeclarationId] = useState('');
 
   const handleNext = () => {
-    const steps: DeclarationStep[] = ['type', 'info', 'revenue', 'deductions', 'summary', 'payment', 'success'];
+    const steps: DeclarationStep[] = ['category', 'taxType', 'identification', 'data', 'calculation', 'summary', 'payment', 'success'];
     const currentIndex = steps.indexOf(step);
     if (currentIndex < steps.length - 1) {
-      if (step === 'deductions') {
-        calculateTax();
-      }
       setStep(steps[currentIndex + 1]);
     }
   };
 
   const handleBack = () => {
-    const steps: DeclarationStep[] = ['type', 'info', 'revenue', 'deductions', 'summary', 'payment', 'success'];
+    const steps: DeclarationStep[] = ['category', 'taxType', 'identification', 'data', 'calculation', 'summary', 'payment', 'success'];
     const currentIndex = steps.indexOf(step);
     if (currentIndex > 0) {
       setStep(steps[currentIndex - 1]);
     }
   };
 
-  const handleSubmitDeclaration = () => {
-    setDeclaration(prev => ({
-      ...prev,
-      status: 'submitted',
-      submittedAt: new Date().toISOString(),
-      id: `TAX-${Date.now()}`,
-    }));
+  const handleSubmit = () => {
+    if (!nif) {
+      toast({
+        variant: "destructive",
+        title: "NIF manquant",
+        description: "Le NIF est obligatoire pour soumettre une déclaration.",
+      });
+      return;
+    }
+    setDeclarationId(`TAX-${Date.now()}`);
     handleNext();
   };
 
   const handlePayment = async () => {
-    // Simuler le paiement
     await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setDeclaration(prev => ({
-      ...prev,
-      status: 'paid',
-      paidAt: new Date().toISOString(),
-    }));
-
     toast({
       title: "Paiement réussi !",
-      description: `Votre impôt de ${declaration.taxAmount.toLocaleString('fr-FR')} CDF a été payé avec succès.`,
+      description: `Votre déclaration a été payée avec succès.`,
     });
-
     handleNext();
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-[#32BB78]/5 to-background">
       <div className="container mx-auto max-w-4xl p-4 space-y-6 animate-in fade-in duration-500">
-        {/* Header */}
         <header className="flex items-center gap-4 pt-4">
           <Button variant="ghost" size="icon" asChild>
             <Link href="/dashboard/mbongo-dashboard">
@@ -155,108 +98,46 @@ export default function TaxDeclarationPage() {
           </Button>
           <div className="flex-1">
             <h1 className="font-headline text-2xl font-bold bg-gradient-to-r from-[#32BB78] to-[#2a9d63] bg-clip-text text-transparent">
-              Déclaration et Paiement d'Impôts
+              Déclaration Fiscale DGI
             </h1>
-            <p className="text-sm text-muted-foreground">Processus officiel de déclaration fiscale RDC</p>
+            <p className="text-sm text-muted-foreground">Système officiel de déclaration d'impôts RDC</p>
           </div>
         </header>
 
-        {/* Progress Steps */}
-        {step !== 'success' && (
-          <div className="flex items-center justify-between gap-2 overflow-x-auto pb-2">
-            {[
-              { key: 'type', label: 'Type', icon: FileText },
-              { key: 'info', label: 'Informations', icon: FileText },
-              { key: 'revenue', label: 'Revenus', icon: Calculator },
-              { key: 'deductions', label: 'Déductions', icon: Calculator },
-              { key: 'summary', label: 'Récapitulatif', icon: CheckCircle2 },
-              { key: 'payment', label: 'Paiement', icon: CreditCard },
-            ].map((s, idx) => {
-              const steps: DeclarationStep[] = ['type', 'info', 'revenue', 'deductions', 'summary', 'payment'];
-              const currentIdx = steps.indexOf(step);
-              const isActive = s.key === step;
-              const isCompleted = idx < currentIdx;
-              const Icon = s.icon;
-
-              return (
-                <div key={s.key} className="flex items-center gap-2 flex-shrink-0">
-                  <div className={`flex flex-col items-center gap-1 ${isActive ? 'opacity-100' : isCompleted ? 'opacity-70' : 'opacity-40'}`}>
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                      isActive ? 'bg-primary text-white' : isCompleted ? 'bg-green-600 text-white' : 'bg-muted'
-                    }`}>
-                      {isCompleted ? <CheckCircle2 className="w-5 h-5" /> : <Icon className="w-5 h-5" />}
-                    </div>
-                    <span className="text-xs font-medium whitespace-nowrap">{s.label}</span>
-                  </div>
-                  {idx < 5 && <div className={`h-0.5 w-8 ${isCompleted ? 'bg-green-600' : 'bg-muted'}`} />}
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Step: Type d'impôt */}
-        {step === 'type' && (
+        {/* Étape 1: Catégorie d'entreprise */}
+        {step === 'category' && (
           <Card>
             <CardHeader>
-              <CardTitle>Sélectionnez le type d'impôt</CardTitle>
-              <CardDescription>Choisissez le type d'impôt que vous souhaitez déclarer</CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="w-5 h-5" />
+                Sélectionnez votre catégorie d'entreprise
+              </CardTitle>
+              <CardDescription>Cela déterminera le niveau de détail des formulaires</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 gap-3">
-                {Object.entries(taxTypes).map(([key, value]) => (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {Object.entries(categoryInfo).map(([key, value]) => (
                   <label
                     key={key}
                     className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                      declaration.type === key ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                      category === key ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
                     }`}
                   >
                     <input
                       type="radio"
-                      name="taxType"
+                      name="category"
                       value={key}
-                      checked={declaration.type === key}
-                      onChange={(e) => setDeclaration(prev => ({ ...prev, type: e.target.value as TaxType, taxRate: value.rate }))}
+                      checked={category === key}
+                      onChange={(e) => setCategory(e.target.value as CompanyCategory)}
                       className="mt-1"
                     />
                     <div className="flex-1">
                       <p className="font-semibold">{value.label}</p>
-                      <p className="text-sm text-muted-foreground">Taux: {(value.rate * 100).toFixed(0)}%</p>
+                      <p className="text-sm text-muted-foreground">{value.description}</p>
                     </div>
                   </label>
                 ))}
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Période</Label>
-                  <Select value={declaration.period} onValueChange={(value) => setDeclaration(prev => ({ ...prev, period: value }))}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="mensuel">Mensuel</SelectItem>
-                      <SelectItem value="trimestriel">Trimestriel</SelectItem>
-                      <SelectItem value="annuel">Annuel</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Année fiscale</Label>
-                  <Select value={declaration.year} onValueChange={(value) => setDeclaration(prev => ({ ...prev, year: value }))}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="2026">2026</SelectItem>
-                      <SelectItem value="2025">2025</SelectItem>
-                      <SelectItem value="2024">2024</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
               <Button className="w-full" onClick={handleNext}>
                 Continuer <ArrowRight className="ml-2 w-4 h-4" />
               </Button>
@@ -264,105 +145,126 @@ export default function TaxDeclarationPage() {
           </Card>
         )}
 
-        {/* Step: Informations */}
-        {step === 'info' && (
+        {/* Étape 2: Type d'impôt */}
+        {step === 'taxType' && (
           <Card>
             <CardHeader>
-              <CardTitle>Informations du contribuable</CardTitle>
-              <CardDescription>Renseignez vos informations personnelles ou d'entreprise</CardDescription>
+              <CardTitle>Sélectionnez le type d'impôt</CardTitle>
+              <CardDescription>Choisissez le formulaire fiscal à remplir</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 gap-3">
+                {Object.entries(taxTypeInfo).map(([key, value]) => (
+                  <label
+                    key={key}
+                    className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                      taxType === key ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="taxType"
+                      value={key}
+                      checked={taxType === key}
+                      onChange={(e) => setTaxType(e.target.value as TaxType)}
+                      className="mt-1"
+                    />
+                    <div className="flex-1">
+                      <p className="font-semibold">{value.label}</p>
+                      <p className="text-sm text-muted-foreground">Échéance: {value.deadline}</p>
+                    </div>
+                  </label>
+                ))}
+              </div>
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={handleBack} className="flex-1">
+                  <ArrowLeft className="mr-2 w-4 h-4" /> Retour
+                </Button>
+                <Button className="flex-1" onClick={handleNext}>
+                  Continuer <ArrowRight className="ml-2 w-4 h-4" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Étape 3: Identification */}
+        {step === 'identification' && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Identification du contribuable</CardTitle>
+              <CardDescription>Informations obligatoires pour tous les formulaires</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>Nom complet / Raison sociale *</Label>
+                <Label>NIF (Numéro d'Identification Fiscale) *</Label>
                 <Input
-                  value={declaration.taxpayerName}
-                  onChange={(e) => setDeclaration(prev => ({ ...prev, taxpayerName: e.target.value }))}
-                  placeholder="Ex: Jean Mukendi / SARL TechCongo"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Numéro d'identification fiscale (NIF) *</Label>
-                <Input
-                  value={declaration.taxpayerNumber}
-                  onChange={(e) => setDeclaration(prev => ({ ...prev, taxpayerNumber: e.target.value }))}
+                  value={nif}
+                  onChange={(e) => setNif(e.target.value.toUpperCase())}
                   placeholder="Ex: A1234567X"
                 />
               </div>
 
               <div className="space-y-2">
+                <Label>Raison sociale / Nom commercial *</Label>
+                <Input
+                  value={raisonSociale}
+                  onChange={(e) => setRaisonSociale(e.target.value)}
+                  placeholder="Ex: SARL TechCongo"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Centre d'impôt *</Label>
+                <Input
+                  value={centreImpot}
+                  onChange={(e) => setCentreImpot(e.target.value)}
+                  placeholder="Ex: Centre Gombe"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Période fiscale *</Label>
+                <Select value={periode} onValueChange={setPeriode}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionnez une période" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="janvier">Janvier 2026</SelectItem>
+                    <SelectItem value="fevrier">Février 2026</SelectItem>
+                    <SelectItem value="mars">Mars 2026</SelectItem>
+                    <SelectItem value="annuel">Annuel 2025</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
                 <Label>Adresse complète *</Label>
                 <Textarea
-                  value={declaration.address}
-                  onChange={(e) => setDeclaration(prev => ({ ...prev, address: e.target.value }))}
+                  value={adresse}
+                  onChange={(e) => setAdresse(e.target.value)}
                   placeholder="Ex: 123 Avenue de la Liberté, Gombe, Kinshasa"
-                  rows={3}
+                  rows={2}
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label>Numéro de téléphone *</Label>
-                <Input
-                  value={declaration.phone}
-                  onChange={(e) => setDeclaration(prev => ({ ...prev, phone: e.target.value }))}
-                  placeholder="Ex: +243 XXX XXX XXX"
-                />
-              </div>
-
-              <div className="flex gap-3">
-                <Button variant="outline" onClick={handleBack} className="flex-1">
-                  <ArrowLeft className="mr-2 w-4 h-4" /> Retour
-                </Button>
-                <Button 
-                  className="flex-1" 
-                  onClick={handleNext}
-                  disabled={!declaration.taxpayerName || !declaration.taxpayerNumber}
-                >
-                  Continuer <ArrowRight className="ml-2 w-4 h-4" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Step: Revenus */}
-        {step === 'revenue' && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Déclaration des revenus</CardTitle>
-              <CardDescription>Indiquez vos revenus pour la période sélectionnée</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>Revenu brut principal (CDF) *</Label>
-                <Input
-                  type="number"
-                  value={declaration.grossRevenue || ''}
-                  onChange={(e) => setDeclaration(prev => ({ ...prev, grossRevenue: parseFloat(e.target.value) || 0 }))}
-                  placeholder="0"
-                  className="text-lg font-semibold"
-                />
-                <p className="text-xs text-muted-foreground">Salaire, chiffre d'affaires, ou revenu principal</p>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Autres revenus (CDF)</Label>
-                <Input
-                  type="number"
-                  value={declaration.otherRevenue || ''}
-                  onChange={(e) => setDeclaration(prev => ({ ...prev, otherRevenue: parseFloat(e.target.value) || 0 }))}
-                  placeholder="0"
-                  className="text-lg font-semibold"
-                />
-                <p className="text-xs text-muted-foreground">Revenus locatifs, dividendes, etc.</p>
-              </div>
-
-              <div className="p-4 rounded-lg bg-muted">
-                <div className="flex justify-between items-center">
-                  <span className="font-semibold">Total des revenus:</span>
-                  <span className="text-2xl font-bold text-primary">
-                    {(declaration.grossRevenue + declaration.otherRevenue).toLocaleString('fr-FR')} CDF
-                  </span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Téléphone *</Label>
+                  <Input
+                    value={telephone}
+                    onChange={(e) => setTelephone(e.target.value)}
+                    placeholder="+243 XXX XXX XXX"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Email *</Label>
+                  <Input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="contact@example.com"
+                  />
                 </div>
               </div>
 
@@ -373,7 +275,7 @@ export default function TaxDeclarationPage() {
                 <Button 
                   className="flex-1" 
                   onClick={handleNext}
-                  disabled={declaration.grossRevenue <= 0}
+                  disabled={!nif || !raisonSociale || !centreImpot || !periode}
                 >
                   Continuer <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
@@ -382,54 +284,141 @@ export default function TaxDeclarationPage() {
           </Card>
         )}
 
-        {/* Step: Déductions */}
-        {step === 'deductions' && (
+        {/* Étape 4: Données fiscales */}
+        {step === 'data' && (
           <Card>
             <CardHeader>
-              <CardTitle>Déductions fiscales</CardTitle>
-              <CardDescription>Indiquez vos déductions autorisées</CardDescription>
+              <CardTitle>Données fiscales</CardTitle>
+              <CardDescription>Remplissez selon votre catégorie d'entreprise</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>Frais professionnels (CDF)</Label>
-                <Input
-                  type="number"
-                  value={declaration.professionalExpenses || ''}
-                  onChange={(e) => setDeclaration(prev => ({ ...prev, professionalExpenses: parseFloat(e.target.value) || 0 }))}
-                  placeholder="0"
-                />
-                <p className="text-xs text-muted-foreground">Frais de transport, fournitures, etc.</p>
-              </div>
+              {category === 'grande' && (
+                <>
+                  <div className="space-y-2">
+                    <Label>Chiffre d'affaires local (CDF)</Label>
+                    <Input type="number" placeholder="0" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Chiffre d'affaires export (CDF)</Label>
+                    <Input type="number" placeholder="0" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Produits d'exploitation (CDF)</Label>
+                    <Input type="number" placeholder="0" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Charges externes (CDF)</Label>
+                    <Input type="number" placeholder="0" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Salaires et traitements (CDF)</Label>
+                    <Input type="number" placeholder="0" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Amortissements (CDF)</Label>
+                    <Input type="number" placeholder="0" />
+                  </div>
+                </>
+              )}
 
-              <div className="space-y-2">
-                <Label>Charges sociales (CDF)</Label>
-                <Input
-                  type="number"
-                  value={declaration.socialCharges || ''}
-                  onChange={(e) => setDeclaration(prev => ({ ...prev, socialCharges: parseFloat(e.target.value) || 0 }))}
-                  placeholder="0"
-                />
-                <p className="text-xs text-muted-foreground">CNSS, INPP, etc.</p>
-              </div>
+              {category === 'moyenne' && (
+                <>
+                  <div className="space-y-2">
+                    <Label>Chiffre d'affaires (CDF)</Label>
+                    <Input type="number" placeholder="0" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Produits d'exploitation (CDF)</Label>
+                    <Input type="number" placeholder="0" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Achats (CDF)</Label>
+                    <Input type="number" placeholder="0" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Salaires (CDF)</Label>
+                    <Input type="number" placeholder="0" />
+                  </div>
+                </>
+              )}
 
-              <div className="space-y-2">
-                <Label>Autres déductions (CDF)</Label>
-                <Input
-                  type="number"
-                  value={declaration.otherDeductions || ''}
-                  onChange={(e) => setDeclaration(prev => ({ ...prev, otherDeductions: parseFloat(e.target.value) || 0 }))}
-                  placeholder="0"
-                />
-                <p className="text-xs text-muted-foreground">Dons, intérêts d'emprunt, etc.</p>
-              </div>
+              {category === 'petite' && (
+                <>
+                  <div className="space-y-2">
+                    <Label>Vente de biens (CDF)</Label>
+                    <Input type="number" placeholder="0" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Prestations de services (CDF)</Label>
+                    <Input type="number" placeholder="0" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Achats (CDF)</Label>
+                    <Input type="number" placeholder="0" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Loyer (CDF)</Label>
+                    <Input type="number" placeholder="0" />
+                  </div>
+                </>
+              )}
 
-              <div className="p-4 rounded-lg bg-muted">
-                <div className="flex justify-between items-center">
-                  <span className="font-semibold">Total des déductions:</span>
-                  <span className="text-xl font-bold">
-                    {(declaration.professionalExpenses + declaration.socialCharges + declaration.otherDeductions).toLocaleString('fr-FR')} CDF
-                  </span>
+              {category === 'micro' && (
+                <>
+                  <div className="space-y-2">
+                    <Label>Total recettes (CDF)</Label>
+                    <Input type="number" placeholder="0" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Total dépenses (CDF)</Label>
+                    <Input type="number" placeholder="0" />
+                  </div>
+                </>
+              )}
+
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={handleBack} className="flex-1">
+                  <ArrowLeft className="mr-2 w-4 h-4" /> Retour
+                </Button>
+                <Button className="flex-1" onClick={handleNext}>
+                  Continuer <ArrowRight className="ml-2 w-4 h-4" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Étape 5: Calcul */}
+        {step === 'calculation' && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Calcul de l'impôt</CardTitle>
+              <CardDescription>Montant automatiquement calculé</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="p-6 rounded-lg bg-gradient-to-r from-primary/10 to-green-800/10 space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span>Base imposable:</span>
+                  <span className="font-semibold">500,000 CDF</span>
                 </div>
+                <div className="flex justify-between text-sm">
+                  <span>Taux applicable:</span>
+                  <span className="font-semibold">30%</span>
+                </div>
+                <div className="h-px bg-border" />
+                <div className="flex justify-between items-center">
+                  <span className="text-lg font-bold">Impôt dû:</span>
+                  <span className="text-3xl font-bold text-primary">150,000 CDF</span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Nom du déclarant *</Label>
+                <Input
+                  value={declarantName}
+                  onChange={(e) => setDeclarantName(e.target.value)}
+                  placeholder="Ex: Jean Mukendi"
+                />
               </div>
 
               <div className="flex gap-3">
@@ -437,67 +426,44 @@ export default function TaxDeclarationPage() {
                   <ArrowLeft className="mr-2 w-4 h-4" /> Retour
                 </Button>
                 <Button className="flex-1" onClick={handleNext}>
-                  Calculer l'impôt <ArrowRight className="ml-2 w-4 h-4" />
+                  Continuer <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
               </div>
             </CardContent>
           </Card>
         )}
 
-        {/* Step: Récapitulatif */}
+        {/* Étape 6: Récapitulatif */}
         {step === 'summary' && (
           <Card>
             <CardHeader>
               <CardTitle>Récapitulatif de la déclaration</CardTitle>
-              <CardDescription>Vérifiez les informations avant de soumettre</CardDescription>
+              <CardDescription>Vérifiez avant de soumettre</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Informations */}
-              <div>
-                <h3 className="font-semibold mb-3">Informations du contribuable</h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Nom:</span>
-                    <span className="font-medium">{declaration.taxpayerName}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">NIF:</span>
-                    <span className="font-medium">{declaration.taxpayerNumber}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Type d'impôt:</span>
-                    <Badge>{taxTypes[declaration.type].label}</Badge>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Période:</span>
-                    <span className="font-medium">{declaration.period} - {declaration.year}</span>
-                  </div>
+              <div className="p-4 rounded-lg bg-muted space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">NIF:</span>
+                  <span className="font-semibold">{nif}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Raison sociale:</span>
+                  <span className="font-semibold">{raisonSociale}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Type d'impôt:</span>
+                  <Badge>{taxTypeInfo[taxType].label}</Badge>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Catégorie:</span>
+                  <Badge variant="outline">{categoryInfo[category].label}</Badge>
                 </div>
               </div>
 
-              {/* Calcul */}
-              <div className="p-4 rounded-lg bg-gradient-to-r from-primary/10 to-green-800/10 space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span>Revenus totaux:</span>
-                  <span className="font-semibold">{declaration.totalRevenue.toLocaleString('fr-FR')} CDF</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span>Déductions totales:</span>
-                  <span className="font-semibold text-red-600">- {declaration.totalDeductions.toLocaleString('fr-FR')} CDF</span>
-                </div>
-                <div className="h-px bg-border" />
-                <div className="flex justify-between">
-                  <span className="font-semibold">Revenu imposable:</span>
-                  <span className="font-bold">{declaration.taxableIncome.toLocaleString('fr-FR')} CDF</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span>Taux d'imposition:</span>
-                  <span className="font-semibold">{(declaration.taxRate * 100).toFixed(0)}%</span>
-                </div>
-                <div className="h-px bg-border" />
+              <div className="p-4 rounded-lg bg-gradient-to-r from-primary/10 to-green-800/10">
                 <div className="flex justify-between items-center">
-                  <span className="text-lg font-bold">Impôt à payer:</span>
-                  <span className="text-3xl font-bold text-primary">{declaration.taxAmount.toLocaleString('fr-FR')} CDF</span>
+                  <span className="text-lg font-bold">Montant à payer:</span>
+                  <span className="text-3xl font-bold text-primary">150,000 CDF</span>
                 </div>
               </div>
 
@@ -505,7 +471,7 @@ export default function TaxDeclarationPage() {
                 <Button variant="outline" onClick={handleBack} className="flex-1">
                   <ArrowLeft className="mr-2 w-4 h-4" /> Modifier
                 </Button>
-                <Button className="flex-1 bg-gradient-to-r from-primary to-green-800" onClick={handleSubmitDeclaration}>
+                <Button className="flex-1 bg-gradient-to-r from-primary to-green-800" onClick={handleSubmit}>
                   Soumettre la déclaration <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
               </div>
@@ -513,40 +479,29 @@ export default function TaxDeclarationPage() {
           </Card>
         )}
 
-        {/* Step: Paiement */}
+        {/* Étape 7: Paiement */}
         {step === 'payment' && (
           <Card>
             <CardHeader>
-              <CardTitle>Paiement de l'impôt</CardTitle>
-              <CardDescription>Déclaration soumise - Référence: {declaration.id}</CardDescription>
+              <CardTitle>Paiement de la déclaration</CardTitle>
+              <CardDescription>Référence: {declarationId}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="p-6 rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200">
                 <div className="flex items-center gap-3 mb-4">
                   <CheckCircle2 className="w-8 h-8 text-green-600" />
                   <div>
-                    <h3 className="font-bold text-green-900">Déclaration soumise avec succès</h3>
+                    <h3 className="font-bold text-green-900">Déclaration soumise</h3>
                     <p className="text-sm text-green-700">Votre déclaration a été enregistrée</p>
-                  </div>
-                </div>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-green-700">Référence:</span>
-                    <span className="font-mono font-bold text-green-900">{declaration.id}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-green-700">Date:</span>
-                    <span className="font-medium text-green-900">{new Date().toLocaleDateString('fr-FR')}</span>
                   </div>
                 </div>
               </div>
 
               <div className="p-4 rounded-lg bg-muted">
-                <div className="flex justify-between items-center mb-4">
+                <div className="flex justify-between items-center">
                   <span className="text-lg font-bold">Montant à payer:</span>
-                  <span className="text-3xl font-bold text-primary">{declaration.taxAmount.toLocaleString('fr-FR')} CDF</span>
+                  <span className="text-3xl font-bold text-primary">150,000 CDF</span>
                 </div>
-                <p className="text-sm text-muted-foreground">Le paiement sera débité de votre portefeuille eNkamba</p>
               </div>
 
               <Button className="w-full h-12 text-lg bg-gradient-to-r from-primary to-green-800" onClick={handlePayment}>
@@ -561,7 +516,7 @@ export default function TaxDeclarationPage() {
           </Card>
         )}
 
-        {/* Step: Succès */}
+        {/* Étape 8: Succès */}
         {step === 'success' && (
           <Card className="border-green-200">
             <CardContent className="p-8 text-center space-y-6">
@@ -571,25 +526,21 @@ export default function TaxDeclarationPage() {
               
               <div>
                 <h2 className="text-2xl font-bold mb-2">Paiement réussi !</h2>
-                <p className="text-muted-foreground">Votre impôt a été payé avec succès</p>
+                <p className="text-muted-foreground">Votre déclaration fiscale a été payée</p>
               </div>
 
               <div className="p-6 rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 space-y-3">
                 <div className="flex justify-between text-sm">
                   <span className="text-green-700">Référence:</span>
-                  <span className="font-mono font-bold text-green-900">{declaration.id}</span>
+                  <span className="font-mono font-bold text-green-900">{declarationId}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-green-700">Type:</span>
-                  <span className="font-medium text-green-900">{taxTypes[declaration.type].label}</span>
+                  <span className="font-medium text-green-900">{taxTypeInfo[taxType].label}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-green-700">Montant payé:</span>
-                  <span className="font-bold text-green-900">{declaration.taxAmount.toLocaleString('fr-FR')} CDF</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-green-700">Date:</span>
-                  <span className="font-medium text-green-900">{new Date().toLocaleDateString('fr-FR')}</span>
+                  <span className="font-bold text-green-900">150,000 CDF</span>
                 </div>
               </div>
 

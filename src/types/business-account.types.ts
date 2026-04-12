@@ -1,20 +1,32 @@
 export type BusinessType = 'COMMERCE' | 'LOGISTICS' | 'PAYMENT';
 export type BusinessStatus = 'PENDING' | 'VERIFIED' | 'REJECTED';
+export type EntityNature = 'CORPORATE' | 'INDIVIDUAL_BUSINESS' | 'PERSONAL' | 'LEGAL_ENTITY';
+export type LogisticsOperationMode = 'FIXED' | 'MOBILE' | 'HYBRID';
+export type PaymentRole = 'INTEGRATOR' | 'AGENT' | 'FINTECH_PARTNER';
 
 export type CommerceSubCategory = 
   | 'WHOLESALE'
   | 'RETAIL'
   | 'EQUIPMENT_PRODUCER'
-  | 'PRODUCT_PRODUCER';
+  | 'PRODUCT_PRODUCER'
+  | 'FOOD_SUPPLY'
+  | 'BIO_PRODUCTS'
+  | 'DIGITAL_SERVICES'
+  | 'SERVICES';
 
 export type LogisticsSubCategory = 
   | 'TRANSPORT_COMPANY'
-  | 'RELAY_AGENT';
+  | 'RELAY'
+  | 'RELAY_AGENT'
+  | 'WAREHOUSE_HUB'
+  | 'LAST_MILE';
 
 export type PaymentSubCategory = 
   | 'API_INTEGRATION'
   | 'ACCREDITED_ENTERPRISE'
-  | 'APPROVED_AGENT';
+  | 'APPROVED_AGENT'
+  | 'FINTECH'
+  | 'B2B_PAYMENTS';
 
 export interface BusinessRequestData {
   userId: string;
@@ -30,10 +42,18 @@ export interface BusinessRequestData {
   country: string;
   contactEmail: string;
   contactPhone: string;
-  
+
   // Payment-specific
   apiCallbackUrl?: string;
-  
+  entityNature: EntityNature;
+  moduleServices: string[];
+  serviceNote?: string;
+  commerceFocus?: string;
+  logisticsOperationMode?: LogisticsOperationMode;
+  paymentRole?: PaymentRole;
+  primaryMarket?: string;
+  expectedVolume?: string;
+
   // Document references
   documents: {
     idCard?: string;
@@ -57,6 +77,7 @@ export interface BusinessProfile extends BusinessRequestData {
 
 export interface BusinessFormState {
   businessName: string;
+  entityNature: EntityNature | '';
   type: BusinessType | '';
   subCategory: string;
   registrationNumber: string;
@@ -65,6 +86,13 @@ export interface BusinessFormState {
   country: string;
   contactEmail: string;
   contactPhone: string;
+  moduleServices: string[];
+  serviceNote: string;
+  commerceFocus?: string;
+  logisticsOperationMode?: LogisticsOperationMode | '';
+  paymentRole?: PaymentRole | '';
+  primaryMarket?: string;
+  expectedVolume?: string;
   apiCallbackUrl?: string;
   documents: {
     idCard: File | null;

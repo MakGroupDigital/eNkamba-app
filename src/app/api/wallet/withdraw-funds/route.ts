@@ -295,6 +295,7 @@ export async function POST(request: NextRequest) {
         newBalance,
         amount,
         status: 'pending',
+        transactionStatus: 'pending',
         estimatedTime: withdrawalMethod === 'agent' ? '24 heures' : withdrawalMethod === 'card' ? '3-5 jours' : '2-3 jours',
         message: 'Retrait initié avec succès',
       });

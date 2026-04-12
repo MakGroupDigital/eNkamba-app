@@ -27,6 +27,7 @@ import { useTheme } from 'next-themes';
 import { useState, useEffect } from 'react';
 import { useKycStatus } from '@/hooks/useKycStatus';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useBusinessStatus } from '@/hooks/useBusinessStatus';
 import { ContactQRCode } from '@/components/settings/ContactQRCode';
 import {
   SettingsPageIcon,
@@ -142,6 +143,21 @@ export default function SettingsPage() {
         </div>
     );
   }
+
+  const { businessUser } = useBusinessStatus();
+  const businessDescription = businessUser
+    ? businessUser.status === 'APPROVED'
+      ? 'Basculer vers le compte entreprise pour accéder aux modules pro.'
+      : `Statut actuel : ${businessUser.status}. Modifiez la demande si nécessaire.`
+    : 'Demandez un compte professionnel pour accéder aux modules avancés.';
+
+  const businessActionLink = businessUser?.status === 'APPROVED'
+    ? '/dashboard/business-pro'
+    : '/dashboard/settings/business-account';
+
+  const businessActionLabel = businessUser?.status === 'APPROVED'
+    ? 'Basculer vers le compte entreprise'
+    : 'Afficher la demande et le statut';
 
   return (
     <div className="container mx-auto max-w-4xl p-4 space-y-6 animate-in fade-in duration-500">
@@ -353,12 +369,12 @@ export default function SettingsPage() {
         <CardContent className="p-0">
           <SettingsItem
             icon={DocumentIcon}
-            title="Obtenir un compte entreprise"
-            description="Demandez un compte professionnel pour accéder aux modules avancés."
+            title="Compte entreprise"
+            description={businessDescription}
             action={
-              <Button variant="ghost" size="icon" className="rounded-xl" asChild>
-                <Link href="/dashboard/settings/business-account">
-                  <ChevronRight />
+              <Button variant="outline" size="sm" className="rounded-xl" asChild>
+                <Link href={businessActionLink}>
+                  {businessActionLabel}
                 </Link>
               </Button>
             }

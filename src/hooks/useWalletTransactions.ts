@@ -331,7 +331,8 @@ export function useWalletTransactions() {
 
       const previousBalance = balance;
       const optimisticId = `optimistic-withdraw-${Date.now()}`;
-      const optimisticNewBalance = Math.max(0, previousBalance - amount);
+      const usesWonyaPay = withdrawalMethod === 'mobile_money';
+      const optimisticNewBalance = usesWonyaPay ? previousBalance : Math.max(0, previousBalance - amount);
 
       setIsLoading(true);
       setError(null);
@@ -343,7 +344,9 @@ export function useWalletTransactions() {
           amount,
           withdrawalMethod,
           status: 'pending',
-          description: 'Retrait en cours...',
+          description: usesWonyaPay
+            ? 'Retrait WonyaPay initié, en attente de confirmation'
+            : 'Retrait en cours...',
           previousBalance,
           newBalance: optimisticNewBalance,
           timestamp: new Date(),
@@ -384,17 +387,18 @@ export function useWalletTransactions() {
           const errorData = data;
           throw new Error(errorData.error || 'Erreur lors du retrait');
         }
+        const transactionStatus = data.transactionStatus || data.status || 'pending';
         setBalance(data.newBalance);
         setTransactions((prev) =>
           prev.map((tx) =>
             tx.id === optimisticId
               ? {
                   ...tx,
-                  status: data.transactionStatus === 'pending' ? 'pending' : 'completed',
+                  status: transactionStatus === 'pending' ? 'pending' : 'completed',
                   description:
-                    data.transactionStatus === 'pending'
+                    transactionStatus === 'pending'
                       ? data.message || 'Retrait en attente de confirmation'
-                      : 'Retrait confirmé',
+                      : data.message || 'Retrait confirmé',
                   newBalance: data.newBalance,
                 }
               : tx

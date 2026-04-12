@@ -12,7 +12,7 @@ import { ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 
-type PaymentMethod = 'mobile_money' | 'credit_card' | 'debit_card' | 'crypto' | 'paypal' | 'wonyapay';
+type PaymentMethod = 'paypal' | 'wonyapay';
 
 export default function AddFundsPage() {
   const router = useRouter();
@@ -24,16 +24,7 @@ export default function AddFundsPage() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
   const [amount, setAmount] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [cardDetails, setCardDetails] = useState({
-    cardNumber: '',
-    expiryDate: '',
-    cvv: '',
-    cardholderName: '',
-  });
-  const [cryptoDetails, setCryptoDetails] = useState({
-    currency: 'BTC',
-    walletAddress: '',
-  });
+  // Cartes et crypto retirés de l'interface (mobile money + PayPal uniquement)
   const [wonyaDetails, setWonyaDetails] = useState({
     currency: 'CDF' as 'CDF' | 'USD',
     motif: '',
@@ -91,33 +82,13 @@ export default function AddFundsPage() {
       return;
     }
 
-    if ((paymentMethod === 'mobile_money' || paymentMethod === 'wonyapay') && !phoneNumber) {
+    if (paymentMethod === 'wonyapay' && !phoneNumber) {
       toast({
         variant: 'destructive',
         title: 'Erreur',
         description: 'Veuillez entrer un numéro de téléphone',
       });
       return;
-    }
-
-    if (paymentMethod === 'crypto' && !cryptoDetails.walletAddress) {
-      toast({
-        variant: 'destructive',
-        title: 'Erreur',
-        description: 'Veuillez entrer votre adresse de portefeuille crypto',
-      });
-      return;
-    }
-
-    if (paymentMethod !== 'mobile_money' && paymentMethod !== 'crypto' && paymentMethod !== 'wonyapay' && paymentMethod !== 'paypal') {
-      if (!cardDetails.cardNumber || !cardDetails.expiryDate || !cardDetails.cvv || !cardDetails.cardholderName) {
-        toast({
-          variant: 'destructive',
-          title: 'Erreur',
-          description: 'Veuillez remplir tous les détails de la carte',
-        });
-        return;
-      }
     }
 
     setStep('confirm');
@@ -148,11 +119,9 @@ export default function AddFundsPage() {
 
       const result = await addFunds(
         parseFloat(amount), 
-        paymentMethod as 'mobile_money' | 'credit_card' | 'debit_card' | 'crypto' | 'wonyapay',
+        paymentMethod,
         {
           phoneNumber,
-          cardDetails: paymentMethod !== 'mobile_money' && paymentMethod !== 'crypto' && paymentMethod !== 'wonyapay' ? cardDetails : undefined,
-          cryptoDetails: paymentMethod === 'crypto' ? cryptoDetails : undefined,
           wonyaDetails: paymentMethod === 'wonyapay' ? wonyaDetails : undefined,
         }
       );
@@ -283,51 +252,12 @@ export default function AddFundsPage() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-lg">PayPal</h3>
-                    <p className="text-sm text-muted-foreground">Paiement sécurisé</p>
+                    <p className="text-sm text-muted-foreground">Paiement par carte de crédit ou débit (Mastercard, Visa), Apple Pay et compte PayPal</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card
-              className="cursor-pointer border-2 hover:border-[#32BB78] transition-colors"
-              onClick={() => handleMethodSelect('credit_card')}
-            >
-              <CardContent className="pt-6">
-                <div className="flex flex-col items-center gap-4 text-center">
-                  <div className="flex gap-3 items-center justify-center h-16">
-                    <div className="bg-blue-600 text-white px-4 py-2 rounded font-bold text-lg">VISA</div>
-                    <div className="flex gap-1">
-                      <div className="w-6 h-6 rounded-full bg-red-500"></div>
-                      <div className="w-6 h-6 rounded-full bg-orange-500 -ml-3"></div>
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-lg">Carte Bancaire</h3>
-                    <p className="text-sm text-muted-foreground">Visa, Mastercard</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card
-              className="cursor-pointer border-2 hover:border-[#FFA500] transition-colors"
-              onClick={() => handleMethodSelect('crypto')}
-            >
-              <CardContent className="pt-6">
-                <div className="flex flex-col items-center gap-4 text-center">
-                  <div className="flex gap-2 items-center justify-center h-16">
-                    <div className="text-4xl">₿</div>
-                    <div className="text-4xl">Ξ</div>
-                    <div className="text-4xl">💰</div>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-lg">Cryptomonnaie</h3>
-                    <p className="text-sm text-muted-foreground">Bitcoin, USDT, ETH...</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </div>
         )}
 
@@ -336,15 +266,9 @@ export default function AddFundsPage() {
           <Card>
             <CardHeader>
               <CardTitle>
-                {paymentMethod === 'mobile_money' 
-                  ? 'Détails Mobile Money'
-                  : paymentMethod === 'paypal'
-                  ? 'Paiement PayPal'
-                  : paymentMethod === 'wonyapay'
+                {paymentMethod === 'wonyapay'
                   ? 'Dépôt Mobile Money'
-                  : paymentMethod === 'crypto'
-                  ? 'Détails Cryptomonnaie'
-                  : 'Détails de la carte'}
+                  : 'Paiement PayPal'}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
