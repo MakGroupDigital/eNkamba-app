@@ -4,11 +4,10 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { CheckCircle2, ArrowRight, ArrowLeft, FileText, DollarSign, CheckCheck } from 'lucide-react';
+import { CheckCircle2, ArrowRight, ArrowLeft, FileText, DollarSign, CheckCheck, Clock } from 'lucide-react';
 
 type ProfileType = 'moral' | 'physical' | null;
 type TaxCategory = 'grande' | 'moyenne' | 'petite' | 'micro' | null;
@@ -42,7 +41,6 @@ interface FiscalData {
 export default function TaxDeclarationPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [profileType, setProfileType] = useState<ProfileType>(null);
-  const [hasNIF, setHasNIF] = useState<boolean | null>(null);
   const [taxCategory, setTaxCategory] = useState<TaxCategory>(null);
   const [taxType, setTaxType] = useState<TaxType>(null);
   const [nifFormData, setNifFormData] = useState<NIFFormData>({
@@ -73,9 +71,8 @@ export default function TaxDeclarationPage() {
   };
 
   const handleNIFVerification = (hasNif: boolean) => {
-    setHasNIF(hasNif);
     if (hasNif) {
-      setCurrentStep(4);
+      setCurrentStep(5);
     } else {
       setCurrentStep(3);
     }
@@ -89,22 +86,22 @@ export default function TaxDeclarationPage() {
 
   const handleCategorySelection = (category: TaxCategory) => {
     setTaxCategory(category);
-    setCurrentStep(5);
+    setCurrentStep(6);
   };
 
   const handleTaxTypeSelection = (type: TaxType) => {
     setTaxType(type);
-    setCurrentStep(6);
+    setCurrentStep(7);
   };
 
   const handleContributorDataSubmit = () => {
     if (contributorData.nif && contributorData.businessName && contributorData.email) {
-      setCurrentStep(7);
+      setCurrentStep(8);
     }
   };
 
   const handleFiscalDataSubmit = () => {
-    setCurrentStep(8);
+    setCurrentStep(9);
     calculateTax();
   };
 
@@ -132,7 +129,7 @@ export default function TaxDeclarationPage() {
   };
 
   const handleNext = () => {
-    if (currentStep < 11) {
+    if (currentStep < 12) {
       setCurrentStep(currentStep + 1);
     }
   };
@@ -146,7 +143,7 @@ export default function TaxDeclarationPage() {
   };
 
   const handlePayment = () => {
-    setCurrentStep(11);
+    setCurrentStep(12);
   };
 
   const renderStep = () => {
@@ -291,6 +288,38 @@ export default function TaxDeclarationPage() {
         return (
           <Card>
             <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="w-5 h-5 text-blue-600" />
+                Demande de NIF en cours
+              </CardTitle>
+              <CardDescription>Votre demande a été soumise avec succès</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="bg-blue-50 p-6 rounded-lg border border-blue-200 text-center">
+                <Clock className="w-12 h-12 text-blue-600 mx-auto mb-4 animate-spin" />
+                <h3 className="text-lg font-semibold mb-2">En attente de votre NIF</h3>
+                <p className="text-gray-600 mb-4">
+                  Votre demande de NIF a été enregistrée. Vous recevrez une notification par email et SMS dès que votre numéro NIF sera attribué.
+                </p>
+                <div className="bg-white p-4 rounded border border-blue-200 text-left space-y-2">
+                  <p className="text-sm"><span className="font-semibold">Nom:</span> {nifFormData.fullName}</p>
+                  <p className="text-sm"><span className="font-semibold">Téléphone:</span> {nifFormData.phone}</p>
+                  <p className="text-sm"><span className="font-semibold">Activité:</span> {nifFormData.activityType}</p>
+                </div>
+              </div>
+              <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                <p className="text-sm text-yellow-800">
+                  <span className="font-semibold">Important:</span> Vous ne pourrez continuer votre déclaration fiscale qu'après avoir reçu votre numéro NIF. Veuillez vérifier vos emails et SMS régulièrement.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        );
+
+      case 5:
+        return (
+          <Card>
+            <CardHeader>
               <CardTitle>Sélection de la catégorie</CardTitle>
               <CardDescription>Choisissez votre catégorie fiscale</CardDescription>
             </CardHeader>
@@ -311,7 +340,7 @@ export default function TaxDeclarationPage() {
           </Card>
         );
 
-      case 5:
+      case 6:
         return (
           <Card>
             <CardHeader>
@@ -341,7 +370,7 @@ export default function TaxDeclarationPage() {
           </Card>
         );
 
-      case 6:
+      case 7:
         return (
           <Card>
             <CardHeader>
@@ -419,7 +448,7 @@ export default function TaxDeclarationPage() {
           </Card>
         );
 
-      case 7:
+      case 8:
         return (
           <Card>
             <CardHeader>
@@ -473,7 +502,7 @@ export default function TaxDeclarationPage() {
           </Card>
         );
 
-      case 8:
+      case 9:
         return (
           <Card>
             <CardHeader>
@@ -506,7 +535,7 @@ export default function TaxDeclarationPage() {
           </Card>
         );
 
-      case 9:
+      case 10:
         return (
           <Card>
             <CardHeader>
@@ -547,7 +576,7 @@ export default function TaxDeclarationPage() {
           </Card>
         );
 
-      case 10:
+      case 11:
         return (
           <Card>
             <CardHeader>
@@ -577,7 +606,7 @@ export default function TaxDeclarationPage() {
           </Card>
         );
 
-      case 11:
+      case 12:
         return (
           <Card>
             <CardHeader>
@@ -617,11 +646,11 @@ export default function TaxDeclarationPage() {
       <div className="max-w-2xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Déclaration Fiscale</h1>
-          <p className="text-gray-600">Étape {currentStep} sur 11</p>
+          <p className="text-gray-600">Étape {currentStep} sur 12</p>
           <div className="mt-4 w-full bg-gray-200 rounded-full h-2">
             <div
               className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${(currentStep / 11) * 100}%` }}
+              style={{ width: `${(currentStep / 12) * 100}%` }}
             />
           </div>
         </div>
@@ -637,16 +666,33 @@ export default function TaxDeclarationPage() {
             <ArrowLeft className="w-4 h-4" />
             Précédent
           </Button>
-          {currentStep < 9 && (
+          {currentStep < 4 && (
             <Button
-              onClick={currentStep === 3 ? handleNIFFormSubmit : currentStep === 6 ? handleContributorDataSubmit : currentStep === 7 ? handleFiscalDataSubmit : handleNext}
+              onClick={currentStep === 3 ? handleNIFFormSubmit : handleNext}
               className="flex-1 flex items-center gap-2"
             >
               Suivant
               <ArrowRight className="w-4 h-4" />
             </Button>
           )}
-          {currentStep === 9 && (
+          {currentStep === 4 && (
+            <Button
+              disabled
+              className="flex-1 flex items-center gap-2"
+            >
+              En attente de notification...
+            </Button>
+          )}
+          {currentStep > 4 && currentStep < 10 && (
+            <Button
+              onClick={currentStep === 7 ? handleContributorDataSubmit : currentStep === 8 ? handleFiscalDataSubmit : handleNext}
+              className="flex-1 flex items-center gap-2"
+            >
+              Suivant
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          )}
+          {currentStep === 10 && (
             <Button
               onClick={handleNext}
               className="flex-1 flex items-center gap-2"
@@ -655,7 +701,7 @@ export default function TaxDeclarationPage() {
               <ArrowRight className="w-4 h-4" />
             </Button>
           )}
-          {currentStep === 10 && (
+          {currentStep === 11 && (
             <Button
               onClick={handlePayment}
               className="flex-1 flex items-center gap-2 bg-green-600 hover:bg-green-700"
