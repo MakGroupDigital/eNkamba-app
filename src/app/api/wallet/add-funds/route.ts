@@ -1,17 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore, collection, doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
+import { getFirestore, collection, doc, getDoc, updateDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import {
   generateWonyaRefTransa,
   getWonyaPayConfig,
   isCompletedWonyaStatus,
   normalizeWonyaPhoneNumber,
 } from '@/lib/wonyapay';
-import { getFirebaseServerConfig } from '@/lib/firebase-server-config';
 
 function getFirebaseApp() {
   try {
-    return getApps().length > 0 ? getApp() : initializeApp(getFirebaseServerConfig(), 'wallet-add-funds');
+    const config = {
+      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+      apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+      authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+      databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
+      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+      messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+      appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+    };
+
+    if (!config.projectId || !config.apiKey) {
+      throw new Error('Variables Firebase manquantes');
+    }
+
+    const existingApp = getApps().find(app => app.name === 'wallet-add-funds');
+    if (existingApp) return existingApp;
+    
+    return getApps().length > 0 ? getApp() : initializeApp(config, 'wallet-add-funds');
   } catch (error) {
     console.error('Erreur initialisation Firebase add-funds:', error);
     throw new Error('Initialisation Firebase impossible pour add-funds');
@@ -126,42 +142,55 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        const refTransa = generateWonyaRefTransa();
-        const wonyaPayload = {
-          RefPartenaire: config.refPartenaire,
-          RefTransa: refTransa,
-          Montant: amount,
-          Devise: currency,
-          Action: 'C2B',
-          MobileMoney: normalizedPhoneNumber,
-          Motif: motif,
-        };
-
-        const wonyaResponse = await fetch(`${config.baseUrl}/payment`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${config.token}`,
-          },
-          body: JSON.stringify(wonyaPayload),
-        });
-
+        let wonyaPayload: Record<string, any> | null = null;
         let wonyaResult: any = null;
-        try {
-          wonyaResult = await wonyaResponse.json();
-        } catch {
-          wonyaResult = null;
-        }
+        let wonyaResponse: Response | null = null;
+        let attempt = 0;
+        let refTransa = '';
+        do {
+          attempt += 1;
+          refTransa = generateWonyaRefTransa();
+          wonyaPayload = {
+            RefPartenaire: config.refPartenaire,
+            RefTransa: refTransa,
+            Montant: amount,
+            Devise: currency,
+            Action: 'C2B',
+            MobileMoney: normalizedPhoneNumber,
+            Motif: motif,
+          };
 
-        if (!wonyaResponse.ok) {
+          wonyaResponse = await fetch(`${config.baseUrl}/payment`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${config.token}`,
+            },
+            body: JSON.stringify(wonyaPayload),
+          });
+
+          try {
+            wonyaResult = await wonyaResponse.json();
+          } catch {
+            wonyaResult = null;
+          }
+
+          if (!wonyaResponse.ok && wonyaResponse.status === 409 && attempt < 3) {
+            continue;
+          }
+
+          break;
+        } while (attempt < 3);
+
+        if (!wonyaResponse || !wonyaResponse.ok) {
           const providerMessage =
             wonyaResult?.message ||
             wonyaResult?.error ||
-            `Erreur WonyaPay (${wonyaResponse.status})`;
+            `Erreur WonyaPay (${wonyaResponse?.status ?? '??'})`;
 
           return NextResponse.json(
             { error: providerMessage },
-            { status: wonyaResponse.status }
+            { status: wonyaResponse?.status || 500 }
           );
         }
 

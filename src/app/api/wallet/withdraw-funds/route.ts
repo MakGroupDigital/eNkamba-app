@@ -1,17 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore, collection, doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
+import { getFirestore, collection, doc, getDoc, updateDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import {
   generateWonyaRefTransa,
   getWonyaPayConfig,
   isCompletedWonyaStatus,
   normalizeWonyaPhoneNumber,
 } from '@/lib/wonyapay';
-import { getFirebaseServerConfig } from '@/lib/firebase-server-config';
 
 function getFirebaseApp() {
   try {
-    return getApps().length > 0 ? getApp() : initializeApp(getFirebaseServerConfig(), 'wallet-withdraw-funds');
+    const config = {
+      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+      apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+      authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+      databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
+      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+      messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+      appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+    };
+
+    if (!config.projectId || !config.apiKey) {
+      throw new Error('Variables Firebase manquantes');
+    }
+
+    const existingApp = getApps().find(app => app.name === 'wallet-withdraw-funds');
+    if (existingApp) return existingApp;
+    
+    return getApps().length > 0 ? getApp() : initializeApp(config, 'wallet-withdraw-funds');
   } catch (error) {
     console.error('Erreur initialisation Firebase withdraw-funds:', error);
     throw new Error('Initialisation Firebase impossible pour withdraw-funds');

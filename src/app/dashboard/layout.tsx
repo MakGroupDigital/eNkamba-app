@@ -8,7 +8,7 @@ import AuthGuard from '@/components/auth-guard';
 import { ModuleKycGate } from '@/components/module-kyc-gate';
 import { TransferNotificationModal } from '@/components/transfer-notification-modal';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
-import { useSupabaseNotifications } from '@/hooks/useSupabaseNotifications';
+// import { useSupabaseNotifications } from '@/hooks/useSupabaseNotifications'; // Disabled - Supabase realtime not needed
 
 export default function DashboardLayout({
   children,
@@ -19,7 +19,7 @@ export default function DashboardLayout({
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('Paiement');
   usePushNotifications();
-  useSupabaseNotifications();
+  // useSupabaseNotifications(); // Disabled - Supabase realtime not needed
 
   useEffect(() => {
     if (pathname.includes('/miyiki-chat')) setActiveTab('Chat');

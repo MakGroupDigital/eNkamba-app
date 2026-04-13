@@ -10,14 +10,30 @@ import {
   query,
   updateDoc,
   where,
+  serverTimestamp,
 } from 'firebase/firestore';
 import { getWonyaPayConfig, isCompletedWonyaStatus, isFailedWonyaStatus } from '@/lib/wonyapay';
-import { getFirebaseServerConfig } from '@/lib/firebase-server-config';
 
 function getFirebaseApp() {
   try {
-    return getApps().find((candidate) => candidate.name === 'wallet-wonyapay-reconcile')
-      || (getApps().length > 0 ? getApp() : initializeApp(getFirebaseServerConfig(), 'wallet-wonyapay-reconcile'));
+    const config = {
+      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+      apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+      authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+      databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
+      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+      messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+      appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+    };
+
+    if (!config.projectId || !config.apiKey) {
+      throw new Error('Variables Firebase manquantes');
+    }
+
+    const existingApp = getApps().find((candidate) => candidate.name === 'wallet-wonyapay-reconcile');
+    if (existingApp) return existingApp;
+    
+    return getApps().length > 0 ? getApp() : initializeApp(config, 'wallet-wonyapay-reconcile');
   } catch (error) {
     console.error('Erreur initialisation Firebase wonyapay reconcile:', error);
     throw new Error('Initialisation Firebase impossible pour wonyapay reconcile');
