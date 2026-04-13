@@ -694,6 +694,19 @@ export default function ConversationClient() {
                                     })()}
                                     
                                     <div className="relative flex items-start gap-2">
+                                        {/* Avatar for non-own messages */}
+                                        {!isOwn && (
+                                            <Avatar className="h-8 w-8 flex-shrink-0 mt-1">
+                                                <AvatarImage 
+                                                    src={message.senderPhoto || undefined}
+                                                    alt={message.senderName}
+                                                    className="object-cover"
+                                                />
+                                                <AvatarFallback className="bg-primary/20 text-primary text-xs font-bold">
+                                                    {message.senderName?.charAt(0)?.toUpperCase() || 'U'}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                        )}
                                         <Card
                                             className={`px-4 py-2 rounded-2xl cursor-pointer hover:shadow-md transition-shadow flex-1 ${
                                                 isOwn

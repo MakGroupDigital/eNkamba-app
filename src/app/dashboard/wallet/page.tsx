@@ -7,6 +7,11 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from '@/components/ui/avatar';
+import {
   ArrowLeft,
   Eye,
   EyeOff,
@@ -474,146 +479,163 @@ export default function WalletPage() {
                 </div>
               )}
               <div className={`card-inner ${isFlipped ? 'flipped' : ''}`}>
-                {/* FRONT - PREMIUM ENKAMBA PAY */}
+                {/* FRONT - RDC FLAG DESIGN WITH USER DATA */}
                 <div className="card-front">
                   <div ref={cardFrontRef} className="relative w-full h-full rounded-3xl overflow-hidden shadow-2xl">
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_#1c7a50_0%,_#0f5739_36%,_#083624_100%)]"></div>
-                    <div className="absolute inset-0 bg-[linear-gradient(140deg,rgba(255,236,170,0.13)_0%,rgba(255,236,170,0)_22%,rgba(255,255,255,0.03)_48%,rgba(212,160,58,0.12)_78%,rgba(88,50,3,0.25)_100%)]"></div>
-                    <div className="absolute inset-0 opacity-[0.14]" style={{
-                      backgroundImage: 'linear-gradient(90deg, rgba(255,216,124,0.09) 1px, transparent 1px), linear-gradient(rgba(255,216,124,0.07) 1px, transparent 1px)',
-                      backgroundSize: '36px 36px'
-                    }}></div>
+                    {/* RDC Flag background image */}
+                    <Image 
+                      src="/drapeau.png" 
+                      alt="RDC Flag" 
+                      fill 
+                      className="object-cover"
+                      priority
+                    />
 
-                    <div className="absolute -left-16 -top-14 h-44 w-44 rounded-full bg-[#f7d87b]/12 blur-3xl"></div>
-                    <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-[#f7d87b]/10 blur-3xl"></div>
-                    <div className="absolute bottom-0 left-10 h-44 w-44 rounded-full bg-[#a36f19]/18 blur-3xl"></div>
-
-                    <div className="absolute left-[8%] top-[38%] h-[2px] w-[72%] rotate-[12deg] bg-gradient-to-r from-transparent via-[#ffd97a] to-transparent opacity-90 shadow-[0_0_22px_rgba(255,215,132,0.9)]"></div>
-                    <div className="absolute left-[24%] top-[55%] h-[2px] w-[58%] -rotate-[16deg] bg-gradient-to-r from-transparent via-[#ffd97a] to-transparent opacity-80 shadow-[0_0_18px_rgba(255,215,132,0.8)]"></div>
-                    <div className="absolute left-[15%] top-[64%] h-3 w-3 rounded-full bg-[#ffdf8f] shadow-[0_0_20px_rgba(255,223,143,0.95)]"></div>
-                    <div className="absolute right-[18%] top-[42%] h-3.5 w-3.5 rounded-full bg-[#ffdf8f] shadow-[0_0_22px_rgba(255,223,143,0.95)]"></div>
-
-                    <div className="relative z-10 flex h-full flex-col p-4 sm:p-6 text-white">
-                      <div className="flex items-start justify-between">
-                        <div className="rounded-2xl border border-[#f7d87b]/40 bg-[linear-gradient(145deg,#fff7cf_0%,#f1d06b_42%,#ba8020_74%,#fff0bf_100%)] p-2 shadow-[0_12px_28px_rgba(0,0,0,0.28),inset_0_1px_2px_rgba(255,255,255,0.9)]">
-                          <div className="grid grid-cols-3 gap-1">
-                            <span className="h-3 w-3 rounded-sm border border-[#8a6516]/60 bg-[#fff6d2]/90"></span>
-                            <span className="h-3 w-3 rounded-sm border border-[#8a6516]/60 bg-[#e6bc57]/80"></span>
-                            <span className="h-3 w-3 rounded-sm border border-[#8a6516]/60 bg-[#fff6d2]/90"></span>
-                            <span className="h-3 w-3 rounded-sm border border-[#8a6516]/60 bg-[#e6bc57]/80"></span>
-                            <span className="h-3 w-3 rounded-sm border border-[#8a6516]/60 bg-[#fff6d2]/90"></span>
-                            <span className="h-3 w-3 rounded-sm border border-[#8a6516]/60 bg-[#e6bc57]/80"></span>
+                    {/* Content overlay */}
+                    <div className="relative z-10 flex h-full flex-col p-3 sm:p-4">
+                      {/* Top section - Logo and branding (moved to top) */}
+                      <div className="flex items-start justify-between -mt-1">
+                        <div className="flex items-center gap-1.5">
+                          <div className="rounded-full border-2 border-white bg-white/30 p-1 backdrop-blur-sm">
+                            <Image src="/enkamba-logo.png" alt="eNkamba" width={28} height={28} className="h-7 w-7 object-cover" />
+                          </div>
+                          <div className="leading-tight">
+                            <p className="text-sm sm:text-base font-bold tracking-widest text-white drop-shadow-xl">eNKAMBA</p>
+                            <p className="text-[10px] text-white drop-shadow-xl font-semibold">PAY</p>
                           </div>
                         </div>
-
-                        <div className="flex flex-col items-end gap-2">
-                          <div className="flex items-center gap-2">
-                            <div className="overflow-hidden rounded-full border border-[#f7d87b]/35 shadow-[0_8px_18px_rgba(0,0,0,0.35)]">
-                              <Image src="/enkamba-logo.png" alt="eNkamba" width={48} height={48} className="h-10 w-10 object-cover sm:h-12 sm:w-12" />
-                            </div>
-                            <div className="text-right">
-                              <p className="text-lg font-bold tracking-[0.24em] text-[#f5d27a] [text-shadow:0_2px_10px_rgba(0,0,0,0.45)] sm:text-xl">eNKAMBA</p>
+                        
+                        {/* Chip - positioned at top right */}
+                        <div>
+                          <div className="rounded-lg border border-white/40 bg-[linear-gradient(145deg,#fff7cf_0%,#f1d06b_42%,#ba8020_74%,#fff0bf_100%)] p-2.5 w-fit shadow-lg">
+                            <div className="grid grid-cols-3 gap-1">
+                              <span className="h-3 w-3 rounded-sm border border-[#8a6516]/60 bg-[#fff6d2]/90"></span>
+                              <span className="h-3 w-3 rounded-sm border border-[#8a6516]/60 bg-[#e6bc57]/80"></span>
+                              <span className="h-3 w-3 rounded-sm border border-[#8a6516]/60 bg-[#fff6d2]/90"></span>
+                              <span className="h-3 w-3 rounded-sm border border-[#8a6516]/60 bg-[#e6bc57]/80"></span>
+                              <span className="h-3 w-3 rounded-sm border border-[#8a6516]/60 bg-[#fff6d2]/90"></span>
+                              <span className="h-3 w-3 rounded-sm border border-[#8a6516]/60 bg-[#e6bc57]/80"></span>
                             </div>
                           </div>
                         </div>
                       </div>
 
-                      <div className="relative flex-1 min-h-0">
-                        <div className="absolute inset-x-[14%] top-[4%] bottom-[20%] sm:inset-x-[12%] sm:top-[2%] sm:bottom-[11%]">
-                          <LeopardAfricaArtwork />
+                      {/* Flex grow for spacing */}
+                      <div className="flex-1"></div>
+
+                      {/* Card number */}
+                      <div className="mb-2">
+                        <p className="text-xs text-white tracking-widest mb-0.5 drop-shadow-xl font-bold">CARD NUMBER</p>
+                        <p className="font-mono text-xs sm:text-sm tracking-[0.15em] text-white drop-shadow-xl font-bold">
+                          {cardNumber || '•••• •••• •••• ••••'}
+                        </p>
+                      </div>
+
+                      {/* Cardholder name and account */}
+                      <div className="flex justify-between items-end gap-2">
+                        <div>
+                          <p className="text-xs text-white mb-0.5 drop-shadow-xl font-bold">CARDHOLDER</p>
+                          <p className="font-semibold text-xs text-white drop-shadow-xl leading-tight">
+                            {(profile?.fullName || profile?.name || 'eNkamba User').toUpperCase()}
+                          </p>
+                          <p className="text-xs text-white mt-0.5 drop-shadow-xl font-bold">ENKAMBAPAY</p>
+                        </div>
+                        
+                        {/* Profile photo from Google */}
+                        <div className="relative">
+                          <Avatar className="h-16 w-14 border-2 border-white shadow-lg">
+                            <AvatarImage 
+                              src={profile?.photoURL || undefined}
+                              alt="Profile"
+                              className="object-cover"
+                            />
+                            <AvatarFallback className="bg-gradient-to-br from-white/50 to-white/30 text-white font-bold text-lg">
+                              {(profile?.fullName || profile?.name || 'U')[0].toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
                         </div>
                       </div>
 
-                      <div className="relative z-10 max-w-[88%] space-y-2 sm:max-w-[68%] sm:space-y-4">
+                      {/* Bottom section with account and balance */}
+                      <div className="mt-2 pt-2 border-t border-white/40 flex justify-between items-center">
                         <div>
-                          <p className="mb-1 text-[10px] uppercase tracking-[0.35em] text-[#fff1bf]/65">Numéro de carte</p>
-                          <p className="font-mono text-[0.92rem] tracking-[0.14em] text-[#f7d87b] drop-shadow-[0_2px_10px_rgba(0,0,0,0.52)] sm:text-[1.95rem] sm:tracking-[0.18em]">
-                            {cardNumber || '•••• •••• •••• ••••'}
-                          </p>
+                          <p className="text-xs text-white drop-shadow-xl font-bold">COMPTE</p>
+                          <p className="font-mono text-xs font-bold text-white drop-shadow-xl">{accountNumber || 'ENK000000000000'}</p>
                         </div>
-
-                        <div>
-                          <p className="text-xs font-medium text-[#fff1bf]/95 drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)] sm:text-sm">
-                            {profile?.fullName || profile?.name || 'Utilisateur eNkamba'}
-                          </p>
-                          <p className="mt-1 text-[11px] uppercase tracking-[0.3em] text-[#fff1bf]/72">
-                            eNkambaPay
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="mt-2 grid grid-cols-2 gap-2 border-t border-[#f7d87b]/20 pt-2 text-[10px] sm:mt-4 sm:gap-4 sm:pt-4 sm:text-xs">
-                        <div className="min-w-0">
-                          <p className="uppercase tracking-[0.25em] text-[#fff1bf]/60">Compte</p>
-                          <p className="mt-1 truncate font-mono text-[11px] font-semibold text-[#f7d87b] sm:text-sm">{accountNumber || 'ENK000000000000'}</p>
-                        </div>
-                        <div className="min-w-0 text-right">
-                          <p className="uppercase tracking-[0.25em] text-[#fff1bf]/60">Solde</p>
-                          <div className="mt-1 flex items-center justify-end gap-1.5">
-                            <p className="truncate font-mono text-[11px] font-semibold text-[#f7d87b] sm:text-sm">{displayBalance} CDF</p>
-                            <button onClick={(e) => { e.stopPropagation(); setIsBalanceVisible(!isBalanceVisible); }} className="rounded-full p-0.5 text-[#f7d87b] transition-colors hover:bg-white/10 sm:p-1">
-                              {isBalanceVisible ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                        <div className="text-right">
+                          <p className="text-xs text-white flex items-center gap-1 drop-shadow-xl font-bold">
+                            SOLDE
+                            <button onClick={(e) => { e.stopPropagation(); setIsBalanceVisible(!isBalanceVisible); }} className="hover:bg-white/30 rounded p-0.5">
+                              {isBalanceVisible ? <Eye className="h-3 w-3 text-white" /> : <EyeOff className="h-3 w-3 text-white" />}
                             </button>
-                          </div>
+                          </p>
+                          <p className="font-mono text-xs font-bold text-white drop-shadow-xl">{displayBalance} CDF</p>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* BACK - PREMIUM INFO PANEL */}
+                {/* BACK - RDC FLAG INFO PANEL */}
                 <div className="card-back">
                   <div ref={cardBackRef} className="relative w-full h-full rounded-3xl overflow-hidden shadow-2xl">
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_#185f3f_0%,_#0d432c_42%,_#071f14_100%)]"></div>
-                    <div className="absolute inset-0 bg-[linear-gradient(145deg,rgba(224,182,85,0.14)_0%,rgba(224,182,85,0)_35%,rgba(255,255,255,0.03)_100%)]"></div>
+                    {/* RDC Flag background image */}
+                    <Image 
+                      src="/drapeau.png" 
+                      alt="RDC Flag" 
+                      fill 
+                      className="object-cover"
+                      priority
+                    />
 
-                    <div className="absolute left-0 top-8 h-12 w-full bg-gradient-to-r from-black/85 via-[#2d2d2d] to-black/85 shadow-inner"></div>
-                    <div className="absolute right-0 bottom-0 h-40 w-40 rounded-full bg-[#e0b655]/10 blur-3xl"></div>
+                    {/* Magnetic stripe effect */}
+                    <div className="absolute left-0 top-8 h-12 w-full bg-gradient-to-r from-black/85 via-[#2d2d2d] to-black/85 shadow-inner z-20"></div>
 
-                    <div className="relative flex h-full flex-col justify-between p-4 text-white sm:p-6">
+                    {/* Content */}
+                    <div className="relative z-10 flex h-full flex-col justify-between p-4 text-white sm:p-6">
                       <div className="pt-24">
-                        <p className="text-[10px] uppercase tracking-[0.35em] text-[#fff1bf]/65">eNkambaPay</p>
-                        <p className="mt-2 text-sm font-semibold text-[#ffe9a3] sm:text-base">Carte portefeuille digitale</p>
+                        <p className="text-[10px] uppercase tracking-[0.35em] text-white/80 drop-shadow-lg font-semibold">eNkambaPay</p>
+                        <p className="mt-2 text-sm font-semibold text-white drop-shadow-lg sm:text-base">Carte portefeuille digitale</p>
                       </div>
 
                       <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1.15fr_0.85fr] sm:gap-4">
                         <div className="space-y-4">
                           <div>
-                            <p className="text-[10px] uppercase tracking-[0.3em] text-[#fff1bf]/60">Titulaire</p>
-                            <p className="mt-1 font-semibold text-[#ffe9a3]">
+                            <p className="text-[10px] uppercase tracking-[0.3em] text-white/70 drop-shadow-lg font-semibold">Titulaire</p>
+                            <p className="mt-1 font-semibold text-white drop-shadow-lg">
                               {(profile?.fullName || profile?.name || 'Utilisateur eNkamba').toUpperCase()}
                             </p>
                           </div>
                           <div>
-                            <p className="text-[10px] uppercase tracking-[0.3em] text-[#fff1bf]/60">Numéro de compte</p>
-                            <p className="mt-1 font-mono text-sm font-semibold text-[#ffe9a3] sm:text-base">{accountNumber || 'ENK000000000000'}</p>
+                            <p className="text-[10px] uppercase tracking-[0.3em] text-white/70 drop-shadow-lg font-semibold">Numéro de compte</p>
+                            <p className="mt-1 font-mono text-sm font-semibold text-white drop-shadow-lg sm:text-base">{accountNumber || 'ENK000000000000'}</p>
                           </div>
                           <div className="grid grid-cols-2 gap-3">
                             <div>
-                              <p className="text-[10px] uppercase tracking-[0.3em] text-[#fff1bf]/60">Validité</p>
-                              <p className="mt-1 font-mono font-semibold text-[#ffe9a3]">{expiryDate}</p>
+                              <p className="text-[10px] uppercase tracking-[0.3em] text-white/70 drop-shadow-lg font-semibold">Validité</p>
+                              <p className="mt-1 font-mono font-semibold text-white drop-shadow-lg">{expiryDate}</p>
                             </div>
                             <div>
-                              <p className="text-[10px] uppercase tracking-[0.3em] text-[#fff1bf]/60">CVV</p>
-                              <p className="mt-1 font-mono font-semibold text-[#ffe9a3]">{cvv}</p>
+                              <p className="text-[10px] uppercase tracking-[0.3em] text-white/70 drop-shadow-lg font-semibold">CVV</p>
+                              <p className="mt-1 font-mono font-semibold text-white drop-shadow-lg">{cvv}</p>
                             </div>
                           </div>
                         </div>
 
                         <div className="flex flex-col gap-3 sm:items-end sm:justify-between">
                           {qrCode && (
-                            <div className="w-fit rounded-2xl border border-[#ffd784]/25 bg-white p-2 shadow-[0_10px_25px_rgba(0,0,0,0.25)] sm:self-end">
+                            <div className="w-fit rounded-2xl border border-white/40 bg-white p-2 shadow-[0_10px_25px_rgba(0,0,0,0.25)] sm:self-end">
                               <Image src={qrCode} alt="QR Code" width={104} height={104} className="h-16 w-16 rounded-md sm:h-20 sm:w-20" />
                             </div>
                           )}
-                          <div className="w-full rounded-2xl border border-[#ffd784]/20 bg-white/5 p-3 sm:text-right">
-                            <p className="text-[10px] uppercase tracking-[0.3em] text-[#fff1bf]/60">Numéro de carte</p>
-                            <p className="mt-1 font-mono text-xs font-semibold text-[#ffe9a3] sm:text-sm">{cardNumber || '•••• •••• •••• ••••'}</p>
+                          <div className="w-full rounded-2xl border border-white/30 bg-white/10 p-3 backdrop-blur-sm sm:text-right">
+                            <p className="text-[10px] uppercase tracking-[0.3em] text-white/70 drop-shadow-lg font-semibold">Numéro de carte</p>
+                            <p className="mt-1 font-mono text-xs font-semibold text-white drop-shadow-lg sm:text-sm">{cardNumber || '•••• •••• •••• ••••'}</p>
                           </div>
                         </div>
                       </div>
 
-                      <div className="border-t border-[#ffd784]/35 pt-2 text-center text-[10px] font-semibold uppercase tracking-[0.22em] text-[#fff2bd] drop-shadow-[0_1px_6px_rgba(0,0,0,0.5)]">
+                      <div className="border-t border-white/30 pt-2 text-center text-[10px] font-semibold uppercase tracking-[0.22em] text-white drop-shadow-[0_1px_6px_rgba(0,0,0,0.5)]">
                         Touchez la carte pour revenir au recto
                       </div>
                     </div>
@@ -662,11 +684,6 @@ export default function WalletPage() {
                 );
               })}
             </div>
-          </div>
-
-          {/* Currency Conversion - Minimal Icons */}
-          <div className="w-full slide-up" style={{ animationDelay: '0.25s' }}>
-            <CurrencyConversionDisplay balance={walletBalance} />
           </div>
         </div>
 
