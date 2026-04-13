@@ -7,15 +7,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, ArrowRight, CheckCircle2, FileText, Calculator, CreditCard, Download, Building2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, FileText, Calculator, CreditCard, Download, Building2, User } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 
+type ProfileType = 'morale' | 'physique';
 type CompanyCategory = 'grande' | 'moyenne' | 'petite' | 'micro';
 type TaxType = 'IS_IBP' | 'TVA' | 'IPR' | 'IERE' | 'IMPOT_MOBILIER';
-type DeclarationStep = 'category' | 'taxType' | 'identification' | 'data' | 'calculation' | 'summary' | 'payment' | 'success';
+type DeclarationStep = 'profileType' | 'nifCheck' | 'nifForm' | 'category' | 'taxType' | 'identification' | 'data' | 'calculation' | 'summary' | 'payment' | 'success';
 
 const categoryInfo = {
   grande: { label: 'Grande Entreprise', description: 'Formulaires détaillés avec annexes' },
@@ -35,7 +36,9 @@ const taxTypeInfo = {
 export default function TaxDeclarationPage() {
   const { toast } = useToast();
   const router = useRouter();
-  const [step, setStep] = useState<DeclarationStep>('category');
+  const [step, setStep] = useState<DeclarationStep>('profileType');
+  const [profileType, setProfileType] = useState<ProfileType | null>(null);
+  const [hasNif, setHasNif] = useState<boolean | null>(null);
   const [category, setCategory] = useState<CompanyCategory>('grande');
   const [taxType, setTaxType] = useState<TaxType>('IS_IBP');
   const [nif, setNif] = useState('');
@@ -46,11 +49,21 @@ export default function TaxDeclarationPage() {
   const [telephone, setTelephone] = useState('');
   const [email, setEmail] = useState('');
   const [declarantName, setDeclarantName] = useState('');
-  const [montantTotal, setMontantTotal] = useState(0);
   const [declarationId, setDeclarationId] = useState('');
+  
+  const [nifFormData, setNifFormData] = useState({
+    nomComplet: '',
+    dateNaissance: '',
+    lieuNaissance: '',
+    nationalite: '',
+    typeActivite: '',
+    descriptionActivite: '',
+    adresseActivite: '',
+    telephoneActivite: '',
+  });
 
   const handleNext = () => {
-    const steps: DeclarationStep[] = ['category', 'taxType', 'identification', 'data', 'calculation', 'summary', 'payment', 'success'];
+    const steps: DeclarationStep[] = ['profileType', 'nifCheck', 'nifForm', 'category', 'taxType', 'identification', 'data', 'calculation', 'summary', 'payment', 'success'];
     const currentIndex = steps.indexOf(step);
     if (currentIndex < steps.length - 1) {
       setStep(steps[currentIndex + 1]);
@@ -58,11 +71,46 @@ export default function TaxDeclarationPage() {
   };
 
   const handleBack = () => {
-    const steps: DeclarationStep[] = ['category', 'taxType', 'identification', 'data', 'calculation', 'summary', 'payment', 'success'];
+    const steps: DeclarationStep[] = ['profileType', 'nifCheck', 'nifForm', 'category', 'taxType', 'identification', 'data', 'calculation', 'summary', 'payment', 'success'];
     const currentIndex = steps.indexOf(step);
     if (currentIndex > 0) {
       setStep(steps[currentIndex - 1]);
     }
+  };
+
+  const handleProfileTypeSelect = (type: ProfileType) => {
+    setProfileType(type);
+    if (type === 'morale') {
+      setStep('category');
+    } else {
+      setStep('nifCheck');
+    }
+  };
+
+  const handleNifCheckResponse = (response: boolean) => {
+    setHasNif(response);
+    if (response) {
+      setStep('category');
+    } else {
+      setStep('nifForm');
+    }
+  };
+
+  const handleNifFormSubmit = () => {
+    if (!nifFormData.nomComplet || !nifFormData.typeActivite || !nifFormData.descriptionActivite) {
+      toast({
+        variant: "destructive",
+        title: "Champs manquants",
+        description: "Veuillez remplir tous les champs obligatoires.",
+      });
+      return;
+    }
+    toast({
+      title: "Formulaire soumis",
+      description: "Votre demande de NIF a été enregistrée. Vous recevrez votre NIF dans les 5 jours ouvrables.",
+      className: 'bg-green-600 text-white border-none',
+    });
+    setStep('category');
   };
 
   const handleSubmit = () => {
@@ -98,19 +146,199 @@ export default function TaxDeclarationPage() {
           </Button>
           <div className="flex-1">
             <h1 className="font-headline text-2xl font-bold bg-gradient-to-r from-[#32BB78] to-[#2a9d63] bg-clip-text text-transparent">
-              Déclaration Fiscale DGI
+              Taxe et Impôt DGI
             </h1>
             <p className="text-sm text-muted-foreground">Système officiel de déclaration d'impôts RDC</p>
           </div>
         </header>
 
-        {/* Étape 1: Catégorie d'entreprise */}
+        {/* Étape 1: Type de profil */}
+        {step === 'profileType' && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <User className="w-5 h-5" />
+                Sélectionnez votre type de profil
+              </CardTitle>
+              <CardDescription>Cela déterminera le flux de déclaration</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <button
+                  onClick={() => handleProfileTypeSelect('morale')}
+                  className="p-6 border-2 border-border rounded-lg hover:border-primary hover:bg-primary/5 transition-all text-left"
+                >
+                  <Building2 className="w-8 h-8 text-primary mb-3" />
+                  <h3 className="font-semibold text-lg mb-2">Personne Morale</h3>
+                  <p className="text-sm text-muted-foreground">Entreprise, SARL, SA, etc.</p>
+                </button>
+
+                <button
+                  onClick={() => handleProfileTypeSelect('physique')}
+                  className="p-6 border-2 border-border rounded-lg hover:border-primary hover:bg-primary/5 transition-all text-left"
+                >
+                  <User className="w-8 h-8 text-primary mb-3" />
+                  <h3 className="font-semibold text-lg mb-2">Personne Physique</h3>
+                  <p className="text-sm text-muted-foreground">Travailleur indépendant, profession libérale</p>
+                </button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Étape 2: Vérification NIF (Personne Physique) */}
+        {step === 'nifCheck' && profileType === 'physique' && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Vérification du NIF</CardTitle>
+              <CardDescription>Avez-vous déjà un numéro NIF (Numéro d'Identification Fiscale) ?</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="p-4 rounded-lg bg-blue-50 border border-blue-200">
+                <p className="text-sm text-blue-900">
+                  Le NIF est un numéro unique d'identification fiscale attribué par la DGI. Si vous ne l'avez pas, nous vous aiderons à le demander.
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <Button 
+                  variant="outline" 
+                  className="flex-1 h-12"
+                  onClick={() => handleNifCheckResponse(false)}
+                >
+                  Non, je n'ai pas de NIF
+                </Button>
+                <Button 
+                  className="flex-1 h-12 bg-[#32BB78] hover:bg-[#2a9d63]"
+                  onClick={() => handleNifCheckResponse(true)}
+                >
+                  Oui, j'ai un NIF
+                </Button>
+              </div>
+
+              <Button variant="ghost" onClick={handleBack} className="w-full">
+                <ArrowLeft className="mr-2 w-4 h-4" /> Retour
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Étape 3: Formulaire NIF (Personne Physique sans NIF) */}
+        {step === 'nifForm' && profileType === 'physique' && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Demande de NIF</CardTitle>
+              <CardDescription>Remplissez ce formulaire pour obtenir votre NIF</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="p-4 rounded-lg bg-amber-50 border border-amber-200">
+                <p className="text-sm text-amber-900">
+                  ℹ️ Après soumission, vous recevrez votre NIF dans les 5 jours ouvrables par email.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Nom complet *</Label>
+                <Input
+                  value={nifFormData.nomComplet}
+                  onChange={(e) => setNifFormData({...nifFormData, nomComplet: e.target.value})}
+                  placeholder="Ex: Jean Mukendi"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Date de naissance *</Label>
+                  <Input
+                    type="date"
+                    value={nifFormData.dateNaissance}
+                    onChange={(e) => setNifFormData({...nifFormData, dateNaissance: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Lieu de naissance *</Label>
+                  <Input
+                    value={nifFormData.lieuNaissance}
+                    onChange={(e) => setNifFormData({...nifFormData, lieuNaissance: e.target.value})}
+                    placeholder="Ex: Kinshasa"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Nationalité *</Label>
+                <Input
+                  value={nifFormData.nationalite}
+                  onChange={(e) => setNifFormData({...nifFormData, nationalite: e.target.value})}
+                  placeholder="Ex: Congolaise"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Type d'activité *</Label>
+                <Select value={nifFormData.typeActivite} onValueChange={(value) => setNifFormData({...nifFormData, typeActivite: value})}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionnez un type d'activité" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="commerce">Commerce</SelectItem>
+                    <SelectItem value="services">Services</SelectItem>
+                    <SelectItem value="artisanat">Artisanat</SelectItem>
+                    <SelectItem value="agriculture">Agriculture</SelectItem>
+                    <SelectItem value="transport">Transport</SelectItem>
+                    <SelectItem value="autre">Autre</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Description de l'activité *</Label>
+                <Textarea
+                  value={nifFormData.descriptionActivite}
+                  onChange={(e) => setNifFormData({...nifFormData, descriptionActivite: e.target.value})}
+                  placeholder="Décrivez votre activité professionnelle"
+                  rows={3}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Adresse de l'activité</Label>
+                <Textarea
+                  value={nifFormData.adresseActivite}
+                  onChange={(e) => setNifFormData({...nifFormData, adresseActivite: e.target.value})}
+                  placeholder="Ex: 123 Avenue de la Liberté, Gombe, Kinshasa"
+                  rows={2}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Téléphone</Label>
+                <Input
+                  value={nifFormData.telephoneActivite}
+                  onChange={(e) => setNifFormData({...nifFormData, telephoneActivite: e.target.value})}
+                  placeholder="+243 XXX XXX XXX"
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={handleBack} className="flex-1">
+                  <ArrowLeft className="mr-2 w-4 h-4" /> Retour
+                </Button>
+                <Button className="flex-1 bg-[#32BB78] hover:bg-[#2a9d63]" onClick={handleNifFormSubmit}>
+                  Soumettre la demande <ArrowRight className="ml-2 w-4 h-4" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Étape 4: Catégorie d'entreprise */}
         {step === 'category' && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Building2 className="w-5 h-5" />
-                Sélectionnez votre catégorie d'entreprise
+                Sélectionnez votre catégorie {profileType === 'morale' ? "d'entreprise" : "d'activité"}
               </CardTitle>
               <CardDescription>Cela déterminera le niveau de détail des formulaires</CardDescription>
             </CardHeader>
@@ -138,14 +366,23 @@ export default function TaxDeclarationPage() {
                   </label>
                 ))}
               </div>
-              <Button className="w-full" onClick={handleNext}>
-                Continuer <ArrowRight className="ml-2 w-4 h-4" />
-              </Button>
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={handleBack} className="flex-1">
+                  <ArrowLeft className="mr-2 w-4 h-4" /> Retour
+                </Button>
+                <Button className="flex-1" onClick={handleNext}>
+                  Continuer <ArrowRight className="ml-2 w-4 h-4" />
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}
+      </div>
+    </div>
+  );
+}
 
-        {/* Étape 2: Type d'impôt */}
+        {/* Étape 5: Type d'impôt */}
         {step === 'taxType' && (
           <Card>
             <CardHeader>
@@ -188,7 +425,7 @@ export default function TaxDeclarationPage() {
           </Card>
         )}
 
-        {/* Étape 3: Identification */}
+        {/* Étape 6: Identification */}
         {step === 'identification' && (
           <Card>
             <CardHeader>
@@ -284,7 +521,7 @@ export default function TaxDeclarationPage() {
           </Card>
         )}
 
-        {/* Étape 4: Données fiscales */}
+        {/* Étape 7: Données fiscales */}
         {step === 'data' && (
           <Card>
             <CardHeader>
@@ -388,7 +625,7 @@ export default function TaxDeclarationPage() {
           </Card>
         )}
 
-        {/* Étape 5: Calcul */}
+        {/* Étape 8: Calcul */}
         {step === 'calculation' && (
           <Card>
             <CardHeader>
@@ -433,7 +670,7 @@ export default function TaxDeclarationPage() {
           </Card>
         )}
 
-        {/* Étape 6: Récapitulatif */}
+        {/* Étape 9: Récapitulatif */}
         {step === 'summary' && (
           <Card>
             <CardHeader>
@@ -479,7 +716,7 @@ export default function TaxDeclarationPage() {
           </Card>
         )}
 
-        {/* Étape 7: Paiement */}
+        {/* Étape 10: Paiement */}
         {step === 'payment' && (
           <Card>
             <CardHeader>
@@ -516,7 +753,7 @@ export default function TaxDeclarationPage() {
           </Card>
         )}
 
-        {/* Étape 8: Succès */}
+        {/* Étape 11: Succès */}
         {step === 'success' && (
           <Card className="border-green-200">
             <CardContent className="p-8 text-center space-y-6">
