@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import EnkambaCard from '@/components/EnkambaCard';
 import {
   Card,
   CardContent,
@@ -7,14 +9,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from '@/components/ui/avatar';
-import {
   ArrowLeft,
-  Eye,
-  EyeOff,
   Shield,
   Zap,
   TrendingUp,
@@ -22,16 +17,12 @@ import {
 } from 'lucide-react';
 import { getTransactionIconConfig } from '@/lib/transaction-icons';
 import Link from 'next/link';
-import { useState, useEffect, useRef } from 'react';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useWalletTransactions } from '@/hooks/useWalletTransactions';
 import { useCurrencyConversion } from '@/hooks/useCurrencyConversion';
-import Image from 'next/image';
-import QRCode from 'qrcode';
 import { Button } from '@/components/ui/button';
-import html2canvas from 'html2canvas';
 
-// Icônes personnalisées pour les actions - Style moderne eNkamba
+// Icônes personnalisées pour les actions
 const DepositIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-6 h-6">
     <path d="M12 2L2 12h4v8h12v-8h4L12 2Z" strokeLinecap="round" strokeLinejoin="round" fill="currentColor" opacity="0.2"/>
@@ -53,7 +44,7 @@ const HistoryIcon = () => (
   </svg>
 );
 
-// Composant de conversion de devises - Minimaliste avec icônes et montants
+// Composant de conversion de devises
 function CurrencyConversionDisplay({ balance }: { balance: number }) {
   const { conversions, isLoading } = useCurrencyConversion(balance);
 
@@ -71,17 +62,12 @@ function CurrencyConversionDisplay({ balance }: { balance: number }) {
           key={currency.code}
           className="group relative flex flex-col items-center gap-2 cursor-pointer"
         >
-          {/* Modern Capsule with Amount Inside */}
           <div className="relative">
-            {/* Glow effect on hover */}
             <div className="absolute inset-0 -m-2 rounded-full bg-[#FFA500]/20 opacity-0 group-hover:opacity-100 transition-all duration-300 blur-lg"></div>
             
-            {/* Main capsule container */}
             <div className="relative bg-gradient-to-br from-[#FFA500] to-[#FF8C00] rounded-full p-4 shadow-md hover:shadow-xl transition-all duration-300 transform group-hover:scale-110 border border-[#FFA500]/60 group-hover:border-[#FFA500]/100 min-w-[80px] h-20 flex flex-col items-center justify-center">
-              {/* Symbol */}
               <span className="text-white font-bold text-lg leading-none">{currency.symbol}</span>
               
-              {/* Amount */}
               <div className="mt-1 text-center">
                 {isLoading ? (
                   <div className="h-3 w-10 bg-white/20 rounded animate-pulse"></div>
@@ -97,7 +83,6 @@ function CurrencyConversionDisplay({ balance }: { balance: number }) {
             </div>
           </div>
           
-          {/* Label below */}
           <span className="text-xs font-semibold text-foreground group-hover:text-[#32BB78] transition-colors duration-300">
             {currency.code}
           </span>
@@ -114,259 +99,34 @@ const walletActions = [
   { icon: HistoryIcon, label: 'Historique', href: '/dashboard/history' },
 ];
 
-const LeopardAfricaArtwork = () => (
-  <svg viewBox="0 0 520 320" className="h-full w-full" aria-hidden="true">
-    <defs>
-      <linearGradient id="africaGold" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#fff4c4" />
-        <stop offset="22%" stopColor="#f7d87b" />
-        <stop offset="45%" stopColor="#cf9833" />
-        <stop offset="68%" stopColor="#8c5f16" />
-        <stop offset="100%" stopColor="#f6d879" />
-      </linearGradient>
-      <radialGradient id="furGold" cx="35%" cy="30%" r="75%">
-        <stop offset="0%" stopColor="#fff8d1" />
-        <stop offset="28%" stopColor="#f1cd6a" />
-        <stop offset="58%" stopColor="#c88e27" />
-        <stop offset="100%" stopColor="#5c390c" />
-      </radialGradient>
-      <radialGradient id="furShadow" cx="50%" cy="50%" r="80%">
-        <stop offset="0%" stopColor="rgba(0,0,0,0)" />
-        <stop offset="100%" stopColor="rgba(0,0,0,0.28)" />
-      </radialGradient>
-      <filter id="goldGlow" x="-40%" y="-40%" width="180%" height="180%">
-        <feGaussianBlur stdDeviation="6" result="blur" />
-        <feColorMatrix
-          in="blur"
-          type="matrix"
-          values="1 0 0 0 0.7  0 1 0 0 0.45  0 0 1 0 0.05  0 0 0 1 0"
-        />
-      </filter>
-      <linearGradient id="metalLine" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#fff6cf" />
-        <stop offset="35%" stopColor="#efca66" />
-        <stop offset="62%" stopColor="#a26d19" />
-        <stop offset="100%" stopColor="#fff0bd" />
-      </linearGradient>
-      <filter id="emboss" x="-20%" y="-20%" width="140%" height="140%">
-        <feOffset dx="0" dy="2" />
-        <feGaussianBlur stdDeviation="2.5" result="offset-blur" />
-        <feColorMatrix
-          in="offset-blur"
-          type="matrix"
-          values="0 0 0 0 0.12  0 0 0 0 0.07  0 0 0 0 0.01  0 0 0 0.65 0"
-        />
-      </filter>
-    </defs>
-
-    <path
-      d="M328 10l46 14 22 30-10 40 24 38-18 54 18 46-26 48-6 40-28-10-10-48-18-14-10-36-24-18-4-38-18-22 8-44 20-24 8-26 26-30z"
-      fill="url(#africaGold)"
-      opacity="0.9"
-      filter="url(#goldGlow)"
-    />
-    <path
-      d="M324 18l43 12 20 28-9 35 21 35-16 51 17 40-22 42-7 34-22-9-9-40-19-15-8-32-22-16-4-34-16-22 8-38 18-21 8-24 20-26z"
-      fill="url(#africaGold)"
-      opacity="0.98"
-    />
-
-    <g transform="translate(36 20)">
-      <path
-        d="M115 92c22-34 61-60 109-60 49 0 95 24 123 65 24 34 32 76 19 113-11 32-34 53-62 71-18 11-30 33-52 40-20 6-43-1-58-15-16-16-18-39-34-54-16-16-39-21-58-36-24-17-40-43-42-72-3-20 3-37 12-52 11-18 24-33 43-48z"
-        fill="url(#furGold)"
-        filter="url(#emboss)"
-      />
-      <path
-        d="M138 104c21-31 51-49 87-54 40-5 82 11 109 42 22 25 32 61 25 92-9 38-39 59-67 82-17 14-28 34-49 40-21 7-41-7-53-21-16-18-40-26-62-37-25-12-43-32-49-57-9-38 3-65 23-87 10-12 18-20 36-30z"
-        fill="rgba(40,22,1,0.16)"
-      />
-      <path
-        d="M130 120c12-37 46-74 86-88 31-10 73-6 105 12 25 14 48 40 57 70 9 29 4 56-5 74-13 25-36 46-63 57-23 9-49 10-72 5-26-5-49-17-70-35-31-26-50-71-38-118z"
-        fill="none"
-        stroke="url(#metalLine)"
-        strokeWidth="5"
-        strokeLinecap="round"
-        opacity="0.85"
-      />
-      <path
-        d="M173 140c22-31 56-47 90-44 31 3 60 20 78 46 13 19 18 40 12 58-6 17-17 26-30 35-15 9-31 18-51 16-16-1-28-8-41-14-20-10-40-9-58-1-13 5-24 15-39 15-14 0-26-9-34-22-14-22-7-52 10-75 14-18 24-27 44-37 6-4 12-6 19-8z"
-        fill="url(#furGold)"
-      />
-      <path
-        d="M185 156c18-24 44-37 73-38 31-1 62 13 81 35 16 19 22 48 10 67-11 16-31 25-49 29-17 3-31-2-47-7-18-6-35-5-51 2-11 4-21 12-33 11-12 0-21-8-27-18-10-18-6-42 7-59 12-15 20-23 36-31z"
-        fill="#f4d37a"
-        opacity="0.86"
-      />
-      <path d="M212 115c3-18 0-39-11-58-8-15-23-28-40-28-13 0-24 8-29 18-7 15-4 31 3 45 11 20 31 34 51 46" fill="url(#furGold)" filter="url(#emboss)" />
-      <path d="M206 126c-5-26-17-46-34-61-10-9-23-14-34-12-8 1-15 7-18 14-5 11-3 24 1 35 9 21 30 35 47 48" fill="rgba(33,18,1,0.18)" />
-      <path d="M229 133c8-10 20-16 34-17 16-1 31 7 40 19" stroke="#3a2100" strokeWidth="5" strokeLinecap="round" opacity="0.75" />
-      <path d="M203 146c-8 6-15 13-18 23" stroke="#3a2100" strokeWidth="5" strokeLinecap="round" opacity="0.65" />
-      <ellipse cx="294" cy="159" rx="8" ry="11" fill="#201202" />
-      <circle cx="297" cy="155" r="2.2" fill="#fff8d1" />
-      <path d="M305 170c13 4 31 16 42 28" stroke="#2a1700" strokeWidth="5" strokeLinecap="round" opacity="0.82" />
-      <path d="M224 189c17 5 31 11 42 20" stroke="#2a1700" strokeWidth="4" strokeLinecap="round" opacity="0.8" />
-      <path d="M260 190c12 7 28 9 40 7" stroke="#2a1700" strokeWidth="4" strokeLinecap="round" opacity="0.78" />
-      <path d="M269 202c8 11 22 17 36 19" stroke="#74480e" strokeWidth="4" strokeLinecap="round" />
-      <path d="M257 199c-8 9-21 14-34 15" stroke="#74480e" strokeWidth="4" strokeLinecap="round" />
-      <path d="M271 211c7 6 15 9 25 9 11 0 19-5 24-10" stroke="#2f1800" strokeWidth="4" strokeLinecap="round" />
-      {[
-        [226, 104], [252, 110], [281, 111], [197, 129], [230, 138], [260, 138],
-        [289, 139], [318, 131], [206, 165], [236, 168], [267, 169], [297, 166],
-        [327, 157], [198, 192], [228, 201], [260, 204], [293, 201], [323, 191],
-        [212, 223], [246, 228], [279, 228], [307, 220], [339, 180], [183, 176],
-        [171, 145], [345, 141]
-      ].map(([cx, cy], index) => (
-        <ellipse
-          key={index}
-          cx={cx}
-          cy={cy}
-          rx={index % 4 === 0 ? 9 : 7}
-          ry={index % 3 === 0 ? 5 : 4}
-          fill="#2a1600"
-          opacity="0.8"
-          transform={`rotate(${index % 2 === 0 ? 22 : -18} ${cx} ${cy})`}
-        />
-      ))}
-      <path d="M176 194c-18 29-39 52-68 66" stroke="#fff1bb" strokeWidth="3" strokeLinecap="round" opacity="0.78" />
-      <path d="M163 201c-28 29-62 54-102 68" stroke="#fff1bb" strokeWidth="2.4" strokeLinecap="round" opacity="0.6" />
-      <path d="M170 214c-16 15-35 28-59 39" stroke="#fff1bb" strokeWidth="2.2" strokeLinecap="round" opacity="0.58" />
-    </g>
-  </svg>
-);
-
 export default function WalletPage() {
   const { profile } = useUserProfile();
   const { balance: walletBalance, transactions: walletTransactions } = useWalletTransactions();
-  const [isBalanceVisible, setIsBalanceVisible] = useState(true);
-  const [qrCode, setQrCode] = useState<string>('');
-  const [accountNumber, setAccountNumber] = useState<string>('');
-  const [isFlipped, setIsFlipped] = useState(false);
-  const [cvv, setCvv] = useState<string>('');
-  const [expiryDate, setExpiryDate] = useState<string>('');
-  const [cardNumber, setCardNumber] = useState<string>('');
-  const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
-  const cardRef = useRef<HTMLDivElement>(null);
-  const cardFrontRef = useRef<HTMLDivElement>(null);
-  const cardBackRef = useRef<HTMLDivElement>(null);
-  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [cardData, setCardData] = useState({
+    cardNumber: '',
+    cardHolderName: '',
+    accountNumber: '',
+    balance: '0',
+    currency: 'CDF',
+    photoUrl: ''
+  });
 
   useEffect(() => {
     if (profile?.uid) {
       const hash = profile.uid.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
       const accountNum = `ENK${String(hash).padStart(12, '0')}`;
-      setAccountNumber(accountNum);
-
       const cardNum = `${String(hash % 10000).padStart(4, '0')} ${String((hash * 7) % 10000).padStart(4, '0')} ${String((hash * 13) % 10000).padStart(4, '0')} ${String((hash * 19) % 10000).padStart(4, '0')}`;
-      setCardNumber(cardNum);
-
-      const cvvCode = String((hash * 23) % 1000).padStart(3, '0');
-      setCvv(cvvCode);
-
-      const now = new Date();
-      const expiry = new Date(now.getFullYear() + 2, now.getMonth());
-      setExpiryDate(`${String(expiry.getMonth() + 1).padStart(2, '0')}/${String(expiry.getFullYear()).slice(-2)}`);
-
-      // Générer QR code avec données complètes
-      const fullName = profile.name || profile.fullName || 'eNkamba User';
-      const email = profile.email || '';
-      const phone = profile.phone || profile.phoneNumber || '';
-      // Format: PAYMENT|accountNumber|name|email|uid
-      const qrData = `PAYMENT|${accountNum}|${fullName}|${email}|${profile.uid}`;
-
-      QRCode.toDataURL(qrData, {
-        width: 200,
-        margin: 1,
-        color: {
-          dark: '#32BB78',
-          light: '#ffffff',
-        },
-      }).then(setQrCode);
+      
+      setCardData({
+        cardNumber: cardNum,
+        cardHolderName: (profile.fullName || profile.name || 'eNkamba User').toUpperCase(),
+        accountNumber: accountNum,
+        balance: walletBalance.toLocaleString('fr-FR'),
+        currency: 'CDF',
+        photoUrl: profile.photoURL || profile.profileImage || '',
+      });
     }
-  }, [profile?.uid, profile?.name, profile?.fullName, profile?.email]);
-
-  const handleCopyAccount = () => {
-    navigator.clipboard.writeText(accountNumber);
-  };
-
-  const captureCardFace = async (element: HTMLDivElement) => {
-    const canvas = await html2canvas(element, {
-      backgroundColor: null,
-      scale: 2,
-      logging: false,
-    });
-
-    return new Promise<Blob>((resolve, reject) => {
-      canvas.toBlob((blob) => {
-        if (!blob) {
-          reject(new Error('Impossible de generer l image de la carte'));
-          return;
-        }
-
-        resolve(blob);
-      }, 'image/png');
-    });
-  };
-
-  // Long press handler pour télécharger la carte
-  const handleCardMouseDown = () => {
-    const timer = setTimeout(async () => {
-      if (cardFrontRef.current && cardBackRef.current) {
-        try {
-          const { default: JSZip } = await import('jszip');
-          const timestamp = new Date().getTime();
-
-          setDownloadProgress(1);
-          const frontBlob = await captureCardFace(cardFrontRef.current);
-          setDownloadProgress(40);
-
-          const backBlob = await captureCardFace(cardBackRef.current);
-          setDownloadProgress(75);
-
-          const zip = new JSZip();
-          zip.file(`enkamba-card-recto-${timestamp}.png`, frontBlob);
-          zip.file(`enkamba-card-verso-${timestamp}.png`, backBlob);
-
-          const zipBlob = await zip.generateAsync({ type: 'blob' });
-          setDownloadProgress(92);
-
-          const link = document.createElement('a');
-          link.href = URL.createObjectURL(zipBlob);
-          link.download = `enkamba-card-${timestamp}.zip`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          URL.revokeObjectURL(link.href);
-
-          setDownloadProgress(100);
-          setTimeout(() => setDownloadProgress(0), 1000);
-        } catch (error) {
-          console.error('Erreur téléchargement carte:', error);
-          setDownloadProgress(0);
-        }
-      }
-    }, 3000);
-    
-    setLongPressTimer(timer);
-  };
-
-  const handleCardMouseUp = () => {
-    if (longPressTimer) {
-      clearTimeout(longPressTimer);
-      setLongPressTimer(null);
-    }
-  };
-
-  const handleCardMouseLeave = () => {
-    if (longPressTimer) {
-      clearTimeout(longPressTimer);
-      setLongPressTimer(null);
-    }
-  };
-
-  const displayBalance = isBalanceVisible 
-    ? walletBalance.toLocaleString('fr-FR') 
-    : '••••••••';
+  }, [profile?.uid, profile?.fullName, profile?.name, profile?.photoURL, profile?.profileImage, walletBalance]);
 
   const getTransactionStatusUI = (status: string) => {
     if (status === 'failed') {
@@ -402,32 +162,6 @@ export default function WalletPage() {
         .slide-up {
           animation: slide-up 0.6s ease-out;
         }
-        .card-container {
-          perspective: 1000px;
-          cursor: pointer;
-          width: 100%;
-          max-width: 100%;
-          aspect-ratio: 1.585;
-        }
-        .card-inner {
-          position: relative;
-          width: 100%;
-          height: 100%;
-          transition: transform 0.6s;
-          transform-style: preserve-3d;
-        }
-        .card-inner.flipped {
-          transform: rotateY(180deg);
-        }
-        .card-front, .card-back {
-          position: absolute;
-          width: 100%;
-          height: 100%;
-          backface-visibility: hidden;
-        }
-        .card-back {
-          transform: rotateY(180deg);
-        }
       `}</style>
 
       <div className="container mx-auto max-w-4xl p-4 space-y-12 animate-in fade-in duration-500">
@@ -448,201 +182,9 @@ export default function WalletPage() {
 
         {/* Hero Section - Card Centered */}
         <div className="flex flex-col items-center gap-8 slide-up" style={{ animationDelay: '0.1s' }}>
-          {/* Card with Glow */}
-          <div className="w-full">
-            <div 
-              className="card-container mx-auto" 
-              onClick={() => setIsFlipped(!isFlipped)}
-              onMouseDown={handleCardMouseDown}
-              onMouseUp={handleCardMouseUp}
-              onMouseLeave={handleCardMouseLeave}
-              onTouchStart={handleCardMouseDown}
-              onTouchEnd={handleCardMouseUp}
-              ref={cardRef}
-            >
-              {/* Download Progress Indicator */}
-              {downloadProgress > 0 && (
-                <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 rounded-3xl">
-                  <div className="text-center">
-                    <div className="w-16 h-16 rounded-full border-4 border-white/20 border-t-[#32BB78] animate-spin mb-3"></div>
-                    <p className="text-white text-sm font-semibold">{downloadProgress}%</p>
-                  </div>
-                </div>
-              )}
-              
-              {/* Long Press Indicator */}
-              {longPressTimer && (
-                <div className="absolute inset-0 z-40 flex items-center justify-center pointer-events-none">
-                  <div className="text-center">
-                    <p className="text-white text-xs font-semibold opacity-70">Maintenez 3 secondes...</p>
-                  </div>
-                </div>
-              )}
-              <div className={`card-inner ${isFlipped ? 'flipped' : ''}`}>
-                {/* FRONT - RDC FLAG DESIGN WITH USER DATA */}
-                <div className="card-front">
-                  <div ref={cardFrontRef} className="relative w-full h-full rounded-3xl overflow-hidden shadow-2xl">
-                    {/* RDC Flag background image */}
-                    <Image 
-                      src="/drapeau.png" 
-                      alt="RDC Flag" 
-                      fill 
-                      className="object-cover"
-                      priority
-                    />
-
-                    {/* Content overlay */}
-                    <div className="relative z-10 flex h-full flex-col p-3 sm:p-4">
-                      {/* Top section - Logo and branding (moved to top) */}
-                      <div className="flex items-start justify-between -mt-1">
-                        <div className="flex items-center gap-1.5">
-                          <div className="rounded-full border-2 border-white bg-white/30 p-1 backdrop-blur-sm">
-                            <Image src="/enkamba-logo.png" alt="eNkamba" width={28} height={28} className="h-7 w-7 object-cover" />
-                          </div>
-                          <div className="leading-tight">
-                            <p className="text-sm sm:text-base font-bold tracking-widest text-white drop-shadow-xl">eNKAMBA</p>
-                            <p className="text-[10px] text-white drop-shadow-xl font-semibold">PAY</p>
-                          </div>
-                        </div>
-                        
-                        {/* Chip - positioned at top right */}
-                        <div>
-                          <div className="rounded-lg border border-white/40 bg-[linear-gradient(145deg,#fff7cf_0%,#f1d06b_42%,#ba8020_74%,#fff0bf_100%)] p-2.5 w-fit shadow-lg">
-                            <div className="grid grid-cols-3 gap-1">
-                              <span className="h-3 w-3 rounded-sm border border-[#8a6516]/60 bg-[#fff6d2]/90"></span>
-                              <span className="h-3 w-3 rounded-sm border border-[#8a6516]/60 bg-[#e6bc57]/80"></span>
-                              <span className="h-3 w-3 rounded-sm border border-[#8a6516]/60 bg-[#fff6d2]/90"></span>
-                              <span className="h-3 w-3 rounded-sm border border-[#8a6516]/60 bg-[#e6bc57]/80"></span>
-                              <span className="h-3 w-3 rounded-sm border border-[#8a6516]/60 bg-[#fff6d2]/90"></span>
-                              <span className="h-3 w-3 rounded-sm border border-[#8a6516]/60 bg-[#e6bc57]/80"></span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Flex grow for spacing */}
-                      <div className="flex-1"></div>
-
-                      {/* Card number */}
-                      <div className="mb-2">
-                        <p className="text-xs text-white tracking-widest mb-0.5 drop-shadow-xl font-bold">CARD NUMBER</p>
-                        <p className="font-mono text-xs sm:text-sm tracking-[0.15em] text-white drop-shadow-xl font-bold">
-                          {cardNumber || '•••• •••• •••• ••••'}
-                        </p>
-                      </div>
-
-                      {/* Cardholder name and account */}
-                      <div className="flex justify-between items-end gap-2">
-                        <div>
-                          <p className="text-xs text-white mb-0.5 drop-shadow-xl font-bold">CARDHOLDER</p>
-                          <p className="font-semibold text-xs text-white drop-shadow-xl leading-tight">
-                            {(profile?.fullName || profile?.name || 'eNkamba User').toUpperCase()}
-                          </p>
-                          <p className="text-xs text-white mt-0.5 drop-shadow-xl font-bold">ENKAMBAPAY</p>
-                        </div>
-                        
-                        {/* Profile photo from Google */}
-                        <div className="relative">
-                          <Avatar className="h-16 w-14 border-2 border-white shadow-lg">
-                            <AvatarImage 
-                              src={profile?.photoURL || undefined}
-                              alt="Profile"
-                              className="object-cover"
-                            />
-                            <AvatarFallback className="bg-gradient-to-br from-white/50 to-white/30 text-white font-bold text-lg">
-                              {(profile?.fullName || profile?.name || 'U')[0].toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                        </div>
-                      </div>
-
-                      {/* Bottom section with account and balance */}
-                      <div className="mt-2 pt-2 border-t border-white/40 flex justify-between items-center">
-                        <div>
-                          <p className="text-xs text-white drop-shadow-xl font-bold">COMPTE</p>
-                          <p className="font-mono text-xs font-bold text-white drop-shadow-xl">{accountNumber || 'ENK000000000000'}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-xs text-white flex items-center gap-1 drop-shadow-xl font-bold">
-                            SOLDE
-                            <button onClick={(e) => { e.stopPropagation(); setIsBalanceVisible(!isBalanceVisible); }} className="hover:bg-white/30 rounded p-0.5">
-                              {isBalanceVisible ? <Eye className="h-3 w-3 text-white" /> : <EyeOff className="h-3 w-3 text-white" />}
-                            </button>
-                          </p>
-                          <p className="font-mono text-xs font-bold text-white drop-shadow-xl">{displayBalance} CDF</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* BACK - RDC FLAG INFO PANEL */}
-                <div className="card-back">
-                  <div ref={cardBackRef} className="relative w-full h-full rounded-3xl overflow-hidden shadow-2xl">
-                    {/* RDC Flag background image */}
-                    <Image 
-                      src="/drapeau.png" 
-                      alt="RDC Flag" 
-                      fill 
-                      className="object-cover"
-                      priority
-                    />
-
-                    {/* Magnetic stripe effect */}
-                    <div className="absolute left-0 top-8 h-12 w-full bg-gradient-to-r from-black/85 via-[#2d2d2d] to-black/85 shadow-inner z-20"></div>
-
-                    {/* Content */}
-                    <div className="relative z-10 flex h-full flex-col justify-between p-4 text-white sm:p-6">
-                      <div className="pt-24">
-                        <p className="text-[10px] uppercase tracking-[0.35em] text-white/80 drop-shadow-lg font-semibold">eNkambaPay</p>
-                        <p className="mt-2 text-sm font-semibold text-white drop-shadow-lg sm:text-base">Carte portefeuille digitale</p>
-                      </div>
-
-                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1.15fr_0.85fr] sm:gap-4">
-                        <div className="space-y-4">
-                          <div>
-                            <p className="text-[10px] uppercase tracking-[0.3em] text-white/70 drop-shadow-lg font-semibold">Titulaire</p>
-                            <p className="mt-1 font-semibold text-white drop-shadow-lg">
-                              {(profile?.fullName || profile?.name || 'Utilisateur eNkamba').toUpperCase()}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-[10px] uppercase tracking-[0.3em] text-white/70 drop-shadow-lg font-semibold">Numéro de compte</p>
-                            <p className="mt-1 font-mono text-sm font-semibold text-white drop-shadow-lg sm:text-base">{accountNumber || 'ENK000000000000'}</p>
-                          </div>
-                          <div className="grid grid-cols-2 gap-3">
-                            <div>
-                              <p className="text-[10px] uppercase tracking-[0.3em] text-white/70 drop-shadow-lg font-semibold">Validité</p>
-                              <p className="mt-1 font-mono font-semibold text-white drop-shadow-lg">{expiryDate}</p>
-                            </div>
-                            <div>
-                              <p className="text-[10px] uppercase tracking-[0.3em] text-white/70 drop-shadow-lg font-semibold">CVV</p>
-                              <p className="mt-1 font-mono font-semibold text-white drop-shadow-lg">{cvv}</p>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex flex-col gap-3 sm:items-end sm:justify-between">
-                          {qrCode && (
-                            <div className="w-fit rounded-2xl border border-white/40 bg-white p-2 shadow-[0_10px_25px_rgba(0,0,0,0.25)] sm:self-end">
-                              <Image src={qrCode} alt="QR Code" width={104} height={104} className="h-16 w-16 rounded-md sm:h-20 sm:w-20" />
-                            </div>
-                          )}
-                          <div className="w-full rounded-2xl border border-white/30 bg-white/10 p-3 backdrop-blur-sm sm:text-right">
-                            <p className="text-[10px] uppercase tracking-[0.3em] text-white/70 drop-shadow-lg font-semibold">Numéro de carte</p>
-                            <p className="mt-1 font-mono text-xs font-semibold text-white drop-shadow-lg sm:text-sm">{cardNumber || '•••• •••• •••• ••••'}</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="border-t border-white/30 pt-2 text-center text-[10px] font-semibold uppercase tracking-[0.22em] text-white drop-shadow-[0_1px_6px_rgba(0,0,0,0.5)]">
-                        Touchez la carte pour revenir au recto
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+          {/* EnkambaCard Component */}
+          <div className="w-full flex justify-center">
+            <EnkambaCard {...cardData} />
           </div>
 
           {/* Actions Wallet - Below Card */}
@@ -653,18 +195,13 @@ export default function WalletPage() {
                 return (
                   <Link key={action.label} href={action.href}>
                     <div className="group relative flex flex-col items-center gap-3 cursor-pointer">
-                      {/* Animated Background Circles */}
                       <div className="absolute -inset-4 bg-gradient-to-br from-[#32BB78]/20 to-[#2a9d63]/5 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
                       <div className="absolute -inset-6 rounded-full border border-[#32BB78]/10 opacity-0 group-hover:opacity-60 transition-all duration-500"></div>
                       
-                      {/* Icon Container - Modern Design */}
                       <div className="relative">
-                        {/* Outer glow circle */}
                         <div className="absolute inset-0 -m-2 rounded-full bg-[#32BB78]/15 opacity-0 group-hover:opacity-100 transition-all duration-300 blur-lg"></div>
                         
-                        {/* Icon background with gradient */}
                         <div className="relative bg-gradient-to-br from-[#32BB78] via-[#2a9d63] to-[#1f7a4a] rounded-full p-5 shadow-lg hover:shadow-2xl transition-all duration-300 transform group-hover:scale-125 border border-[#32BB78]/60 group-hover:border-[#32BB78]/100 group-hover:-rotate-12">
-                          {/* Inner circle animation */}
                           <div className="absolute inset-2 rounded-full border border-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                           <div className="relative text-white drop-shadow-lg">
                             <Icon />
@@ -672,12 +209,10 @@ export default function WalletPage() {
                         </div>
                       </div>
                       
-                      {/* Label with enhanced styling */}
                       <span className="text-sm font-semibold text-foreground group-hover:text-[#32BB78] transition-colors duration-300 text-center">
                         {action.label}
                       </span>
                       
-                      {/* Subtle animation indicator */}
                       <div className="h-1 w-6 bg-gradient-to-r from-[#32BB78]/0 via-[#32BB78] to-[#32BB78]/0 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300"></div>
                     </div>
                   </Link>
@@ -714,7 +249,7 @@ export default function WalletPage() {
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Compte</p>
-                  <p className="text-lg font-bold">{accountNumber}</p>
+                  <p className="text-lg font-bold">{cardData.accountNumber}</p>
                 </div>
                 <div className="p-3 rounded-full bg-[#32BB78]/20">
                   <CreditCard className="w-6 h-6 text-[#32BB78]" />
