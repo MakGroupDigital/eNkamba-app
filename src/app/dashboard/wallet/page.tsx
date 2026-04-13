@@ -20,6 +20,7 @@ import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useWalletTransactions } from '@/hooks/useWalletTransactions';
+import { useCurrencyConversion } from '@/hooks/useCurrencyConversion';
 import Image from 'next/image';
 import QRCode from 'qrcode';
 import { Button } from '@/components/ui/button';
@@ -46,6 +47,60 @@ const HistoryIcon = () => (
     <polyline points="12 7 12 12 16 14" strokeLinecap="round" strokeLinejoin="round"/>
   </svg>
 );
+
+// Composant de conversion de devises - Minimaliste avec icônes et montants
+function CurrencyConversionDisplay({ balance }: { balance: number }) {
+  const { conversions, isLoading } = useCurrencyConversion(balance);
+
+  const currencies = [
+    { code: 'EUR', symbol: '€', label: 'Euro' },
+    { code: 'USD', symbol: '$', label: 'Dollar US' },
+    { code: 'CNY', symbol: '¥', label: 'Yuan' },
+    { code: 'XOF', symbol: 'Fr', label: 'FCFA' },
+  ];
+
+  return (
+    <div className="flex justify-center gap-4 sm:gap-6 flex-wrap">
+      {currencies.map((currency) => (
+        <div
+          key={currency.code}
+          className="group relative flex flex-col items-center gap-2 cursor-pointer"
+        >
+          {/* Modern Capsule with Amount Inside */}
+          <div className="relative">
+            {/* Glow effect on hover */}
+            <div className="absolute inset-0 -m-2 rounded-full bg-[#FFA500]/20 opacity-0 group-hover:opacity-100 transition-all duration-300 blur-lg"></div>
+            
+            {/* Main capsule container */}
+            <div className="relative bg-gradient-to-br from-[#FFA500] to-[#FF8C00] rounded-full p-4 shadow-md hover:shadow-xl transition-all duration-300 transform group-hover:scale-110 border border-[#FFA500]/60 group-hover:border-[#FFA500]/100 min-w-[80px] h-20 flex flex-col items-center justify-center">
+              {/* Symbol */}
+              <span className="text-white font-bold text-lg leading-none">{currency.symbol}</span>
+              
+              {/* Amount */}
+              <div className="mt-1 text-center">
+                {isLoading ? (
+                  <div className="h-3 w-10 bg-white/20 rounded animate-pulse"></div>
+                ) : (
+                  <p className="text-white font-bold text-xs leading-tight">
+                    {conversions[currency.code as keyof typeof conversions].toLocaleString('fr-FR', {
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 0,
+                    })}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+          
+          {/* Label below */}
+          <span className="text-xs font-semibold text-foreground group-hover:text-[#32BB78] transition-colors duration-300">
+            {currency.code}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 // Actions rapides du wallet
 const walletActions = [
@@ -608,6 +663,11 @@ export default function WalletPage() {
               })}
             </div>
           </div>
+
+          {/* Currency Conversion - Minimal Icons */}
+          <div className="w-full slide-up" style={{ animationDelay: '0.25s' }}>
+            <CurrencyConversionDisplay balance={walletBalance} />
+          </div>
         </div>
 
         {/* Stats Section */}
@@ -666,6 +726,18 @@ export default function WalletPage() {
                 <div className="w-2 h-2 rounded-full bg-[#32BB78]"></div>
                 <span className="text-[#32BB78] font-semibold">2FA Activé</span>
               </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Currency Conversion Section */}
+        <div className="slide-up" style={{ animationDelay: '0.35s' }}>
+          <Card className="border-[#32BB78]/20 bg-gradient-to-br from-[#32BB78]/5 to-[#2a9d63]/5">
+            <CardHeader>
+              <CardTitle className="font-headline text-xl">Solde en Différentes Devises</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CurrencyConversionDisplay balance={walletBalance} />
             </CardContent>
           </Card>
         </div>
