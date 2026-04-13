@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Link2, Smartphone, Landmark, ArrowRight, Info } from "lucide-react";
+import { Link2, Smartphone, Landmark, ArrowRight, Info, CreditCard } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import Link from "next/link";
 
@@ -45,6 +45,20 @@ export default function LinkAccountPage() {
                         <div className="flex-1">
                             <p className="font-headline font-semibold">Lier un compte Bancaire</p>
                             <p className="text-xs text-muted-foreground">Connectez votre compte en banque local ou international.</p>
+                        </div>
+                        <ArrowRight className="h-5 w-5 text-muted-foreground"/>
+                    </CardContent>
+                </Card>
+            </Link>
+            <Link href="#" className="block">
+                 <Card className="hover:border-primary hover:shadow-lg transition-all">
+                    <CardContent className="p-4 flex items-center gap-4">
+                        <div className="p-3 bg-primary/10 rounded-lg">
+                             <CreditCard className="h-8 w-8 text-primary"/>
+                        </div>
+                        <div className="flex-1">
+                            <p className="font-headline font-semibold">Lier une Carte Bancaire</p>
+                            <p className="text-xs text-muted-foreground">Connectez votre carte Visa, Mastercard ou autre.</p>
                         </div>
                         <ArrowRight className="h-5 w-5 text-muted-foreground"/>
                     </CardContent>
