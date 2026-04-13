@@ -183,7 +183,7 @@ export default function WalletPage() {
         {/* Hero Section - Card Centered */}
         <div className="flex flex-col items-center gap-8 slide-up" style={{ animationDelay: '0.1s' }}>
           {/* EnkambaCard Component */}
-          <div className="w-full flex justify-center">
+          <div className="w-full flex justify-center px-4 sm:px-0">
             <EnkambaCard {...cardData} />
           </div>
 
