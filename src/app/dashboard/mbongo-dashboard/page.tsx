@@ -46,7 +46,7 @@ const financialServices = [
 
 const bills = [
   { icon: ESimIcon, label: 'eSIM-eNkamba', href: '/dashboard/partner-services' },
-  { icon: TaxIcon, label: 'Impôts', href: '/dashboard/tax-declaration' },
+  { icon: TaxIcon, label: 'Taxe et Impôt', href: '/dashboard/tax-declaration' },
   { icon: YangoIcon, label: 'Yango', href: '/dashboard/pay-bill?type=yango' },
   { icon: WaterIcon, label: 'Regideso', href: '/dashboard/pay-bill?type=water' },
   { icon: TvIcon, label: 'Canal+', href: '/dashboard/pay-bill?type=tv' },
