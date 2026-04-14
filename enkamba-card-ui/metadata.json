@@ -1,0 +1,6 @@
+{
+  "name": "Enkamba Card UI",
+  "description": "A reusable Next.js component replicating the Enkamba ID/Payment card design.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

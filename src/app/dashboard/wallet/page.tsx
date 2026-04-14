@@ -9,6 +9,12 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import {
+  type CarouselApi,
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from '@/components/ui/carousel';
+import {
   ArrowLeft,
   Shield,
   Zap,
@@ -19,7 +25,6 @@ import { getTransactionIconConfig } from '@/lib/transaction-icons';
 import Link from 'next/link';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useWalletTransactions } from '@/hooks/useWalletTransactions';
-import { useCurrencyConversion } from '@/hooks/useCurrencyConversion';
 import { Button } from '@/components/ui/button';
 
 // Icônes personnalisées pour les actions
@@ -44,64 +49,28 @@ const HistoryIcon = () => (
   </svg>
 );
 
-// Composant de conversion de devises
-function CurrencyConversionDisplay({ balance }: { balance: number }) {
-  const { conversions, isLoading } = useCurrencyConversion(balance);
-
-  const currencies = [
-    { code: 'EUR', symbol: '€', label: 'Euro' },
-    { code: 'USD', symbol: '$', label: 'Dollar US' },
-    { code: 'CNY', symbol: '¥', label: 'Yuan' },
-    { code: 'XOF', symbol: 'Fr', label: 'FCFA' },
-  ];
-
-  return (
-    <div className="flex justify-center gap-4 sm:gap-6 flex-wrap">
-      {currencies.map((currency) => (
-        <div
-          key={currency.code}
-          className="group relative flex flex-col items-center gap-2 cursor-pointer"
-        >
-          <div className="relative">
-            <div className="absolute inset-0 -m-2 rounded-full bg-[#FFA500]/20 opacity-0 group-hover:opacity-100 transition-all duration-300 blur-lg"></div>
-            
-            <div className="relative bg-gradient-to-br from-[#FFA500] to-[#FF8C00] rounded-full p-4 shadow-md hover:shadow-xl transition-all duration-300 transform group-hover:scale-110 border border-[#FFA500]/60 group-hover:border-[#FFA500]/100 min-w-[80px] h-20 flex flex-col items-center justify-center">
-              <span className="text-white font-bold text-lg leading-none">{currency.symbol}</span>
-              
-              <div className="mt-1 text-center">
-                {isLoading ? (
-                  <div className="h-3 w-10 bg-white/20 rounded animate-pulse"></div>
-                ) : (
-                  <p className="text-white font-bold text-xs leading-tight">
-                    {conversions[currency.code as keyof typeof conversions].toLocaleString('fr-FR', {
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 0,
-                    })}
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-          
-          <span className="text-xs font-semibold text-foreground group-hover:text-[#32BB78] transition-colors duration-300">
-            {currency.code}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
-}
+const CardsIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-6 h-6">
+    <rect x="3" y="6" width="18" height="12" rx="2" strokeLinecap="round" strokeLinejoin="round" fill="currentColor" opacity="0.15" />
+    <path d="M3 10h18" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M7 15h6" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M18 7v3" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M16.5 8.5h3" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
 
 // Actions rapides du wallet
 const walletActions = [
   { icon: DepositIcon, label: 'Dépôt', href: '/dashboard/add-funds' },
   { icon: WithdrawIcon, label: 'Retrait', href: '/dashboard/withdraw' },
   { icon: HistoryIcon, label: 'Historique', href: '/dashboard/history' },
+  { icon: CardsIcon, label: 'Mes Cartes', href: '/dashboard/cards' },
 ];
 
 export default function WalletPage() {
   const { profile } = useUserProfile();
   const { balance: walletBalance, transactions: walletTransactions } = useWalletTransactions();
+  const [cardsCarouselApi, setCardsCarouselApi] = useState<CarouselApi | null>(null);
   const [cardData, setCardData] = useState({
     cardNumber: '',
     cardHolderName: '',
@@ -127,6 +96,15 @@ export default function WalletPage() {
       });
     }
   }, [profile?.uid, profile?.fullName, profile?.name, profile?.photoURL, profile?.profileImage, walletBalance]);
+
+  useEffect(() => {
+    if (!cardsCarouselApi) return;
+    const id = window.setInterval(() => {
+      cardsCarouselApi.scrollNext();
+    }, 4500);
+
+    return () => window.clearInterval(id);
+  }, [cardsCarouselApi]);
 
   const getTransactionStatusUI = (status: string) => {
     if (status === 'failed') {
@@ -184,12 +162,25 @@ export default function WalletPage() {
         <div className="flex flex-col items-center gap-8 slide-up" style={{ animationDelay: '0.1s' }}>
           {/* EnkambaCard Component */}
           <div className="w-full flex justify-center px-4 sm:px-0">
-            <EnkambaCard {...cardData} />
+            <Carousel
+              className="w-full max-w-[520px]"
+              opts={{ align: 'center', loop: true }}
+              setApi={(api) => setCardsCarouselApi(api)}
+            >
+              <CarouselContent>
+                <CarouselItem className="flex justify-center">
+                  <EnkambaCard {...cardData} brand="visa" />
+                </CarouselItem>
+                <CarouselItem className="flex justify-center">
+                  <EnkambaCard {...cardData} brand="mastercard" />
+                </CarouselItem>
+              </CarouselContent>
+            </Carousel>
           </div>
 
           {/* Actions Wallet - Below Card */}
           <div className="w-full slide-up" style={{ animationDelay: '0.2s' }}>
-            <div className="flex justify-center gap-8 sm:gap-12">
+            <div className="flex flex-wrap justify-center gap-8 sm:gap-12">
               {walletActions.map((action) => {
                 const Icon = action.icon;
                 return (
@@ -225,18 +216,19 @@ export default function WalletPage() {
         {/* Stats Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 slide-up" style={{ animationDelay: '0.3s' }}>
           {/* Balance Overview */}
-          <Card className="bg-gradient-to-br from-[#32BB78]/10 to-[#2a9d63]/5 border-[#32BB78]/20 border-l-4 border-l-[#FFA500] overflow-hidden">
+          <Card className="border-0 bg-white shadow-md hover:shadow-lg transition-shadow">
             <CardContent className="pt-6">
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">Solde Total</p>
-                  <p className="text-3xl font-bold text-[#32BB78]">{walletBalance.toLocaleString('fr-FR')} CDF</p>
+                  <p className="text-sm font-medium text-muted-foreground mb-2">Solde Total</p>
+                  <p className="text-3xl font-bold text-[#32BB78]">{walletBalance.toLocaleString('fr-FR')}</p>
+                  <p className="text-xs text-muted-foreground mt-1">CDF</p>
                 </div>
-                <div className="p-3 rounded-full bg-[#32BB78]/20">
+                <div className="p-3 rounded-lg bg-[#32BB78]/10">
                   <Zap className="w-6 h-6 text-[#32BB78]" />
                 </div>
               </div>
-              <div className="flex items-center gap-2 text-sm text-green-600">
+              <div className="flex items-center gap-2 text-sm text-[#32BB78] font-medium mb-4">
                 <TrendingUp className="w-4 h-4" />
                 <span>+12.5% ce mois</span>
               </div>
@@ -244,52 +236,40 @@ export default function WalletPage() {
           </Card>
 
           {/* Account Status */}
-          <Card className="bg-gradient-to-br from-[#32BB78]/10 to-[#2a9d63]/5 border-[#32BB78]/20 border-l-4 border-l-[#FFA500] overflow-hidden">
+          <Card className="border-0 bg-white shadow-md hover:shadow-lg transition-shadow">
             <CardContent className="pt-6">
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">Compte</p>
-                  <p className="text-lg font-bold">{cardData.accountNumber}</p>
+                  <p className="text-sm font-medium text-muted-foreground mb-2">Compte</p>
+                  <p className="text-lg font-mono font-bold text-foreground">{cardData.accountNumber}</p>
                 </div>
-                <div className="p-3 rounded-full bg-[#32BB78]/20">
-                  <CreditCard className="w-6 h-6 text-[#32BB78]" />
+                <div className="p-3 rounded-lg bg-[#FFA500]/10">
+                  <CreditCard className="w-6 h-6 text-[#FFA500]" />
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-[#32BB78]"></div>
-                <span className="text-sm font-semibold text-[#32BB78]">Actif</span>
+                <span className="text-sm font-medium text-[#32BB78]">Actif</span>
               </div>
             </CardContent>
           </Card>
 
           {/* Security */}
-          <Card className="bg-gradient-to-br from-[#32BB78]/10 to-[#2a9d63]/5 border-[#32BB78]/20 border-l-4 border-l-[#FFA500] overflow-hidden">
+          <Card className="border-0 bg-white shadow-md hover:shadow-lg transition-shadow">
             <CardContent className="pt-6">
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">Sécurité</p>
-                  <p className="text-lg font-bold">Protégé</p>
+                  <p className="text-sm font-medium text-muted-foreground mb-2">Sécurité</p>
+                  <p className="text-lg font-bold text-foreground">Protégé</p>
                 </div>
-                <div className="p-3 rounded-full bg-[#32BB78]/20">
-                  <Shield className="w-6 h-6 text-[#32BB78]" />
+                <div className="p-3 rounded-lg bg-blue-500/10">
+                  <Shield className="w-6 h-6 text-blue-500" />
                 </div>
               </div>
-              <div className="flex items-center gap-2 text-sm">
-                <div className="w-2 h-2 rounded-full bg-[#32BB78]"></div>
-                <span className="text-[#32BB78] font-semibold">2FA Activé</span>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                <span className="text-sm font-medium text-blue-500">2FA Activé</span>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Currency Conversion Section */}
-        <div className="slide-up" style={{ animationDelay: '0.35s' }}>
-          <Card className="border-[#32BB78]/20 bg-gradient-to-br from-[#32BB78]/5 to-[#2a9d63]/5">
-            <CardHeader>
-              <CardTitle className="font-headline text-xl">Solde en Différentes Devises</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CurrencyConversionDisplay balance={walletBalance} />
             </CardContent>
           </Card>
         </div>
@@ -341,6 +321,8 @@ export default function WalletPage() {
             </CardContent>
           </Card>
         </div>
+
+
       </div>
     </div>
   );
