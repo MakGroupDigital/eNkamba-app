@@ -161,9 +161,9 @@ export default function WalletPage() {
         {/* Hero Section - Card Centered */}
         <div className="flex flex-col items-center gap-8 slide-up" style={{ animationDelay: '0.1s' }}>
           {/* EnkambaCard Component */}
-          <div className="w-full flex justify-center px-4 sm:px-0">
+          <div className="w-full flex justify-center overflow-x-auto px-4">
             <Carousel
-              className="w-full max-w-[520px]"
+              className="w-[500px] shrink-0"
               opts={{ align: 'center', loop: true }}
               setApi={(api) => setCardsCarouselApi(api)}
             >
@@ -180,19 +180,19 @@ export default function WalletPage() {
 
           {/* Actions Wallet - Below Card */}
           <div className="w-full slide-up" style={{ animationDelay: '0.2s' }}>
-            <div className="flex flex-wrap justify-center gap-8 sm:gap-12">
+            <div className="flex justify-between items-center gap-2 px-2 max-w-sm mx-auto">
               {walletActions.map((action) => {
                 const Icon = action.icon;
                 return (
-                  <Link key={action.label} href={action.href}>
-                    <div className="group relative flex flex-col items-center gap-3 cursor-pointer">
+                  <Link key={action.label} href={action.href} className="flex-1">
+                    <div className="group relative flex flex-col items-center gap-2 cursor-pointer">
                       <div className="absolute -inset-4 bg-gradient-to-br from-[#32BB78]/20 to-[#2a9d63]/5 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
                       <div className="absolute -inset-6 rounded-full border border-[#32BB78]/10 opacity-0 group-hover:opacity-60 transition-all duration-500"></div>
                       
                       <div className="relative">
                         <div className="absolute inset-0 -m-2 rounded-full bg-[#32BB78]/15 opacity-0 group-hover:opacity-100 transition-all duration-300 blur-lg"></div>
                         
-                        <div className="relative bg-gradient-to-br from-[#32BB78] via-[#2a9d63] to-[#1f7a4a] rounded-full p-5 shadow-lg hover:shadow-2xl transition-all duration-300 transform group-hover:scale-125 border border-[#32BB78]/60 group-hover:border-[#32BB78]/100 group-hover:-rotate-12">
+                        <div className="relative bg-gradient-to-br from-[#32BB78] via-[#2a9d63] to-[#1f7a4a] rounded-full p-3 sm:p-5 shadow-lg hover:shadow-2xl transition-all duration-300 transform group-hover:scale-110 sm:group-hover:scale-125 border border-[#32BB78]/60 group-hover:border-[#32BB78]/100 group-hover:-rotate-12">
                           <div className="absolute inset-2 rounded-full border border-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                           <div className="relative text-white drop-shadow-lg">
                             <Icon />
@@ -200,7 +200,7 @@ export default function WalletPage() {
                         </div>
                       </div>
                       
-                      <span className="text-sm font-semibold text-foreground group-hover:text-[#32BB78] transition-colors duration-300 text-center">
+                      <span className="text-[0.65rem] sm:text-sm font-semibold text-foreground group-hover:text-[#32BB78] transition-colors duration-300 text-center leading-tight">
                         {action.label}
                       </span>
                       
