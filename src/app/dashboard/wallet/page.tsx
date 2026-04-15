@@ -80,6 +80,36 @@ export default function WalletPage() {
     photoUrl: ''
   });
 
+  // Taux de change approximatifs (CDF vers autres devises)
+  const exchangeRates = {
+    USD: 0.00037, // 1 CDF = 0.00037 USD (environ 2700 CDF = 1 USD)
+    EUR: 0.00034, // 1 CDF = 0.00034 EUR (environ 2940 CDF = 1 EUR)
+    GBP: 0.00029, // 1 CDF = 0.00029 GBP (environ 3450 CDF = 1 GBP)
+    CNY: 0.0027,  // 1 CDF = 0.0027 CNY (environ 370 CDF = 1 CNY)
+  };
+
+  // Calcul des montants convertis
+  const convertedAmounts = {
+    USD: walletBalance * exchangeRates.USD,
+    EUR: walletBalance * exchangeRates.EUR,
+    GBP: walletBalance * exchangeRates.GBP,
+    CNY: walletBalance * exchangeRates.CNY,
+  };
+
+  // Fonction pour formater les montants
+  const formatAmount = (amount: number, currency: string) => {
+    if (currency === 'FCFA') {
+      return amount.toLocaleString('fr-FR', { maximumFractionDigits: 0 });
+    }
+    if (amount >= 100) {
+      return amount.toFixed(0);
+    } else if (amount >= 1) {
+      return amount.toFixed(1);
+    } else {
+      return amount.toFixed(2);
+    }
+  };
+
   useEffect(() => {
     if (profile?.uid) {
       const hash = profile.uid.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
@@ -162,20 +192,22 @@ export default function WalletPage() {
         <div className="flex flex-col items-center gap-8 slide-up" style={{ animationDelay: '0.1s' }}>
           {/* EnkambaCard Component */}
           <div className="w-full flex justify-center overflow-x-auto px-4">
-            <Carousel
-              className="w-[500px] shrink-0"
-              opts={{ align: 'center', loop: true }}
-              setApi={(api) => setCardsCarouselApi(api)}
-            >
-              <CarouselContent>
-                <CarouselItem className="flex justify-center">
-                  <EnkambaCard {...cardData} brand="visa" />
-                </CarouselItem>
-                <CarouselItem className="flex justify-center">
-                  <EnkambaCard {...cardData} brand="mastercard" />
-                </CarouselItem>
-              </CarouselContent>
-            </Carousel>
+            <div className="transform scale-75 sm:scale-100 origin-center">
+              <Carousel
+                className="w-[500px] shrink-0"
+                opts={{ align: 'center', loop: true }}
+                setApi={(api) => setCardsCarouselApi(api)}
+              >
+                <CarouselContent>
+                  <CarouselItem className="flex justify-center">
+                    <EnkambaCard {...cardData} brand="visa" />
+                  </CarouselItem>
+                  <CarouselItem className="flex justify-center">
+                    <EnkambaCard {...cardData} brand="mastercard" />
+                  </CarouselItem>
+                </CarouselContent>
+              </Carousel>
+            </div>
           </div>
 
           {/* Actions Wallet - Below Card */}
@@ -219,18 +251,63 @@ export default function WalletPage() {
           <Card className="border-0 bg-white shadow-md hover:shadow-lg transition-shadow">
             <CardContent className="pt-6">
               <div className="flex items-start justify-between mb-4">
-                <div>
+                <div className="flex-1">
                   <p className="text-sm font-medium text-muted-foreground mb-2">Solde Total</p>
                   <p className="text-3xl font-bold text-[#32BB78]">{walletBalance.toLocaleString('fr-FR')}</p>
-                  <p className="text-xs text-muted-foreground mt-1">CDF</p>
-                </div>
-                <div className="p-3 rounded-lg bg-[#32BB78]/10">
-                  <Zap className="w-6 h-6 text-[#32BB78]" />
+                  <p className="text-xs text-muted-foreground mt-1">FCFA</p>
                 </div>
               </div>
               <div className="flex items-center gap-2 text-sm text-[#32BB78] font-medium mb-4">
                 <TrendingUp className="w-4 h-4" />
                 <span>+12.5% ce mois</span>
+              </div>
+              
+              {/* Currency Bubbles */}
+              <div className="flex justify-between gap-1 mt-4">
+                {/* FCFA Bubble */}
+                <div className="group relative flex flex-col items-center gap-1 cursor-pointer flex-1">
+                  <div className="relative bg-gradient-to-br from-[#32BB78] via-[#2a9d63] to-[#1f7a4a] rounded-full w-12 h-12 flex flex-col items-center justify-center shadow-md hover:shadow-xl transition-all duration-300 transform group-hover:scale-125 border border-[#32BB78]/60 group-hover:border-[#32BB78]/100">
+                    <div className="relative text-white text-[0.4rem] font-bold leading-tight">FCFA</div>
+                    <div className="relative text-white text-[0.35rem] font-medium leading-tight px-1 text-center overflow-hidden">{formatAmount(walletBalance, 'FCFA')}</div>
+                  </div>
+                  <span className="text-[0.45rem] font-medium text-muted-foreground text-center">Franc</span>
+                </div>
+
+                {/* USD Bubble */}
+                <div className="group relative flex flex-col items-center gap-1 cursor-pointer flex-1">
+                  <div className="relative bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 rounded-full w-12 h-12 flex flex-col items-center justify-center shadow-md hover:shadow-xl transition-all duration-300 transform group-hover:scale-125 border border-blue-500/60 group-hover:border-blue-500/100">
+                    <div className="relative text-white text-[0.4rem] font-bold leading-tight">USD</div>
+                    <div className="relative text-white text-[0.35rem] font-medium leading-tight px-1 text-center overflow-hidden">{formatAmount(convertedAmounts.USD, 'USD')}</div>
+                  </div>
+                  <span className="text-[0.45rem] font-medium text-muted-foreground text-center">Dollar</span>
+                </div>
+
+                {/* EUR Bubble */}
+                <div className="group relative flex flex-col items-center gap-1 cursor-pointer flex-1">
+                  <div className="relative bg-gradient-to-br from-purple-500 via-purple-600 to-purple-700 rounded-full w-12 h-12 flex flex-col items-center justify-center shadow-md hover:shadow-xl transition-all duration-300 transform group-hover:scale-125 border border-purple-500/60 group-hover:border-purple-500/100">
+                    <div className="relative text-white text-[0.4rem] font-bold leading-tight">EUR</div>
+                    <div className="relative text-white text-[0.35rem] font-medium leading-tight px-1 text-center overflow-hidden">{formatAmount(convertedAmounts.EUR, 'EUR')}</div>
+                  </div>
+                  <span className="text-[0.45rem] font-medium text-muted-foreground text-center">Euro</span>
+                </div>
+
+                {/* GBP Bubble */}
+                <div className="group relative flex flex-col items-center gap-1 cursor-pointer flex-1">
+                  <div className="relative bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700 rounded-full w-12 h-12 flex flex-col items-center justify-center shadow-md hover:shadow-xl transition-all duration-300 transform group-hover:scale-125 border border-orange-500/60 group-hover:border-orange-500/100">
+                    <div className="relative text-white text-[0.4rem] font-bold leading-tight">GBP</div>
+                    <div className="relative text-white text-[0.35rem] font-medium leading-tight px-1 text-center overflow-hidden">{formatAmount(convertedAmounts.GBP, 'GBP')}</div>
+                  </div>
+                  <span className="text-[0.45rem] font-medium text-muted-foreground text-center">Livre</span>
+                </div>
+
+                {/* CNY Bubble */}
+                <div className="group relative flex flex-col items-center gap-1 cursor-pointer flex-1">
+                  <div className="relative bg-gradient-to-br from-red-500 via-red-600 to-red-700 rounded-full w-12 h-12 flex flex-col items-center justify-center shadow-md hover:shadow-xl transition-all duration-300 transform group-hover:scale-125 border border-red-500/60 group-hover:border-red-500/100">
+                    <div className="relative text-white text-[0.4rem] font-bold leading-tight">CNY</div>
+                    <div className="relative text-white text-[0.35rem] font-medium leading-tight px-1 text-center overflow-hidden">{formatAmount(convertedAmounts.CNY, 'CNY')}</div>
+                  </div>
+                  <span className="text-[0.45rem] font-medium text-muted-foreground text-center">Yuan</span>
+                </div>
               </div>
             </CardContent>
           </Card>
