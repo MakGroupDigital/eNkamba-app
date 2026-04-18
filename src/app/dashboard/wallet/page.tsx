@@ -98,7 +98,7 @@ export default function WalletPage() {
 
   // Fonction pour formater les montants
   const formatAmount = (amount: number, currency: string) => {
-    if (currency === 'FCFA') {
+    if (currency === 'FC') {
       return amount.toLocaleString('fr-FR', { maximumFractionDigits: 0 });
     }
     if (amount >= 100) {
@@ -254,7 +254,7 @@ export default function WalletPage() {
                 <div className="flex-1">
                   <p className="text-sm font-medium text-muted-foreground mb-2">Solde Total</p>
                   <p className="text-3xl font-bold text-[#32BB78]">{walletBalance.toLocaleString('fr-FR')}</p>
-                  <p className="text-xs text-muted-foreground mt-1">FCFA</p>
+                  <p className="text-xs text-muted-foreground mt-1">FC</p>
                 </div>
               </div>
               <div className="flex items-center gap-2 text-sm text-[#32BB78] font-medium mb-4">
@@ -264,11 +264,11 @@ export default function WalletPage() {
               
               {/* Currency Bubbles */}
               <div className="flex justify-between gap-1 mt-4">
-                {/* FCFA Bubble */}
+                {/* FC Bubble */}
                 <div className="group relative flex flex-col items-center gap-1 cursor-pointer flex-1">
                   <div className="relative bg-gradient-to-br from-[#32BB78] via-[#2a9d63] to-[#1f7a4a] rounded-full w-12 h-12 flex flex-col items-center justify-center shadow-md hover:shadow-xl transition-all duration-300 transform group-hover:scale-125 border border-[#32BB78]/60 group-hover:border-[#32BB78]/100">
-                    <div className="relative text-white text-[0.4rem] font-bold leading-tight">FCFA</div>
-                    <div className="relative text-white text-[0.35rem] font-medium leading-tight px-1 text-center overflow-hidden">{formatAmount(walletBalance, 'FCFA')}</div>
+                    <div className="relative text-white text-[0.4rem] font-bold leading-tight">FC</div>
+                    <div className="relative text-white text-[0.35rem] font-medium leading-tight px-1 text-center overflow-hidden">{formatAmount(walletBalance, 'FC')}</div>
                   </div>
                   <span className="text-[0.45rem] font-medium text-muted-foreground text-center">Franc</span>
                 </div>
