@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getFirestore, collection, doc, getDoc, updateDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import {
-  generateWonyaRefTransa,
+  generateRefTransa,
   getWonyaPayConfig,
   isCompletedWonyaStatus,
-  normalizeWonyaPhoneNumber,
+  normalizePhoneNumber,
 } from '@/lib/wonyapay';
 
 function getFirebaseApp() {
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
       // Traitement spécifique pour Mobile Money via WonyaPay B2C
       if (withdrawalMethod === 'mobile_money') {
         const config = getWonyaPayConfig();
-        const normalizedPhoneNumber = normalizeWonyaPhoneNumber(phoneNumber || '');
+        const normalizedPhoneNumber = normalizePhoneNumber(phoneNumber || '');
         const withdrawCurrency = currency === 'USD' ? 'USD' : 'CDF';
 
         if (!config.token || !config.refPartenaire) {
@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        const refTransa = generateWonyaRefTransa();
+        const refTransa = generateRefTransa();
         const wonyaPayload = {
           RefPartenaire: config.refPartenaire,
           RefTransa: refTransa,

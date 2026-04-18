@@ -51,8 +51,10 @@ export function getFirebaseAdminConfig() {
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL || 
                       decodeSecret(process.env.FIREBASE_CLIENT_EMAIL_ENCODED);
   
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY || 
-                     decodeSecret(process.env.FIREBASE_PRIVATE_KEY_ENCODED);
+  const privateKeyRaw = process.env.FIREBASE_PRIVATE_KEY || 
+                        decodeSecret(process.env.FIREBASE_PRIVATE_KEY_ENCODED);
+  // Firebase Admin attend de vraies nouvelles lignes dans la clé PEM.
+  const privateKey = privateKeyRaw.replace(/\\n/g, '\n');
   
   return {
     projectId,

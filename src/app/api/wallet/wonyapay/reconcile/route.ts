@@ -108,14 +108,14 @@ export async function POST(request: NextRequest) {
 
       if (!refTransa) continue;
 
-      // Vérifier si la transaction a plus de 2 minutes
+      // Vérifier si la transaction a eu le temps de remonter côté opérateur (évite de spammer trop tôt)
       const txTimestamp =
         txData?.timestamp?.toMillis?.() ??
         (txData?.createdAt ? new Date(txData.createdAt).getTime() : 0);
       const ageInMinutes = (now - txTimestamp) / (1000 * 60);
 
-      // Ne vérifier que les transactions de plus de 2 minutes
-      if (ageInMinutes < 2) {
+      // Ne vérifier que les transactions de plus de ~15s
+      if (ageInMinutes < 0.25) {
         continue;
       }
 

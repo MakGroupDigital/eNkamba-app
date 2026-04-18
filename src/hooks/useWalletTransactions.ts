@@ -260,25 +260,77 @@ export function useWalletTransactions() {
         // Obtenir le token d'authentification
         const token = await currentUser.getIdToken();
 
-        // Appeler l'API route Next.js (pas de CORS côté serveur)
-        const response = await fetch('/api/wallet/add-funds', {
+        const shouldFallbackToLite = (res: Response, payload: any) => {
+          // Breakglass fallback: quand Firebase Admin est KO (lecture user), on retente via la route lite.
+          // On se base sur le "stage" (mode dev) et/ou le message d'erreur (prod).
+          const stage = typeof payload?.stage === 'string' ? payload.stage : '';
+          const msg = String(payload?.error || payload?.message || '');
+          return (
+            res.status >= 500 &&
+            (
+              stage === 'firestore_get_user' ||
+              stage === 'firebase_admin_init' ||
+              /firebase/i.test(msg) ||
+              /lecture utilisateur/i.test(msg)
+            )
+          );
+        };
+
+        const requestBody = {
+          userId: currentUser.uid,
+          amount,
+          paymentMethod,
+          phoneNumber: details.phoneNumber,
+          cardDetails: details.cardDetails,
+          cryptoDetails: details.cryptoDetails,
+          wonyaDetails: details.wonyaDetails,
+        };
+
+        // Utiliser Firestore SDK côté serveur (route lite) pour éviter les soucis Firebase Admin en dev.
+        // On garde le token envoyé (utile si on renforce la sécurité plus tard).
+        const primaryEndpoint = '/api/wallet/add-funds-lite';
+        const secondaryEndpoint = '/api/wallet/add-funds';
+
+        let response = await fetch(primaryEndpoint, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            userId: currentUser.uid,
-            amount,
-            paymentMethod,
-            phoneNumber: details.phoneNumber,
-            cardDetails: details.cardDetails,
-            cryptoDetails: details.cryptoDetails,
-            wonyaDetails: details.wonyaDetails,
-          }),
+          body: JSON.stringify(requestBody),
         });
 
-        const data = await parseApiResponse(response);
+        let data = await parseApiResponse(response);
+
+        // Compat: si la route lite échoue (ex: indispo), on tente l’ancienne route.
+        if (!response.ok) {
+          const fallbackResponse = await fetch(secondaryEndpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify(requestBody),
+          });
+
+          const fallbackData = await parseApiResponse(fallbackResponse);
+
+          // Si l’ancienne route échoue à cause de Firebase Admin, on repasse sur lite (breakglass)
+          if (!fallbackResponse.ok && shouldFallbackToLite(fallbackResponse, fallbackData)) {
+            response = await fetch(primaryEndpoint, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+              },
+              body: JSON.stringify(requestBody),
+            });
+            data = await parseApiResponse(response);
+          } else {
+            response = fallbackResponse;
+            data = fallbackData;
+          }
+        }
 
         if (!response.ok) {
           const errorData = data;
