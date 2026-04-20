@@ -1,65 +1,81 @@
+'use client';
+
 import { useState, useEffect } from 'react';
-import { doc, getDoc, onSnapshot } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { useAuth } from '@/hooks/useAuth';
-import { BusinessUser, BusinessStatus } from '@/types/business-dashboard.types';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { db, auth } from '@/lib/firebase';
+
+export interface BusinessUser {
+  uid: string;
+  businessName: string;
+  businessType: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'UNDER_REVIEW';
+  submittedAt: string;
+  reviewedAt?: string;
+  documents?: {
+    businessLicense?: string;
+    taxCertificate?: string;
+    identityDocument?: string;
+  };
+  contactInfo?: {
+    email: string;
+    phone: string;
+    address: string;
+  };
+}
 
 export function useBusinessStatus() {
-  const { user } = useAuth();
+  const [user, setUser] = useState<User | null>(null);
   const [businessUser, setBusinessUser] = useState<BusinessUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Listen to auth state changes
   useEffect(() => {
-    if (!user?.uid) {
-      setIsLoading(false);
-      return;
-    }
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
 
-    try {
-      // Real-time listener for business status
-      const unsubscribe = onSnapshot(
-        doc(db, 'users', user.uid),
-        (docSnapshot) => {
-          if (docSnapshot.exists()) {
-            const userData = docSnapshot.data();
-            if (userData.isBusiness) {
-              setBusinessUser({
-                uid: user.uid,
-                businessId: userData.businessId,
-                businessName: userData.businessName || '',
-                businessType: userData.businessType,
-                subCategory: userData.subCategory || '',
-                status: userData.businessStatus || 'PENDING',
-                rejectionReason: userData.rejectionReason,
-                approvedAt: userData.approvedAt,
-                isBusiness: true,
-              });
-            }
-          }
-          setIsLoading(false);
-        },
-        (err) => {
-          console.error('Error listening to business status:', err);
-          setError('Erreur lors du chargement du statut');
-          setIsLoading(false);
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    async function fetchBusinessStatus() {
+      if (!user?.uid) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const businessDocRef = doc(db, 'businessUsers', user.uid);
+        const businessDoc = await getDoc(businessDocRef);
+
+        if (businessDoc.exists()) {
+          setBusinessUser(businessDoc.data() as BusinessUser);
+        } else {
+          setBusinessUser(null);
         }
-      );
-
-      return () => unsubscribe();
-    } catch (err) {
-      console.error('Error setting up listener:', err);
-      setError('Erreur lors du chargement du statut');
-      setIsLoading(false);
+      } catch (err) {
+        console.error('Error fetching business status:', err);
+        setError('Erreur lors du chargement du statut business');
+      } finally {
+        setIsLoading(false);
+      }
     }
+
+    fetchBusinessStatus();
   }, [user?.uid]);
 
   return {
     businessUser,
     isLoading,
     error,
-    isApproved: businessUser?.status === 'APPROVED',
-    isPending: businessUser?.status === 'PENDING',
-    isRejected: businessUser?.status === 'REJECTED',
+    refetch: () => {
+      if (user?.uid) {
+        setIsLoading(true);
+        setError(null);
+        // Re-fetch logic here
+      }
+    }
   };
 }

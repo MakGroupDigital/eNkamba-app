@@ -29,6 +29,7 @@ import { useKycStatus } from '@/hooks/useKycStatus';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useBusinessStatus } from '@/hooks/useBusinessStatus';
 import { ContactQRCode } from '@/components/settings/ContactQRCode';
+import { AgentRelaySection } from '@/components/agent-relay/AgentRelaySection';
 import {
   SettingsPageIcon,
   UserProfileIcon,
@@ -381,6 +382,9 @@ export default function SettingsPage() {
           />
         </CardContent>
       </Card>
+
+      {/* Agent Relais Section */}
+      <AgentRelaySection />
 
       {/* Preferences & Security */}
       <Card className="overflow-hidden">
