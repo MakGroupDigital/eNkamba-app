@@ -20,6 +20,7 @@ export function BusinessStatusCard({
   const getStatusConfig = () => {
     switch (status) {
       case 'PENDING':
+      case 'UNDER_REVIEW':
         return {
           icon: BusinessDashboardIcons.Clock,
           title: 'En cours de traitement',
@@ -66,6 +67,7 @@ export function BusinessStatusCard({
           <div className={`${config.dotColor} w-3 h-3 rounded-full animate-pulse`} />
           <span className={`${config.badgeColor} px-3 py-1 rounded-full text-sm font-semibold`}>
             {status === 'PENDING' && '🔵 EN COURS'}
+            {status === 'UNDER_REVIEW' && '🔵 EN EXAMEN'}
             {status === 'APPROVED' && '🟢 APPROUVÉ'}
             {status === 'REJECTED' && '🔴 REJETÉ'}
           </span>

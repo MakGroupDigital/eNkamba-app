@@ -33,15 +33,9 @@ export default function EnkambaCard({
         // Format: ENK:accountNumber:cardHolderName (Enkamba payment format)
         const qrData = `ENK:${accountNumber}:${cardHolderName}`;
         const url = await QRCode.toDataURL(qrData, {
-          errorCorrectionLevel: 'H',
-          type: 'image/png',
-          quality: 0.95,
-          margin: 0,
           width: 200,
-          color: {
-            dark: '#000000',
-            light: '#FFFFFF',
-          },
+          margin: 0,
+          color: { dark: '#000000', light: '#FFFFFF' },
         });
         setQrCodeUrl(url);
       } catch (err) {

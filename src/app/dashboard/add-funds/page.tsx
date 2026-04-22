@@ -98,6 +98,10 @@ export default function AddFundsPage() {
     if (!user) return;
     
     try {
+      if (!paymentMethod) {
+        throw new Error('Méthode de paiement manquante');
+      }
+
       // Si PayPal, rediriger vers le lien de paiement avec le montant pré-rempli
       if (paymentMethod === 'paypal') {
         const returnUrl = encodeURIComponent(`https://enkamba.io/ok?amount=${amount}&userId=${user.uid}`);
@@ -117,12 +121,16 @@ export default function AddFundsPage() {
         return;
       }
 
+      if (paymentMethod !== 'wonyapay') {
+        throw new Error('Méthode de paiement non supportée');
+      }
+
       const result = await addFunds(
         parseFloat(amount), 
-        paymentMethod,
+        'wonyapay',
         {
           phoneNumber,
-          wonyaDetails: paymentMethod === 'wonyapay' ? wonyaDetails : undefined,
+          wonyaDetails,
         }
       );
 
@@ -396,143 +404,6 @@ export default function AddFundsPage() {
                 </>
               )}
 
-              {/* Autres méthodes de paiement */}
-              {paymentMethod === 'mobile_money' && (
-                <>
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Montant (CDF)</label>
-                    <Input
-                      type="number"
-                      placeholder="Entrez le montant"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      className="text-lg"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Numéro de téléphone</label>
-                    <Input
-                      type="tel"
-                      placeholder="+243 812 345 678"
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
-                    />
-                  </div>
-                </>
-              )}
-
-              {paymentMethod === 'crypto' && (
-                <>
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Montant (CDF)</label>
-                    <Input
-                      type="number"
-                      placeholder="Entrez le montant"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      className="text-lg"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Cryptomonnaie</label>
-                    <select
-                      className="w-full p-2 border rounded-md bg-background"
-                      value={cryptoDetails.currency}
-                      onChange={(e) => setCryptoDetails({ ...cryptoDetails, currency: e.target.value })}
-                    >
-                      <option value="BTC">Bitcoin (BTC)</option>
-                      <option value="ETH">Ethereum (ETH)</option>
-                      <option value="USDT">Tether (USDT)</option>
-                      <option value="USDC">USD Coin (USDC)</option>
-                      <option value="BNB">Binance Coin (BNB)</option>
-                      <option value="XRP">Ripple (XRP)</option>
-                      <option value="ADA">Cardano (ADA)</option>
-                      <option value="SOL">Solana (SOL)</option>
-                      <option value="DOGE">Dogecoin (DOGE)</option>
-                      <option value="TRX">Tron (TRX)</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Votre adresse de portefeuille</label>
-                    <Input
-                      type="text"
-                      placeholder="Entrez votre adresse crypto"
-                      value={cryptoDetails.walletAddress}
-                      onChange={(e) => setCryptoDetails({ ...cryptoDetails, walletAddress: e.target.value })}
-                    />
-                    <p className="text-xs text-muted-foreground mt-2">
-                      ⚠️ Vérifiez bien votre adresse. Les transactions crypto sont irréversibles.
-                    </p>
-                  </div>
-                  <div className="bg-[#FFA500]/10 border border-[#FFA500]/30 rounded-lg p-4 text-sm">
-                    <p className="font-semibold text-[#FFA500] mb-2">📌 Instructions:</p>
-                    <ol className="space-y-1 text-muted-foreground list-decimal list-inside">
-                      <li>Sélectionnez votre cryptomonnaie</li>
-                      <li>Entrez votre adresse de portefeuille</li>
-                      <li>Vous recevrez une adresse de dépôt eNkamba</li>
-                      <li>Envoyez vos crypto à cette adresse</li>
-                      <li>Les fonds seront convertis en CDF automatiquement</li>
-                    </ol>
-                  </div>
-                </>
-              )}
-
-              {(paymentMethod === 'credit_card' || paymentMethod === 'debit_card') && (
-                <>
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Montant (CDF)</label>
-                    <Input
-                      type="number"
-                      placeholder="Entrez le montant"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      className="text-lg"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Numéro de carte</label>
-                    <Input
-                      type="text"
-                      placeholder="1234 5678 9012 3456"
-                      value={cardDetails.cardNumber}
-                      onChange={(e) => setCardDetails({ ...cardDetails, cardNumber: e.target.value })}
-                      maxLength={19}
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Date d'expiration</label>
-                      <Input
-                        type="text"
-                        placeholder="MM/YY"
-                        value={cardDetails.expiryDate}
-                        onChange={(e) => setCardDetails({ ...cardDetails, expiryDate: e.target.value })}
-                        maxLength={5}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">CVV</label>
-                      <Input
-                        type="text"
-                        placeholder="123"
-                        value={cardDetails.cvv}
-                        onChange={(e) => setCardDetails({ ...cardDetails, cvv: e.target.value })}
-                        maxLength={3}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Nom du titulaire</label>
-                    <Input
-                      type="text"
-                      placeholder="Jean Dupont"
-                      value={cardDetails.cardholderName}
-                      onChange={(e) => setCardDetails({ ...cardDetails, cardholderName: e.target.value })}
-                    />
-                  </div>
-                </>
-              )}
-
               <div className="flex gap-3">
                 <Button
                   variant="outline"
@@ -581,18 +452,14 @@ export default function AddFundsPage() {
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Méthode</span>
                   <span className="font-semibold">
-                    {paymentMethod === 'mobile_money' 
-                      ? 'Mobile Money'
-                      : paymentMethod === 'paypal'
+                    {paymentMethod === 'paypal'
                       ? 'PayPal'
                       : paymentMethod === 'wonyapay'
                       ? 'Mobile Money'
-                      : paymentMethod === 'crypto'
-                      ? 'Cryptomonnaie'
-                      : 'Carte bancaire'}
+                      : '—'}
                   </span>
                 </div>
-                {(paymentMethod === 'mobile_money' || paymentMethod === 'wonyapay') && (
+                {paymentMethod === 'wonyapay' && (
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Téléphone</span>
                     <span className="font-semibold">{phoneNumber}</span>
@@ -624,31 +491,12 @@ export default function AddFundsPage() {
                     )}
                   </>
                 )}
-                {paymentMethod === 'crypto' && (
-                  <>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Crypto</span>
-                      <span className="font-semibold">{cryptoDetails.currency}</span>
-                    </div>
-                    <div className="flex justify-between items-start">
-                      <span className="text-muted-foreground">Adresse</span>
-                      <span className="font-mono text-xs text-right max-w-[200px] break-all">
-                        {cryptoDetails.walletAddress.substring(0, 20)}...
-                      </span>
-                    </div>
-                  </>
-                )}
               </div>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
-                <p>
-                  ✓ Vos données sont sécurisées et chiffrées<br />
-                  {paymentMethod === 'crypto' ? (
-                    <>
-                      ✓ Conversion automatique au taux du marché<br />
-                      ✓ Fonds disponibles après confirmation blockchain
-                    </>
-                  ) : paymentMethod === 'wonyapay' ? (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
+                  <p>
+                    ✓ Vos données sont sécurisées et chiffrées<br />
+                  {paymentMethod === 'wonyapay' ? (
                     <>
                       ✓ Dépôt initié via Mobile Money sécurisé<br />
                       {wonyaDetails.currency === 'USD' && '✓ Conversion automatique USD → CDF'}<br />

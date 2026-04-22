@@ -69,7 +69,7 @@ const agentTypes = {
 export default function AgentSignupPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const agentType = searchParams.get('type') || 'agent-relais';
+  const agentType = searchParams?.get('type') ?? 'agent-relais';
   const { user } = useAuth();
   
   const [currentStep, setCurrentStep] = useState(1);
@@ -153,7 +153,7 @@ export default function AgentSignupPage() {
             
             // Si approuvé, rediriger vers dashboard
             if (data.status === 'approved') {
-              router.push('/dashboard/agent-relay/dashboard');
+              router.push(`/dashboard/agent-relay/dashboard/${data.agentType || 'agent-relais'}`);
               return;
             }
 

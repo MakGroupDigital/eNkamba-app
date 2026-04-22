@@ -7,10 +7,10 @@ import { getWonyaPayConfig, getTransactionStatus } from '@/lib/wonyapay';
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { refTransa: string } }
+  { params }: { params: Promise<{ refTransa: string }> }
 ) {
   try {
-    const { refTransa } = params;
+    const { refTransa } = await params;
 
     if (!refTransa) {
       return NextResponse.json(

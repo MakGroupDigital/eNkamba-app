@@ -300,7 +300,7 @@ export default function NkampaPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { contactSeller, buyProduct } = useNkampaEcommerce();
-  const { balance, loading: balanceLoading } = useWalletTransactions();
+  const { balance, isLoading: balanceLoading } = useWalletTransactions();
   const { cart, isOpen, setIsOpen, addToCart, removeFromCart, updateQuantity, total, itemCount } = useNkampaCart();
 
   const [searchQuery, setSearchQuery] = useState('');

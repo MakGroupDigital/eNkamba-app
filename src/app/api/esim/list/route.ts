@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getApps, getApp, initializeApp } from 'firebase/app';
+import { getApps, getApp, initializeApp, type FirebaseApp } from 'firebase/app';
 import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore';
 
 const firebaseConfig = {
@@ -13,7 +13,7 @@ const firebaseConfig = {
 };
 
 // Utiliser l'app existante ou en créer une nouvelle
-let app;
+let app: FirebaseApp;
 try {
   app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 } catch (error) {

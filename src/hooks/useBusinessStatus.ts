@@ -4,14 +4,16 @@ import { useState, useEffect } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
+import type { BusinessStatus, BusinessType } from '@/types/business-dashboard.types';
 
 export interface BusinessUser {
   uid: string;
   businessName: string;
-  businessType: string;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'UNDER_REVIEW';
+  businessType: BusinessType;
+  status: BusinessStatus;
   submittedAt: string;
   reviewedAt?: string;
+  rejectionReason?: string;
   documents?: {
     businessLicense?: string;
     taxCertificate?: string;
@@ -70,6 +72,7 @@ export function useBusinessStatus() {
     businessUser,
     isLoading,
     error,
+    isApproved: businessUser?.status === 'APPROVED',
     refetch: () => {
       if (user?.uid) {
         setIsLoading(true);

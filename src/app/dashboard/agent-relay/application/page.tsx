@@ -73,7 +73,7 @@ const agentTypes = {
 export default function AgentApplicationPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const agentType = searchParams.get('type') || 'agent-relais';
+  const agentType = searchParams?.get('type') ?? 'agent-relais';
   
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);

@@ -1,18 +1,18 @@
 // Business Dashboard Types
 
-export type BusinessStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+export type BusinessStatus = 'PENDING' | 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED';
 export type BusinessType = 'COMMERCE' | 'LOGISTICS' | 'PAYMENT';
 
 export interface BusinessUser {
   uid: string;
-  businessId: string;
   businessName: string;
   businessType: BusinessType;
-  subCategory: string;
   status: BusinessStatus;
   rejectionReason?: string;
   approvedAt?: number;
-  isBusiness: boolean;
+  businessId?: string;
+  subCategory?: string;
+  isBusiness?: boolean;
 }
 
 // Commerce Dashboard

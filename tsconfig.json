@@ -29,12 +29,21 @@
     }
   },
   "include": [
-    "**/*.ts",
-    "**/*.tsx",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "scripts/**/*.ts",
+    "scripts/**/*.tsx",
     "next-env.d.ts",
     ".next/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "enkamba-card-ui",
+    "src/app/api/test/supabase-connection",
+    "src/app/api/wallet/add-funds-bypass",
+    "src/app/api/wallet/add-funds-supabase",
+    "src/app/api/wallet/supabase-test",
+    "src/app/api/wallet/wonyapay/debug-reftransa",
+    "src/app/api/wallet/wonyapay/production-test"
   ]
 }

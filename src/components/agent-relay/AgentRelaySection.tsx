@@ -100,14 +100,18 @@ export function AgentRelaySection() {
             title={`Compte ${agentTypeLabels[application?.agentType || ''] || 'Agent'}`}
             description="Votre compte agent est actif. Accédez à votre espace professionnel."
             action={
-              <Button 
-                size="sm" 
-                className="rounded-xl bg-green-600 hover:bg-green-700" 
-                onClick={() => router.push('/dashboard/agent-relay/dashboard')}
-              >
-                Accéder
-              </Button>
-            }
+                <Button 
+                  size="sm" 
+                  className="rounded-xl bg-green-600 hover:bg-green-700" 
+                  onClick={() =>
+                    router.push(
+                      `/dashboard/agent-relay/dashboard/${application?.agentType || 'agent-relais'}`
+                    )
+                  }
+                >
+                  Accéder
+                </Button>
+              }
             badge={
               <span className="px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-medium">
                 Actif

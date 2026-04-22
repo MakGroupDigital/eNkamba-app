@@ -20,10 +20,10 @@ export default function AgentRelayStatusPage() {
   useEffect(() => {
     // Si approuvé, rediriger vers le dashboard agent
     if (!isLoading && status === 'approved') {
-      router.replace('/dashboard/agent-relay/dashboard');
+      router.replace(`/dashboard/agent-relay/dashboard/${application?.agentType || 'agent-relais'}`);
       return;
     }
-  }, [status, isLoading]);
+  }, [status, isLoading, application?.agentType, router]);
 
   if (isLoading) {
     return (

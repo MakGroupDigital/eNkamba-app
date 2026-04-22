@@ -57,7 +57,11 @@ export function BiometricCapture({ type, onCapture, capturedUrl }: BiometricCapt
         video.srcObject = mediaStream;
         
         // Configurer les attributs vidéo
-        video.muted = type === 'photo';
+        // Toujours muter l'élément <video> pour éviter le blocage autoplay (NotAllowedError),
+        // tout en gardant l'audio capturé côté MediaRecorder quand type === 'video'.
+        video.muted = true;
+        video.defaultMuted = true;
+        video.volume = 0;
         video.playsInline = true;
         video.autoplay = true;
         
@@ -69,12 +73,23 @@ export function BiometricCapture({ type, onCapture, capturedUrl }: BiometricCapt
         });
         
         // Écouter les événements
-        video.onloadedmetadata = () => {
+        video.onloadedmetadata = async () => {
           console.log('Métadonnées chargées:', {
             videoWidth: video.videoWidth,
             videoHeight: video.videoHeight,
             readyState: video.readyState
           });
+
+          if (video.videoWidth && video.videoHeight) {
+            setIsVideoReady(true);
+          }
+
+          try {
+            await video.play();
+            console.log('Play() réussi (metadata)');
+          } catch (playError) {
+            console.error('Erreur play (metadata):', playError);
+          }
         };
         
         video.onloadeddata = () => {
@@ -320,7 +335,7 @@ export function BiometricCapture({ type, onCapture, capturedUrl }: BiometricCapt
                 ref={videoRef}
                 autoPlay
                 playsInline
-                muted={type === 'photo'}
+                muted
                 className="w-full h-auto min-h-[300px]"
                 style={{ 
                   transform: 'scaleX(-1)',
