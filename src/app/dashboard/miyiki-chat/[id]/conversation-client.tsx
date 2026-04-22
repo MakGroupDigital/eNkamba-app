@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { collection, doc, documentId, getDoc, getDocs, query, updateDoc, serverTimestamp, where } from 'firebase/firestore';
+import { collection, doc, documentId, getDoc, getDocs, onSnapshot, query, serverTimestamp, updateDoc, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -19,6 +19,13 @@ import { uploadToCloudinary } from '@/lib/cloudinary-upload';
 import { ChevronLeft, Send, Loader2, Mail, Phone, Mic, Video, MapPin, DollarSign, Paperclip, Plus, X, Check, Square, Settings, Users, Trash2, Edit2, MoreVertical } from 'lucide-react';
 import Link from 'next/link';
 import { GroupSettingsDialog } from '@/components/group-settings-dialog';
+
+type IncomingCallDoc = {
+    id: string;
+    callType: 'audio' | 'video';
+    fromUid: string;
+    createdAtMs: number;
+};
 
 export default function ConversationClient() {
     const params = useParams();
@@ -52,6 +59,8 @@ export default function ConversationClient() {
     const [showMessageMenu, setShowMessageMenu] = useState<string | null>(null);
     const [senderAvatars, setSenderAvatars] = useState<Record<string, string>>({});
     const [myAvatar, setMyAvatar] = useState<string>('');
+    const [incomingCall, setIncomingCall] = useState<{ id: string; callType: 'audio' | 'video'; fromUid: string } | null>(null);
+    const seenIncomingCallIdsRef = useRef<Set<string>>(new Set());
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const textAreaRef = useRef<HTMLTextAreaElement | null>(null);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -61,6 +70,65 @@ export default function ConversationClient() {
     const audioContextRef = useRef<AudioContext | null>(null);
     const analyserRef = useRef<AnalyserNode | null>(null);
     const animationFrameRef = useRef<number | null>(null);
+
+    // Listener appels entrants (quand l'utilisateur est déjà dans la conversation)
+    useEffect(() => {
+        if (!currentUser?.uid) return;
+        if (!conversationId) return;
+        if (isGroup) return;
+
+        const q = query(collection(db, 'calls'), where('toUid', '==', currentUser.uid));
+        const unsub = onSnapshot(q, (snap) => {
+            const candidates: IncomingCallDoc[] = [];
+
+            snap.forEach((d) => {
+                const data: any = d.data() || {};
+                if (data?.conversationId !== conversationId) return;
+                if (data?.status !== 'ringing') return;
+                const createdAtMs = data?.createdAt?.toMillis?.() || 0;
+                const callType: 'audio' | 'video' = data?.callType === 'audio' ? 'audio' : 'video';
+                const fromUid = String(data?.fromUid || '');
+                if (!fromUid) return;
+
+                candidates.push({ id: d.id, callType, fromUid, createdAtMs });
+            });
+
+            const bestCall = candidates.sort((a, b) => b.createdAtMs - a.createdAtMs)[0];
+            if (!bestCall) {
+                setIncomingCall(null);
+                return;
+            }
+
+            // Marquer "reçu" dès que l'appel est visible côté destinataire
+            if (!seenIncomingCallIdsRef.current.has(bestCall.id)) {
+                seenIncomingCallIdsRef.current.add(bestCall.id);
+                void updateDoc(doc(db, 'calls', bestCall.id), { receivedAt: serverTimestamp() } as any).catch(() => undefined);
+            }
+
+            setIncomingCall((prev) => {
+                if (prev?.id === bestCall.id) return prev;
+                return { id: bestCall.id, callType: bestCall.callType, fromUid: bestCall.fromUid };
+            });
+        });
+
+        return () => unsub();
+    }, [conversationId, currentUser?.uid, isGroup]);
+
+    const acceptIncomingCall = useCallback(() => {
+        if (!incomingCall) return;
+        setIncomingCall(null);
+        const routeBase = incomingCall.callType === 'audio' ? 'audiocall' : 'call';
+        router.push(`/dashboard/miyiki-chat/${routeBase}/${conversationId}?callId=${incomingCall.id}`);
+    }, [conversationId, incomingCall, router]);
+
+    const declineIncomingCall = useCallback(async () => {
+        if (!incomingCall) return;
+        const callId = incomingCall.id;
+        setIncomingCall(null);
+        try {
+            await updateDoc(doc(db, 'calls', callId), { status: 'missed', endedAt: serverTimestamp() } as any);
+        } catch {}
+    }, [incomingCall]);
 
     // Charger les infos de la conversation et du contact
     useEffect(() => {
@@ -768,6 +836,49 @@ export default function ConversationClient() {
                     </div>
                 )}
             </header>
+
+            {/* Incoming call banner */}
+            {incomingCall && !isGroup && (
+                <div className="flex items-center justify-between gap-3 px-4 py-3 bg-gradient-to-r from-emerald-700 via-primary to-orange-600 text-white shadow-md flex-shrink-0">
+                    <div className="flex items-center gap-3 min-w-0">
+                        <Avatar className="h-9 w-9 border border-white/30">
+                            {contact?.avatar ? (
+                                <AvatarImage src={contact.avatar} alt={contact?.name || 'Contact'} className="object-cover" />
+                            ) : null}
+                            <AvatarFallback className="bg-white/15 text-white">
+                                {(contact?.name || 'U').charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0">
+                            <div className="text-sm font-semibold truncate">
+                                {contact?.name || 'Appel entrant'}
+                            </div>
+                            <div className="text-xs text-white/80">
+                                Appel {incomingCall.callType === 'audio' ? 'audio' : 'vidéo'} en cours…
+                            </div>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                        <Button
+                            size="sm"
+                            className="bg-white/15 hover:bg-white/25 text-white border border-white/20"
+                            onClick={acceptIncomingCall}
+                        >
+                            {incomingCall.callType === 'audio' ? <Phone className="h-4 w-4 mr-2" /> : <Video className="h-4 w-4 mr-2" />}
+                            Accepter
+                        </Button>
+                        <Button
+                            size="icon"
+                            variant="ghost"
+                            className="text-white hover:bg-white/15"
+                            onClick={() => void declineIncomingCall()}
+                            title="Refuser"
+                        >
+                            <X className="h-5 w-5" />
+                        </Button>
+                    </div>
+                </div>
+            )}
 
             {/* Messages Container */}
             <main className="flex-1 overflow-y-auto p-4 space-y-4 flex-shrink min-h-0">

@@ -65,12 +65,13 @@ export default function DashboardLayout({
 
   const showMasoloButton = !pathname.includes('/miyiki-chat');
   const isChatSubpage = pathname.startsWith('/dashboard/miyiki-chat/') && pathname !== '/dashboard/miyiki-chat';
+  const isUgaviHome = pathname === '/dashboard/ugavi';
 
   return (
     <AuthGuard>
       <ModuleKycGate>
         <div className="flex h-screen flex-col bg-background">
-          <main className={isChatSubpage ? 'flex-grow overflow-hidden pb-0' : 'flex-grow overflow-y-auto pb-40'}>
+          <main className={isChatSubpage || isUgaviHome ? 'flex-grow overflow-hidden pb-0' : 'flex-grow overflow-y-auto pb-40'}>
             {children}
           </main>
 
