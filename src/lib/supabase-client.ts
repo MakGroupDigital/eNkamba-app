@@ -1,15 +1,26 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { getSupabaseConfig } from './decode-secrets';
 
-// Configuration Supabase
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const { url: supabaseUrl, anonKey: supabaseAnonKey } = getSupabaseConfig();
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.warn('⚠️ Configuration Supabase manquante. Ajoutez NEXT_PUBLIC_SUPABASE_URL et NEXT_PUBLIC_SUPABASE_ANON_KEY');
 }
 
-// Client Supabase
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+let supabaseClient: SupabaseClient | null = null;
+
+function getSupabaseClientOrThrow(): SupabaseClient {
+  if (supabaseClient) return supabaseClient;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error(
+      'Configuration Supabase manquante. Renseignez NEXT_PUBLIC_SUPABASE_URL/NEXT_PUBLIC_SUPABASE_ANON_KEY (ou les versions *_ENCODED).'
+    );
+  }
+
+  supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+  return supabaseClient;
+}
 
 // Types pour les tables Supabase
 export interface SupabaseUser {
@@ -49,6 +60,7 @@ export interface SupabaseTransaction {
  */
 export async function getOrCreateSupabaseUser(uid: string, email?: string, phone?: string): Promise<SupabaseUser | null> {
   try {
+    const supabase = getSupabaseClientOrThrow();
     // Chercher l'utilisateur existant
     const { data: existingUser, error: fetchError } = await supabase
       .from('users')
@@ -93,6 +105,7 @@ export async function getOrCreateSupabaseUser(uid: string, email?: string, phone
  */
 export async function updateUserBalance(uid: string, newBalance: number): Promise<boolean> {
   try {
+    const supabase = getSupabaseClientOrThrow();
     const { error } = await supabase
       .from('users')
       .update({
@@ -119,6 +132,7 @@ export async function updateUserBalance(uid: string, newBalance: number): Promis
  */
 export async function createSupabaseTransaction(transaction: Omit<SupabaseTransaction, 'id' | 'created_at' | 'updated_at'>): Promise<SupabaseTransaction | null> {
   try {
+    const supabase = getSupabaseClientOrThrow();
     const transactionData = {
       ...transaction,
       created_at: new Date().toISOString(),
@@ -148,6 +162,7 @@ export async function createSupabaseTransaction(transaction: Omit<SupabaseTransa
  */
 export async function updateSupabaseTransaction(transactionId: string, updates: Partial<SupabaseTransaction>): Promise<boolean> {
   try {
+    const supabase = getSupabaseClientOrThrow();
     const { error } = await supabase
       .from('transactions')
       .update({
@@ -173,6 +188,7 @@ export async function updateSupabaseTransaction(transactionId: string, updates: 
  */
 export async function getUserTransactions(uid: string, limit = 50): Promise<SupabaseTransaction[]> {
   try {
+    const supabase = getSupabaseClientOrThrow();
     const { data, error } = await supabase
       .from('transactions')
       .select('*')
@@ -200,6 +216,7 @@ export async function performAtomicTransaction(
   transactionData: Omit<SupabaseTransaction, 'id' | 'user_id' | 'created_at' | 'updated_at'>
 ): Promise<{ success: boolean; transaction?: SupabaseTransaction; error?: string }> {
   try {
+    const supabase = getSupabaseClientOrThrow();
     // Utiliser une transaction Supabase pour garantir l'atomicité
     const { data, error } = await supabase.rpc('perform_wallet_transaction', {
       p_user_uid: uid,
@@ -229,6 +246,8 @@ export async function checkSupabaseConnection(): Promise<{ connected: boolean; e
     if (!supabaseUrl || !supabaseAnonKey) {
       return { connected: false, error: 'Configuration Supabase manquante' };
     }
+
+    const supabase = getSupabaseClientOrThrow();
 
     // Test simple de connexion
     const { data, error } = await supabase

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { checkSupabaseConnection } from '@/lib/supabase-client';
+import { getSupabaseConfig } from '@/lib/decode-secrets';
 
 /**
  * GET /api/test/supabase-connection
@@ -8,8 +9,7 @@ import { checkSupabaseConnection } from '@/lib/supabase-client';
 export async function GET() {
   try {
     // Vérifier les variables d'environnement
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const { url: supabaseUrl, anonKey: supabaseAnonKey } = getSupabaseConfig();
     
     const config = {
       url_configured: !!supabaseUrl,
@@ -35,8 +35,8 @@ export async function GET() {
         'Testez l\'API: POST /api/wallet/add-funds-supabase',
         'Créez les tables si ce n\'est pas déjà fait (voir SUPABASE_WALLET_SETUP.md)'
       ] : [
-        'Vérifiez NEXT_PUBLIC_SUPABASE_URL dans .env.local',
-        'Vérifiez NEXT_PUBLIC_SUPABASE_ANON_KEY dans .env.local',
+        'Vérifiez NEXT_PUBLIC_SUPABASE_URL(_ENCODED) dans .env.local',
+        'Vérifiez NEXT_PUBLIC_SUPABASE_ANON_KEY(_ENCODED) dans .env.local',
         'Créez un projet sur supabase.com',
         'Suivez les instructions dans SUPABASE_WALLET_SETUP.md'
       ]
