@@ -227,7 +227,6 @@ const pointIconByKind: Record<ItineraryPoint['kind'], ComponentType<{ className?
 export default function UgaviPage() {
   const { toast } = useToast();
   const router = useRouter();
-  const [trackingNumber, setTrackingNumber] = useState('');
   const [currentAddress, setCurrentAddress] = useState('Localisation en cours...');
   const [transportMode, setTransportMode] = useState<TransportMode>('moto');
   const [selectedPoint, setSelectedPoint] = useState<ItineraryPoint | null>(null);
@@ -242,17 +241,15 @@ export default function UgaviPage() {
   const [clientAddress, setClientAddress] = useState('Position du client en cours...');
   const [destinationAddress, setDestinationAddress] = useState('Destination en attente...');
   const [showSendDialog, setShowSendDialog] = useState(false);
-  const [showTrackingResult, setShowTrackingResult] = useState(false);
-  const [showCalculateDialog, setShowCalculateDialog] = useState(false);
-  const [showRelayDialog, setShowRelayDialog] = useState(false);
-  const [showHistoryDialog, setShowHistoryDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  // Calculate fees states
-  const [weight, setWeight] = useState('');
-  const [origin, setOrigin] = useState('');
-  const [destination, setDestination] = useState('');
-  const [calculatedPrice, setCalculatedPrice] = useState<number | null>(null);
+
+  const [activeService, setActiveService] = useState<'express' | 'standard' | 'international' | null>(null);
+  const [pickupQuery, setPickupQuery] = useState('');
+  const [dropoffQuery, setDropoffQuery] = useState('');
+  const [finderQuery, setFinderQuery] = useState('');
+  const [finderIsLoading, setFinderIsLoading] = useState(false);
+  const [finderCenter, setFinderCenter] = useState<GeoPoint | null>(null);
+  const [finderKinds, setFinderKinds] = useState<Array<'relais' | 'centre' | 'livreur'>>([]);
   
   // Form states
   const [senderName, setSenderName] = useState('');
@@ -285,16 +282,67 @@ export default function UgaviPage() {
     return () => navigator.geolocation.clearWatch(watchId);
   }, []);
 
-  const handleTrack = () => {
-    if (!trackingNumber || !trackingNumber.trim()) {
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Veuillez entrer un numéro de suivi.",
-      });
+  const inferFinderKinds = (raw: string): Array<'relais' | 'centre' | 'livreur'> => {
+    const q = (raw || '').toLowerCase();
+    const kinds = new Set<Array<'relais' | 'centre' | 'livreur'>[number]>();
+
+    if (/(agent|relais|relay|point relais|point-relais)/i.test(q)) kinds.add('relais');
+    if (/(agence|centre|hub|office)/i.test(q)) kinds.add('centre');
+    if (/(livreur|courier|coursier|moto|bike|vélo|velo|chauffeur)/i.test(q)) kinds.add('livreur');
+
+    return Array.from(kinds);
+  };
+
+  const stripFinderKeywords = (raw: string): string => {
+    return (raw || '')
+      .replace(/(agent|relais|relay|point\s*relais|point-relais|agence|centre|hub|office|livreur|courier|coursier|proche|près|pres|autour|de\s+ma\s+localisation|ma\s+localisation|à|a)/gi, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  };
+
+  const forwardGeocode = async (queryText: string): Promise<GeoPoint | null> => {
+    const q = queryText.trim();
+    if (!q) return null;
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(q)}`;
+      const response = await fetch(url);
+      if (!response.ok) return null;
+      const data = await response.json();
+      const result = Array.isArray(data) ? data[0] : null;
+      if (!result?.lat || !result?.lon) return null;
+      return { lat: Number(result.lat), lon: Number(result.lon) };
+    } catch {
+      return null;
+    }
+  };
+
+  const runFinderSearch = async (raw: string) => {
+    const queryText = raw.trim();
+    setFinderQuery(queryText);
+    if (!queryText) {
+      setFinderKinds([]);
+      setFinderCenter(null);
+      setSelectedPoint(null);
       return;
     }
-    router.push(`/dashboard/ugavi/tracking?tracking=${encodeURIComponent(trackingNumber.trim())}`);
+
+    setFinderIsLoading(true);
+    try {
+      const kinds = inferFinderKinds(queryText);
+      setFinderKinds(kinds.length ? kinds : ['livreur', 'relais', 'centre']);
+
+      const nearMe = /(proche|près|pres|autour|ma localisation|ma\s+position)/i.test(queryText);
+      if (nearMe) {
+        setFinderCenter(userPosition);
+        return;
+      }
+
+      const locationText = stripFinderKeywords(queryText);
+      const resolved = locationText ? await forwardGeocode(`${locationText}, Kinshasa`) : null;
+      setFinderCenter(resolved || userPosition);
+    } finally {
+      setFinderIsLoading(false);
+    }
   };
 
   const handleSendPackage = async () => {
@@ -635,10 +683,17 @@ export default function UgaviPage() {
     () => (routeInfo?.path?.length ? routeInfo.path : selectedPoint ? [userPosition, selectedPoint] : []),
     [routeInfo?.path, selectedPoint, userPosition]
   );
+  const visibleMapPoints = useMemo(() => {
+    const queryText = finderQuery.trim();
+    if (!queryText) return [] as ItineraryPoint[];
+    const center = finderCenter || userPosition;
+    const kinds = finderKinds.length ? finderKinds : (['livreur', 'relais', 'centre'] as Array<'relais' | 'centre' | 'livreur'>);
+    const candidates = ITINERARY_POINTS.filter((p) => kinds.includes(p.kind as any));
+    const nearby = candidates.filter((p) => haversineDistanceKm(center, p) <= 22);
+    return nearby.length ? nearby : candidates;
+  }, [finderCenter, finderKinds, finderQuery, userPosition]);
   const mapBounds = useMemo(() => {
-    const nearbyPoints = ITINERARY_POINTS
-      .filter((point) => haversineDistanceKm(userPosition, point) <= 35)
-      .map((point) => ({ lat: point.lat, lon: point.lon }));
+    const nearbyPoints = visibleMapPoints.map((point) => ({ lat: point.lat, lon: point.lon }));
     const pointsForBounds = [
       userPosition,
       ...(selectedPoint ? [selectedPoint] : []),
@@ -646,7 +701,7 @@ export default function UgaviPage() {
       ...nearbyPoints,
     ];
     return buildMapBounds(pointsForBounds);
-  }, [userPosition, selectedPoint, routePath]);
+  }, [userPosition, selectedPoint, routePath, visibleMapPoints]);
   const mapEmbedSrc = useMemo(() => {
     const bbox = `${mapBounds.west.toFixed(6)}%2C${mapBounds.south.toFixed(6)}%2C${mapBounds.east.toFixed(6)}%2C${mapBounds.north.toFixed(6)}`;
     return `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik`;
@@ -688,34 +743,94 @@ export default function UgaviPage() {
         </section>
 
         <section className="rounded-2xl border border-emerald-200 bg-white p-2 shadow">
-          <div className="flex items-center gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-              <Input
-                placeholder="Envoyer un colis..."
-                value={trackingNumber}
-                onChange={(e) => setTrackingNumber(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleTrack()}
-                className="h-10 rounded-xl border-slate-200 bg-slate-50 pl-10"
-              />
+          {activeService === 'express' ? (
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <div className="relative sm:col-span-1">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                <Input
+                  placeholder="Point de départ (ex: Gombe)"
+                  value={pickupQuery}
+                  onChange={(e) => setPickupQuery(e.target.value)}
+                  className="h-10 rounded-xl border-slate-200 bg-slate-50 pl-10"
+                />
+              </div>
+              <div className="relative sm:col-span-1">
+                <ArrowRight className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                <Input
+                  placeholder="Point de livraison"
+                  value={dropoffQuery}
+                  onChange={(e) => setDropoffQuery(e.target.value)}
+                  className="h-10 rounded-xl border-slate-200 bg-slate-50 pl-10"
+                />
+              </div>
+              <Button
+                className="h-10 rounded-xl bg-primary hover:bg-primary/90 sm:col-span-1"
+                onClick={() => {
+                  const base = dropoffQuery.trim() ? `livreur proche de ${dropoffQuery.trim()}` : 'livreur proche de ma localisation';
+                  void runFinderSearch(base);
+                }}
+                disabled={finderIsLoading}
+              >
+                {finderIsLoading ? 'Recherche…' : 'Trouver un livreur'}
+              </Button>
             </div>
-            <Button size="icon" className="h-10 w-10 rounded-xl bg-primary hover:bg-primary/90" onClick={handleTrack}>
-              <SearchIcon size={18} className="text-white" />
-            </Button>
-          </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                <Input
+                  placeholder="Rechercher livreur, agence ou point relais…"
+                  value={finderQuery}
+                  onChange={(e) => setFinderQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && void runFinderSearch(finderQuery)}
+                  className="h-10 rounded-xl border-slate-200 bg-slate-50 pl-10"
+                />
+              </div>
+              <Button
+                size="icon"
+                className="h-10 w-10 rounded-xl bg-primary hover:bg-primary/90"
+                onClick={() => void runFinderSearch(finderQuery)}
+                disabled={finderIsLoading}
+                title="Rechercher"
+              >
+                <SearchIcon size={18} className="text-white" />
+              </Button>
+            </div>
+          )}
+          {finderQuery.trim() && (
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-slate-600">
+              <span className="font-semibold text-slate-700">Résultats:</span>
+              {finderKinds.includes('livreur') && <Badge variant="secondary">Livreurs</Badge>}
+              {finderKinds.includes('relais') && <Badge variant="secondary">Agents relais</Badge>}
+              {finderKinds.includes('centre') && <Badge variant="secondary">Agences</Badge>}
+              <button
+                type="button"
+                className="ml-auto text-[11px] font-semibold text-primary hover:underline"
+                onClick={() => {
+                  setFinderQuery('');
+                  setFinderKinds([]);
+                  setFinderCenter(null);
+                  setSelectedPoint(null);
+                }}
+              >
+                Effacer
+              </button>
+            </div>
+          )}
         </section>
 
-        <section className="grid grid-cols-4 gap-1.5">
+        <section className="grid grid-cols-5 gap-1.5">
           {[
-            { label: 'Livraison Express', icon: <LogisticsExpressIcon size={24} />, href: '/dashboard/ugavi/service/express' },
-            { label: 'Livraison Standard', icon: <LogisticsStandardIcon size={24} />, href: '/dashboard/ugavi/service/standard' },
-            { label: 'International', icon: <LogisticsInternationalIcon size={24} />, href: '/dashboard/ugavi/service/international' },
-            { label: 'Suivi Colis', icon: <LogisticsTrackingIcon size={24} />, href: '/dashboard/ugavi/tracking' },
+            { label: 'Envoyer', icon: <SendHorizontal className="h-5 w-5" />, onClick: () => { setShowSendDialog(true); setActiveService('standard'); } },
+            { label: 'Express', icon: <LogisticsExpressIcon size={22} />, onClick: () => { setActiveService('express'); void runFinderSearch('livreur proche de ma localisation'); } },
+            { label: 'Standard', icon: <LogisticsStandardIcon size={22} />, onClick: () => { setActiveService('standard'); router.push('/dashboard/ugavi/service/standard'); } },
+            { label: 'International', icon: <LogisticsInternationalIcon size={22} />, onClick: () => { setActiveService('international'); router.push('/dashboard/ugavi/service/international'); } },
+            { label: 'Suivi', icon: <LogisticsTrackingIcon size={22} />, onClick: () => router.push('/dashboard/ugavi/tracking') },
           ].map((item) => (
             <button
               key={item.label}
               className="rounded-xl border border-slate-200 bg-white p-1.5 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-              onClick={() => router.push(item.href)}
+              onClick={item.onClick}
             >
               <div className="mx-auto mb-1 flex h-8 w-8 items-center justify-center rounded-full bg-slate-100">
                 {item.icon}
@@ -747,10 +862,11 @@ export default function UgaviPage() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setShowRelayDialog(true)}
+                onClick={() => void runFinderSearch('livreur proche de ma localisation')}
                 className="h-8 w-8 rounded-lg border-slate-300 p-0"
+                title="Trouver un livreur proche"
               >
-                <ArrowRight className="h-3.5 w-3.5" />
+                <Search className="h-3.5 w-3.5" />
               </Button>
             </div>
           </div>
@@ -790,7 +906,7 @@ export default function UgaviPage() {
                 Ma position
               </span>
             </div>
-            {ITINERARY_POINTS.map((point) => {
+            {visibleMapPoints.map((point) => {
               const isSelected = selectedPoint?.id === point.id;
               const showInfo = activePointInfoId === point.id;
               const MarkerIcon = pointIconByKind[point.kind];
@@ -828,53 +944,7 @@ export default function UgaviPage() {
           </div>
 
           <div className="border-t bg-white/95 p-2 backdrop-blur">
-            <div className="mb-1 grid grid-cols-3 gap-1 text-[10px]">
-              {[
-                { id: 'relais', label: 'Agents Relais', icon: LogisticsRelayIcon },
-                { id: 'centre', label: 'Agences', icon: LogisticsAgencyIcon },
-                { id: 'livreur', label: 'Livreurs', icon: LogisticsCourierIcon },
-              ].map((service) => {
-                const Icon = service.icon;
-                const linkedPoint = ITINERARY_POINTS.find((p) => p.kind === service.id);
-                return (
-                  <button
-                    key={service.id}
-                    type="button"
-                    onClick={() => linkedPoint && handleSelectPoint(linkedPoint)}
-                    className={`inline-flex items-center justify-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-1.5 py-1 font-semibold text-slate-700 transition hover:border-primary/30 hover:bg-primary/5 ${
-                      selectedPoint?.kind === service.id ? 'border-primary bg-primary/10 text-primary' : ''
-                    }`}
-                  >
-                    <Icon size={14} />
-                    {service.label}
-                  </button>
-                );
-              })}
-            </div>
-            <div className="grid grid-cols-5 gap-1">
-              {[
-                { id: 'walk', label: 'Pied', icon: <LogisticsWalkModeIcon size={18} /> },
-                { id: 'bike', label: 'Vélo', icon: <LogisticsBikeModeIcon size={18} /> },
-                { id: 'moto', label: 'Moto', icon: <LogisticsMotoModeIcon size={18} /> },
-                { id: 'car', label: 'Voiture', icon: <LogisticsCarModeIcon size={18} /> },
-                { id: 'train', label: 'Train', icon: <LogisticsTrainModeIcon size={18} /> },
-              ].map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    setTransportMode(item.id as TransportMode);
-                  }}
-                    className={`rounded-lg border px-1 py-1 text-[10px] font-semibold transition ${
-                      transportMode === item.id
-                        ? 'border-primary bg-primary/10 text-primary'
-                        : 'border-slate-200 bg-slate-50 text-slate-700'
-                    }`}
-                >
-                  <span className="mb-0.5 flex justify-center">{item.icon}</span>
-                  {item.label}
-                </button>
-              ))}
-            </div>
+            {/* Section itinéraire: disponible quand l'utilisateur sélectionne un point sur la carte */}
             {selectedPoint && (
               <div className="mt-1 rounded-xl border border-slate-200 bg-slate-50 p-2 text-[11px]">
                 <p className="font-semibold text-slate-800">
@@ -939,46 +1009,6 @@ export default function UgaviPage() {
           </div>
         </section>
 
-        <section className="hidden grid-cols-1 gap-2 sm:grid sm:grid-cols-3">
-          <button
-            onClick={() => setShowSendDialog(true)}
-            className="overflow-hidden rounded-2xl border border-emerald-300 bg-gradient-to-b from-emerald-500 to-emerald-700 p-3 text-white shadow-lg"
-          >
-            <SendHorizontal className="mx-auto mb-2 h-6 w-6" />
-            <p className="text-sm font-bold">Envoyer</p>
-          </button>
-          <button
-            onClick={() => setShowHistoryDialog(true)}
-            className="overflow-hidden rounded-2xl border border-green-300 bg-gradient-to-b from-green-500 to-green-700 p-3 text-white shadow-lg"
-          >
-            <HandCoins className="mx-auto mb-2 h-6 w-6" />
-            <p className="text-sm font-bold">Recevoir</p>
-          </button>
-          <button
-            onClick={() => router.push('/dashboard/ugavi/tracking')}
-            className="overflow-hidden rounded-2xl border border-blue-300 bg-gradient-to-b from-blue-500 to-blue-700 p-3 text-white shadow-lg"
-          >
-            <TrackPackageIcon size={24} className="mx-auto mb-2 text-white" />
-            <p className="text-sm font-bold">Suivi</p>
-          </button>
-        </section>
-
-        {showTrackingResult && trackingNumber && (
-          <Card className="border-primary/30 bg-primary/5">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <CheckCircle2 className="h-5 w-5 text-primary" />
-                Statut du colis : {trackingNumber}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              <div className="flex justify-between"><span className="text-muted-foreground">Statut :</span><Badge className="bg-green-100 text-green-700">En transit</Badge></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Origine :</span><span className="font-semibold">Kinshasa, RDC</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Destination :</span><span className="font-semibold">Paris, France</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Dernière mise à jour :</span><span className="font-semibold">Il y a 2 heures</span></div>
-            </CardContent>
-          </Card>
-        )}
       </main>
 
       {/* Send Package Dialog */}
@@ -1062,184 +1092,6 @@ export default function UgaviPage() {
             </Button>
             <Button onClick={handleSendPackage} disabled={isSubmitting} className="bg-gradient-to-r from-primary to-green-800">
               {isSubmitting ? "Enregistrement..." : "Créer l'envoi"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Calculate Fees Dialog */}
-      <Dialog open={showCalculateDialog} onOpenChange={setShowCalculateDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Calculer les frais de livraison</DialogTitle>
-            <DialogDescription>
-              Obtenez une estimation des frais de livraison pour votre colis.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="calc-weight">Poids (kg) *</Label>
-              <Input
-                id="calc-weight"
-                type="number"
-                placeholder="Ex: 2.5"
-                value={weight}
-                onChange={(e) => setWeight(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="calc-origin">Ville d'origine *</Label>
-              <Input
-                id="calc-origin"
-                placeholder="Ex: Kinshasa"
-                value={origin}
-                onChange={(e) => setOrigin(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="calc-destination">Ville de destination *</Label>
-              <Input
-                id="calc-destination"
-                placeholder="Ex: Paris"
-                value={destination}
-                onChange={(e) => setDestination(e.target.value)}
-              />
-            </div>
-            <Button
-              className="w-full"
-              onClick={() => {
-                if (!weight || !origin || !destination) {
-                  toast({
-                    variant: "destructive",
-                    title: "Erreur",
-                    description: "Veuillez remplir tous les champs.",
-                  });
-                  return;
-                }
-                // Calcul simple : base 5000 CDF + 1000 par kg + distance estimée
-                const basePrice = 5000;
-                const weightPrice = parseFloat(weight) * 1000;
-                const distancePrice = 15000; // Prix fixe pour l'exemple
-                setCalculatedPrice(basePrice + weightPrice + distancePrice);
-                toast({
-                  title: "Calcul effectué",
-                  description: "Les frais estimés sont affichés ci-dessous.",
-                });
-              }}
-            >
-              Calculer
-            </Button>
-            {calculatedPrice !== null && (
-              <Card className="p-4 bg-primary/10 border-primary/20">
-                <div className="flex justify-between items-center">
-                  <span className="font-semibold">Frais estimés :</span>
-                  <span className="text-2xl font-bold text-primary">{calculatedPrice.toLocaleString('fr-FR')} CDF</span>
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Prix indicatif. Les frais réels peuvent varier selon les options choisies.
-                </p>
-              </Card>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              setShowCalculateDialog(false);
-              setWeight('');
-              setOrigin('');
-              setDestination('');
-              setCalculatedPrice(null);
-            }}>
-              Fermer
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Find Relay Point Dialog */}
-      <Dialog open={showRelayDialog} onOpenChange={setShowRelayDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Trouver un point relais</DialogTitle>
-            <DialogDescription>
-              Recherchez un point relais près de chez vous.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="relay-location">Votre localisation</Label>
-              <Input
-                id="relay-location"
-                placeholder="Ex: Kinshasa, Gombe"
-                className="pl-10"
-              />
-            </div>
-            <Button
-              className="w-full"
-              onClick={() => {
-                toast({
-                  title: "Recherche effectuée",
-                  description: "10 points relais trouvés dans votre zone. Affichage de la carte...",
-                });
-              }}
-            >
-              Rechercher
-            </Button>
-            <div className="space-y-2 pt-4 border-t">
-              <p className="font-semibold text-sm">Points relais à proximité :</p>
-              <div className="space-y-2">
-                {['Point Relais Kinshasa Centre', 'Point Relais Gombe', 'Point Relais Limete'].map((name, i) => (
-                  <Card key={i} className="p-3">
-                    <p className="font-semibold text-sm">{name}</p>
-                    <p className="text-xs text-muted-foreground">Ouvert 7j/7, 8h-20h</p>
-                    <p className="text-xs text-primary mt-1">📍 1.2 km</p>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowRelayDialog(false)}>
-              Fermer
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Shipping History Dialog */}
-      <Dialog open={showHistoryDialog} onOpenChange={setShowHistoryDialog}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Historique d'envoi</DialogTitle>
-            <DialogDescription>
-              Consultez l'historique de tous vos envois de colis.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            {[
-              { id: 'UGV-12345678', date: '15/05/2024', destination: 'Paris, France', status: 'Livré', amount: '125000 CDF' },
-              { id: 'UGV-87654321', date: '10/05/2024', destination: 'Kinshasa, RDC', status: 'En transit', amount: '45000 CDF' },
-              { id: 'UGV-11223344', date: '05/05/2024', destination: 'Bruxelles, Belgique', status: 'Livré', amount: '98000 CDF' },
-            ].map((shipment) => (
-              <Card key={shipment.id}>
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <p className="font-semibold">{shipment.id}</p>
-                      <p className="text-xs text-muted-foreground">{shipment.date}</p>
-                    </div>
-                    <Badge className={shipment.status === 'Livré' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}>
-                      {shipment.status}
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-2">Vers : {shipment.destination}</p>
-                  <p className="text-sm font-semibold text-primary">{shipment.amount}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowHistoryDialog(false)}>
-              Fermer
             </Button>
           </DialogFooter>
         </DialogContent>

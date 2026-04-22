@@ -13,6 +13,7 @@ import {
   getDocs,
   getDoc,
   setDoc,
+  increment,
 } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 
@@ -212,6 +213,14 @@ export function useFirestoreConversations() {
           lastMessage: '',
           lastMessageTime: serverTimestamp(),
           createdAt: serverTimestamp(),
+          unreadCountByUid: {
+            [currentUser.uid]: 0,
+            [otherUserId]: 0,
+          },
+          lastMessageSenderId: '',
+          lastReadAtByUid: {
+            [currentUser.uid]: serverTimestamp(),
+          },
         });
 
         return docRef.id;
@@ -228,7 +237,7 @@ export function useFirestoreConversations() {
     async (
       conversationId: string,
       text: string,
-      messageType: 'text' | 'voice' | 'video' | 'location' | 'money' | 'file' = 'text',
+      messageType: 'text' | 'voice' | 'video' | 'location' | 'money' | 'file' | 'call' = 'text',
       metadata?: any,
       otherUserId?: string,
       otherUserName?: string
@@ -252,14 +261,26 @@ export function useFirestoreConversations() {
             lastMessageTime: serverTimestamp(),
             createdAt: serverTimestamp(),
             unreadCount: 0,
+            unreadCountByUid: {
+              [currentUser.uid]: 0,
+              [otherUserId]: 0,
+            },
+            lastMessageSenderId: currentUser.uid,
+            lastReadAtByUid: {
+              [currentUser.uid]: serverTimestamp(),
+            },
           });
           convSnap = await getDoc(convRef);
         }
+        const convData = convSnap.data() || {};
+        const participants: string[] = Array.isArray(convData.participants) ? convData.participants : [];
+        const recipientIds = participants.filter((id) => id && id !== currentUser.uid);
 
         // Construire le message en filtrant les valeurs undefined
         const messageData: any = {
           senderId: currentUser.uid,
           senderName: currentUser.displayName || 'Utilisateur',
+          senderPhoto: currentUser.photoURL || undefined,
           text: text || `[${messageType}]`,
           messageType,
           timestamp: serverTimestamp(),
@@ -295,9 +316,17 @@ export function useFirestoreConversations() {
         // Mettre à jour le dernier message
         try {
           const messagePreview = text || `[${messageType}]`;
+          const unreadUpdates: Record<string, any> = {};
+          recipientIds.forEach((uid) => {
+            unreadUpdates[`unreadCountByUid.${uid}`] = increment(1);
+          });
+
           await updateDoc(convRef, {
             lastMessage: messagePreview,
             lastMessageTime: serverTimestamp(),
+            lastMessageSenderId: currentUser.uid,
+            [`lastReadAtByUid.${currentUser.uid}`]: serverTimestamp(),
+            ...unreadUpdates,
           });
         } catch (updateErr) {
           console.warn('Mise à jour conversation (non critique):', updateErr);

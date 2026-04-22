@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Store, Package, TrendingUp, Users, CheckCircle, Upload, Loader2 } from 'lucide-react';
+import { ArrowLeft, Store, Package, TrendingUp, Users, CheckCircle, Upload, Loader2, X, Images, Briefcase } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,12 +10,75 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useNkampaEcommerce } from '@/hooks/useNkampaEcommerce';
 import { uploadToCloudinary } from '@/lib/cloudinary-upload';
+import { useNkampaStore } from '@/hooks/useNkampaStore';
+
+const SUBCATEGORIES_BY_CATEGORY: Record<string, Array<{ id: string; label: string }>> = {
+  tech: [
+    { id: 'smartphones', label: 'Smartphones' },
+    { id: 'ordinateurs', label: 'Ordinateurs' },
+    { id: 'accessoires', label: 'Accessoires' },
+    { id: 'audio', label: 'Audio' },
+    { id: 'tv', label: 'TV & Vidéo' },
+  ],
+  mode: [
+    { id: 'vetements', label: 'Vêtements' },
+    { id: 'chaussures', label: 'Chaussures' },
+    { id: 'sacs', label: 'Sacs' },
+    { id: 'montres', label: 'Montres' },
+    { id: 'bijoux', label: 'Bijoux' },
+  ],
+  alimentaire: [
+    { id: 'cereales', label: 'Céréales' },
+    { id: 'boissons', label: 'Boissons' },
+    { id: 'epices', label: 'Épices' },
+    { id: 'snacks', label: 'Snacks' },
+    { id: 'frais', label: 'Produits frais' },
+  ],
+  bio: [
+    { id: 'legumes', label: 'Légumes' },
+    { id: 'fruits', label: 'Fruits' },
+    { id: 'miel', label: 'Miel' },
+    { id: 'tisanes', label: 'Tisanes' },
+    { id: 'graines', label: 'Graines' },
+  ],
+  electro: [
+    { id: 'cuisine', label: 'Cuisine' },
+    { id: 'entretien', label: 'Entretien' },
+    { id: 'clim', label: 'Climatisation' },
+    { id: 'energie', label: 'Énergie' },
+  ],
+  maison: [
+    { id: 'decor', label: 'Décor' },
+    { id: 'meubles', label: 'Meubles' },
+    { id: 'linge', label: 'Linge de maison' },
+    { id: 'cuisine', label: 'Cuisine' },
+  ],
+  beaute: [
+    { id: 'soins', label: 'Soins' },
+    { id: 'parfums', label: 'Parfums' },
+    { id: 'makeup', label: 'Maquillage' },
+    { id: 'cheveux', label: 'Cheveux' },
+  ],
+  sports: [
+    { id: 'fitness', label: 'Fitness' },
+    { id: 'ballons', label: 'Ballons' },
+    { id: 'equipements', label: 'Équipements' },
+    { id: 'tenues', label: 'Tenues' },
+  ],
+  accessoires: [
+    { id: 'telephones', label: 'Téléphones' },
+    { id: 'mode', label: 'Mode' },
+    { id: 'auto', label: 'Auto' },
+    { id: 'maison', label: 'Maison' },
+  ],
+};
 
 export default function BecomeSellerPage() {
   const router = useRouter();
   const { user } = useAuth();
   const { toast } = useToast();
   const { addProduct } = useNkampaEcommerce();
+  const { store, hasChecked } = useNkampaStore(user?.uid);
 
   const [step, setStep] = useState<'intro' | 'form'>('intro');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -25,22 +88,35 @@ export default function BecomeSellerPage() {
   const [price, setPrice] = useState('');
   const [currency, setCurrency] = useState('CDF');
   const [category, setCategory] = useState<'B2B' | 'B2C'>('B2C');
+  const [subcategory, setSubcategory] = useState<string>('');
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
   const [moq, setMoq] = useState('');
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string>('');
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setImageFile(file);
+  const storeCategory = store?.category || '';
+  const subcategoryOptions = useMemo(() => SUBCATEGORIES_BY_CATEGORY[storeCategory] || [], [storeCategory]);
+
+  const handleImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    const nextFiles = [...imageFiles, ...files].slice(0, 8);
+    setImageFiles(nextFiles);
+
+    files.forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreview(reader.result as string);
+        setImagePreviews((prev) => [...prev, reader.result as string].slice(0, 8));
       };
       reader.readAsDataURL(file);
-    }
+    });
+  };
+
+  const removeImageAt = (idx: number) => {
+    setImageFiles((prev) => prev.filter((_, i) => i !== idx));
+    setImagePreviews((prev) => prev.filter((_, i) => i !== idx));
   };
 
   const handleSubmit = async () => {
@@ -53,6 +129,17 @@ export default function BecomeSellerPage() {
       return;
     }
 
+    if (!hasChecked) {
+      toast({ variant: 'destructive', title: 'Patientez', description: 'Chargement de votre boutique…' });
+      return;
+    }
+
+    if (!store) {
+      toast({ variant: 'destructive', title: 'Boutique requise', description: 'Créez d’abord une boutique Nkampa.' });
+      router.push('/dashboard/nkampa/store');
+      return;
+    }
+
     if (!productName || !price || !location) {
       toast({
         variant: 'destructive',
@@ -62,16 +149,20 @@ export default function BecomeSellerPage() {
       return;
     }
 
+    if (store.sellType === 'product' && subcategoryOptions.length > 0 && !subcategory) {
+      toast({ variant: 'destructive', title: 'Sous-catégorie requise', description: 'Choisissez une sous-catégorie.' });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      let imageUrl = 'https://picsum.photos/seed/default/300/300';
-
-      // Upload image vers Cloudinary si fournie
-      if (imageFile) {
-        const uploadResult = await uploadToCloudinary(imageFile, 'image');
-        imageUrl = uploadResult.secureUrl;
+      const uploadedUrls: string[] = [];
+      for (const f of imageFiles) {
+        const r = await uploadToCloudinary(f, 'image');
+        uploadedUrls.push(r.secureUrl);
       }
+      const imageUrl = uploadedUrls[0] || 'https://picsum.photos/seed/default/300/300';
 
       // Ajouter le produit
       await addProduct({
@@ -79,12 +170,18 @@ export default function BecomeSellerPage() {
         price: parseFloat(price),
         currency,
         image: imageUrl,
+        images: uploadedUrls,
         moq: moq || undefined,
-        location,
+        location: location || store.location || '',
         category,
         description: description || undefined,
-        sellerName: user.displayName || user.email || 'Vendeur',
+        sellerName: store.storeName || user.displayName || user.email || 'Vendeur',
         sellerEmail: user.email || undefined,
+        storeId: store.id,
+        storeSlug: store.slug,
+        storeCategory: store.category,
+        storeSubcategory: subcategory || '',
+        listingType: store.sellType,
       });
 
       toast({
@@ -94,7 +191,7 @@ export default function BecomeSellerPage() {
       });
 
       // Rediriger vers la page principale
-      router.push('/dashboard/nkampa');
+      router.push('/dashboard/nkampa/store/dashboard');
     } catch (error: any) {
       console.error('Erreur ajout produit:', error);
       toast({
@@ -258,7 +355,16 @@ export default function BecomeSellerPage() {
           >
             <ArrowLeft className="w-6 h-6" />
           </Button>
-          <h1 className="text-2xl font-bold text-white">Ajouter un produit</h1>
+          <div className="min-w-0">
+            <h1 className="text-2xl font-bold text-white">
+              {store?.sellType === 'service' ? 'Ajouter un service' : 'Ajouter un produit'}
+            </h1>
+            {store ? (
+              <p className="text-xs text-white/80 truncate">
+                {store.storeName} • {store.sellType === 'service' ? 'Services' : 'Produits'} • {store.category}
+              </p>
+            ) : null}
+          </div>
         </div>
       </div>
 
@@ -266,53 +372,50 @@ export default function BecomeSellerPage() {
       <div className="container mx-auto max-w-2xl p-6">
         <Card>
           <CardContent className="p-6 space-y-6">
-            {/* Image */}
+            {/* Images */}
             <div>
               <label className="block text-sm font-semibold mb-2">
-                Photo du produit *
+                Photos {store?.sellType === 'service' ? 'du service' : 'du produit'}
               </label>
-              <div className="flex flex-col items-center gap-4">
-                {imagePreview ? (
-                  <div className="relative w-full h-64 rounded-lg overflow-hidden border-2 border-primary/20">
-                    <img
-                      src={imagePreview}
-                      alt="Preview"
-                      className="w-full h-full object-cover"
-                    />
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      className="absolute top-2 right-2"
-                      onClick={() => {
-                        setImageFile(null);
-                        setImagePreview('');
-                      }}
-                    >
-                      Supprimer
-                    </Button>
+              <div className="space-y-3">
+                <label className="w-full border-2 border-dashed border-primary/30 rounded-2xl flex items-center justify-center cursor-pointer hover:border-primary/50 transition-colors p-6 bg-white">
+                  <div className="text-center space-y-2">
+                    <div className="mx-auto h-12 w-12 rounded-2xl bg-primary/10 grid place-items-center">
+                      <Images className="w-6 h-6 text-primary" />
+                    </div>
+                    <div className="text-sm font-semibold text-gray-800">Ajouter des photos</div>
+                    <div className="text-xs text-gray-600">Jusqu’à 8 images (Cloudinary)</div>
                   </div>
-                ) : (
-                  <label className="w-full h-64 border-2 border-dashed border-primary/30 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors">
-                    <Upload className="w-12 h-12 text-primary/50 mb-2" />
-                    <span className="text-sm text-gray-600">Cliquez pour ajouter une photo</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      className="hidden"
-                    />
-                  </label>
-                )}
+                  <input type="file" accept="image/*" multiple onChange={handleImagesChange} className="hidden" />
+                </label>
+
+                {imagePreviews.length > 0 ? (
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                    {imagePreviews.map((src, idx) => (
+                      <div key={`${idx}-${src.slice(0, 20)}`} className="relative rounded-2xl overflow-hidden border border-primary/10 bg-gray-100 aspect-square">
+                        <img src={src} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => removeImageAt(idx)}
+                          className="absolute top-2 right-2 h-7 w-7 rounded-full bg-black/60 text-white grid place-items-center hover:bg-black/70"
+                          aria-label="Supprimer"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
               </div>
             </div>
 
             {/* Nom */}
             <div>
               <label className="block text-sm font-semibold mb-2">
-                Nom du produit *
+                Nom {store?.sellType === 'service' ? 'du service' : 'du produit'} *
               </label>
               <Input
-                placeholder="Ex: Sac de riz 25kg"
+                placeholder={store?.sellType === 'service' ? "Ex: Réparation smartphone" : "Ex: Sac de riz 25kg"}
                 value={productName}
                 onChange={(e) => setProductName(e.target.value)}
               />
@@ -345,6 +448,49 @@ export default function BecomeSellerPage() {
                 </select>
               </div>
             </div>
+
+            {/* Catégorie boutique (fixe) + Sous-catégorie */}
+            {store ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold mb-2">Catégorie boutique</label>
+                  <div className="h-10 px-3 rounded-md border border-input bg-background flex items-center text-sm">
+                    {store.category}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-2">
+                    Sous-catégorie {store.sellType === 'service' ? '(optionnel)' : '*'}
+                  </label>
+                  <select
+                    value={subcategory}
+                    onChange={(e) => setSubcategory(e.target.value)}
+                    className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                    disabled={subcategoryOptions.length === 0}
+                  >
+                    <option value="">{subcategoryOptions.length ? 'Choisir…' : '—'}</option>
+                    {subcategoryOptions.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            ) : (
+              <Card className="border-amber-200 bg-amber-50">
+                <CardContent className="p-4 flex items-start gap-3">
+                  <Briefcase className="h-5 w-5 text-amber-700 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-semibold text-amber-900">Boutique requise</p>
+                    <p className="text-xs text-amber-800 mt-1">Créez votre boutique Nkampa pour personnaliser l’ajout de produits.</p>
+                    <Button size="sm" className="mt-3 bg-primary hover:bg-primary/90" onClick={() => router.push('/dashboard/nkampa/store')}>
+                      Créer une boutique
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Catégorie */}
             <div>

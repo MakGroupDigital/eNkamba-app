@@ -1,11 +1,10 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { doc, getDoc } from 'firebase/firestore';
+import { collection, doc, documentId, getDoc, getDocs, query, updateDoc, serverTimestamp, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card } from '@/components/ui/card';
 import { useFirestoreConversations } from '@/hooks/useFirestoreConversations';
@@ -51,7 +50,10 @@ export default function ConversationClient() {
     const [isGroup, setIsGroup] = useState(false);
     const [editingMessage, setEditingMessage] = useState<any>(null);
     const [showMessageMenu, setShowMessageMenu] = useState<string | null>(null);
+    const [senderAvatars, setSenderAvatars] = useState<Record<string, string>>({});
+    const [myAvatar, setMyAvatar] = useState<string>('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const textAreaRef = useRef<HTMLTextAreaElement | null>(null);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const streamRef = useRef<MediaStream | null>(null);
     const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -99,11 +101,28 @@ export default function ConversationClient() {
                         const otherParticipantIdx = participants.findIndex((id: string) => id !== currentUser.uid);
                         
                         if (otherParticipantIdx !== -1 && participantNames[otherParticipantIdx]) {
+                            const otherUid = participants[otherParticipantIdx];
+                            let avatarUrl = '';
+                            try {
+                                const uSnap = await getDoc(doc(db, 'users', otherUid));
+                                const uData: any = uSnap.exists() ? uSnap.data() : {};
+                                avatarUrl =
+                                    uData?.profileImage ||
+                                    uData?.photoURL ||
+                                    uData?.avatarUrl ||
+                                    uData?.profilePhotoUrl ||
+                                    uData?.kyc?.profileImage ||
+                                    '';
+                            } catch (e) {
+                                console.warn('Chargement avatar contact (non critique):', e);
+                            }
+
                             const contactData = {
-                                id: participants[otherParticipantIdx],
+                                id: otherUid,
                                 name: participantNames[otherParticipantIdx],
                                 phoneNumber: convData.phoneNumber || '',
                                 email: convData.email || '',
+                                avatar: avatarUrl || undefined,
                                 isGroup: false,
                             };
                             setContact(contactData);
@@ -117,6 +136,28 @@ export default function ConversationClient() {
 
         loadConversationData();
     }, [conversationId, currentUser]);
+
+    useEffect(() => {
+        const loadMyAvatar = async () => {
+            if (!currentUser?.uid) return;
+            try {
+                const uSnap = await getDoc(doc(db, 'users', currentUser.uid));
+                const uData: any = uSnap.exists() ? uSnap.data() : {};
+                const avatarUrl =
+                    uData?.profileImage ||
+                    uData?.photoURL ||
+                    uData?.avatarUrl ||
+                    uData?.profilePhotoUrl ||
+                    uData?.kyc?.profileImage ||
+                    currentUser.photoURL ||
+                    '';
+                setMyAvatar(avatarUrl ? String(avatarUrl) : '');
+            } catch (e) {
+                setMyAvatar(currentUser.photoURL || '');
+            }
+        };
+        loadMyAvatar();
+    }, [currentUser?.uid, currentUser?.photoURL]);
 
     // Charger les messages
     useEffect(() => {
@@ -139,6 +180,24 @@ export default function ConversationClient() {
             }
         };
     }, [conversationId, loadMessages]);
+
+    // Marquer comme lu uniquement quand l'utilisateur ouvre la conversation
+    useEffect(() => {
+        if (!conversationId || !currentUser?.uid) return;
+        const run = async () => {
+            try {
+                const convRef = doc(db, 'conversations', conversationId);
+                await updateDoc(convRef, {
+                    [`unreadCountByUid.${currentUser.uid}`]: 0,
+                    unreadCount: 0,
+                    [`lastReadAtByUid.${currentUser.uid}`]: serverTimestamp(),
+                } as any);
+            } catch (e) {
+                console.warn('Marquage lu (non critique):', e);
+            }
+        };
+        run();
+    }, [conversationId, currentUser?.uid]);
 
     // Update video preview stream when recording
     useEffect(() => {
@@ -166,6 +225,80 @@ export default function ConversationClient() {
         }, 50);
     }, [messages]);
 
+    // Auto-resize textarea (wrap + grows up to a max height)
+    useEffect(() => {
+        const el = textAreaRef.current;
+        if (!el) return;
+        el.style.height = '0px';
+        const next = Math.min(el.scrollHeight, 140);
+        el.style.height = `${Math.max(next, 44)}px`;
+    }, [inputValue]);
+
+    const isGroupConversation = useMemo(() => Boolean(isGroup), [isGroup]);
+
+    // Charger les avatars des expéditeurs (groupe + fallback 1-1)
+    useEffect(() => {
+        if (!currentUser?.uid) return;
+        if (!messages.length) return;
+        if (!isGroupConversation) return;
+
+        const needed = new Set<string>();
+        for (const m of messages) {
+            const sid = m?.senderId;
+            if (!sid || sid === currentUser.uid) continue;
+            if (m?.senderPhoto) continue;
+            if (senderAvatars[sid]) continue;
+            needed.add(sid);
+        }
+        const ids = Array.from(needed);
+        if (!ids.length) return;
+
+        (async () => {
+            try {
+                const chunks: string[][] = [];
+                for (let i = 0; i < ids.length; i += 10) chunks.push(ids.slice(i, i + 10));
+                const next: Record<string, string> = {};
+                for (const chunk of chunks) {
+                    const usersQ = query(collection(db, 'users'), where(documentId(), 'in', chunk));
+                    const usersSnap = await getDocs(usersQ);
+                    usersSnap.forEach((u) => {
+                        const ud: any = u.data() || {};
+                        const avatarUrl =
+                            ud.profileImage ||
+                            ud.photoURL ||
+                            ud.avatarUrl ||
+                            ud.profilePhotoUrl ||
+                            ud.kyc?.profileImage ||
+                            '';
+                        if (avatarUrl) next[u.id] = String(avatarUrl);
+                    });
+                }
+                if (Object.keys(next).length) {
+                    setSenderAvatars((prev) => ({ ...prev, ...next }));
+                }
+            } catch (e) {
+                console.warn('Chargement avatars groupe (non critique):', e);
+            }
+        })();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [messages, isGroupConversation, currentUser?.uid]);
+
+    const formatCallDuration = (seconds: number) => {
+        const s = Math.max(0, Math.floor(seconds || 0));
+        const mins = Math.floor(s / 60).toString().padStart(2, '0');
+        const secs = (s % 60).toString().padStart(2, '0');
+        return `${mins}:${secs}`;
+    };
+
+    const formatCallTime = (ms: number | null | undefined) => {
+        if (!ms || typeof ms !== 'number') return null;
+        try {
+            return new Date(ms).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        } catch {
+            return null;
+        }
+    };
+
     // Envoyer un message
     const handleSendMessage = async () => {
         if (!inputValue.trim()) return;
@@ -181,17 +314,19 @@ export default function ConversationClient() {
                 setEditingMessage(null);
             } else {
                 // Attacher le message original complet si on répond à un message
-                const metadata = replyingTo ? {
-                    replyTo: replyingTo.id,
-                    repliedMessage: {
-                        id: replyingTo.id,
-                        text: replyingTo.text,
-                        senderName: replyingTo.senderName,
-                        senderId: replyingTo.senderId,
-                        messageType: replyingTo.messageType
+                const metadata = replyingTo
+                    ? {
+                        replyTo: replyingTo.id,
+                        repliedMessage: {
+                            id: replyingTo.id,
+                            text: replyingTo.text,
+                            senderName: replyingTo.senderName,
+                            senderId: replyingTo.senderId,
+                            messageType: replyingTo.messageType,
+                        },
                     }
-                } : undefined;
-                
+                    : undefined;
+
                 await sendMessage(conversationId, messageText, 'text', metadata);
                 setReplyingTo(null);
             }
@@ -553,7 +688,7 @@ export default function ConversationClient() {
     };
 
     return (
-        <div className="flex h-screen flex-col bg-background overflow-hidden">
+        <div className="flex h-full flex-col bg-background overflow-hidden">
             {/* Header */}
             <header className="sticky top-0 z-10 flex h-auto flex-col bg-gradient-to-r from-primary via-primary to-green-800 px-4 py-3 shadow-lg flex-shrink-0">
                 <div className="flex items-center gap-4 mb-3">
@@ -564,6 +699,9 @@ export default function ConversationClient() {
                     </Link>
                     <div className="flex items-center gap-3 flex-1">
                         <Avatar className="h-10 w-10 border-2 border-white/20">
+                            {!isGroup && contact?.avatar && (
+                                <AvatarImage src={contact.avatar} alt={contact?.name || 'Contact'} className="object-cover" />
+                            )}
                             <AvatarFallback className="bg-white/20 text-white">
                                 {isGroup ? (
                                     <Users className="h-5 w-5" />
@@ -598,12 +736,12 @@ export default function ConversationClient() {
                     {/* Call Buttons - Only for individual conversations */}
                     {!isGroup && (
                         <>
-                            <Link href={`/dashboard/miyiki-chat/call/${conversationId}`}>
+                            <Link href={`/dashboard/miyiki-chat/audiocall/${conversationId}`}>
                                 <Button size="icon" variant="ghost" className="text-white hover:bg-white/20" title="Appel audio">
                                     <Phone className="h-5 w-5" />
                                 </Button>
                             </Link>
-                            <Link href={`/dashboard/miyiki-chat/videocall/${conversationId}`}>
+                            <Link href={`/dashboard/miyiki-chat/call/${conversationId}`}>
                                 <Button size="icon" variant="ghost" className="text-white hover:bg-white/20" title="Appel vidéo">
                                     <Video className="h-5 w-5" />
                                 </Button>
@@ -663,9 +801,13 @@ export default function ConversationClient() {
                         return (
                             <div
                                 key={message.id}
-                                className={`flex ${isOwn ? 'justify-end' : 'justify-start'} group relative`}
+                                className={`w-full flex ${isOwn ? 'justify-end' : 'justify-start'}`}
                             >
-                                <div className="flex flex-col gap-1 w-full max-w-md relative">
+                                <div
+                                    className={`group relative flex flex-col gap-1 ${
+                                        isOwn ? 'items-end' : 'items-start'
+                                    } w-full max-w-[82%] sm:max-w-[74%]`}
+                                >
                                     {/* Nom de l'expéditeur pour les groupes (sauf pour ses propres messages) */}
                                     {isGroup && !isOwn && message.senderName && (
                                         <p className="text-xs font-semibold text-primary px-3">
@@ -693,12 +835,12 @@ export default function ConversationClient() {
                                         );
                                     })()}
                                     
-                                    <div className="relative flex items-start gap-2">
+                                    <div className={`relative flex items-end gap-2 ${isOwn ? 'justify-end' : 'justify-start'} w-full`}>
                                         {/* Avatar for non-own messages */}
                                         {!isOwn && (
                                             <Avatar className="h-8 w-8 flex-shrink-0 mt-1">
                                                 <AvatarImage 
-                                                    src={message.senderPhoto || undefined}
+                                                    src={message.senderPhoto || senderAvatars[message.senderId] || (!isGroup ? contact?.avatar : undefined) || undefined}
                                                     alt={message.senderName}
                                                     className="object-cover"
                                                 />
@@ -708,7 +850,7 @@ export default function ConversationClient() {
                                             </Avatar>
                                         )}
                                         <Card
-                                            className={`px-4 py-2 rounded-2xl cursor-pointer hover:shadow-md transition-shadow flex-1 ${
+                                            className={`px-4 py-2 rounded-2xl cursor-pointer hover:shadow-md transition-shadow w-fit max-w-full ${
                                                 isOwn
                                                     ? 'bg-primary text-white rounded-br-none'
                                                     : 'bg-muted text-foreground rounded-bl-none'
@@ -890,6 +1032,82 @@ export default function ConversationClient() {
                                                 await rejectTransfer(message.id, conversationId);
                                             }}
                                         />
+                                    ) : message.messageType === 'call' && message.metadata?.callType ? (
+                                        <div className={`rounded-xl border px-4 py-3 ${
+                                            isOwn ? 'border-white/20 bg-white/10' : 'border-border bg-background'
+                                        }`}>
+                                            <div className="flex items-center gap-3">
+                                                <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
+                                                    isOwn ? 'bg-white/15 text-white' : 'bg-primary/10 text-primary'
+                                                }`}>
+                                                    {message.metadata.callType === 'video' ? <Video className="h-5 w-5" /> : <Phone className="h-5 w-5" />}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className={`text-sm font-semibold ${isOwn ? 'text-white' : 'text-foreground'}`}>
+                                                        {message.metadata.callType === 'video' ? 'Appel vidéo' : 'Appel audio'}
+                                                    </p>
+                                                    <p className={`text-xs ${isOwn ? 'text-white/75' : 'text-muted-foreground'}`}>
+                                                        {message.metadata.status === 'no_answer'
+                                                            ? 'Sans réponse'
+                                                            : message.metadata.status === 'missed'
+                                                                ? 'Appel manqué'
+                                                                : message.metadata.durationSec
+                                                                    ? `Durée: ${formatCallDuration(message.metadata.durationSec)}`
+                                                                    : 'Appel terminé'}
+                                                    </p>
+                                                    <div className={`mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-[11px] ${
+                                                        isOwn ? 'text-white/70' : 'text-muted-foreground'
+                                                    }`}>
+                                                        {(() => {
+                                                            const received = formatCallTime(message.metadata.receivedAtMs);
+                                                            const accepted = formatCallTime(message.metadata.acceptedAtMs);
+                                                            const ended = formatCallTime(message.metadata.endedAtMs);
+                                                            const created = formatCallTime(message.metadata.createdAtMs);
+                                                            const ringSec =
+                                                                message.metadata.acceptedAtMs && message.metadata.receivedAtMs
+                                                                    ? Math.max(0, Math.round((message.metadata.acceptedAtMs - message.metadata.receivedAtMs) / 1000))
+                                                                    : message.metadata.endedAtMs && message.metadata.createdAtMs
+                                                                        ? Math.max(0, Math.round((message.metadata.endedAtMs - message.metadata.createdAtMs) / 1000))
+                                                                        : null;
+                                                            return (
+                                                                <>
+                                                                    {created && (
+                                                                        <div className="flex items-center justify-between">
+                                                                            <span className="opacity-80">Début</span>
+                                                                            <span className="font-medium">{created}</span>
+                                                                        </div>
+                                                                    )}
+                                                                    {received && (
+                                                                        <div className="flex items-center justify-between">
+                                                                            <span className="opacity-80">Reçu</span>
+                                                                            <span className="font-medium">{received}</span>
+                                                                        </div>
+                                                                    )}
+                                                                    {accepted && (
+                                                                        <div className="flex items-center justify-between">
+                                                                            <span className="opacity-80">Répondu</span>
+                                                                            <span className="font-medium">{accepted}</span>
+                                                                        </div>
+                                                                    )}
+                                                                    {ended && (
+                                                                        <div className="flex items-center justify-between">
+                                                                            <span className="opacity-80">Fin</span>
+                                                                            <span className="font-medium">{ended}</span>
+                                                                        </div>
+                                                                    )}
+                                                                    {ringSec !== null && (
+                                                                        <div className="flex items-center justify-between col-span-2">
+                                                                            <span className="opacity-80">Sonnerie</span>
+                                                                            <span className="font-medium">{ringSec}s</span>
+                                                                        </div>
+                                                                    )}
+                                                                </>
+                                                            );
+                                                        })()}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     ) : (
                                         <p className="text-sm">{message.text}</p>
                                     )}
@@ -945,6 +1163,20 @@ export default function ConversationClient() {
                                             )}
                                         </div>
                                     )}
+
+                                    {/* Avatar for own messages */}
+                                    {isOwn && (
+                                        <Avatar className="h-8 w-8 flex-shrink-0 mt-1">
+                                            <AvatarImage
+                                                src={message.senderPhoto || myAvatar || undefined}
+                                                alt={message.senderName || 'Moi'}
+                                                className="object-cover"
+                                            />
+                                            <AvatarFallback className="bg-white/20 text-white text-xs font-bold">
+                                                {message.senderName?.charAt(0)?.toUpperCase() || 'U'}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                    )}
                                     </div>
                                     
                                     {/* Reply Button */}
@@ -954,7 +1186,7 @@ export default function ConversationClient() {
                                             variant="ghost"
                                             className={`opacity-0 group-hover:opacity-100 transition-opacity text-xs h-6 ${
                                                 isOwn ? 'text-primary' : 'text-muted-foreground'
-                                            }`}
+                                            } ${isOwn ? 'self-end' : 'self-start'}`}
                                             onClick={() => setReplyingTo(message)}
                                         >
                                             Répondre
@@ -969,8 +1201,8 @@ export default function ConversationClient() {
             </main>
 
             {/* Fixed Input Footer */}
-            <footer className="flex-shrink-0 border-t bg-background space-y-3 z-20 shadow-lg flex flex-col max-h-[30vh] overflow-y-auto">
-                <div className="p-4 space-y-3">
+            <footer className="flex-shrink-0 border-t bg-background z-20 shadow-lg flex flex-col max-h-[30vh] overflow-y-auto mb-[calc(80px+env(safe-area-inset-bottom))]">
+                <div className="px-4 pt-3 pb-2 space-y-3">
                 
                 {/* Edit Preview */}
                 {editingMessage && (
@@ -1152,19 +1384,24 @@ export default function ConversationClient() {
                             {showMoreActions ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
                         </Button>
 
-                        {/* Text Input */}
-                        <Input
+                        {/* Text Input (auto-wrap + auto-grow) */}
+                        <textarea
+                            ref={textAreaRef}
                             placeholder="Écrivez votre message..."
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value)}
-                            onKeyPress={(e) => {
+                            onKeyDown={(e) => {
                                 if (e.key === 'Enter' && !e.shiftKey) {
                                     e.preventDefault();
                                     handleSendMessage();
                                 }
                             }}
                             disabled={isSending || isRecording}
-                            className="rounded-full"
+                            spellCheck={true}
+                            autoCorrect="on"
+                            autoCapitalize="sentences"
+                            rows={1}
+                            className="flex-1 min-h-[44px] max-h-[140px] w-full resize-none rounded-2xl border border-input bg-background px-4 py-3 text-sm leading-5 shadow-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         />
 
                         {/* Voice Message Button */}

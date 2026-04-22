@@ -10,6 +10,7 @@ export interface EcommerceProduct {
   price: number;
   currency: string;
   image: string;
+  images?: string[];
   moq?: string;
   location: string;
   rating?: number;
@@ -18,6 +19,11 @@ export interface EcommerceProduct {
   sellerName: string;
   sellerEmail?: string;
   category: 'B2B' | 'B2C';
+  storeId?: string;
+  storeSlug?: string;
+  storeCategory?: string;
+  storeSubcategory?: string;
+  listingType?: 'product' | 'service';
   description?: string;
   createdAt: any;
 }

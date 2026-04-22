@@ -1,10 +1,12 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   collection,
   query,
   where,
   onSnapshot,
   Timestamp,
+  getDocs,
+  documentId,
 } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 
@@ -20,12 +22,40 @@ export interface Conversation {
   participants?: string[];
   participantNames?: string[];
   lastMessageTime?: Timestamp;
+  otherUserId?: string;
+  lastMessageSenderId?: string;
+  lastMessageReadByOther?: boolean;
 }
 
 export function useConversations() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [userAvatars, setUserAvatars] = useState<Record<string, string>>({});
+  const [userNames, setUserNames] = useState<Record<string, string>>({});
+  const userAvatarsRef = useRef<Record<string, string>>({});
+
+  useEffect(() => {
+    userAvatarsRef.current = userAvatars;
+  }, [userAvatars]);
+
+  useEffect(() => {
+    if (!Object.keys(userAvatars).length && !Object.keys(userNames).length) return;
+    setConversations((prev) => {
+      let changed = false;
+      const next = prev.map((c) => {
+        if (c.isGroup || !c.otherUserId) return c;
+        const avatar = c.avatar || userAvatars[c.otherUserId];
+        const name = userNames[c.otherUserId] || c.name;
+        if (avatar !== c.avatar || name !== c.name) {
+          changed = true;
+          return { ...c, avatar, name };
+        }
+        return c;
+      });
+      return changed ? next : prev;
+    });
+  }, [userAvatars, userNames]);
 
   // Charger les conversations depuis Firebase
   useEffect(() => {
@@ -47,6 +77,7 @@ export function useConversations() {
 
         const unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
           const convos: Conversation[] = [];
+          const otherUserIds = new Set<string>();
           
           snapshot.forEach((doc) => {
             const data = doc.data();
@@ -64,9 +95,13 @@ export function useConversations() {
             } else {
               // Pour les conversations 1-1, trouver l'autre participant
               const otherParticipantIdx = data.participants?.findIndex((id: string) => id !== currentUser.uid);
-              displayName = otherParticipantIdx !== -1 && otherParticipantIdx !== undefined
-                ? data.participantNames?.[otherParticipantIdx] || 'Utilisateur'
-                : 'Utilisateur';
+              const otherUid =
+                otherParticipantIdx !== -1 && otherParticipantIdx !== undefined ? data.participants?.[otherParticipantIdx] : undefined;
+              if (otherUid) otherUserIds.add(otherUid);
+              displayName =
+                otherParticipantIdx !== -1 && otherParticipantIdx !== undefined
+                  ? data.participantNames?.[otherParticipantIdx] || 'Utilisateur'
+                  : 'Utilisateur';
             }
 
             // Formater le temps
@@ -89,13 +124,42 @@ export function useConversations() {
               name: displayName,
               lastMessage: data.lastMessage || 'Aucun message',
               time: timeStr,
-              avatar: data.avatar || undefined,
-              unread: data.unreadCount || 0,
+              avatar: (() => {
+                if (data.avatar) return data.avatar as string;
+                return undefined;
+              })(),
+              unread: (() => {
+                const byUid = (data.unreadCountByUid || {}) as Record<string, number>;
+                const val = byUid[currentUser.uid];
+                if (typeof val === 'number') return val;
+                return data.unreadCount || 0;
+              })(),
               isGroup: isGroup,
               href: `/dashboard/miyiki-chat/${doc.id}`,
               participants: data.participants,
               participantNames: data.participantNames,
               lastMessageTime: data.lastMessageTime,
+              otherUserId: (() => {
+                if (isGroup) return undefined;
+                const otherParticipantIdx = data.participants?.findIndex((id: string) => id !== currentUser.uid);
+                const otherUid =
+                  otherParticipantIdx !== -1 && otherParticipantIdx !== undefined ? data.participants?.[otherParticipantIdx] : undefined;
+                return otherUid || undefined;
+              })(),
+              lastMessageSenderId: data.lastMessageSenderId || undefined,
+              lastMessageReadByOther: (() => {
+                if (isGroup) return false;
+                const otherParticipantIdx = data.participants?.findIndex((id: string) => id !== currentUser.uid);
+                const otherUid =
+                  otherParticipantIdx !== -1 && otherParticipantIdx !== undefined ? data.participants?.[otherParticipantIdx] : undefined;
+                if (!otherUid) return false;
+                if (data.lastMessageSenderId !== currentUser.uid) return false;
+                const lastRead = data.lastReadAtByUid?.[otherUid];
+                const lastMsg = data.lastMessageTime;
+                const lastReadMs = lastRead?.toMillis?.() || 0;
+                const lastMsgMs = lastMsg?.toMillis?.() || 0;
+                return lastReadMs >= lastMsgMs && lastMsgMs > 0;
+              })(),
             });
           });
 
@@ -108,6 +172,46 @@ export function useConversations() {
 
           setConversations(convos);
           setIsLoading(false);
+
+          // Charger en batch les photos/noms des autres utilisateurs (modèle B)
+          const ids = Array.from(otherUserIds).filter((id) => id && !userAvatarsRef.current[id]);
+          if (ids.length) {
+            (async () => {
+              try {
+                const chunks: string[][] = [];
+                for (let i = 0; i < ids.length; i += 10) chunks.push(ids.slice(i, i + 10));
+
+                const nextAvatars: Record<string, string> = {};
+                const nextNames: Record<string, string> = {};
+                for (const chunk of chunks) {
+                  const usersQ = query(collection(db, 'users'), where(documentId(), 'in', chunk));
+                  const usersSnap = await getDocs(usersQ);
+                  usersSnap.forEach((u) => {
+                    const ud: any = u.data() || {};
+                    const avatarUrl =
+                      ud.profileImage ||
+                      ud.photoURL ||
+                      ud.avatarUrl ||
+                      ud.profilePhotoUrl ||
+                      ud.kyc?.profileImage ||
+                      '';
+                    const name = ud.fullName || ud.displayName || ud.name || ud.email || '';
+                    if (avatarUrl) nextAvatars[u.id] = String(avatarUrl);
+                    if (name) nextNames[u.id] = String(name);
+                  });
+                }
+
+                if (Object.keys(nextAvatars).length) {
+                  setUserAvatars((prev) => ({ ...prev, ...nextAvatars }));
+                }
+                if (Object.keys(nextNames).length) {
+                  setUserNames((prev) => ({ ...prev, ...nextNames }));
+                }
+              } catch (e) {
+                console.error('Erreur chargement profils chat:', e);
+              }
+            })();
+          }
         });
 
         return () => unsubscribeSnapshot();

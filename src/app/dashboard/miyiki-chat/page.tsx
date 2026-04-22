@@ -40,7 +40,7 @@ import {
   ChatFilterReadIcon,
   ChatFilterGroupsIcon,
 } from "@/components/icons/chat-icons";
-import { MessageSquare, CheckCheck, Circle, Users, Plus, TrendingUp, Settings, Edit, Zap, MapPin, ShoppingBag, Video, Mic, Image as ImageIcon, Eye, EyeOff } from 'lucide-react';
+import { MessageSquare, Check, CheckCheck, Circle, Users, Plus, TrendingUp, Settings, Edit, Zap, MapPin, ShoppingBag, Video, Mic, Image as ImageIcon, Eye, EyeOff } from 'lucide-react';
 import { CreateGroupDialog } from '@/components/create-group-dialog';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -229,10 +229,22 @@ export default function MiyikiChatPage() {
                         {convo.unread}
                       </Badge>
                     ) : (
-                      <div className="flex items-center gap-1 text-xs text-green-600">
-                        <CheckCheck size={14} />
-                        <span className="font-medium">Lu</span>
-                      </div>
+                      (() => {
+                        const currentUid = profile?.uid || (typeof window !== 'undefined' ? window.localStorage.getItem('uid') : null);
+                        const sentByMe = Boolean(currentUid && convo.lastMessageSenderId === currentUid);
+                        if (!sentByMe) return null;
+                        return convo.lastMessageReadByOther ? (
+                          <div className="flex items-center gap-1 text-xs text-green-600">
+                            <CheckCheck size={14} />
+                            <span className="font-medium">Lu</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <Check size={14} />
+                            <span className="font-medium">Envoyé</span>
+                          </div>
+                        );
+                      })()
                     )}
                   </div>
                 </div>

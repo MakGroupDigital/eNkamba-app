@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { Search, Mic, Phone, X, Loader2, Package, Store, Heart, User, ArrowLeft } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { Search, Mic, X, Loader2, ArrowLeft, ShoppingCart } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -32,6 +32,14 @@ import { useToast } from '@/hooks/use-toast';
 import { useNkampaCart } from '@/hooks/useNkampaCart';
 import { useWalletTransactions } from '@/hooks/useWalletTransactions';
 import { FloatingCart } from '@/components/nkampa/FloatingCart';
+import {
+  NkampaNavFavoritesIcon,
+  NkampaNavOrdersIcon,
+  NkampaNavSellerIcon,
+  NkampaNavShopIcon,
+} from '@/components/icons/nkampa-nav-icons';
+import { useNkampaStore } from '@/hooks/useNkampaStore';
+import { useNkampaStores } from '@/hooks/useNkampaStores';
 
 // Catégories principales avec icônes modernes
 const MAIN_CATEGORIES = [
@@ -46,7 +54,9 @@ const MAIN_CATEGORIES = [
   { id: 'tracking', label: 'Suivi colis', icon: TrackingIcon, href: '/dashboard/package-tracking' },
 ];
 
-// Sous-catégories de produits
+type SubcategoryOption = { id: string; label: string; icon: string };
+
+// Sous-catégories Produit
 const PRODUCT_SUBCATEGORIES = [
   { id: 'alimentaire', label: 'Alimentaire', icon: '🍎' },
   { id: 'bio', label: 'Bio', icon: '🌿' },
@@ -59,249 +69,68 @@ const PRODUCT_SUBCATEGORIES = [
   { id: 'sports', label: 'Sports & Loisirs', icon: '⚽' },
 ];
 
-// Données des fournisseurs/vendeurs
-const ALL_SUPPLIERS = [
-  {
-    id: 'seller-1',
-    name: 'Fournisseur Premium',
-    type: 'supplier',
-    location: 'Kinshasa',
-    rating: 4.6,
-    reviews: 23,
-    phone: '+243 XXX XXX XXX',
-    image: 'https://picsum.photos/seed/seller1/300/300',
-    category: 'alimentaire',
-  },
-  {
-    id: 'seller-2',
-    name: 'Grossiste Goma',
-    type: 'wholesaler',
-    location: 'Goma',
-    rating: 4.7,
-    reviews: 34,
-    phone: '+243 XXX XXX XXX',
-    image: 'https://picsum.photos/seed/seller2/300/300',
-    category: 'alimentaire',
-  },
-  {
-    id: 'seller-3',
-    name: 'Producteur Bio Bukavu',
-    type: 'producer',
-    location: 'Bukavu',
-    rating: 4.9,
-    reviews: 45,
-    phone: '+243 XXX XXX XXX',
-    image: 'https://picsum.photos/seed/seller3/300/300',
-    category: 'bio',
-  },
-  {
-    id: 'seller-4',
-    name: 'ElectroShop',
-    type: 'retailer',
-    location: 'Kinshasa',
-    rating: 4.8,
-    reviews: 45,
-    phone: '+243 XXX XXX XXX',
-    image: 'https://picsum.photos/seed/seller4/300/300',
-    category: 'tech',
-  },
-  {
-    id: 'seller-5',
-    name: 'TechStore',
-    type: 'retailer',
-    location: 'Kinshasa',
-    rating: 4.5,
-    reviews: 28,
-    phone: '+243 XXX XXX XXX',
-    image: 'https://picsum.photos/seed/seller5/300/300',
-    category: 'tech',
-  },
-  {
-    id: 'seller-6',
-    name: 'Fashion Plus',
-    type: 'retailer',
-    location: 'Kinshasa',
-    rating: 4.7,
-    reviews: 32,
-    phone: '+243 XXX XXX XXX',
-    image: 'https://picsum.photos/seed/seller6/300/300',
-    category: 'mode',
-  },
-  {
-    id: 'seller-7',
-    name: 'AudioWorld',
-    type: 'retailer',
-    location: 'Kinshasa',
-    rating: 4.9,
-    reviews: 56,
-    phone: '+243 XXX XXX XXX',
-    image: 'https://picsum.photos/seed/seller7/300/300',
-    category: 'tech',
-  },
-  {
-    id: 'seller-8',
-    name: 'Digital Store',
-    type: 'digital',
-    location: 'En ligne',
-    rating: 4.8,
-    reviews: 67,
-    phone: '+243 XXX XXX XXX',
-    image: 'https://picsum.photos/seed/seller8/300/300',
-    category: 'services',
-  },
-  {
-    id: 'seller-9',
-    name: 'Tech Academy',
-    type: 'digital',
-    location: 'En ligne',
-    rating: 4.9,
-    reviews: 89,
-    phone: '+243 XXX XXX XXX',
-    image: 'https://picsum.photos/seed/seller9/300/300',
-    category: 'services',
-  },
+// Sous-catégories Service
+const SERVICE_SUBCATEGORIES: SubcategoryOption[] = [
+  { id: 'livraison', label: 'Livraison', icon: '🚚' },
+  { id: 'transport', label: 'Transport', icon: '🚌' },
+  { id: 'reparation', label: 'Réparation', icon: '🛠️' },
+  { id: 'installation', label: 'Installation', icon: '🧰' },
+  { id: 'menage', label: 'Ménage', icon: '🧹' },
+  { id: 'formation', label: 'Formation', icon: '🎓' },
+  { id: 'sante', label: 'Santé', icon: '🩺' },
+  { id: 'event', label: 'Événementiel', icon: '🎉' },
 ];
 
-// Données de démonstration avec types et sous-catégories
-const ALL_PRODUCTS = [
-  // Produits de Kasang Elektronique (seller-1)
-  {
-    id: 'prod-1',
-    name: 'iPhone 15 Pro Max',
-    price: 1299000,
-    currency: 'CDF',
-    image: 'https://picsum.photos/seed/iphone15/300/300',
-    location: 'Kinshasa',
-    type: 'product',
-    subcategory: 'tech',
-    sellerId: 'seller-1',
-    sellerName: 'Kasang Elektronique',
-    rating: 4.8,
-    reviews: 234,
-  },
-  {
-    id: 'prod-2',
-    name: 'Samsung Galaxy S24',
-    price: 999000,
-    currency: 'CDF',
-    image: 'https://picsum.photos/seed/samsung-s24/300/300',
-    location: 'Kinshasa',
-    type: 'product',
-    subcategory: 'tech',
-    sellerId: 'seller-1',
-    sellerName: 'Kasang Elektronique',
-    rating: 4.7,
-    reviews: 189,
-  },
-  {
-    id: 'prod-3',
-    name: 'MacBook Pro 16"',
-    price: 2499000,
-    currency: 'CDF',
-    image: 'https://picsum.photos/seed/macbook/300/300',
-    location: 'Kinshasa',
-    type: 'product',
-    subcategory: 'tech',
-    sellerId: 'seller-1',
-    sellerName: 'Kasang Elektronique',
-    rating: 4.9,
-    reviews: 156,
-  },
-  {
-    id: 'prod-4',
-    name: 'iPad Air',
-    price: 599000,
-    currency: 'CDF',
-    image: 'https://picsum.photos/seed/ipad/300/300',
-    location: 'Kinshasa',
-    type: 'product',
-    subcategory: 'tech',
-    sellerId: 'seller-1',
-    sellerName: 'Kasang Elektronique',
-    rating: 4.6,
-    reviews: 98,
-  },
-  // Autres produits (pour démonstration)
-  {
-    id: 'p-5',
-    name: 'Montre Connectée',
-    price: 150000,
-    currency: 'CDF',
-    image: 'https://picsum.photos/seed/watch/300/300',
-    location: 'Kinshasa',
-    type: 'product',
-    subcategory: 'tech',
-    sellerId: 'seller-5',
-    sellerName: 'TechStore',
-    rating: 4.5,
-    reviews: 28,
-  },
-  {
-    id: 'p-6',
-    name: 'Sac à Main Cuir',
-    price: 85000,
-    currency: 'CDF',
-    image: 'https://picsum.photos/seed/bag1/300/300',
-    location: 'Kinshasa',
-    type: 'product',
-    subcategory: 'mode',
-    sellerId: 'seller-6',
-    sellerName: 'Fashion Plus',
-    rating: 4.7,
-    reviews: 32,
-  },
-  {
-    id: 'p-7',
-    name: 'Casque Audio Premium',
-    price: 120000,
-    currency: 'CDF',
-    image: 'https://picsum.photos/seed/headphones/300/300',
-    location: 'Kinshasa',
-    type: 'product',
-    subcategory: 'tech',
-    sellerId: 'seller-7',
-    sellerName: 'AudioWorld',
-    rating: 4.9,
-    reviews: 56,
-  },
-  // Produits Digitaux
-  {
-    id: 'p-8',
-    name: 'Template WordPress Premium',
-    price: 15000,
-    currency: 'CDF',
-    image: 'https://picsum.photos/seed/web/300/300',
-    location: 'En ligne',
-    type: 'digital',
-    subcategory: 'services',
-    sellerId: 'seller-8',
-    sellerName: 'Digital Store',
-    rating: 4.8,
-    reviews: 67,
-  },
-  {
-    id: 'p-9',
-    name: 'Cours Programmation Python',
-    price: 25000,
-    currency: 'CDF',
-    image: 'https://picsum.photos/seed/code/300/300',
-    location: 'En ligne',
-    type: 'digital',
-    subcategory: 'services',
-    sellerId: 'seller-9',
-    sellerName: 'Tech Academy',
-    rating: 4.9,
-    reviews: 89,
-  },
+// Sous-catégories Digital
+const DIGITAL_SUBCATEGORIES: SubcategoryOption[] = [
+  { id: 'templates', label: 'Templates', icon: '🧩' },
+  { id: 'cours', label: 'Cours', icon: '📚' },
+  { id: 'logiciels', label: 'Logiciels', icon: '💾' },
+  { id: 'ebooks', label: 'eBooks', icon: '📖' },
+  { id: 'design', label: 'Design', icon: '🎨' },
+  { id: 'marketing', label: 'Marketing', icon: '📣' },
+];
+
+// Sous-catégories Partenaires (Fournisseurs/Grossistes/Détaillants/Producteurs)
+const SUPPLIER_SUBCATEGORIES: SubcategoryOption[] = [
+  { id: 'alimentaire', label: 'Alimentaire', icon: '🍎' },
+  { id: 'bio', label: 'Bio', icon: '🌿' },
+  { id: 'tech', label: 'Tech', icon: '💻' },
+  { id: 'mode', label: 'Mode', icon: '👗' },
+  { id: 'maison', label: 'Maison', icon: '🏠' },
+  { id: 'beaute', label: 'Beauté', icon: '💄' },
+];
+
+const WHOLESALER_SUBCATEGORIES: SubcategoryOption[] = [
+  { id: 'alimentaire', label: 'Alimentaire', icon: '🍎' },
+  { id: 'electro', label: 'Électro', icon: '⚡' },
+  { id: 'mode', label: 'Textile', icon: '👕' },
+  { id: 'construction', label: 'Construction', icon: '🧱' },
+];
+
+const RETAILER_SUBCATEGORIES: SubcategoryOption[] = [
+  { id: 'tech', label: 'Tech', icon: '💻' },
+  { id: 'mode', label: 'Mode', icon: '👗' },
+  { id: 'maison', label: 'Maison', icon: '🏠' },
+  { id: 'sports', label: 'Sports', icon: '⚽' },
+];
+
+const PRODUCER_SUBCATEGORIES: SubcategoryOption[] = [
+  { id: 'bio', label: 'Bio', icon: '🌿' },
+  { id: 'alimentaire', label: 'Agro', icon: '🌾' },
+  { id: 'artisanat', label: 'Artisanat', icon: '🧵' },
 ];
 
 export default function NkampaPage() {
   const router = useRouter();
+  const pathname = usePathname();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { contactSeller, buyProduct } = useNkampaEcommerce();
+  const { products: firestoreProducts, isLoading: productsLoading, buyProduct } = useNkampaEcommerce();
+  const { stores: publicStores } = useNkampaStores({ statuses: ['active', 'approved'] });
   const { balance, isLoading: balanceLoading } = useWalletTransactions();
   const { cart, isOpen, setIsOpen, addToCart, removeFromCart, updateQuantity, total, itemCount } = useNkampaCart();
+  const { store: myStore, hasChecked: hasStoreChecked } = useNkampaStore(user?.uid);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [showCheckout, setShowCheckout] = useState(false);
@@ -315,31 +144,96 @@ export default function NkampaPage() {
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
   const bannerTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Rotation automatique des bannières
+  const activeMainCategory = selectedMainCategory
+    ? MAIN_CATEGORIES.find((c) => c.id === selectedMainCategory) || null
+    : null;
+
+  const isSupplierView = ['suppliers', 'wholesalers', 'retail', 'producers'].includes(selectedMainCategory || '');
+
+  const getSubcategoriesForMain = (mainId: string | null): SubcategoryOption[] => {
+    if (!mainId) return [];
+    switch (mainId) {
+      case 'produit':
+        return PRODUCT_SUBCATEGORIES;
+      case 'service':
+        return SERVICE_SUBCATEGORIES;
+      case 'digital':
+        return DIGITAL_SUBCATEGORIES;
+      case 'suppliers':
+        return SUPPLIER_SUBCATEGORIES;
+      case 'wholesalers':
+        return WHOLESALER_SUBCATEGORIES;
+      case 'retail':
+        return RETAILER_SUBCATEGORIES;
+      case 'producers':
+        return PRODUCER_SUBCATEGORIES;
+      default:
+        return [];
+    }
+  };
+
+  const activeSubcategories = getSubcategoriesForMain(selectedMainCategory);
+
+  const bannerProducts = (() => {
+    const withTime = (firestoreProducts || []).slice().sort((a: any, b: any) => {
+      const aMs = a?.createdAt?.toMillis?.() || 0;
+      const bMs = b?.createdAt?.toMillis?.() || 0;
+      return bMs - aMs;
+    });
+    return withTime.slice(0, 6);
+  })();
+
+  // Rotation automatique des bannières (uniquement si on a des produits)
   useEffect(() => {
+    if (bannerTimerRef.current) clearInterval(bannerTimerRef.current);
+    if (!bannerProducts || bannerProducts.length <= 1) return;
+
     bannerTimerRef.current = setInterval(() => {
-      setBannerIndex((prev) => (prev + 1) % ALL_PRODUCTS.length);
+      setBannerIndex((prev) => (prev + 1) % bannerProducts.length);
     }, 5000);
+
     return () => {
       if (bannerTimerRef.current) clearInterval(bannerTimerRef.current);
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bannerProducts.length]);
+
+  useEffect(() => {
+    if (bannerIndex >= (bannerProducts?.length || 0)) setBannerIndex(0);
+  }, [bannerIndex, bannerProducts?.length]);
 
   // Filtrer les produits selon la catégorie et sous-catégorie
   const getFilteredProducts = () => {
-    let filtered = ALL_PRODUCTS;
+    let filtered: any[] = (firestoreProducts || []) as any[];
 
-    if (selectedMainCategory) {
-      filtered = filtered.filter((p) => p.type === selectedMainCategory);
+    if (activeMainCategory?.type && !isSupplierView) {
+      if (activeMainCategory.id === 'digital') {
+        const allowed = new Set(DIGITAL_SUBCATEGORIES.map((d) => d.id));
+        filtered = filtered.filter((p) => {
+          const t = (p?.listingType || p?.type || '').toString();
+          const cat = (p?.storeCategory || '').toString();
+          const sub = (p?.storeSubcategory || p?.subcategory || '').toString();
+          return t === 'digital' || cat === 'digital' || allowed.has(sub);
+        });
+      } else {
+        filtered = filtered.filter((p) => {
+          const t = (p?.listingType || p?.type || '').toString();
+          return t === activeMainCategory.type;
+        });
+      }
     }
 
     if (selectedSubcategory) {
-      filtered = filtered.filter((p) => p.subcategory === selectedSubcategory);
+      filtered = filtered.filter((p) => {
+        const sub = (p?.storeSubcategory || p?.subcategory || '').toString();
+        const cat = (p?.storeCategory || '').toString();
+        return sub === selectedSubcategory || cat === selectedSubcategory;
+      });
     }
 
     if (searchQuery) {
       filtered = filtered.filter((p) =>
-        p.name.toLowerCase().includes(searchQuery.toLowerCase())
+        (p?.name || '').toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
@@ -348,19 +242,19 @@ export default function NkampaPage() {
 
   // Filtrer les fournisseurs selon la catégorie
   const getFilteredSuppliers = () => {
-    let filtered = ALL_SUPPLIERS;
+    let filtered: any[] = (publicStores || []) as any[];
 
-    if (selectedMainCategory && selectedMainCategory !== 'all') {
-      filtered = filtered.filter((s) => s.type === selectedMainCategory);
+    if (activeMainCategory?.type && isSupplierView) {
+      filtered = filtered.filter((s) => Array.isArray(s.businessRoles) && s.businessRoles.includes(activeMainCategory.type));
     }
 
     if (selectedSubcategory) {
-      filtered = filtered.filter((s) => s.category === selectedSubcategory);
+      filtered = filtered.filter((s) => (s?.category || '') === selectedSubcategory);
     }
 
     if (searchQuery) {
       filtered = filtered.filter((s) =>
-        s.name.toLowerCase().includes(searchQuery.toLowerCase())
+        (s?.storeName || '').toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
@@ -368,32 +262,9 @@ export default function NkampaPage() {
   };
 
   // Déterminer si on affiche les fournisseurs ou les produits
-  const isSupplierView = ['suppliers', 'wholesalers', 'retail', 'producers'].includes(selectedMainCategory || '');
   const filteredProducts = getFilteredProducts();
   const filteredSuppliers = getFilteredSuppliers();
   const categoryLabel = MAIN_CATEGORIES.find((c) => c.id === selectedMainCategory)?.label || 'Tous les produits';
-
-  const handleContactSeller = async (product: any) => {
-    if (!user) {
-      toast({
-        title: 'Authentification requise',
-        description: 'Veuillez vous connecter pour contacter le vendeur',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    try {
-      const conversationId = await contactSeller(product);
-      router.push(`/dashboard/miyiki-chat/${conversationId}`);
-    } catch (error: any) {
-      toast({
-        title: 'Erreur',
-        description: error.message || 'Erreur lors du contact du vendeur',
-        variant: 'destructive',
-      });
-    }
-  };
 
   const handleCheckoutFromCart = () => {
     if (cart.length === 0) {
@@ -460,72 +331,36 @@ export default function NkampaPage() {
   };
 
   const SupplierCard = ({ supplier }: { supplier: any }) => (
-    <Card className="rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
-      <div className="relative w-full h-40 bg-gray-100">
+    <Link href={`/shop/${supplier.slug || ''}`} className={!supplier.slug ? 'pointer-events-none opacity-60' : ''}>
+      <Card className="rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer h-full">
+      <div className="relative w-full aspect-square bg-gray-100">
         <Image
-          src={supplier.image}
-          alt={supplier.name}
+          src={supplier.logoUrl || supplier.coverUrl || 'https://picsum.photos/seed/store/300/300'}
+          alt={supplier.storeName || 'Boutique'}
           fill
           className="object-cover"
         />
       </div>
       <CardContent className="p-3 space-y-2">
         <h3 className="font-semibold text-sm text-gray-900 line-clamp-2">
-          {supplier.name}
+          {supplier.storeName || 'Boutique'}
         </h3>
         <div className="flex items-center gap-1 text-xs text-gray-600">
           <LocationIcon className="w-3 h-3" />
-          <span>{supplier.location}</span>
-        </div>
-        {supplier.rating && (
-          <div className="flex items-center gap-1 text-xs">
-            <div className="flex gap-0.5">
-              {[...Array(5)].map((_, i) => (
-                <StarIcon
-                  key={i}
-                  className={`w-3 h-3 ${
-                    i < Math.floor(supplier.rating)
-                      ? 'text-yellow-400'
-                      : 'text-gray-300'
-                  }`}
-                />
-              ))}
-            </div>
-            {supplier.reviews !== undefined && (
-              <span className="text-gray-600">({supplier.reviews})</span>
-            )}
-          </div>
-        )}
-        <div className="flex gap-2 pt-2">
-          <Button
-            size="sm"
-            variant="outline"
-            className="flex-1 text-xs h-8"
-            onClick={() => handleContactSeller(supplier)}
-          >
-            <Phone className="w-3 h-3 mr-1" />
-            Appeler
-          </Button>
-          <Button
-            size="sm"
-            className="flex-1 bg-primary hover:bg-primary/90 text-white text-xs h-8"
-            onClick={() => handleContactSeller(supplier)}
-          >
-            <Mic className="w-3 h-3 mr-1" />
-            Écrire
-          </Button>
+          <span>{supplier.location || '—'}</span>
         </div>
       </CardContent>
     </Card>
+    </Link>
   );
 
   const ProductCard = ({ product }: { product: any }) => (
-    <Link href={`/dashboard/nkampa/product/${product.id}`}>
+    <Link href={product?.storeSlug ? `/shop/${product.storeSlug}/product/${product.id}` : `/dashboard/nkampa`} className={!product?.storeSlug ? 'pointer-events-none opacity-60' : ''}>
       <Card className="rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer h-full">
-        <div className="relative w-full h-40 bg-gray-100">
+        <div className="relative w-full aspect-square bg-gray-100">
           <Image
-            src={product.image}
-            alt={product.name}
+            src={product.image || product.images?.[0] || 'https://picsum.photos/seed/product/300/300'}
+            alt={product.name || 'Produit'}
             fill
             className="object-cover"
           />
@@ -537,7 +372,7 @@ export default function NkampaPage() {
           <div className="flex items-center gap-1">
             <PriceIcon className="w-4 h-4 text-primary" />
             <span className="text-lg font-bold text-primary">
-              {product.price.toLocaleString()}
+              {Number(product.price || 0).toLocaleString()}
             </span>
             <span className="text-xs text-gray-600">{product.currency}</span>
           </div>
@@ -549,7 +384,7 @@ export default function NkampaPage() {
           )}
           <div className="flex items-center gap-1 text-xs text-gray-600">
             <LocationIcon className="w-3 h-3" />
-            <span>{product.location}</span>
+            <span>{product.location || '—'}</span>
           </div>
           {product.rating && (
             <div className="flex items-center gap-1 text-xs">
@@ -577,77 +412,120 @@ export default function NkampaPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Navigation Bar */}
-      <div className="sticky top-0 z-20 bg-gradient-to-r from-primary via-primary to-green-800 text-white shadow-lg">
-        <div className="flex items-center justify-between p-4">
-          <Link href="/dashboard">
-            <Button size="icon" variant="ghost" className="text-white hover:bg-white/20">
-              <ArrowLeft className="h-6 w-6" />
-            </Button>
-          </Link>
-          <h1 className="text-xl font-bold">eNkamba Shop</h1>
-          <div className="w-10" /> {/* Spacer */}
-        </div>
+      {/* Ultra-modern Header */}
+      <header className="sticky top-0 z-30">
+        <div className="relative px-3 pt-3">
+          {/* Ambient glow */}
+          <div className="pointer-events-none absolute left-1/2 top-0 h-28 w-[min(760px,95vw)] -translate-x-1/2 bg-[radial-gradient(closest-side,rgba(16,185,129,0.55),transparent)] blur-2xl" />
 
-        {/* Navigation Tabs */}
-        <div className="flex items-center gap-1 px-2 pb-2 overflow-x-auto scrollbar-hide">
-          <Link href="/dashboard/nkampa" className="flex-shrink-0">
-            <Button
-              size="sm"
-              variant="ghost"
-              className="text-white hover:bg-white/20 gap-2"
-            >
-              <Store className="w-4 h-4" />
-              Boutique
-            </Button>
-          </Link>
-          <Link href="/dashboard/nkampa/orders" className="flex-shrink-0">
-            <Button
-              size="sm"
-              variant="ghost"
-              className="text-white hover:bg-white/20 gap-2"
-            >
-              <Package className="w-4 h-4" />
-              Mes Commandes
-            </Button>
-          </Link>
-          <Link href="/dashboard/nkampa/favorites" className="flex-shrink-0">
-            <Button
-              size="sm"
-              variant="ghost"
-              className="text-white hover:bg-white/20 gap-2"
-            >
-              <Heart className="w-4 h-4" />
-              Favoris
-            </Button>
-          </Link>
-          <Link href="/dashboard/nkampa/seller" className="flex-shrink-0">
-            <Button
-              size="sm"
-              variant="ghost"
-              className="text-white hover:bg-white/20 gap-2"
-            >
-              <User className="w-4 h-4" />
-              Devenir Vendeur
-            </Button>
-          </Link>
-        </div>
-      </div>
+          <div className="mx-auto max-w-6xl">
+            {/* Floating frame (gradient border) */}
+            <div className="relative rounded-[28px] p-[1px] shadow-[0_18px_45px_rgba(0,0,0,0.18)]">
+              <div className="absolute inset-0 rounded-[28px] bg-[conic-gradient(at_30%_30%,rgba(16,185,129,1),rgba(34,197,94,0.55),rgba(16,185,129,0.22),rgba(16,185,129,1))] opacity-95" />
+              <div className="relative rounded-[27px] border border-white/10 bg-background/65 backdrop-blur-2xl">
+                {/* Top row */}
+                <div className="flex items-center justify-between gap-3 px-3 py-3 sm:px-4">
+                  <Link href="/dashboard" className="flex-shrink-0">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="text-foreground/80 hover:bg-primary/10 hover:text-foreground"
+                      aria-label="Retour"
+                    >
+                      <ArrowLeft className="h-5 w-5" />
+                    </Button>
+                  </Link>
 
-      {/* Header avec recherche */}
-      <div className="sticky top-[120px] z-10 bg-white border-b border-gray-200 p-4">
-        <div className="flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-2">
-          <Search className="w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Rechercher produits, fournisseurs, grossiste..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1 bg-transparent outline-none text-sm text-gray-900 placeholder-gray-500"
-          />
-          <Mic className="w-5 h-5 text-gray-400 cursor-pointer hover:text-gray-600" />
+                  <div className="min-w-0 flex items-center gap-3">
+                    <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-2xl bg-primary/10 ring-1 ring-primary/25 shadow-[0_10px_35px_rgba(16,185,129,0.22)]">
+                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(16,185,129,0.55),transparent_60%)]" />
+                      <div className="absolute -right-3 -top-3 h-10 w-10 rounded-full bg-white/20 blur-md" />
+                    </div>
+                    <h1 className="truncate text-sm font-extrabold tracking-tight text-foreground sm:text-base">
+                      eNkamba <span className="text-primary">Shop</span>
+                    </h1>
+                  </div>
+
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => setIsOpen(true)}
+                    className="relative text-foreground/80 hover:bg-primary/10 hover:text-foreground"
+                    aria-label="Ouvrir le panier"
+                  >
+                    <ShoppingCart className="h-5 w-5" />
+                    {itemCount > 0 && (
+                      <span className="absolute -top-1 -right-1 min-w-5 rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-black text-primary-foreground shadow">
+                        {itemCount > 99 ? '99+' : itemCount}
+                      </span>
+                    )}
+                  </Button>
+                </div>
+
+                {/* Dock row */}
+                <div className="flex flex-col gap-2 px-3 pb-3 sm:px-4">
+                  <nav className="flex items-center gap-4 overflow-x-auto pb-1 scrollbar-hide">
+                    {[
+                      { href: '/dashboard/nkampa', label: 'Boutique', icon: NkampaNavShopIcon, accent: 'text-primary' },
+                      { href: '/dashboard/nkampa/orders', label: 'Commandes', icon: NkampaNavOrdersIcon, accent: 'text-amber-600' },
+                      { href: '/dashboard/nkampa/favorites', label: 'Favoris', icon: NkampaNavFavoritesIcon, accent: 'text-pink-600' },
+                      hasStoreChecked && myStore
+                        ? { href: '/dashboard/nkampa/store/dashboard', label: 'Ma boutique', icon: NkampaNavSellerIcon, accent: 'text-sky-600' }
+                        : { href: '/dashboard/nkampa/store', label: 'Créer boutique', icon: NkampaNavSellerIcon, accent: 'text-sky-600' },
+                    ].map((t) => {
+                      const Icon = t.icon;
+                      const isActive = pathname === t.href;
+                      return (
+                        <Link
+                          key={t.href}
+                          href={t.href}
+                          aria-current={isActive ? 'page' : undefined}
+                          className={[
+                            'group relative flex-shrink-0 px-0.5 py-2 text-xs font-semibold transition',
+                            isActive ? 'text-primary' : 'text-foreground/70 hover:text-foreground',
+                            isActive
+                              ? 'after:absolute after:left-0 after:right-0 after:-bottom-0.5 after:h-[2px] after:rounded-full after:bg-primary after:shadow-[0_0_18px_rgba(16,185,129,0.35)]'
+                              : 'after:absolute after:left-0 after:right-0 after:-bottom-0.5 after:h-[2px] after:rounded-full after:bg-transparent group-hover:after:bg-primary/30',
+                          ].join(' ')}
+                        >
+                          <span className="flex items-center gap-2">
+                            <Icon
+                              className={[
+                                'h-4 w-4',
+                                isActive ? 'text-primary' : `${t.accent} opacity-85`,
+                                'transition-opacity group-hover:opacity-100',
+                              ].join(' ')}
+                            />
+                            {t.label}
+                          </span>
+                        </Link>
+                      );
+                    })}
+                  </nav>
+
+                  <div className="flex items-center gap-2 rounded-2xl ring-1 ring-primary/10 bg-background/40 px-3 py-2 backdrop-blur">
+                    <Search className="h-4 w-4 text-foreground/60" />
+                    <input
+                      type="text"
+                      placeholder="Rechercher…"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-44 flex-1 bg-transparent text-sm text-foreground placeholder:text-foreground/40 outline-none transition-[width] focus:w-72 md:w-72 md:focus:w-96"
+                    />
+                    <button
+                      type="button"
+                      className="rounded-xl p-2 text-foreground/60 transition hover:bg-primary/10 hover:text-foreground"
+                      aria-label="Recherche vocale"
+                    >
+                      <Mic className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      </header>
 
       {/* Contenu principal */}
       <div className="space-y-6 pb-8">
@@ -657,7 +535,18 @@ export default function NkampaPage() {
             {MAIN_CATEGORIES.map((cat) => {
               const IconComponent = cat.icon;
               const isActive = selectedMainCategory === cat.id;
-              const content = (
+              const content = cat.href ? (
+                <div className="flex-shrink-0 flex flex-col items-center gap-2 transition-all">
+                  <div
+                    className={`w-16 h-16 rounded-full flex items-center justify-center transition-all shadow-md bg-white text-primary hover:shadow-lg hover:scale-105`}
+                  >
+                    <IconComponent className="text-primary" size={32} />
+                  </div>
+                  <span className="text-xs font-semibold text-gray-700 text-center max-w-[70px]">
+                    {cat.label}
+                  </span>
+                </div>
+              ) : (
                 <button
                   onClick={() => {
                     if (cat.id === 'all') {
@@ -698,9 +587,11 @@ export default function NkampaPage() {
         </div>
 
         {/* Filtres par sous-catégories */}
-        {selectedMainCategory && selectedMainCategory !== 'all' && (
+        {selectedMainCategory && activeSubcategories.length > 0 && (
           <div className="px-4">
-            <p className="text-xs font-semibold text-gray-600 mb-2">Filtrer par type:</p>
+            <p className="text-xs font-semibold text-gray-600 mb-2">
+              {isSupplierView ? 'Filtrer par catégorie:' : 'Filtrer par type:'}
+            </p>
             <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
               <button
                 onClick={() => setSelectedSubcategory(null)}
@@ -712,7 +603,7 @@ export default function NkampaPage() {
               >
                 Tous
               </button>
-              {PRODUCT_SUBCATEGORIES.map((subcat) => (
+              {activeSubcategories.map((subcat) => (
                 <button
                   key={subcat.id}
                   onClick={() => setSelectedSubcategory(subcat.id)}
@@ -742,7 +633,7 @@ export default function NkampaPage() {
               </div>
             </div>
             {filteredSuppliers.length > 0 ? (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                 {filteredSuppliers.map((supplier) => (
                   <SupplierCard key={supplier.id} supplier={supplier} />
                 ))}
@@ -767,7 +658,7 @@ export default function NkampaPage() {
               </div>
             </div>
             {filteredProducts.length > 0 ? (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                 {filteredProducts.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
@@ -784,42 +675,55 @@ export default function NkampaPage() {
         {!selectedMainCategory && (
           <>
             {/* Bannière promotionnelle défilante */}
-            <div className="relative h-48 mx-4 mt-4 rounded-lg overflow-hidden shadow-md bg-gradient-to-r from-green-700 to-green-900">
+            <div className="relative h-48 mx-4 mt-4 rounded-2xl overflow-hidden shadow-[0_18px_45px_rgba(0,0,0,0.18)] bg-gradient-to-br from-primary via-emerald-700 to-green-900">
               {/* Images défilantes avec transition */}
               <div className="absolute inset-0 transition-opacity duration-1000 ease-in-out">
-                <Image
-                  src={ALL_PRODUCTS[bannerIndex].image}
-                  alt="Bannière"
-                  fill
-                  className="object-cover opacity-40"
-                />
+                {bannerProducts.length > 0 && (
+                  <Image
+                    src={bannerProducts[bannerIndex]?.image || bannerProducts[bannerIndex]?.images?.[0] || 'https://picsum.photos/seed/banner/1200/600'}
+                    alt="Bannière"
+                    fill
+                    className="object-cover opacity-40"
+                  />
+                )}
               </div>
-              <div className="absolute inset-0 bg-gradient-to-r from-green-700/90 to-green-900/70" />
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/85 via-emerald-700/75 to-green-900/70" />
               <div className="absolute inset-0 flex flex-col justify-between p-4 text-white">
                 <div>
                   <Badge className="bg-white text-green-700">🌾 Nouveau</Badge>
                 </div>
                 <div className="animate-pulse">
-                  <h2 className="text-white font-bold text-lg mb-1">
-                    {ALL_PRODUCTS[bannerIndex].name}
-                  </h2>
-                  <p className="text-white/90 text-sm">
-                    {ALL_PRODUCTS[bannerIndex].price.toLocaleString()} {ALL_PRODUCTS[bannerIndex].currency}
-                  </p>
+                  {bannerProducts.length > 0 ? (
+                    <>
+                      <h2 className="text-white font-bold text-lg mb-1">
+                        {bannerProducts[bannerIndex]?.name}
+                      </h2>
+                      <p className="text-white/90 text-sm">
+                        {Number(bannerProducts[bannerIndex]?.price || 0).toLocaleString()} {bannerProducts[bannerIndex]?.currency || 'CDF'}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <h2 className="text-white font-bold text-lg mb-1">Découvrez Nkampa</h2>
+                      <p className="text-white/90 text-sm">Ajoutez vos premiers produits pour les voir ici.</p>
+                    </>
+                  )}
                 </div>
               </div>
               {/* Indicateurs de bannière */}
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-                {ALL_PRODUCTS.map((_, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setBannerIndex(idx)}
-                    className={`h-2 rounded-full transition-all cursor-pointer ${
-                      idx === bannerIndex ? 'w-6 bg-white' : 'w-2 bg-white/50'
-                    }`}
-                  />
-                ))}
-              </div>
+              {bannerProducts.length > 1 && (
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                  {bannerProducts.map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setBannerIndex(idx)}
+                      className={`h-2 rounded-full transition-all cursor-pointer ${
+                        idx === bannerIndex ? 'w-6 bg-white' : 'w-2 bg-white/50'
+                      }`}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Affichage de tous les produits */}
@@ -828,15 +732,25 @@ export default function NkampaPage() {
                 <div>
                   <h2 className="text-lg font-bold text-gray-900">Tous les produits</h2>
                   <p className="text-xs text-gray-600">
-                    {ALL_PRODUCTS.length} produit{ALL_PRODUCTS.length !== 1 ? 's' : ''}
+                    {firestoreProducts.length} produit{firestoreProducts.length !== 1 ? 's' : ''}
                   </p>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                {ALL_PRODUCTS.map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-              </div>
+              {productsLoading ? (
+                <div className="py-10 flex items-center justify-center text-gray-500">
+                  <Loader2 className="w-5 h-5 animate-spin mr-2" /> Chargement…
+                </div>
+              ) : firestoreProducts.length > 0 ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                  {firestoreProducts.map((product) => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-10 text-gray-500">
+                  Aucun produit pour le moment.
+                </div>
+              )}
             </div>
           </>
         )}
