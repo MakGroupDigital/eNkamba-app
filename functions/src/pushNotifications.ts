@@ -134,10 +134,12 @@ export const onUserNotificationCreated = functions.firestore
     const title = String(notif.title || 'eNkamba');
     const body = String(notif.message || 'Vous avez une nouvelle notification');
     const actionUrl = String(notif.actionUrl || '/dashboard');
+    const notificationType = String(notif.type || 'system');
+    const isCallNotification = notificationType === 'incoming_call';
 
     const dataPayload: Record<string, string> = {
       notificationId,
-      type: String(notif.type || 'system'),
+      type: notificationType,
       actionUrl,
     };
 
@@ -155,7 +157,23 @@ export const onUserNotificationCreated = functions.firestore
       android: {
         priority: 'high',
         notification: {
-          channelId: 'enkamba_general',
+          channelId: isCallNotification ? 'enkamba_calls' : 'enkamba_general',
+          sound: 'default',
+          defaultSound: true,
+          defaultVibrateTimings: true,
+          notificationPriority: 'PRIORITY_MAX',
+          visibility: 'PUBLIC',
+        },
+      },
+      apns: {
+        headers: {
+          'apns-priority': '10',
+        },
+        payload: {
+          aps: {
+            sound: 'default',
+            contentAvailable: true,
+          },
         },
       },
       webpush: {
@@ -167,6 +185,8 @@ export const onUserNotificationCreated = functions.firestore
           icon: '/enkamba-logo.png',
           badge: '/favicon.png',
           data: { actionUrl },
+          requireInteraction: isCallNotification,
+          vibrate: isCallNotification ? [300, 150, 300, 150, 300] : undefined,
         },
       },
     });

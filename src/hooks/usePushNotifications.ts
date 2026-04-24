@@ -55,12 +55,16 @@ async function setupWebPush() {
     if (Notification.permission !== 'granted') return;
     const title = payload.notification?.title || 'eNkamba';
     const body = payload.notification?.body || 'Nouvelle notification';
-    new Notification(title, {
+    const isCallNotification = payload.data?.type === 'incoming_call';
+    const notificationOptions: NotificationOptions & { vibrate?: number[] } = {
       body,
       icon: '/enkamba-logo.png',
       badge: '/favicon.png',
       data: payload.data || {},
-    });
+      requireInteraction: isCallNotification,
+      vibrate: isCallNotification ? [300, 150, 300, 150, 300] : undefined,
+    };
+    new Notification(title, notificationOptions);
   });
 
   return () => unsubscribe();
@@ -82,6 +86,16 @@ async function setupNativePush() {
     importance: 5,
     visibility: 1,
     vibration: true,
+  }).catch(() => undefined);
+
+  await PushNotifications.createChannel({
+    id: 'enkamba_calls',
+    name: 'eNkamba Appels',
+    description: 'Appels audio et vidéo entrants',
+    importance: 5,
+    visibility: 1,
+    vibration: true,
+    sound: 'default',
   }).catch(() => undefined);
 
   PushNotifications.addListener('registration', async (token) => {

@@ -9,6 +9,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertTitle } from '@/components/ui/alert';
 import { useAuth } from '@/hooks/useAuth';
 import { useFirestoreConversations } from '@/hooks/useFirestoreConversations';
+import { useCallFeedback } from '@/hooks/useCallFeedback';
+import { attachRemoteStream, getRtcConfiguration } from '@/lib/webrtc';
 import {
   addDoc,
   collection,
@@ -36,10 +38,6 @@ type CallDoc = {
   summarySent?: boolean;
 };
 
-const RTC_CONFIGURATION: RTCConfiguration = {
-  iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }],
-};
-
 export default function CallClient() {
   const router = useRouter();
   const params = useParams();
@@ -64,10 +62,45 @@ export default function CallClient() {
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const remoteStreamRef = useRef<MediaStream | null>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const unsubRefs = useRef<Unsubscribe[]>([]);
   const ringTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const summarySentRef = useRef(false);
+
+  useCallFeedback(callStatus === 'ringing' && !isIncoming, 'ringback');
+
+  useEffect(() => {
+    const setupFullscreen = async () => {
+      try {
+        const [{ Capacitor }, { StatusBar, Style }] = await Promise.all([
+          import('@capacitor/core'),
+          import('@capacitor/status-bar'),
+        ]);
+
+        if (!Capacitor.isNativePlatform()) return;
+        await StatusBar.hide();
+
+        return async () => {
+          await StatusBar.show();
+          await StatusBar.setStyle({ style: Style.Dark });
+        };
+      } catch {
+        return undefined;
+      }
+    };
+
+    let cleanup: undefined | (() => Promise<void>);
+    void setupFullscreen().then((result) => {
+      cleanup = result;
+    });
+
+    return () => {
+      if (cleanup) {
+        void cleanup();
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const getMediaPermissions = async () => {
@@ -77,23 +110,24 @@ export default function CallClient() {
         setHasPermission(true);
         if (localVideoRef.current) {
           localVideoRef.current.srcObject = stream;
+          void localVideoRef.current.play().catch(() => undefined);
         }
       } catch (error) {
         console.error('Error accessing media devices:', error);
         setHasPermission(false);
         toast({
           variant: 'destructive',
-          title: 'Accès Média Refusé',
-          description: "Veuillez autoriser l'accès à la caméra et au microphone.",
+          title: 'Acces media refuse',
+          description: "Veuillez autoriser l'acces a la camera et au microphone.",
         });
       }
     };
 
-    getMediaPermissions();
+    void getMediaPermissions();
 
     return () => {
       if (ringTimeoutRef.current) clearTimeout(ringTimeoutRef.current);
-      unsubRefs.current.forEach((u) => u());
+      unsubRefs.current.forEach((unsubscribe) => unsubscribe());
       unsubRefs.current = [];
       if (pcRef.current) {
         try {
@@ -104,24 +138,29 @@ export default function CallClient() {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
       }
+      remoteStreamRef.current = null;
     };
   }, [toast]);
 
   useEffect(() => {
     if (hasPermission && callStatus === 'in_call') {
-      const timer = setInterval(() => setCallDuration((p) => p + 1), 1000);
+      const timer = setInterval(() => setCallDuration((current) => current + 1), 1000);
       return () => clearInterval(timer);
     }
   }, [hasPermission, callStatus]);
 
   useEffect(() => {
     if (!streamRef.current) return;
-    streamRef.current.getAudioTracks().forEach((track) => (track.enabled = !isMicMuted));
+    streamRef.current.getAudioTracks().forEach((track) => {
+      track.enabled = !isMicMuted;
+    });
   }, [isMicMuted]);
 
   useEffect(() => {
     if (!streamRef.current) return;
-    streamRef.current.getVideoTracks().forEach((track) => (track.enabled = !isCameraOff));
+    streamRef.current.getVideoTracks().forEach((track) => {
+      track.enabled = !isCameraOff;
+    });
   }, [isCameraOff]);
 
   useEffect(() => {
@@ -136,73 +175,125 @@ export default function CallClient() {
         if (!otherUid) return;
 
         const userSnap = await getDoc(doc(db, 'users', otherUid));
-        const ud: any = userSnap.exists() ? userSnap.data() : {};
+        const userData: any = userSnap.exists() ? userSnap.data() : {};
         const name =
-          ud?.fullName ||
-          ud?.displayName ||
-          ud?.name ||
-          data.participantNames?.find((n: any) => typeof n === 'string' && n) ||
+          userData?.fullName ||
+          userData?.displayName ||
+          userData?.name ||
+          data.participantNames?.find((item: unknown) => typeof item === 'string' && item) ||
           'Utilisateur';
-        const avatar = ud?.profileImage || ud?.photoURL || ud?.avatarUrl || ud?.profilePhotoUrl || '';
+        const avatar =
+          userData?.profileImage ||
+          userData?.photoURL ||
+          userData?.avatarUrl ||
+          userData?.profilePhotoUrl ||
+          '';
+
         setContact({ uid: otherUid, name: String(name), avatar: avatar ? String(avatar) : undefined });
-      } catch (e) {
-        console.error('Erreur chargement contact appel:', e);
+      } catch (error) {
+        console.error('Erreur chargement contact appel:', error);
       }
     };
-    loadContactFromConversation();
+
+    void loadContactFromConversation();
   }, [conversationId, user?.uid]);
 
   const ensurePeerConnection = () => {
     if (pcRef.current) return pcRef.current;
-    const pc = new RTCPeerConnection(RTC_CONFIGURATION);
-    pcRef.current = pc;
 
-    pc.ontrack = (event) => {
-      const [remoteStream] = event.streams;
-      if (remoteVideoRef.current && remoteStream) {
-        remoteVideoRef.current.srcObject = remoteStream;
+    const peerConnection = new RTCPeerConnection(getRtcConfiguration());
+    pcRef.current = peerConnection;
+    remoteStreamRef.current = new MediaStream();
+
+    peerConnection.ontrack = (event) => {
+      const remoteStream = remoteStreamRef.current ?? new MediaStream();
+      remoteStreamRef.current = remoteStream;
+
+      const incomingStream = event.streams[0];
+      if (incomingStream) {
+        incomingStream.getTracks().forEach((track) => {
+          if (!remoteStream.getTracks().some((existing) => existing.id === track.id)) {
+            remoteStream.addTrack(track);
+          }
+        });
+      } else if (!remoteStream.getTracks().some((existing) => existing.id === event.track.id)) {
+        remoteStream.addTrack(event.track);
+      }
+
+      void attachRemoteStream(remoteVideoRef.current, remoteStream, () => setRemoteReady(true));
+    };
+
+    peerConnection.onconnectionstatechange = () => {
+      if (peerConnection.connectionState === 'connected') {
+        setCallStatus('in_call');
         setRemoteReady(true);
+      }
+
+      if (peerConnection.connectionState === 'failed') {
+        try {
+          peerConnection.restartIce();
+        } catch {}
+      }
+
+      if (peerConnection.connectionState === 'disconnected' || peerConnection.connectionState === 'closed') {
+        setCallStatus('ended');
       }
     };
 
-    pc.onconnectionstatechange = () => {
-      if (pc.connectionState === 'connected') setCallStatus('in_call');
-      if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') setCallStatus('ended');
+    peerConnection.oniceconnectionstatechange = () => {
+      if (peerConnection.iceConnectionState === 'connected' || peerConnection.iceConnectionState === 'completed') {
+        setRemoteReady(true);
+        setCallStatus('in_call');
+      }
+
+      if (peerConnection.iceConnectionState === 'failed') {
+        try {
+          peerConnection.restartIce();
+        } catch {}
+      }
+    };
+
+    peerConnection.onicecandidateerror = (event) => {
+      console.warn('ICE candidate error:', event.errorText || event.url || 'unknown');
     };
 
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach((t) => pc.addTrack(t, streamRef.current as MediaStream));
+      streamRef.current.getTracks().forEach((track) => {
+        if (!peerConnection.getSenders().some((sender) => sender.track?.id === track.id)) {
+          peerConnection.addTrack(track, streamRef.current as MediaStream);
+        }
+      });
     }
-    return pc;
+
+    return peerConnection;
   };
 
   const attachIceHandlers = (callIdToUse: string, role: 'caller' | 'callee') => {
-    const pc = ensurePeerConnection();
+    const peerConnection = ensurePeerConnection();
     const callRef = doc(db, 'calls', callIdToUse);
     const offerCandidates = collection(callRef, 'offerCandidates');
     const answerCandidates = collection(callRef, 'answerCandidates');
 
-    pc.onicecandidate = (event) => {
+    peerConnection.onicecandidate = (event) => {
       if (!event.candidate) return;
       const target = role === 'caller' ? offerCandidates : answerCandidates;
       void addDoc(target, event.candidate.toJSON() as any).catch(() => undefined);
     };
 
     const listenTo = role === 'caller' ? answerCandidates : offerCandidates;
-    const unsub = onSnapshot(listenTo, (snap) => {
-      snap.docChanges().forEach((change) => {
+    const unsubscribe = onSnapshot(listenTo, (snapshot) => {
+      snapshot.docChanges().forEach((change) => {
         if (change.type !== 'added') return;
-        const data: any = change.doc.data();
-        if (!data) return;
-        void pc.addIceCandidate(new RTCIceCandidate(data)).catch(() => undefined);
+        const candidateData: any = change.doc.data();
+        if (!candidateData) return;
+        void peerConnection.addIceCandidate(new RTCIceCandidate(candidateData)).catch(() => undefined);
       });
     });
-    unsubRefs.current.push(unsub);
+    unsubRefs.current.push(unsubscribe);
   };
 
   const startOutgoingCall = async () => {
-    if (!user?.uid || !contact?.uid) return;
-    if (!hasPermission) return;
+    if (!user?.uid || !contact?.uid || !hasPermission) return;
 
     setCallStatus('ringing');
     const created = await addDoc(collection(db, 'calls'), {
@@ -217,46 +308,60 @@ export default function CallClient() {
     const newCallId = created.id;
     setCallId(newCallId);
 
-    const pc = ensurePeerConnection();
+    const peerConnection = ensurePeerConnection();
     attachIceHandlers(newCallId, 'caller');
 
-    const offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
-    await updateDoc(doc(db, 'calls', newCallId), { offer: { type: offer.type, sdp: offer.sdp } } as any);
+    const offer = await peerConnection.createOffer({
+      offerToReceiveAudio: true,
+      offerToReceiveVideo: true,
+    });
+    await peerConnection.setLocalDescription(offer);
+    await updateDoc(doc(db, 'calls', newCallId), {
+      offer: { type: offer.type, sdp: offer.sdp },
+    } as any);
 
     try {
       await addDoc(collection(db, 'users', contact.uid, 'notifications'), {
-        type: 'system',
-        title: 'Appel vidéo',
+        type: 'incoming_call',
+        title: 'Appel video',
         message: `${user.displayName || 'Quelqu’un'} vous appelle`,
         actionUrl: `/dashboard/miyiki-chat/call/${conversationId}?callId=${newCallId}`,
         read: false,
+        callId: newCallId,
+        callType: 'video',
+        conversationId,
         timestamp: serverTimestamp(),
         createdAt: serverTimestamp(),
       } as any);
-    } catch (e) {
-      console.warn('Notif appel (non critique):', e);
+    } catch (error) {
+      console.warn('Notif appel (non critique):', error);
     }
 
     ringTimeoutRef.current = setTimeout(async () => {
       try {
-        const ref = doc(db, 'calls', newCallId);
-        const snap = await getDoc(ref);
-        if (!snap.exists()) return;
-        const data: any = snap.data();
-        if (data.status === 'ringing') {
-          await updateDoc(ref, { status: 'missed', endedAt: serverTimestamp() } as any);
+        const callRef = doc(db, 'calls', newCallId);
+        const callSnap = await getDoc(callRef);
+        if (!callSnap.exists()) return;
+        const callData: any = callSnap.data();
+        if (callData.status === 'ringing') {
+          await updateDoc(callRef, { status: 'missed', endedAt: serverTimestamp() } as any);
         }
       } catch {}
     }, 35000);
 
-    const unsub = onSnapshot(doc(db, 'calls', newCallId), async (snap) => {
-      if (!snap.exists()) return;
-      const data: any = snap.data();
+    const unsubscribe = onSnapshot(doc(db, 'calls', newCallId), async (snapshot) => {
+      if (!snapshot.exists()) return;
+      const data: any = snapshot.data();
       const isCaller = Boolean(user?.uid && data.fromUid === user.uid);
+
+      if (data.status === 'accepted' && ringTimeoutRef.current) {
+        clearTimeout(ringTimeoutRef.current);
+        ringTimeoutRef.current = null;
+      }
 
       if (data.status === 'ended' || data.status === 'missed') {
         setCallStatus('ended');
+
         if (isCaller && !summarySentRef.current) {
           summarySentRef.current = true;
           try {
@@ -269,7 +374,7 @@ export default function CallClient() {
 
             await sendMessage(
               conversationId,
-              acceptedAtMs ? '🎥 Appel vidéo' : '🎥 Appel vidéo (sans réponse)',
+              acceptedAtMs ? 'Appel video' : 'Appel video (sans reponse)',
               'call',
               {
                 callType: 'video',
@@ -283,28 +388,26 @@ export default function CallClient() {
               }
             );
             await updateDoc(doc(db, 'calls', newCallId), { summarySent: true } as any);
-          } catch (e) {
-            console.warn('Résumé appel (non critique):', e);
+          } catch (error) {
+            console.warn('Resume appel (non critique):', error);
           }
         }
         return;
       }
 
-      if (data.answer && !pc.currentRemoteDescription) {
-        await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+      if (data.answer && !peerConnection.currentRemoteDescription) {
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
         setCallStatus('connecting');
       }
-      if (data.status === 'accepted') setCallStatus('connecting');
     });
-    unsubRefs.current.push(unsub);
+    unsubRefs.current.push(unsubscribe);
   };
 
   const joinIncomingCall = async (callIdToUse: string) => {
-    if (!user?.uid) return;
-    if (!hasPermission) return;
+    if (!user?.uid || !hasPermission) return;
 
     setCallStatus('connecting');
-    const pc = ensurePeerConnection();
+    const peerConnection = ensurePeerConnection();
     attachIceHandlers(callIdToUse, 'callee');
 
     const callRef = doc(db, 'calls', callIdToUse);
@@ -312,19 +415,19 @@ export default function CallClient() {
       await updateDoc(callRef, { receivedAt: serverTimestamp() } as any);
     } catch {}
 
-    const unsub = onSnapshot(callRef, async (snap) => {
-      if (!snap.exists()) return;
-      const data: any = snap.data();
+    const unsubscribe = onSnapshot(callRef, async (snapshot) => {
+      if (!snapshot.exists()) return;
+      const data: any = snapshot.data();
 
       if (data.status === 'ended' || data.status === 'missed') {
         setCallStatus('ended');
         return;
       }
 
-      if (data.offer && !pc.currentRemoteDescription) {
-        await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
-        const answer = await pc.createAnswer();
-        await pc.setLocalDescription(answer);
+      if (data.offer && !peerConnection.currentRemoteDescription) {
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
+        const answer = await peerConnection.createAnswer();
+        await peerConnection.setLocalDescription(answer);
         await updateDoc(callRef, {
           answer: { type: answer.type, sdp: answer.sdp },
           status: 'accepted',
@@ -332,33 +435,30 @@ export default function CallClient() {
         } as any);
       }
     });
-    unsubRefs.current.push(unsub);
+    unsubRefs.current.push(unsubscribe);
   };
 
   useEffect(() => {
-    if (!hasPermission) return;
-    if (!user?.uid) return;
-    if (!conversationId) return;
+    if (!hasPermission || !user?.uid || !conversationId) return;
     if (!contact && !isIncoming) return;
 
     if (isIncoming) {
-      if (!incomingCallId) return;
-      if (callStatus !== 'init') return;
-      void joinIncomingCall(incomingCallId).catch((e) => {
-        console.error(e);
-        toast({ variant: 'destructive', title: 'Appel impossible', description: "Impossible de rejoindre l’appel." });
+      if (!incomingCallId || callStatus !== 'init') return;
+      void joinIncomingCall(incomingCallId).catch((error) => {
+        console.error(error);
+        toast({ variant: 'destructive', title: 'Appel impossible', description: "Impossible de rejoindre l'appel." });
         setCallStatus('ended');
       });
-    } else {
-      if (callStatus !== 'init') return;
-      void startOutgoingCall().catch((e) => {
-        console.error(e);
-        toast({ variant: 'destructive', title: 'Appel impossible', description: "Impossible de démarrer l’appel." });
-        setCallStatus('ended');
-      });
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasPermission, user?.uid, conversationId, contact?.uid, isIncoming]);
+
+    if (callStatus !== 'init') return;
+    void startOutgoingCall().catch((error) => {
+      console.error(error);
+      toast({ variant: 'destructive', title: 'Appel impossible', description: "Impossible de demarrer l'appel." });
+      setCallStatus('ended');
+    });
+  }, [callStatus, contact, conversationId, hasPermission, incomingCallId, isIncoming, toast, user?.uid]);
 
   const handleEndCall = async () => {
     try {
@@ -371,14 +471,13 @@ export default function CallClient() {
   };
 
   const formatDuration = (seconds: number) => {
-    const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
-    const secs = (seconds % 60).toString().padStart(2, '0');
-    return `${mins}:${secs}`;
+    const minutes = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const remainingSeconds = (seconds % 60).toString().padStart(2, '0');
+    return `${minutes}:${remainingSeconds}`;
   };
 
   return (
-    <div className="relative flex h-screen w-full flex-col bg-black text-white overflow-hidden">
-      {/* Remote Video */}
+    <div className="fixed inset-0 z-[220] flex w-full flex-col overflow-hidden bg-black text-white">
       <div className="absolute inset-0">
         <video ref={remoteVideoRef} autoPlay playsInline className="h-full w-full object-cover" />
         {!remoteReady && (
@@ -387,25 +486,25 @@ export default function CallClient() {
             <div className="pointer-events-none absolute -top-24 left-1/2 h-56 w-[min(620px,90vw)] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(255,140,0,0.45),transparent)] blur-2xl" />
             <div className="pointer-events-none absolute -bottom-28 left-1/2 h-72 w-[min(720px,92vw)] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(50,187,120,0.55),transparent)] blur-2xl" />
 
-            <div className="relative z-10 flex h-full flex-col items-center justify-center text-center px-6">
+            <div className="relative z-10 flex h-full flex-col items-center justify-center px-6 text-center">
               <Avatar className="h-36 w-36 border-4 border-white/50 shadow-[0_18px_45px_rgba(0,0,0,0.35)]">
                 <AvatarImage src={contact?.avatar} />
                 <AvatarFallback>{contact?.name?.charAt(0) || 'U'}</AvatarFallback>
               </Avatar>
-              <p className="mt-5 font-headline text-2xl font-bold">{contact?.name || 'Appel vidéo'}</p>
+              <p className="mt-5 font-headline text-2xl font-bold">{contact?.name || 'Appel video'}</p>
               {hasPermission && callStatus === 'in_call' ? (
-                <p className="text-white/70 text-lg font-mono mt-2">{formatDuration(callDuration)}</p>
+                <p className="mt-2 font-mono text-lg text-white/70">{formatDuration(callDuration)}</p>
               ) : (
-                <p className="text-white/85 text-base mt-2">
+                <p className="mt-2 text-base text-white/85">
                   {hasPermission === false
-                    ? 'Caméra/Micro requis'
+                    ? 'Camera/Micro requis'
                     : callStatus === 'ringing'
-                      ? 'Sonnerie…'
+                      ? 'Sonnerie...'
                       : callStatus === 'connecting'
-                        ? 'Connexion…'
+                        ? 'Connexion...'
                         : callStatus === 'ended'
-                          ? 'Terminé'
-                          : 'Préparation…'}
+                          ? 'Termine'
+                          : 'Preparation...'}
                 </p>
               )}
 
@@ -413,7 +512,7 @@ export default function CallClient() {
                 <div className="mt-6 w-full max-w-sm">
                   <Alert variant="destructive">
                     <Camera className="h-4 w-4" />
-                    <AlertTitle>Caméra/Micro requis</AlertTitle>
+                    <AlertTitle>Camera/Micro requis</AlertTitle>
                   </Alert>
                 </div>
               )}
@@ -422,18 +521,16 @@ export default function CallClient() {
         )}
       </div>
 
-      {/* Local Video */}
-      <div className="absolute top-4 right-4 h-48 w-32 overflow-hidden rounded-2xl border border-white/15 bg-black/30 shadow-[0_18px_45px_rgba(0,0,0,0.35)] backdrop-blur">
+      <div className="absolute right-4 top-4 h-48 w-32 overflow-hidden rounded-2xl border border-white/15 bg-black/30 shadow-[0_18px_45px_rgba(0,0,0,0.35)] backdrop-blur">
         <video ref={localVideoRef} autoPlay playsInline muted className="h-full w-full object-cover" />
       </div>
 
-      {/* Call Controls */}
-      <div className="absolute bottom-10 left-1/2 z-10 flex -translate-x-1/2 items-center gap-4 rounded-full bg-black/40 p-4 backdrop-blur-xl border border-white/10 shadow-[0_18px_45px_rgba(0,0,0,0.25)]">
+      <div className="absolute bottom-10 left-1/2 z-10 flex -translate-x-1/2 items-center gap-4 rounded-full border border-white/10 bg-black/40 p-4 shadow-[0_18px_45px_rgba(0,0,0,0.25)] backdrop-blur-xl">
         <Button
           variant="ghost"
           size="icon"
           className="h-14 w-14 rounded-full bg-white/15 hover:bg-white/25"
-          onClick={() => setIsMicMuted((p) => !p)}
+          onClick={() => setIsMicMuted((current) => !current)}
           disabled={!hasPermission}
         >
           {isMicMuted ? <MicOff /> : <Mic />}
@@ -442,14 +539,14 @@ export default function CallClient() {
           variant="ghost"
           size="icon"
           className="h-14 w-14 rounded-full bg-white/15 hover:bg-white/25"
-          onClick={() => setIsCameraOff((p) => !p)}
+          onClick={() => setIsCameraOff((current) => !current)}
           disabled={!hasPermission}
         >
           {isCameraOff ? <VideoOff /> : <Video />}
         </Button>
         <Button
           size="icon"
-          className="h-16 w-16 rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90 scale-110 shadow-[0_18px_45px_rgba(220,38,38,0.35)]"
+          className="h-16 w-16 scale-110 rounded-full bg-destructive text-destructive-foreground shadow-[0_18px_45px_rgba(220,38,38,0.35)] hover:bg-destructive/90"
           onClick={handleEndCall}
         >
           <PhoneOff />
@@ -458,4 +555,3 @@ export default function CallClient() {
     </div>
   );
 }
-

@@ -66,22 +66,23 @@ export default function DashboardLayout({
   const showMasoloButton = !pathname.includes('/miyiki-chat');
   const isChatSubpage = pathname.startsWith('/dashboard/miyiki-chat/') && pathname !== '/dashboard/miyiki-chat';
   const isUgaviHome = pathname === '/dashboard/ugavi';
+  const isCallPage = pathname.includes('/dashboard/miyiki-chat/audiocall/') || pathname.includes('/dashboard/miyiki-chat/call/');
 
   return (
     <AuthGuard>
       <ModuleKycGate>
         <div className="flex h-screen flex-col bg-background">
-          <main className={isChatSubpage || isUgaviHome ? 'flex-grow overflow-hidden pb-0' : 'flex-grow overflow-y-auto pb-40'}>
+          <main className={isCallPage ? 'fixed inset-0 z-[200] overflow-hidden bg-black' : isChatSubpage || isUgaviHome ? 'flex-grow overflow-hidden pb-0' : 'flex-grow overflow-y-auto pb-40'}>
             {children}
           </main>
 
-          {showMasoloButton && (
+          {showMasoloButton && !isCallPage && (
             <div className="fixed bottom-24 right-4 z-50 flex items-center gap-3">
               <MasoloFloatingButton />
             </div>
           )}
 
-          <HubNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
+          {!isCallPage && <HubNavigation activeTab={activeTab} setActiveTab={setActiveTab} />}
           
           {/* Modal de notification de transfert reçu */}
           <TransferNotificationModal />
