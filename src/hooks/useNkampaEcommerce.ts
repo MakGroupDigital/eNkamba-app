@@ -36,6 +36,7 @@ export interface EcommerceOrder {
   sellerId: string;
   quantity: number;
   totalPrice: number;
+  totalAmount?: number; // Pour compatibilité avec nouveau système
   currency: string;
   status: 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled';
   paymentMethod: string;

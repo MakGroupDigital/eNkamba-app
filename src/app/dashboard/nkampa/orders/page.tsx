@@ -65,11 +65,11 @@ export default function OrdersPage() {
       type: 'ECOMMERCE_ORDER',
       orderId: order.id,
       trackingNumber: order.trackingNumber || '',
-      productName: order.productName,
-      quantity: order.quantity,
-      totalPrice: order.totalPrice,
-      currency: order.currency,
-      status: order.status,
+      productName: order.productName || 'Produit',
+      quantity: order.quantity || 1,
+      totalPrice: order.totalPrice || order.totalAmount || 0,
+      currency: order.currency || 'CDF',
+      status: order.status || 'pending',
       date: order.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
     });
 
@@ -148,7 +148,7 @@ export default function OrdersPage() {
           <div class="total">
             <div class="label">Total Payé</div>
             <div class="value" style="color: #32BB78; font-size: 24px;">
-              ${order.totalPrice.toLocaleString()} ${order.currency}
+              ${(order.totalPrice || order.totalAmount || 0).toLocaleString()} ${order.currency || 'CDF'}
             </div>
           </div>
           
@@ -311,7 +311,7 @@ export default function OrdersPage() {
                     <div>
                       <p className="text-gray-500">Total</p>
                       <p className="font-semibold text-primary">
-                        {order.totalPrice.toLocaleString()} {order.currency}
+                        {((order as any).totalPrice || (order as any).totalAmount || 0).toLocaleString()} {(order as any).currency || 'CDF'}
                       </p>
                     </div>
                   </div>
@@ -380,7 +380,7 @@ export default function OrdersPage() {
                     <div>
                       <p className="text-xs text-gray-500">Prix unitaire</p>
                       <p className="font-semibold">
-                        {(selectedOrder.totalPrice / selectedOrder.quantity).toLocaleString()} {selectedOrder.currency}
+                        {((selectedOrder.totalPrice || selectedOrder.totalAmount || 0) / (selectedOrder.quantity || 1)).toLocaleString()} {selectedOrder.currency || 'CDF'}
                       </p>
                     </div>
                   </div>
@@ -428,7 +428,7 @@ export default function OrdersPage() {
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Total payé</span>
                     <span className="text-xl font-bold text-primary">
-                      {selectedOrder.totalPrice.toLocaleString()} {selectedOrder.currency}
+                      {(selectedOrder.totalPrice || selectedOrder.totalAmount || 0).toLocaleString()} {selectedOrder.currency || 'CDF'}
                     </span>
                   </div>
                   {selectedOrder.transactionId && (
