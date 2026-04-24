@@ -124,39 +124,55 @@ export function GlobalCallOverlay() {
   }
 
   return (
-    <div className="fixed inset-0 z-[250] flex items-start justify-center bg-black/35 px-4 pt-8 backdrop-blur-[2px] sm:items-center sm:pt-0">
-      <div className="w-full max-w-md overflow-hidden rounded-[2rem] border border-white/15 bg-gradient-to-br from-primary via-emerald-700 to-orange-500 text-white shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
-        <div className="bg-black/15 px-6 py-5">
-          <p className="text-xs uppercase tracking-[0.24em] text-white/70">Appel entrant</p>
+    <div className="fixed inset-0 z-[250] overflow-hidden bg-[radial-gradient(circle_at_top,rgba(50,187,120,0.35),transparent_35%),linear-gradient(180deg,#03140d_0%,#072b1b_34%,#0b1b14_100%)] text-white">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-md" />
+      <div className="pointer-events-none absolute -top-24 left-1/2 h-64 w-[min(720px,95vw)] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(255,140,0,0.32),transparent)] blur-3xl" />
+      <div className="pointer-events-none absolute bottom-0 left-1/2 h-80 w-[min(920px,110vw)] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(50,187,120,0.28),transparent)] blur-3xl" />
+
+      <div className="relative z-10 flex h-full flex-col items-center justify-between px-6 pb-12 pt-16 text-center sm:pt-20">
+        <div className="space-y-3">
+          <p className="text-[11px] uppercase tracking-[0.34em] text-white/60">Appel entrant</p>
+          <div className="mx-auto flex h-9 items-center justify-center rounded-full border border-white/10 bg-white/5 px-4 text-sm text-white/75">
+            {incomingCall.callType === 'audio' ? 'Audio en direct' : 'Video en direct'}
+          </div>
         </div>
-        <div className="px-6 pb-6 pt-4 text-center">
-          <Avatar className="mx-auto h-24 w-24 border-4 border-white/35 shadow-[0_18px_45px_rgba(0,0,0,0.25)]">
-            <AvatarImage src={incomingCall.fromAvatar} alt={incomingCall.fromName} />
-            <AvatarFallback className="bg-white/15 text-2xl text-white">
-              {incomingCall.fromName.charAt(0).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          <h2 className="mt-4 text-2xl font-bold">{incomingCall.fromName}</h2>
-          <p className="mt-1 text-sm text-white/80">
-            Appel {incomingCall.callType === 'audio' ? 'audio' : 'video'}
-          </p>
-          <div className="mt-6 flex items-center justify-center gap-4">
+
+        <div className="space-y-5">
+          <div className="relative mx-auto">
+            <div className="absolute inset-0 rounded-full border border-white/10 animate-ping" />
+            <Avatar className="relative mx-auto h-32 w-32 border-[5px] border-white/30 shadow-[0_30px_80px_rgba(0,0,0,0.45)] sm:h-40 sm:w-40">
+              <AvatarImage src={incomingCall.fromAvatar} alt={incomingCall.fromName} />
+              <AvatarFallback className="bg-white/10 text-4xl text-white">
+                {incomingCall.fromName.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+          </div>
+
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">{incomingCall.fromName}</h2>
+            <p className="mt-2 text-base text-white/72">Souhaite vous joindre maintenant</p>
+          </div>
+        </div>
+
+        <div className="w-full max-w-md space-y-5">
+          <div className="grid grid-cols-2 gap-4">
             <Button
               variant="ghost"
-              size="icon"
-              className="h-16 w-16 rounded-full bg-red-500 text-white hover:bg-red-500/90"
+              className="h-16 rounded-[1.5rem] border border-red-300/20 bg-red-500/90 text-white hover:bg-red-500"
               onClick={() => void declineCall()}
             >
-              <PhoneOff className="h-6 w-6" />
+              <PhoneOff className="mr-3 h-5 w-5" />
+              Refuser
             </Button>
             <Button
-              size="icon"
-              className="h-16 w-16 rounded-full bg-white text-primary hover:bg-white/90"
+              className="h-16 rounded-[1.5rem] bg-white text-primary hover:bg-white/90"
               onClick={acceptCall}
             >
-              {incomingCall.callType === 'audio' ? <Phone className="h-6 w-6" /> : <Video className="h-6 w-6" />}
+              {incomingCall.callType === 'audio' ? <Phone className="mr-3 h-5 w-5" /> : <Video className="mr-3 h-5 w-5" />}
+              Decrocher
             </Button>
           </div>
+          <p className="text-xs text-white/45">eNkamba Miyiki Call</p>
         </div>
       </div>
     </div>

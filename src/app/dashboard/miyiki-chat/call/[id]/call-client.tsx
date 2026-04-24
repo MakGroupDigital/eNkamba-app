@@ -10,7 +10,7 @@ import { Alert, AlertTitle } from '@/components/ui/alert';
 import { useAuth } from '@/hooks/useAuth';
 import { useFirestoreConversations } from '@/hooks/useFirestoreConversations';
 import { useCallFeedback } from '@/hooks/useCallFeedback';
-import { attachRemoteStream, getRtcConfiguration } from '@/lib/webrtc';
+import { attachRemoteStream, closePeerResources, getRtcConfiguration, hasTurnServerConfigured } from '@/lib/webrtc';
 import {
   addDoc,
   collection,
@@ -66,7 +66,13 @@ export default function CallClient() {
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const unsubRefs = useRef<Unsubscribe[]>([]);
   const ringTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const leaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const connectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const summarySentRef = useRef(false);
+  const hasNavigatedAwayRef = useRef(false);
+  const remoteReadyRef = useRef(false);
+  const callStatusRef = useRef(callStatus);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
 
   useCallFeedback(callStatus === 'ringing' && !isIncoming, 'ringback');
 
@@ -103,6 +109,20 @@ export default function CallClient() {
   }, []);
 
   useEffect(() => {
+    if (!hasTurnServerConfigured()) {
+      console.warn('Aucun serveur TURN configure: les appels a distance peuvent rester sans media selon le NAT.');
+    }
+  }, []);
+
+  useEffect(() => {
+    callStatusRef.current = callStatus;
+  }, [callStatus]);
+
+  useEffect(() => {
+    remoteReadyRef.current = remoteReady;
+  }, [remoteReady]);
+
+  useEffect(() => {
     const getMediaPermissions = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -127,17 +147,12 @@ export default function CallClient() {
 
     return () => {
       if (ringTimeoutRef.current) clearTimeout(ringTimeoutRef.current);
+      if (leaveTimeoutRef.current) clearTimeout(leaveTimeoutRef.current);
+      if (connectTimeoutRef.current) clearTimeout(connectTimeoutRef.current);
       unsubRefs.current.forEach((unsubscribe) => unsubscribe());
       unsubRefs.current = [];
-      if (pcRef.current) {
-        try {
-          pcRef.current.close();
-        } catch {}
-        pcRef.current = null;
-      }
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => track.stop());
-      }
+      closePeerResources(pcRef.current, [streamRef.current, remoteStreamRef.current]);
+      pcRef.current = null;
       remoteStreamRef.current = null;
     };
   }, [toast]);
@@ -227,6 +242,11 @@ export default function CallClient() {
       if (peerConnection.connectionState === 'connected') {
         setCallStatus('in_call');
         setRemoteReady(true);
+        setConnectionError(null);
+        if (connectTimeoutRef.current) {
+          clearTimeout(connectTimeoutRef.current);
+          connectTimeoutRef.current = null;
+        }
       }
 
       if (peerConnection.connectionState === 'failed') {
@@ -235,7 +255,7 @@ export default function CallClient() {
         } catch {}
       }
 
-      if (peerConnection.connectionState === 'disconnected' || peerConnection.connectionState === 'closed') {
+      if (peerConnection.connectionState === 'closed') {
         setCallStatus('ended');
       }
     };
@@ -244,12 +264,21 @@ export default function CallClient() {
       if (peerConnection.iceConnectionState === 'connected' || peerConnection.iceConnectionState === 'completed') {
         setRemoteReady(true);
         setCallStatus('in_call');
+        setConnectionError(null);
+        if (connectTimeoutRef.current) {
+          clearTimeout(connectTimeoutRef.current);
+          connectTimeoutRef.current = null;
+        }
       }
 
       if (peerConnection.iceConnectionState === 'failed') {
         try {
           peerConnection.restartIce();
         } catch {}
+      }
+
+      if (peerConnection.iceConnectionState === 'closed') {
+        setCallStatus('ended');
       }
     };
 
@@ -266,6 +295,29 @@ export default function CallClient() {
     }
 
     return peerConnection;
+  };
+
+  const leaveCallScreen = () => {
+    if (hasNavigatedAwayRef.current) return;
+    hasNavigatedAwayRef.current = true;
+    closePeerResources(pcRef.current, [streamRef.current, remoteStreamRef.current]);
+    pcRef.current = null;
+    router.replace(`/dashboard/miyiki-chat/${conversationId}`);
+  };
+
+  const finalizeRemoteEnd = () => {
+    setCallStatus('ended');
+    if (connectTimeoutRef.current) {
+      clearTimeout(connectTimeoutRef.current);
+      connectTimeoutRef.current = null;
+    }
+    closePeerResources(pcRef.current, [streamRef.current, remoteStreamRef.current]);
+    pcRef.current = null;
+
+    if (leaveTimeoutRef.current) clearTimeout(leaveTimeoutRef.current);
+    leaveTimeoutRef.current = setTimeout(() => {
+      leaveCallScreen();
+    }, 900);
   };
 
   const attachIceHandlers = (callIdToUse: string, role: 'caller' | 'callee') => {
@@ -292,6 +344,24 @@ export default function CallClient() {
     unsubRefs.current.push(unsubscribe);
   };
 
+  const armConnectionTimeout = (callIdToWatch: string) => {
+    if (connectTimeoutRef.current) clearTimeout(connectTimeoutRef.current);
+    connectTimeoutRef.current = setTimeout(async () => {
+      if (callStatusRef.current === 'in_call' || remoteReadyRef.current) return;
+
+      const message = hasTurnServerConfigured()
+        ? 'Connexion reseau impossible pour cet appel.'
+        : 'Connexion impossible a distance: serveur TURN requis.';
+      setConnectionError(message);
+
+      try {
+        await updateDoc(doc(db, 'calls', callIdToWatch), { status: 'ended', endedAt: serverTimestamp() } as any);
+      } catch {}
+
+      finalizeRemoteEnd();
+    }, 18000);
+  };
+
   const startOutgoingCall = async () => {
     if (!user?.uid || !contact?.uid || !hasPermission) return;
 
@@ -307,6 +377,8 @@ export default function CallClient() {
 
     const newCallId = created.id;
     setCallId(newCallId);
+    setConnectionError(null);
+    armConnectionTimeout(newCallId);
 
     const peerConnection = ensurePeerConnection();
     attachIceHandlers(newCallId, 'caller');
@@ -360,7 +432,7 @@ export default function CallClient() {
       }
 
       if (data.status === 'ended' || data.status === 'missed') {
-        setCallStatus('ended');
+        finalizeRemoteEnd();
 
         if (isCaller && !summarySentRef.current) {
           summarySentRef.current = true;
@@ -409,6 +481,8 @@ export default function CallClient() {
     setCallStatus('connecting');
     const peerConnection = ensurePeerConnection();
     attachIceHandlers(callIdToUse, 'callee');
+    setConnectionError(null);
+    armConnectionTimeout(callIdToUse);
 
     const callRef = doc(db, 'calls', callIdToUse);
     try {
@@ -420,7 +494,7 @@ export default function CallClient() {
       const data: any = snapshot.data();
 
       if (data.status === 'ended' || data.status === 'missed') {
-        setCallStatus('ended');
+        finalizeRemoteEnd();
         return;
       }
 
@@ -466,8 +540,7 @@ export default function CallClient() {
         await updateDoc(doc(db, 'calls', callId), { status: 'ended', endedAt: serverTimestamp() } as any);
       }
     } catch {}
-    setCallStatus('ended');
-    router.push(`/dashboard/miyiki-chat/${conversationId}`);
+    finalizeRemoteEnd();
   };
 
   const formatDuration = (seconds: number) => {
@@ -495,17 +568,20 @@ export default function CallClient() {
               {hasPermission && callStatus === 'in_call' ? (
                 <p className="mt-2 font-mono text-lg text-white/70">{formatDuration(callDuration)}</p>
               ) : (
-                <p className="mt-2 text-base text-white/85">
-                  {hasPermission === false
-                    ? 'Camera/Micro requis'
-                    : callStatus === 'ringing'
-                      ? 'Sonnerie...'
-                      : callStatus === 'connecting'
-                        ? 'Connexion...'
-                        : callStatus === 'ended'
-                          ? 'Termine'
-                          : 'Preparation...'}
-                </p>
+                <>
+                  <p className="mt-2 text-base text-white/85">
+                    {hasPermission === false
+                      ? 'Camera/Micro requis'
+                      : callStatus === 'ringing'
+                        ? 'Sonnerie...'
+                        : callStatus === 'connecting'
+                          ? 'Connexion...'
+                          : callStatus === 'ended'
+                            ? 'Termine'
+                            : 'Preparation...'}
+                  </p>
+                  {connectionError ? <p className="mt-3 max-w-sm text-sm text-red-100/90">{connectionError}</p> : null}
+                </>
               )}
 
               {hasPermission === false && (
@@ -521,9 +597,11 @@ export default function CallClient() {
         )}
       </div>
 
-      <div className="absolute right-4 top-4 h-48 w-32 overflow-hidden rounded-2xl border border-white/15 bg-black/30 shadow-[0_18px_45px_rgba(0,0,0,0.35)] backdrop-blur">
-        <video ref={localVideoRef} autoPlay playsInline muted className="h-full w-full object-cover" />
-      </div>
+      {!isIncoming && (
+        <div className="absolute right-4 top-4 h-48 w-32 overflow-hidden rounded-2xl border border-white/15 bg-black/30 shadow-[0_18px_45px_rgba(0,0,0,0.35)] backdrop-blur">
+          <video ref={localVideoRef} autoPlay playsInline muted className="h-full w-full object-cover" />
+        </div>
+      )}
 
       <div className="absolute bottom-10 left-1/2 z-10 flex -translate-x-1/2 items-center gap-4 rounded-full border border-white/10 bg-black/40 p-4 shadow-[0_18px_45px_rgba(0,0,0,0.25)] backdrop-blur-xl">
         <Button

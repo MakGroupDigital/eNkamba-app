@@ -10,7 +10,7 @@ import { Alert, AlertTitle } from '@/components/ui/alert';
 import { useAuth } from '@/hooks/useAuth';
 import { useFirestoreConversations } from '@/hooks/useFirestoreConversations';
 import { useCallFeedback } from '@/hooks/useCallFeedback';
-import { attachRemoteStream, getRtcConfiguration } from '@/lib/webrtc';
+import { attachRemoteStream, closePeerResources, getRtcConfiguration, hasTurnServerConfigured } from '@/lib/webrtc';
 import {
   addDoc,
   collection,
@@ -67,11 +67,26 @@ export default function AudioCallClient() {
   const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
   const unsubRefs = useRef<Unsubscribe[]>([]);
   const ringTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const leaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const connectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const summarySentRef = useRef(false);
+  const hasNavigatedAwayRef = useRef(false);
+  const callStatusRef = useRef(callStatus);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
 
   const isIncoming = useMemo(() => Boolean(incomingCallId), [incomingCallId]);
 
   useCallFeedback(callStatus === 'ringing' && !isIncoming, 'ringback');
+
+  useEffect(() => {
+    callStatusRef.current = callStatus;
+  }, [callStatus]);
+
+  useEffect(() => {
+    if (!hasTurnServerConfigured()) {
+      console.warn('Aucun serveur TURN configure: les appels a distance peuvent rester sans media selon le NAT.');
+    }
+  }, []);
 
   useEffect(() => {
     const setupFullscreen = async () => {
@@ -127,17 +142,12 @@ export default function AudioCallClient() {
 
     return () => {
       if (ringTimeoutRef.current) clearTimeout(ringTimeoutRef.current);
+      if (leaveTimeoutRef.current) clearTimeout(leaveTimeoutRef.current);
+      if (connectTimeoutRef.current) clearTimeout(connectTimeoutRef.current);
       unsubRefs.current.forEach((unsubscribe) => unsubscribe());
       unsubRefs.current = [];
-      if (pcRef.current) {
-        try {
-          pcRef.current.close();
-        } catch {}
-        pcRef.current = null;
-      }
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => track.stop());
-      }
+      closePeerResources(pcRef.current, [streamRef.current, remoteStreamRef.current]);
+      pcRef.current = null;
       remoteStreamRef.current = null;
     };
   }, [toast]);
@@ -219,6 +229,11 @@ export default function AudioCallClient() {
     peerConnection.onconnectionstatechange = () => {
       if (peerConnection.connectionState === 'connected') {
         setCallStatus('in_call');
+        setConnectionError(null);
+        if (connectTimeoutRef.current) {
+          clearTimeout(connectTimeoutRef.current);
+          connectTimeoutRef.current = null;
+        }
       }
 
       if (peerConnection.connectionState === 'failed') {
@@ -227,7 +242,7 @@ export default function AudioCallClient() {
         } catch {}
       }
 
-      if (peerConnection.connectionState === 'disconnected' || peerConnection.connectionState === 'closed') {
+      if (peerConnection.connectionState === 'closed') {
         setCallStatus('ended');
       }
     };
@@ -235,12 +250,21 @@ export default function AudioCallClient() {
     peerConnection.oniceconnectionstatechange = () => {
       if (peerConnection.iceConnectionState === 'connected' || peerConnection.iceConnectionState === 'completed') {
         setCallStatus('in_call');
+        setConnectionError(null);
+        if (connectTimeoutRef.current) {
+          clearTimeout(connectTimeoutRef.current);
+          connectTimeoutRef.current = null;
+        }
       }
 
       if (peerConnection.iceConnectionState === 'failed') {
         try {
           peerConnection.restartIce();
         } catch {}
+      }
+
+      if (peerConnection.iceConnectionState === 'closed') {
+        setCallStatus('ended');
       }
     };
 
@@ -252,6 +276,29 @@ export default function AudioCallClient() {
       });
     }
     return peerConnection;
+  };
+
+  const leaveCallScreen = () => {
+    if (hasNavigatedAwayRef.current) return;
+    hasNavigatedAwayRef.current = true;
+    closePeerResources(pcRef.current, [streamRef.current, remoteStreamRef.current]);
+    pcRef.current = null;
+    router.replace(`/dashboard/miyiki-chat/${conversationId}`);
+  };
+
+  const finalizeRemoteEnd = () => {
+    setCallStatus('ended');
+    if (connectTimeoutRef.current) {
+      clearTimeout(connectTimeoutRef.current);
+      connectTimeoutRef.current = null;
+    }
+    closePeerResources(pcRef.current, [streamRef.current, remoteStreamRef.current]);
+    pcRef.current = null;
+
+    if (leaveTimeoutRef.current) clearTimeout(leaveTimeoutRef.current);
+    leaveTimeoutRef.current = setTimeout(() => {
+      leaveCallScreen();
+    }, 900);
   };
 
   const attachIceHandlers = (callIdToUse: string, role: 'caller' | 'callee') => {
@@ -278,6 +325,24 @@ export default function AudioCallClient() {
     unsubRefs.current.push(unsubscribe);
   };
 
+  const armConnectionTimeout = (callIdToWatch: string) => {
+    if (connectTimeoutRef.current) clearTimeout(connectTimeoutRef.current);
+    connectTimeoutRef.current = setTimeout(async () => {
+      if (callStatusRef.current === 'in_call') return;
+
+      const message = hasTurnServerConfigured()
+        ? 'Connexion reseau impossible pour cet appel.'
+        : 'Connexion impossible a distance: serveur TURN requis.';
+      setConnectionError(message);
+
+      try {
+        await updateDoc(doc(db, 'calls', callIdToWatch), { status: 'ended', endedAt: serverTimestamp() } as any);
+      } catch {}
+
+      finalizeRemoteEnd();
+    }, 18000);
+  };
+
   const startOutgoingCall = async () => {
     if (!user?.uid || !contact?.uid || !hasPermission) return;
 
@@ -293,6 +358,8 @@ export default function AudioCallClient() {
 
     const newCallId = created.id;
     setCallId(newCallId);
+    setConnectionError(null);
+    armConnectionTimeout(newCallId);
 
     const peerConnection = ensurePeerConnection();
     attachIceHandlers(newCallId, 'caller');
@@ -346,7 +413,7 @@ export default function AudioCallClient() {
       }
 
       if (data.status === 'ended' || data.status === 'missed') {
-        setCallStatus('ended');
+        finalizeRemoteEnd();
         if (isCaller && !summarySentRef.current) {
           summarySentRef.current = true;
           try {
@@ -397,6 +464,8 @@ export default function AudioCallClient() {
     setCallStatus('connecting');
     const peerConnection = ensurePeerConnection();
     attachIceHandlers(callIdToUse, 'callee');
+    setConnectionError(null);
+    armConnectionTimeout(callIdToUse);
 
     const callRef = doc(db, 'calls', callIdToUse);
     try {
@@ -406,7 +475,7 @@ export default function AudioCallClient() {
       if (!snapshot.exists()) return;
       const data: any = snapshot.data();
       if (data.status === 'ended' || data.status === 'missed') {
-        setCallStatus('ended');
+        finalizeRemoteEnd();
         return;
       }
       if (data.offer && !peerConnection.currentRemoteDescription) {
@@ -484,8 +553,7 @@ export default function AudioCallClient() {
         await updateDoc(doc(db, 'calls', callId), { status: 'ended', endedAt: serverTimestamp() } as any);
       }
     } catch {}
-    setCallStatus('ended');
-    router.push(`/dashboard/miyiki-chat/${conversationId}`);
+    finalizeRemoteEnd();
   };
 
   const formatDuration = (seconds: number) => {
@@ -509,17 +577,20 @@ export default function AudioCallClient() {
         {hasPermission && callStatus === 'in_call' ? (
           <p className="mt-2 font-mono text-lg text-white/70">{formatDuration(callDuration)}</p>
         ) : (
-          <p className="mt-2 text-lg text-white/85">
-            {hasPermission === false
-              ? 'Microphone requis'
-              : callStatus === 'ringing'
-                ? 'Sonnerie...'
-                : callStatus === 'connecting'
-                  ? 'Connexion...'
-                  : callStatus === 'ended'
-                    ? 'Termine'
-                    : 'Preparation...'}
-          </p>
+          <>
+            <p className="mt-2 text-lg text-white/85">
+              {hasPermission === false
+                ? 'Microphone requis'
+                : callStatus === 'ringing'
+                  ? 'Sonnerie...'
+                  : callStatus === 'connecting'
+                    ? 'Connexion...'
+                    : callStatus === 'ended'
+                      ? 'Termine'
+                      : 'Preparation...'}
+            </p>
+            {connectionError ? <p className="mt-3 max-w-sm text-sm text-red-100/90">{connectionError}</p> : null}
+          </>
         )}
 
         {hasPermission === false && (

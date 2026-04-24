@@ -1,0 +1,16 @@
+services:
+  coturn:
+    image: coturn/coturn:4.6.3
+    container_name: enkamba-coturn
+    restart: unless-stopped
+    network_mode: host
+    env_file:
+      - .env
+    volumes:
+      - ./turnserver.conf:/etc/coturn/turnserver.conf:ro
+      - ./data:/var/lib/coturn
+      - ./certs:/etc/coturn/certs:ro
+    command:
+      - -c
+      - /etc/coturn/turnserver.conf
+
