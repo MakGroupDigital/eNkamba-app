@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Search, Mic, X, Loader2, ArrowLeft, ShoppingCart } from 'lucide-react';
 import Image from 'next/image';
@@ -30,7 +30,7 @@ import { useNkampaEcommerce } from '@/hooks/useNkampaEcommerce';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useNkampaCart } from '@/hooks/useNkampaCart';
-import { useWalletTransactions } from '@/hooks/useWalletTransactions';
+import { useWalletBalance } from '@/hooks/useWalletBalance';
 import { FloatingCart } from '@/components/nkampa/FloatingCart';
 import {
   NkampaNavFavoritesIcon,
@@ -128,7 +128,7 @@ export default function NkampaPage() {
   const { toast } = useToast();
   const { products: firestoreProducts, isLoading: productsLoading, buyProduct } = useNkampaEcommerce();
   const { stores: publicStores } = useNkampaStores({ statuses: ['active', 'approved'] });
-  const { balance, isLoading: balanceLoading } = useWalletTransactions();
+  const { balance, isLoading: balanceLoading } = useWalletBalance();
   const { cart, isOpen, setIsOpen, addToCart, removeFromCart, updateQuantity, total, itemCount } = useNkampaCart();
   const { store: myStore, hasChecked: hasStoreChecked } = useNkampaStore(user?.uid);
 
@@ -142,7 +142,94 @@ export default function NkampaPage() {
   const [bannerIndex, setBannerIndex] = useState(0);
   const [selectedMainCategory, setSelectedMainCategory] = useState<string | null>(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
+  const [isListening, setIsListening] = useState(false);
   const bannerTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Fonction de recherche vocale
+  const handleVoiceSearch = () => {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      toast({
+        title: 'Non supporté',
+        description: 'La recherche vocale n\'est pas supportée sur ce navigateur',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    
+    recognition.lang = 'fr-FR';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    recognition.onstart = () => {
+      setIsListening(true);
+      toast({
+        title: '🎤 Écoute en cours...',
+        description: 'Parlez maintenant',
+        className: 'bg-green-600 text-white border-none',
+      });
+    };
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      
+      // Réinitialiser les filtres pour voir tous les résultats
+      setSelectedMainCategory(null);
+      setSelectedSubcategory(null);
+      
+      // Définir la recherche
+      setSearchQuery(transcript);
+      
+      // Attendre que le filtrage se fasse et afficher le nombre de résultats
+      setTimeout(() => {
+        const resultsSection = document.querySelector('[data-results-section]');
+        if (resultsSection) {
+          resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        
+        // Compter les résultats filtrés
+        const results = sortedProducts.filter((p: any) =>
+          (p?.name || '').toLowerCase().includes(transcript.toLowerCase())
+        );
+        
+        toast({
+          title: '✅ Recherche effectuée',
+          description: `"${transcript}" - ${results.length} résultat(s) trouvé(s)`,
+          className: 'bg-green-600 text-white border-none',
+        });
+      }, 300);
+    };
+
+    recognition.onerror = (event: any) => {
+      setIsListening(false);
+      console.error('Erreur reconnaissance vocale:', event.error);
+      toast({
+        title: 'Erreur',
+        description: event.error === 'no-speech' 
+          ? 'Aucune parole détectée. Réessayez.' 
+          : 'Erreur lors de la reconnaissance vocale',
+        variant: 'destructive',
+      });
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    try {
+      recognition.start();
+    } catch (error) {
+      console.error('Erreur démarrage reconnaissance:', error);
+      setIsListening(false);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de démarrer la reconnaissance vocale',
+        variant: 'destructive',
+      });
+    }
+  };
 
   const activeMainCategory = selectedMainCategory
     ? MAIN_CATEGORIES.find((c) => c.id === selectedMainCategory) || null
@@ -174,14 +261,24 @@ export default function NkampaPage() {
 
   const activeSubcategories = getSubcategoriesForMain(selectedMainCategory);
 
-  const bannerProducts = (() => {
-    const withTime = (firestoreProducts || []).slice().sort((a: any, b: any) => {
-      const aMs = a?.createdAt?.toMillis?.() || 0;
-      const bMs = b?.createdAt?.toMillis?.() || 0;
-      return bMs - aMs;
+  const sortedProducts = useMemo(() => {
+    const getCreatedAtMs = (product: any) => product?.createdAt?.toMillis?.() || 0;
+    const getPopularityScore = (product: any) => {
+      const clicks = Number(product?.clickCount ?? product?.viewCount ?? product?.views ?? 0);
+      const sold = Number(product?.sold ?? 0);
+      const reviews = Number(product?.reviews ?? 0);
+      const rating = Number(product?.rating ?? 0);
+      return clicks * 1000000 + sold * 10000 + reviews * 100 + Math.round(rating * 10);
+    };
+
+    return [...(firestoreProducts || [])].sort((left: any, right: any) => {
+      const popularityDiff = getPopularityScore(right) - getPopularityScore(left);
+      if (popularityDiff !== 0) return popularityDiff;
+      return getCreatedAtMs(right) - getCreatedAtMs(left);
     });
-    return withTime.slice(0, 6);
-  })();
+  }, [firestoreProducts]);
+
+  const bannerProducts = useMemo(() => sortedProducts.slice(0, 6), [sortedProducts]);
 
   // Rotation automatique des bannières (uniquement si on a des produits)
   useEffect(() => {
@@ -203,8 +300,8 @@ export default function NkampaPage() {
   }, [bannerIndex, bannerProducts?.length]);
 
   // Filtrer les produits selon la catégorie et sous-catégorie
-  const getFilteredProducts = () => {
-    let filtered: any[] = (firestoreProducts || []) as any[];
+  const filteredProducts = useMemo(() => {
+    let filtered: any[] = sortedProducts as any[];
 
     if (activeMainCategory?.type && !isSupplierView) {
       if (activeMainCategory.id === 'digital') {
@@ -238,10 +335,10 @@ export default function NkampaPage() {
     }
 
     return filtered;
-  };
+  }, [sortedProducts, activeMainCategory?.type, activeMainCategory?.id, isSupplierView, selectedSubcategory, searchQuery]);
 
   // Filtrer les fournisseurs selon la catégorie
-  const getFilteredSuppliers = () => {
+  const filteredSuppliers = useMemo(() => {
     let filtered: any[] = (publicStores || []) as any[];
 
     if (activeMainCategory?.type && isSupplierView) {
@@ -259,11 +356,9 @@ export default function NkampaPage() {
     }
 
     return filtered;
-  };
+  }, [publicStores, activeMainCategory?.type, isSupplierView, selectedSubcategory, searchQuery]);
 
   // Déterminer si on affiche les fournisseurs ou les produits
-  const filteredProducts = getFilteredProducts();
-  const filteredSuppliers = getFilteredSuppliers();
   const categoryLabel = MAIN_CATEGORIES.find((c) => c.id === selectedMainCategory)?.label || 'Tous les produits';
 
   const handleCheckoutFromCart = () => {
@@ -412,118 +507,139 @@ export default function NkampaPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Ultra-modern Header */}
+      {/* Header futuriste vert sans transparence */}
       <header className="sticky top-0 z-30">
-        <div className="relative px-3 pt-3">
-          {/* Ambient glow */}
-          <div className="pointer-events-none absolute left-1/2 top-0 h-28 w-[min(760px,95vw)] -translate-x-1/2 bg-[radial-gradient(closest-side,rgba(16,185,129,0.55),transparent)] blur-2xl" />
+        {/* Fond vert solide avec effet de profondeur */}
+        <div className="relative bg-gradient-to-br from-green-600 via-green-500 to-emerald-600 shadow-2xl">
+          {/* Effet de lumière néon en haut */}
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-green-300 to-transparent opacity-80" />
+          
+          {/* Grille futuriste en arrière-plan */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute inset-0" style={{
+              backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)',
+              backgroundSize: '20px 20px'
+            }} />
+          </div>
 
-          <div className="mx-auto max-w-6xl">
-            {/* Floating frame (gradient border) */}
-            <div className="relative rounded-[28px] p-[1px] shadow-[0_18px_45px_rgba(0,0,0,0.18)]">
-              <div className="absolute inset-0 rounded-[28px] bg-[conic-gradient(at_30%_30%,rgba(16,185,129,1),rgba(34,197,94,0.55),rgba(16,185,129,0.22),rgba(16,185,129,1))] opacity-95" />
-              <div className="relative rounded-[27px] border border-white/10 bg-background/65 backdrop-blur-2xl">
-                {/* Top row */}
-                <div className="flex items-center justify-between gap-3 px-3 py-3 sm:px-4">
-                  <Link href="/dashboard" className="flex-shrink-0">
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="text-foreground/80 hover:bg-primary/10 hover:text-foreground"
-                      aria-label="Retour"
-                    >
-                      <ArrowLeft className="h-5 w-5" />
-                    </Button>
-                  </Link>
+          <div className="relative mx-auto max-w-6xl px-4 py-4">
+            {/* Top row */}
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <Link href="/dashboard" className="flex-shrink-0">
+                <button className="group relative h-10 w-10 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-all overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <ArrowLeft className="relative h-5 w-5 text-white m-auto" />
+                </button>
+              </Link>
 
-                  <div className="min-w-0 flex items-center gap-3">
-                    <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-2xl bg-primary/10 ring-1 ring-primary/25 shadow-[0_10px_35px_rgba(16,185,129,0.22)]">
-                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(16,185,129,0.55),transparent_60%)]" />
-                      <div className="absolute -right-3 -top-3 h-10 w-10 rounded-full bg-white/20 blur-md" />
-                    </div>
-                    <h1 className="truncate text-sm font-extrabold tracking-tight text-foreground sm:text-base">
-                      eNkamba <span className="text-primary">Shop</span>
-                    </h1>
-                  </div>
-
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => setIsOpen(true)}
-                    className="relative text-foreground/80 hover:bg-primary/10 hover:text-foreground"
-                    aria-label="Ouvrir le panier"
-                  >
-                    <ShoppingCart className="h-5 w-5" />
-                    {itemCount > 0 && (
-                      <span className="absolute -top-1 -right-1 min-w-5 rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-black text-primary-foreground shadow">
-                        {itemCount > 99 ? '99+' : itemCount}
-                      </span>
-                    )}
-                  </Button>
-                </div>
-
-                {/* Dock row */}
-                <div className="flex flex-col gap-2 px-3 pb-3 sm:px-4">
-                  <nav className="flex items-center gap-4 overflow-x-auto pb-1 scrollbar-hide">
-                    {[
-                      { href: '/dashboard/nkampa', label: 'Boutique', icon: NkampaNavShopIcon, accent: 'text-primary' },
-                      { href: '/dashboard/nkampa/orders', label: 'Commandes', icon: NkampaNavOrdersIcon, accent: 'text-amber-600' },
-                      { href: '/dashboard/nkampa/favorites', label: 'Favoris', icon: NkampaNavFavoritesIcon, accent: 'text-pink-600' },
-                      hasStoreChecked && myStore
-                        ? { href: '/dashboard/nkampa/store/dashboard', label: 'Ma boutique', icon: NkampaNavSellerIcon, accent: 'text-sky-600' }
-                        : { href: '/dashboard/nkampa/store', label: 'Créer boutique', icon: NkampaNavSellerIcon, accent: 'text-sky-600' },
-                    ].map((t) => {
-                      const Icon = t.icon;
-                      const isActive = pathname === t.href;
-                      return (
-                        <Link
-                          key={t.href}
-                          href={t.href}
-                          aria-current={isActive ? 'page' : undefined}
-                          className={[
-                            'group relative flex-shrink-0 px-0.5 py-2 text-xs font-semibold transition',
-                            isActive ? 'text-primary' : 'text-foreground/70 hover:text-foreground',
-                            isActive
-                              ? 'after:absolute after:left-0 after:right-0 after:-bottom-0.5 after:h-[2px] after:rounded-full after:bg-primary after:shadow-[0_0_18px_rgba(16,185,129,0.35)]'
-                              : 'after:absolute after:left-0 after:right-0 after:-bottom-0.5 after:h-[2px] after:rounded-full after:bg-transparent group-hover:after:bg-primary/30',
-                          ].join(' ')}
-                        >
-                          <span className="flex items-center gap-2">
-                            <Icon
-                              className={[
-                                'h-4 w-4',
-                                isActive ? 'text-primary' : `${t.accent} opacity-85`,
-                                'transition-opacity group-hover:opacity-100',
-                              ].join(' ')}
-                            />
-                            {t.label}
-                          </span>
-                        </Link>
-                      );
-                    })}
-                  </nav>
-
-                  <div className="flex items-center gap-2 rounded-2xl ring-1 ring-primary/10 bg-background/40 px-3 py-2 backdrop-blur">
-                    <Search className="h-4 w-4 text-foreground/60" />
-                    <input
-                      type="text"
-                      placeholder="Rechercher…"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-44 flex-1 bg-transparent text-sm text-foreground placeholder:text-foreground/40 outline-none transition-[width] focus:w-72 md:w-72 md:focus:w-96"
+              <div className="flex items-center gap-3">
+                {/* Logo eNkamba avec effet holographique */}
+                <div className="relative">
+                  {/* Glow effect */}
+                  <div className="absolute -inset-2 bg-white/30 rounded-2xl blur-xl" />
+                  
+                  {/* Logo container */}
+                  <div className="relative h-12 w-12 rounded-2xl bg-white shadow-2xl overflow-hidden border-2 border-white/50">
+                    <Image
+                      src="/enkamba-logo.png"
+                      alt="eNkamba"
+                      fill
+                      className="object-contain p-1"
                     />
-                    <button
-                      type="button"
-                      className="rounded-xl p-2 text-foreground/60 transition hover:bg-primary/10 hover:text-foreground"
-                      aria-label="Recherche vocale"
-                    >
-                      <Mic className="h-4 w-4" />
-                    </button>
                   </div>
                 </div>
+                
+                <div>
+                  <h1 className="text-xl font-black text-white tracking-tight drop-shadow-lg">
+                    eNkamba Shop
+                  </h1>
+                  <p className="text-xs text-white/80 font-medium">Marketplace du futur</p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setIsOpen(true)}
+                className="group relative h-12 w-12 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-all overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <ShoppingCart className="relative h-5 w-5 text-white m-auto" />
+                {itemCount > 0 && (
+                  <span className="absolute -top-1 -right-1 h-6 min-w-[24px] flex items-center justify-center rounded-full bg-gradient-to-r from-red-500 to-pink-500 px-1.5 text-xs font-black text-white shadow-lg border-2 border-white">
+                    {itemCount > 99 ? '99+' : itemCount}
+                  </span>
+                )}
+              </button>
+            </div>
+
+            {/* Navigation futuriste */}
+            <nav className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide mb-4">
+              {[
+                { href: '/dashboard/nkampa', label: 'Boutique', icon: NkampaNavShopIcon },
+                { href: '/dashboard/nkampa/orders', label: 'Commandes', icon: NkampaNavOrdersIcon },
+                { href: '/dashboard/nkampa/favorites', label: 'Favoris', icon: NkampaNavFavoritesIcon },
+                hasStoreChecked && myStore
+                  ? { href: '/dashboard/nkampa/store/dashboard', label: 'Ma boutique', icon: NkampaNavSellerIcon }
+                  : { href: '/dashboard/nkampa/store', label: 'Créer boutique', icon: NkampaNavSellerIcon },
+              ].map((item) => {
+                const Icon = item.icon;
+                const isActive = pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="group relative"
+                  >
+                    <div className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
+                      isActive
+                        ? 'bg-white text-green-600 shadow-xl shadow-white/20'
+                        : 'text-white/90 hover:bg-white/10 backdrop-blur-sm border border-white/10'
+                    }`}>
+                      <Icon className="h-4 w-4" />
+                      {item.label}
+                    </div>
+                    {isActive && (
+                      <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1/2 h-1 bg-white rounded-full shadow-lg shadow-white/50" />
+                    )}
+                  </Link>
+                );
+              })}
+            </nav>
+
+            {/* Barre de recherche futuriste */}
+            <div className="relative group">
+              {/* Glow effect on focus */}
+              <div className="absolute -inset-1 bg-white/20 rounded-2xl opacity-0 group-focus-within:opacity-100 blur-lg transition-opacity" />
+              
+              <div className="relative flex items-center gap-3 rounded-2xl bg-white shadow-xl px-4 py-3 border-2 border-white/50">
+                <Search className="h-5 w-5 text-green-600" />
+                <input
+                  type="text"
+                  placeholder="Rechercher des produits..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="flex-1 bg-transparent text-sm font-medium text-gray-900 placeholder:text-gray-500 outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={handleVoiceSearch}
+                  className={`relative rounded-xl p-2 transition-all ${
+                    isListening 
+                      ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/50' 
+                      : 'text-green-600 hover:bg-green-50'
+                  }`}
+                  aria-label="Recherche vocale"
+                >
+                  <Mic className="h-5 w-5" />
+                  {isListening && (
+                    <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-400 rounded-full animate-ping" />
+                  )}
+                </button>
               </div>
             </div>
           </div>
+
+          {/* Effet de lumière néon en bas */}
+          <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-emerald-300 to-transparent opacity-60" />
         </div>
       </header>
 
@@ -623,7 +739,7 @@ export default function NkampaPage() {
 
         {/* Section Fournisseurs */}
         {isSupplierView && selectedMainCategory && (
-          <div className="px-4">
+          <div className="px-4" data-results-section>
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-lg font-bold text-gray-900">{categoryLabel}</h2>
@@ -648,7 +764,7 @@ export default function NkampaPage() {
 
         {/* Section Produits filtrés */}
         {!isSupplierView && selectedMainCategory && (
-          <div className="px-4">
+          <div className="px-4" data-results-section>
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-lg font-bold text-gray-900">{categoryLabel}</h2>
@@ -674,52 +790,84 @@ export default function NkampaPage() {
         {/* Section par défaut - Tous les produits */}
         {!selectedMainCategory && (
           <>
-            {/* Bannière promotionnelle défilante */}
-            <div className="relative h-48 mx-4 mt-4 rounded-2xl overflow-hidden shadow-[0_18px_45px_rgba(0,0,0,0.18)] bg-gradient-to-br from-primary via-emerald-700 to-green-900">
-              {/* Images défilantes avec transition */}
-              <div className="absolute inset-0 transition-opacity duration-1000 ease-in-out">
+            {/* Bannière promotionnelle moderne et immersive */}
+            <div className="relative h-56 mx-4 mt-4 rounded-3xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.25)]">
+              {/* Image de fond avec overlay subtil */}
+              <div className="absolute inset-0">
                 {bannerProducts.length > 0 && (
                   <Image
                     src={bannerProducts[bannerIndex]?.image || bannerProducts[bannerIndex]?.images?.[0] || 'https://picsum.photos/seed/banner/1200/600'}
                     alt="Bannière"
                     fill
-                    className="object-cover opacity-40"
+                    className="object-cover"
                   />
                 )}
               </div>
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/85 via-emerald-700/75 to-green-900/70" />
-              <div className="absolute inset-0 flex flex-col justify-between p-4 text-white">
-                <div>
-                  <Badge className="bg-white text-green-700">🌾 Nouveau</Badge>
+              
+              {/* Gradient overlay moderne - plus subtil */}
+              <div className="absolute inset-0 bg-gradient-to-br from-black/40 via-black/20 to-transparent" />
+              
+              {/* Effet de lumière futuriste */}
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(16,185,129,0.3),transparent_50%)]" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(34,197,94,0.2),transparent_50%)]" />
+              
+              {/* Contenu */}
+              <div className="absolute inset-0 flex flex-col justify-between p-6">
+                {/* Badge en haut */}
+                <div className="flex items-start justify-between">
+                  <div className="relative">
+                    <div className="absolute -inset-1 bg-gradient-to-r from-primary to-emerald-400 rounded-full blur opacity-75" />
+                    <Badge className="relative bg-white/95 text-primary border-0 font-bold shadow-lg backdrop-blur-sm">
+                      🌟 Tendance
+                    </Badge>
+                  </div>
                 </div>
-                <div className="animate-pulse">
+                
+                {/* Informations produit en bas */}
+                <div className="space-y-2">
                   {bannerProducts.length > 0 ? (
                     <>
-                      <h2 className="text-white font-bold text-lg mb-1">
+                      <div className="inline-block px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20">
+                        <p className="text-xs font-semibold text-white/90">Produit vedette</p>
+                      </div>
+                      <h2 className="text-white font-black text-2xl drop-shadow-lg line-clamp-2">
                         {bannerProducts[bannerIndex]?.name}
                       </h2>
-                      <p className="text-white/90 text-sm">
-                        {Number(bannerProducts[bannerIndex]?.price || 0).toLocaleString()} {bannerProducts[bannerIndex]?.currency || 'CDF'}
-                      </p>
+                      <div className="flex items-baseline gap-2">
+                        <p className="text-white font-black text-3xl drop-shadow-lg">
+                          {Number(bannerProducts[bannerIndex]?.price || 0).toLocaleString()}
+                        </p>
+                        <p className="text-white/90 font-semibold text-lg drop-shadow">
+                          {bannerProducts[bannerIndex]?.currency || 'CDF'}
+                        </p>
+                      </div>
                     </>
                   ) : (
                     <>
-                      <h2 className="text-white font-bold text-lg mb-1">Découvrez Nkampa</h2>
-                      <p className="text-white/90 text-sm">Ajoutez vos premiers produits pour les voir ici.</p>
+                      <h2 className="text-white font-black text-2xl drop-shadow-lg">
+                        Découvrez Nkampa
+                      </h2>
+                      <p className="text-white/90 text-sm drop-shadow">
+                        Votre marketplace de confiance
+                      </p>
                     </>
                   )}
                 </div>
               </div>
-              {/* Indicateurs de bannière */}
+              
+              {/* Indicateurs de bannière modernes */}
               {bannerProducts.length > 1 && (
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
                   {bannerProducts.map((_, idx) => (
                     <button
                       key={idx}
                       onClick={() => setBannerIndex(idx)}
-                      className={`h-2 rounded-full transition-all cursor-pointer ${
-                        idx === bannerIndex ? 'w-6 bg-white' : 'w-2 bg-white/50'
+                      className={`h-1.5 rounded-full transition-all ${
+                        idx === bannerIndex 
+                          ? 'w-8 bg-white shadow-[0_0_12px_rgba(255,255,255,0.8)]' 
+                          : 'w-1.5 bg-white/40 hover:bg-white/60'
                       }`}
+                      aria-label={`Aller à la bannière ${idx + 1}`}
                     />
                   ))}
                 </div>
@@ -727,28 +875,39 @@ export default function NkampaPage() {
             </div>
 
             {/* Affichage de tous les produits */}
-            <div className="px-4">
+            <div className="px-4" data-results-section>
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h2 className="text-lg font-bold text-gray-900">Tous les produits</h2>
+                  <h2 className="text-lg font-bold text-gray-900">
+                    {searchQuery ? `Résultats pour "${searchQuery}"` : 'Tous les produits'}
+                  </h2>
                   <p className="text-xs text-gray-600">
-                    {firestoreProducts.length} produit{firestoreProducts.length !== 1 ? 's' : ''}
+                    {searchQuery ? filteredProducts.length : sortedProducts.length} produit{(searchQuery ? filteredProducts.length : sortedProducts.length) !== 1 ? 's' : ''}
                   </p>
                 </div>
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-sm font-medium text-gray-700 transition-colors"
+                  >
+                    <X className="h-4 w-4" />
+                    Effacer
+                  </button>
+                )}
               </div>
               {productsLoading ? (
                 <div className="py-10 flex items-center justify-center text-gray-500">
                   <Loader2 className="w-5 h-5 animate-spin mr-2" /> Chargement…
                 </div>
-              ) : firestoreProducts.length > 0 ? (
+              ) : (searchQuery ? filteredProducts : sortedProducts).length > 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-                  {firestoreProducts.map((product) => (
+                  {(searchQuery ? filteredProducts : sortedProducts).map((product) => (
                     <ProductCard key={product.id} product={product} />
                   ))}
                 </div>
               ) : (
                 <div className="text-center py-10 text-gray-500">
-                  Aucun produit pour le moment.
+                  {searchQuery ? `Aucun produit trouvé pour "${searchQuery}"` : 'Aucun produit pour le moment.'}
                 </div>
               )}
             </div>

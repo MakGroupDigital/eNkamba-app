@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { collection, addDoc, query, where, onSnapshot, doc, getDoc, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { useFirestoreConversations } from './useFirestoreConversations';
-import { useWalletTransactions } from './useWalletTransactions';
+import { useWalletBalance } from './useWalletBalance';
 
 export interface EcommerceProduct {
   id: string;
@@ -53,7 +53,7 @@ export function useNkampaEcommerce() {
   const [error, setError] = useState<string | null>(null);
   const currentUser = auth.currentUser;
   const { createConversation, sendMessage } = useFirestoreConversations();
-  const { balance } = useWalletTransactions();
+  const { balance } = useWalletBalance();
 
   // Charger les produits
   useEffect(() => {
