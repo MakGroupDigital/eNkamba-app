@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useNkampaCart } from '@/hooks/useNkampaCart';
 import { useNkampaEcommerce } from '@/hooks/useNkampaEcommerce';
 import { useWalletBalance } from '@/hooks/useWalletBalance';
+import { OrderReceipt } from '@/components/nkampa/OrderReceipt';
 
 export default function ShopProductPage({
   params,
@@ -38,6 +39,29 @@ export default function ShopProductPage({
   const [shippingAddress, setShippingAddress] = useState('');
   const [shippingPhone, setShippingPhone] = useState('');
   const [isBuying, setIsBuying] = useState(false);
+  const [priceInCDF, setPriceInCDF] = useState<number>(0);
+  const [showReceipt, setShowReceipt] = useState(false);
+  const [completedOrder, setCompletedOrder] = useState<any>(null);
+  const [conversationId, setConversationId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!product) return;
+
+    const convertPrice = async () => {
+      try {
+        const { convertToCDF } = await import('@/lib/currency-converter');
+        const price = Number(product.price || 0);
+        const currency = product.currency || 'CDF';
+        const converted = await convertToCDF(price, currency);
+        setPriceInCDF(Math.round(converted));
+      } catch (error) {
+        console.error('Erreur conversion prix:', error);
+        setPriceInCDF(Number(product.price || 0));
+      }
+    };
+
+    convertPrice();
+  }, [product]);
 
   useEffect(() => {
     let mounted = true;
@@ -103,7 +127,7 @@ export default function ShopProductPage({
     return list.slice(0, 8);
   }, [product]);
 
-  const totalPrice = useMemo(() => Number(product?.price || 0) * quantity, [product?.price, quantity]);
+  const totalPrice = useMemo(() => priceInCDF * quantity, [priceInCDF, quantity]);
 
   const handleAddToCart = () => {
     if (!product) return;
@@ -164,11 +188,14 @@ export default function ShopProductPage({
 
       toast({
         title: 'Commande confirmée',
-        description: `Commande ${result.orderId} créée avec succès.`,
+        description: `Commande ${result.orderNumber} créée avec succès.`,
         className: 'bg-green-600 text-white border-none',
       });
 
-      router.push(`/dashboard/miyiki-chat/${result.conversationId}`);
+      // Afficher le reçu de paiement
+      setCompletedOrder(result.order);
+      setConversationId(result.conversationId);
+      setShowReceipt(true);
     } catch (error: any) {
       toast({
         title: 'Paiement impossible',
@@ -313,8 +340,13 @@ export default function ShopProductPage({
               <div className="min-w-0">
                 <p className="text-xs text-muted-foreground">Prix</p>
                 <p className="text-2xl font-extrabold text-primary">
-                  {(product.price || 0).toLocaleString()} {product.currency || 'CDF'}
+                  {priceInCDF.toLocaleString()} CDF
                 </p>
+                {product.currency && product.currency !== 'CDF' && product.currency !== 'FC' && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Prix original: {(product.price || 0).toLocaleString()} {product.currency}
+                  </p>
+                )}
               </div>
               <Badge className="bg-primary/10 text-primary border border-primary/15">
                 {product.storeCategory || storeDoc.category || 'Nkampa'}
@@ -396,7 +428,7 @@ export default function ShopProductPage({
                   <div className="flex-1 min-w-0">
                     <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Total</p>
                     <p className="text-lg font-black text-primary truncate">
-                      {totalPrice.toLocaleString()} <span className="text-xs">{product.currency || 'CDF'}</span>
+                      {totalPrice.toLocaleString()} <span className="text-xs">CDF</span>
                     </p>
                   </div>
 
@@ -434,28 +466,40 @@ export default function ShopProductPage({
                   </button>
                 </div>
 
-                {/* Champs d'adresse en accordéon */}
-                {(!shippingAddress || !shippingPhone) && (
-                  <div className="px-4 pb-3 pt-1 space-y-2 border-t border-primary/5">
-                    <input
-                      value={shippingAddress}
-                      onChange={(event) => setShippingAddress(event.target.value)}
-                      placeholder="📍 Adresse de livraison"
-                      className="w-full h-10 rounded-xl border border-primary/10 bg-white/50 px-3 text-xs outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:bg-white"
-                    />
-                    <input
-                      value={shippingPhone}
-                      onChange={(event) => setShippingPhone(event.target.value)}
-                      placeholder="📞 Téléphone"
-                      className="w-full h-10 rounded-xl border border-primary/10 bg-white/50 px-3 text-xs outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:bg-white"
-                    />
-                  </div>
-                )}
+                {/* Champs d'adresse toujours visibles */}
+                <div className="px-4 pb-3 pt-1 space-y-2 border-t border-primary/5">
+                  <input
+                    value={shippingAddress}
+                    onChange={(event) => setShippingAddress(event.target.value)}
+                    placeholder="📍 Adresse de livraison"
+                    className="w-full h-10 rounded-xl border border-primary/10 bg-white/50 px-3 text-xs outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:bg-white"
+                  />
+                  <input
+                    value={shippingPhone}
+                    onChange={(event) => setShippingPhone(event.target.value)}
+                    placeholder="📞 Téléphone"
+                    className="w-full h-10 rounded-xl border border-primary/10 bg-white/50 px-3 text-xs outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:bg-white"
+                  />
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Reçu de paiement */}
+      {showReceipt && completedOrder && (
+        <OrderReceipt
+          order={completedOrder}
+          onClose={() => {
+            setShowReceipt(false);
+            // Rediriger vers la conversation avec le vendeur
+            if (conversationId) {
+              router.push(`/dashboard/miyiki-chat/${conversationId}`);
+            }
+          }}
+        />
+      )}
 
       <style jsx>{`
         @keyframes shimmer {

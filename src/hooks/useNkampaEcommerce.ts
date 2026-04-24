@@ -145,79 +145,88 @@ export function useNkampaEcommerce() {
       if (!currentUser) throw new Error('Utilisateur non authentifié');
 
       try {
-        const totalPrice = product.price * quantity;
+        // Convertir le prix en CDF
+        const { convertToCDF } = await import('@/lib/currency-converter');
+        const priceInCDF = await convertToCDF(product.price, product.currency);
+        const totalPriceInCDF = Math.round(priceInCDF * quantity);
 
-        // Vérifier le solde
-        if (balance < totalPrice) {
+        // Vérifier le solde (toujours en CDF)
+        if (balance < totalPriceInCDF) {
           throw new Error('Solde insuffisant. Veuillez ajouter des fonds.');
         }
 
-        // Générer un numéro de suivi unique
-        const year = new Date().getFullYear();
-        const timestamp = Date.now();
-        const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-        const trackingNumber = `ENK-${year}-${timestamp.toString().slice(-6)}${random}`;
-
-        // Générer un ID de transaction
-        const transactionId = `TXN_${timestamp}_${Math.random().toString(36).substr(2, 9)}`;
-
-        // Créer la commande
-        const orderRef = await addDoc(collection(db, 'nkampa_orders'), {
-          productId: product.id,
-          productName: product.name,
-          buyerId: currentUser.uid,
-          sellerId: product.sellerId,
-          quantity,
-          totalPrice,
-          currency: product.currency,
-          status: 'pending',
-          paymentMethod: 'wallet',
-          shippingAddress,
-          shippingPhone,
-          trackingNumber,
-          transactionId,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        });
-
-        // Effectuer le paiement directement avec Firestore
+        // Récupérer les infos utilisateur
         const buyerUserRef = doc(db, 'users', currentUser.uid);
-        const sellerUserRef = doc(db, 'users', product.sellerId);
-
-        // Récupérer les documents utilisateurs
         const buyerUserSnap = await getDoc(buyerUserRef);
-        const sellerUserSnap = await getDoc(sellerUserRef);
-
+        
         if (!buyerUserSnap.exists()) {
           throw new Error('Utilisateur introuvable');
         }
 
+        const buyerData = buyerUserSnap.data();
+        const buyerName = buyerData?.displayName || buyerData?.name || 'Acheteur';
+        const buyerEmail = buyerData?.email || currentUser.email || '';
+
+        // Créer la commande avec le nouveau système
+        const { createOrder, notifySeller, notifyBuyer } = await import('@/lib/nkampa-orders');
+        
+        const order = await createOrder({
+          buyerId: currentUser.uid,
+          buyerName,
+          buyerEmail,
+          sellerId: product.sellerId,
+          sellerName: product.sellerName,
+          storeId: product.storeId || '',
+          storeName: product.sellerName,
+          storeSlug: product.storeSlug || '',
+          productId: product.id,
+          productName: product.name,
+          productImage: product.image || product.images?.[0] || '',
+          quantity,
+          pricePerUnit: product.price,
+          originalCurrency: product.currency,
+          priceInCDF,
+          totalAmount: totalPriceInCDF,
+          shippingAddress,
+          shippingPhone,
+          status: 'pending',
+          paymentMethod: 'wallet',
+          paymentStatus: 'pending',
+        });
+
+        // Effectuer le paiement
+        const sellerUserRef = doc(db, 'users', product.sellerId);
+        const sellerUserSnap = await getDoc(sellerUserRef);
+
         const currentBalance = buyerUserSnap.data()?.walletBalance || 0;
 
-        if (currentBalance < totalPrice) {
+        if (currentBalance < totalPriceInCDF) {
           throw new Error('Solde insuffisant');
         }
 
         // Mettre à jour les soldes
         await updateDoc(buyerUserRef, {
-          walletBalance: currentBalance - totalPrice,
+          walletBalance: currentBalance - totalPriceInCDF,
           updatedAt: serverTimestamp(),
         });
 
         if (sellerUserSnap.exists()) {
           const sellerBalance = sellerUserSnap.data()?.walletBalance || 0;
           await updateDoc(sellerUserRef, {
-            walletBalance: sellerBalance + totalPrice,
+            walletBalance: sellerBalance + totalPriceInCDF,
             updatedAt: serverTimestamp(),
           });
         } else {
           await setDoc(sellerUserRef, {
             uid: product.sellerId,
-            walletBalance: totalPrice,
+            walletBalance: totalPriceInCDF,
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
           });
         }
+
+        // Générer un ID de transaction
+        const transactionId = `TXN_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
         // Enregistrer les transactions
         const buyerTransactionRef = doc(
@@ -229,20 +238,23 @@ export function useNkampaEcommerce() {
         );
 
         await setDoc(buyerTransactionRef, {
-          type: 'payment',
-          amount: -totalPrice,
+          type: 'nkampa_purchase',
+          amount: -totalPriceInCDF,
           status: 'completed',
-          description: `Achat e-commerce - ${product.name}`,
+          description: `Achat Nkampa - ${product.name}`,
           previousBalance: currentBalance,
-          newBalance: currentBalance - totalPrice,
+          newBalance: currentBalance - totalPriceInCDF,
           timestamp: serverTimestamp(),
           createdAt: new Date().toISOString(),
           metadata: {
-            trackingNumber,
-            orderId: orderRef.id,
+            orderId: order.id,
+            orderNumber: order.orderId,
             productId: product.id,
             productName: product.name,
             quantity,
+            originalPrice: product.price,
+            originalCurrency: product.currency,
+            priceInCDF,
           },
         });
 
@@ -257,17 +269,19 @@ export function useNkampaEcommerce() {
         const sellerBalance = sellerUserSnap.exists() ? (sellerUserSnap.data()?.walletBalance || 0) : 0;
 
         await setDoc(sellerTransactionRef, {
-          type: 'payment',
-          amount: totalPrice,
+          type: 'nkampa_sale',
+          amount: totalPriceInCDF,
           status: 'completed',
-          description: `Vente e-commerce - ${product.name}`,
+          description: `Vente Nkampa - ${product.name}`,
           previousBalance: sellerBalance,
-          newBalance: sellerBalance + totalPrice,
+          newBalance: sellerBalance + totalPriceInCDF,
           timestamp: serverTimestamp(),
           createdAt: new Date().toISOString(),
           metadata: {
-            orderId: orderRef.id,
+            orderId: order.id,
+            orderNumber: order.orderId,
             buyerId: currentUser.uid,
+            buyerName,
             productId: product.id,
             productName: product.name,
             quantity,
@@ -275,38 +289,44 @@ export function useNkampaEcommerce() {
         });
 
         // Mettre à jour la commande avec le statut de paiement
-        await updateDoc(doc(db, 'nkampa_orders', orderRef.id), {
-          status: 'paid',
-          updatedAt: serverTimestamp(),
+        const { updateOrderStatus } = await import('@/lib/nkampa-orders');
+        await updateOrderStatus(order.id!, 'paid', {
+          transactionId,
+          paymentStatus: 'completed',
         });
 
-        // Créer une conversation avec le vendeur pour la commande
+        // Envoyer les notifications
+        await notifySeller(order);
+        await notifyBuyer(order, 'order_confirmed');
+
+        // Créer une conversation avec le vendeur
         const conversationId = await createConversation(
           product.sellerId,
           product.sellerName,
           'uid'
         );
 
-        // Envoyer un message de confirmation avec le numéro de suivi
+        // Envoyer un message de confirmation
         await sendMessage(
           conversationId,
-          `✅ Commande confirmée!\n\n📦 ${product.name} x${quantity}\n💰 Total: ${totalPrice} ${product.currency}\n📋 Commande: ${orderRef.id.substring(0, 8).toUpperCase()}\n🔍 Suivi: ${trackingNumber}\n\nVous pouvez suivre votre colis avec ce numéro.`,
+          `✅ Commande confirmée!\n\n📦 ${product.name} x${quantity}\n💰 Total: ${totalPriceInCDF.toLocaleString()} CDF\n📋 Commande: ${order.orderId}\n\n📍 Livraison:\n${shippingAddress}\n📞 ${shippingPhone}\n\nLe vendeur va traiter votre commande.`,
           'text',
           {
-            orderId: orderRef.id,
+            orderId: order.id,
+            orderNumber: order.orderId,
             productId: product.id,
             quantity,
-            totalPrice,
-            trackingNumber,
+            totalPrice: totalPriceInCDF,
           }
         );
 
         return {
           success: true,
-          orderId: orderRef.id,
+          orderId: order.id!,
+          orderNumber: order.orderId,
           conversationId,
           transactionId,
-          trackingNumber,
+          order,
         };
       } catch (err: any) {
         console.error('Erreur achat produit:', err);

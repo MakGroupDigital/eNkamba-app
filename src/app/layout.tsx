@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { PendingPaymentWatcher } from "@/components/wallet/pending-payment-watcher";
 import { AccessCodeGate } from "@/components/access-code/AccessCodeGate";
 import { GlobalCallOverlay } from "@/components/chat/global-call-overlay";
+import { CurrencyInitializer } from "@/components/currency/CurrencyInitializer";
 
 export const metadata: Metadata = {
   title: "eNkamba - La vie simplifiée et meilleure",
@@ -55,6 +56,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <CurrencyInitializer />
           <AccessCodeGate>
             {children}
             <GlobalCallOverlay />

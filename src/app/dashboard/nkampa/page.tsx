@@ -449,61 +449,87 @@ export default function NkampaPage() {
     </Link>
   );
 
-  const ProductCard = ({ product }: { product: any }) => (
-    <Link href={product?.storeSlug ? `/shop/${product.storeSlug}/product/${product.id}` : `/dashboard/nkampa`} className={!product?.storeSlug ? 'pointer-events-none opacity-60' : ''}>
-      <Card className="rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer h-full">
-        <div className="relative w-full aspect-square bg-gray-100">
-          <Image
-            src={product.image || product.images?.[0] || 'https://picsum.photos/seed/product/300/300'}
-            alt={product.name || 'Produit'}
-            fill
-            className="object-cover"
-          />
-        </div>
-        <CardContent className="p-3 space-y-2">
-          <h3 className="font-semibold text-sm text-gray-900 line-clamp-2">
-            {product.name}
-          </h3>
-          <div className="flex items-center gap-1">
-            <PriceIcon className="w-4 h-4 text-primary" />
-            <span className="text-lg font-bold text-primary">
-              {Number(product.price || 0).toLocaleString()}
-            </span>
-            <span className="text-xs text-gray-600">{product.currency}</span>
+  const ProductCard = ({ product }: { product: any }) => {
+    const [priceInCDF, setPriceInCDF] = useState<number>(0);
+
+    useEffect(() => {
+      const convertPrice = async () => {
+        try {
+          const { convertToCDF } = await import('@/lib/currency-converter');
+          const price = Number(product.price || 0);
+          const currency = product.currency || 'CDF';
+          const converted = await convertToCDF(price, currency);
+          setPriceInCDF(Math.round(converted));
+        } catch (error) {
+          console.error('Erreur conversion prix:', error);
+          setPriceInCDF(Number(product.price || 0));
+        }
+      };
+
+      convertPrice();
+    }, [product.price, product.currency]);
+
+    return (
+      <Link href={product?.storeSlug ? `/shop/${product.storeSlug}/product/${product.id}` : `/dashboard/nkampa`} className={!product?.storeSlug ? 'pointer-events-none opacity-60' : ''}>
+        <Card className="rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer h-full">
+          <div className="relative w-full aspect-square bg-gray-100">
+            <Image
+              src={product.image || product.images?.[0] || 'https://picsum.photos/seed/product/300/300'}
+              alt={product.name || 'Produit'}
+              fill
+              className="object-cover"
+            />
           </div>
-          {product.moq && (
-            <div className="flex items-center gap-1 text-xs text-gray-600">
-              <MOQIcon className="w-3 h-3" />
-              <span>MOQ: {product.moq}</span>
+          <CardContent className="p-3 space-y-2">
+            <h3 className="font-semibold text-sm text-gray-900 line-clamp-2">
+              {product.name}
+            </h3>
+            <div className="flex items-center gap-1">
+              <PriceIcon className="w-4 h-4 text-primary" />
+              <span className="text-lg font-bold text-primary">
+                {priceInCDF.toLocaleString()}
+              </span>
+              <span className="text-xs text-gray-600">CDF</span>
             </div>
-          )}
-          <div className="flex items-center gap-1 text-xs text-gray-600">
-            <LocationIcon className="w-3 h-3" />
-            <span>{product.location || '—'}</span>
-          </div>
-          {product.rating && (
-            <div className="flex items-center gap-1 text-xs">
-              <div className="flex gap-0.5">
-                {[...Array(5)].map((_, i) => (
-                  <StarIcon
-                    key={i}
-                    className={`w-3 h-3 ${
-                      i < Math.floor(product.rating)
-                        ? 'text-yellow-400'
-                        : 'text-gray-300'
-                    }`}
-                  />
-                ))}
+            {product.currency && product.currency !== 'CDF' && product.currency !== 'FC' && (
+              <p className="text-xs text-gray-500">
+                Prix original: {Number(product.price || 0).toLocaleString()} {product.currency}
+              </p>
+            )}
+            {product.moq && (
+              <div className="flex items-center gap-1 text-xs text-gray-600">
+                <MOQIcon className="w-3 h-3" />
+                <span>MOQ: {product.moq}</span>
               </div>
-              {product.reviews !== undefined && (
-                <span className="text-gray-600">({product.reviews})</span>
-              )}
+            )}
+            <div className="flex items-center gap-1 text-xs text-gray-600">
+              <LocationIcon className="w-3 h-3" />
+              <span>{product.location || '—'}</span>
             </div>
-          )}
-        </CardContent>
-      </Card>
-    </Link>
-  );
+            {product.rating && (
+              <div className="flex items-center gap-1 text-xs">
+                <div className="flex gap-0.5">
+                  {[...Array(5)].map((_, i) => (
+                    <StarIcon
+                      key={i}
+                      className={`w-3 h-3 ${
+                        i < Math.floor(product.rating)
+                          ? 'text-yellow-400'
+                          : 'text-gray-300'
+                      }`}
+                    />
+                  ))}
+                </div>
+                {product.reviews !== undefined && (
+                  <span className="text-gray-600">({product.reviews})</span>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </Link>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
