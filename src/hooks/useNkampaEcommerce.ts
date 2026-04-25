@@ -67,7 +67,18 @@ export function useNkampaEcommerce() {
             ...doc.data(),
           } as EcommerceProduct);
         });
-        setProducts(prods);
+        
+        // Mettre à jour seulement si les données ont changé
+        setProducts((prevProducts) => {
+          if (JSON.stringify(prevProducts) === JSON.stringify(prods)) {
+            return prevProducts;
+          }
+          return prods;
+        });
+        setIsLoading(false);
+      }, (err) => {
+        console.error('Erreur chargement produits:', err);
+        setError('Erreur lors du chargement des produits');
         setIsLoading(false);
       });
       return () => unsubscribe();
@@ -95,9 +106,22 @@ export function useNkampaEcommerce() {
             ...doc.data(),
           } as EcommerceOrder);
         });
-        setOrders(ords);
+        
+        // Mettre à jour seulement si les données ont changé
+        setOrders((prevOrders) => {
+          if (JSON.stringify(prevOrders) === JSON.stringify(ords)) {
+            return prevOrders;
+          }
+          return ords;
+        });
+      }, (err) => {
+        console.error('Erreur chargement commandes:', err);
       });
       return () => unsubscribe();
+    } catch (err) {
+      console.error('Erreur chargement commandes:', err);
+    }
+  }, [currentUser]);
     } catch (err) {
       console.error('Erreur chargement commandes:', err);
     }

@@ -282,15 +282,19 @@ export default function NkampaPage() {
   const bannerProducts = useMemo(() => sortedProducts.slice(0, 6), [sortedProducts]);
 
   // Rotation automatique des bannières (uniquement si on a des produits)
+  // Rotation automatique des bannières (uniquement si on a des produits)
   useEffect(() => {
     if (bannerTimerRef.current) clearInterval(bannerTimerRef.current);
-    if (!bannerProducts || bannerProducts.length <= 1) return;
-
-    // Réinitialiser l'index si hors limites
-    if (bannerIndex >= bannerProducts.length) {
+    if (!bannerProducts || bannerProducts.length <= 1) {
       setBannerIndex(0);
       return;
     }
+
+    // Réinitialiser l'index si hors limites
+    setBannerIndex((current) => {
+      if (current >= bannerProducts.length) return 0;
+      return current;
+    });
 
     bannerTimerRef.current = setInterval(() => {
       setBannerIndex((prev) => (prev + 1) % bannerProducts.length);
@@ -299,8 +303,7 @@ export default function NkampaPage() {
     return () => {
       if (bannerTimerRef.current) clearInterval(bannerTimerRef.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bannerProducts.length, bannerIndex]);
+  }, [bannerProducts.length]);
 
   // Filtrer les produits selon la catégorie et sous-catégorie
   const filteredProducts = useMemo(() => {
