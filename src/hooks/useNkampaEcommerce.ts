@@ -2,7 +2,6 @@ import { useState, useCallback, useEffect } from 'react';
 import { collection, addDoc, query, where, onSnapshot, doc, getDoc, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { useFirestoreConversations } from './useFirestoreConversations';
-import { useWalletBalance } from './useWalletBalance';
 
 export interface EcommerceProduct {
   id: string;
@@ -54,7 +53,6 @@ export function useNkampaEcommerce() {
   const [error, setError] = useState<string | null>(null);
   const currentUser = auth.currentUser;
   const { createConversation, sendMessage } = useFirestoreConversations();
-  const { balance } = useWalletBalance();
 
   // Charger les produits
   useEffect(() => {
@@ -150,11 +148,6 @@ export function useNkampaEcommerce() {
         const { convertToCDF } = await import('@/lib/currency-converter');
         const priceInCDF = await convertToCDF(product.price, product.currency);
         const totalPriceInCDF = Math.round(priceInCDF * quantity);
-
-        // Vérifier le solde (toujours en CDF)
-        if (balance < totalPriceInCDF) {
-          throw new Error('Solde insuffisant. Veuillez ajouter des fonds.');
-        }
 
         // Récupérer les infos utilisateur
         const buyerUserRef = doc(db, 'users', currentUser.uid);
@@ -334,7 +327,7 @@ export function useNkampaEcommerce() {
         throw err;
       }
     },
-    [currentUser, balance, createConversation, sendMessage]
+    [currentUser, createConversation, sendMessage]
   );
 
   // Ajouter un produit (pour les vendeurs)

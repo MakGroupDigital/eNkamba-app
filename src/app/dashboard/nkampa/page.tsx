@@ -26,6 +26,7 @@ import {
   MOQIcon,
   PriceIcon,
 } from '@/components/icons/nkampa-ecommerce-icons';
+import { convertToCDFSync } from '@/lib/currency-converter';
 import { useNkampaEcommerce } from '@/hooks/useNkampaEcommerce';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -450,24 +451,9 @@ export default function NkampaPage() {
   );
 
   const ProductCard = ({ product }: { product: any }) => {
-    const [priceInCDF, setPriceInCDF] = useState<number>(0);
-
-    useEffect(() => {
-      const convertPrice = async () => {
-        try {
-          const { convertToCDF } = await import('@/lib/currency-converter');
-          const price = Number(product.price || 0);
-          const currency = product.currency || 'CDF';
-          const converted = await convertToCDF(price, currency);
-          setPriceInCDF(Math.round(converted));
-        } catch (error) {
-          console.error('Erreur conversion prix:', error);
-          setPriceInCDF(Number(product.price || 0));
-        }
-      };
-
-      convertPrice();
-    }, [product.price, product.currency]);
+    const priceInCDF = Math.round(
+      convertToCDFSync(Number(product.price || 0), product.currency || 'CDF')
+    );
 
     return (
       <Link href={product?.storeSlug ? `/shop/${product.storeSlug}/product/${product.id}` : `/dashboard/nkampa`} className={!product?.storeSlug ? 'pointer-events-none opacity-60' : ''}>
@@ -532,140 +518,148 @@ export default function NkampaPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header futuriste vert sans transparence */}
-      <header className="sticky top-0 z-30">
-        {/* Fond vert solide avec effet de profondeur */}
-        <div className="relative bg-gradient-to-br from-green-600 via-green-500 to-emerald-600 shadow-2xl">
-          {/* Effet de lumière néon en haut */}
-          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-green-300 to-transparent opacity-80" />
-          
-          {/* Grille futuriste en arrière-plan */}
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute inset-0" style={{
-              backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)',
-              backgroundSize: '20px 20px'
-            }} />
-          </div>
-
-          <div className="relative mx-auto max-w-6xl px-4 py-4">
-            {/* Top row */}
-            <div className="flex items-center justify-between gap-3 mb-4">
-              <Link href="/dashboard" className="flex-shrink-0">
-                <button className="group relative h-10 w-10 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-all overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <ArrowLeft className="relative h-5 w-5 text-white m-auto" />
-                </button>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(34,197,94,0.12),transparent_35%),linear-gradient(180deg,#f7fbf8_0%,#eef8f1_52%,#f8faf8_100%)]">
+      {/* Header Minimal Futuriste */}
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-xl border-b border-gray-100 shadow-sm">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+          {/* Top Bar */}
+          <div className="flex items-center justify-between h-16">
+            {/* Left: Back + Logo */}
+            <div className="flex items-center gap-3">
+              <Link
+                href="/dashboard"
+                className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-50 text-gray-700 transition-all hover:bg-gray-100 hover:scale-105 active:scale-95"
+              >
+                <ArrowLeft className="h-5 w-5" />
               </Link>
 
-              <div className="flex items-center gap-3">
-                {/* Logo eNkamba avec effet holographique */}
-                <div className="relative">
-                  {/* Glow effect */}
-                  <div className="absolute -inset-2 bg-white/30 rounded-2xl blur-xl" />
-                  
-                  {/* Logo container */}
-                  <div className="relative h-12 w-12 rounded-2xl bg-white shadow-2xl overflow-hidden border-2 border-white/50">
-                    <Image
-                      src="/enkamba-logo.png"
-                      alt="eNkamba"
-                      fill
-                      className="object-contain p-1"
-                    />
-                  </div>
+              <div className="flex items-center gap-2.5">
+                <div className="relative h-10 w-10 rounded-xl bg-gradient-to-br from-green-400 to-green-600 shadow-lg shadow-green-500/20 overflow-hidden">
+                  <Image
+                    src="/enkamba-logo.png"
+                    alt="eNkamba"
+                    width={40}
+                    height={40}
+                    className="object-cover"
+                  />
                 </div>
-                
-                <div>
-                  <h1 className="text-xl font-black text-white tracking-tight drop-shadow-lg">
+                <div className="hidden sm:block">
+                  <h1 className="text-lg font-black text-gray-900 leading-none">
                     eNkamba Shop
                   </h1>
-                  <p className="text-xs text-white/80 font-medium">Marketplace du futur</p>
+                  <p className="text-[10px] font-semibold text-green-600 uppercase tracking-wider">
+                    Commerce vivant
+                  </p>
                 </div>
               </div>
+            </div>
 
+            {/* Right: Search + Cart */}
+            <div className="flex items-center gap-3">
+              {/* Search Bar - Desktop */}
+              <div className="hidden md:flex items-center gap-2 bg-gray-50 rounded-xl px-4 py-2.5 min-w-[280px] transition-all focus-within:bg-white focus-within:ring-2 focus-within:ring-green-500/20 focus-within:shadow-lg">
+                <Search className="h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Rechercher..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="flex-1 bg-transparent text-sm text-gray-900 placeholder:text-gray-400 outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={handleVoiceSearch}
+                  className={`rounded-lg p-1.5 transition-all ${
+                    isListening
+                      ? 'bg-red-500 text-white'
+                      : 'text-gray-400 hover:text-green-600 hover:bg-green-50'
+                  }`}
+                  aria-label="Recherche vocale"
+                >
+                  <Mic className="h-4 w-4" />
+                  {isListening && (
+                    <span className="absolute -right-0.5 -top-0.5 h-2 w-2 animate-ping rounded-full bg-red-400" />
+                  )}
+                </button>
+              </div>
+
+              {/* Cart Button */}
               <button
                 onClick={() => setIsOpen(true)}
-                className="group relative h-12 w-12 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-all overflow-hidden"
+                className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-green-600 text-white transition-all hover:bg-green-700 hover:scale-105 active:scale-95 shadow-lg shadow-green-600/30"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                <ShoppingCart className="relative h-5 w-5 text-white m-auto" />
+                <ShoppingCart className="h-5 w-5" />
                 {itemCount > 0 && (
-                  <span className="absolute -top-1 -right-1 h-6 min-w-[24px] flex items-center justify-center rounded-full bg-gradient-to-r from-red-500 to-pink-500 px-1.5 text-xs font-black text-white shadow-lg border-2 border-white">
+                  <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-black text-white shadow-lg animate-bounce">
                     {itemCount > 99 ? '99+' : itemCount}
                   </span>
                 )}
               </button>
             </div>
-
-            {/* Navigation futuriste */}
-            <nav className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide mb-4">
-              {[
-                { href: '/dashboard/nkampa', label: 'Boutique', icon: NkampaNavShopIcon },
-                { href: '/dashboard/nkampa/orders', label: 'Commandes', icon: NkampaNavOrdersIcon },
-                { href: '/dashboard/nkampa/favorites', label: 'Favoris', icon: NkampaNavFavoritesIcon },
-                hasStoreChecked && myStore
-                  ? { href: '/dashboard/nkampa/store/dashboard', label: 'Ma boutique', icon: NkampaNavSellerIcon }
-                  : { href: '/dashboard/nkampa/store', label: 'Créer boutique', icon: NkampaNavSellerIcon },
-              ].map((item) => {
-                const Icon = item.icon;
-                const isActive = pathname === item.href;
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className="group relative"
-                  >
-                    <div className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
-                      isActive
-                        ? 'bg-white text-green-600 shadow-xl shadow-white/20'
-                        : 'text-white/90 hover:bg-white/10 backdrop-blur-sm border border-white/10'
-                    }`}>
-                      <Icon className="h-4 w-4" />
-                      {item.label}
-                    </div>
-                    {isActive && (
-                      <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1/2 h-1 bg-white rounded-full shadow-lg shadow-white/50" />
-                    )}
-                  </Link>
-                );
-              })}
-            </nav>
-
-            {/* Barre de recherche futuriste */}
-            <div className="relative group">
-              {/* Glow effect on focus */}
-              <div className="absolute -inset-1 bg-white/20 rounded-2xl opacity-0 group-focus-within:opacity-100 blur-lg transition-opacity" />
-              
-              <div className="relative flex items-center gap-3 rounded-2xl bg-white shadow-xl px-4 py-3 border-2 border-white/50">
-                <Search className="h-5 w-5 text-green-600" />
-                <input
-                  type="text"
-                  placeholder="Rechercher des produits..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="flex-1 bg-transparent text-sm font-medium text-gray-900 placeholder:text-gray-500 outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={handleVoiceSearch}
-                  className={`relative rounded-xl p-2 transition-all ${
-                    isListening 
-                      ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/50' 
-                      : 'text-green-600 hover:bg-green-50'
-                  }`}
-                  aria-label="Recherche vocale"
-                >
-                  <Mic className="h-5 w-5" />
-                  {isListening && (
-                    <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-400 rounded-full animate-ping" />
-                  )}
-                </button>
-              </div>
-            </div>
           </div>
 
-          {/* Effet de lumière néon en bas */}
-          <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-emerald-300 to-transparent opacity-60" />
+          {/* Navigation Bar */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-3 scrollbar-hide">
+            {[
+              { href: '/dashboard/nkampa', label: 'Boutique', icon: NkampaNavShopIcon },
+              { href: '/dashboard/nkampa/orders', label: 'Commandes', icon: NkampaNavOrdersIcon },
+              { href: '/dashboard/nkampa/favorites', label: 'Favoris', icon: NkampaNavFavoritesIcon },
+              hasStoreChecked && myStore
+                ? { href: '/dashboard/nkampa/store/dashboard', label: 'Ma boutique', icon: NkampaNavSellerIcon }
+                : { href: '/dashboard/nkampa/store', label: 'Créer boutique', icon: NkampaNavSellerIcon },
+            ].map((item) => {
+              const Icon = item.icon;
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="relative group"
+                >
+                  <div className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold whitespace-nowrap transition-all ${
+                    isActive
+                      ? 'bg-green-600 text-white shadow-md shadow-green-600/30'
+                      : 'text-gray-600 hover:text-green-600 hover:bg-green-50'
+                  }`}>
+                    <Icon className="h-4 w-4" />
+                    <span>{item.label}</span>
+                  </div>
+                  {isActive && (
+                    <div className="absolute -bottom-3 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-full bg-green-600" />
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* Search Bar - Mobile */}
+          <div className="md:hidden pb-3">
+            <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-4 py-2.5 transition-all focus-within:bg-white focus-within:ring-2 focus-within:ring-green-500/20 focus-within:shadow-lg">
+              <Search className="h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Rechercher..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1 bg-transparent text-sm text-gray-900 placeholder:text-gray-400 outline-none"
+              />
+              <button
+                type="button"
+                onClick={handleVoiceSearch}
+                className={`relative rounded-lg p-1.5 transition-all ${
+                  isListening
+                    ? 'bg-red-500 text-white'
+                    : 'text-gray-400 hover:text-green-600 hover:bg-green-50'
+                }`}
+                aria-label="Recherche vocale"
+              >
+                <Mic className="h-4 w-4" />
+                {isListening && (
+                  <span className="absolute -right-0.5 -top-0.5 h-2 w-2 animate-ping rounded-full bg-red-400" />
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       </header>
 
