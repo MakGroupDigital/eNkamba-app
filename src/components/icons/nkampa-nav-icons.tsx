@@ -167,6 +167,3 @@ export const NkampaNavSellerIcon = ({ className, size = 24 }: IconProps) => (
   </svg>
 );
 
-// Export avec compatibilité ancienne API
-export { NkampaNavShopIcon, NkampaNavOrdersIcon, NkampaNavFavoritesIcon, NkampaNavSellerIcon };
-
