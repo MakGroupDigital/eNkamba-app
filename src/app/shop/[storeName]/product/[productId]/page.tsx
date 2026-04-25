@@ -167,7 +167,7 @@ export default function ShopProductPage({
     if (!shippingAddress.trim() || !shippingPhone.trim()) {
       toast({
         title: 'Informations manquantes',
-        description: 'Renseignez l'adresse et le numéro de téléphone.',
+        description: 'Renseignez l\'adresse et le numéro de téléphone.',
         variant: 'destructive',
       });
       return;
