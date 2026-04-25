@@ -286,6 +286,12 @@ export default function NkampaPage() {
     if (bannerTimerRef.current) clearInterval(bannerTimerRef.current);
     if (!bannerProducts || bannerProducts.length <= 1) return;
 
+    // Réinitialiser l'index si hors limites
+    if (bannerIndex >= bannerProducts.length) {
+      setBannerIndex(0);
+      return;
+    }
+
     bannerTimerRef.current = setInterval(() => {
       setBannerIndex((prev) => (prev + 1) % bannerProducts.length);
     }, 5000);
@@ -294,11 +300,7 @@ export default function NkampaPage() {
       if (bannerTimerRef.current) clearInterval(bannerTimerRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bannerProducts.length]);
-
-  useEffect(() => {
-    if (bannerIndex >= (bannerProducts?.length || 0)) setBannerIndex(0);
-  }, [bannerIndex, bannerProducts?.length]);
+  }, [bannerProducts.length, bannerIndex]);
 
   // Filtrer les produits selon la catégorie et sous-catégorie
   const filteredProducts = useMemo(() => {
