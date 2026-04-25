@@ -519,11 +519,11 @@ export default function NkampaPage() {
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(34,197,94,0.12),transparent_35%),linear-gradient(180deg,#f7fbf8_0%,#eef8f1_52%,#f8faf8_100%)]">
-      {/* Header avec fond vert */}
-      <header className="sticky top-0 z-50 bg-gradient-to-r from-green-600 via-green-700 to-green-600 backdrop-blur-xl border-b border-green-800 shadow-lg shadow-green-900/20">
+      {/* Header avec fond vert et bordures arrondies en haut */}
+      <header className="sticky top-0 z-50 bg-gradient-to-r from-green-600 via-green-700 to-green-600 backdrop-blur-xl shadow-lg shadow-green-900/20 rounded-b-[32px] overflow-hidden">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           {/* Top Bar */}
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-16 pt-2">
             {/* Left: Logo */}
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2.5">
