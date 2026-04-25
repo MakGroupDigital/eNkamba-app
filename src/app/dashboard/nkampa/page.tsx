@@ -519,22 +519,15 @@ export default function NkampaPage() {
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(34,197,94,0.12),transparent_35%),linear-gradient(180deg,#f7fbf8_0%,#eef8f1_52%,#f8faf8_100%)]">
-      {/* Header Minimal Futuriste */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-xl border-b border-gray-100 shadow-sm">
+      {/* Header avec fond vert */}
+      <header className="sticky top-0 z-50 bg-gradient-to-r from-green-600 via-green-700 to-green-600 backdrop-blur-xl border-b border-green-800 shadow-lg shadow-green-900/20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           {/* Top Bar */}
           <div className="flex items-center justify-between h-16">
-            {/* Left: Back + Logo */}
+            {/* Left: Logo */}
             <div className="flex items-center gap-3">
-              <Link
-                href="/dashboard"
-                className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-50 text-gray-700 transition-all hover:bg-gray-100 hover:scale-105 active:scale-95"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Link>
-
               <div className="flex items-center gap-2.5">
-                <div className="relative h-10 w-10 rounded-xl bg-gradient-to-br from-green-400 to-green-600 shadow-lg shadow-green-500/20 overflow-hidden">
+                <div className="relative h-10 w-10 rounded-xl bg-white shadow-lg overflow-hidden ring-2 ring-white/30">
                   <Image
                     src="/enkamba-logo.png"
                     alt="eNkamba"
@@ -544,10 +537,10 @@ export default function NkampaPage() {
                   />
                 </div>
                 <div className="hidden sm:block">
-                  <h1 className="text-lg font-black text-gray-900 leading-none">
+                  <h1 className="text-lg font-black text-white leading-none">
                     eNkamba Shop
                   </h1>
-                  <p className="text-[10px] font-semibold text-green-600 uppercase tracking-wider">
+                  <p className="text-[10px] font-semibold text-green-100 uppercase tracking-wider">
                     Commerce vivant
                   </p>
                 </div>
@@ -557,14 +550,14 @@ export default function NkampaPage() {
             {/* Right: Search + Cart */}
             <div className="flex items-center gap-3">
               {/* Search Bar - Desktop */}
-              <div className="hidden md:flex items-center gap-2 bg-gray-50 rounded-xl px-4 py-2.5 min-w-[280px] transition-all focus-within:bg-white focus-within:ring-2 focus-within:ring-green-500/20 focus-within:shadow-lg">
-                <Search className="h-4 w-4 text-gray-400" />
+              <div className="hidden md:flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2.5 min-w-[280px] transition-all focus-within:bg-white/30 focus-within:ring-2 focus-within:ring-white/50 focus-within:shadow-lg border border-white/30">
+                <Search className="h-4 w-4 text-white" />
                 <input
                   type="text"
                   placeholder="Rechercher..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="flex-1 bg-transparent text-sm text-gray-900 placeholder:text-gray-400 outline-none"
+                  className="flex-1 bg-transparent text-sm text-white placeholder:text-white/70 outline-none"
                 />
                 <button
                   type="button"
@@ -572,7 +565,7 @@ export default function NkampaPage() {
                   className={`rounded-lg p-1.5 transition-all ${
                     isListening
                       ? 'bg-red-500 text-white'
-                      : 'text-gray-400 hover:text-green-600 hover:bg-green-50'
+                      : 'text-white hover:bg-white/20'
                   }`}
                   aria-label="Recherche vocale"
                 >
@@ -586,11 +579,11 @@ export default function NkampaPage() {
               {/* Cart Button */}
               <button
                 onClick={() => setIsOpen(true)}
-                className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-green-600 text-white transition-all hover:bg-green-700 hover:scale-105 active:scale-95 shadow-lg shadow-green-600/30"
+                className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-white text-green-700 transition-all hover:bg-white/90 hover:scale-105 active:scale-95 shadow-lg"
               >
                 <ShoppingCart className="h-5 w-5" />
                 {itemCount > 0 && (
-                  <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-black text-white shadow-lg animate-bounce">
+                  <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-black text-white shadow-lg animate-bounce ring-2 ring-white">
                     {itemCount > 99 ? '99+' : itemCount}
                   </span>
                 )}
@@ -618,14 +611,14 @@ export default function NkampaPage() {
                 >
                   <div className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold whitespace-nowrap transition-all ${
                     isActive
-                      ? 'bg-green-600 text-white shadow-md shadow-green-600/30'
-                      : 'text-gray-600 hover:text-green-600 hover:bg-green-50'
+                      ? 'bg-white text-green-700 shadow-md'
+                      : 'text-white hover:bg-white/20 border border-transparent hover:border-white/30'
                   }`}>
                     <Icon className="h-4 w-4" />
                     <span>{item.label}</span>
                   </div>
                   {isActive && (
-                    <div className="absolute -bottom-3 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-full bg-green-600" />
+                    <div className="absolute -bottom-3 left-1/2 h-1 w-8 -translate-x-1/2 rounded-full bg-white shadow-lg shadow-white/50" />
                   )}
                 </Link>
               );
@@ -634,14 +627,14 @@ export default function NkampaPage() {
 
           {/* Search Bar - Mobile */}
           <div className="md:hidden pb-3">
-            <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-4 py-2.5 transition-all focus-within:bg-white focus-within:ring-2 focus-within:ring-green-500/20 focus-within:shadow-lg">
-              <Search className="h-4 w-4 text-gray-400" />
+            <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2.5 transition-all focus-within:bg-white/30 focus-within:ring-2 focus-within:ring-white/50 focus-within:shadow-lg border border-white/30">
+              <Search className="h-4 w-4 text-white" />
               <input
                 type="text"
                 placeholder="Rechercher..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 bg-transparent text-sm text-gray-900 placeholder:text-gray-400 outline-none"
+                className="flex-1 bg-transparent text-sm text-white placeholder:text-white/70 outline-none"
               />
               <button
                 type="button"
@@ -649,7 +642,7 @@ export default function NkampaPage() {
                 className={`relative rounded-lg p-1.5 transition-all ${
                   isListening
                     ? 'bg-red-500 text-white'
-                    : 'text-gray-400 hover:text-green-600 hover:bg-green-50'
+                    : 'text-white hover:bg-white/20'
                 }`}
                 aria-label="Recherche vocale"
               >
