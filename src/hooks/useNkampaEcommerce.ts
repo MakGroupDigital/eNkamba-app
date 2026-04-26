@@ -92,6 +92,9 @@ export function useNkampaEcommerce() {
   // Charger les commandes de l'utilisateur
   useEffect(() => {
     if (!currentUser) return;
+  // Charger les commandes de l'utilisateur
+  useEffect(() => {
+    if (!currentUser) return;
 
     try {
       const q = query(
@@ -118,10 +121,6 @@ export function useNkampaEcommerce() {
         console.error('Erreur chargement commandes:', err);
       });
       return () => unsubscribe();
-    } catch (err) {
-      console.error('Erreur chargement commandes:', err);
-    }
-  }, [currentUser]);
     } catch (err) {
       console.error('Erreur chargement commandes:', err);
     }
