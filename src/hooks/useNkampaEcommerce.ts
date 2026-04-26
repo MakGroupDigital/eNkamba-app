@@ -92,9 +92,6 @@ export function useNkampaEcommerce() {
   // Charger les commandes de l'utilisateur
   useEffect(() => {
     if (!currentUser) return;
-  // Charger les commandes de l'utilisateur
-  useEffect(() => {
-    if (!currentUser) return;
 
     try {
       const q = query(
