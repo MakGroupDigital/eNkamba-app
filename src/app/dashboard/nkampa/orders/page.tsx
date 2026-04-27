@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Package, Truck, CheckCircle, XCircle, Download, MapPin, Phone, Mail, Calendar, DollarSign } from 'lucide-react';
+import { ArrowLeft, Package, Truck, CheckCircle, XCircle, Download, MapPin, Phone, Calendar, DollarSign, Route } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -211,6 +211,10 @@ export default function OrdersPage() {
     }
   };
 
+  const openPickupRoute = (order: any) => {
+    router.push(`/dashboard/ugavi?orderId=${order.id}&source=nkampa`);
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -316,6 +320,18 @@ export default function OrdersPage() {
                     </div>
                   </div>
 
+                  {order.deliveryOption === 'pickup' && order.pickupRoute?.enabled && (
+                    <div className="mb-2 rounded-lg border border-orange-200 bg-orange-50 p-2">
+                      <div className="flex items-center gap-2">
+                        <Route className="w-4 h-4 text-orange-600" />
+                        <div className="flex-1">
+                          <p className="text-xs font-semibold text-orange-700">Retrait en boutique</p>
+                          <p className="text-xs text-orange-800">Itineraire disponible depuis cette commande</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {order.trackingNumber && (
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 mb-2">
                       <div className="flex items-center gap-2">
@@ -390,7 +406,14 @@ export default function OrdersPage() {
               {/* Livraison */}
               <div>
                 <p className="text-sm font-semibold text-gray-600 mb-2">Informations de livraison</p>
-                <div className="space-y-2">
+                  <div className="space-y-2">
+                  <div className="flex items-start gap-2">
+                    <Route className="w-4 h-4 text-gray-400 mt-1" />
+                    <div>
+                      <p className="text-xs text-gray-500">Mode</p>
+                      <p className="text-sm">{selectedOrder.deliveryOption === 'pickup' ? 'Retrait en boutique' : 'Livraison'}</p>
+                    </div>
+                  </div>
                   <div className="flex items-start gap-2">
                     <MapPin className="w-4 h-4 text-gray-400 mt-1" />
                     <div>
@@ -411,6 +434,15 @@ export default function OrdersPage() {
                       <div>
                         <p className="text-xs text-gray-500">Numéro de suivi</p>
                         <p className="text-sm font-mono">{selectedOrder.trackingNumber}</p>
+                      </div>
+                    </div>
+                  )}
+                  {selectedOrder.pickupRoute?.enabled && (
+                    <div className="flex items-start gap-2">
+                      <MapPin className="w-4 h-4 text-gray-400 mt-1" />
+                      <div>
+                        <p className="text-xs text-gray-500">Trajet boutique</p>
+                        <p className="text-sm">{selectedOrder.pickupRoute.storeLocationLabel}</p>
                       </div>
                     </div>
                   )}
@@ -457,6 +489,15 @@ export default function OrdersPage() {
                   >
                     <MapPin className="w-4 h-4" />
                     Suivre la commande
+                  </Button>
+                )}
+                {selectedOrder.pickupRoute?.enabled && (
+                  <Button
+                    className="flex-1 gap-2 bg-orange-500 hover:bg-orange-600"
+                    onClick={() => openPickupRoute(selectedOrder)}
+                  >
+                    <Route className="w-4 h-4" />
+                    Voir itineraire
                   </Button>
                 )}
               </div>

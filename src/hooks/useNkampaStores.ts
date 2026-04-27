@@ -30,7 +30,9 @@ export function useNkampaStores(options: UseNkampaStoresOptions = {}) {
         (snap) => {
           const next: NkampaStore[] = [];
           snap.forEach((d) => next.push({ id: d.id, ...(d.data() as any) } as NkampaStore));
-          setStores(next);
+          setStores((prevStores) => (
+            JSON.stringify(prevStores) === JSON.stringify(next) ? prevStores : next
+          ));
           setIsLoading(false);
         },
         (err) => {
@@ -51,4 +53,3 @@ export function useNkampaStores(options: UseNkampaStoresOptions = {}) {
 
   return { stores, isLoading, error };
 }
-

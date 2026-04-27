@@ -11,9 +11,11 @@ import type { NkampaOrder } from '@/lib/nkampa-orders';
 interface OrderReceiptProps {
   order: NkampaOrder;
   onClose?: () => void;
+  primaryActionLabel?: string;
+  onPrimaryAction?: () => void;
 }
 
-export function OrderReceipt({ order, onClose }: OrderReceiptProps) {
+export function OrderReceipt({ order, onClose, primaryActionLabel, onPrimaryAction }: OrderReceiptProps) {
   const receiptRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -175,6 +177,12 @@ export function OrderReceipt({ order, onClose }: OrderReceiptProps) {
             <h3 className="font-bold text-lg mb-3">Informations de livraison</h3>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
+                <span className="text-muted-foreground">Mode:</span>
+                <span className="font-semibold">
+                  {order.deliveryOption === 'pickup' ? 'Retrait en boutique' : 'Livraison'}
+                </span>
+              </div>
+              <div className="flex justify-between">
                 <span className="text-muted-foreground">Adresse:</span>
                 <span className="font-semibold text-right max-w-xs">{order.shippingAddress}</span>
               </div>
@@ -182,6 +190,18 @@ export function OrderReceipt({ order, onClose }: OrderReceiptProps) {
                 <span className="text-muted-foreground">Téléphone:</span>
                 <span className="font-semibold">{order.shippingPhone}</span>
               </div>
+              {order.trackingNumber && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Suivi:</span>
+                  <span className="font-semibold text-right max-w-xs font-mono">{order.trackingNumber}</span>
+                </div>
+              )}
+              {order.pickupRoute?.enabled && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Trajet:</span>
+                  <span className="font-semibold text-right max-w-xs">{order.pickupRoute.storeLocationLabel}</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -234,6 +254,14 @@ export function OrderReceipt({ order, onClose }: OrderReceiptProps) {
             <Share2 className="h-4 w-4 mr-2" />
             Partager
           </Button>
+          {primaryActionLabel && onPrimaryAction && (
+            <Button
+              onClick={onPrimaryAction}
+              className="flex-1 bg-orange-500 hover:bg-orange-600"
+            >
+              {primaryActionLabel}
+            </Button>
+          )}
           {onClose && (
             <Button
               onClick={onClose}

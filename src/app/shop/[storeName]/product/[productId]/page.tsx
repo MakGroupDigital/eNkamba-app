@@ -10,13 +10,32 @@ import { db } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Share2, Loader2, Heart, MessageCircle, ShoppingCart, Check } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ArrowLeft, Share2, Loader2, Heart, MessageCircle, ShoppingCart, Check, MapPinned, Route, ShieldCheck } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useNkampaCart } from '@/hooks/useNkampaCart';
 import { useNkampaEcommerce } from '@/hooks/useNkampaEcommerce';
 import { useWalletBalance } from '@/hooks/useWalletBalance';
 import { OrderReceipt } from '@/components/nkampa/OrderReceipt';
+import { PinVerification } from '@/components/payment/PinVerification';
+
+type PickupRouteContext = {
+  enabled: boolean;
+  storeLocationLabel: string;
+  buyerLocationLabel: string;
+  buyerLatitude: number;
+  buyerLongitude: number;
+  destinationQuery: string;
+  suggestedTransportMode?: 'foot' | 'car' | 'train';
+};
+
+type PendingPurchase = {
+  shippingAddress: string;
+  shippingPhone: string;
+  deliveryOption: 'delivery' | 'pickup';
+  pickupRoute?: PickupRouteContext;
+};
 
 export default function ShopProductPage({
   params,
@@ -45,6 +64,11 @@ export default function ShopProductPage({
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [deliveryOption, setDeliveryOption] = useState<'delivery' | 'pickup'>('delivery');
+  const [isPreparingRoute, setIsPreparingRoute] = useState(false);
+  const [showOrderSummary, setShowOrderSummary] = useState(false);
+  const [showPinDialog, setShowPinDialog] = useState(false);
+  const [pendingPurchase, setPendingPurchase] = useState<PendingPurchase | null>(null);
 
   // Vérifier si le produit est en favori
   useEffect(() => {
@@ -147,6 +171,47 @@ export default function ShopProductPage({
 
   const totalPrice = useMemo(() => priceInCDF * quantity, [priceInCDF, quantity]);
 
+  const resolveCurrentLocation = async () => {
+    if (typeof window === 'undefined' || !navigator.geolocation) {
+      throw new Error('La géolocalisation n’est pas disponible sur cet appareil.');
+    }
+
+    const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resolve, reject, {
+        enableHighAccuracy: true,
+        timeout: 12000,
+        maximumAge: 60000,
+      });
+    });
+
+    const latitude = position.coords.latitude;
+    const longitude = position.coords.longitude;
+
+    let address = '';
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
+        {
+          headers: {
+            Accept: 'application/json',
+          },
+        }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        address = data.display_name || '';
+      }
+    } catch (error) {
+      console.error('Erreur géocodage inverse:', error);
+    }
+
+    return {
+      latitude,
+      longitude,
+      address: address || 'Position actuelle',
+    };
+  };
+
   const handleAddToCart = () => {
     if (!product) return;
 
@@ -168,8 +233,10 @@ export default function ShopProductPage({
     });
   };
 
-  const handleBuyNow = async () => {
-    if (!product) return;
+  const preparePurchase = async (): Promise<PendingPurchase> => {
+    if (!product) {
+      throw new Error('Produit indisponible');
+    }
 
     if (!user) {
       toast({
@@ -177,18 +244,49 @@ export default function ShopProductPage({
         description: 'Connectez-vous pour acheter ce produit.',
         variant: 'destructive',
       });
-      return;
+      throw new Error('Utilisateur non authentifié');
     }
 
-    if (!shippingAddress.trim() || !shippingPhone.trim()) {
+    if (deliveryOption === 'delivery' && (!shippingAddress.trim() || !shippingPhone.trim())) {
       toast({
         title: 'Informations manquantes',
         description: "Renseignez l'adresse et le numéro de téléphone.",
         variant: 'destructive',
       });
-      return;
+      throw new Error('Informations de livraison incomplètes');
     }
 
+    let routeContext: PickupRouteContext | undefined;
+
+    let finalShippingAddress = shippingAddress.trim();
+    let finalShippingPhone = shippingPhone.trim();
+
+    if (deliveryOption === 'pickup') {
+      setIsPreparingRoute(true);
+      const currentLocation = await resolveCurrentLocation();
+      routeContext = {
+        enabled: true,
+        storeLocationLabel: storeDoc?.location || storeDoc?.storeName || 'Boutique',
+        buyerLocationLabel: currentLocation.address,
+        buyerLatitude: currentLocation.latitude,
+        buyerLongitude: currentLocation.longitude,
+        destinationQuery: `${storeDoc?.storeName || 'Boutique'}, ${storeDoc?.location || ''}`.trim(),
+        suggestedTransportMode: 'foot',
+      };
+      finalShippingAddress = `Retrait en boutique - ${routeContext.storeLocationLabel}`;
+      finalShippingPhone = shippingPhone.trim() || user?.phoneNumber || user?.email || 'Retrait boutique';
+    }
+
+    return {
+      shippingAddress: finalShippingAddress,
+      shippingPhone: finalShippingPhone,
+      deliveryOption,
+      pickupRoute: routeContext,
+    };
+  };
+
+  const finalizePurchase = async (purchase: PendingPurchase) => {
+    if (!product) return;
     setIsBuying(true);
     try {
       const result = await buyProduct(
@@ -200,8 +298,12 @@ export default function ShopProductPage({
           storeSlug: product.storeSlug || storeDoc?.slug || slug,
         },
         quantity,
-        shippingAddress.trim(),
-        shippingPhone.trim()
+        purchase.shippingAddress,
+        purchase.shippingPhone,
+        {
+          deliveryOption: purchase.deliveryOption,
+          pickupRoute: purchase.pickupRoute,
+        }
       );
 
       toast({
@@ -213,6 +315,8 @@ export default function ShopProductPage({
       // Afficher le reçu de paiement
       setCompletedOrder(result.order);
       setConversationId(result.conversationId);
+      setPendingPurchase(null);
+      setShowOrderSummary(false);
       setShowReceipt(true);
     } catch (error: any) {
       toast({
@@ -221,8 +325,25 @@ export default function ShopProductPage({
         variant: 'destructive',
       });
     } finally {
+      setIsPreparingRoute(false);
       setIsBuying(false);
     }
+  };
+
+  const handleBuyNow = async () => {
+    if (!product) return;
+    try {
+      const purchase = await preparePurchase();
+      setPendingPurchase(purchase);
+      setShowOrderSummary(true);
+    } catch (error) {
+      setIsPreparingRoute(false);
+    }
+  };
+
+  const handleOpenPickupRoute = (order: any) => {
+    setShowReceipt(false);
+    router.push(`/dashboard/ugavi?orderId=${order.id}&source=nkampa`);
   };
 
   const handleChat = async () => {
@@ -256,14 +377,15 @@ export default function ShopProductPage({
       );
       
       const snapshot = await getDocs(q);
-      let existingConversation = null;
-      
-      snapshot.forEach((doc) => {
-        const data = doc.data();
+      let existingConversation: { id: string; [key: string]: any } | null = null;
+
+      for (const conversationDoc of snapshot.docs) {
+        const data = conversationDoc.data();
         if (data.participants?.includes(storeDoc.ownerId)) {
-          existingConversation = { id: doc.id, ...data };
+          existingConversation = { id: conversationDoc.id, ...data };
+          break;
         }
-      });
+      }
 
       if (existingConversation) {
         // Envoyer un message automatique avec la référence du produit
@@ -617,34 +739,104 @@ export default function ShopProductPage({
       {/* Vendeur */}
       <button 
         onClick={() => router.push(`/shop/${slug}`)}
-        className="mx-4 mt-4 bg-gray-50 rounded-lg p-3 flex items-center justify-between w-full hover:bg-gray-100 transition-colors"
+        className="mx-4 mt-4 w-[calc(100%-2rem)] rounded-2xl border border-green-100 bg-gradient-to-r from-green-50 via-white to-orange-50 p-3 hover:bg-gray-100 transition-colors"
       >
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-green-600 flex items-center justify-center text-white font-bold">
-            {storeDoc.storeName?.charAt(0) || 'e'}
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="relative h-14 w-14 overflow-hidden rounded-2xl border border-green-200 bg-white shadow-sm">
+              {storeDoc.logoUrl ? (
+                <Image
+                  src={storeDoc.logoUrl}
+                  alt={storeDoc.storeName || 'Boutique'}
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-green-600 text-white font-bold">
+                  {storeDoc.storeName?.charAt(0) || 'e'}
+                </div>
+              )}
+            </div>
+            <div className="text-left">
+              <div className="flex items-center gap-2">
+                <p className="font-bold text-gray-900">Boutique officielle</p>
+                <ShieldCheck className="h-4 w-4 text-green-600" />
+              </div>
+              <p className="font-extrabold text-green-700">{storeDoc.storeName}</p>
+              {storeDoc.description && (
+                <p className="text-xs text-gray-600 mt-1 line-clamp-2">{storeDoc.description}</p>
+              )}
+              {storeDoc.location && (
+                <p className="mt-1 text-[11px] font-medium text-gray-500">{storeDoc.location}</p>
+              )}
+            </div>
           </div>
-          <div className="text-left">
-            <p className="font-bold text-gray-900">Vendeur vérifié : {storeDoc.storeName}</p>
-            {storeDoc.description && (
-              <p className="text-xs text-gray-600 mt-1">{storeDoc.description}</p>
-            )}
-          </div>
+          <span className="text-lg">›</span>
         </div>
-        <span className="text-lg">›</span>
       </button>
 
-      {/* Champs adresse et téléphone */}
+      {/* Option logistique */}
       <div className="mx-4 mt-4 space-y-2">
-        <input
-          value={shippingAddress}
-          onChange={(e) => setShippingAddress(e.target.value)}
-          placeholder="📍 Adresse de livraison"
-          className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600"
-        />
+        <div className="rounded-2xl border border-green-100 bg-green-50/70 p-3">
+          <p className="text-sm font-bold text-gray-900">Logistique / livraison</p>
+          <p className="mt-1 text-xs text-gray-600">
+            Choisissez la livraison classique ou le retrait avec itinéraire vers la boutique.
+          </p>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={() => setDeliveryOption('delivery')}
+              className={`rounded-2xl border px-4 py-3 text-left transition-all ${
+                deliveryOption === 'delivery'
+                  ? 'border-green-600 bg-white shadow-sm'
+                  : 'border-gray-200 bg-white/80'
+              }`}
+            >
+              <p className="font-semibold text-gray-900">Livraison</p>
+              <p className="text-xs text-gray-500">Le vendeur livre à votre adresse</p>
+            </button>
+            <button
+              type="button"
+              onClick={() => setDeliveryOption('pickup')}
+              className={`rounded-2xl border px-4 py-3 text-left transition-all ${
+                deliveryOption === 'pickup'
+                  ? 'border-green-600 bg-white shadow-sm'
+                  : 'border-gray-200 bg-white/80'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Route className="h-4 w-4 text-green-600" />
+                <p className="font-semibold text-gray-900">Retrait en boutique</p>
+              </div>
+              <p className="text-xs text-gray-500">Itinéraire disponible dans vos commandes</p>
+            </button>
+          </div>
+        </div>
+
+        {deliveryOption === 'delivery' ? (
+          <input
+            value={shippingAddress}
+            onChange={(e) => setShippingAddress(e.target.value)}
+            placeholder="📍 Adresse de livraison"
+            className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600"
+          />
+        ) : (
+          <div className="rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-800">
+            <div className="flex items-start gap-2">
+              <MapPinned className="mt-0.5 h-4 w-4 flex-shrink-0" />
+              <div>
+                <p className="font-semibold">Retrait choisi</p>
+                <p className="mt-1">
+                  Après paiement, l’itinéraire vers <span className="font-bold">{storeDoc.storeName}</span> sera enregistré et disponible à tout moment dans vos commandes.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
         <input
           value={shippingPhone}
           onChange={(e) => setShippingPhone(e.target.value)}
-          placeholder="📞 Téléphone"
+          placeholder={deliveryOption === 'pickup' ? '📞 Téléphone de contact (optionnel)' : '📞 Téléphone'}
           className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600"
         />
       </div>
@@ -669,13 +861,13 @@ export default function ShopProductPage({
         </div>
         <button
           onClick={handleBuyNow}
-          disabled={isBuying}
+          disabled={isBuying || isPreparingRoute}
           className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-lg py-3 font-bold transition-colors flex items-center justify-center gap-2"
         >
-          {isBuying ? (
+          {isBuying || isPreparingRoute ? (
             <>
               <Loader2 className="h-5 w-5 animate-spin" />
-              Traitement...
+              {isPreparingRoute ? 'Préparation de l’itinéraire...' : 'Traitement...'}
             </>
           ) : (
             <>
@@ -695,9 +887,106 @@ export default function ShopProductPage({
       </div>
 
       {/* Reçu de paiement */}
+      <Dialog open={showOrderSummary} onOpenChange={setShowOrderSummary}>
+        <DialogContent className="max-w-lg rounded-3xl border-0 p-0 overflow-hidden">
+          <div className="bg-gradient-to-r from-green-700 via-green-600 to-emerald-500 px-6 py-5 text-white">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-black">Confirmer la commande</DialogTitle>
+              <DialogDescription className="text-white/85">
+                Vérifiez les détails puis confirmez le paiement avec votre PIN eNkambaPay.
+              </DialogDescription>
+            </DialogHeader>
+          </div>
+          <div className="space-y-5 p-6">
+            <div className="rounded-2xl border border-green-100 bg-green-50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-green-700">Produit</p>
+              <p className="mt-2 text-lg font-black text-slate-900">{product.name}</p>
+              <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <p className="text-slate-500">Quantité</p>
+                  <p className="font-bold text-slate-900">{quantity}</p>
+                </div>
+                <div>
+                  <p className="text-slate-500">Montant total</p>
+                  <p className="font-bold text-green-700">{totalPrice.toLocaleString()} CDF</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+              <p className="text-sm font-bold text-slate-900">Mode choisi</p>
+              <p className="mt-1 text-sm text-slate-600">
+                {pendingPurchase?.deliveryOption === 'pickup' ? 'Retrait en boutique avec itinéraire' : 'Livraison à domicile'}
+              </p>
+              <p className="mt-3 text-xs text-slate-500">Adresse / destination</p>
+              <p className="text-sm font-semibold text-slate-900">{pendingPurchase?.shippingAddress}</p>
+              <p className="mt-3 text-xs text-slate-500">Téléphone</p>
+              <p className="text-sm font-semibold text-slate-900">{pendingPurchase?.shippingPhone}</p>
+              {pendingPurchase?.pickupRoute?.enabled && (
+                <>
+                  <p className="mt-3 text-xs text-slate-500">Départ actuel</p>
+                  <p className="text-sm font-semibold text-slate-900">{pendingPurchase.pickupRoute.buyerLocationLabel}</p>
+                  <p className="mt-3 text-xs text-slate-500">Boutique</p>
+                  <p className="text-sm font-semibold text-slate-900">{pendingPurchase.pickupRoute.storeLocationLabel}</p>
+                </>
+              )}
+            </div>
+
+            <div className="rounded-2xl border border-orange-100 bg-orange-50 p-4">
+              <p className="text-sm font-semibold text-orange-900">Paiement sécurisé</p>
+              <p className="mt-1 text-sm text-orange-800">
+                Votre solde actuel est de {balance.toLocaleString()} CDF. Le paiement sera confirmé avec votre PIN eNkambaPay.
+              </p>
+            </div>
+          </div>
+          <DialogFooter className="border-t bg-slate-50 px-6 py-4">
+            <div className="flex w-full gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={() => setShowOrderSummary(false)}
+              >
+                Modifier
+              </Button>
+              <Button
+                type="button"
+                className="flex-1 bg-green-600 hover:bg-green-700"
+                onClick={() => setShowPinDialog(true)}
+                disabled={!pendingPurchase}
+              >
+                Confirmer le paiement
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <PinVerification
+        isOpen={showPinDialog}
+        onClose={() => setShowPinDialog(false)}
+        onSuccess={() => {
+          setShowPinDialog(false);
+          if (pendingPurchase) {
+            void finalizePurchase(pendingPurchase);
+          }
+        }}
+        paymentDetails={{
+          recipient: storeDoc.storeName || product.sellerName || 'Boutique Nkampa',
+          amount: totalPrice.toLocaleString(),
+          currency: 'CDF',
+        }}
+      />
+
       {showReceipt && completedOrder && (
         <OrderReceipt
           order={completedOrder}
+          primaryActionLabel={completedOrder?.pickupRoute?.enabled ? 'Aller à la boutique' : undefined}
+          onPrimaryAction={
+            completedOrder?.pickupRoute?.enabled
+              ? () => handleOpenPickupRoute(completedOrder)
+              : undefined
+          }
           onClose={() => {
             setShowReceipt(false);
             if (conversationId) {

@@ -34,6 +34,17 @@ export interface NkampaOrder {
   totalAmount: number;
   shippingAddress: string;
   shippingPhone: string;
+  trackingNumber?: string;
+  deliveryOption?: 'delivery' | 'pickup';
+  pickupRoute?: {
+    enabled: boolean;
+    storeLocationLabel: string;
+    buyerLocationLabel: string;
+    buyerLatitude: number;
+    buyerLongitude: number;
+    destinationQuery: string;
+    suggestedTransportMode?: 'foot' | 'car' | 'train';
+  };
   status: 'pending' | 'paid' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   paymentMethod: 'wallet';
   paymentStatus: 'pending' | 'completed' | 'failed' | 'refunded';
@@ -53,10 +64,12 @@ export interface NkampaOrder {
 export async function createOrder(orderData: Omit<NkampaOrder, 'id' | 'orderId' | 'createdAt' | 'updatedAt'>): Promise<NkampaOrder> {
   try {
     const orderId = `ENK-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+    const trackingNumber = orderData.trackingNumber || `TRK-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
     
     const order: Omit<NkampaOrder, 'id'> = {
       ...orderData,
       orderId,
+      trackingNumber,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };

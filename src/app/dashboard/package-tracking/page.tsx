@@ -82,6 +82,7 @@ export default function PackageTrackingPage() {
       const statusMap: Record<string, 'pending' | 'in_transit' | 'delivered' | 'failed'> = {
         'pending': 'pending',
         'paid': 'in_transit',
+        'processing': 'in_transit',
         'shipped': 'in_transit',
         'delivered': 'delivered',
         'cancelled': 'failed',
@@ -98,12 +99,21 @@ export default function PackageTrackingPage() {
         location: sellerData?.location || 'Kinshasa',
       });
 
-      if (orderData.status === 'paid' || orderData.status === 'shipped' || orderData.status === 'delivered') {
+      if (orderData.status === 'paid' || orderData.status === 'processing' || orderData.status === 'shipped' || orderData.status === 'delivered') {
         events.push({
           date: createdDate.toLocaleDateString('fr-FR'),
           time: createdDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
           status: 'Paiement confirmé',
           location: 'eNkamba',
+        });
+      }
+
+      if (orderData.pickupRoute?.enabled) {
+        events.push({
+          date: createdDate.toLocaleDateString('fr-FR'),
+          time: createdDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+          status: 'Retrait en boutique disponible',
+          location: orderData.pickupRoute.storeLocationLabel || 'Boutique Nkampa',
         });
       }
 

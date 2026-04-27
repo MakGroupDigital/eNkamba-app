@@ -45,9 +45,10 @@ export function useWalletBalance() {
       userDocRef,
       (snapshot) => {
         if (snapshot.exists()) {
-          setBalance(snapshot.data()?.walletBalance || 0);
+          const nextBalance = snapshot.data()?.walletBalance || 0;
+          setBalance((prevBalance) => (prevBalance === nextBalance ? prevBalance : nextBalance));
         } else {
-          setBalance(0);
+          setBalance((prevBalance) => (prevBalance === 0 ? prevBalance : 0));
         }
         setIsLoading(false);
       },

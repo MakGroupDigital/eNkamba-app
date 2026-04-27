@@ -22,7 +22,8 @@ import {
   HandCoins,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { doc, getDoc } from 'firebase/firestore';
 import {
   TrackPackageIcon,
   SearchIcon,
@@ -41,6 +42,7 @@ import {
   LogisticsTrainModeIcon,
   LogisticsWalkModeIcon,
 } from "@/components/icons/logistics-generated-icons";
+import { db } from '@/lib/firebase';
 
 type TransportMode = 'walk' | 'bike' | 'moto' | 'car' | 'train';
 
@@ -68,6 +70,21 @@ type RouteInfo = {
   trafficLevel: 'Faible' | 'Moyenne' | 'Dense';
   trafficScore: number;
   source: 'osrm' | 'fallback';
+};
+
+type LinkedPickupOrder = {
+  id: string;
+  productName?: string;
+  storeName?: string;
+  pickupRoute?: {
+    enabled: boolean;
+    storeLocationLabel: string;
+    buyerLocationLabel: string;
+    buyerLatitude: number;
+    buyerLongitude: number;
+    destinationQuery: string;
+    suggestedTransportMode?: 'foot' | 'car' | 'train';
+  };
 };
 
 const KINSHASA_CENTER: GeoPoint = { lat: -4.325, lon: 15.3222 };
@@ -227,6 +244,8 @@ const pointIconByKind: Record<ItineraryPoint['kind'], ComponentType<{ className?
 export default function UgaviPage() {
   const { toast } = useToast();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const orderId = searchParams?.get('orderId') || null;
   const [currentAddress, setCurrentAddress] = useState('Localisation en cours...');
   const [transportMode, setTransportMode] = useState<TransportMode>('moto');
   const [selectedPoint, setSelectedPoint] = useState<ItineraryPoint | null>(null);
@@ -250,6 +269,8 @@ export default function UgaviPage() {
   const [finderIsLoading, setFinderIsLoading] = useState(false);
   const [finderCenter, setFinderCenter] = useState<GeoPoint | null>(null);
   const [finderKinds, setFinderKinds] = useState<Array<'relais' | 'centre' | 'livreur'>>([]);
+  const [linkedPickupOrder, setLinkedPickupOrder] = useState<LinkedPickupOrder | null>(null);
+  const [isLoadingLinkedPickup, setIsLoadingLinkedPickup] = useState(false);
   
   // Form states
   const [senderName, setSenderName] = useState('');
@@ -262,8 +283,8 @@ export default function UgaviPage() {
   const [packageDescription, setPackageDescription] = useState('');
   const [shippingMethod, setShippingMethod] = useState<'standard' | 'express'>('standard');
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
+    if (linkedPickupOrder?.pickupRoute?.enabled) return;
     if (!('geolocation' in navigator)) return;
 
     const watchId = navigator.geolocation.watchPosition(
@@ -280,7 +301,7 @@ export default function UgaviPage() {
     );
 
     return () => navigator.geolocation.clearWatch(watchId);
-  }, []);
+  }, [linkedPickupOrder?.pickupRoute?.enabled]);
 
   const inferFinderKinds = (raw: string): Array<'relais' | 'centre' | 'livreur'> => {
     const q = (raw || '').toLowerCase();
@@ -315,6 +336,125 @@ export default function UgaviPage() {
       return null;
     }
   };
+
+  useEffect(() => {
+    if (!orderId) {
+      setLinkedPickupOrder(null);
+      return;
+    }
+
+    let active = true;
+
+    const loadLinkedPickupOrder = async () => {
+      try {
+        setIsLoadingLinkedPickup(true);
+        const orderSnap = await getDoc(doc(db, 'nkampa_orders', orderId));
+        if (!active) return;
+
+        if (!orderSnap.exists()) {
+          setLinkedPickupOrder(null);
+          toast({
+            variant: 'destructive',
+            title: 'Commande introuvable',
+            description: "Impossible de retrouver l'itinéraire de retrait.",
+          });
+          return;
+        }
+
+        const orderData = { ...(orderSnap.data() as LinkedPickupOrder), id: orderSnap.id };
+        if (!orderData.pickupRoute?.enabled) {
+          setLinkedPickupOrder(null);
+          toast({
+            variant: 'destructive',
+            title: 'Itinéraire indisponible',
+            description: 'Cette commande ne contient pas de retrait en boutique.',
+          });
+          return;
+        }
+
+        setLinkedPickupOrder(orderData);
+      } catch (error) {
+        console.error('Erreur chargement itinéraire Nkampa:', error);
+        if (!active) return;
+        setLinkedPickupOrder(null);
+        toast({
+          variant: 'destructive',
+          title: 'Chargement impossible',
+          description: "L'itinéraire de retrait n'a pas pu être chargé.",
+        });
+      } finally {
+        if (active) {
+          setIsLoadingLinkedPickup(false);
+        }
+      }
+    };
+
+    void loadLinkedPickupOrder();
+
+    return () => {
+      active = false;
+    };
+  }, [orderId, toast]);
+
+  useEffect(() => {
+    if (!linkedPickupOrder?.pickupRoute?.enabled) return;
+
+    let active = true;
+
+    const syncLinkedPickupContext = async () => {
+      const route = linkedPickupOrder.pickupRoute;
+      if (!route) return;
+      setActiveService(null);
+      setFinderQuery('');
+      setFinderKinds([]);
+      setFinderCenter(null);
+      setRouteInfo(null);
+      setIsRouteStarted(false);
+      setMissionNote('');
+      setTransportMode(route.suggestedTransportMode === 'car' || route.suggestedTransportMode === 'train' ? route.suggestedTransportMode : 'walk');
+      setUserPosition({
+        lat: route.buyerLatitude,
+        lon: route.buyerLongitude,
+      });
+      setCurrentAddress(route.buyerLocationLabel || 'Position enregistrée');
+      setClientAddress(route.buyerLocationLabel || 'Position enregistrée');
+      setDestinationAddress(route.storeLocationLabel || 'Boutique Nkampa');
+
+      const destinationPoint = await forwardGeocode(route.destinationQuery || route.storeLocationLabel);
+      if (!active || !destinationPoint) {
+        if (!destinationPoint) {
+          toast({
+            variant: 'destructive',
+            title: 'Destination introuvable',
+            description: "La boutique n'a pas pu être localisée pour cet itinéraire.",
+          });
+        }
+        return;
+      }
+
+      const syntheticPoint: ItineraryPoint = {
+        id: `pickup-order-${linkedPickupOrder.id}`,
+        title: linkedPickupOrder.storeName || 'Boutique Nkampa',
+        subtitle: route.storeLocationLabel || 'Retrait boutique',
+        color: 'bg-orange-500',
+        ringColor: 'ring-orange-300',
+        top: '50%',
+        left: '50%',
+        kind: 'relais',
+        lat: destinationPoint.lat,
+        lon: destinationPoint.lon,
+      };
+
+      setSelectedPoint(syntheticPoint);
+      setActivePointInfoId(syntheticPoint.id);
+    };
+
+    void syncLinkedPickupContext();
+
+    return () => {
+      active = false;
+    };
+  }, [linkedPickupOrder, toast]);
 
   const runFinderSearch = async (raw: string) => {
     const queryText = raw.trim();
@@ -504,15 +644,20 @@ export default function UgaviPage() {
     setDestinationAddress(toAddress);
   };
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const syncCurrentAddress = async () => {
+      if (linkedPickupOrder?.pickupRoute?.enabled) {
+        const savedAddress = linkedPickupOrder.pickupRoute.buyerLocationLabel || 'Position enregistrée';
+        setCurrentAddress(savedAddress);
+        setClientAddress(savedAddress);
+        return;
+      }
       const resolvedAddress = await reverseGeocode(userPosition);
       setCurrentAddress(resolvedAddress);
       setClientAddress(resolvedAddress);
     };
     void syncCurrentAddress();
-  }, [userPosition.lat, userPosition.lon]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [linkedPickupOrder, userPosition.lat, userPosition.lon]);
 
   const estimateTrafficOnZone = async (samplePoint: GeoPoint): Promise<{ multiplier: number; level: RouteInfo['trafficLevel']; score: number }> => {
     const hour = new Date().getHours();
@@ -818,6 +963,53 @@ export default function UgaviPage() {
             </div>
           )}
         </section>
+
+        {linkedPickupOrder?.pickupRoute?.enabled && (
+          <section className="rounded-2xl border border-orange-200 bg-gradient-to-r from-orange-50 via-white to-emerald-50 p-3 shadow">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div className="space-y-1">
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-orange-600">
+                  Retrait boutique Nkampa
+                </p>
+                <h2 className="text-lg font-black text-slate-900">
+                  {linkedPickupOrder.productName || 'Commande Nkampa'}
+                </h2>
+                <p className="text-sm text-slate-600">
+                  Départ: {linkedPickupOrder.pickupRoute.buyerLocationLabel}
+                </p>
+                <p className="text-sm text-slate-600">
+                  Destination: {linkedPickupOrder.pickupRoute.storeLocationLabel}
+                </p>
+              </div>
+              <div className="grid grid-cols-3 gap-2 md:min-w-[280px]">
+                {[
+                  { id: 'walk' as TransportMode, label: 'Pied', icon: LogisticsWalkModeIcon },
+                  { id: 'car' as TransportMode, label: 'Voiture', icon: LogisticsCarModeIcon },
+                  { id: 'train' as TransportMode, label: 'Train', icon: LogisticsTrainModeIcon },
+                ].map((mode) => (
+                  <button
+                    key={mode.id}
+                    type="button"
+                    onClick={() => setTransportMode(mode.id)}
+                    className={`rounded-2xl border px-3 py-3 text-xs font-semibold transition ${
+                      transportMode === mode.id
+                        ? 'border-primary bg-primary text-white shadow-lg'
+                        : 'border-slate-200 bg-white text-slate-700'
+                    }`}
+                  >
+                    <div className="flex flex-col items-center gap-1">
+                      <mode.icon size={18} />
+                      <span>{mode.label}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+            {isLoadingLinkedPickup && (
+              <p className="mt-3 text-xs text-slate-500">Chargement de l’itinéraire enregistré…</p>
+            )}
+          </section>
+        )}
 
         <section className="grid grid-cols-5 gap-1.5">
           {[

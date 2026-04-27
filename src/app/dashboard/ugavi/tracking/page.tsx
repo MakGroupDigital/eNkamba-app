@@ -48,45 +48,109 @@ export default function UgaviTrackingPage() {
     setSearchError(null);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1100));
+      const { db } = await import('@/lib/firebase');
+      const { collection, query, where, getDocs, doc: docRef, getDoc } = await import('firebase/firestore');
 
-      const mockData: TrackingInfo = {
-        trackingNumber: numberToSearch,
-        status: 'in_transit',
-        sender: 'Fournisseur Premium',
-        recipient: 'Votre Nom',
-        origin: 'Kinshasa',
-        destination: 'Goma',
-        estimatedDelivery: '2026-02-27',
-        lastUpdate: '2026-02-25 14:30',
-        events: [
-          {
-            date: '2026-02-25',
-            time: '14:30',
-            status: 'En transit',
-            location: 'Kinshasa - Centre de distribution',
-          },
-          {
-            date: '2026-02-25',
-            time: '09:15',
-            status: 'Colis reçu',
-            location: 'Kinshasa - Entrepôt principal',
-          },
-          {
-            date: '2026-02-24',
-            time: '16:45',
-            status: 'Colis préparé',
-            location: 'Point de départ',
-          },
-        ],
+      const ordersRef = collection(db, 'nkampa_orders');
+      const q = query(ordersRef, where('trackingNumber', '==', numberToSearch));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        setSearchError('Aucune commande trouvée avec ce numéro de suivi');
+        toast({
+          variant: 'destructive',
+          title: 'Colis introuvable',
+          description: 'Vérifiez le numéro de suivi et réessayez',
+        });
+        return;
+      }
+
+      const orderDoc = querySnapshot.docs[0];
+      const orderData = orderDoc.data();
+      const sellerDoc = await getDoc(docRef(db, 'users', orderData.sellerId));
+      const sellerData = sellerDoc.exists() ? sellerDoc.data() : null;
+      const buyerDoc = await getDoc(docRef(db, 'users', orderData.buyerId));
+      const buyerData = buyerDoc.exists() ? buyerDoc.data() : null;
+
+      const statusMap: Record<string, 'pending' | 'in_transit' | 'delivered' | 'failed'> = {
+        pending: 'pending',
+        paid: 'in_transit',
+        processing: 'in_transit',
+        shipped: 'in_transit',
+        delivered: 'delivered',
+        cancelled: 'failed',
       };
 
-      setTrackingInfo(mockData);
+      const createdDate = orderData.createdAt?.toDate?.() || new Date();
+      const events = [
+        {
+          date: createdDate.toLocaleDateString('fr-FR'),
+          time: createdDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+          status: 'Commande créée',
+          location: sellerData?.location || 'Boutique Nkampa',
+        },
+      ];
+
+      if (['paid', 'processing', 'shipped', 'delivered'].includes(orderData.status)) {
+        events.push({
+          date: createdDate.toLocaleDateString('fr-FR'),
+          time: createdDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+          status: 'Paiement confirmé',
+          location: 'eNkambaPay',
+        });
+      }
+
+      if (orderData.pickupRoute?.enabled) {
+        events.push({
+          date: createdDate.toLocaleDateString('fr-FR'),
+          time: createdDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+          status: 'Itinéraire boutique disponible',
+          location: orderData.pickupRoute.storeLocationLabel || 'Boutique',
+        });
+      }
+
+      if (['shipped', 'delivered'].includes(orderData.status)) {
+        const shippedDate = orderData.shippedAt?.toDate?.() || orderData.updatedAt?.toDate?.() || new Date();
+        events.push({
+          date: shippedDate.toLocaleDateString('fr-FR'),
+          time: shippedDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+          status: 'Colis expédié',
+          location: sellerData?.location || 'Kinshasa',
+        });
+      }
+
+      if (orderData.status === 'delivered') {
+        const deliveredDate = orderData.deliveredAt?.toDate?.() || orderData.updatedAt?.toDate?.() || new Date();
+        events.push({
+          date: deliveredDate.toLocaleDateString('fr-FR'),
+          time: deliveredDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+          status: 'Colis livré',
+          location: orderData.shippingAddress || orderData.pickupRoute?.storeLocationLabel || 'Destination',
+        });
+      }
+
+      const estimatedDelivery = new Date(createdDate);
+      estimatedDelivery.setDate(estimatedDelivery.getDate() + (orderData.pickupRoute?.enabled ? 1 : 4));
+
+      const trackingData: TrackingInfo = {
+        trackingNumber: numberToSearch,
+        status: statusMap[orderData.status] || 'pending',
+        sender: sellerData?.fullName || sellerData?.displayName || orderData.sellerName || 'Vendeur',
+        recipient: buyerData?.fullName || buyerData?.displayName || orderData.buyerName || 'Client',
+        origin: sellerData?.location || orderData.pickupRoute?.storeLocationLabel || 'Kinshasa',
+        destination: orderData.shippingAddress || orderData.pickupRoute?.storeLocationLabel || 'Destination',
+        estimatedDelivery: estimatedDelivery.toLocaleDateString('fr-FR'),
+        lastUpdate: (orderData.updatedAt?.toDate?.() || new Date()).toLocaleString('fr-FR'),
+        events: events.reverse(),
+      };
+
+      setTrackingInfo(trackingData);
       toast({
         title: 'Colis trouvé ✅',
         description: `Numéro de suivi: ${numberToSearch}`,
       });
-    } catch {
+    } catch (error) {
+      console.error('Erreur recherche suivi Ugavi:', error);
       setSearchError('Erreur lors de la recherche. Veuillez réessayer.');
       toast({
         variant: 'destructive',

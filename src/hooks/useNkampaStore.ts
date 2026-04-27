@@ -27,13 +27,18 @@ export function useNkampaStore(ownerId?: string | null) {
       q,
       (snap) => {
         if (snap.empty) {
-          setStore(null);
+          setStore((prevStore) => (prevStore === null ? prevStore : null));
           setIsLoading(false);
           setHasChecked(true);
           return;
         }
         const doc = snap.docs[0];
-        setStore({ id: doc.id, ...(doc.data() as any) } as NkampaStore);
+        const nextStore = { id: doc.id, ...(doc.data() as any) } as NkampaStore;
+        setStore((prevStore) => (
+          prevStore && JSON.stringify(prevStore) === JSON.stringify(nextStore)
+            ? prevStore
+            : nextStore
+        ));
         setIsLoading(false);
         setHasChecked(true);
       },

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { memo, useState, useEffect, useRef, useMemo } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Search, Mic, X, Loader2, ArrowLeft, ShoppingCart } from 'lucide-react';
 import Image from 'next/image';
@@ -121,6 +121,99 @@ const PRODUCER_SUBCATEGORIES: SubcategoryOption[] = [
   { id: 'alimentaire', label: 'Agro', icon: '🌾' },
   { id: 'artisanat', label: 'Artisanat', icon: '🧵' },
 ];
+
+const SupplierCard = memo(function SupplierCard({ supplier }: { supplier: any }) {
+  return (
+    <Link href={`/shop/${supplier.slug || ''}`} className={!supplier.slug ? 'pointer-events-none opacity-60' : ''}>
+      <Card className="rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer h-full">
+        <div className="relative w-full aspect-square bg-gray-100">
+          <Image
+            src={supplier.logoUrl || supplier.coverUrl || 'https://picsum.photos/seed/store/300/300'}
+            alt={supplier.storeName || 'Boutique'}
+            fill
+            className="object-cover"
+          />
+        </div>
+        <CardContent className="p-3 space-y-2">
+          <h3 className="font-semibold text-sm text-gray-900 line-clamp-2">
+            {supplier.storeName || 'Boutique'}
+          </h3>
+          <div className="flex items-center gap-1 text-xs text-gray-600">
+            <LocationIcon className="w-3 h-3" />
+            <span>{supplier.location || '—'}</span>
+          </div>
+        </CardContent>
+      </Card>
+    </Link>
+  );
+});
+
+const ProductCard = memo(function ProductCard({ product }: { product: any }) {
+  const priceInCDF = Math.round(
+    convertToCDFSync(Number(product.price || 0), product.currency || 'CDF')
+  );
+
+  return (
+    <Link href={product?.storeSlug ? `/shop/${product.storeSlug}/product/${product.id}` : `/dashboard/nkampa`} className={!product?.storeSlug ? 'pointer-events-none opacity-60' : ''}>
+      <Card className="rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer h-full">
+        <div className="relative w-full aspect-square bg-gray-100">
+          <Image
+            src={product.image || product.images?.[0] || 'https://picsum.photos/seed/product/300/300'}
+            alt={product.name || 'Produit'}
+            fill
+            className="object-cover"
+          />
+        </div>
+        <CardContent className="p-3 space-y-2">
+          <h3 className="font-semibold text-sm text-gray-900 line-clamp-2">
+            {product.name}
+          </h3>
+          <div className="flex items-center gap-1">
+            <PriceIcon className="w-4 h-4 text-primary" />
+            <span className="text-lg font-bold text-primary">
+              {priceInCDF.toLocaleString()}
+            </span>
+            <span className="text-xs text-gray-600">CDF</span>
+          </div>
+          {product.currency && product.currency !== 'CDF' && product.currency !== 'FC' && (
+            <p className="text-xs text-gray-500">
+              Prix original: {Number(product.price || 0).toLocaleString()} {product.currency}
+            </p>
+          )}
+          {product.moq && (
+            <div className="flex items-center gap-1 text-xs text-gray-600">
+              <MOQIcon className="w-3 h-3" />
+              <span>MOQ: {product.moq}</span>
+            </div>
+          )}
+          <div className="flex items-center gap-1 text-xs text-gray-600">
+            <LocationIcon className="w-3 h-3" />
+            <span>{product.location || '—'}</span>
+          </div>
+          {product.rating && (
+            <div className="flex items-center gap-1 text-xs">
+              <div className="flex gap-0.5">
+                {[...Array(5)].map((_, i) => (
+                  <StarIcon
+                    key={i}
+                    className={`w-3 h-3 ${
+                      i < Math.floor(product.rating)
+                        ? 'text-yellow-400'
+                        : 'text-gray-300'
+                    }`}
+                  />
+                ))}
+              </div>
+              {product.reviews !== undefined && (
+                <span className="text-gray-600">({product.reviews})</span>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </Link>
+  );
+});
 
 export default function NkampaPage() {
   const router = useRouter();
@@ -429,97 +522,6 @@ export default function NkampaPage() {
     } finally {
       setIsProcessing(false);
     }
-  };
-
-  const SupplierCard = ({ supplier }: { supplier: any }) => (
-    <Link href={`/shop/${supplier.slug || ''}`} className={!supplier.slug ? 'pointer-events-none opacity-60' : ''}>
-      <Card className="rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer h-full">
-      <div className="relative w-full aspect-square bg-gray-100">
-        <Image
-          src={supplier.logoUrl || supplier.coverUrl || 'https://picsum.photos/seed/store/300/300'}
-          alt={supplier.storeName || 'Boutique'}
-          fill
-          className="object-cover"
-        />
-      </div>
-      <CardContent className="p-3 space-y-2">
-        <h3 className="font-semibold text-sm text-gray-900 line-clamp-2">
-          {supplier.storeName || 'Boutique'}
-        </h3>
-        <div className="flex items-center gap-1 text-xs text-gray-600">
-          <LocationIcon className="w-3 h-3" />
-          <span>{supplier.location || '—'}</span>
-        </div>
-      </CardContent>
-    </Card>
-    </Link>
-  );
-
-  const ProductCard = ({ product }: { product: any }) => {
-    const priceInCDF = Math.round(
-      convertToCDFSync(Number(product.price || 0), product.currency || 'CDF')
-    );
-
-    return (
-      <Link href={product?.storeSlug ? `/shop/${product.storeSlug}/product/${product.id}` : `/dashboard/nkampa`} className={!product?.storeSlug ? 'pointer-events-none opacity-60' : ''}>
-        <Card className="rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer h-full">
-          <div className="relative w-full aspect-square bg-gray-100">
-            <Image
-              src={product.image || product.images?.[0] || 'https://picsum.photos/seed/product/300/300'}
-              alt={product.name || 'Produit'}
-              fill
-              className="object-cover"
-            />
-          </div>
-          <CardContent className="p-3 space-y-2">
-            <h3 className="font-semibold text-sm text-gray-900 line-clamp-2">
-              {product.name}
-            </h3>
-            <div className="flex items-center gap-1">
-              <PriceIcon className="w-4 h-4 text-primary" />
-              <span className="text-lg font-bold text-primary">
-                {priceInCDF.toLocaleString()}
-              </span>
-              <span className="text-xs text-gray-600">CDF</span>
-            </div>
-            {product.currency && product.currency !== 'CDF' && product.currency !== 'FC' && (
-              <p className="text-xs text-gray-500">
-                Prix original: {Number(product.price || 0).toLocaleString()} {product.currency}
-              </p>
-            )}
-            {product.moq && (
-              <div className="flex items-center gap-1 text-xs text-gray-600">
-                <MOQIcon className="w-3 h-3" />
-                <span>MOQ: {product.moq}</span>
-              </div>
-            )}
-            <div className="flex items-center gap-1 text-xs text-gray-600">
-              <LocationIcon className="w-3 h-3" />
-              <span>{product.location || '—'}</span>
-            </div>
-            {product.rating && (
-              <div className="flex items-center gap-1 text-xs">
-                <div className="flex gap-0.5">
-                  {[...Array(5)].map((_, i) => (
-                    <StarIcon
-                      key={i}
-                      className={`w-3 h-3 ${
-                        i < Math.floor(product.rating)
-                          ? 'text-yellow-400'
-                          : 'text-gray-300'
-                      }`}
-                    />
-                  ))}
-                </div>
-                {product.reviews !== undefined && (
-                  <span className="text-gray-600">({product.reviews})</span>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </Link>
-    );
   };
 
   return (

@@ -41,6 +41,16 @@ export interface EcommerceOrder {
   paymentMethod: string;
   shippingAddress: string;
   shippingPhone: string;
+  deliveryOption?: 'delivery' | 'pickup';
+  pickupRoute?: {
+    enabled: boolean;
+    storeLocationLabel: string;
+    buyerLocationLabel: string;
+    buyerLatitude: number;
+    buyerLongitude: number;
+    destinationQuery: string;
+    suggestedTransportMode?: 'foot' | 'car' | 'train';
+  };
   trackingNumber?: string;
   createdAt: any;
   updatedAt: any;
@@ -159,7 +169,19 @@ export function useNkampaEcommerce() {
       product: EcommerceProduct,
       quantity: number,
       shippingAddress: string,
-      shippingPhone: string
+      shippingPhone: string,
+      purchaseOptions?: {
+        deliveryOption?: 'delivery' | 'pickup';
+        pickupRoute?: {
+          enabled: boolean;
+          storeLocationLabel: string;
+          buyerLocationLabel: string;
+          buyerLatitude: number;
+          buyerLongitude: number;
+          destinationQuery: string;
+          suggestedTransportMode?: 'foot' | 'car' | 'train';
+        };
+      }
     ) => {
       if (!currentUser) throw new Error('Utilisateur non authentifié');
 
@@ -203,6 +225,8 @@ export function useNkampaEcommerce() {
           totalAmount: totalPriceInCDF,
           shippingAddress,
           shippingPhone,
+          deliveryOption: purchaseOptions?.deliveryOption || 'delivery',
+          pickupRoute: purchaseOptions?.pickupRoute,
           status: 'pending',
           paymentMethod: 'wallet',
           paymentStatus: 'pending',
@@ -323,7 +347,7 @@ export function useNkampaEcommerce() {
         // Envoyer un message de confirmation
         await sendMessage(
           conversationId,
-          `✅ Commande confirmée!\n\n📦 ${product.name} x${quantity}\n💰 Total: ${totalPriceInCDF.toLocaleString()} CDF\n📋 Commande: ${order.orderId}\n\n📍 Livraison:\n${shippingAddress}\n📞 ${shippingPhone}\n\nLe vendeur va traiter votre commande.`,
+          `✅ Commande confirmée!\n\n📦 ${product.name} x${quantity}\n💰 Total: ${totalPriceInCDF.toLocaleString()} CDF\n📋 Commande: ${order.orderId}\n\n${purchaseOptions?.deliveryOption === 'pickup' ? `🏪 Retrait en boutique\n📍 Boutique: ${purchaseOptions?.pickupRoute?.storeLocationLabel || shippingAddress}` : `📍 Livraison:\n${shippingAddress}\n📞 ${shippingPhone}`}\n\nLe vendeur va traiter votre commande.`,
           'text',
           {
             orderId: order.id,
@@ -340,7 +364,13 @@ export function useNkampaEcommerce() {
           orderNumber: order.orderId,
           conversationId,
           transactionId,
-          order,
+          order: {
+            ...order,
+            status: 'paid',
+            paymentStatus: 'completed',
+            transactionId,
+            paidAt: new Date(),
+          },
         };
       } catch (err: any) {
         console.error('Erreur achat produit:', err);
