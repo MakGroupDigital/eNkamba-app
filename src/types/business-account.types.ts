@@ -16,10 +16,21 @@ export type CommerceSubCategory =
 
 export type LogisticsSubCategory = 
   | 'TRANSPORT_COMPANY'
+  | 'LOCAL_AGENCY'
+  | 'NATIONAL_AGENCY'
+  | 'INTERNATIONAL_AGENCY'
   | 'RELAY'
   | 'RELAY_AGENT'
   | 'WAREHOUSE_HUB'
-  | 'LAST_MILE';
+  | 'LAST_MILE'
+  | 'COURIER_FOOT'
+  | 'COURIER_BIKE'
+  | 'COURIER_MOTORBIKE'
+  | 'COURIER_CAR'
+  | 'COURIER_TRUCK'
+  | 'COURIER_TRAIN'
+  | 'COURIER_BOAT'
+  | 'COURIER_AIR';
 
 export type PaymentSubCategory = 
   | 'API_INTEGRATION'

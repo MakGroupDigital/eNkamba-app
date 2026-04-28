@@ -84,11 +84,22 @@ const SUBCATEGORY_MAP: Record<BusinessType, { value: string; label: string }[]> 
     { value: 'SERVICES', label: 'Services spécialisés (santé, formation, etc.)' },
   ],
   LOGISTICS: [
+    { value: 'RELAY', label: 'Point relais client / dépôt de proximité' },
+    { value: 'RELAY_AGENT', label: 'Agent relais terrain / kiosque mobile' },
+    { value: 'LOCAL_AGENCY', label: 'Agence locale de livraison' },
     { value: 'TRANSPORT_COMPANY', label: 'Entreprise de transport & flotte' },
-    { value: 'RELAY', label: 'Point relais / hub client' },
-    { value: 'RELAY_AGENT', label: 'Agent relais Mobile Money' },
-    { value: 'WAREHOUSE_HUB', label: 'Entrepôt & gestion de stock' },
-    { value: 'LAST_MILE', label: 'Livraison last-mile & agents de proximité' },
+    { value: 'NATIONAL_AGENCY', label: 'Agence de transport national' },
+    { value: 'INTERNATIONAL_AGENCY', label: 'Agence logistique internationale' },
+    { value: 'WAREHOUSE_HUB', label: 'Entrepôt / hub / dépôt' },
+    { value: 'LAST_MILE', label: 'Last-mile manager & agents de proximité' },
+    { value: 'COURIER_FOOT', label: 'Livreur piéton' },
+    { value: 'COURIER_BIKE', label: 'Livreur vélo' },
+    { value: 'COURIER_MOTORBIKE', label: 'Livreur moto' },
+    { value: 'COURIER_CAR', label: 'Livreur voiture' },
+    { value: 'COURIER_TRUCK', label: 'Livreur camion' },
+    { value: 'COURIER_TRAIN', label: 'Transporteur train' },
+    { value: 'COURIER_BOAT', label: 'Transporteur bateau' },
+    { value: 'COURIER_AIR', label: 'Transporteur avion' },
   ],
   PAYMENT: [
     { value: 'API_INTEGRATION', label: 'Intégration API / plateforme' },
@@ -104,6 +115,19 @@ const SUBCATEGORY_TIPS: Record<string, string> = {
     'Interface commerce + logistique pour produits alimentaires (lots, dates péremption, tracing).',
   BIO_PRODUCTS: 'Accès à des modules bio et traçabilité, dashboards Nkampa Bio et listes de certification.',
   RELAY_AGENT: 'Flux inspiré de l’agent relais (KYC, mode d’exploitation, géolocalisation).',
+  LOCAL_AGENCY: 'Dashboard agence locale: missions, flotte, tarifs rapides et suivi urbain.',
+  NATIONAL_AGENCY: 'Dashboard inter-ville avec dépôts, transferts, hubs et réseau national.',
+  INTERNATIONAL_AGENCY: 'Dashboard cross-border avec douane, partenaires et tracking multi-pays.',
+  WAREHOUSE_HUB: 'Dashboard dépôt: stock, réception colis, scans, remises et inventaires.',
+  LAST_MILE: 'Dashboard supervision last-mile avec agents proches, affectation et SLA.',
+  COURIER_FOOT: 'Profil livreur piéton avec missions légères, ETA court et zone GPS réduite.',
+  COURIER_BIKE: 'Profil coursier vélo pour courses express et petits colis urbains.',
+  COURIER_MOTORBIKE: 'Profil livreur moto pour express urbain et peri-urbain.',
+  COURIER_CAR: 'Profil livreur voiture pour tournées urbaines, colis moyens et pickups.',
+  COURIER_TRUCK: 'Profil camion pour volumes lourds, hubs et grandes liaisons.',
+  COURIER_TRAIN: 'Profil ferroviaire pour flux inter-ville et lots consolidés.',
+  COURIER_BOAT: 'Profil fluvial pour trafic volumineux et longues distances.',
+  COURIER_AIR: 'Profil aérien pour urgent, premium et international.',
   API_INTEGRATION: 'Accès prioritaire aux clés API, webhooks et sandbox Mbongo.',
 };
 
@@ -122,10 +146,10 @@ const MODULE_OVERVIEW: Record<BusinessType, { title: string; description: string
     title: 'Logistique & relais',
     description: 'Flotte, suivi colis, agents relais et scanner QR (Dashboard Logistique).',
     features: [
-      'Gestion de la flotte, planification des véhicules et conducteurs.',
-      'Tracking des colis, points relais et collectes terrain.',
-      'Scanner QR, agents relais et supervision des points mobiles.',
-      'Alertes GPS, zones à risque et inventaire des hubs.',
+      'Profils séparés pour relais, livreurs, agences locales, nationales et internationales.',
+      'Tracking des colis, départ/destination, scans QR et statut temps réel.',
+      'Affectation des missions, flotte, hubs, dépôts et zones GPS.',
+      'Paiement, commissions, alertes opérationnelles et validation admin avant activation.',
     ],
   },
   PAYMENT: {
@@ -166,23 +190,23 @@ const SERVICE_CATALOG: Record<BusinessType, { id: string; label: string; descrip
   LOGISTICS: [
     {
       id: 'fleet',
-      label: 'Flotte & conducteurs',
-      description: 'Ajoutez véhicules, chauffeurs et rapports d’activité par route.',
+      label: 'Flotte, livreurs & moyens de transport',
+      description: 'Ajoutez véhicules, chauffeurs, agents terrain et moyens multimodaux.',
     },
     {
       id: 'tracking',
       label: 'Tracking colis & QR',
-      description: 'Reliez chaque colis à un scanner QR et suivez-la en temps réel.',
+      description: 'Reliez chaque colis à un scanner QR et suivez-le en temps réel.',
     },
     {
       id: 'relay',
-      label: 'Agents relais & points de service',
-      description: 'Points de dépôt, cabine ou kiosque avec KYC, horaires et photos.',
+      label: 'Agents relais, agences & points de service',
+      description: 'Points de dépôt, cabine, hub, agence ou kiosque avec KYC et horaires.',
     },
     {
       id: 'warehouse',
-      label: 'Hub stockage',
-      description: 'Gestion de stock, accès sécurisé, photos façade et contrat.',
+      label: 'Hub, stockage & international',
+      description: 'Gestion de stock, dépôts, routes nationales et passages internationaux.',
     },
   ],
   PAYMENT: [
@@ -220,6 +244,105 @@ const PAYMENT_ROLES: { value: PaymentRole; label: string }[] = [
   { value: 'AGENT', label: 'Agent agréé / relais' },
   { value: 'FINTECH_PARTNER', label: 'Plateforme fintech ou institution' },
 ];
+
+const LOGISTICS_ROLE_PRESETS: Record<string, { title: string; badge: string; dashboard: string; capabilities: string[] }> = {
+  RELAY: {
+    title: 'Point relais Ugavi',
+    badge: 'Relais',
+    dashboard: 'Réception, enregistrement, QR, remise colis et paiements.',
+    capabilities: ['Réception colis', 'Enregistrement colis', 'Impression ticket QR', 'Recherche livreur dans le rayon'],
+  },
+  RELAY_AGENT: {
+    title: 'Agent relais terrain',
+    badge: 'Agent',
+    dashboard: 'Point mobile avec retrait, encaissement, remise et scans.',
+    capabilities: ['Scans terrain', 'Encaissement', 'Remise colis', 'Affectation proximité'],
+  },
+  LOCAL_AGENCY: {
+    title: 'Agence locale',
+    badge: 'Agence',
+    dashboard: 'Missions locales, flotte urbaine, dispatch et SLA.',
+    capabilities: ['Gestion livreurs', 'Affectation missions', 'Prix instantané', 'Suivi des tournées'],
+  },
+  TRANSPORT_COMPANY: {
+    title: 'Entreprise transport',
+    badge: 'Flotte',
+    dashboard: 'Flotte multi-véhicules, lignes régulières et hubs.',
+    capabilities: ['Flotte', 'Chauffeurs', 'Planification routes', 'Reporting activité'],
+  },
+  NATIONAL_AGENCY: {
+    title: 'Agence nationale',
+    badge: 'National',
+    dashboard: 'Inter-ville, dépôts, train, bateau, camion et relais de réception.',
+    capabilities: ['Création trajets', 'Gestion dépôts', 'Transferts inter-ville', 'Suivi national'],
+  },
+  INTERNATIONAL_AGENCY: {
+    title: 'Agence internationale',
+    badge: 'International',
+    dashboard: 'Cross-border, partenaires, douane et tracking multi-pays.',
+    capabilities: ['Flux internationaux', 'Douane', 'Partenaires', 'Suivi multi-pays'],
+  },
+  WAREHOUSE_HUB: {
+    title: 'Hub / entrepôt',
+    badge: 'Hub',
+    dashboard: 'Stockage, scanning, tri et dispatch.',
+    capabilities: ['Inventaire', 'Réception', 'Dispatch', 'Contrôle de stock'],
+  },
+  LAST_MILE: {
+    title: 'Coordination last-mile',
+    badge: 'Last-mile',
+    dashboard: 'Pilotage des agents proches, ETA et missions finales.',
+    capabilities: ['Dispatch rapide', 'ETA', 'Zones GPS', 'Suivi de performance'],
+  },
+  COURIER_FOOT: {
+    title: 'Livreur piéton',
+    badge: 'Piéton',
+    dashboard: 'Missions légères, proximité et express urbain.',
+    capabilities: ['Missions proches', 'Express léger', 'Zone piétonne', 'Historique de courses'],
+  },
+  COURIER_BIKE: {
+    title: 'Livreur vélo',
+    badge: 'Vélo',
+    dashboard: 'Trajets rapides, coût faible et petits colis.',
+    capabilities: ['Courses express', 'Petits colis', 'Zone urbaine', 'Disponibilité live'],
+  },
+  COURIER_MOTORBIKE: {
+    title: 'Livreur moto',
+    badge: 'Moto',
+    dashboard: 'Express principal pour la ville et peri-urbain.',
+    capabilities: ['Courses urgentes', 'Colis moyens', 'Acceptation mission', 'Disponibilité live'],
+  },
+  COURIER_CAR: {
+    title: 'Livreur voiture',
+    badge: 'Voiture',
+    dashboard: 'Parcours urbains, suburbains et pickups multiples.',
+    capabilities: ['Tournées multiples', 'Pickups', 'Colis moyens', 'Navigation GPS'],
+  },
+  COURIER_TRUCK: {
+    title: 'Livreur camion',
+    badge: 'Camion',
+    dashboard: 'Volumes lourds, hubs et longues liaisons.',
+    capabilities: ['Charges lourdes', 'Liaisons longues', 'Capacité kg', 'Affectation dépôt'],
+  },
+  COURIER_TRAIN: {
+    title: 'Transporteur train',
+    badge: 'Train',
+    dashboard: 'Flux inter-ville lourds et lots consolidés.',
+    capabilities: ['Lots consolidés', 'Inter-ville', 'Hubs ferroviaires', 'Suivi de rame'],
+  },
+  COURIER_BOAT: {
+    title: 'Transporteur bateau',
+    badge: 'Bateau',
+    dashboard: 'Trafic fluvial et volumineux.',
+    capabilities: ['Trajets fluviaux', 'Volume élevé', 'Ports / quais', 'Suivi embarquement'],
+  },
+  COURIER_AIR: {
+    title: 'Transporteur avion',
+    badge: 'Avion',
+    dashboard: 'Urgent premium et international.',
+    capabilities: ['Express premium', 'Longue distance', 'Aéroport', 'Suivi cargo'],
+  },
+};
 
 const KYC_CHECKS = [
   'Selfie live + vidéo courte et vérification faciale.',
@@ -280,6 +403,22 @@ function StatusBadge({ status }: { status: string }) {
   }
 }
 
+function UgaviBusinessIcon({ size = 28 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="ugaviBizGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#32BB78" />
+          <stop offset="100%" stopColor="#F97316" />
+        </linearGradient>
+      </defs>
+      <path d="M10 13L24 6L38 13V23C38 31.5 32.2 39.1 24 42C15.8 39.1 10 31.5 10 23V13Z" fill="url(#ugaviBizGrad)" />
+      <path d="M17 24L22 29L31 18" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M14 16H34" stroke="white" strokeWidth="3" strokeLinecap="round" opacity="0.4" />
+    </svg>
+  );
+}
+
 export default function BusinessAccountPage() {
   const { toast } = useToast();
   const { user } = useAuth();
@@ -324,6 +463,7 @@ export default function BusinessAccountPage() {
   const selectedEntityType = ENTITY_TYPES.find(type => type.value === formData.entityNature);
   const moduleOverview = formData.type ? MODULE_OVERVIEW[formData.type] : null;
   const serviceOptions = formData.type ? SERVICE_CATALOG[formData.type] : [];
+  const logisticsRolePreset = formData.type === 'LOGISTICS' ? LOGISTICS_ROLE_PRESETS[formData.subCategory] : null;
 
   const handleInputChange = (field: keyof BusinessFormState, value: string) => {
     setFormData(prev => ({
@@ -581,24 +721,47 @@ export default function BusinessAccountPage() {
               </div>
             )}
             {formData.type === 'LOGISTICS' && (
-              <div>
-                <Label htmlFor="logisticsOperationMode">Mode d’exploitation *</Label>
-                <Select
-                  value={formData.logisticsOperationMode}
-                  onValueChange={(value) => handleInputChange('logisticsOperationMode', value)}
-                  disabled={isSubmitting}
-                >
-                  <SelectTrigger id="logisticsOperationMode">
-                    <SelectValue placeholder="Choisissez le mode" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {LOGISTICS_MODES.map((mode) => (
-                      <SelectItem key={mode.value} value={mode.value}>
-                        {mode.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="logisticsOperationMode">Mode d’exploitation *</Label>
+                  <Select
+                    value={formData.logisticsOperationMode}
+                    onValueChange={(value) => handleInputChange('logisticsOperationMode', value)}
+                    disabled={isSubmitting}
+                  >
+                    <SelectTrigger id="logisticsOperationMode">
+                      <SelectValue placeholder="Choisissez le mode" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {LOGISTICS_MODES.map((mode) => (
+                        <SelectItem key={mode.value} value={mode.value}>
+                          {mode.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {logisticsRolePreset && (
+                  <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-emerald-700">{logisticsRolePreset.badge}</p>
+                        <p className="text-lg font-bold text-slate-900">{logisticsRolePreset.title}</p>
+                        <p className="mt-1 text-sm text-slate-600">{logisticsRolePreset.dashboard}</p>
+                      </div>
+                      <div className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
+                        Dashboard dédié après approbation
+                      </div>
+                    </div>
+                    <div className="mt-4 grid gap-2 md:grid-cols-2">
+                      {logisticsRolePreset.capabilities.map((capability) => (
+                        <div key={capability} className="rounded-xl bg-white px-3 py-2 text-sm text-slate-700 ring-1 ring-emerald-100">
+                          {capability}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
             {formData.type === 'PAYMENT' && (

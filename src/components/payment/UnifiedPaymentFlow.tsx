@@ -29,6 +29,9 @@ export interface UnifiedPaymentFlowProps {
   onBack?: () => void;
   customIcon?: React.ReactNode;
   customLabel?: string;
+  initialAmount?: number;
+  initialDescription?: string;
+  initialMetadata?: Record<string, any>;
 }
 
 export function UnifiedPaymentFlow(props: UnifiedPaymentFlowProps) {
@@ -39,6 +42,9 @@ export function UnifiedPaymentFlow(props: UnifiedPaymentFlowProps) {
     onBack,
     customIcon,
     customLabel = 'Payer',
+    initialAmount,
+    initialDescription,
+    initialMetadata,
   } = props;
 
   const { toast } = useToast();
@@ -46,8 +52,8 @@ export function UnifiedPaymentFlow(props: UnifiedPaymentFlowProps) {
 
   const [step, setStep] = useState<'method' | 'details' | 'confirm' | 'success'>('method');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
-  const [amount, setAmount] = useState('');
-  const [description, setDescription] = useState('');
+  const [amount, setAmount] = useState(initialAmount ? String(initialAmount) : '');
+  const [description, setDescription] = useState(initialDescription || '');
   const [recipientIdentifier, setRecipientIdentifier] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [recipientInfo, setRecipientInfo] = useState<any>(null);
@@ -119,20 +125,22 @@ export function UnifiedPaymentFlow(props: UnifiedPaymentFlowProps) {
     // PIN vérifié, procéder au paiement
     setShowPinDialog(false);
 
-    const success = await processPayment({
+    const result = await processPayment({
       amount: parseFloat(amount),
       paymentMethod: paymentMethod!,
       recipientId: recipientInfo?.uid,
       recipientIdentifier: paymentMethod !== 'bluetooth' && paymentMethod !== 'wifi' ? recipientIdentifier : undefined,
       qrCodeData: paymentMethod === 'qrcode' ? qrCodeData : undefined,
       description: description || undefined,
+      metadata: initialMetadata,
     });
 
-    if (success) {
+    if (result.success) {
       setStep('success');
+      setTransactionId(result.transactionId || '');
       // Appeler le callback de succès
       if (onSuccess) {
-        onSuccess('transaction_id');
+        onSuccess(result.transactionId || '');
       }
     } else if (onError) {
       onError(new Error('Erreur lors du paiement'));

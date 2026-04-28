@@ -75,6 +75,19 @@ export async function POST(request: NextRequest) {
       rejectionReason: reason || 'Raison non spécifiée',
     });
 
+    const businessUserRef = db.collection('businessUsers').doc(userId);
+    await businessUserRef.set({
+      uid: userId,
+      businessId: requestId,
+      businessName: requestData.businessName,
+      businessType: requestData.type,
+      subCategory: requestData.subCategory,
+      status: 'REJECTED',
+      rejectionReason: reason || 'Raison non spécifiée',
+      isBusiness: false,
+      updatedAt: Date.now(),
+    }, { merge: true });
+
     // Create notification for user
     const notificationRef = db.collection('users').doc(userId).collection('notifications').doc();
     await notificationRef.set({

@@ -10,6 +10,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import {
   LogisticsCourierIcon,
   LogisticsExpressIcon,
@@ -92,6 +95,7 @@ export default function UgaviServiceModePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
+  const { user } = useAuth();
   const params = useParams<{ mode: string }>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userPosition, setUserPosition] = useState<GeoPoint>(KINSHASA_CENTER);
@@ -149,6 +153,21 @@ export default function UgaviServiceModePage() {
     }
   }, [searchParams, shouldSelectCourierFirst, nearestCourier]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const rawPrefill = sessionStorage.getItem('ugavi_service_prefill');
+    if (!rawPrefill) return;
+
+    try {
+      const prefill = JSON.parse(rawPrefill) as Record<string, string>;
+      if (prefill.pickupQuery) setSenderAddress((prev) => prev || prefill.pickupQuery);
+      if (prefill.dropoffQuery) setReceiverAddress((prev) => prev || prefill.dropoffQuery);
+      if (prefill.packageWeight) setPackageWeight((prev) => prev || prefill.packageWeight);
+    } catch (error) {
+      console.error('Erreur lecture prefill Ugavi:', error);
+    }
+  }, []);
+
   const selectedCourier = useMemo(
     () => couriersByDistance.find((courier) => courier.id === selectedCourierId) ?? null,
     [couriersByDistance, selectedCourierId]
@@ -162,7 +181,7 @@ export default function UgaviServiceModePage() {
     return serviceConfig.basePrice + weightFee + customsFee + courierDistanceFee;
   }, [packageWeight, serviceConfig.basePrice, serviceConfig.mode, selectedCourier]);
 
-  const handleContinueToPayment = () => {
+  const handleContinueToPayment = async () => {
     if (!senderName.trim() || !senderAddress.trim() || !receiverName.trim() || !receiverAddress.trim() || !packageWeight.trim()) {
       toast({
         variant: 'destructive',
@@ -182,6 +201,40 @@ export default function UgaviServiceModePage() {
     }
 
     setIsSubmitting(true);
+    let requestDraftId: string | null = null;
+    try {
+      const requestDraft = await addDoc(collection(db, 'ugaviRequests'), {
+        userId: user?.uid || null,
+        status: 'pending_payment',
+        logisticsStatus: 'draft',
+        serviceMode: serviceConfig.mode,
+        senderName,
+        senderAddress,
+        receiverName,
+        receiverAddress,
+        packageWeight: Number(packageWeight),
+        description,
+        serviceInstructions,
+        eta: serviceConfig.eta,
+        selectedCourier,
+        totalAmount,
+        statusHistory: [
+          {
+            code: 'draft',
+            label: 'Demande creee',
+            location: senderAddress,
+            actor: senderName,
+            createdAtIso: new Date().toISOString(),
+          },
+        ],
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+      requestDraftId = requestDraft.id;
+    } catch (error) {
+      console.error('Erreur creation brouillon Ugavi:', error);
+    }
+
     const paymentData = {
       context: 'ugavi',
       amount: totalAmount,
@@ -197,6 +250,7 @@ export default function UgaviServiceModePage() {
         serviceInstructions,
         eta: serviceConfig.eta,
         selectedCourier,
+        requestDraftId,
       },
     };
 

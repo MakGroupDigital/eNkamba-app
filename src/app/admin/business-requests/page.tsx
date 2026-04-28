@@ -86,6 +86,20 @@ export default function BusinessRequestsPage() {
         approvedAt: new Date(),
       });
 
+      const businessUserRef = doc(db, 'businessUsers', userId);
+      await setDoc(businessUserRef, {
+        uid: userId,
+        businessId: requestId,
+        businessName: requestData.businessName,
+        businessType: requestData.type,
+        subCategory: requestData.subCategory,
+        status: 'APPROVED',
+        isBusiness: true,
+        approvedAt: Date.now(),
+        submittedAt: requestData.submittedAt || Date.now(),
+        updatedAt: Date.now(),
+      }, { merge: true });
+
       // Create notification
       const notificationRef = doc(collection(db, 'users', userId, 'notifications'));
       await setDoc(notificationRef, {
@@ -158,6 +172,19 @@ export default function BusinessRequestsPage() {
         businessStatus: 'REJECTED',
         rejectionReason: rejectionReason,
       });
+
+      const businessUserRef = doc(db, 'businessUsers', userId);
+      await setDoc(businessUserRef, {
+        uid: userId,
+        businessId: requestId,
+        businessName: requestData.businessName,
+        businessType: requestData.type,
+        subCategory: requestData.subCategory,
+        status: 'REJECTED',
+        rejectionReason,
+        isBusiness: false,
+        updatedAt: Date.now(),
+      }, { merge: true });
 
       // Create notification
       const notificationRef = doc(collection(db, 'users', userId, 'notifications'));

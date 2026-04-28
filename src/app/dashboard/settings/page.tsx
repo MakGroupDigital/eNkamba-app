@@ -59,6 +59,20 @@ const DocumentIcon = ({ size = 24 }: { size?: number }) => (
   </svg>
 );
 
+const UgaviBusinessAccountIcon = ({ size = 24 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="ugaviBusinessSettingsGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#32BB78" />
+        <stop offset="100%" stopColor="#F97316" />
+      </linearGradient>
+    </defs>
+    <path d="M10 13L24 6L38 13V23C38 31.5 32.2 39.1 24 42C15.8 39.1 10 31.5 10 23V13Z" fill="url(#ugaviBusinessSettingsGrad)" />
+    <path d="M17 24L22 29L31 18" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M16 16H32" stroke="white" strokeWidth="3" strokeLinecap="round" opacity="0.4" />
+  </svg>
+);
+
 const SettingsItem = ({
   icon: IconComponent,
   title,
@@ -369,7 +383,7 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent className="p-0">
           <SettingsItem
-            icon={DocumentIcon}
+            icon={businessUser?.businessType === 'LOGISTICS' ? UgaviBusinessAccountIcon : DocumentIcon}
             title="Compte entreprise"
             description={businessDescription}
             action={

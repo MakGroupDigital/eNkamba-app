@@ -5,11 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, Package, Search, AlertCircle, CheckCircle, Clock, MapPin } from 'lucide-react';
+import { ArrowLeft, Package, Search, AlertCircle, CheckCircle, Clock, MapPin, Download, ReceiptText } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { useAuth } from '@/hooks/useAuth';
+import { appendUgaviStatus, UGAVI_PRIMARY_FLOW, UGAVI_STATUS_LABELS, UGAVI_TRACKING_STATUS_MAP, type UgaviLogisticsStatus } from '@/lib/ugavi-requests';
 
 interface TrackingInfo {
   trackingNumber: string;
@@ -20,22 +22,91 @@ interface TrackingInfo {
   destination: string;
   estimatedDelivery: string;
   lastUpdate: string;
+  totalAmount?: number;
+  transactionId?: string;
+  serviceMode?: string;
+  requestId?: string;
+  logisticsStatus?: UgaviLogisticsStatus;
   events: Array<{
     date: string;
     time: string;
     status: string;
     location: string;
+    actor?: string;
   }>;
 }
 
 export default function UgaviTrackingPage() {
   const searchParams = useSearchParams();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [trackingNumber, setTrackingNumber] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [trackingInfo, setTrackingInfo] = useState<TrackingInfo | null>(null);
   const [searchError, setSearchError] = useState<string | null>(null);
   const hasAutoSearched = useRef(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+
+  const downloadUgaviReceipt = () => {
+    if (!trackingInfo) return;
+
+    const receiptHtml = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8" />
+        <title>Recu Ugavi</title>
+        <style>
+          body { font-family: Arial, sans-serif; max-width: 760px; margin: 0 auto; padding: 24px; color: #0f172a; }
+          .hero { background: linear-gradient(135deg, #0E7A52, #F28C28); color: white; padding: 28px; border-radius: 20px 20px 0 0; }
+          .content { border: 1px solid #dbe4ea; border-top: none; padding: 24px; border-radius: 0 0 20px 20px; }
+          .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
+          .item { background: #f8fafc; border-radius: 14px; padding: 14px; }
+          .label { font-size: 12px; color: #64748b; margin-bottom: 6px; }
+          .value { font-weight: 700; }
+          .timeline { margin-top: 20px; }
+          .timeline-item { border-left: 3px solid #0E7A52; padding: 0 0 14px 14px; margin-left: 6px; }
+        </style>
+      </head>
+      <body>
+        <div class="hero">
+          <h1>eNkamba Ugavi</h1>
+          <p>Recu de demande logistique</p>
+          <p><strong>${trackingInfo.trackingNumber}</strong></p>
+        </div>
+        <div class="content">
+          <div class="grid">
+            <div class="item"><div class="label">Expediteur</div><div class="value">${trackingInfo.sender}</div></div>
+            <div class="item"><div class="label">Destinataire</div><div class="value">${trackingInfo.recipient}</div></div>
+            <div class="item"><div class="label">Origine</div><div class="value">${trackingInfo.origin}</div></div>
+            <div class="item"><div class="label">Destination</div><div class="value">${trackingInfo.destination}</div></div>
+            <div class="item"><div class="label">Statut</div><div class="value">${getStatusLabel(trackingInfo.status)}</div></div>
+            <div class="item"><div class="label">Montant</div><div class="value">${(trackingInfo.totalAmount || 0).toLocaleString('fr-FR')} CDF</div></div>
+          </div>
+          <div class="timeline">
+            ${trackingInfo.events.map((event) => `
+              <div class="timeline-item">
+                <div class="label">${event.date} ${event.time}</div>
+                <div class="value">${event.status}</div>
+                <div>${event.location}${event.actor ? ` · ${event.actor}` : ''}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const blob = new Blob([receiptHtml], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `recu-ugavi-${trackingInfo.trackingNumber}.html`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
   const handleSearch = useCallback(async (numberOverride?: string) => {
     const numberToSearch = (numberOverride ?? trackingNumber).trim();
@@ -50,6 +121,67 @@ export default function UgaviTrackingPage() {
     try {
       const { db } = await import('@/lib/firebase');
       const { collection, query, where, getDocs, doc: docRef, getDoc } = await import('firebase/firestore');
+
+      const ugaviRequestsRef = collection(db, 'ugaviRequests');
+      const ugaviQuery = query(ugaviRequestsRef, where('trackingNumber', '==', numberToSearch));
+      const ugaviSnapshot = await getDocs(ugaviQuery);
+
+      if (!ugaviSnapshot.empty) {
+        const ugaviDoc = ugaviSnapshot.docs[0];
+        const ugaviData = ugaviDoc.data();
+        const requestUserDoc = ugaviData.userId ? await getDoc(docRef(db, 'users', ugaviData.userId)) : null;
+        const requestUserData = requestUserDoc?.exists() ? requestUserDoc.data() : null;
+        const history = Array.isArray(ugaviData.statusHistory) ? ugaviData.statusHistory : [];
+        const events =
+          history.length > 0
+            ? history
+                .map((entry: any) => {
+                  const eventDate = entry.createdAtIso ? new Date(entry.createdAtIso) : new Date();
+                  return {
+                    date: eventDate.toLocaleDateString('fr-FR'),
+                    time: eventDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+                    status: entry.label || 'Mise a jour',
+                    location: entry.location || 'Ugavi',
+                    actor: entry.actor || undefined,
+                  };
+                })
+                .reverse()
+            : [
+                {
+                  date: new Date().toLocaleDateString('fr-FR'),
+                  time: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+                  status: 'Demande creee',
+                  location: ugaviData.senderAddress || 'Point de depart',
+                  actor: ugaviData.senderName || undefined,
+                },
+              ];
+
+        const logisticsStatus = (ugaviData.logisticsStatus || ugaviData.status || 'draft') as UgaviLogisticsStatus;
+
+        const trackingData: TrackingInfo = {
+          trackingNumber: numberToSearch,
+          status: UGAVI_TRACKING_STATUS_MAP[logisticsStatus] || 'pending',
+          sender: requestUserData?.fullName || requestUserData?.displayName || ugaviData.senderName || 'Expediteur',
+          recipient: ugaviData.receiverName || 'Destinataire',
+          origin: ugaviData.senderAddress || 'Origine',
+          destination: ugaviData.receiverAddress || 'Destination',
+          estimatedDelivery: ugaviData.eta || 'Selon trajet',
+          lastUpdate: (ugaviData.updatedAt?.toDate?.() || new Date()).toLocaleString('fr-FR'),
+          totalAmount: ugaviData.totalAmount || 0,
+          transactionId: ugaviData.transactionId || '',
+          serviceMode: ugaviData.serviceMode || '',
+          requestId: ugaviDoc.id,
+          logisticsStatus,
+          events,
+        };
+
+        setTrackingInfo(trackingData);
+        toast({
+          title: 'Suivi Ugavi trouve',
+          description: `Reference: ${numberToSearch}`,
+        });
+        return;
+      }
 
       const ordersRef = collection(db, 'nkampa_orders');
       const q = query(ordersRef, where('trackingNumber', '==', numberToSearch));
@@ -161,6 +293,39 @@ export default function UgaviTrackingPage() {
       setIsSearching(false);
     }
   }, [trackingNumber, toast]);
+
+  const moveUgaviStatus = async (nextStatus: UgaviLogisticsStatus) => {
+    if (!trackingInfo?.requestId || !trackingInfo.logisticsStatus || !user) return;
+
+    setIsUpdatingStatus(true);
+    try {
+      const actorName = user.displayName || user.email || 'Operateur';
+      const location =
+        nextStatus === 'delivered'
+          ? trackingInfo.destination
+          : nextStatus === 'arrived_depot'
+            ? 'Depot Ugavi'
+            : nextStatus === 'out_for_delivery'
+              ? 'Zone de livraison'
+              : trackingInfo.origin;
+
+      await appendUgaviStatus(trackingInfo.requestId, nextStatus, actorName, location);
+      await handleSearch(trackingInfo.trackingNumber);
+      toast({
+        title: 'Statut mis a jour',
+        description: UGAVI_STATUS_LABELS[nextStatus],
+      });
+    } catch (error) {
+      console.error('Erreur mise a jour statut Ugavi:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Impossible de mettre a jour le statut',
+      });
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
@@ -284,6 +449,80 @@ export default function UgaviTrackingPage() {
 
           <Card>
             <CardContent className="space-y-4 p-6">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-lg font-semibold">Journal Ugavi</h3>
+                  <p className="text-sm text-gray-600">Trace de paiement et progression logistique</p>
+                </div>
+                <Button variant="outline" onClick={downloadUgaviReceipt}>
+                  <Download className="mr-2 h-4 w-4" />
+                  Recu
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="mb-1 text-xs text-gray-600">Service</p>
+                  <p className="font-semibold text-gray-900">{trackingInfo.serviceMode || 'Ugavi'}</p>
+                </div>
+                <div>
+                  <p className="mb-1 text-xs text-gray-600">Montant</p>
+                  <p className="font-semibold text-gray-900">{(trackingInfo.totalAmount || 0).toLocaleString('fr-FR')} CDF</p>
+                </div>
+              </div>
+
+              {trackingInfo.transactionId && (
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                  <p className="mb-1 text-xs text-gray-600">Transaction</p>
+                  <p className="font-mono text-sm font-semibold text-slate-900">{trackingInfo.transactionId}</p>
+                </div>
+              )}
+
+              {trackingInfo.requestId && trackingInfo.logisticsStatus && (
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                  <p className="mb-2 text-xs text-gray-600">Progression logistique</p>
+                  <div className="flex flex-wrap gap-2">
+                    {UGAVI_PRIMARY_FLOW.map((statusCode) => (
+                      <Button
+                        key={statusCode}
+                        type="button"
+                        size="sm"
+                        variant={trackingInfo.logisticsStatus === statusCode ? 'default' : 'outline'}
+                        className="rounded-full"
+                        disabled={isUpdatingStatus}
+                        onClick={() => void moveUgaviStatus(statusCode)}
+                      >
+                        {UGAVI_STATUS_LABELS[statusCode]}
+                      </Button>
+                    ))}
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="rounded-full border-orange-200 text-orange-700"
+                      disabled={isUpdatingStatus}
+                      onClick={() => void moveUgaviStatus('returned')}
+                    >
+                      Retour
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="rounded-full border-red-200 text-red-700"
+                      disabled={isUpdatingStatus}
+                      onClick={() => void moveUgaviStatus('blocked')}
+                    >
+                      Bloque
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="space-y-4 p-6">
               <h3 className="text-lg font-semibold">Informations de Livraison</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -310,6 +549,31 @@ export default function UgaviTrackingPage() {
                     <p className="font-semibold text-gray-900">{trackingInfo.destination}</p>
                   </div>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="mb-4 flex items-center gap-2">
+                <ReceiptText className="h-5 w-5 text-primary" />
+                <h3 className="text-lg font-semibold">Timeline</h3>
+              </div>
+              <div className="space-y-4">
+                {trackingInfo.events.map((event, index) => (
+                  <div key={`${event.date}-${event.time}-${index}`} className="flex gap-3">
+                    <div className="mt-1 flex flex-col items-center">
+                      <span className="h-3 w-3 rounded-full bg-primary" />
+                      {index < trackingInfo.events.length - 1 && <span className="mt-1 h-full w-px bg-primary/20" />}
+                    </div>
+                    <div className="pb-2">
+                      <p className="text-sm font-semibold text-slate-900">{event.status}</p>
+                      <p className="text-xs text-slate-500">{event.date} · {event.time}</p>
+                      <p className="text-sm text-slate-700">{event.location}</p>
+                      {event.actor && <p className="text-xs text-slate-500">Par {event.actor}</p>}
+                    </div>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>

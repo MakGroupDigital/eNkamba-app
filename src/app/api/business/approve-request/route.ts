@@ -79,6 +79,20 @@ export async function POST(request: NextRequest) {
       approvedAt: new Date(),
     });
 
+    const businessUserRef = db.collection('businessUsers').doc(userId);
+    await businessUserRef.set({
+      uid: userId,
+      businessId: requestId,
+      businessName: requestData.businessName,
+      businessType: requestData.type,
+      subCategory: requestData.subCategory,
+      status: 'APPROVED',
+      isBusiness: true,
+      approvedAt: Date.now(),
+      submittedAt: requestData.submittedAt || Date.now(),
+      updatedAt: Date.now(),
+    }, { merge: true });
+
     // Create notification for user
     const notificationRef = db.collection('users').doc(userId).collection('notifications').doc();
     await notificationRef.set({

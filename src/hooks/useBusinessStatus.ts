@@ -4,27 +4,7 @@ import { useState, useEffect } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
-import type { BusinessStatus, BusinessType } from '@/types/business-dashboard.types';
-
-export interface BusinessUser {
-  uid: string;
-  businessName: string;
-  businessType: BusinessType;
-  status: BusinessStatus;
-  submittedAt: string;
-  reviewedAt?: string;
-  rejectionReason?: string;
-  documents?: {
-    businessLicense?: string;
-    taxCertificate?: string;
-    identityDocument?: string;
-  };
-  contactInfo?: {
-    email: string;
-    phone: string;
-    address: string;
-  };
-}
+import type { BusinessUser } from '@/types/business-dashboard.types';
 
 export function useBusinessStatus() {
   const [user, setUser] = useState<User | null>(null);
@@ -53,9 +33,42 @@ export function useBusinessStatus() {
         const businessDoc = await getDoc(businessDocRef);
 
         if (businessDoc.exists()) {
-          setBusinessUser(businessDoc.data() as BusinessUser);
+          const data = businessDoc.data();
+          setBusinessUser({
+            uid: user.uid,
+            businessName: data.businessName || 'Compte entreprise',
+            businessType: data.businessType,
+            status: data.status,
+            rejectionReason: data.rejectionReason,
+            approvedAt: typeof data.approvedAt === 'number' ? data.approvedAt : data.approvedAt?.toMillis?.(),
+            businessId: data.businessId,
+            subCategory: data.subCategory,
+            isBusiness: data.isBusiness,
+          } as BusinessUser);
         } else {
-          setBusinessUser(null);
+          const userDocRef = doc(db, 'users', user.uid);
+          const userDoc = await getDoc(userDocRef);
+
+          if (!userDoc.exists()) {
+            setBusinessUser(null);
+          } else {
+            const data = userDoc.data();
+            if (!data.businessStatus || !data.businessType) {
+              setBusinessUser(null);
+            } else {
+              setBusinessUser({
+                uid: user.uid,
+                businessName: data.businessName || 'Compte entreprise',
+                businessType: data.businessType,
+                status: data.businessStatus,
+                rejectionReason: data.rejectionReason,
+                approvedAt: typeof data.approvedAt === 'number' ? data.approvedAt : data.approvedAt?.toMillis?.(),
+                businessId: data.businessId,
+                subCategory: data.subCategory,
+                isBusiness: data.isBusiness,
+              } as BusinessUser);
+            }
+          }
         }
       } catch (err) {
         console.error('Error fetching business status:', err);

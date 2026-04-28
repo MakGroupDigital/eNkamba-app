@@ -1,1293 +1,530 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, type ComponentType } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
-  ArrowRight,
-  CheckCircle2,
-  Bell,
-  ShoppingCart,
-  Search,
+  MapPin,
   Navigation,
-  Volume2,
-  VolumeX,
-  SendHorizontal,
-  HandCoins,
+  Package,
+  Search,
+  Clock,
+  ArrowRight,
 } from "lucide-react";
+import { useRouter } from 'next/navigation';
 import { useToast } from "@/hooks/use-toast";
-import { useRouter, useSearchParams } from 'next/navigation';
-import { doc, getDoc } from 'firebase/firestore';
+import { useAuth } from '@/hooks/useAuth';
 import {
-  TrackPackageIcon,
-  SearchIcon,
-} from "@/components/icons/service-icons";
-import {
-  LogisticsAgencyIcon,
-  LogisticsBikeModeIcon,
-  LogisticsCarModeIcon,
   LogisticsCourierIcon,
   LogisticsExpressIcon,
   LogisticsInternationalIcon,
-  LogisticsMotoModeIcon,
-  LogisticsRelayIcon,
-  LogisticsStandardIcon,
   LogisticsTrackingIcon,
-  LogisticsTrainModeIcon,
-  LogisticsWalkModeIcon,
 } from "@/components/icons/logistics-generated-icons";
-import { db } from '@/lib/firebase';
 
-type TransportMode = 'walk' | 'bike' | 'moto' | 'car' | 'train';
-
-type GeoPoint = {
-  lat: number;
-  lon: number;
-};
-
-type ItineraryPoint = GeoPoint & {
-  id: string;
-  title: string;
-  subtitle: string;
-  color: string;
-  ringColor: string;
-  top: string;
-  left: string;
-  kind: 'centre' | 'relais' | 'livreur' | 'camion' | 'velo';
-};
-
-type RouteInfo = {
-  distanceKm: number;
-  durationMin: number;
-  steps: string[];
-  path: GeoPoint[];
-  trafficLevel: 'Faible' | 'Moyenne' | 'Dense';
-  trafficScore: number;
-  source: 'osrm' | 'fallback';
-};
-
-type LinkedPickupOrder = {
-  id: string;
-  productName?: string;
-  storeName?: string;
-  pickupRoute?: {
-    enabled: boolean;
-    storeLocationLabel: string;
-    buyerLocationLabel: string;
-    buyerLatitude: number;
-    buyerLongitude: number;
-    destinationQuery: string;
-    suggestedTransportMode?: 'foot' | 'car' | 'train';
-  };
-};
-
-const KINSHASA_CENTER: GeoPoint = { lat: -4.325, lon: 15.3222 };
-type MapBounds = {
-  west: number;
-  east: number;
-  south: number;
-  north: number;
-};
-
-const ITINERARY_POINTS: ItineraryPoint[] = [
-  {
-    id: 'centre',
-    title: 'Centre Logistique',
-    subtitle: 'Hub principal',
-    color: 'bg-blue-600',
-    ringColor: 'ring-blue-300',
-    top: '22%',
-    left: '50%',
-    kind: 'centre',
-    lat: -4.3237,
-    lon: 15.3102,
-  },
-  {
-    id: 'relais',
-    title: 'Agent Relais',
-    subtitle: 'Point de dépôt',
-    color: 'bg-green-600',
-    ringColor: 'ring-green-300',
-    top: '37%',
-    left: '12%',
-    kind: 'relais',
-    lat: -4.3345,
-    lon: 15.287,
-  },
-  {
-    id: 'livreur',
-    title: 'Livreur Proche',
-    subtitle: 'Zone rapide',
-    color: 'bg-amber-600',
-    ringColor: 'ring-amber-300',
-    top: '49%',
-    left: '79%',
-    kind: 'livreur',
-    lat: -4.313,
-    lon: 15.353,
-  },
-  {
-    id: 'camion',
-    title: 'Camion',
-    subtitle: 'Plateforme transport',
-    color: 'bg-orange-500',
-    ringColor: 'ring-orange-300',
-    top: '67%',
-    left: '80%',
-    kind: 'camion',
-    lat: -4.3512,
-    lon: 15.346,
-  },
-  {
-    id: 'velo',
-    title: 'Hub Vélo',
-    subtitle: 'Micro livraison',
-    color: 'bg-emerald-700',
-    ringColor: 'ring-emerald-300',
-    top: '62%',
-    left: '12%',
-    kind: 'velo',
-    lat: -4.349,
-    lon: 15.2895,
-  },
-];
-
-const haversineDistanceKm = (from: GeoPoint, to: GeoPoint): number => {
-  const toRad = (value: number) => (value * Math.PI) / 180;
-  const earthRadiusKm = 6371;
-  const dLat = toRad(to.lat - from.lat);
-  const dLon = toRad(to.lon - from.lon);
-  const lat1 = toRad(from.lat);
-  const lat2 = toRad(to.lat);
-
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-
-  return earthRadiusKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-};
-
-const estimateMinutes = (distanceKm: number, mode: TransportMode): number => {
-  const avgSpeedByMode: Record<TransportMode, number> = {
-    walk: 5,
-    bike: 15,
-    moto: 35,
-    car: 28,
-    train: 55,
-  };
-  return Math.max(1, Math.round((distanceKm / avgSpeedByMode[mode]) * 60));
-};
-
-const modeLabelMap: Record<TransportMode, string> = {
-  walk: 'à pied',
-  bike: 'à vélo',
-  moto: 'en moto',
-  car: 'en voiture',
-  train: 'en train',
-};
-
-const isMissionPoint = (kind: ItineraryPoint['kind']): boolean => kind === 'livreur';
-
-const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
-
-const buildMapBounds = (points: GeoPoint[]): MapBounds => {
-  const fallback = { west: 15.2, east: 15.42, south: -4.45, north: -4.25 };
-  if (!points.length) return fallback;
-
-  const lats = points.map((point) => point.lat);
-  const lons = points.map((point) => point.lon);
-  const minLat = Math.min(...lats);
-  const maxLat = Math.max(...lats);
-  const minLon = Math.min(...lons);
-  const maxLon = Math.max(...lons);
-  const latSpan = Math.max(0.06, maxLat - minLat);
-  const lonSpan = Math.max(0.06, maxLon - minLon);
-  const latPad = latSpan * 0.45;
-  const lonPad = lonSpan * 0.45;
-
-  return {
-    west: minLon - lonPad,
-    east: maxLon + lonPad,
-    south: minLat - latPad,
-    north: maxLat + latPad,
-  };
-};
-
-const toMapPercent = (point: GeoPoint, bounds: MapBounds): { x: number; y: number } => {
-  const x = ((point.lon - bounds.west) / (bounds.east - bounds.west)) * 100;
-  const y = ((bounds.north - point.lat) / (bounds.north - bounds.south)) * 100;
-  return { x: clamp(x, 0, 100), y: clamp(y, 0, 100) };
-};
-
-const pointLabelByKind: Record<ItineraryPoint['kind'], string> = {
-  centre: 'Centre logistique',
-  relais: 'Agent relais',
-  livreur: 'Livreur',
-  camion: 'Camion',
-  velo: 'Hub vélo',
-};
-
-const pointIconByKind: Record<ItineraryPoint['kind'], ComponentType<{ className?: string }>> = {
-  centre: LogisticsAgencyIcon,
-  relais: LogisticsRelayIcon,
-  livreur: LogisticsCourierIcon,
-  camion: LogisticsStandardIcon,
-  velo: LogisticsBikeModeIcon,
-};
+const KINSHASA_CENTER = { lat: -4.325, lon: 15.3222 };
 
 export default function UgaviPage() {
-  const { toast } = useToast();
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const orderId = searchParams?.get('orderId') || null;
-  const [currentAddress, setCurrentAddress] = useState('Localisation en cours...');
-  const [transportMode, setTransportMode] = useState<TransportMode>('moto');
-  const [selectedPoint, setSelectedPoint] = useState<ItineraryPoint | null>(null);
-  const [activePointInfoId, setActivePointInfoId] = useState<string | null>(null);
-  const [isRouting, setIsRouting] = useState(false);
-  const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
-  const [isRouteStarted, setIsRouteStarted] = useState(false);
-  const [voiceEnabled, setVoiceEnabled] = useState(true);
-  const speechPrimedRef = useRef(false);
-  const [userPosition, setUserPosition] = useState<GeoPoint>(KINSHASA_CENTER);
-  const [missionNote, setMissionNote] = useState('');
-  const [clientAddress, setClientAddress] = useState('Position du client en cours...');
-  const [destinationAddress, setDestinationAddress] = useState('Destination en attente...');
-  const [showSendDialog, setShowSendDialog] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const [activeService, setActiveService] = useState<'express' | 'standard' | 'international' | null>(null);
-  const [pickupQuery, setPickupQuery] = useState('');
-  const [dropoffQuery, setDropoffQuery] = useState('');
-  const [finderQuery, setFinderQuery] = useState('');
-  const [finderIsLoading, setFinderIsLoading] = useState(false);
-  const [finderCenter, setFinderCenter] = useState<GeoPoint | null>(null);
-  const [finderKinds, setFinderKinds] = useState<Array<'relais' | 'centre' | 'livreur'>>([]);
-  const [linkedPickupOrder, setLinkedPickupOrder] = useState<LinkedPickupOrder | null>(null);
-  const [isLoadingLinkedPickup, setIsLoadingLinkedPickup] = useState(false);
-  
-  // Form states
-  const [senderName, setSenderName] = useState('');
-  const [senderAddress, setSenderAddress] = useState('');
-  const [senderPhone, setSenderPhone] = useState('');
-  const [receiverName, setReceiverName] = useState('');
-  const [receiverAddress, setReceiverAddress] = useState('');
-  const [receiverPhone, setReceiverPhone] = useState('');
-  const [packageWeight, setPackageWeight] = useState('');
-  const [packageDescription, setPackageDescription] = useState('');
-  const [shippingMethod, setShippingMethod] = useState<'standard' | 'express'>('standard');
+  const { toast } = useToast();
+  const { user } = useAuth();
+  const [pickupLocation, setPickupLocation] = useState('');
+  const [dropoffLocation, setDropoffLocation] = useState('');
+  const [activeTab, setActiveTab] = useState<'send' | 'track' | 'express' | 'international'>('send');
+  const [userPosition, setUserPosition] = useState(KINSHASA_CENTER);
+  const [trackingQuery, setTrackingQuery] = useState('');
+  const [recentShipments, setRecentShipments] = useState<
+    Array<{
+      id: string;
+      trackingNumber: string;
+      destination: string;
+      status: string;
+      statusColor: string;
+      source: 'ugavi' | 'nkampa';
+    }>
+  >([]);
 
   useEffect(() => {
-    if (linkedPickupOrder?.pickupRoute?.enabled) return;
-    if (!('geolocation' in navigator)) return;
-
-    const watchId = navigator.geolocation.watchPosition(
-      (position) => {
-        setUserPosition({
-          lat: position.coords.latitude,
-          lon: position.coords.longitude,
-        });
-      },
-      () => {
-        setUserPosition(KINSHASA_CENTER);
-      },
-      { enableHighAccuracy: false, timeout: 7000, maximumAge: 5000 }
-    );
-
-    return () => navigator.geolocation.clearWatch(watchId);
-  }, [linkedPickupOrder?.pickupRoute?.enabled]);
-
-  const inferFinderKinds = (raw: string): Array<'relais' | 'centre' | 'livreur'> => {
-    const q = (raw || '').toLowerCase();
-    const kinds = new Set<Array<'relais' | 'centre' | 'livreur'>[number]>();
-
-    if (/(agent|relais|relay|point relais|point-relais)/i.test(q)) kinds.add('relais');
-    if (/(agence|centre|hub|office)/i.test(q)) kinds.add('centre');
-    if (/(livreur|courier|coursier|moto|bike|vélo|velo|chauffeur)/i.test(q)) kinds.add('livreur');
-
-    return Array.from(kinds);
-  };
-
-  const stripFinderKeywords = (raw: string): string => {
-    return (raw || '')
-      .replace(/(agent|relais|relay|point\s*relais|point-relais|agence|centre|hub|office|livreur|courier|coursier|proche|près|pres|autour|de\s+ma\s+localisation|ma\s+localisation|à|a)/gi, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
-  };
-
-  const forwardGeocode = async (queryText: string): Promise<GeoPoint | null> => {
-    const q = queryText.trim();
-    if (!q) return null;
-    try {
-      const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(q)}`;
-      const response = await fetch(url);
-      if (!response.ok) return null;
-      const data = await response.json();
-      const result = Array.isArray(data) ? data[0] : null;
-      if (!result?.lat || !result?.lon) return null;
-      return { lat: Number(result.lat), lon: Number(result.lon) };
-    } catch {
-      return null;
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserPosition({
+            lat: position.coords.latitude,
+            lon: position.coords.longitude,
+          });
+        },
+        () => {
+          setUserPosition(KINSHASA_CENTER);
+        }
+      );
     }
-  };
+  }, []);
 
   useEffect(() => {
-    if (!orderId) {
-      setLinkedPickupOrder(null);
+    if (!user?.uid) {
+      setRecentShipments([]);
       return;
     }
 
-    let active = true;
+    let isCancelled = false;
 
-    const loadLinkedPickupOrder = async () => {
+    const loadRecentShipments = async () => {
       try {
-        setIsLoadingLinkedPickup(true);
-        const orderSnap = await getDoc(doc(db, 'nkampa_orders', orderId));
-        if (!active) return;
+        const { db } = await import('@/lib/firebase');
+        const { collection, getDocs, query, where } = await import('firebase/firestore');
 
-        if (!orderSnap.exists()) {
-          setLinkedPickupOrder(null);
-          toast({
-            variant: 'destructive',
-            title: 'Commande introuvable',
-            description: "Impossible de retrouver l'itinéraire de retrait.",
-          });
-          return;
+        const ugaviSnapshot = await getDocs(
+          query(
+            collection(db, 'ugaviRequests'),
+            where('userId', '==', user.uid)
+          )
+        );
+
+        const nkampaSnapshot = await getDocs(
+          query(
+            collection(db, 'nkampa_orders'),
+            where('buyerId', '==', user.uid)
+          )
+        );
+
+        const normalizeStatus = (status: string) => {
+          const lowered = (status || '').toLowerCase();
+          if (['delivered', 'livré', 'livre'].includes(lowered)) {
+            return { label: 'Livré', color: 'bg-green-100 text-green-700' };
+          }
+          if (['assigned', 'registered', 'paid', 'processing', 'shipped', 'in_transit', 'out_for_delivery'].includes(lowered)) {
+            return { label: 'En transit', color: 'bg-blue-100 text-blue-700' };
+          }
+          if (['blocked', 'failed', 'cancelled', 'returned'].includes(lowered)) {
+            return { label: 'Incident', color: 'bg-red-100 text-red-700' };
+          }
+          return { label: 'En attente', color: 'bg-amber-100 text-amber-700' };
+        };
+
+        const ugaviItems = ugaviSnapshot.docs.map((shipmentDoc) => {
+          const data = shipmentDoc.data() as any;
+          const statusMeta = normalizeStatus(data.logisticsStatus || data.status || 'pending_payment');
+          return {
+            id: shipmentDoc.id,
+            trackingNumber: data.trackingNumber || `UGV-${shipmentDoc.id.slice(0, 6).toUpperCase()}`,
+            destination: data.receiverAddress || 'Destination Ugavi',
+            status: statusMeta.label,
+            statusColor: statusMeta.color,
+            source: 'ugavi' as const,
+            updatedAt: data.updatedAt?.toMillis?.() || 0,
+          };
+        });
+
+        const nkampaItems = nkampaSnapshot.docs
+          .map((orderDoc) => {
+            const data = orderDoc.data() as any;
+            if (!data.trackingNumber) return null;
+            const statusMeta = normalizeStatus(data.status || 'pending');
+            return {
+              id: orderDoc.id,
+              trackingNumber: data.trackingNumber,
+              destination: data.shippingAddress || data.pickupRoute?.storeLocationLabel || 'Destination Nkampa',
+              status: statusMeta.label,
+              statusColor: statusMeta.color,
+              source: 'nkampa' as const,
+              updatedAt: data.updatedAt?.toMillis?.() || 0,
+            };
+          })
+          .filter(Boolean) as Array<any>;
+
+        const merged = [...ugaviItems, ...nkampaItems]
+          .sort((left, right) => right.updatedAt - left.updatedAt)
+          .slice(0, 4)
+          .map(({ updatedAt, ...shipment }) => shipment);
+
+        if (!isCancelled) {
+          setRecentShipments(merged);
         }
-
-        const orderData = { ...(orderSnap.data() as LinkedPickupOrder), id: orderSnap.id };
-        if (!orderData.pickupRoute?.enabled) {
-          setLinkedPickupOrder(null);
-          toast({
-            variant: 'destructive',
-            title: 'Itinéraire indisponible',
-            description: 'Cette commande ne contient pas de retrait en boutique.',
-          });
-          return;
-        }
-
-        setLinkedPickupOrder(orderData);
       } catch (error) {
-        console.error('Erreur chargement itinéraire Nkampa:', error);
-        if (!active) return;
-        setLinkedPickupOrder(null);
+        console.error('Erreur chargement envois Ugavi:', error);
+        if (!isCancelled) {
+          setRecentShipments([]);
+        }
+      }
+    };
+
+    loadRecentShipments();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [user?.uid]);
+
+  const navItems = [
+    { id: 'send', label: 'Envoyer', icon: LogisticsCourierIcon, color: 'green' },
+    { id: 'track', label: 'Suivre', icon: LogisticsTrackingIcon, color: 'blue' },
+    { id: 'express', label: 'Express', icon: LogisticsExpressIcon, color: 'orange' },
+    { id: 'international', label: 'International', icon: LogisticsInternationalIcon, color: 'purple' },
+  ];
+
+  const activeServiceMode = useMemo(() => {
+    if (activeTab === 'express') return 'express';
+    if (activeTab === 'international') return 'international';
+    return 'standard';
+  }, [activeTab]);
+
+  const primaryButtonLabel = activeTab === 'track' ? 'Rechercher le colis' : 'Continuer';
+
+  const handleContinue = () => {
+    if (activeTab === 'track') {
+      if (!trackingQuery.trim()) {
         toast({
           variant: 'destructive',
-          title: 'Chargement impossible',
-          description: "L'itinéraire de retrait n'a pas pu être chargé.",
+          title: 'Numéro requis',
+          description: 'Veuillez entrer un numéro de suivi',
         });
-      } finally {
-        if (active) {
-          setIsLoadingLinkedPickup(false);
-        }
-      }
-    };
-
-    void loadLinkedPickupOrder();
-
-    return () => {
-      active = false;
-    };
-  }, [orderId, toast]);
-
-  useEffect(() => {
-    if (!linkedPickupOrder?.pickupRoute?.enabled) return;
-
-    let active = true;
-
-    const syncLinkedPickupContext = async () => {
-      const route = linkedPickupOrder.pickupRoute;
-      if (!route) return;
-      setActiveService(null);
-      setFinderQuery('');
-      setFinderKinds([]);
-      setFinderCenter(null);
-      setRouteInfo(null);
-      setIsRouteStarted(false);
-      setMissionNote('');
-      setTransportMode(route.suggestedTransportMode === 'car' || route.suggestedTransportMode === 'train' ? route.suggestedTransportMode : 'walk');
-      setUserPosition({
-        lat: route.buyerLatitude,
-        lon: route.buyerLongitude,
-      });
-      setCurrentAddress(route.buyerLocationLabel || 'Position enregistrée');
-      setClientAddress(route.buyerLocationLabel || 'Position enregistrée');
-      setDestinationAddress(route.storeLocationLabel || 'Boutique Nkampa');
-
-      const destinationPoint = await forwardGeocode(route.destinationQuery || route.storeLocationLabel);
-      if (!active || !destinationPoint) {
-        if (!destinationPoint) {
-          toast({
-            variant: 'destructive',
-            title: 'Destination introuvable',
-            description: "La boutique n'a pas pu être localisée pour cet itinéraire.",
-          });
-        }
         return;
       }
 
-      const syntheticPoint: ItineraryPoint = {
-        id: `pickup-order-${linkedPickupOrder.id}`,
-        title: linkedPickupOrder.storeName || 'Boutique Nkampa',
-        subtitle: route.storeLocationLabel || 'Retrait boutique',
-        color: 'bg-orange-500',
-        ringColor: 'ring-orange-300',
-        top: '50%',
-        left: '50%',
-        kind: 'relais',
-        lat: destinationPoint.lat,
-        lon: destinationPoint.lon,
-      };
-
-      setSelectedPoint(syntheticPoint);
-      setActivePointInfoId(syntheticPoint.id);
-    };
-
-    void syncLinkedPickupContext();
-
-    return () => {
-      active = false;
-    };
-  }, [linkedPickupOrder, toast]);
-
-  const runFinderSearch = async (raw: string) => {
-    const queryText = raw.trim();
-    setFinderQuery(queryText);
-    if (!queryText) {
-      setFinderKinds([]);
-      setFinderCenter(null);
-      setSelectedPoint(null);
+      router.push(`/dashboard/ugavi/tracking?tracking=${encodeURIComponent(trackingQuery.trim())}`);
       return;
     }
 
-    setFinderIsLoading(true);
-    try {
-      const kinds = inferFinderKinds(queryText);
-      setFinderKinds(kinds.length ? kinds : ['livreur', 'relais', 'centre']);
-
-      const nearMe = /(proche|près|pres|autour|ma localisation|ma\s+position)/i.test(queryText);
-      if (nearMe) {
-        setFinderCenter(userPosition);
-        return;
-      }
-
-      const locationText = stripFinderKeywords(queryText);
-      const resolved = locationText ? await forwardGeocode(`${locationText}, Kinshasa`) : null;
-      setFinderCenter(resolved || userPosition);
-    } finally {
-      setFinderIsLoading(false);
-    }
-  };
-
-  const handleSendPackage = async () => {
-    if (!senderName || !senderAddress || !senderPhone || !receiverName || !receiverAddress || !receiverPhone || !packageWeight) {
-      toast({
-        variant: "destructive",
-        title: "Informations manquantes",
-        description: "Veuillez remplir tous les champs obligatoires.",
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
-    
-    // Calculer le prix de livraison
-    const basePrice = 5000;
-    const weightPrice = parseFloat(packageWeight) * 1000;
-    const distancePrice = shippingMethod === 'express' ? 25000 : 15000;
-    const totalPrice = basePrice + weightPrice + distancePrice;
-
-    // Préparer les données de paiement
-    const paymentData = {
-      context: 'ugavi',
-      amount: totalPrice,
-      description: `Livraison de ${parseFloat(packageWeight)}kg - ${shippingMethod === 'express' ? 'Express' : 'Standard'}`,
-      metadata: {
-        senderName,
-        senderAddress,
-        senderPhone,
-        receiverName,
-        receiverAddress,
-        receiverPhone,
-        packageWeight,
-        packageDescription,
-        shippingMethod,
-        basePrice,
-        weightPrice,
-        distancePrice
-      }
-    };
-
-    // Stocker les données de paiement
-    sessionStorage.setItem('ugavi_payment_data', JSON.stringify(paymentData));
-    
-    // Rediriger vers la page de paiement
-    router.push('/dashboard/ugavi/pay');
-  };
-
-  const pickFemaleVoice = (): SpeechSynthesisVoice | null => {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return null;
-    const voices = window.speechSynthesis.getVoices();
-    if (!voices.length) return null;
-
-    const femalePattern = /(female|femme|woman|zira|samantha|amelie|audrey|claire|julie|google fr)/i;
-    const frenchFemaleVoice =
-      voices.find((voice) => voice.lang.toLowerCase().startsWith('fr') && femalePattern.test(voice.name)) ??
-      voices.find((voice) => femalePattern.test(voice.name));
-    return frenchFemaleVoice ?? voices.find((voice) => voice.lang.toLowerCase().startsWith('fr')) ?? voices[0];
-  };
-
-  const isMobileSpeechRuntime = (): boolean => {
-    if (typeof window === 'undefined') return false;
-    const ua = window.navigator.userAgent || '';
-    const isMobileUA = /iPhone|iPad|iPod|Android|Mobile/i.test(ua);
-    const isCapacitorRuntime = Boolean((window as any).Capacitor);
-    return isMobileUA || isCapacitorRuntime;
-  };
-
-  const primeSpeechIfNeeded = () => {
-    if (!voiceEnabled || typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-    if (speechPrimedRef.current) return;
-    const synth = window.speechSynthesis;
-    try {
-      synth.getVoices();
-      synth.resume();
-      const unlockUtterance = new SpeechSynthesisUtterance('.');
-      unlockUtterance.volume = 0.01;
-      unlockUtterance.rate = 1;
-      unlockUtterance.pitch = 1;
-      synth.speak(unlockUtterance);
-      speechPrimedRef.current = true;
-    } catch {
-      // noop
-    }
-  };
-
-  const speakTextWithRetry = (text: string) => {
-    if (!voiceEnabled || typeof window === 'undefined' || !('speechSynthesis' in window) || !text.trim()) return;
-    const synth = window.speechSynthesis;
-    const voice = pickFemaleVoice();
-    let retries = 0;
-
-    const doSpeak = () => {
-      try {
-        synth.resume();
-        synth.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = voice?.lang ?? 'fr-FR';
-        utterance.rate = 0.98;
-        utterance.pitch = 1.2;
-        if (voice) utterance.voice = voice;
-        synth.speak(utterance);
-
-        window.setTimeout(() => {
-          if (!synth.speaking && retries < 2) {
-            retries += 1;
-            doSpeak();
-          }
-        }, 420);
-      } catch {
-        // noop
-      }
-    };
-
-    doSpeak();
-  };
-
-  const speakRoute = (destinationLabel: string, info: RouteInfo) => {
-    if (!voiceEnabled) return;
-    const startText = `Votre itinéraire a commencé ${modeLabelMap[transportMode]} vers ${destinationLabel}.`;
-    const summaryText = `Distance ${info.distanceKm.toFixed(1)} kilomètres. Temps estimé ${info.durationMin} minutes.`;
-    const firstStep = info.steps[0] ? `Première instruction: ${info.steps[0]}.` : '';
-    speakTextWithRetry(`${startText} ${summaryText} ${firstStep}`.trim());
-  };
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-    const handler = () => primeSpeechIfNeeded();
-    window.addEventListener('touchstart', handler, { passive: true });
-    window.addEventListener('click', handler, { passive: true });
-    window.speechSynthesis.getVoices();
-    return () => {
-      window.removeEventListener('touchstart', handler);
-      window.removeEventListener('click', handler);
-    };
-  }, [voiceEnabled]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const reverseGeocode = async (point: GeoPoint): Promise<string> => {
-    try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${point.lat}&lon=${point.lon}&zoom=18&addressdetails=1`
-      );
-      if (!response.ok) throw new Error(`Reverse geocoding HTTP ${response.status}`);
-      const data = await response.json();
-      if (data?.display_name) return data.display_name;
-    } catch {
-      // Fallback handled below
-    }
-    return `Lat ${point.lat.toFixed(5)}, Lon ${point.lon.toFixed(5)}`;
-  };
-
-  const refreshAddresses = async (destinationPoint: ItineraryPoint) => {
-    const [fromAddress, toAddress] = await Promise.all([
-      reverseGeocode(userPosition),
-      reverseGeocode(destinationPoint),
-    ]);
-    setClientAddress(fromAddress);
-    setDestinationAddress(toAddress);
-  };
-
-  useEffect(() => {
-    const syncCurrentAddress = async () => {
-      if (linkedPickupOrder?.pickupRoute?.enabled) {
-        const savedAddress = linkedPickupOrder.pickupRoute.buyerLocationLabel || 'Position enregistrée';
-        setCurrentAddress(savedAddress);
-        setClientAddress(savedAddress);
-        return;
-      }
-      const resolvedAddress = await reverseGeocode(userPosition);
-      setCurrentAddress(resolvedAddress);
-      setClientAddress(resolvedAddress);
-    };
-    void syncCurrentAddress();
-  }, [linkedPickupOrder, userPosition.lat, userPosition.lon]);
-
-  const estimateTrafficOnZone = async (samplePoint: GeoPoint): Promise<{ multiplier: number; level: RouteInfo['trafficLevel']; score: number }> => {
-    const hour = new Date().getHours();
-    const peakFactor = hour >= 7 && hour <= 9 ? 1.35 : hour >= 16 && hour <= 19 ? 1.42 : hour >= 11 && hour <= 14 ? 1.18 : 1.0;
-
-    try {
-      const query = `[out:json][timeout:8];(way(around:550,${samplePoint.lat},${samplePoint.lon})["highway"];node(around:550,${samplePoint.lat},${samplePoint.lon})["highway"="traffic_signals"];);out body;`;
-      const response = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`);
-      if (!response.ok) throw new Error(`Overpass HTTP ${response.status}`);
-      const data = await response.json();
-      const elements = Array.isArray(data?.elements) ? data.elements : [];
-      const signalsCount = elements.filter((element: any) => element?.type === 'node').length;
-      const roadsCount = elements.filter((element: any) => element?.type === 'way').length;
-      const densityScore = Math.max(0.6, Math.min(2.2, (roadsCount / 90 + signalsCount / 24) * peakFactor));
-      const level: RouteInfo['trafficLevel'] = densityScore > 1.45 ? 'Dense' : densityScore > 1.05 ? 'Moyenne' : 'Faible';
-      return { multiplier: densityScore, level, score: densityScore };
-    } catch {
-      const fallbackScore = peakFactor;
-      const level: RouteInfo['trafficLevel'] = fallbackScore > 1.35 ? 'Dense' : fallbackScore > 1.1 ? 'Moyenne' : 'Faible';
-      return { multiplier: fallbackScore, level, score: fallbackScore };
-    }
-  };
-
-  const calculateRoute = async (destinationPoint: ItineraryPoint): Promise<RouteInfo> => {
-    const directDistanceKm = haversineDistanceKm(userPosition, destinationPoint);
-    const profileByMode: Record<TransportMode, 'foot' | 'bike' | 'driving'> = {
-      walk: 'foot',
-      bike: 'bike',
-      moto: 'driving',
-      car: 'driving',
-      train: 'driving',
-    };
-
-    try {
-      const profile = profileByMode[transportMode];
-      const endpoint = `https://router.project-osrm.org/route/v1/${profile}/${userPosition.lon},${userPosition.lat};${destinationPoint.lon},${destinationPoint.lat}?overview=full&geometries=geojson&steps=true&alternatives=false`;
-      const response = await fetch(endpoint);
-      if (!response.ok) throw new Error(`OSRM HTTP ${response.status}`);
-
-      const data = await response.json();
-      const route = data?.routes?.[0];
-      const stepsRaw = route?.legs?.[0]?.steps ?? [];
-      const geometryCoordinates = route?.geometry?.coordinates ?? [];
-      if (!route) throw new Error('No route returned');
-
-      const normalizedSteps: string[] = stepsRaw.slice(0, 4).map((step: any) => {
-        const maneuver = step?.maneuver?.type || 'continuez';
-        const modifier = step?.maneuver?.modifier ? ` ${step.maneuver.modifier}` : '';
-        const streetName = step?.name ? ` vers ${step.name}` : '';
-        return `${maneuver}${modifier}${streetName}`;
-      });
-
-      const pathPoints: GeoPoint[] = geometryCoordinates.map((coordinate: [number, number]) => ({
-        lon: coordinate[0],
-        lat: coordinate[1],
-      }));
-      const densityPoint = pathPoints[Math.floor(pathPoints.length / 2)] ?? destinationPoint;
-      const traffic = await estimateTrafficOnZone(densityPoint);
-      const baseDurationMin = transportMode !== 'train'
-        ? Math.max(1, Math.round(route.duration / 60))
-        : Math.max(1, Math.round((route.distance / 1000 / 55) * 60));
-      const impactByMode: Record<TransportMode, number> = {
-        walk: 0.15,
-        bike: 0.35,
-        moto: 0.9,
-        car: 1.0,
-        train: 0.45,
-      };
-      const durationMin = Math.max(1, Math.round(baseDurationMin * (1 + (traffic.multiplier - 1) * impactByMode[transportMode])));
-
-      return {
-        distanceKm: Math.max(0.2, route.distance / 1000),
-        durationMin,
-        steps: normalizedSteps,
-        path: pathPoints,
-        trafficLevel: traffic.level,
-        trafficScore: traffic.score,
-        source: 'osrm',
-      };
-    } catch {
-      const traffic = await estimateTrafficOnZone(destinationPoint);
-      return {
-        distanceKm: Math.max(0.2, directDistanceKm),
-        durationMin: Math.max(1, Math.round(estimateMinutes(Math.max(0.2, directDistanceKm), transportMode) * traffic.multiplier)),
-        steps: [
-          `Dirigez-vous ${modeLabelMap[transportMode]} vers ${destinationPoint.title}`,
-          'Suivez la route principale indiquée sur la carte',
-          'Vous approchez de votre destination',
-        ],
-        path: [userPosition, destinationPoint],
-        trafficLevel: traffic.level,
-        trafficScore: traffic.score,
-        source: 'fallback',
-      };
-    }
-  };
-
-  const handleStartItinerary = async () => {
-    primeSpeechIfNeeded();
-    if (isMobileSpeechRuntime() && voiceEnabled) {
-      speakTextWithRetry('Itinéraire démarré. Calcul en cours.');
-    }
-
-    if (!selectedPoint) {
+    if (!pickupLocation || !dropoffLocation) {
       toast({
         variant: 'destructive',
-        title: 'Destination manquante',
-        description: "Appuyez d'abord sur un point de la carte.",
-      });
-      return;
-    }
-    if (isMissionPoint(selectedPoint.kind)) {
-      toast({
-        title: 'Point livreur sélectionné',
-        description: "Pour un livreur, utilisez l'action mission (express/standard).",
+        title: 'Informations manquantes',
+        description: 'Veuillez renseigner le point de départ et la destination',
       });
       return;
     }
 
-    setIsRouting(true);
-    setIsRouteStarted(true);
-    const info = await calculateRoute(selectedPoint);
-    setRouteInfo(info);
-    await refreshAddresses(selectedPoint);
-    setIsRouting(false);
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem(
+        'ugavi_service_prefill',
+        JSON.stringify({
+          pickupQuery: pickupLocation,
+          dropoffQuery: dropoffLocation,
+        })
+      );
+    }
 
-    toast({
-      title: 'Itinéraire démarré',
-      description: `${selectedPoint.title} · ${info.durationMin} min · ${info.distanceKm.toFixed(1)} km`,
-    });
-    speakRoute(selectedPoint.title, info);
+    router.push(
+      `/dashboard/ugavi/service/${activeServiceMode}?senderAddress=${encodeURIComponent(pickupLocation)}&receiverAddress=${encodeURIComponent(dropoffLocation)}`
+    );
   };
 
-  const handleAssignMission = (mode: 'express' | 'standard') => {
-    if (!selectedPoint || !isMissionPoint(selectedPoint.kind)) return;
-    const params = new URLSearchParams({
-      courierId: selectedPoint.id,
-      courierName: selectedPoint.title,
-      courierLat: String(selectedPoint.lat),
-      courierLon: String(selectedPoint.lon),
-      note: missionNote.trim(),
-    });
-    router.push(`/dashboard/ugavi/service/${mode}?${params.toString()}`);
+  const handleQuickTracking = (trackingNumber: string) => {
+    router.push(`/dashboard/ugavi/tracking?tracking=${encodeURIComponent(trackingNumber)}`);
   };
-
-  const handleSelectPoint = (point: ItineraryPoint) => {
-    setSelectedPoint(point);
-    setActivePointInfoId(point.id);
-    setRouteInfo(null);
-    setIsRouteStarted(false);
-    setDestinationAddress('Destination en cours de résolution...');
-    void refreshAddresses(point);
-  };
-
-  useEffect(() => {
-    if (!selectedPoint) return;
-    if (!isRouteStarted) return;
-    const intervalId = window.setInterval(async () => {
-      const updatedRoute = await calculateRoute(selectedPoint);
-      setRouteInfo(updatedRoute);
-      await refreshAddresses(selectedPoint);
-    }, 10000);
-
-    return () => window.clearInterval(intervalId);
-  }, [isRouteStarted, selectedPoint, transportMode, userPosition.lat, userPosition.lon]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const routePath = useMemo(
-    () => (routeInfo?.path?.length ? routeInfo.path : selectedPoint ? [userPosition, selectedPoint] : []),
-    [routeInfo?.path, selectedPoint, userPosition]
-  );
-  const visibleMapPoints = useMemo(() => {
-    const queryText = finderQuery.trim();
-    if (!queryText) return [] as ItineraryPoint[];
-    const center = finderCenter || userPosition;
-    const kinds = finderKinds.length ? finderKinds : (['livreur', 'relais', 'centre'] as Array<'relais' | 'centre' | 'livreur'>);
-    const candidates = ITINERARY_POINTS.filter((p) => kinds.includes(p.kind as any));
-    const nearby = candidates.filter((p) => haversineDistanceKm(center, p) <= 22);
-    return nearby.length ? nearby : candidates;
-  }, [finderCenter, finderKinds, finderQuery, userPosition]);
-  const mapBounds = useMemo(() => {
-    const nearbyPoints = visibleMapPoints.map((point) => ({ lat: point.lat, lon: point.lon }));
-    const pointsForBounds = [
-      userPosition,
-      ...(selectedPoint ? [selectedPoint] : []),
-      ...routePath,
-      ...nearbyPoints,
-    ];
-    return buildMapBounds(pointsForBounds);
-  }, [userPosition, selectedPoint, routePath, visibleMapPoints]);
-  const mapEmbedSrc = useMemo(() => {
-    const bbox = `${mapBounds.west.toFixed(6)}%2C${mapBounds.south.toFixed(6)}%2C${mapBounds.east.toFixed(6)}%2C${mapBounds.north.toFixed(6)}`;
-    return `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik`;
-  }, [mapBounds]);
-  const routePolyline = routePath
-    .map((point) => {
-      const percent = toMapPercent(point, mapBounds);
-      return `${percent.x},${percent.y}`;
-    })
-    .join(' ');
-  const clientMarker = toMapPercent(userPosition, mapBounds);
-  const destinationMarker = selectedPoint ? toMapPercent(selectedPoint, mapBounds) : null;
 
   return (
-    <div className="h-screen overflow-hidden bg-gradient-to-b from-emerald-50 via-white to-cyan-50 pb-8 md:pb-12">
-      <main className="mx-auto flex h-[calc(100vh-6.1rem)] w-full max-w-5xl flex-col gap-1 px-2 pb-0 pt-1 md:h-[calc(100vh-7.3rem)] md:gap-2 md:px-3 md:pb-0 md:pt-1">
-        <section className="relative overflow-hidden rounded-3xl border border-emerald-200 bg-white shadow-xl">
-          <div className="h-24 bg-[url('https://images.unsplash.com/photo-1613486362292-4f5f6ebf6522?q=80&w=1600&auto=format&fit=crop')] bg-cover bg-center" />
-          <div className="absolute inset-0 bg-gradient-to-b from-white/70 via-white/55 to-white/95" />
-          <div className="absolute inset-0 p-3">
-            <div className="flex items-start justify-between">
-              <div>
-                <h1 className="text-3xl font-black tracking-tight text-primary">eNKAMBA</h1>
-                <p className="-mt-1 text-xs font-medium text-slate-700">Logistics Network</p>
-              </div>
-              <div className="flex items-center gap-2 pt-1">
-                <button className="rounded-full bg-white/90 p-2 text-primary shadow">
-                  <ShoppingCart className="h-4 w-4" />
-                </button>
-                <button className="rounded-full bg-white/90 p-2 text-primary shadow">
-                  <Bell className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-            <div className="mt-2 inline-flex max-w-full items-center gap-1 rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-slate-700 shadow">
-              Adresse actuelle: <span className="max-w-[220px] truncate text-slate-900">{currentAddress}</span>
-            </div>
-          </div>
-        </section>
+    <div className="relative min-h-screen overflow-hidden">
+      {/* Carte OpenStreetMap en fond */}
+      <div className="absolute inset-0 z-0">
+        <iframe
+          src={`https://www.openstreetmap.org/export/embed.html?bbox=${userPosition.lon - 0.05},${userPosition.lat - 0.05},${userPosition.lon + 0.05},${userPosition.lat + 0.05}&layer=mapnik&marker=${userPosition.lat},${userPosition.lon}`}
+          className="w-full h-full border-0"
+          style={{ filter: 'grayscale(20%) brightness(0.95)' }}
+        />
+        {/* Overlay pour assombrir légèrement la carte */}
+        <div className="absolute inset-0 bg-black/10"></div>
+      </div>
 
-        <section className="rounded-2xl border border-emerald-200 bg-white p-2 shadow">
-          {activeService === 'express' ? (
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-              <div className="relative sm:col-span-1">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-                <Input
-                  placeholder="Point de départ (ex: Gombe)"
-                  value={pickupQuery}
-                  onChange={(e) => setPickupQuery(e.target.value)}
-                  className="h-10 rounded-xl border-slate-200 bg-slate-50 pl-10"
-                />
-              </div>
-              <div className="relative sm:col-span-1">
-                <ArrowRight className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-                <Input
-                  placeholder="Point de livraison"
-                  value={dropoffQuery}
-                  onChange={(e) => setDropoffQuery(e.target.value)}
-                  className="h-10 rounded-xl border-slate-200 bg-slate-50 pl-10"
-                />
-              </div>
-              <Button
-                className="h-10 rounded-xl bg-primary hover:bg-primary/90 sm:col-span-1"
-                onClick={() => {
-                  const base = dropoffQuery.trim() ? `livreur proche de ${dropoffQuery.trim()}` : 'livreur proche de ma localisation';
-                  void runFinderSearch(base);
-                }}
-                disabled={finderIsLoading}
-              >
-                {finderIsLoading ? 'Recherche…' : 'Trouver un livreur'}
-              </Button>
+      {/* Contenu par-dessus la carte */}
+      <div className="relative z-10">
+        {/* Header transparent */}
+        <header className="bg-white/80 backdrop-blur-xl border-b border-white/20 px-4 py-4 shadow-lg">
+          <div className="max-w-7xl mx-auto flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-xl font-black bg-gradient-to-r from-green-600 to-green-700 bg-clip-text text-transparent">
+                Ugavi Logistics
+              </h1>
+              <p className="text-sm text-gray-700 font-medium">Livraison rapide et fiable</p>
             </div>
-          ) : (
-            <div className="flex items-center gap-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-                <Input
-                  placeholder="Rechercher livreur, agence ou point relais…"
-                  value={finderQuery}
-                  onChange={(e) => setFinderQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && void runFinderSearch(finderQuery)}
-                  className="h-10 rounded-xl border-slate-200 bg-slate-50 pl-10"
-                />
-              </div>
-              <Button
-                size="icon"
-                className="h-10 w-10 rounded-xl bg-primary hover:bg-primary/90"
-                onClick={() => void runFinderSearch(finderQuery)}
-                disabled={finderIsLoading}
-                title="Rechercher"
-              >
-                <SearchIcon size={18} className="text-white" />
-              </Button>
-            </div>
-          )}
-          {finderQuery.trim() && (
-            <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-slate-600">
-              <span className="font-semibold text-slate-700">Résultats:</span>
-              {finderKinds.includes('livreur') && <Badge variant="secondary">Livreurs</Badge>}
-              {finderKinds.includes('relais') && <Badge variant="secondary">Agents relais</Badge>}
-              {finderKinds.includes('centre') && <Badge variant="secondary">Agences</Badge>}
-              <button
-                type="button"
-                className="ml-auto text-[11px] font-semibold text-primary hover:underline"
-                onClick={() => {
-                  setFinderQuery('');
-                  setFinderKinds([]);
-                  setFinderCenter(null);
-                  setSelectedPoint(null);
-                }}
-              >
-                Effacer
-              </button>
-            </div>
-          )}
-        </section>
-
-        {linkedPickupOrder?.pickupRoute?.enabled && (
-          <section className="rounded-2xl border border-orange-200 bg-gradient-to-r from-orange-50 via-white to-emerald-50 p-3 shadow">
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <div className="space-y-1">
-                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-orange-600">
-                  Retrait boutique Nkampa
-                </p>
-                <h2 className="text-lg font-black text-slate-900">
-                  {linkedPickupOrder.productName || 'Commande Nkampa'}
-                </h2>
-                <p className="text-sm text-slate-600">
-                  Départ: {linkedPickupOrder.pickupRoute.buyerLocationLabel}
-                </p>
-                <p className="text-sm text-slate-600">
-                  Destination: {linkedPickupOrder.pickupRoute.storeLocationLabel}
-                </p>
-              </div>
-              <div className="grid grid-cols-3 gap-2 md:min-w-[280px]">
-                {[
-                  { id: 'walk' as TransportMode, label: 'Pied', icon: LogisticsWalkModeIcon },
-                  { id: 'car' as TransportMode, label: 'Voiture', icon: LogisticsCarModeIcon },
-                  { id: 'train' as TransportMode, label: 'Train', icon: LogisticsTrainModeIcon },
-                ].map((mode) => (
-                  <button
-                    key={mode.id}
-                    type="button"
-                    onClick={() => setTransportMode(mode.id)}
-                    className={`rounded-2xl border px-3 py-3 text-xs font-semibold transition ${
-                      transportMode === mode.id
-                        ? 'border-primary bg-primary text-white shadow-lg'
-                        : 'border-slate-200 bg-white text-slate-700'
-                    }`}
-                  >
-                    <div className="flex flex-col items-center gap-1">
-                      <mode.icon size={18} />
-                      <span>{mode.label}</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-            {isLoadingLinkedPickup && (
-              <p className="mt-3 text-xs text-slate-500">Chargement de l’itinéraire enregistré…</p>
-            )}
-          </section>
-        )}
-
-        <section className="grid grid-cols-5 gap-1.5">
-          {[
-            { label: 'Envoyer', icon: <SendHorizontal className="h-5 w-5" />, onClick: () => { setShowSendDialog(true); setActiveService('standard'); } },
-            { label: 'Express', icon: <LogisticsExpressIcon size={22} />, onClick: () => { setActiveService('express'); void runFinderSearch('livreur proche de ma localisation'); } },
-            { label: 'Standard', icon: <LogisticsStandardIcon size={22} />, onClick: () => { setActiveService('standard'); router.push('/dashboard/ugavi/service/standard'); } },
-            { label: 'International', icon: <LogisticsInternationalIcon size={22} />, onClick: () => { setActiveService('international'); router.push('/dashboard/ugavi/service/international'); } },
-            { label: 'Suivi', icon: <LogisticsTrackingIcon size={22} />, onClick: () => router.push('/dashboard/ugavi/tracking') },
-          ].map((item) => (
-            <button
-              key={item.label}
-              className="rounded-xl border border-slate-200 bg-white p-1.5 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-              onClick={item.onClick}
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => router.push('/dashboard/settings/business-account')}
+              className="shrink-0 rounded-full bg-gradient-to-r from-green-600 to-orange-500 px-4 text-white shadow-lg hover:from-green-700 hover:to-orange-600"
             >
-              <div className="mx-auto mb-1 flex h-8 w-8 items-center justify-center rounded-full bg-slate-100">
-                {item.icon}
-              </div>
-              <p className="text-[10px] font-semibold leading-tight text-slate-800">{item.label}</p>
-            </button>
-          ))}
-        </section>
-
-        <section className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl border border-emerald-200 bg-white shadow-xl">
-          <div className="border-b bg-white/95 px-2 py-1.5 backdrop-blur">
-            <div className="flex items-center gap-1.5">
-              <Button
-                onClick={handleStartItinerary}
-                disabled={!selectedPoint || isRouting || (selectedPoint ? isMissionPoint(selectedPoint.kind) : false)}
-                className="h-8 flex-1 rounded-lg bg-gradient-to-r from-primary to-emerald-700 px-2 text-xs text-white"
-              >
-                <Navigation className="mr-1 h-3.5 w-3.5" />
-                {isRouting ? 'Calcul...' : selectedPoint && isMissionPoint(selectedPoint.kind) ? 'Mission livreur' : 'Commencer itinéraire'}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setVoiceEnabled((prev) => !prev)}
-                className="h-8 w-8 rounded-lg border-slate-300 p-0"
-              >
-                {voiceEnabled ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5" />}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => void runFinderSearch('livreur proche de ma localisation')}
-                className="h-8 w-8 rounded-lg border-slate-300 p-0"
-                title="Trouver un livreur proche"
-              >
-                <Search className="h-3.5 w-3.5" />
-              </Button>
-            </div>
+              Business Account
+            </Button>
           </div>
-          <div className="relative min-h-0 flex-1">
-            <iframe
-              title="OpenStreetMap Kinshasa"
-              src={mapEmbedSrc}
-              className="h-full w-full"
-            />
-            {routePath.length > 1 && (
-              <svg
-                viewBox="0 0 100 100"
-                preserveAspectRatio="none"
-                className="pointer-events-none absolute inset-0 h-full w-full"
-              >
-                <polyline
-                  points={routePolyline}
-                  fill="none"
-                  stroke="rgba(16,185,129,0.92)"
-                  strokeWidth="0.9"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeDasharray="2 1.6"
-                />
-                <circle cx={clientMarker.x} cy={clientMarker.y} r="1.2" fill="#2563eb" />
-                {destinationMarker && <circle cx={destinationMarker.x} cy={destinationMarker.y} r="1.35" fill="#f97316" />}
-              </svg>
-            )}
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-white/45 via-transparent to-white/20" />
-            <div
-              className="pointer-events-none absolute z-20"
-              style={{ top: `${clientMarker.y}%`, left: `${clientMarker.x}%`, transform: 'translate(-50%, -50%)' }}
-            >
-              <span className="absolute left-1/2 top-1/2 h-7 w-7 -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-500/35 animate-ping" />
-              <span className="relative block h-4 w-4 rounded-full border-2 border-white bg-blue-600 shadow" />
-              <span className="absolute left-1/2 top-full mt-1.5 w-max -translate-x-1/2 rounded-md bg-black/70 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur">
-                Ma position
-              </span>
-            </div>
-            {visibleMapPoints.map((point) => {
-              const isSelected = selectedPoint?.id === point.id;
-              const showInfo = activePointInfoId === point.id;
-              const MarkerIcon = pointIconByKind[point.kind];
-              const mapPoint = toMapPercent(point, mapBounds);
-              return (
-                <div
-                  key={point.id}
-                  className="absolute z-10"
-                  style={{ top: `${mapPoint.y}%`, left: `${mapPoint.x}%`, transform: 'translate(-50%, -50%)' }}
-                >
-                  {showInfo && (
-                    <div className="pointer-events-none absolute -top-2 left-1/2 w-max max-w-[190px] -translate-x-1/2 -translate-y-full rounded-xl border border-white/70 bg-black/75 px-2 py-1.5 text-[10px] text-white shadow-lg backdrop-blur">
-                      <p className="font-semibold leading-tight">{pointLabelByKind[point.kind]}</p>
-                      <p className="opacity-90">{point.subtitle}</p>
+        </header>
+
+        <div className="max-w-7xl mx-auto px-4 py-6 space-y-4">
+          {/* Carte principale - Style Yango avec transparence */}
+          <Card className="border-white/30 shadow-2xl bg-white/90 backdrop-blur-xl">
+            <CardContent className="p-6 space-y-4">
+              {/* Point de départ */}
+              {activeTab !== 'track' ? (
+                <>
+                  <div className="flex items-center gap-3">
+                    <div className="flex-shrink-0">
+                      <div className="w-4 h-4 rounded-full bg-green-600 ring-4 ring-green-100"></div>
                     </div>
-                  )}
-                  <button
-                    type="button"
-                    aria-label={pointLabelByKind[point.kind]}
-                    onClick={() => handleSelectPoint(point)}
-                    onMouseEnter={() => setActivePointInfoId(point.id)}
-                    onMouseLeave={() => setActivePointInfoId((prev) => (prev === point.id ? null : prev))}
-                    onFocus={() => setActivePointInfoId(point.id)}
-                    onBlur={() => setActivePointInfoId((prev) => (prev === point.id ? null : prev))}
-                    onTouchStart={() => setActivePointInfoId(point.id)}
-                    className={`flex h-10 w-10 items-center justify-center rounded-full border border-white/80 text-white shadow-xl transition ${
-                      isSelected ? `scale-105 ring-4 ${point.ringColor}` : 'hover:scale-[1.06]'
-                    } ${point.color}`}
-                  >
-                    <MarkerIcon className="h-5 w-5" />
-                  </button>
-                </div>
-              );
-            })}
-          </div>
+                    <div className="flex-1 relative">
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-green-600" />
+                      <Input
+                        value={pickupLocation}
+                        onChange={(e) => setPickupLocation(e.target.value)}
+                        placeholder={activeTab === 'international' ? 'Ville / pays de départ' : 'Point de départ'}
+                        className="pl-10 h-12 bg-white/50 backdrop-blur-sm border-white/50 focus:bg-white/80 focus:border-green-500 font-medium"
+                      />
+                    </div>
+                  </div>
 
-          <div className="border-t bg-white/95 p-2 backdrop-blur">
-            {/* Section itinéraire: disponible quand l'utilisateur sélectionne un point sur la carte */}
-            {selectedPoint && (
-              <div className="mt-1 rounded-xl border border-slate-200 bg-slate-50 p-2 text-[11px]">
-                <p className="font-semibold text-slate-800">
-                  {isMissionPoint(selectedPoint.kind) ? 'Livreur sélectionné:' : 'Destination:'} {selectedPoint.title}
-                </p>
-                {isMissionPoint(selectedPoint.kind) ? (
-                  <div className="mt-2 space-y-2">
-                    <Label className="text-[10px] text-slate-600">Instructions mission (produit/service)</Label>
-                    <Textarea
-                      value={missionNote}
-                      onChange={(e) => setMissionNote(e.target.value)}
-                      placeholder="Ex: livrer documents urgents, fragile, contacter avant arrivée..."
-                      className="min-h-12 text-[11px]"
+                  <div className="flex items-center gap-3">
+                    <div className="flex-shrink-0 w-4 flex justify-center">
+                      <div className="w-0.5 h-8 bg-gradient-to-b from-green-600 to-red-600"></div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <div className="flex-shrink-0">
+                      <div className="w-4 h-4 rounded-full bg-red-600 ring-4 ring-red-100"></div>
+                    </div>
+                    <div className="flex-1 relative">
+                      <Navigation className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-red-600" />
+                      <Input
+                        value={dropoffLocation}
+                        onChange={(e) => setDropoffLocation(e.target.value)}
+                        placeholder={activeTab === 'international' ? 'Ville / pays de destination' : 'Destination'}
+                        className="pl-10 h-12 bg-white/50 backdrop-blur-sm border-white/50 focus:bg-white/80 focus:border-red-500 font-medium"
+                      />
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <div className="flex-shrink-0">
+                    <div className="w-4 h-4 rounded-full bg-blue-600 ring-4 ring-blue-100"></div>
+                  </div>
+                  <div className="flex-1 relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-blue-600" />
+                    <Input
+                      value={trackingQuery}
+                      onChange={(e) => setTrackingQuery(e.target.value)}
+                      placeholder="Numéro de suivi Ugavi ou Nkampa"
+                      className="pl-10 h-12 bg-white/50 backdrop-blur-sm border-white/50 focus:bg-white/80 focus:border-blue-500 font-medium"
                     />
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button size="sm" onClick={() => handleAssignMission('express')} className="h-8 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700">
-                        Mission Express
-                      </Button>
-                      <Button size="sm" onClick={() => handleAssignMission('standard')} className="h-8 rounded-lg bg-primary text-white hover:bg-primary/90">
-                        Mission Standard
+                  </div>
+                </div>
+              )}
+
+              {/* Bouton continuer */}
+              <Button
+                onClick={handleContinue}
+                className="w-full h-12 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-[1.02]"
+              >
+                {primaryButtonLabel}
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Barre de navigation horizontale avec transparence */}
+          <div className="bg-white/90 backdrop-blur-xl rounded-xl shadow-lg p-2 overflow-x-auto border border-white/30">
+            <div className="flex gap-2 min-w-max">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = activeTab === item.id;
+                const colorClasses = {
+                  green: isActive ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-lg shadow-green-500/30' : 'bg-green-50 text-green-700 hover:bg-green-100',
+                  blue: isActive ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/30' : 'bg-blue-50 text-blue-700 hover:bg-blue-100',
+                  orange: isActive ? 'bg-gradient-to-r from-orange-600 to-orange-700 text-white shadow-lg shadow-orange-500/30' : 'bg-orange-50 text-orange-700 hover:bg-orange-100',
+                  purple: isActive ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-lg shadow-purple-500/30' : 'bg-purple-50 text-purple-700 hover:bg-purple-100',
+                };
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id as any)}
+                    className={`flex items-center gap-2 px-4 py-3 rounded-lg font-semibold text-sm transition-all whitespace-nowrap ${colorClasses[item.color as keyof typeof colorClasses]}`}
+                  >
+                    <Icon className="h-5 w-5" />
+                    <span>{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Contenu selon l'onglet actif avec transparence */}
+          <div className="space-y-4">
+            {activeTab === 'send' && (
+              <Card className="border-white/30 bg-white/90 backdrop-blur-xl shadow-lg">
+                <CardContent className="p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 bg-green-100 rounded-xl">
+                      <LogisticsCourierIcon className="h-6 w-6 text-green-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-bold text-gray-900 mb-2">Envoyer un colis</h3>
+                      <p className="text-sm text-gray-700 mb-4">
+                        Livraison rapide et sécurisée dans toute la ville
+                      </p>
+                      <div className="flex items-center gap-4 text-sm">
+                        <div className="flex items-center gap-1 text-gray-700">
+                          <Clock className="h-4 w-4" />
+                          <span className="font-medium">24-48h</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-green-600 font-bold">
+                          <span>À partir de 5 000 FC</span>
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        className="mt-4 bg-green-600 hover:bg-green-700"
+                        onClick={() => setActiveTab('send')}
+                      >
+                        Ouvrir le flux
+                        <ArrowRight className="ml-2 h-4 w-4" />
                       </Button>
                     </div>
                   </div>
-                ) : (
-                  <>
-                    <p className="text-[11px] text-slate-600">Mode choisi: {modeLabelMap[transportMode]}</p>
-                    <div className="mt-2 flex items-center justify-between gap-2">
-                      <p className="text-[10px] text-slate-500">Utilisez le bouton en haut de la carte.</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {activeTab === 'track' && (
+              <Card className="border-white/30 bg-white/90 backdrop-blur-xl shadow-lg">
+                <CardContent className="p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 bg-blue-100 rounded-xl">
+                      <LogisticsTrackingIcon className="h-6 w-6 text-blue-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-bold text-gray-900 mb-2">Suivre un colis</h3>
+                      <p className="text-sm text-gray-700 mb-4">
+                        Localisez votre colis en temps réel
+                      </p>
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-blue-600" />
+                        <Input
+                          value={trackingQuery}
+                          onChange={(e) => setTrackingQuery(e.target.value)}
+                          placeholder="Entrez le numéro de suivi"
+                          className="h-10 pl-10 bg-white/50 backdrop-blur-sm border-white/50 focus:bg-white/80 focus:border-blue-500"
+                        />
+                      </div>
                       <Button
                         size="sm"
-                        onClick={handleStartItinerary}
-                        disabled={isRouting}
-                        className="h-7 rounded-lg bg-primary px-2 text-[10px] text-white hover:bg-primary/90"
+                        className="mt-4 bg-blue-600 hover:bg-blue-700"
+                        onClick={handleContinue}
                       >
-                        <Navigation className="mr-1 h-3.5 w-3.5" />
-                        Itinéraire
+                        Rechercher
+                        <ArrowRight className="ml-2 h-4 w-4" />
                       </Button>
                     </div>
-                  </>
-                )}
-              </div>
+                  </div>
+                </CardContent>
+              </Card>
             )}
-            {routeInfo && selectedPoint && (
-              <div className="mt-1 rounded-xl border border-emerald-200 bg-emerald-50 p-2 text-[11px] text-slate-700">
-                <p className="font-semibold text-emerald-800">
-                  Itinéraire actif vers {selectedPoint.title}
-                </p>
-                <p>
-                  {routeInfo.durationMin} min · {routeInfo.distanceKm.toFixed(1)} km ·{' '}
-                  {routeInfo.source === 'osrm' ? 'Trajet réel' : 'Estimation'}
-                </p>
-                <p className="mt-1 text-slate-600">
-                  <span className="font-semibold">Circulation:</span> {routeInfo.trafficLevel} (indice {routeInfo.trafficScore.toFixed(2)})
-                </p>
-                <p className="mt-1 text-slate-600"><span className="font-semibold">Client:</span> {clientAddress}</p>
-                <p className="mt-1 text-slate-600"><span className="font-semibold">Destination:</span> {destinationAddress}</p>
-                {routeInfo.steps.length > 0 && (
-                  <p className="mt-1 text-slate-600">Instruction: {routeInfo.steps[0]}</p>
-                )}
-              </div>
+
+            {activeTab === 'express' && (
+              <Card className="border-white/30 bg-white/90 backdrop-blur-xl shadow-lg">
+                <CardContent className="p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 bg-orange-100 rounded-xl">
+                      <LogisticsExpressIcon className="h-6 w-6 text-orange-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-bold text-gray-900 mb-2">Livraison Express</h3>
+                      <p className="text-sm text-gray-700 mb-4">
+                        Livraison en moins de 2 heures
+                      </p>
+                      <div className="flex items-center gap-4 text-sm">
+                        <div className="flex items-center gap-1 text-gray-700">
+                          <Clock className="h-4 w-4" />
+                          <span className="font-medium">Moins de 2h</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-orange-600 font-bold">
+                          <span>À partir de 15 000 FC</span>
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        className="mt-4 bg-orange-600 hover:bg-orange-700"
+                        onClick={() => setActiveTab('express')}
+                      >
+                        Commander express
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {activeTab === 'international' && (
+              <Card className="border-white/30 bg-white/90 backdrop-blur-xl shadow-lg">
+                <CardContent className="p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 bg-purple-100 rounded-xl">
+                      <LogisticsInternationalIcon className="h-6 w-6 text-purple-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-bold text-gray-900 mb-2">Livraison Internationale</h3>
+                      <p className="text-sm text-gray-700 mb-4">
+                        Envoyez vos colis partout dans le monde
+                      </p>
+                      <div className="flex items-center gap-4 text-sm">
+                        <div className="flex items-center gap-1 text-gray-700">
+                          <Package className="h-4 w-4" />
+                          <span className="font-medium">Selon destination</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-purple-600 font-bold">
+                          <span>Sur devis</span>
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        className="mt-4 bg-purple-600 hover:bg-purple-700"
+                        onClick={() => setActiveTab('international')}
+                      >
+                        Préparer l’envoi
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             )}
           </div>
-        </section>
 
-      </main>
-
-      {/* Send Package Dialog */}
-      <Dialog open={showSendDialog} onOpenChange={setShowSendDialog}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Envoyer un colis</DialogTitle>
-            <DialogDescription>
-              Remplissez les informations pour envoyer votre colis.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-6 py-4">
-            {/* Sender Info */}
-            <div className="space-y-4">
-              <h3 className="font-semibold">Expéditeur</h3>
+          {/* Envois récents avec transparence */}
+          <Card className="border-white/30 bg-white/90 backdrop-blur-xl shadow-lg">
+            <CardContent className="p-6">
+              <h3 className="font-bold text-gray-900 mb-4">Envois récents</h3>
               <div className="space-y-3">
-                <div className="space-y-2">
-                  <Label htmlFor="sender-name">Nom complet *</Label>
-                  <Input id="sender-name" value={senderName} onChange={(e) => setSenderName(e.target.value)} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="sender-address">Adresse complète *</Label>
-                  <Textarea id="sender-address" value={senderAddress} onChange={(e) => setSenderAddress(e.target.value)} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="sender-phone">Téléphone *</Label>
-                  <Input id="sender-phone" value={senderPhone} onChange={(e) => setSenderPhone(e.target.value)} />
-                </div>
+                {recentShipments.length ? (
+                  recentShipments.map((shipment) => (
+                    <button
+                      key={`${shipment.source}-${shipment.id}`}
+                      onClick={() => handleQuickTracking(shipment.trackingNumber)}
+                      className="flex w-full items-center justify-between rounded-lg border border-white/30 bg-white/50 p-3 text-left backdrop-blur-sm transition hover:bg-white/70"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="rounded-lg bg-white p-2 shadow-sm">
+                          <Package className="h-5 w-5 text-gray-600" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm text-gray-900">{shipment.trackingNumber}</p>
+                          <p className="text-xs text-gray-600">{shipment.destination}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className={`inline-block rounded px-2 py-1 text-xs font-semibold ${shipment.statusColor}`}>
+                          {shipment.status}
+                        </span>
+                      </div>
+                    </button>
+                  ))
+                ) : (
+                  <div className="rounded-lg border border-dashed border-white/40 bg-white/40 p-4 text-sm text-gray-600">
+                    Aucun envoi récent disponible pour le moment.
+                  </div>
+                )}
               </div>
-            </div>
-
-            {/* Receiver Info */}
-            <div className="space-y-4 pt-4 border-t">
-              <h3 className="font-semibold">Destinataire</h3>
-              <div className="space-y-3">
-                <div className="space-y-2">
-                  <Label htmlFor="receiver-name">Nom complet *</Label>
-                  <Input id="receiver-name" value={receiverName} onChange={(e) => setReceiverName(e.target.value)} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="receiver-address">Adresse complète *</Label>
-                  <Textarea id="receiver-address" value={receiverAddress} onChange={(e) => setReceiverAddress(e.target.value)} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="receiver-phone">Téléphone *</Label>
-                  <Input id="receiver-phone" value={receiverPhone} onChange={(e) => setReceiverPhone(e.target.value)} />
-                </div>
-              </div>
-            </div>
-
-            {/* Package Info */}
-            <div className="space-y-4 pt-4 border-t">
-              <h3 className="font-semibold">Informations du colis</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="weight">Poids (kg) *</Label>
-                  <Input id="weight" type="number" value={packageWeight} onChange={(e) => setPackageWeight(e.target.value)} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="shipping-method">Mode de livraison</Label>
-                  <Select value={shippingMethod} onValueChange={(value: 'standard' | 'express') => setShippingMethod(value)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="standard">Standard (5-7 jours)</SelectItem>
-                      <SelectItem value="express">Express (1-3 jours)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="description">Description du contenu</Label>
-                <Textarea id="description" value={packageDescription} onChange={(e) => setPackageDescription(e.target.value)} placeholder="Décrivez le contenu du colis..." />
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowSendDialog(false)} disabled={isSubmitting}>
-              Annuler
-            </Button>
-            <Button onClick={handleSendPackage} disabled={isSubmitting} className="bg-gradient-to-r from-primary to-green-800">
-              {isSubmitting ? "Enregistrement..." : "Créer l'envoi"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }

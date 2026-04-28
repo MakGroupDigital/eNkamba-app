@@ -20,6 +20,12 @@ export interface PaymentData {
   metadata?: Record<string, any>;
 }
 
+export interface PaymentResult {
+  success: boolean;
+  transactionId?: string;
+  newBalance?: number;
+}
+
 export interface ReceiveData {
   paymentMethod: PaymentMethod;
   description?: string;
@@ -146,9 +152,9 @@ export function useUnifiedPayment(config: UnifiedPaymentConfig) {
   /**
    * Traite un paiement unifié
    */
-  const processPayment = async (data: PaymentData): Promise<boolean> => {
+  const processPayment = async (data: PaymentData): Promise<PaymentResult> => {
     if (!validatePayment(data.amount, data.recipientId)) {
-      return false;
+      return { success: false };
     }
 
     setIsProcessing(true);
@@ -179,17 +185,21 @@ export function useUnifiedPayment(config: UnifiedPaymentConfig) {
         });
 
         // Le solde sera mis à jour automatiquement via le listener Firestore
-        return true;
+        return {
+          success: true,
+          transactionId: resultData.transactionId,
+          newBalance: resultData.newBalance,
+        };
       }
 
-      return false;
+      return { success: false };
     } catch (error: any) {
       toast({
         variant: 'destructive',
         title: 'Erreur',
         description: error.message || 'Erreur lors du paiement',
       });
-      return false;
+      return { success: false };
     } finally {
       setIsProcessing(false);
     }
