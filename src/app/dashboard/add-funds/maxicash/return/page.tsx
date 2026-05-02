@@ -1,0 +1,86 @@
+'use client';
+
+import { Suspense, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Image from 'next/image';
+import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+
+function PaymentReturnContent() {
+  const router = useRouter();
+  const params = useSearchParams();
+  const [state, setState] = useState<'loading' | 'completed' | 'failed' | 'pending'>('loading');
+
+  const status = params?.get('status') || '';
+  const userId = params?.get('userId') || '';
+  const transactionId = params?.get('transactionId') || '';
+
+  useEffect(() => {
+    const finalize = async () => {
+      if (!userId || !transactionId) {
+        setState('failed');
+        return;
+      }
+
+      try {
+        const query = new URLSearchParams();
+        params?.forEach((value, key) => query.set(key, value));
+        query.set('userId', userId);
+        query.set('transactionId', transactionId);
+        query.set('status', status);
+
+        const response = await fetch(`/api/wallet/maxicash/notify?${query.toString()}`);
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Validation eNkambaPay impossible');
+        setState(data.transactionStatus === 'completed' ? 'completed' : data.transactionStatus === 'failed' ? 'failed' : 'pending');
+      } catch {
+        setState('failed');
+      }
+    };
+
+    finalize();
+  }, [params, status, transactionId, userId]);
+
+  const icon =
+    state === 'loading' ? <Loader2 className="h-14 w-14 animate-spin text-[#32BB78]" /> :
+    state === 'completed' ? <CheckCircle2 className="h-14 w-14 text-[#32BB78]" /> :
+    <AlertCircle className="h-14 w-14 text-red-600" />;
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-[#32BB78]/5 to-background p-4">
+      <Card className="w-full max-w-md">
+        <CardContent className="space-y-6 p-6 text-center">
+          <div className="flex items-center justify-center gap-2">
+            <Image src="/enkamba-logo.png" alt="" width={34} height={34} className="h-9 w-9 object-contain" />
+            <span className="text-lg font-semibold text-[#0B6E4F]">eNkambaPay</span>
+          </div>
+          <div className="flex justify-center">{icon}</div>
+          <div>
+            <h1 className="text-2xl font-bold">
+              {state === 'loading' ? 'Validation eNkambaPay' : state === 'completed' ? 'Dépôt confirmé' : 'Dépôt non confirmé'}
+            </h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {state === 'loading'
+                ? 'Nous confirmons votre paiement eNkambaPay.'
+                : state === 'completed'
+                  ? 'Votre portefeuille a été crédité.'
+                  : 'Le paiement a été annulé, refusé ou reste non confirmé.'}
+            </p>
+          </div>
+          <Button className="w-full bg-[#32BB78] hover:bg-[#2a9d63]" onClick={() => router.push('/dashboard/wallet')}>
+            Retour au portefeuille
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+export default function PaymentReturnPage() {
+  return (
+    <Suspense fallback={<div className="grid min-h-screen place-items-center"><Loader2 className="h-8 w-8 animate-spin text-[#32BB78]" /></div>}>
+      <PaymentReturnContent />
+    </Suspense>
+  );
+}

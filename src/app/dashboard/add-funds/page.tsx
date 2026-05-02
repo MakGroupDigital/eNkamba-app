@@ -1,18 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import Link from 'next/link';
+import { ArrowLeft, CheckCircle2, CreditCard, Loader2, Mail, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useWalletTransactions } from '@/hooks/useWalletTransactions';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { ArrowLeft, Loader2 } from 'lucide-react';
-import Link from 'next/link';
-import Image from 'next/image';
 
-type PaymentMethod = 'paypal' | 'wonyapay';
+type PaymentMethod = 'maxicash' | 'wonyapay' | 'paypal';
 
 export default function AddFundsPage() {
   const router = useRouter();
@@ -24,148 +25,156 @@ export default function AddFundsPage() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
   const [amount, setAmount] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  // Cartes et crypto retirés de l'interface (mobile money + PayPal uniquement)
+  const [email, setEmail] = useState('');
   const [wonyaDetails, setWonyaDetails] = useState({
     currency: 'CDF' as 'CDF' | 'USD',
     motif: '',
   });
   const [usdToCdfRate, setUsdToCdfRate] = useState<number>(2800);
   const [isLoadingRate, setIsLoadingRate] = useState(false);
-  const [convertedAmount, setConvertedAmount] = useState<number>(0);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  // Charger le taux de change USD/CDF pour WonyaPay et PayPal
-  useEffect(() => {
-    if (paymentMethod === 'paypal' || (paymentMethod === 'wonyapay' && wonyaDetails.currency === 'USD')) {
-      const loadExchangeRate = async () => {
-        setIsLoadingRate(true);
-        try {
-          const { getUsdToCdfRate } = await import('@/lib/exchange-rate');
-          const rate = await getUsdToCdfRate();
-          setUsdToCdfRate(rate);
-        } catch (error) {
-          console.error('Erreur chargement taux:', error);
-        } finally {
-          setIsLoadingRate(false);
-        }
-      };
-      loadExchangeRate();
-    }
-  }, [paymentMethod, wonyaDetails.currency]);
+  const numericAmount = Number(amount || 0);
+  const usesUsdRate =
+    paymentMethod === 'paypal' ||
+    paymentMethod === 'maxicash' ||
+    (paymentMethod === 'wonyapay' && wonyaDetails.currency === 'USD');
 
-  // Calculer la conversion en temps réel
   useEffect(() => {
-    if (amount && parseFloat(amount) > 0) {
-      if (paymentMethod === 'wonyapay' && wonyaDetails.currency === 'USD') {
-        setConvertedAmount(parseFloat(amount) * usdToCdfRate);
-      } else if (paymentMethod === 'paypal') {
-        setConvertedAmount(parseFloat(amount) * usdToCdfRate);
-      } else {
-        setConvertedAmount(parseFloat(amount));
+    if (!usesUsdRate) return;
+
+    const loadExchangeRate = async () => {
+      setIsLoadingRate(true);
+      try {
+        const { getUsdToCdfRate } = await import('@/lib/exchange-rate');
+        setUsdToCdfRate(await getUsdToCdfRate());
+      } catch (error) {
+        console.error('Erreur chargement taux:', error);
+      } finally {
+        setIsLoadingRate(false);
       }
-    } else {
-      setConvertedAmount(0);
-    }
-  }, [amount, wonyaDetails.currency, usdToCdfRate, paymentMethod]);
+    };
+
+    loadExchangeRate();
+  }, [usesUsdRate]);
+
+  const convertedAmount = useMemo(() => {
+    if (!numericAmount || numericAmount <= 0) return 0;
+    if (usesUsdRate) return Math.round(numericAmount * usdToCdfRate);
+    return numericAmount;
+  }, [numericAmount, usdToCdfRate, usesUsdRate]);
 
   const handleMethodSelect = (method: PaymentMethod) => {
     setPaymentMethod(method);
     setStep('details');
   };
 
-  const handleDetailsSubmit = async () => {
-    if (!amount || parseFloat(amount) <= 0) {
-      toast({
-        variant: 'destructive',
-        title: 'Erreur',
-        description: 'Veuillez entrer un montant valide',
-      });
-      return;
+  const validateDetails = () => {
+    if (!paymentMethod) return 'Méthode de paiement manquante';
+    if (!numericAmount || numericAmount <= 0) return 'Veuillez entrer un montant valide';
+    if ((paymentMethod === 'maxicash' || paymentMethod === 'wonyapay') && !phoneNumber.trim()) {
+      return 'Veuillez entrer un numéro de téléphone';
     }
+    if (paymentMethod === 'maxicash' && !email.trim()) {
+      return 'Veuillez entrer un email';
+    }
+    return null;
+  };
 
-    if (paymentMethod === 'wonyapay' && !phoneNumber) {
-      toast({
-        variant: 'destructive',
-        title: 'Erreur',
-        description: 'Veuillez entrer un numéro de téléphone',
-      });
+  const handleDetailsSubmit = () => {
+    const validationError = validateDetails();
+    if (validationError) {
+      toast({ variant: 'destructive', title: 'Erreur', description: validationError });
       return;
     }
 
     setStep('confirm');
   };
 
-  const handleConfirm = async () => {
-    if (!user) return;
-    
-    try {
-      if (!paymentMethod) {
-        throw new Error('Méthode de paiement manquante');
-      }
+  const submitMaxiCashFormPost = () => {
+    if (!user) throw new Error('Utilisateur non authentifié');
 
-      // Si PayPal, rediriger vers le lien de paiement avec le montant pré-rempli
-      if (paymentMethod === 'paypal') {
-        const returnUrl = encodeURIComponent(`https://enkamba.io/ok?amount=${amount}&userId=${user.uid}`);
-        const cancelUrl = encodeURIComponent(`https://enkamba.io/cancel`);
-        
-        // Le lien PayPal avec les paramètres de retour
-        const paypalUrl = `https://www.paypal.com/ncp/payment/D723Q3TM3HQRW?return=${returnUrl}&cancel_return=${cancelUrl}`;
-        
-        window.open(paypalUrl, '_blank');
-        
-        toast({
-          title: 'Redirection PayPal',
-          description: 'Vous allez être redirigé vers PayPal pour finaliser le paiement',
-          className: 'bg-blue-600 text-white border-none',
-        });
-        
+    setIsProcessing(true);
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/api/wallet/maxicash/form-post';
+    form.style.display = 'none';
+
+    const fields: Record<string, string> = {
+      userId: user.uid,
+      amount,
+      telephone: phoneNumber.trim(),
+      email: email.trim(),
+    };
+
+    Object.entries(fields).forEach(([name, value]) => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = name;
+      input.value = value;
+      form.appendChild(input);
+    });
+
+    document.body.appendChild(form);
+    form.submit();
+  };
+
+  const handleConfirm = async () => {
+    if (!user || !paymentMethod) return;
+
+    try {
+      if (paymentMethod === 'maxicash') {
+        submitMaxiCashFormPost();
         return;
       }
 
-      if (paymentMethod !== 'wonyapay') {
-        throw new Error('Méthode de paiement non supportée');
+      if (paymentMethod === 'paypal') {
+        const returnUrl = encodeURIComponent(`https://enkamba.io/ok?amount=${amount}&userId=${user.uid}`);
+        const cancelUrl = encodeURIComponent('https://enkamba.io/cancel');
+        window.open(`https://www.paypal.com/ncp/payment/D723Q3TM3HQRW?return=${returnUrl}&cancel_return=${cancelUrl}`, '_blank');
+        toast({
+          title: 'Redirection PayPal',
+          description: 'Vous allez être redirigé vers PayPal pour finaliser le paiement.',
+          className: 'bg-blue-600 text-white border-none',
+        });
+        return;
       }
 
-      const result = await addFunds(
-        parseFloat(amount), 
-        'wonyapay',
-        {
-          phoneNumber,
-          wonyaDetails,
-        }
-      );
+      const result = await addFunds(numericAmount, 'wonyapay', {
+        phoneNumber,
+        wonyaDetails,
+      });
 
-      if (result.transactionStatus === 'pending') {
-        toast({
-          title: 'Demande envoyée',
-          description: result.message || 'Votre dépôt WonyaPay est en attente de confirmation',
-          className: 'bg-amber-600 text-white border-none',
-        });
-      } else {
-        toast({
-          title: 'Succès',
-          description: `${parseFloat(amount).toLocaleString('fr-FR')} CDF ont été ajoutés à votre portefeuille`,
-          className: 'bg-green-600 text-white border-none',
-        });
-      }
+      toast({
+        title: result.transactionStatus === 'pending' ? 'Demande envoyée' : 'Succès',
+        description:
+          result.message ||
+          (result.transactionStatus === 'pending'
+            ? 'Votre dépôt Mobile Money est en attente de confirmation.'
+            : 'Votre dépôt a été ajouté au portefeuille.'),
+        className: result.transactionStatus === 'pending'
+          ? 'bg-amber-600 text-white border-none'
+          : 'bg-green-600 text-white border-none',
+      });
 
       router.push('/dashboard/wallet');
     } catch (error: any) {
       toast({
         variant: 'destructive',
         title: 'Erreur',
-        description: error.message || 'Erreur lors de l\'ajout de fonds',
+        description: error.message || 'Erreur lors de l’ajout de fonds',
       });
+      setIsProcessing(false);
     }
   };
 
-  if (!user) {
-    return null;
-  }
+  if (!user) return null;
+
+  const busy = isLoading || isProcessing;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-[#32BB78]/5 to-background">
-      <div className="container mx-auto max-w-2xl p-4 space-y-6 animate-in fade-in duration-500">
-        {/* Header */}
+      <div className="container mx-auto max-w-3xl space-y-6 p-4">
         <header className="flex items-center gap-4 pt-4">
           <Button variant="ghost" size="icon" asChild>
             <Link href="/dashboard/wallet">
@@ -173,249 +182,153 @@ export default function AddFundsPage() {
             </Link>
           </Button>
           <div>
-            <h1 className="font-headline text-3xl font-bold bg-gradient-to-r from-[#32BB78] to-[#2a9d63] bg-clip-text text-transparent">
-              Ajouter des fonds
-            </h1>
-            <p className="text-sm text-muted-foreground">Choisissez votre méthode de paiement</p>
+            <h1 className="font-headline text-3xl font-bold text-[#0B6E4F]">Ajouter des fonds</h1>
+            <p className="text-sm text-muted-foreground">Choisissez une méthode de dépôt.</p>
           </div>
         </header>
 
-        {/* Step 1: Payment Method Selection */}
         {step === 'method' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-4">
             <Card
-              className="cursor-pointer border-2 hover:border-[#0B6E4F] transition-colors"
-              onClick={() => handleMethodSelect('wonyapay')}
+              className="cursor-pointer border-2 border-[#32BB78]/40 bg-[#32BB78]/5 transition-colors hover:border-[#0B6E4F]"
+              onClick={() => handleMethodSelect('maxicash')}
             >
-              <CardContent className="pt-6">
-                <div className="flex flex-col items-center gap-4 text-center">
-                  <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-4">
-                    {/* Airtel Money Logo */}
-                    <div className="flex min-h-14 items-center justify-center rounded-xl border border-border/60 bg-background/70 px-3 py-2">
-                      <Image 
-                        src="/logoairtel.png" 
-                        alt="Airtel Money" 
-                        width={80} 
-                        height={40}
-                        className="h-8 w-auto object-contain"
-                      />
-                    </div>
-                    
-                    {/* M-Pesa Logo */}
-                    <div className="flex min-h-14 items-center justify-center rounded-xl border border-border/60 bg-background/70 px-3 py-2">
-                      <Image 
-                        src="/logompsa.png" 
-                        alt="M-Pesa" 
-                        width={80} 
-                        height={40}
-                        className="h-8 w-auto object-contain"
-                      />
-                    </div>
-                    
-                    {/* Orange Money Logo */}
-                    <div className="flex min-h-14 items-center justify-center rounded-xl border border-border/60 bg-background/70 px-3 py-2">
-                      <Image 
-                        src="/logo-orange.png" 
-                        alt="Orange Money" 
-                        width={80} 
-                        height={40}
-                        className="h-8 w-auto object-contain"
-                      />
-                    </div>
-                    
-                    {/* Africell Logo */}
-                    <div className="flex min-h-14 items-center justify-center rounded-xl border border-border/60 bg-background/70 px-3 py-2">
-                      <Image 
-                        src="/logoafricell.png" 
-                        alt="Africell Money" 
-                        width={80} 
-                        height={40}
-                        className="h-8 w-auto object-contain"
-                      />
-                    </div>
+              <CardContent className="p-5">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#32BB78]/25 bg-white">
+                    <Image src="/enkamba-logo.png" alt="eNkambaPay" width={56} height={56} className="h-14 w-14 max-w-none object-cover" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-lg">Mobile Money</h3>
-                    <p className="text-sm text-muted-foreground">Airtel, M-Pesa, Orange, Africell</p>
+                    <h2 className="text-xl font-semibold text-[#0B6E4F]">eNkambaPay</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Paiement sécurisé : carte, Mobile Money, PayPal, Mobile Banking et portefeuille partenaire.
+                    </p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card
-              className="cursor-pointer border-2 hover:border-[#0070BA] transition-colors"
-              onClick={() => handleMethodSelect('paypal')}
-            >
-              <CardContent className="pt-6">
-                <div className="flex flex-col items-center gap-4 text-center">
-                  <div className="flex items-center justify-center h-16">
-                    <svg viewBox="0 0 124 33" className="h-12 w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M46.211 6.749h-6.839a.95.95 0 0 0-.939.802l-2.766 17.537a.57.57 0 0 0 .564.658h3.265a.95.95 0 0 0 .939-.803l.746-4.73a.95.95 0 0 1 .938-.803h2.165c4.505 0 7.105-2.18 7.784-6.5.306-1.89.013-3.375-.872-4.415-.972-1.142-2.696-1.746-4.985-1.746zM47 13.154c-.374 2.454-2.249 2.454-4.062 2.454h-1.032l.724-4.583a.57.57 0 0 1 .563-.481h.473c1.235 0 2.4 0 3.002.704.359.42.469 1.044.332 1.906zM66.654 13.075h-3.275a.57.57 0 0 0-.563.481l-.145.916-.229-.332c-.709-1.029-2.29-1.373-3.868-1.373-3.619 0-6.71 2.741-7.312 6.586-.313 1.918.132 3.752 1.22 5.031.998 1.176 2.426 1.666 4.125 1.666 2.916 0 4.533-1.875 4.533-1.875l-.146.91a.57.57 0 0 0 .562.66h2.95a.95.95 0 0 0 .939-.803l1.77-11.209a.568.568 0 0 0-.561-.658zm-4.565 6.374c-.316 1.871-1.801 3.127-3.695 3.127-.951 0-1.711-.305-2.199-.883-.484-.574-.668-1.391-.514-2.301.295-1.855 1.805-3.152 3.67-3.152.93 0 1.686.309 2.184.892.499.589.697 1.411.554 2.317zM84.096 13.075h-3.291a.954.954 0 0 0-.787.417l-4.539 6.686-1.924-6.425a.953.953 0 0 0-.912-.678h-3.234a.57.57 0 0 0-.541.754l3.625 10.638-3.408 4.811a.57.57 0 0 0 .465.9h3.287a.949.949 0 0 0 .781-.408l10.946-15.8a.57.57 0 0 0-.468-.895z" fill="#253B80"/>
-                      <path d="M94.992 6.749h-6.84a.95.95 0 0 0-.938.802l-2.766 17.537a.569.569 0 0 0 .562.658h3.51a.665.665 0 0 0 .656-.562l.785-4.971a.95.95 0 0 1 .938-.803h2.164c4.506 0 7.105-2.18 7.785-6.5.307-1.89.012-3.375-.873-4.415-.971-1.142-2.694-1.746-4.983-1.746zm.789 6.405c-.373 2.454-2.248 2.454-4.062 2.454h-1.031l.725-4.583a.568.568 0 0 1 .562-.481h.473c1.234 0 2.4 0 3.002.704.359.42.468 1.044.331 1.906zM115.434 13.075h-3.273a.567.567 0 0 0-.562.481l-.145.916-.23-.332c-.709-1.029-2.289-1.373-3.867-1.373-3.619 0-6.709 2.741-7.311 6.586-.312 1.918.131 3.752 1.219 5.031 1 1.176 2.426 1.666 4.125 1.666 2.916 0 4.533-1.875 4.533-1.875l-.146.91a.57.57 0 0 0 .564.66h2.949a.95.95 0 0 0 .938-.803l1.771-11.209a.571.571 0 0 0-.565-.658zm-4.565 6.374c-.314 1.871-1.801 3.127-3.695 3.127-.949 0-1.711-.305-2.199-.883-.484-.574-.666-1.391-.514-2.301.297-1.855 1.805-3.152 3.67-3.152.93 0 1.686.309 2.184.892.501.589.699 1.411.554 2.317zM119.295 7.23l-2.807 17.858a.569.569 0 0 0 .562.658h2.822c.469 0 .867-.34.939-.803l2.768-17.536a.57.57 0 0 0-.562-.659h-3.16a.571.571 0 0 0-.562.482z" fill="#179BD7"/>
-                      <path d="M7.266 29.154l.523-3.322-1.165-.027H1.061L4.927 1.292a.316.316 0 0 1 .314-.268h9.38c3.114 0 5.263.648 6.385 1.927.526.6.861 1.227 1.023 1.917.17.724.173 1.589.007 2.644l-.012.077v.676l.526.298a3.69 3.69 0 0 1 1.065.812c.45.513.741 1.165.864 1.938.127.795.085 1.741-.123 2.812-.24 1.232-.628 2.305-1.152 3.183a6.547 6.547 0 0 1-1.825 2c-.696.494-1.523.869-2.458 1.109-.906.236-1.939.355-3.072.355h-.73c-.522 0-1.029.188-1.427.525a2.21 2.21 0 0 0-.744 1.328l-.055.299-.924 5.855-.042.215c-.011.068-.03.102-.058.125a.155.155 0 0 1-.096.035H7.266z" fill="#253B80"/>
-                      <path d="M23.048 7.667c-.028.179-.06.362-.096.55-1.237 6.351-5.469 8.545-10.874 8.545H9.326c-.661 0-1.218.48-1.321 1.132L6.596 26.83l-.399 2.533a.704.704 0 0 0 .695.814h4.881c.578 0 1.069-.42 1.16-.99l.048-.248.919-5.832.059-.32c.09-.572.582-.992 1.16-.992h.73c4.729 0 8.431-1.92 9.513-7.476.452-2.321.218-4.259-.978-5.622a4.667 4.667 0 0 0-1.336-1.03z" fill="#179BD7"/>
-                      <path d="M21.754 7.151a9.757 9.757 0 0 0-1.203-.267 15.284 15.284 0 0 0-2.426-.177h-7.352a1.172 1.172 0 0 0-1.159.992L8.05 17.605l-.045.289a1.336 1.336 0 0 1 1.321-1.132h2.752c5.405 0 9.637-2.195 10.874-8.545.037-.188.068-.371.096-.55a6.594 6.594 0 0 0-1.017-.429 9.045 9.045 0 0 0-.277-.087z" fill="#222D65"/>
-                      <path d="M9.614 7.699a1.169 1.169 0 0 1 1.159-.991h7.352c.871 0 1.684.057 2.426.177a9.757 9.757 0 0 1 1.481.353c.365.121.704.264 1.017.429.368-2.347-.003-3.945-1.272-5.392C20.378.682 17.853 0 14.622 0h-9.38c-.66 0-1.223.48-1.325 1.133L.01 25.898a.806.806 0 0 0 .795.932h5.791l1.454-9.225 1.564-9.906z" fill="#253B80"/>
-                    </svg>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <Card className="cursor-pointer border-2 transition-colors hover:border-[#0B6E4F]" onClick={() => handleMethodSelect('wonyapay')}>
+                <CardContent className="space-y-4 p-5 text-center">
+                  <div className="grid grid-cols-4 gap-2">
+                    {[
+                      ['/logoairtel.png', 'Airtel Money'],
+                      ['/logompsa.png', 'M-Pesa'],
+                      ['/logo-orange.png', 'Orange Money'],
+                      ['/logoafricell.png', 'Africell Money'],
+                    ].map(([src, alt]) => (
+                      <div key={alt} className="flex min-h-12 items-center justify-center rounded-lg border bg-background px-2">
+                        <Image src={src} alt={alt} width={72} height={36} className="h-7 w-auto object-contain" />
+                      </div>
+                    ))}
                   </div>
                   <div>
-                    <h3 className="font-semibold text-lg">PayPal</h3>
-                    <p className="text-sm text-muted-foreground">Paiement par carte de crédit ou débit (Mastercard, Visa), Apple Pay et compte PayPal</p>
+                    <h3 className="font-semibold">Mobile Money direct</h3>
+                    <p className="text-sm text-muted-foreground">Dépôt opérateur via le connecteur existant.</p>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
 
+              <Card className="cursor-pointer border-2 transition-colors hover:border-[#0070BA]" onClick={() => handleMethodSelect('paypal')}>
+                <CardContent className="flex h-full flex-col items-center justify-center gap-4 p-5 text-center">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-[#0070BA]/10 text-[#0070BA]">
+                    <CreditCard className="h-7 w-7" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">PayPal</h3>
+                    <p className="text-sm text-muted-foreground">Paiement USD via PayPal et cartes compatibles.</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         )}
 
-        {/* Step 2: Payment Details with Amount */}
         {step === 'details' && (
           <Card>
             <CardHeader>
               <CardTitle>
-                {paymentMethod === 'wonyapay'
-                  ? 'Dépôt Mobile Money'
-                  : 'Paiement PayPal'}
+                {paymentMethod === 'maxicash'
+                  ? 'Dépôt eNkambaPay'
+                  : paymentMethod === 'wonyapay'
+                    ? 'Dépôt Mobile Money direct'
+                    : 'Paiement PayPal'}
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Formulaire WonyaPay avec montant et devise */}
-              {paymentMethod === 'wonyapay' && (
+            <CardContent className="space-y-5">
+              {paymentMethod === 'maxicash' && (
                 <>
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Devise</label>
-                    <select
-                      className="w-full rounded-md border bg-background p-2"
-                      value={wonyaDetails.currency}
-                      onChange={(e) => setWonyaDetails({ ...wonyaDetails, currency: e.target.value as 'CDF' | 'USD' })}
-                    >
-                      <option value="CDF">Franc Congolais (CDF)</option>
-                      <option value="USD">Dollar Américain (USD)</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">
-                      Montant ({wonyaDetails.currency})
-                    </label>
-                    <Input
-                      type="number"
-                      placeholder={`Entrez le montant en ${wonyaDetails.currency}`}
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      className="text-lg"
-                    />
-                    {wonyaDetails.currency === 'USD' && amount && parseFloat(amount) > 0 && (
-                      <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                        <p className="text-sm text-muted-foreground">Vous recevrez:</p>
-                        <p className="text-xl font-bold text-[#32BB78]">
-                          {isLoadingRate ? (
-                            'Calcul...'
-                          ) : (
-                            `${convertedAmount.toLocaleString('fr-FR')} CDF`
-                          )}
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label>Montant à payer (USD)</Label>
+                      <Input type="number" min="1" placeholder="Ex: 10" value={amount} onChange={(event) => setAmount(event.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Crédit portefeuille estimé</Label>
+                      <div className="rounded-md border bg-muted/40 px-3 py-2">
+                        <p className="text-lg font-bold text-[#32BB78]">
+                          {isLoadingRate ? 'Calcul...' : `${convertedAmount.toLocaleString('fr-FR')} CDF`}
                         </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Taux: 1 USD = {usdToCdfRate.toLocaleString('fr-FR')} CDF
-                        </p>
+                        <p className="text-xs text-muted-foreground">Taux: 1 USD = {usdToCdfRate.toLocaleString('fr-FR')} CDF</p>
                       </div>
-                    )}
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Numéro Mobile Money</label>
-                    <Input
-                      type="tel"
-                      placeholder="0997654321"
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
-                    />
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Format: 10 chiffres (ex: 0997654321)
-                    </p>
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2"><Phone className="h-4 w-4" />Téléphone</Label>
+                    <Input type="tel" placeholder="Ex: 0997654321" value={phoneNumber} onChange={(event) => setPhoneNumber(event.target.value)} />
                   </div>
 
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Motif (optionnel)</label>
-                    <Input
-                      type="text"
-                      placeholder="Dépôt portefeuille eNkamba"
-                      value={wonyaDetails.motif}
-                      onChange={(e) => setWonyaDetails({ ...wonyaDetails, motif: e.target.value })}
-                    />
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2"><Mail className="h-4 w-4" />Email</Label>
+                    <Input type="email" placeholder="client@exemple.com" value={email} onChange={(event) => setEmail(event.target.value)} />
                   </div>
 
-                  <div className="rounded-lg border border-[#0B6E4F]/20 bg-[#0B6E4F]/5 p-4 text-sm">
-                    <p className="mb-2 font-semibold text-[#0B6E4F]">Mobile Money RDC</p>
-                    <p className="text-muted-foreground">
-                      Dépôt via Airtel, M-Pesa, Orange ou Africell. La transaction peut rester en attente jusqu&apos;à confirmation du réseau.
-                    </p>
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+                    Le paiement sécurisé s’ouvrira en plein écran pour finaliser votre dépôt eNkambaPay.
                   </div>
                 </>
               )}
 
-              {/* Formulaire PayPal */}
-              {paymentMethod === 'paypal' && (
+              {paymentMethod === 'wonyapay' && (
                 <>
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Montant (USD)</label>
-                    <Input
-                      type="number"
-                      placeholder="Entrez le montant en USD"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      className="text-lg"
-                    />
-                    {amount && parseFloat(amount) > 0 && (
-                      <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                        <p className="text-sm text-muted-foreground">Vous recevrez environ:</p>
-                        <p className="text-xl font-bold text-[#32BB78]">
-                          {isLoadingRate ? (
-                            'Calcul...'
-                          ) : (
-                            `${convertedAmount.toLocaleString('fr-FR')} CDF`
-                          )}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Taux: 1 USD = {usdToCdfRate.toLocaleString('fr-FR')} CDF
-                        </p>
-                      </div>
-                    )}
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label>Devise</Label>
+                      <select
+                        className="w-full rounded-md border bg-background p-2"
+                        value={wonyaDetails.currency}
+                        onChange={(event) => setWonyaDetails({ ...wonyaDetails, currency: event.target.value as 'CDF' | 'USD' })}
+                      >
+                        <option value="CDF">Franc Congolais (CDF)</option>
+                        <option value="USD">Dollar Américain (USD)</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Montant ({wonyaDetails.currency})</Label>
+                      <Input type="number" value={amount} onChange={(event) => setAmount(event.target.value)} />
+                    </div>
                   </div>
-
-                  <div className="bg-[#0070BA]/10 border border-[#0070BA]/30 rounded-lg p-4">
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Vous serez redirigé vers PayPal pour finaliser votre paiement de manière sécurisée.
-                    </p>
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="text-green-600">✓</span>
-                      <span>Paiement 100% sécurisé</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="text-green-600">✓</span>
-                      <span>Protection des achats PayPal</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="text-green-600">✓</span>
-                      <span>Fonds disponibles immédiatement</span>
-                    </div>
+                  <div className="space-y-2">
+                    <Label>Numéro Mobile Money</Label>
+                    <Input type="tel" placeholder="0997654321" value={phoneNumber} onChange={(event) => setPhoneNumber(event.target.value)} />
                   </div>
                 </>
+              )}
+
+              {paymentMethod === 'paypal' && (
+                <div className="space-y-2">
+                  <Label>Montant (USD)</Label>
+                  <Input type="number" placeholder="Ex: 10" value={amount} onChange={(event) => setAmount(event.target.value)} />
+                </div>
               )}
 
               <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => setStep('method')}
-                  className="flex-1"
-                >
+                <Button variant="outline" onClick={() => setStep('method')} className="flex-1">
                   Retour
                 </Button>
-                <Button
-                  onClick={handleDetailsSubmit}
-                  className="flex-1 bg-[#32BB78] hover:bg-[#2a9d63]"
-                >
+                <Button onClick={handleDetailsSubmit} className="flex-1 bg-[#32BB78] hover:bg-[#2a9d63]">
                   Continuer
                 </Button>
               </div>
@@ -423,113 +336,70 @@ export default function AddFundsPage() {
           </Card>
         )}
 
-        {/* Step 4: Confirmation */}
         {step === 'confirm' && (
           <Card>
             <CardHeader>
-              <CardTitle>Confirmer l'ajout de fonds</CardTitle>
+              <CardTitle>Confirmer le dépôt</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="bg-muted p-4 rounded-lg space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Montant</span>
-                  <span className="font-bold text-lg">
-                    {paymentMethod === 'paypal' 
-                      ? `$${parseFloat(amount).toLocaleString('en-US')} USD`
-                      : paymentMethod === 'wonyapay'
-                      ? `${parseFloat(amount).toLocaleString('fr-FR')} ${wonyaDetails.currency}`
-                      : `${parseFloat(amount).toLocaleString('fr-FR')} CDF`}
-                  </span>
-                </div>
-                {paymentMethod === 'paypal' && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Équivalent CDF</span>
-                    <span className="font-bold text-[#32BB78]">
-                      {(parseFloat(amount) * usdToCdfRate).toLocaleString('fr-FR')} CDF
-                    </span>
-                  </div>
-                )}
-                <div className="flex justify-between">
+              <div className="space-y-3 rounded-lg bg-muted p-4">
+                <div className="flex justify-between gap-4">
                   <span className="text-muted-foreground">Méthode</span>
-                  <span className="font-semibold">
-                    {paymentMethod === 'paypal'
-                      ? 'PayPal'
-                      : paymentMethod === 'wonyapay'
-                      ? 'Mobile Money'
-                      : '—'}
+                  <span className="text-right font-semibold">
+                    {paymentMethod === 'maxicash' ? 'eNkambaPay' : paymentMethod === 'wonyapay' ? 'Mobile Money direct' : 'PayPal'}
                   </span>
                 </div>
-                {paymentMethod === 'wonyapay' && (
-                  <div className="flex justify-between">
+                <div className="flex justify-between gap-4">
+                  <span className="text-muted-foreground">Montant payé</span>
+                  <span className="text-right font-bold">
+                    {paymentMethod === 'wonyapay'
+                      ? `${numericAmount.toLocaleString('fr-FR')} ${wonyaDetails.currency}`
+                      : `${numericAmount.toLocaleString('en-US')} USD`}
+                  </span>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <span className="text-muted-foreground">Crédit portefeuille</span>
+                  <span className="text-right font-bold text-[#32BB78]">{convertedAmount.toLocaleString('fr-FR')} CDF</span>
+                </div>
+                {phoneNumber && (
+                  <div className="flex justify-between gap-4">
                     <span className="text-muted-foreground">Téléphone</span>
-                    <span className="font-semibold">{phoneNumber}</span>
+                    <span className="text-right font-semibold">{phoneNumber}</span>
                   </div>
                 )}
-                {paymentMethod === 'wonyapay' && (
-                  <>
-                    {wonyaDetails.currency === 'USD' && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Crédit portefeuille</span>
-                        <span className="font-bold text-[#32BB78]">
-                          {convertedAmount.toLocaleString('fr-FR')} CDF
-                        </span>
-                      </div>
-                    )}
-                    {wonyaDetails.currency === 'USD' && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Taux de change</span>
-                        <span className="font-semibold">
-                          1 USD = {usdToCdfRate.toLocaleString('fr-FR')} CDF
-                        </span>
-                      </div>
-                    )}
-                    {wonyaDetails.motif && (
-                      <div className="flex justify-between gap-4">
-                        <span className="text-muted-foreground">Motif</span>
-                        <span className="max-w-[220px] text-right font-semibold">{wonyaDetails.motif}</span>
-                      </div>
-                    )}
-                  </>
+                {email && (
+                  <div className="flex justify-between gap-4">
+                    <span className="text-muted-foreground">Email</span>
+                    <span className="max-w-[220px] break-all text-right font-semibold">{email}</span>
+                  </div>
                 )}
               </div>
 
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
+              <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+                <div className="flex items-start gap-2">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
                   <p>
-                    ✓ Vos données sont sécurisées et chiffrées<br />
-                  {paymentMethod === 'wonyapay' ? (
-                    <>
-                      ✓ Dépôt initié via Mobile Money sécurisé<br />
-                      {wonyaDetails.currency === 'USD' && '✓ Conversion automatique USD → CDF'}<br />
-                      ✓ Crédit portefeuille après confirmation opérateur
-                    </>
-                  ) : (
-                    <>
-                      ✓ Aucun frais supplémentaire<br />
-                      ✓ Fonds disponibles immédiatement
-                    </>
-                  )}
-                </p>
+                    {paymentMethod === 'maxicash'
+                      ? 'Le paiement sera ouvert dans un environnement sécurisé eNkambaPay.'
+                      : paymentMethod === 'wonyapay'
+                        ? 'Le dépôt sera initié et confirmé par l’opérateur Mobile Money.'
+                        : 'Vous serez redirigé vers PayPal pour finaliser le paiement.'}
+                  </p>
+                </div>
               </div>
 
               <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => setStep('details')}
-                  className="flex-1"
-                  disabled={isLoading}
-                >
+                <Button variant="outline" onClick={() => setStep('details')} className="flex-1" disabled={busy}>
                   Retour
                 </Button>
-                <Button
-                  onClick={handleConfirm}
-                  className="flex-1 bg-[#32BB78] hover:bg-[#2a9d63]"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
+                <Button onClick={handleConfirm} className="flex-1 bg-[#32BB78] hover:bg-[#2a9d63]" disabled={busy}>
+                  {busy ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Traitement...
                     </>
+                  ) : paymentMethod === 'maxicash' ? (
+                    'Continuer'
                   ) : (
                     'Confirmer'
                   )}
