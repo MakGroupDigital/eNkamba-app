@@ -13,7 +13,7 @@ import { useWalletTransactions } from '@/hooks/useWalletTransactions';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 
-type PaymentMethod = 'maxicash' | 'wonyapay' | 'paypal';
+type PaymentMethod = 'enkambapay' | 'wonyapay' | 'paypal';
 
 export default function AddFundsPage() {
   const router = useRouter();
@@ -37,7 +37,7 @@ export default function AddFundsPage() {
   const numericAmount = Number(amount || 0);
   const usesUsdRate =
     paymentMethod === 'paypal' ||
-    paymentMethod === 'maxicash' ||
+    paymentMethod === 'enkambapay' ||
     (paymentMethod === 'wonyapay' && wonyaDetails.currency === 'USD');
 
   useEffect(() => {
@@ -72,10 +72,10 @@ export default function AddFundsPage() {
   const validateDetails = () => {
     if (!paymentMethod) return 'Méthode de paiement manquante';
     if (!numericAmount || numericAmount <= 0) return 'Veuillez entrer un montant valide';
-    if ((paymentMethod === 'maxicash' || paymentMethod === 'wonyapay') && !phoneNumber.trim()) {
+    if ((paymentMethod === 'enkambapay' || paymentMethod === 'wonyapay') && !phoneNumber.trim()) {
       return 'Veuillez entrer un numéro de téléphone';
     }
-    if (paymentMethod === 'maxicash' && !email.trim()) {
+    if (paymentMethod === 'enkambapay' && !email.trim()) {
       return 'Veuillez entrer un email';
     }
     return null;
@@ -105,6 +105,7 @@ export default function AddFundsPage() {
       amount,
       telephone: phoneNumber.trim(),
       email: email.trim(),
+      brand: 'enkambapay',
     };
 
     Object.entries(fields).forEach(([name, value]) => {
@@ -123,7 +124,7 @@ export default function AddFundsPage() {
     if (!user || !paymentMethod) return;
 
     try {
-      if (paymentMethod === 'maxicash') {
+      if (paymentMethod === 'enkambapay') {
         submitMaxiCashFormPost();
         return;
       }
@@ -191,7 +192,7 @@ export default function AddFundsPage() {
           <div className="space-y-4">
             <Card
               className="cursor-pointer border-2 border-[#32BB78]/40 bg-[#32BB78]/5 transition-colors hover:border-[#0B6E4F]"
-              onClick={() => handleMethodSelect('maxicash')}
+              onClick={() => handleMethodSelect('enkambapay')}
             >
               <CardContent className="p-5">
                 <div className="flex items-start gap-4">
@@ -249,7 +250,7 @@ export default function AddFundsPage() {
           <Card>
             <CardHeader>
               <CardTitle>
-                {paymentMethod === 'maxicash'
+                {paymentMethod === 'enkambapay'
                   ? 'Dépôt eNkambaPay'
                   : paymentMethod === 'wonyapay'
                     ? 'Dépôt Mobile Money direct'
@@ -257,7 +258,7 @@ export default function AddFundsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-5">
-              {paymentMethod === 'maxicash' && (
+              {paymentMethod === 'enkambapay' && (
                 <>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
@@ -346,7 +347,11 @@ export default function AddFundsPage() {
                 <div className="flex justify-between gap-4">
                   <span className="text-muted-foreground">Méthode</span>
                   <span className="text-right font-semibold">
-                    {paymentMethod === 'maxicash' ? 'eNkambaPay' : paymentMethod === 'wonyapay' ? 'Mobile Money direct' : 'PayPal'}
+                    {paymentMethod === 'enkambapay'
+                      ? 'eNkambaPay'
+                      : paymentMethod === 'wonyapay'
+                        ? 'Mobile Money direct'
+                        : 'PayPal'}
                   </span>
                 </div>
                 <div className="flex justify-between gap-4">
@@ -379,7 +384,7 @@ export default function AddFundsPage() {
                 <div className="flex items-start gap-2">
                   <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
                   <p>
-                    {paymentMethod === 'maxicash'
+                    {paymentMethod === 'enkambapay'
                       ? 'Le paiement sera ouvert dans un environnement sécurisé eNkambaPay.'
                       : paymentMethod === 'wonyapay'
                         ? 'Le dépôt sera initié et confirmé par l’opérateur Mobile Money.'
@@ -398,7 +403,7 @@ export default function AddFundsPage() {
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Traitement...
                     </>
-                  ) : paymentMethod === 'maxicash' ? (
+                  ) : paymentMethod === 'enkambapay' ? (
                     'Continuer'
                   ) : (
                     'Confirmer'

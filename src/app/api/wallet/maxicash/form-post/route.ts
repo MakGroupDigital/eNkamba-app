@@ -41,9 +41,12 @@ export async function POST(request: NextRequest) {
     const amount = Number(formData.get('amount') || 0);
     const telephone = String(formData.get('telephone') || '');
     const email = String(formData.get('email') || '');
+    const brand = String(formData.get('brand') || 'enkambapay') === 'maxicash' ? 'maxicash' : 'enkambapay';
+    const isMaxiCashBrand = brand === 'maxicash';
+    const displayName = isMaxiCashBrand ? 'MaxiCash' : 'eNkambaPay';
 
     if (!userId || !amount || amount <= 0) {
-      return new NextResponse('Paramètres eNkambaPay invalides.', { status: 400 });
+      return new NextResponse(`Paramètres ${displayName} invalides.`, { status: 400 });
     }
 
     const config = getMaxiCashConfig();
@@ -64,6 +67,7 @@ export async function POST(request: NextRequest) {
     const amountInCdf = (await convertUsdToCdf(amount)).cdfAmount;
     const baseUrl = getBaseUrl(request);
     const returnBase = `${baseUrl}/dashboard/add-funds/maxicash/return`;
+    const returnParams = `userId=${encodeURIComponent(userId)}&transactionId=${encodeURIComponent(transactionId)}&brand=${encodeURIComponent(brand)}`;
     const notifyUrl = `${baseUrl}/api/wallet/maxicash/notify?userId=${encodeURIComponent(userId)}&transactionId=${encodeURIComponent(transactionId)}`;
 
     const transactionRef = doc(collection(userRef, 'transactions'), transactionId);
@@ -73,11 +77,11 @@ export async function POST(request: NextRequest) {
       amount: amountInCdf,
       originalAmount: amount,
       originalCurrency: 'MaxiDollar',
-      paymentMethod: 'maxicash',
+      paymentMethod: isMaxiCashBrand ? 'maxicash_gateway' : 'maxicash',
       status: 'pending',
       previousBalance: currentBalance,
       newBalance: currentBalance,
-      description: `Dépôt eNkambaPay initié (${amount} USD)`,
+      description: `Dépôt ${displayName} initié (${amount} USD)`,
       timestamp: new Date(),
       createdAt: new Date().toISOString(),
       phoneNumber: telephone || null,
@@ -87,6 +91,7 @@ export async function POST(request: NextRequest) {
         environment: config.environment,
         reference,
         formPostUrl: config.payEntryPostUrl,
+        brand,
       },
     });
 
@@ -100,9 +105,9 @@ export async function POST(request: NextRequest) {
       MerchantPassword: config.merchantPassword,
       Language: 'Fr',
       Reference: reference,
-      accepturl: `${returnBase}?status=success&userId=${encodeURIComponent(userId)}&transactionId=${encodeURIComponent(transactionId)}`,
-      cancelurl: `${returnBase}?status=cancelled&userId=${encodeURIComponent(userId)}&transactionId=${encodeURIComponent(transactionId)}`,
-      declineurl: `${returnBase}?status=failed&userId=${encodeURIComponent(userId)}&transactionId=${encodeURIComponent(transactionId)}`,
+      accepturl: `${returnBase}?status=success&${returnParams}`,
+      cancelurl: `${returnBase}?status=cancelled&${returnParams}`,
+      declineurl: `${returnBase}?status=failed&${returnParams}`,
       notifyurl: notifyUrl,
     };
 
@@ -137,10 +142,14 @@ export async function POST(request: NextRequest) {
         responseError: payEntryWebData?.ResponseError,
         responseDesc: payEntryWebData?.ResponseDesc,
       });
-      return new NextResponse(payEntryWebData?.ResponseError || 'eNkambaPay n’a pas pu initialiser le paiement.', { status: 502 });
+      return new NextResponse(payEntryWebData?.ResponseError || `${displayName} n’a pas pu initialiser le paiement.`, { status: 502 });
     }
 
     const gatewayUrl = `${config.gatewayBaseUrl.replace(/\/$/, '')}/payentryweb?logid=${encodeURIComponent(logId)}`;
+
+    if (isMaxiCashBrand) {
+      return NextResponse.redirect(gatewayUrl, 303);
+    }
 
     return new NextResponse(
       `<!doctype html>
@@ -148,7 +157,7 @@ export async function POST(request: NextRequest) {
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Ouverture eNkambaPay</title>
+    <title>Ouverture ${escapeHtml(displayName)}</title>
     <style>
       body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:0;min-height:100vh;display:grid;place-items:center;background:#f7fbf9;color:#0B6E4F}
       .box{width:min(420px,calc(100vw - 32px));border:1px solid #d7eee4;border-radius:12px;background:#fff;padding:24px;text-align:center;box-shadow:0 12px 30px rgba(11,110,79,.08)}
@@ -163,8 +172,8 @@ export async function POST(request: NextRequest) {
   <body>
     <div class="box">
       <div class="brand">
-        <img src="/enkamba-logo.png" alt="">
-        <strong>eNkambaPay</strong>
+        ${isMaxiCashBrand ? '' : '<img src="/enkamba-logo.png" alt="">'}
+        <strong>${escapeHtml(displayName)}</strong>
       </div>
       <div class="spinner"></div>
       <h1>Ouverture du paiement</h1>
@@ -179,6 +188,6 @@ export async function POST(request: NextRequest) {
     );
   } catch (error: any) {
     console.error('Erreur Form Post MaxiCash:', error);
-    return new NextResponse(error?.message || 'Erreur eNkambaPay', { status: 500 });
+    return new NextResponse(error?.message || 'Erreur paiement', { status: 500 });
   }
 }

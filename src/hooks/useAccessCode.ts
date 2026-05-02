@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 
 const ACCESS_CODE_SESSION_KEY = 'enkamba_access_verified';
-const CORRECT_CODE = process.env.NEXT_PUBLIC_ACCESS_CODE || 'eNkamba2000';
+const CORRECT_CODE = process.env.NEXT_PUBLIC_ACCESS_CODE || 'Martin2026';
 
 export function useAccessCode() {
   const [isVerified, setIsVerified] = useState(false);

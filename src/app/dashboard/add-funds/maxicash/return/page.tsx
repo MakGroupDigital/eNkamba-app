@@ -15,6 +15,8 @@ function PaymentReturnContent() {
   const status = params?.get('status') || '';
   const userId = params?.get('userId') || '';
   const transactionId = params?.get('transactionId') || '';
+  const brand = params?.get('brand') === 'maxicash' ? 'maxicash' : 'enkambapay';
+  const displayName = brand === 'maxicash' ? 'MaxiCash' : 'eNkambaPay';
 
   useEffect(() => {
     const finalize = async () => {
@@ -32,7 +34,7 @@ function PaymentReturnContent() {
 
         const response = await fetch(`/api/wallet/maxicash/notify?${query.toString()}`);
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Validation eNkambaPay impossible');
+        if (!response.ok) throw new Error(data.error || `Validation ${displayName} impossible`);
         setState(data.transactionStatus === 'completed' ? 'completed' : data.transactionStatus === 'failed' ? 'failed' : 'pending');
       } catch {
         setState('failed');
@@ -40,7 +42,7 @@ function PaymentReturnContent() {
     };
 
     finalize();
-  }, [params, status, transactionId, userId]);
+  }, [displayName, params, status, transactionId, userId]);
 
   const icon =
     state === 'loading' ? <Loader2 className="h-14 w-14 animate-spin text-[#32BB78]" /> :
@@ -52,17 +54,17 @@ function PaymentReturnContent() {
       <Card className="w-full max-w-md">
         <CardContent className="space-y-6 p-6 text-center">
           <div className="flex items-center justify-center gap-2">
-            <Image src="/enkamba-logo.png" alt="" width={34} height={34} className="h-9 w-9 object-contain" />
-            <span className="text-lg font-semibold text-[#0B6E4F]">eNkambaPay</span>
+            {brand === 'enkambapay' && <Image src="/enkamba-logo.png" alt="" width={34} height={34} className="h-9 w-9 object-contain" />}
+            <span className="text-lg font-semibold text-[#0B6E4F]">{displayName}</span>
           </div>
           <div className="flex justify-center">{icon}</div>
           <div>
             <h1 className="text-2xl font-bold">
-              {state === 'loading' ? 'Validation eNkambaPay' : state === 'completed' ? 'Dépôt confirmé' : 'Dépôt non confirmé'}
+              {state === 'loading' ? `Validation ${displayName}` : state === 'completed' ? 'Dépôt confirmé' : 'Dépôt non confirmé'}
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">
               {state === 'loading'
-                ? 'Nous confirmons votre paiement eNkambaPay.'
+                ? `Nous confirmons votre paiement ${displayName}.`
                 : state === 'completed'
                   ? 'Votre portefeuille a été crédité.'
                   : 'Le paiement a été annulé, refusé ou reste non confirmé.'}

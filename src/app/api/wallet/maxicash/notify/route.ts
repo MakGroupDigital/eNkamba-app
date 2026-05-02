@@ -45,7 +45,7 @@ async function handleNotification(request: NextRequest) {
   const status = extractMaxiCashStatus(payload, explicitStatus);
 
   if (!userId || !transactionId) {
-    return NextResponse.json({ error: 'Paramètres eNkambaPay manquants.' }, { status: 400 });
+    return NextResponse.json({ error: 'Paramètres de paiement manquants.' }, { status: 400 });
   }
 
   const app = getFirebaseApp();
@@ -55,9 +55,10 @@ async function handleNotification(request: NextRequest) {
 
   const result = await runTransaction(db, async (tx) => {
     const [userSnap, txSnap] = await Promise.all([tx.get(userRef), tx.get(transactionRef)]);
-    if (!txSnap.exists()) throw new Error('Transaction eNkambaPay introuvable.');
+    if (!txSnap.exists()) throw new Error('Transaction de paiement introuvable.');
 
     const transaction = txSnap.data() as any;
+    const displayName = transaction.maxicash?.brand === 'maxicash' ? 'MaxiCash' : 'eNkambaPay';
     const currentBalance = Number(userSnap.data()?.walletBalance || 0);
     const amount = Number(transaction.amount || 0);
     const updateData = {
@@ -78,7 +79,7 @@ async function handleNotification(request: NextRequest) {
         status: 'completed',
         newBalance,
         completedAt: new Date().toISOString(),
-        description: 'Dépôt eNkambaPay confirmé',
+        description: `Dépôt ${displayName} confirmé`,
       });
       return { transactionStatus: 'completed', newBalance };
     }
@@ -88,7 +89,7 @@ async function handleNotification(request: NextRequest) {
         ...updateData,
         status: 'failed',
         failedAt: new Date().toISOString(),
-        description: 'Dépôt eNkambaPay refusé ou annulé',
+        description: `Dépôt ${displayName} refusé ou annulé`,
       });
       return { transactionStatus: 'failed', newBalance: currentBalance };
     }

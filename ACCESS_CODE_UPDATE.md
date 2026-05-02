@@ -1,12 +1,12 @@
 # Mise à Jour du Code d'Accès - eNkamba
 
-## Date: 20 Avril 2026
+## Date: 2 Mai 2026
 
 ## Changements Effectués
 
 ### 1. Nouveau Code d'Accès
-- **Ancien code**: `eNkamba2026`
-- **Nouveau code**: `eNkamba2000`
+- **Ancien code**: `eNkamba2000`
+- **Nouveau code**: `Martin2026`
 
 ### 2. Vérification Obligatoire à Chaque Ouverture
 
@@ -28,8 +28,8 @@
 - const ACCESS_CODE_STORAGE_KEY = 'enkamba_access_verified';
 + const ACCESS_CODE_SESSION_KEY = 'enkamba_access_verified';
 
-- const CORRECT_CODE = process.env.NEXT_PUBLIC_ACCESS_CODE || 'eNkamba2026';
-+ const CORRECT_CODE = process.env.NEXT_PUBLIC_ACCESS_CODE || 'eNkamba2000';
+- const CORRECT_CODE = process.env.NEXT_PUBLIC_ACCESS_CODE || 'eNkamba2000';
++ const CORRECT_CODE = process.env.NEXT_PUBLIC_ACCESS_CODE || 'Martin2026';
 
 // Utilisation de sessionStorage au lieu de localStorage
 - localStorage.getItem(ACCESS_CODE_STORAGE_KEY)
@@ -43,16 +43,16 @@
 ```
 
 #### Fichiers d'environnement
-- `.env` - Mis à jour avec `eNkamba2000`
-- `.env.example` - Mis à jour avec `eNkamba2000`
-- `.env.production` - Mis à jour avec `eNkamba2000`
+- `.env` - Mis à jour avec `Martin2026`
+- `.env.example` - Mis à jour avec `Martin2026`
+- `.env.production` - Mis à jour avec `Martin2026`
 
 ## Comportement
 
 ### Scénario 1: Première Visite
 1. L'utilisateur ouvre l'application
 2. Un écran de vérification s'affiche
-3. L'utilisateur entre le code `eNkamba2000`
+3. L'utilisateur entre le code `Martin2026`
 4. Accès accordé pour cette session
 
 ### Scénario 2: Navigation dans l'App
@@ -107,15 +107,15 @@ Le hook vérifie maintenant `sessionStorage` au lieu de `localStorage`, donc:
 ### Première Connexion Après Mise à Jour
 1. L'utilisateur ouvre l'app
 2. Même s'il avait le code en localStorage, il devra le rentrer
-3. Nouveau code: `eNkamba2000`
+3. Nouveau code: `Martin2026`
 
 ## Tests à Effectuer
 
 ### Test 1: Nouveau Code
 - [ ] Ouvrir l'application
-- [ ] Entrer `eNkamba2000`
+- [ ] Entrer `Martin2026`
 - [ ] Vérifier que l'accès est accordé
-- [ ] Entrer `eNkamba2026` (ancien code)
+- [ ] Entrer `eNkamba2000` (ancien code)
 - [ ] Vérifier que l'accès est refusé
 
 ### Test 2: Persistance Session
@@ -159,10 +159,10 @@ Le hook vérifie maintenant `sessionStorage` au lieu de `localStorage`, donc:
 ### Variables d'Environnement
 ```bash
 # Development
-NEXT_PUBLIC_ACCESS_CODE=eNkamba2000
+NEXT_PUBLIC_ACCESS_CODE=Martin2026
 
 # Production
-NEXT_PUBLIC_ACCESS_CODE=eNkamba2000
+NEXT_PUBLIC_ACCESS_CODE=Martin2026
 ```
 
 ## Déploiement
@@ -178,7 +178,7 @@ NEXT_PUBLIC_ACCESS_CODE=eNkamba2000
 ### Commandes Git
 ```bash
 git add src/hooks/useAccessCode.ts .env.example .env.production
-git commit -m "security: update access code to eNkamba2000 and enforce per-session verification"
+git commit -m "security: update access code to Martin2026"
 git push origin main
 ```
 
@@ -190,7 +190,7 @@ git push origin main
 
 Le code d'accès de l'application a été mis à jour pour des raisons de sécurité.
 
-Nouveau code: eNkamba2000
+Nouveau code: Martin2026
 
 Important:
 - Vous devrez entrer ce code à chaque ouverture de l'application
@@ -202,7 +202,7 @@ Merci de votre compréhension.
 
 ## Résumé
 
-✅ **Code mis à jour**: `eNkamba2026` → `eNkamba2000`
+✅ **Code mis à jour**: `eNkamba2000` → `Martin2026`
 ✅ **Vérification obligatoire**: À chaque nouvelle session
 ✅ **Stockage**: localStorage → sessionStorage
 ✅ **Sécurité**: Améliorée
