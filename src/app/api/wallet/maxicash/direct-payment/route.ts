@@ -210,6 +210,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: result.transactionStatus !== 'failed',
+      error: result.transactionStatus === 'failed'
+        ? data?.ResponseError || data?.ResponseDesc || 'Paiement eNkambaPay refusé.'
+        : '',
       transactionId,
       reference,
       providerTransactionId,

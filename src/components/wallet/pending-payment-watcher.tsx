@@ -72,7 +72,7 @@ export function PendingPaymentWatcher() {
 
   const handleRetry = () => {
     closeNotification();
-    router.push("/dashboard/add-funds");
+    router.push(activeNotification?.tx.paymentMethod === "enkambapay" ? "/dashboard/wallet" : "/dashboard/add-funds");
   };
 
   return (

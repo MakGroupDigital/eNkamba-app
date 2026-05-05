@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowLeft, CheckCircle2, CreditCard, Loader2, Mail, Phone } from 'lucide-react';
+import { AlertCircle, ArrowLeft, CheckCircle2, CreditCard, Loader2, Mail, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,7 @@ import { useAuth } from '@/hooks/useAuth';
 
 type PaymentMethod = 'enkambapay' | 'wonyapay' | 'paypal';
 type EnkambaPayPartner = 'maxicash' | 'airtel' | 'mpesa' | 'orange' | 'africell';
+type PaymentError = { title: string; message: string; details?: string };
 
 const ENKAMBAPAY_PARTNERS: Array<{ id: EnkambaPayPartner; label: string; logo?: string; payType: number }> = [
   { id: 'airtel', label: 'Airtel Money', logo: '/logoairtel.png', payType: 1 },
@@ -43,6 +44,7 @@ export default function AddFundsPage() {
   const [usdToCdfRate, setUsdToCdfRate] = useState<number>(2800);
   const [isLoadingRate, setIsLoadingRate] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentError, setPaymentError] = useState<PaymentError | null>(null);
 
   const numericAmount = Number(amount || 0);
   const usesUsdRate =
@@ -75,6 +77,7 @@ export default function AddFundsPage() {
   }, [numericAmount, usdToCdfRate, usesUsdRate]);
 
   const handleMethodSelect = (method: PaymentMethod) => {
+    setPaymentError(null);
     setPaymentMethod(method);
     setStep('details');
   };
@@ -91,11 +94,29 @@ export default function AddFundsPage() {
   const handleDetailsSubmit = () => {
     const validationError = validateDetails();
     if (validationError) {
+      setPaymentError({ title: 'Informations incomplètes', message: validationError });
       toast({ variant: 'destructive', title: 'Erreur', description: validationError });
       return;
     }
 
+    setPaymentError(null);
     setStep('confirm');
+  };
+
+  const buildEnkambaPayError = (result: any): PaymentError => {
+    const provider = result?.providerResponse || {};
+    const message =
+      provider.ResponseError ||
+      provider.ResponseDesc ||
+      result?.error ||
+      'Le paiement eNkambaPay n’a pas pu être initié.';
+    const details = [
+      provider.ResponseStatus ? `Statut: ${provider.ResponseStatus}` : '',
+      provider.ResponseData ? `Réponse: ${provider.ResponseData}` : '',
+      result?.reference ? `Référence: ${result.reference}` : '',
+    ].filter(Boolean).join(' · ');
+
+    return { title: 'Paiement non initié', message, details: details || undefined };
   };
 
   const submitEnkambaPayDirectPayment = async () => {
@@ -116,12 +137,9 @@ export default function AddFundsPage() {
     const result = await response.json().catch(() => null);
 
     if (!response.ok || result?.success === false || result?.transactionStatus === 'failed') {
-      throw new Error(
-        result?.providerResponse?.ResponseError ||
-        result?.providerResponse?.ResponseDesc ||
-        result?.error ||
-        'Paiement eNkambaPay impossible'
-      );
+      const error = buildEnkambaPayError(result);
+      setPaymentError(error);
+      throw new Error(error.message);
     }
 
     toast({
@@ -142,6 +160,7 @@ export default function AddFundsPage() {
     if (!user || !paymentMethod) return;
 
     try {
+      setPaymentError(null);
       if (paymentMethod === 'enkambapay') {
         await submitEnkambaPayDirectPayment();
         return;
@@ -178,10 +197,9 @@ export default function AddFundsPage() {
 
       router.push('/dashboard/wallet');
     } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Erreur',
-        description: error.message || 'Erreur lors de l’ajout de fonds',
+      setPaymentError((current) => current || {
+        title: 'Erreur de dépôt',
+        message: error.message || 'Erreur lors de l’ajout de fonds',
       });
       setIsProcessing(false);
     }
@@ -205,6 +223,19 @@ export default function AddFundsPage() {
             <p className="text-sm text-muted-foreground">Choisissez une méthode de dépôt.</p>
           </div>
         </header>
+
+        {paymentError && (
+          <Card className="border-red-200 bg-red-50">
+            <CardContent className="flex gap-3 p-4 text-red-900">
+              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
+              <div className="space-y-1">
+                <p className="font-semibold">{paymentError.title}</p>
+                <p className="text-sm">{paymentError.message}</p>
+                {paymentError.details && <p className="text-xs text-red-700">{paymentError.details}</p>}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {step === 'method' && (
           <div className="space-y-4">
