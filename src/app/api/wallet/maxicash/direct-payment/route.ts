@@ -32,7 +32,6 @@ const PARTNER_LABELS: Record<MaxiCashPartner, string> = {
 };
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 420;
 
 function normalizeCongolesePhone(value: string) {
   const digits = value.replace(/\D/g, '');
