@@ -14,6 +14,15 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 
 type PaymentMethod = 'enkambapay' | 'wonyapay' | 'paypal';
+type EnkambaPayPartner = 'maxicash' | 'airtel' | 'mpesa' | 'orange' | 'africell';
+
+const ENKAMBAPAY_PARTNERS: Array<{ id: EnkambaPayPartner; label: string; logo?: string; payType: number }> = [
+  { id: 'airtel', label: 'Airtel Money', logo: '/logoairtel.png', payType: 1 },
+  { id: 'mpesa', label: 'M-Pesa', logo: '/logompsa.png', payType: 2 },
+  { id: 'orange', label: 'Orange Money', logo: '/logo-orange.png', payType: 3 },
+  { id: 'africell', label: 'Africell Money', logo: '/logoafricell.png', payType: 4 },
+  { id: 'maxicash', label: 'Portefeuille partenaire', payType: 0 },
+];
 
 export default function AddFundsPage() {
   const router = useRouter();
@@ -26,6 +35,7 @@ export default function AddFundsPage() {
   const [amount, setAmount] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [email, setEmail] = useState('');
+  const [enkambaPayPartner, setEnkambaPayPartner] = useState<EnkambaPayPartner>('airtel');
   const [wonyaDetails, setWonyaDetails] = useState({
     currency: 'CDF' as 'CDF' | 'USD',
     motif: '',
@@ -75,9 +85,6 @@ export default function AddFundsPage() {
     if ((paymentMethod === 'enkambapay' || paymentMethod === 'wonyapay') && !phoneNumber.trim()) {
       return 'Veuillez entrer un numéro de téléphone';
     }
-    if (paymentMethod === 'enkambapay' && !email.trim()) {
-      return 'Veuillez entrer un email';
-    }
     return null;
   };
 
@@ -91,33 +98,44 @@ export default function AddFundsPage() {
     setStep('confirm');
   };
 
-  const submitMaxiCashFormPost = () => {
+  const submitEnkambaPayDirectPayment = async () => {
     if (!user) throw new Error('Utilisateur non authentifié');
 
     setIsProcessing(true);
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = '/api/wallet/maxicash/form-post';
-    form.style.display = 'none';
+    const response = await fetch('/api/wallet/maxicash/direct-payment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: user.uid,
+        amount: numericAmount,
+        telephone: phoneNumber.trim(),
+        email: email.trim(),
+        partner: enkambaPayPartner,
+      }),
+    });
+    const result = await response.json().catch(() => null);
 
-    const fields: Record<string, string> = {
-      userId: user.uid,
-      amount,
-      telephone: phoneNumber.trim(),
-      email: email.trim(),
-      brand: 'enkambapay',
-    };
+    if (!response.ok || result?.success === false || result?.transactionStatus === 'failed') {
+      throw new Error(
+        result?.providerResponse?.ResponseError ||
+        result?.providerResponse?.ResponseDesc ||
+        result?.error ||
+        'Paiement eNkambaPay impossible'
+      );
+    }
 
-    Object.entries(fields).forEach(([name, value]) => {
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = name;
-      input.value = value;
-      form.appendChild(input);
+    toast({
+      title: result.transactionStatus === 'completed' ? 'Dépôt confirmé' : 'Paiement initié',
+      description:
+        result.transactionStatus === 'completed'
+          ? 'Votre portefeuille a été crédité.'
+          : result.providerResponse?.ResponseDesc || result.providerResponse?.ResponseData || 'Confirmez le paiement sur votre téléphone. Le dépôt sera finalisé après confirmation.',
+      className: result.transactionStatus === 'completed'
+        ? 'bg-green-600 text-white border-none'
+        : 'bg-amber-600 text-white border-none',
     });
 
-    document.body.appendChild(form);
-    form.submit();
+    router.push('/dashboard/wallet');
   };
 
   const handleConfirm = async () => {
@@ -125,7 +143,7 @@ export default function AddFundsPage() {
 
     try {
       if (paymentMethod === 'enkambapay') {
-        submitMaxiCashFormPost();
+        await submitEnkambaPayDirectPayment();
         return;
       }
 
@@ -278,16 +296,46 @@ export default function AddFundsPage() {
 
                   <div className="space-y-2">
                     <Label className="flex items-center gap-2"><Phone className="h-4 w-4" />Téléphone</Label>
-                    <Input type="tel" placeholder="Ex: 0997654321" value={phoneNumber} onChange={(event) => setPhoneNumber(event.target.value)} />
+                    <Input type="tel" placeholder="Ex: 243997654321" value={phoneNumber} onChange={(event) => setPhoneNumber(event.target.value)} />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Partenaire de paiement</Label>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {ENKAMBAPAY_PARTNERS.map((partner) => (
+                        <button
+                          key={partner.id}
+                          type="button"
+                          onClick={() => setEnkambaPayPartner(partner.id)}
+                          className={`flex items-center gap-3 rounded-lg border p-3 text-left transition ${
+                            enkambaPayPartner === partner.id
+                              ? 'border-[#32BB78] bg-[#32BB78]/10 text-[#0B6E4F]'
+                              : 'border-border bg-background hover:border-[#0B6E4F]'
+                          }`}
+                        >
+                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border bg-white">
+                            {partner.logo ? (
+                              <Image src={partner.logo} alt={partner.label} width={64} height={32} className="h-6 w-auto object-contain" />
+                            ) : (
+                              <CreditCard className="h-5 w-5 text-[#0B6E4F]" />
+                            )}
+                          </span>
+                          <span>
+                            <span className="block font-semibold">{partner.label}</span>
+                            <span className="block text-xs text-muted-foreground">Confirmation mobile</span>
+                          </span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
                   <div className="space-y-2">
                     <Label className="flex items-center gap-2"><Mail className="h-4 w-4" />Email</Label>
-                    <Input type="email" placeholder="client@exemple.com" value={email} onChange={(event) => setEmail(event.target.value)} />
+                    <Input type="email" placeholder="Optionnel" value={email} onChange={(event) => setEmail(event.target.value)} />
                   </div>
 
-                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-                    Le paiement sécurisé s’ouvrira en plein écran pour finaliser votre dépôt eNkambaPay.
+                  <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+                    Le paiement sera initié directement dans l’app. Vous devrez confirmer la demande sur votre téléphone.
                   </div>
                 </>
               )}
@@ -378,6 +426,14 @@ export default function AddFundsPage() {
                     <span className="max-w-[220px] break-all text-right font-semibold">{email}</span>
                   </div>
                 )}
+                {paymentMethod === 'enkambapay' && (
+                  <div className="flex justify-between gap-4">
+                    <span className="text-muted-foreground">Partenaire</span>
+                    <span className="text-right font-semibold">
+                      {ENKAMBAPAY_PARTNERS.find((partner) => partner.id === enkambaPayPartner)?.label}
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
@@ -385,7 +441,7 @@ export default function AddFundsPage() {
                   <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
                   <p>
                     {paymentMethod === 'enkambapay'
-                      ? 'Le paiement sera ouvert dans un environnement sécurisé eNkambaPay.'
+                      ? 'Le paiement sera initié dans l’app via eNkambaPay. Confirmez ensuite sur votre téléphone.'
                       : paymentMethod === 'wonyapay'
                         ? 'Le dépôt sera initié et confirmé par l’opérateur Mobile Money.'
                         : 'Vous serez redirigé vers PayPal pour finaliser le paiement.'}

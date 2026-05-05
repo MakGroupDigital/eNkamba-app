@@ -6,6 +6,8 @@ export interface MaxiCashConfig {
   merchantPassword: string;
   payEntryPostUrl: string;
   payEntryWebUrl: string;
+  payNowSyncUrl: string;
+  checkPaymentStatusByReferenceUrl: string;
   gatewayBaseUrl: string;
 }
 
@@ -23,13 +25,32 @@ export function getMaxiCashConfig(): MaxiCashConfig {
     (environment === 'live'
       ? 'https://webapi.maxicashapp.com/Integration/PayEntryWeb'
       : 'https://webapi-test.maxicashapp.com/Integration/PayEntryWeb');
+  const payNowSyncUrl =
+    process.env.MAXICASH_PAY_NOW_SYNC_URL ||
+    (environment === 'live'
+      ? 'https://webapi.maxicashapp.com/Integration/PayNowSync'
+      : 'https://webapi-test.maxicashapp.com/Integration/PayNowSync');
+  const checkPaymentStatusByReferenceUrl =
+    process.env.MAXICASH_CHECK_PAYMENT_STATUS_BY_REFERENCE_URL ||
+    (environment === 'live'
+      ? 'https://webapi.maxicashapp.com/Integration/CheckPaymentStatusByReference'
+      : 'https://webapi-test.maxicashapp.com/Integration/CheckPaymentStatusByReference');
   const gatewayBaseUrl =
     process.env.MAXICASH_GATEWAY_BASE_URL ||
     (environment === 'live'
       ? 'https://api.maxicashapp.com'
       : 'https://api-testbed.maxicashapp.com');
 
-  return { environment, merchantId, merchantPassword, payEntryPostUrl, payEntryWebUrl, gatewayBaseUrl };
+  return {
+    environment,
+    merchantId,
+    merchantPassword,
+    payEntryPostUrl,
+    payEntryWebUrl,
+    payNowSyncUrl,
+    checkPaymentStatusByReferenceUrl,
+    gatewayBaseUrl,
+  };
 }
 
 export function assertMaxiCashConfig(config = getMaxiCashConfig()) {
@@ -65,6 +86,11 @@ export function isSuccessfulMaxiCashStatus(status: unknown) {
 export function isFailedMaxiCashStatus(status: unknown) {
   const normalized = String(status || '').trim().toLowerCase();
   return ['failed', 'failure', 'declined', 'decline', 'cancelled', 'canceled', 'error', 'rejected'].includes(normalized);
+}
+
+export function isPendingMaxiCashStatus(status: unknown) {
+  const normalized = String(status || '').trim().toLowerCase();
+  return ['pending', 'processing', 'inprogress', 'in progress', 'waiting', 'initiated'].includes(normalized);
 }
 
 export function extractMaxiCashStatus(payload: Record<string, any>, fallback?: string) {

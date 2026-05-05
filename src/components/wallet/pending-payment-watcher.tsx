@@ -24,10 +24,11 @@ export function PendingPaymentWatcher() {
   const lastStatusesRef = useRef<Record<string, TxStatus>>({});
   const notifiedRef = useRef<Set<string>>(new Set());
 
-  // Dernière transaction WonyaPay en attente
+  // Dernière transaction en attente
   const pendingTx = useMemo(() => {
     return transactions.find((tx) =>
-      tx.status === "pending" && (tx.paymentMethod === "wonyapay" || tx.withdrawalMethod === "mobile_money")
+      tx.status === "pending" &&
+      (tx.paymentMethod === "wonyapay" || tx.paymentMethod === "enkambapay" || tx.withdrawalMethod === "mobile_money")
     );
   }, [transactions]);
 
@@ -39,8 +40,8 @@ export function PendingPaymentWatcher() {
       const prev = lastStatusesRef.current[tx.id];
       lastStatusesRef.current[tx.id] = tx.status;
 
-      const isWonya = tx.paymentMethod === "wonyapay" || tx.withdrawalMethod === "mobile_money";
-      if (!isWonya) return;
+      const isWatchedPayment = tx.paymentMethod === "wonyapay" || tx.paymentMethod === "enkambapay" || tx.withdrawalMethod === "mobile_money";
+      if (!isWatchedPayment) return;
 
       const transitioned = prev === "pending" && tx.status !== "pending";
       if (transitioned && !notifiedRef.current.has(tx.id)) {
@@ -115,14 +116,14 @@ export function PendingPaymentWatcher() {
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {activeNotification.status === "completed"
-                    ? "Vous pouvez maintenant accéder au contenu acheté."
+                    ? "Votre opération a été confirmée."
                     : "Vous pouvez réessayer ou revenir plus tard."}
                 </p>
               </div>
               <div className="flex flex-col gap-2 sm:flex-row">
                 {activeNotification.status === "completed" ? (
                   <Button className="flex-1" onClick={handleSuccessAction}>
-                    Regarder le contenu acheté
+                    Voir le portefeuille
                   </Button>
                 ) : (
                   <>
@@ -147,4 +148,3 @@ export function PendingPaymentWatcher() {
     </>
   );
 }
-
