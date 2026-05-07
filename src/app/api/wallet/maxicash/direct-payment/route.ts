@@ -20,8 +20,8 @@ const MAXICASH_PAY_TYPES = {
   airtel: 1,
   mpesa: 2,
   orange: 3,
-  // MaxiCash PaymentType enum: AfricellDRC = 52 (4 = MaxiCashCard)
-  africell: 52,
+  // MaxiCash WebAPI (Integration/PayNowSync) PayType mapping (DRC): 0 MaxiCash / 1 Airtel / 2 M-Pesa / 3 Orange / 4 Africell
+  africell: 4,
 } as const;
 
 type MaxiCashPartner = keyof typeof MAXICASH_PAY_TYPES;
