@@ -138,6 +138,23 @@ export function hasSuccessfulMaxiCashStatus(payload: Record<string, any> | null 
   return getMaxiCashStatusCandidates(payload, fallback).some(isSuccessfulMaxiCashStatus);
 }
 
+export function getMaxiCashPaymentStatusCandidates(payload: Record<string, any> | null | undefined) {
+  if (!payload) return [];
+
+  return [
+    payload.ResponseData,
+    payload.responseData,
+    payload.TransactionStatus,
+    payload.transactionStatus,
+    payload.PaymentStatus,
+    payload.paymentStatus,
+  ].filter((value) => value !== undefined && value !== null && String(value).trim() !== '');
+}
+
+export function hasCompletedMaxiCashPayment(payload: Record<string, any> | null | undefined) {
+  return getMaxiCashPaymentStatusCandidates(payload).some(isSuccessfulMaxiCashStatus);
+}
+
 export function hasFailedMaxiCashStatus(payload: Record<string, any> | null | undefined, fallback?: string) {
   return getMaxiCashStatusCandidates(payload, fallback).some(isFailedMaxiCashStatus);
 }

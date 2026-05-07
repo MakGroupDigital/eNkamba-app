@@ -7,8 +7,8 @@ import {
   generateMaxiCashReference,
   getMaxiCashConfig,
   getMaxiCashErrorMessage,
+  hasCompletedMaxiCashPayment,
   hasFailedMaxiCashStatus,
-  hasSuccessfulMaxiCashStatus,
   isImmediateMaxiCashFailure,
   isPendingMaxiCashStatus,
   toMaxiCashCents,
@@ -39,13 +39,12 @@ export const dynamic = 'force-dynamic';
 type MaxiCashCurrencyCode = 'USD' | 'CDF';
 
 function getProviderCurrencyCode(currencyCode: MaxiCashCurrencyCode) {
-  // MaxiCash WebAPI expects the franc congolais rail as FC even though the app displays CDF.
-  return currencyCode === 'CDF' ? 'FC' : currencyCode;
+  return currencyCode;
 }
 
-function getProviderAmount(amount: number, currencyCode: MaxiCashCurrencyCode) {
-  // FC is sent in whole francs; USD remains in cents as documented by MaxiCash.
-  return currencyCode === 'CDF' ? String(Math.round(amount)) : String(toMaxiCashCents(amount));
+function getProviderAmount(amount: number) {
+  // The recent MaxiCash PDF states all collection amounts are sent in cents.
+  return String(toMaxiCashCents(amount));
 }
 
 function normalizeCongolesePhone(value: string) {
@@ -115,7 +114,7 @@ export async function POST(request: NextRequest) {
         ? (await convertUsdToCdf(amount)).cdfAmount
         : Math.round(amount);
     const providerCurrencyCode = getProviderCurrencyCode(currencyCode);
-    const providerAmount = getProviderAmount(amount, currencyCode);
+    const providerAmount = getProviderAmount(amount);
     const payType = MAXICASH_PAY_TYPES[partner];
     const partnerLabel = PARTNER_LABELS[partner];
     const transactionRef = doc(collection(userRef, 'transactions'), transactionId);
@@ -200,7 +199,7 @@ export async function POST(request: NextRequest) {
         updatedAt: new Date().toISOString(),
       };
 
-      if (hasSuccessfulMaxiCashStatus(data, responseStatus)) {
+      if (hasCompletedMaxiCashPayment(data)) {
         if (transaction.status === 'completed') {
           return { transactionStatus: 'completed', newBalance: Number(transaction.newBalance || freshBalance) };
         }
@@ -212,6 +211,8 @@ export async function POST(request: NextRequest) {
           status: 'completed',
           newBalance,
           completedAt: new Date().toISOString(),
+          creditedAt: new Date().toISOString(),
+          'maxicash.completionVerified': true,
           description: `Dépôt eNkambaPay confirmé via ${partnerLabel}`,
         });
         return { transactionStatus: 'completed', newBalance };

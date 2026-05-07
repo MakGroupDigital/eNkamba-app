@@ -17,8 +17,8 @@ import {
   extractMaxiCashStatus,
   getMaxiCashConfig,
   getMaxiCashErrorMessage,
+  hasCompletedMaxiCashPayment,
   hasFailedMaxiCashStatus,
-  hasSuccessfulMaxiCashStatus,
   isImmediateMaxiCashFailure,
 } from '@/lib/maxicash';
 
@@ -124,7 +124,12 @@ export async function POST(request: NextRequest) {
       const isMaxiCashDeposit =
         txData.type === 'deposit' &&
         (txData.paymentMethod === 'enkambapay' || txData.provider === 'MaxiCash' || Boolean(txData?.maxicash));
-      const canReconcile = txData.status === 'pending' || txData.status === 'failed';
+      const isUnverifiedCompletedDeposit =
+        txData.status === 'completed' &&
+        txData?.maxicash?.completionVerified !== true &&
+        !txData?.maxicash?.creditReversedAt &&
+        !hasCompletedMaxiCashPayment(txData?.maxicash?.lastPayload);
+      const canReconcile = txData.status === 'pending' || txData.status === 'failed' || isUnverifiedCompletedDeposit;
 
       if (!isMaxiCashDeposit || !canReconcile || !reference) continue;
 
@@ -151,7 +156,7 @@ export async function POST(request: NextRequest) {
         updatedAt: new Date().toISOString(),
       };
 
-      if (hasSuccessfulMaxiCashStatus(statusPayload, status)) {
+      if (hasCompletedMaxiCashPayment(statusPayload)) {
         const result = await runTransaction(db, async (firestoreTx) => {
           const [freshUserSnap, freshTxSnap] = await Promise.all([
             firestoreTx.get(userRef),
@@ -160,6 +165,10 @@ export async function POST(request: NextRequest) {
           const freshTxData = freshTxSnap.data() as any;
 
           if (freshTxData?.status === 'completed') {
+            firestoreTx.update(txDoc.ref, {
+              ...updateData,
+              'maxicash.completionVerified': true,
+            });
             return { alreadyCompleted: true };
           }
 
@@ -179,12 +188,51 @@ export async function POST(request: NextRequest) {
             description: `Dépôt eNkambaPay confirmé via ${freshTxData?.maxicash?.partnerLabel || txData?.maxicash?.partnerLabel || 'MaxiCash'}`,
             completedAt: new Date().toISOString(),
             creditedAt: new Date().toISOString(),
+            'maxicash.completionVerified': true,
           });
 
           return { alreadyCompleted: false };
         });
 
         if (!result.alreadyCompleted) updated += 1;
+        continue;
+      }
+
+      if (isUnverifiedCompletedDeposit) {
+        await runTransaction(db, async (firestoreTx) => {
+          const [freshUserSnap, freshTxSnap] = await Promise.all([
+            firestoreTx.get(userRef),
+            firestoreTx.get(txDoc.ref),
+          ]);
+          const freshTxData = freshTxSnap.data() as any;
+
+          if (
+            freshTxData?.status !== 'completed' ||
+            freshTxData?.maxicash?.completionVerified === true ||
+            freshTxData?.maxicash?.creditReversedAt
+          ) {
+            return;
+          }
+
+          const amountToReverse = Number(freshTxData?.amount || txData.amount || 0);
+          const currentBalance = Number(freshUserSnap.data()?.walletBalance || 0);
+          const newBalance = currentBalance - amountToReverse;
+
+          firestoreTx.update(userRef, {
+            walletBalance: newBalance,
+            lastTransactionTime: new Date(),
+          });
+
+          firestoreTx.update(txDoc.ref, {
+            ...updateData,
+            status: 'pending',
+            newBalance,
+            description: `Dépôt eNkambaPay en attente de confirmation via ${freshTxData?.maxicash?.partnerLabel || txData?.maxicash?.partnerLabel || 'MaxiCash'}`,
+            'maxicash.creditReversedAt': new Date().toISOString(),
+            'maxicash.creditReversalReason': 'provider_completion_not_confirmed',
+          });
+        });
+        updated += 1;
         continue;
       }
 
