@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { AlertCircle, ArrowLeft, CheckCircle2, CreditCard, Loader2, Mail, Phone } from 'lucide-react';
+import { AlertCircle, ArrowLeft, CreditCard, Loader2, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -64,7 +64,6 @@ export default function AddFundsPage() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
   const [amount, setAmount] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [email, setEmail] = useState('');
   const [enkambaPayPartner, setEnkambaPayPartner] = useState<EnkambaPayPartner>('airtel');
   const [enkambaPayCurrency, setEnkambaPayCurrency] = useState<EnkambaPayCurrency>('USD');
   const [enkambaPayPartnerLocked, setEnkambaPayPartnerLocked] = useState(false);
@@ -172,7 +171,6 @@ export default function AddFundsPage() {
         userId: user.uid,
         amount: numericAmount,
         telephone: phoneNumber.trim(),
-        email: email.trim(),
         partner: enkambaPayPartner,
         currency: enkambaPayCurrency,
       }),
@@ -263,7 +261,6 @@ export default function AddFundsPage() {
           </Button>
           <div>
             <h1 className="font-headline text-3xl font-bold text-[#0B6E4F]">Ajouter des fonds</h1>
-            <p className="text-sm text-muted-foreground">Choisissez une méthode de dépôt.</p>
           </div>
         </header>
 
@@ -293,9 +290,6 @@ export default function AddFundsPage() {
                   </div>
                   <div>
                     <h2 className="text-xl font-semibold text-[#0B6E4F]">eNkambaPay</h2>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      Paiement sécurisé : carte, Mobile Money, PayPal, Mobile Banking et portefeuille partenaire.
-                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -318,7 +312,6 @@ export default function AddFundsPage() {
                   </div>
                   <div>
                     <h3 className="font-semibold">Mobile Money direct</h3>
-                    <p className="text-sm text-muted-foreground">Dépôt opérateur via le connecteur existant.</p>
                   </div>
                 </CardContent>
               </Card>
@@ -330,7 +323,6 @@ export default function AddFundsPage() {
                   </div>
                   <div>
                     <h3 className="font-semibold">PayPal</h3>
-                    <p className="text-sm text-muted-foreground">Paiement USD via PayPal et cartes compatibles.</p>
                   </div>
                 </CardContent>
               </Card>
@@ -367,7 +359,7 @@ export default function AddFundsPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Montant à payer ({enkambaPayCurrency})</Label>
+                      <Label>Montant ({enkambaPayCurrency})</Label>
                       <Input
                         type="number"
                         min="1"
@@ -376,28 +368,21 @@ export default function AddFundsPage() {
                         value={amount}
                         onChange={(event) => setAmount(event.target.value)}
                       />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Crédit portefeuille estimé</Label>
-                    <div className="rounded-md border bg-muted/40 px-3 py-2">
-                      <p className="text-lg font-bold text-[#32BB78]">
-                        {isLoadingRate ? 'Calcul...' : `${convertedAmount.toLocaleString('fr-FR')} CDF`}
-                      </p>
-                      {enkambaPayCurrency === 'USD' && (
-                        <p className="text-xs text-muted-foreground">Taux: 1 USD = {usdToCdfRate.toLocaleString('fr-FR')} CDF</p>
+                      {numericAmount > 0 && (
+                        <p className="text-sm font-semibold text-[#32BB78]">
+                          Crédit portefeuille: {isLoadingRate ? 'Calcul...' : `${convertedAmount.toLocaleString('fr-FR')} CDF`}
+                        </p>
                       )}
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="flex items-center gap-2"><Phone className="h-4 w-4" />Téléphone</Label>
+                    <Label className="flex items-center gap-2"><Phone className="h-4 w-4" />Numéro téléphone</Label>
                     <Input type="tel" placeholder="Ex: 243997654321" value={phoneNumber} onChange={(event) => setPhoneNumber(event.target.value)} />
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Partenaire de paiement</Label>
+                    <Label>Opérateur</Label>
                     <Select
                       value={enkambaPayPartner}
                       onValueChange={(value) => {
@@ -416,15 +401,6 @@ export default function AddFundsPage() {
                         ))}
                       </SelectContent>
                     </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2"><Mail className="h-4 w-4" />Email</Label>
-                    <Input type="email" placeholder="Optionnel" value={email} onChange={(event) => setEmail(event.target.value)} />
-                  </div>
-
-                  <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
-                    Le paiement sera initié directement dans l’app. Vous devrez confirmer la demande sur votre téléphone.
                   </div>
                 </>
               )}
@@ -511,33 +487,14 @@ export default function AddFundsPage() {
                     <span className="text-right font-semibold">{phoneNumber}</span>
                   </div>
                 )}
-                {email && (
-                  <div className="flex justify-between gap-4">
-                    <span className="text-muted-foreground">Email</span>
-                    <span className="max-w-[220px] break-all text-right font-semibold">{email}</span>
-                  </div>
-                )}
                 {paymentMethod === 'enkambapay' && (
                   <div className="flex justify-between gap-4">
-                    <span className="text-muted-foreground">Partenaire</span>
+                    <span className="text-muted-foreground">Opérateur</span>
                     <span className="text-right font-semibold">
                       {ENKAMBAPAY_PARTNERS.find((partner) => partner.id === enkambaPayPartner)?.label}
                     </span>
                   </div>
                 )}
-              </div>
-
-              <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
-                <div className="flex items-start gap-2">
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
-                  <p>
-                    {paymentMethod === 'enkambapay'
-                      ? 'Le paiement sera initié dans l’app via eNkambaPay. Confirmez ensuite sur votre téléphone.'
-                      : paymentMethod === 'wonyapay'
-                        ? 'Le dépôt sera initié et confirmé par l’opérateur Mobile Money.'
-                        : 'Vous serez redirigé vers PayPal pour finaliser le paiement.'}
-                  </p>
-                </div>
               </div>
 
               <div className="flex gap-3">
