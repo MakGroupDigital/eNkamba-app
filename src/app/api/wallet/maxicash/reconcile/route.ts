@@ -43,7 +43,12 @@ function getFirebaseApp() {
   const existingApp = getApps().find((candidate) => candidate.name === 'wallet-maxicash-reconcile');
   if (existingApp) return existingApp;
 
-  return getApps().length > 0 ? getApp() : initializeApp(config, 'wallet-maxicash-reconcile');
+  // In serverless environments we may already have named apps initialized, but no DEFAULT app.
+  // `getApp()` without a name would throw in that case, so we fallback to the first app.
+  const apps = getApps();
+  if (apps.length > 0) return apps[0];
+
+  return initializeApp(config, 'wallet-maxicash-reconcile');
 }
 
 async function checkPaymentStatusByReference(reference: string, transactionId?: string | null) {
