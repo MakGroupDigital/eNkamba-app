@@ -9,7 +9,6 @@ import {
   getMaxiCashErrorMessage,
   hasCompletedMaxiCashPayment,
   hasFailedMaxiCashStatus,
-  isImmediateMaxiCashFailure,
   isPendingMaxiCashStatus,
   toMaxiCashCents,
 } from '@/lib/maxicash';
@@ -169,13 +168,28 @@ export async function POST(request: NextRequest) {
     const data = await response.json().catch(() => null);
     const responseStatus = extractMaxiCashStatus(data, data?.ResponseStatus);
     const providerTransactionId = data?.TransactionID || null;
+    const providerErrorMessage = getMaxiCashErrorMessage(data, 'Paiement eNkambaPay refusé.');
+
+    if (currencyCode === 'CDF') {
+      console.info('MaxiCash CDF initiation response', {
+        responseStatus,
+        responseData: data?.ResponseData || null,
+        responseDesc: data?.ResponseDesc || null,
+        responseError: data?.ResponseError || null,
+        transactionID: providerTransactionId,
+        reference,
+        payType,
+        providerCurrencyCode,
+        providerAmount,
+      });
+    }
 
     if (!response.ok) {
       await runTransaction(db, async (tx) => {
         tx.update(transactionRef, {
           status: 'failed',
           failedAt: new Date().toISOString(),
-          description: `Dépôt eNkambaPay refusé via ${partnerLabel}`,
+          description: `Échec eNkambaPay: ${providerErrorMessage}`,
           'maxicash.lastPayload': data,
           'maxicash.lastStatus': responseStatus || null,
           'maxicash.providerTransactionId': providerTransactionId,
@@ -183,7 +197,7 @@ export async function POST(request: NextRequest) {
       });
 
       return NextResponse.json(
-        { error: data?.ResponseError || 'eNkambaPay n’a pas pu initier le paiement.', providerResponse: data },
+        { error: providerErrorMessage || 'eNkambaPay n’a pas pu initier le paiement.', providerResponse: data },
         { status: 502 }
       );
     }
@@ -218,12 +232,12 @@ export async function POST(request: NextRequest) {
         return { transactionStatus: 'completed', newBalance };
       }
 
-      if (hasFailedMaxiCashStatus(data, responseStatus) && isImmediateMaxiCashFailure(data, responseStatus)) {
+      if (hasFailedMaxiCashStatus(data, responseStatus)) {
         tx.update(transactionRef, {
           ...updateData,
           status: 'failed',
           failedAt: new Date().toISOString(),
-          description: `Dépôt eNkambaPay refusé via ${partnerLabel}`,
+          description: `Échec eNkambaPay: ${providerErrorMessage}`,
         });
         return { transactionStatus: 'failed', newBalance: freshBalance };
       }
@@ -239,7 +253,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: result.transactionStatus !== 'failed',
       error: result.transactionStatus === 'failed'
-        ? getMaxiCashErrorMessage(data, 'Paiement eNkambaPay refusé.')
+        ? providerErrorMessage
         : '',
       transactionId,
       reference,
