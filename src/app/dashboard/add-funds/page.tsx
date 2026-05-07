@@ -21,7 +21,8 @@ const ENKAMBAPAY_PARTNERS: Array<{ id: EnkambaPayPartner; label: string; logo?: 
   { id: 'airtel', label: 'Airtel Money', logo: '/logoairtel.png', payType: 1 },
   { id: 'mpesa', label: 'M-Pesa', logo: '/logompsa.png', payType: 2 },
   { id: 'orange', label: 'Orange Money', logo: '/logo-orange.png', payType: 3 },
-  { id: 'africell', label: 'Africell Money', logo: '/logoafricell.png', payType: 4 },
+  // MaxiCash PaymentType enum: AfricellDRC = 52 (4 = MaxiCashCard)
+  { id: 'africell', label: 'Africell Money', logo: '/logoafricell.png', payType: 52 },
   { id: 'maxicash', label: 'Portefeuille partenaire', payType: 0 },
 ];
 

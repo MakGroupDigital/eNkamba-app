@@ -6,9 +6,11 @@ import {
   extractMaxiCashStatus,
   generateMaxiCashReference,
   getMaxiCashConfig,
-  isFailedMaxiCashStatus,
+  getMaxiCashErrorMessage,
+  hasFailedMaxiCashStatus,
+  hasSuccessfulMaxiCashStatus,
+  isImmediateMaxiCashFailure,
   isPendingMaxiCashStatus,
-  isSuccessfulMaxiCashStatus,
   toMaxiCashCents,
 } from '@/lib/maxicash';
 import { convertUsdToCdf } from '@/lib/exchange-rate';
@@ -18,7 +20,8 @@ const MAXICASH_PAY_TYPES = {
   airtel: 1,
   mpesa: 2,
   orange: 3,
-  africell: 4,
+  // MaxiCash PaymentType enum: AfricellDRC = 52 (4 = MaxiCashCard)
+  africell: 52,
 } as const;
 
 type MaxiCashPartner = keyof typeof MAXICASH_PAY_TYPES;
@@ -173,7 +176,7 @@ export async function POST(request: NextRequest) {
         updatedAt: new Date().toISOString(),
       };
 
-      if (isSuccessfulMaxiCashStatus(responseStatus) || isSuccessfulMaxiCashStatus(data?.ResponseData)) {
+      if (hasSuccessfulMaxiCashStatus(data, responseStatus)) {
         if (transaction.status === 'completed') {
           return { transactionStatus: 'completed', newBalance: Number(transaction.newBalance || freshBalance) };
         }
@@ -190,7 +193,7 @@ export async function POST(request: NextRequest) {
         return { transactionStatus: 'completed', newBalance };
       }
 
-      if (isFailedMaxiCashStatus(responseStatus) || isFailedMaxiCashStatus(data?.ResponseData)) {
+      if (hasFailedMaxiCashStatus(data, responseStatus) && isImmediateMaxiCashFailure(data, responseStatus)) {
         tx.update(transactionRef, {
           ...updateData,
           status: 'failed',
@@ -203,7 +206,7 @@ export async function POST(request: NextRequest) {
       tx.update(transactionRef, {
         ...updateData,
         status: isPendingMaxiCashStatus(responseStatus) ? 'pending' : 'pending',
-        description: `Dépôt eNkambaPay en attente via ${partnerLabel}`,
+        description: `Dépôt eNkambaPay en attente de confirmation via ${partnerLabel}`,
       });
       return { transactionStatus: 'pending', newBalance: freshBalance };
     });
@@ -211,7 +214,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: result.transactionStatus !== 'failed',
       error: result.transactionStatus === 'failed'
-        ? data?.ResponseError || data?.ResponseDesc || 'Paiement eNkambaPay refusé.'
+        ? getMaxiCashErrorMessage(data, 'Paiement eNkambaPay refusé.')
         : '',
       transactionId,
       reference,

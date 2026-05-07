@@ -91,41 +91,46 @@ export function useWalletTransactions() {
   useEffect(() => {
     if (!currentUser) return;
 
-    const syncPendingWonyaDeposits = async () => {
+    const syncPendingWalletPayments = async () => {
       try {
         const token = await currentUser.getIdToken();
-        const response = await fetch('/api/wallet/wonyapay/reconcile', {
+        const reconcileRequest = {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ userId: currentUser.uid }),
-        });
+        };
+
+        const [wonyaResponse, maxicashResponse] = await Promise.all([
+          fetch('/api/wallet/wonyapay/reconcile', reconcileRequest),
+          fetch('/api/wallet/maxicash/reconcile', reconcileRequest),
+        ]);
         
         // Ne pas logger les erreurs si l'API retourne un succès avec skip
-        if (response.ok) {
-          const data = await response.json();
-          if (data.skipped) {
-            // Configuration WonyaPay non disponible, c'est normal
-            return;
-          }
+        if (wonyaResponse.ok) {
+          await wonyaResponse.json().catch(() => null);
+        }
+
+        if (maxicashResponse.ok) {
+          await syncBalanceFromFirestore();
         }
       } catch (err) {
         // Ignorer silencieusement les erreurs de réconciliation
         // pour ne pas perturber l'expérience utilisateur
-        console.debug('Sync WonyaPay skipped:', err);
+        console.debug('Sync wallet payments skipped:', err);
       }
     };
 
     // Sync immédiat au chargement
-    syncPendingWonyaDeposits();
+    syncPendingWalletPayments();
     
     // Sync toutes les 30 secondes pour les transactions récentes
-    const intervalId = window.setInterval(syncPendingWonyaDeposits, 30000);
+    const intervalId = window.setInterval(syncPendingWalletPayments, 30000);
 
     return () => window.clearInterval(intervalId);
-  }, [currentUser]);
+  }, [currentUser, syncBalanceFromFirestore]);
 
   // Charger et écouter le solde depuis Firestore directement (évite CORS)
   useEffect(() => {

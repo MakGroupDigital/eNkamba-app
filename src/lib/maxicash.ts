@@ -94,6 +94,8 @@ export function isPendingMaxiCashStatus(status: unknown) {
 }
 
 export function extractMaxiCashStatus(payload: Record<string, any>, fallback?: string) {
+  if (!payload) return fallback || '';
+
   return (
     payload.status ||
     payload.Status ||
@@ -108,4 +110,64 @@ export function extractMaxiCashStatus(payload: Record<string, any>, fallback?: s
     fallback ||
     ''
   );
+}
+
+export function getMaxiCashStatusCandidates(payload: Record<string, any> | null | undefined, fallback?: string) {
+  if (!payload) return [fallback || ''].filter(Boolean);
+
+  return [
+    payload.status,
+    payload.Status,
+    payload.ResponseStatus,
+    payload.responseStatus,
+    payload.ResponseData,
+    payload.responseData,
+    payload.ResponseDesc,
+    payload.responseDesc,
+    payload.TransactionStatus,
+    payload.transactionStatus,
+    payload.PaymentStatus,
+    payload.paymentStatus,
+    payload.result,
+    payload.Result,
+    fallback,
+  ].filter((value) => value !== undefined && value !== null && String(value).trim() !== '');
+}
+
+export function hasSuccessfulMaxiCashStatus(payload: Record<string, any> | null | undefined, fallback?: string) {
+  return getMaxiCashStatusCandidates(payload, fallback).some(isSuccessfulMaxiCashStatus);
+}
+
+export function hasFailedMaxiCashStatus(payload: Record<string, any> | null | undefined, fallback?: string) {
+  return getMaxiCashStatusCandidates(payload, fallback).some(isFailedMaxiCashStatus);
+}
+
+export function getMaxiCashErrorMessage(payload: Record<string, any> | null | undefined, fallback = '') {
+  if (!payload) return fallback;
+
+  return String(
+    payload.ResponseError ||
+    payload.responseError ||
+    payload.Error ||
+    payload.error ||
+    payload.ResponseDesc ||
+    payload.responseDesc ||
+    payload.ResponseData ||
+    fallback ||
+    ''
+  );
+}
+
+export function isImmediateMaxiCashFailure(payload: Record<string, any> | null | undefined, fallbackStatus?: string) {
+  const message = getMaxiCashErrorMessage(payload, fallbackStatus).toLowerCase();
+  return [
+    'merchant not active',
+    'invalid credential',
+    'invalid credentials',
+    'invalid merchant',
+    'merchant account not found',
+    'not found',
+    'unauthorized',
+    'forbidden',
+  ].some((pattern) => message.includes(pattern));
 }
