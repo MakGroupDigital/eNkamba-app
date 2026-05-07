@@ -38,6 +38,16 @@ export const dynamic = 'force-dynamic';
 
 type MaxiCashCurrencyCode = 'USD' | 'CDF';
 
+function getProviderCurrencyCode(currencyCode: MaxiCashCurrencyCode) {
+  // MaxiCash WebAPI expects the franc congolais rail as FC even though the app displays CDF.
+  return currencyCode === 'CDF' ? 'FC' : currencyCode;
+}
+
+function getProviderAmount(amount: number, currencyCode: MaxiCashCurrencyCode) {
+  // FC is sent in whole francs; USD remains in cents as documented by MaxiCash.
+  return currencyCode === 'CDF' ? String(Math.round(amount)) : String(toMaxiCashCents(amount));
+}
+
 function normalizeCongolesePhone(value: string) {
   const digits = value.replace(/\D/g, '');
   if (digits.startsWith('243')) return digits;
@@ -104,8 +114,8 @@ export async function POST(request: NextRequest) {
       currencyCode === 'USD'
         ? (await convertUsdToCdf(amount)).cdfAmount
         : Math.round(amount);
-    // MaxiCash expects amounts in minor units (cents).
-    const amountInCents = String(toMaxiCashCents(amount));
+    const providerCurrencyCode = getProviderCurrencyCode(currencyCode);
+    const providerAmount = getProviderAmount(amount, currencyCode);
     const payType = MAXICASH_PAY_TYPES[partner];
     const partnerLabel = PARTNER_LABELS[partner];
     const transactionRef = doc(collection(userRef, 'transactions'), transactionId);
@@ -135,19 +145,21 @@ export async function POST(request: NextRequest) {
         partnerLabel,
         payType,
         currencyCode,
+        providerCurrencyCode,
+        providerAmount,
       },
     });
 
     const payload = {
       RequestData: {
-        Amount: amountInCents,
+        Amount: providerAmount,
         Reference: reference,
         Telephone: telephone,
       },
       MerchantID: config.merchantId,
       MerchantPassword: config.merchantPassword,
       PayType: payType,
-      CurrencyCode: currencyCode,
+      CurrencyCode: providerCurrencyCode,
     };
 
     const response = await fetch(config.payNowSyncUrl, {
