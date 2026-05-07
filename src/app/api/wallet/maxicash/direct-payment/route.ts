@@ -36,6 +36,8 @@ const PARTNER_LABELS: Record<MaxiCashPartner, string> = {
 
 export const dynamic = 'force-dynamic';
 
+type MaxiCashCurrencyCode = 'USD' | 'CDF';
+
 function normalizeCongolesePhone(value: string) {
   const digits = value.replace(/\D/g, '');
   if (digits.startsWith('243')) return digits;
@@ -69,6 +71,7 @@ export async function POST(request: NextRequest) {
     const telephone = normalizeCongolesePhone(String(body.telephone || ''));
     const email = String(body.email || '').trim();
     const partner = String(body.partner || 'airtel') as MaxiCashPartner;
+    const currencyCode = String(body.currency || 'USD').trim().toUpperCase() as MaxiCashCurrencyCode;
 
     if (!userId || !amount || amount <= 0 || !telephone) {
       return NextResponse.json({ error: 'Paramètres eNkambaPay invalides.' }, { status: 400 });
@@ -76,6 +79,10 @@ export async function POST(request: NextRequest) {
 
     if (!(partner in MAXICASH_PAY_TYPES)) {
       return NextResponse.json({ error: 'Partenaire de paiement non pris en charge.' }, { status: 400 });
+    }
+
+    if (!['USD', 'CDF'].includes(currencyCode)) {
+      return NextResponse.json({ error: 'Devise non prise en charge. Utilisez USD ou CDF.' }, { status: 400 });
     }
 
     const config = getMaxiCashConfig();
@@ -93,7 +100,11 @@ export async function POST(request: NextRequest) {
 
     const transactionId = `MXC-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
     const reference = generateMaxiCashReference(userId);
-    const amountInCdf = (await convertUsdToCdf(amount)).cdfAmount;
+    const amountInWalletCdf =
+      currencyCode === 'USD'
+        ? (await convertUsdToCdf(amount)).cdfAmount
+        : Math.round(amount);
+    // MaxiCash expects amounts in minor units (cents).
     const amountInCents = String(toMaxiCashCents(amount));
     const payType = MAXICASH_PAY_TYPES[partner];
     const partnerLabel = PARTNER_LABELS[partner];
@@ -102,14 +113,14 @@ export async function POST(request: NextRequest) {
     await setDoc(transactionRef, {
       id: transactionId,
       type: 'deposit',
-      amount: amountInCdf,
+      amount: amountInWalletCdf,
       originalAmount: amount,
-      originalCurrency: 'USD',
+      originalCurrency: currencyCode,
       paymentMethod: 'enkambapay',
       status: 'pending',
       previousBalance: currentBalance,
       newBalance: currentBalance,
-      description: `Dépôt eNkambaPay initié via ${partnerLabel} (${amount} USD)`,
+      description: `Dépôt eNkambaPay initié via ${partnerLabel} (${amount} ${currencyCode})`,
       timestamp: new Date(),
       createdAt: new Date().toISOString(),
       phoneNumber: telephone,
@@ -123,6 +134,7 @@ export async function POST(request: NextRequest) {
         partner,
         partnerLabel,
         payType,
+        currencyCode,
       },
     });
 
@@ -135,7 +147,7 @@ export async function POST(request: NextRequest) {
       MerchantID: config.merchantId,
       MerchantPassword: config.merchantPassword,
       PayType: payType,
-      CurrencyCode: 'USD',
+      CurrencyCode: currencyCode,
     };
 
     const response = await fetch(config.payNowSyncUrl, {
@@ -181,7 +193,7 @@ export async function POST(request: NextRequest) {
           return { transactionStatus: 'completed', newBalance: Number(transaction.newBalance || freshBalance) };
         }
 
-        const newBalance = freshBalance + amountInCdf;
+        const newBalance = freshBalance + amountInWalletCdf;
         tx.update(userRef, { walletBalance: newBalance, lastTransactionTime: new Date() });
         tx.update(transactionRef, {
           ...updateData,

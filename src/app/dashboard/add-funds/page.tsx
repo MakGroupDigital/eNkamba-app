@@ -9,12 +9,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useWalletTransactions } from '@/hooks/useWalletTransactions';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 
 type PaymentMethod = 'enkambapay' | 'wonyapay' | 'paypal';
 type EnkambaPayPartner = 'maxicash' | 'airtel' | 'mpesa' | 'orange' | 'africell';
+type EnkambaPayCurrency = 'USD' | 'CDF';
 type PaymentError = { title: string; message: string; details?: string };
 
 const ENKAMBAPAY_PARTNERS: Array<{ id: EnkambaPayPartner; label: string; logo?: string; payType: number }> = [
@@ -25,6 +27,32 @@ const ENKAMBAPAY_PARTNERS: Array<{ id: EnkambaPayPartner; label: string; logo?: 
   { id: 'africell', label: 'Africell Money', logo: '/logoafricell.png', payType: 52 },
   { id: 'maxicash', label: 'Portefeuille partenaire', payType: 0 },
 ];
+
+function normalizeCdPhoneDigits(value: string) {
+  const digits = String(value || '').replace(/\D/g, '');
+  if (digits.startsWith('243')) return digits;
+  if (digits.startsWith('0')) return `243${digits.slice(1)}`;
+  // allow entering without country code (e.g. 81xxxxxxx)
+  if (digits.length === 9 && ['80', '81', '82', '83', '84', '85', '89', '90', '91', '97', '98', '99'].includes(digits.slice(0, 2))) {
+    return `243${digits}`;
+  }
+  return digits;
+}
+
+function guessPartnerFromPhone(phoneNumber: string): EnkambaPayPartner | null {
+  const digits = normalizeCdPhoneDigits(phoneNumber);
+  if (!digits.startsWith('243') || digits.length < 5) return null;
+
+  const prefix = digits.slice(3, 5); // e.g. 81, 84...
+
+  // DRC prefix assignments (heuristic). User can always change the selection.
+  if (['81', '82', '83'].includes(prefix)) return 'mpesa';
+  if (['84', '85'].includes(prefix)) return 'orange';
+  if (['97', '98', '99'].includes(prefix)) return 'airtel';
+  if (['90', '91'].includes(prefix)) return 'africell';
+
+  return null;
+}
 
 export default function AddFundsPage() {
   const router = useRouter();
@@ -38,6 +66,8 @@ export default function AddFundsPage() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [email, setEmail] = useState('');
   const [enkambaPayPartner, setEnkambaPayPartner] = useState<EnkambaPayPartner>('airtel');
+  const [enkambaPayCurrency, setEnkambaPayCurrency] = useState<EnkambaPayCurrency>('USD');
+  const [enkambaPayPartnerLocked, setEnkambaPayPartnerLocked] = useState(false);
   const [wonyaDetails, setWonyaDetails] = useState({
     currency: 'CDF' as 'CDF' | 'USD',
     motif: '',
@@ -50,7 +80,7 @@ export default function AddFundsPage() {
   const numericAmount = Number(amount || 0);
   const usesUsdRate =
     paymentMethod === 'paypal' ||
-    paymentMethod === 'enkambapay' ||
+    (paymentMethod === 'enkambapay' && enkambaPayCurrency === 'USD') ||
     (paymentMethod === 'wonyapay' && wonyaDetails.currency === 'USD');
 
   useEffect(() => {
@@ -76,6 +106,17 @@ export default function AddFundsPage() {
     if (usesUsdRate) return Math.round(numericAmount * usdToCdfRate);
     return numericAmount;
   }, [numericAmount, usdToCdfRate, usesUsdRate]);
+
+  useEffect(() => {
+    if (paymentMethod !== 'enkambapay') return;
+
+    const suggestion = guessPartnerFromPhone(phoneNumber);
+    if (!suggestion) return;
+
+    if (!enkambaPayPartnerLocked) {
+      setEnkambaPayPartner(suggestion);
+    }
+  }, [paymentMethod, phoneNumber, enkambaPayPartnerLocked]);
 
   const handleMethodSelect = (method: PaymentMethod) => {
     setPaymentError(null);
@@ -133,6 +174,7 @@ export default function AddFundsPage() {
         telephone: phoneNumber.trim(),
         email: email.trim(),
         partner: enkambaPayPartner,
+        currency: enkambaPayCurrency,
       }),
     });
     const result = await response.json().catch(() => null);
@@ -312,17 +354,40 @@ export default function AddFundsPage() {
                 <>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
-                      <Label>Montant à payer (USD)</Label>
-                      <Input type="number" min="1" placeholder="Ex: 10" value={amount} onChange={(event) => setAmount(event.target.value)} />
+                      <Label>Devise</Label>
+                      <Select value={enkambaPayCurrency} onValueChange={(value) => setEnkambaPayCurrency(value as EnkambaPayCurrency)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionner une devise" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="USD">USD</SelectItem>
+                          <SelectItem value="CDF">CDF</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
+
                     <div className="space-y-2">
-                      <Label>Crédit portefeuille estimé</Label>
-                      <div className="rounded-md border bg-muted/40 px-3 py-2">
-                        <p className="text-lg font-bold text-[#32BB78]">
-                          {isLoadingRate ? 'Calcul...' : `${convertedAmount.toLocaleString('fr-FR')} CDF`}
-                        </p>
+                      <Label>Montant à payer ({enkambaPayCurrency})</Label>
+                      <Input
+                        type="number"
+                        min="1"
+                        step={enkambaPayCurrency === 'USD' ? '0.01' : '1'}
+                        placeholder={enkambaPayCurrency === 'USD' ? 'Ex: 10' : 'Ex: 10000'}
+                        value={amount}
+                        onChange={(event) => setAmount(event.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Crédit portefeuille estimé</Label>
+                    <div className="rounded-md border bg-muted/40 px-3 py-2">
+                      <p className="text-lg font-bold text-[#32BB78]">
+                        {isLoadingRate ? 'Calcul...' : `${convertedAmount.toLocaleString('fr-FR')} CDF`}
+                      </p>
+                      {enkambaPayCurrency === 'USD' && (
                         <p className="text-xs text-muted-foreground">Taux: 1 USD = {usdToCdfRate.toLocaleString('fr-FR')} CDF</p>
-                      </div>
+                      )}
                     </div>
                   </div>
 
@@ -333,32 +398,24 @@ export default function AddFundsPage() {
 
                   <div className="space-y-2">
                     <Label>Partenaire de paiement</Label>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      {ENKAMBAPAY_PARTNERS.map((partner) => (
-                        <button
-                          key={partner.id}
-                          type="button"
-                          onClick={() => setEnkambaPayPartner(partner.id)}
-                          className={`flex items-center gap-3 rounded-lg border p-3 text-left transition ${
-                            enkambaPayPartner === partner.id
-                              ? 'border-[#32BB78] bg-[#32BB78]/10 text-[#0B6E4F]'
-                              : 'border-border bg-background hover:border-[#0B6E4F]'
-                          }`}
-                        >
-                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border bg-white">
-                            {partner.logo ? (
-                              <Image src={partner.logo} alt={partner.label} width={64} height={32} className="h-6 w-auto object-contain" />
-                            ) : (
-                              <CreditCard className="h-5 w-5 text-[#0B6E4F]" />
-                            )}
-                          </span>
-                          <span>
-                            <span className="block font-semibold">{partner.label}</span>
-                            <span className="block text-xs text-muted-foreground">Confirmation mobile</span>
-                          </span>
-                        </button>
-                      ))}
-                    </div>
+                    <Select
+                      value={enkambaPayPartner}
+                      onValueChange={(value) => {
+                        setEnkambaPayPartner(value as EnkambaPayPartner);
+                        setEnkambaPayPartnerLocked(true);
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner un partenaire" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ENKAMBAPAY_PARTNERS.map((partner) => (
+                          <SelectItem key={partner.id} value={partner.id}>
+                            {partner.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div className="space-y-2">
@@ -439,7 +496,9 @@ export default function AddFundsPage() {
                   <span className="text-right font-bold">
                     {paymentMethod === 'wonyapay'
                       ? `${numericAmount.toLocaleString('fr-FR')} ${wonyaDetails.currency}`
-                      : `${numericAmount.toLocaleString('en-US')} USD`}
+                      : paymentMethod === 'enkambapay'
+                        ? `${numericAmount.toLocaleString('fr-FR')} ${enkambaPayCurrency}`
+                        : `${numericAmount.toLocaleString('en-US')} USD`}
                   </span>
                 </div>
                 <div className="flex justify-between gap-4">
