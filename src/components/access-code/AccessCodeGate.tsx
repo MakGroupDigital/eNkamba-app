@@ -38,10 +38,10 @@ export function AccessCodeGate({ children }: { children: React.ReactNode }) {
 
             {/* Form */}
             <form
-              onSubmit={(e) => {
+              onSubmit={async (e) => {
                 e.preventDefault();
                 setIsSubmitting(true);
-                const success = verifyCode(code);
+                const success = await verifyCode(code);
                 if (!success) {
                   setCode('');
                 }
