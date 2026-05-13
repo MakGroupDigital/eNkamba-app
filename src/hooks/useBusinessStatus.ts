@@ -2,11 +2,64 @@
 
 import { useState, useEffect } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
-import type { BusinessUser } from '@/types/business-dashboard.types';
+import type { BusinessStatus, BusinessType, BusinessUser } from '@/types/business-dashboard.types';
 
-export function useBusinessStatus() {
+function normalizeBusinessStatus(status: unknown): BusinessStatus {
+  if (status === 'APPROVED' || status === 'VERIFIED') return 'APPROVED';
+  if (status === 'REJECTED') return 'REJECTED';
+  if (status === 'UNDER_REVIEW') return 'UNDER_REVIEW';
+  return 'PENDING';
+}
+
+function normalizeBusinessType(type: unknown): BusinessType | null {
+  if (type === 'COMMERCE' || type === 'LOGISTICS' || type === 'PAYMENT') return type;
+  return null;
+}
+
+function getTime(value: any): number {
+  if (!value) return 0;
+  if (typeof value?.toMillis === 'function') return value.toMillis();
+  if (value instanceof Date) return value.getTime();
+  if (typeof value === 'number') return value;
+  if (typeof value === 'string') {
+    const parsed = Date.parse(value);
+    return Number.isNaN(parsed) ? 0 : parsed;
+  }
+  return 0;
+}
+
+function candidateTime(data: any): number {
+  return Math.max(
+    getTime(data.approvedAt),
+    getTime(data.verifiedAt),
+    getTime(data.updatedAt),
+    getTime(data.submittedAt),
+    getTime(data.createdAt)
+  );
+}
+
+function buildBusinessUserCandidate(uid: string, data: any, businessId?: string): (BusinessUser & { priorityTime: number }) | null {
+  const businessType = normalizeBusinessType(data.businessType || data.type);
+  const status = normalizeBusinessStatus(data.status || data.businessStatus);
+  if (!businessType) return null;
+
+  return {
+    uid,
+    businessName: data.businessName || 'Compte entreprise',
+    businessType,
+    status,
+    rejectionReason: data.rejectionReason,
+    approvedAt: getTime(data.approvedAt || data.verifiedAt) || undefined,
+    businessId: businessId || data.businessId,
+    subCategory: data.subCategory,
+    isBusiness: data.isBusiness ?? status === 'APPROVED',
+    priorityTime: candidateTime(data),
+  };
+}
+
+export function useBusinessStatus(preferredBusinessType?: BusinessType | null) {
   const [user, setUser] = useState<User | null>(null);
   const [businessUser, setBusinessUser] = useState<BusinessUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -29,47 +82,47 @@ export function useBusinessStatus() {
       }
 
       try {
+        const candidates: Array<BusinessUser & { priorityTime: number }> = [];
+
         const businessDocRef = doc(db, 'businessUsers', user.uid);
         const businessDoc = await getDoc(businessDocRef);
-
         if (businessDoc.exists()) {
-          const data = businessDoc.data();
-          setBusinessUser({
-            uid: user.uid,
-            businessName: data.businessName || 'Compte entreprise',
-            businessType: data.businessType,
-            status: data.status,
-            rejectionReason: data.rejectionReason,
-            approvedAt: typeof data.approvedAt === 'number' ? data.approvedAt : data.approvedAt?.toMillis?.(),
-            businessId: data.businessId,
-            subCategory: data.subCategory,
-            isBusiness: data.isBusiness,
-          } as BusinessUser);
-        } else {
-          const userDocRef = doc(db, 'users', user.uid);
-          const userDoc = await getDoc(userDocRef);
-
-          if (!userDoc.exists()) {
-            setBusinessUser(null);
-          } else {
-            const data = userDoc.data();
-            if (!data.businessStatus || !data.businessType) {
-              setBusinessUser(null);
-            } else {
-              setBusinessUser({
-                uid: user.uid,
-                businessName: data.businessName || 'Compte entreprise',
-                businessType: data.businessType,
-                status: data.businessStatus,
-                rejectionReason: data.rejectionReason,
-                approvedAt: typeof data.approvedAt === 'number' ? data.approvedAt : data.approvedAt?.toMillis?.(),
-                businessId: data.businessId,
-                subCategory: data.subCategory,
-                isBusiness: data.isBusiness,
-              } as BusinessUser);
-            }
-          }
+          const candidate = buildBusinessUserCandidate(user.uid, businessDoc.data());
+          if (candidate) candidates.push(candidate);
         }
+
+        const userDocRef = doc(db, 'users', user.uid);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+          const candidate = buildBusinessUserCandidate(user.uid, userDoc.data());
+          if (candidate) candidates.push(candidate);
+        }
+
+        const requestsSnapshot = await getDocs(query(collection(db, 'business_requests'), where('userId', '==', user.uid)));
+        requestsSnapshot.docs.forEach((requestDoc) => {
+          const candidate = buildBusinessUserCandidate(user.uid, requestDoc.data(), requestDoc.id);
+          if (candidate) candidates.push(candidate);
+        });
+
+        if (!candidates.length) {
+          setBusinessUser(null);
+          return;
+        }
+
+        const ranked = candidates.sort((left, right) => {
+          const leftApproved = left.status === 'APPROVED' ? 1 : 0;
+          const rightApproved = right.status === 'APPROVED' ? 1 : 0;
+          if (rightApproved !== leftApproved) return rightApproved - leftApproved;
+
+          const leftPreferred = preferredBusinessType && left.businessType === preferredBusinessType ? 1 : 0;
+          const rightPreferred = preferredBusinessType && right.businessType === preferredBusinessType ? 1 : 0;
+          if (rightPreferred !== leftPreferred) return rightPreferred - leftPreferred;
+
+          return right.priorityTime - left.priorityTime;
+        });
+
+        const { priorityTime, ...resolvedBusinessUser } = ranked[0];
+        setBusinessUser(resolvedBusinessUser);
       } catch (err) {
         console.error('Error fetching business status:', err);
         setError('Erreur lors du chargement du statut business');
@@ -79,7 +132,7 @@ export function useBusinessStatus() {
     }
 
     fetchBusinessStatus();
-  }, [user?.uid]);
+  }, [preferredBusinessType, user?.uid]);
 
   return {
     businessUser,

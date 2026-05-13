@@ -1,18 +1,26 @@
 'use client';
 
 import React from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useBusinessStatus } from '@/hooks/useBusinessStatus';
 import { BusinessStatusCard } from '@/components/business/business-status-card';
 import { CommerceDashboard } from '@/components/business/dashboards/commerce-dashboard';
 import { LogisticsDashboard } from '@/components/business/dashboards/logistics-dashboard';
 import { PaymentDashboard } from '@/components/business/dashboards/payment-dashboard';
+import type { BusinessType } from '@/types/business-dashboard.types';
 
 interface BusinessDashboardWrapperProps {
   onRetry?: () => void;
 }
 
 export function BusinessDashboardWrapper({ onRetry }: BusinessDashboardWrapperProps) {
-  const { businessUser, isLoading, error, isApproved } = useBusinessStatus();
+  const searchParams = useSearchParams();
+  const requestedModule = searchParams?.get('module');
+  const preferredBusinessType: BusinessType | null =
+    requestedModule === 'LOGISTICS' || requestedModule === 'COMMERCE' || requestedModule === 'PAYMENT'
+      ? requestedModule
+      : null;
+  const { businessUser, isLoading, error, isApproved } = useBusinessStatus(preferredBusinessType);
 
   if (isLoading) {
     return (
@@ -60,14 +68,18 @@ export function BusinessDashboardWrapper({ onRetry }: BusinessDashboardWrapperPr
     );
   }
 
+  const activeBusinessUser = preferredBusinessType
+    ? { ...businessUser, businessType: preferredBusinessType }
+    : businessUser;
+
   // Show appropriate dashboard based on business type
-  switch (businessUser.businessType) {
+  switch (activeBusinessUser.businessType) {
     case 'COMMERCE':
-      return <CommerceDashboard businessUser={businessUser} />;
+      return <CommerceDashboard businessUser={activeBusinessUser} />;
     case 'LOGISTICS':
-      return <LogisticsDashboard businessUser={businessUser} />;
+      return <LogisticsDashboard businessUser={activeBusinessUser} />;
     case 'PAYMENT':
-      return <PaymentDashboard businessUser={businessUser} />;
+      return <PaymentDashboard businessUser={activeBusinessUser} />;
     default:
       return (
         <div className="flex items-center justify-center min-h-screen">

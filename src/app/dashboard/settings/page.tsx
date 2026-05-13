@@ -28,6 +28,7 @@ import { useState, useEffect } from 'react';
 import { useKycStatus } from '@/hooks/useKycStatus';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useBusinessStatus } from '@/hooks/useBusinessStatus';
+import { getBusinessDashboardPath, getBusinessStatusLabel } from '@/lib/business-routing';
 import { ContactQRCode } from '@/components/settings/ContactQRCode';
 import { AgentRelaySection } from '@/components/agent-relay/AgentRelaySection';
 import {
@@ -163,11 +164,11 @@ export default function SettingsPage() {
   const businessDescription = businessUser
     ? businessUser.status === 'APPROVED'
       ? 'Basculer vers le compte entreprise pour accéder aux modules pro.'
-      : `Statut actuel : ${businessUser.status}. Modifiez la demande si nécessaire.`
+      : `Statut actuel : ${getBusinessStatusLabel(businessUser.status)}. Modifiez la demande si nécessaire.`
     : 'Demandez un compte professionnel pour accéder aux modules avancés.';
 
   const businessActionLink = businessUser?.status === 'APPROVED'
-    ? '/dashboard/business-pro'
+    ? getBusinessDashboardPath(businessUser.businessType)
     : '/dashboard/settings/business-account';
 
   const businessActionLabel = businessUser?.status === 'APPROVED'

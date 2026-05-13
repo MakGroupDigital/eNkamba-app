@@ -8,6 +8,7 @@ import AuthGuard from '@/components/auth-guard';
 import { ModuleKycGate } from '@/components/module-kyc-gate';
 import { TransferNotificationModal } from '@/components/transfer-notification-modal';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { ChevronRight } from 'lucide-react';
 // import { useSupabaseNotifications } from '@/hooks/useSupabaseNotifications'; // Disabled - Supabase realtime not needed
 
 export default function DashboardLayout({
@@ -67,6 +68,7 @@ export default function DashboardLayout({
   const isChatSubpage = pathname.startsWith('/dashboard/miyiki-chat/') && pathname !== '/dashboard/miyiki-chat';
   const isUgaviHome = pathname === '/dashboard/ugavi';
   const isCallPage = pathname.includes('/dashboard/miyiki-chat/audiocall/') || pathname.includes('/dashboard/miyiki-chat/call/');
+  const showLogisticsClientButton = !isCallPage && !isUgaviHome;
 
   return (
     <AuthGuard>
@@ -80,6 +82,17 @@ export default function DashboardLayout({
             <div className="fixed bottom-24 right-4 z-50 flex items-center gap-3">
               <MasoloFloatingButton />
             </div>
+          )}
+
+          {showLogisticsClientButton && (
+            <button
+              type="button"
+              onClick={() => router.push('/dashboard/ugavi?panel=client')}
+              className="fixed left-0 top-1/2 z-50 flex -translate-y-1/2 items-center gap-1 rounded-r-2xl bg-slate-950/90 px-2 py-4 text-xs font-semibold text-white shadow-2xl backdrop-blur transition hover:bg-slate-900"
+            >
+              <ChevronRight className="h-4 w-4" />
+              <span className="hidden [writing-mode:vertical-rl] sm:inline">Mes colis</span>
+            </button>
           )}
 
           {!isCallPage && <HubNavigation activeTab={activeTab} setActiveTab={setActiveTab} />}

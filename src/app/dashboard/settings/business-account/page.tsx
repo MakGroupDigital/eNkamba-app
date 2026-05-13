@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ArrowLeft, Loader2, Upload, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,6 +17,7 @@ import { useBusinessAccount } from '@/hooks/useBusinessAccount';
 import { useAuth } from '@/hooks/useAuth';
 import { useBusinessStatus } from '@/hooks/useBusinessStatus';
 import { BusinessStatusCard } from '@/components/business/business-status-card';
+import { getBusinessDashboardPath } from '@/lib/business-routing';
 import {
   BusinessFormState,
   BusinessType,
@@ -420,10 +422,11 @@ function UgaviBusinessIcon({ size = 28 }: { size?: number }) {
 }
 
 export default function BusinessAccountPage() {
+  const router = useRouter();
   const { toast } = useToast();
   const { user } = useAuth();
   const { businessRequest, isLoading, isSubmitting, submitBusinessRequest } = useBusinessAccount();
-  const { businessUser } = useBusinessStatus();
+  const { businessUser, isLoading: isBusinessStatusLoading } = useBusinessStatus();
 
   const [showForm, setShowForm] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
@@ -459,6 +462,13 @@ export default function BusinessAccountPage() {
       setShowForm(false);
     }
   }, [businessRequest]);
+
+  useEffect(() => {
+    if (isLoading || isBusinessStatusLoading) return;
+    if (businessUser?.status === 'APPROVED') {
+      router.replace(getBusinessDashboardPath(businessUser.businessType));
+    }
+  }, [businessUser?.businessType, businessUser?.status, isBusinessStatusLoading, isLoading, router]);
 
   const selectedEntityType = ENTITY_TYPES.find(type => type.value === formData.entityNature);
   const moduleOverview = formData.type ? MODULE_OVERVIEW[formData.type] : null;
@@ -606,7 +616,7 @@ export default function BusinessAccountPage() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || isBusinessStatusLoading || businessUser?.status === 'APPROVED') {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="animate-spin" size={32} />
