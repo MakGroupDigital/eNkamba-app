@@ -118,17 +118,17 @@ function distanceKm(from: GeoPoint, to: GeoPoint) {
   return radius * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-function markerPercent(point: GeoPoint, center: GeoPoint) {
-  const left = 50 + (point.lon - center.lon) * 520;
-  const top = 50 - (point.lat - center.lat) * 520;
+function markerPercent(point: GeoPoint, center: GeoPoint, radius = 0.06) {
+  const left = 50 + (point.lon - center.lon) * (38 / radius);
+  const top = 50 - (point.lat - center.lat) * (34 / radius);
   return {
     left: Math.min(88, Math.max(12, left)),
     top: Math.min(82, Math.max(16, top)),
   };
 }
 
-function markerPosition(point: GeoPoint, center: GeoPoint) {
-  const position = markerPercent(point, center);
+function markerPosition(point: GeoPoint, center: GeoPoint, radius = 0.06) {
+  const position = markerPercent(point, center, radius);
   return {
     left: `${position.left}%`,
     top: `${position.top}%`,
@@ -212,7 +212,11 @@ export default function UgaviPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { businessUser } = useBusinessStatus();
-  const watchIdRef = useRef<number | null>(null);
+  const locationWatchIdRef = useRef<number | null>(null);
+  const mapGestureRef = useRef<{
+    pointers: Map<number, { x: number; y: number }>;
+    pinchDistance: number | null;
+  }>({ pointers: new Map(), pinchDistance: null });
   const [mode, setMode] = useState<UgaviMode>('send');
   const [pickupLocation, setPickupLocation] = useState('');
   const [dropoffLocation, setDropoffLocation] = useState('');
@@ -235,19 +239,31 @@ export default function UgaviPage() {
   const [isClientPanelOpen, setIsClientPanelOpen] = useState(false);
   const [isProcessingExpressPayment, setIsProcessingExpressPayment] = useState(false);
   const [userPosition, setUserPosition] = useState(KINSHASA_CENTER);
+  const [mapViewCenter, setMapViewCenter] = useState(KINSHASA_CENTER);
+  const [mapRadius, setMapRadius] = useState(0.06);
+  const [hasUserMovedMap, setHasUserMovedMap] = useState(false);
   const [recentShipments, setRecentShipments] = useState<Array<{ id: string; trackingNumber: string; destination: string; status: string; source: 'ugavi' | 'nkampa' }>>([]);
 
   useEffect(() => {
     if (!('geolocation' in navigator)) return;
-    navigator.geolocation.getCurrentPosition(
+
+    locationWatchIdRef.current = navigator.geolocation.watchPosition(
       (position) => {
         const nextPosition = { lat: position.coords.latitude, lon: position.coords.longitude };
         setUserPosition(nextPosition);
-        setPickupPoint((current) => current || nextPosition);
       },
-      () => setUserPosition(KINSHASA_CENTER),
-      { enableHighAccuracy: false, timeout: 8000, maximumAge: 15000 }
+      () => {
+        setUserPosition((current) => current || KINSHASA_CENTER);
+      },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 3000 }
     );
+
+    return () => {
+      if (locationWatchIdRef.current !== null && 'geolocation' in navigator) {
+        navigator.geolocation.clearWatch(locationWatchIdRef.current);
+        locationWatchIdRef.current = null;
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -364,14 +380,6 @@ export default function UgaviPage() {
     };
   }, [user?.uid]);
 
-  useEffect(() => {
-    return () => {
-      if (watchIdRef.current !== null && 'geolocation' in navigator) {
-        navigator.geolocation.clearWatch(watchIdRef.current);
-      }
-    };
-  }, []);
-
   const availableAgencies = useMemo(
     () => AGENCIES.filter((agency) => agency.scope === shipmentType),
     [shipmentType]
@@ -380,31 +388,38 @@ export default function UgaviPage() {
   const selectedAgency = availableAgencies.find((agency) => agency.id === selectedAgencyId) || null;
   const selectedCourier = COURIERS.find((courier) => courier.id === selectedCourierId) || null;
   const activeRouteTarget = mode === 'express' ? selectedCourier : selectedAgency;
-  const routeStartPoint = pickupPoint || userPosition;
+  const routeStartPoint = tripStatus === 'running' ? userPosition : pickupPoint || userPosition;
   const activeDistance = activeRouteTarget ? distanceKm(routeStartPoint, activeRouteTarget) : null;
   const activeEtaMinutes = activeDistance ? Math.max(4, Math.round((activeDistance / (transportMode === 'walk' ? 4 : transportMode === 'bike' ? 12 : 24)) * 60)) : null;
-  const mapCenter = useMemo(() => {
-    if (activeRouteTarget) {
+  const defaultMapCenter = useMemo(() => {
+    if (activeRouteTarget && isRouteReady) {
       return {
         lat: (routeStartPoint.lat + activeRouteTarget.lat) / 2,
         lon: (routeStartPoint.lon + activeRouteTarget.lon) / 2,
       };
     }
-    return dropoffPoint || pickupPoint || userPosition;
-  }, [activeRouteTarget, dropoffPoint, pickupPoint, routeStartPoint, userPosition]);
+    return userPosition;
+  }, [activeRouteTarget, isRouteReady, routeStartPoint, userPosition]);
+  const mapCenter = mapViewCenter;
   const showAgencyMarkers = mode === 'send' && pickupLocation && dropoffLocation;
   const showCourierMarkers = mode === 'express' && pickupLocation && dropoffLocation;
   const hasExpressRoute = Boolean(pickupLocation.trim() && dropoffLocation.trim());
   const routeLine = useMemo(() => {
     if (!activeRouteTarget) return null;
-    const start = markerPercent(routeStartPoint, mapCenter);
-    const end = markerPercent(activeRouteTarget, mapCenter);
+    const start = markerPercent(routeStartPoint, mapCenter, mapRadius);
+    const end = markerPercent(activeRouteTarget, mapCenter, mapRadius);
 
     return {
       start,
       end,
     };
-  }, [activeRouteTarget, mapCenter, routeStartPoint]);
+  }, [activeRouteTarget, mapCenter, mapRadius, routeStartPoint]);
+
+  useEffect(() => {
+    if (!hasUserMovedMap || tripStatus === 'running') {
+      setMapViewCenter(defaultMapCenter);
+    }
+  }, [defaultMapCenter, hasUserMovedMap, tripStatus]);
 
   const startTrip = () => {
     if (!activeRouteTarget) {
@@ -413,23 +428,84 @@ export default function UgaviPage() {
     }
 
     setTripStatus('running');
-    if ('geolocation' in navigator && watchIdRef.current === null) {
-      watchIdRef.current = navigator.geolocation.watchPosition(
-        (position) => setUserPosition({ lat: position.coords.latitude, lon: position.coords.longitude }),
-        () => undefined,
-        { enableHighAccuracy: true, maximumAge: 4000, timeout: 12000 }
-      );
-    }
   };
 
   const pauseTrip = () => setTripStatus('paused');
 
   const stopTrip = () => {
     setTripStatus('idle');
-    if (watchIdRef.current !== null && 'geolocation' in navigator) {
-      navigator.geolocation.clearWatch(watchIdRef.current);
-      watchIdRef.current = null;
+  };
+
+  const recenterMap = () => {
+    setHasUserMovedMap(false);
+    setMapViewCenter(defaultMapCenter);
+  };
+
+  const zoomMap = (direction: 'in' | 'out') => {
+    if (!isRouteReady) {
+      setMapViewCenter(userPosition);
+      setHasUserMovedMap(false);
     }
+    setMapRadius((current) => {
+      const next = direction === 'in' ? current * 0.72 : current / 0.72;
+      return Math.min(0.18, Math.max(0.012, next));
+    });
+  };
+
+  const panMapByPixels = (deltaX: number, deltaY: number) => {
+    const width = window.innerWidth || 1;
+    const height = window.innerHeight || 1;
+    setHasUserMovedMap(true);
+    setMapViewCenter((current) => ({
+      lat: current.lat + (deltaY / height) * mapRadius * 2,
+      lon: current.lon - (deltaX / width) * mapRadius * 2,
+    }));
+  };
+
+  const handleMapPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    event.currentTarget.setPointerCapture(event.pointerId);
+    mapGestureRef.current.pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (mapGestureRef.current.pointers.size === 2) {
+      const points = Array.from(mapGestureRef.current.pointers.values());
+      mapGestureRef.current.pinchDistance = Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
+    }
+  };
+
+  const handleMapPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    const previous = mapGestureRef.current.pointers.get(event.pointerId);
+    if (!previous) return;
+
+    mapGestureRef.current.pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    const pointers = Array.from(mapGestureRef.current.pointers.values());
+
+    if (pointers.length === 1) {
+      panMapByPixels(event.clientX - previous.x, event.clientY - previous.y);
+      return;
+    }
+
+    if (pointers.length === 2) {
+      const nextDistance = Math.hypot(pointers[0].x - pointers[1].x, pointers[0].y - pointers[1].y);
+      const previousDistance = mapGestureRef.current.pinchDistance || nextDistance;
+      const ratio = nextDistance / previousDistance;
+      mapGestureRef.current.pinchDistance = nextDistance;
+      if (!isRouteReady) {
+        setMapViewCenter(userPosition);
+        setHasUserMovedMap(false);
+      }
+      setMapRadius((current) => Math.min(0.18, Math.max(0.012, current / ratio)));
+    }
+  };
+
+  const handleMapPointerEnd = (event: React.PointerEvent<HTMLDivElement>) => {
+    mapGestureRef.current.pointers.delete(event.pointerId);
+    if (mapGestureRef.current.pointers.size < 2) {
+      mapGestureRef.current.pinchDistance = null;
+    }
+  };
+
+  const handleMapWheel = (event: React.WheelEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    zoomMap(event.deltaY > 0 ? 'out' : 'in');
   };
 
   const shareRoute = async () => {
@@ -699,22 +775,32 @@ export default function UgaviPage() {
   };
 
   return (
-    <div className="relative h-screen overflow-hidden bg-slate-950">
+    <div className="relative h-full min-h-0 touch-none overflow-hidden overscroll-none bg-white">
       <iframe
         title="Carte Ugavi"
-        src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapCenter.lon - 0.06},${mapCenter.lat - 0.06},${mapCenter.lon + 0.06},${mapCenter.lat + 0.06}&layer=mapnik&marker=${userPosition.lat},${userPosition.lon}`}
+        src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapCenter.lon - mapRadius},${mapCenter.lat - mapRadius},${mapCenter.lon + mapRadius},${mapCenter.lat + mapRadius}&layer=mapnik`}
         className="absolute inset-0 h-full w-full border-0"
-        style={{ filter: 'saturate(0.85) contrast(1.02)' }}
+        style={{ filter: 'grayscale(1) brightness(1.18) contrast(0.82) opacity(0.7)', pointerEvents: 'none' }}
       />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/25" />
+      <div
+        className="absolute inset-0 z-[5] touch-none cursor-grab active:cursor-grabbing"
+        onPointerDown={handleMapPointerDown}
+        onPointerMove={handleMapPointerMove}
+        onPointerUp={handleMapPointerEnd}
+        onPointerCancel={handleMapPointerEnd}
+        onWheel={handleMapWheel}
+      />
+      <div className="pointer-events-none absolute inset-0 bg-white/30 mix-blend-screen" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(50,187,120,0.08),transparent_45%),linear-gradient(to_bottom,rgba(255,255,255,0.1),rgba(255,255,255,0.45))]" />
 
       <button
         type="button"
-        className="absolute z-20 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-full bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-800 shadow-lg ring-1 ring-black/5"
-        style={markerPosition(userPosition, mapCenter)}
+        title="Ma localisation"
+        className="absolute z-20 flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-emerald-700 shadow-xl ring-4 ring-emerald-500/25"
+        style={markerPosition(userPosition, mapCenter, mapRadius)}
       >
-        <span className="h-2.5 w-2.5 rounded-full bg-blue-600" />
-        Vous
+        <span className="absolute h-12 w-12 animate-ping rounded-full bg-emerald-400/25" />
+        <Navigation className="relative h-5 w-5 fill-emerald-600" />
       </button>
 
       {pickupPoint && (
@@ -722,7 +808,7 @@ export default function UgaviPage() {
           type="button"
           title={pickupLocation}
           className="absolute z-20 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-full bg-emerald-600 px-2.5 py-1.5 text-xs font-semibold text-white shadow-lg ring-2 ring-white/80"
-          style={markerPosition(pickupPoint, mapCenter)}
+          style={markerPosition(pickupPoint, mapCenter, mapRadius)}
         >
           <MapPin className="h-3.5 w-3.5" />
           Depart
@@ -734,7 +820,7 @@ export default function UgaviPage() {
           type="button"
           title={dropoffLocation}
           className="absolute z-20 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-full bg-orange-600 px-2.5 py-1.5 text-xs font-semibold text-white shadow-lg ring-2 ring-white/80"
-          style={markerPosition(dropoffPoint, mapCenter)}
+          style={markerPosition(dropoffPoint, mapCenter, mapRadius)}
         >
           <Navigation className="h-3.5 w-3.5" />
           Destination
@@ -755,7 +841,7 @@ export default function UgaviPage() {
             className={`absolute z-20 flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full shadow-xl ring-2 ring-white/80 ${
               selectedAgencyId === agency.id ? 'bg-emerald-600 text-white' : 'bg-white text-slate-800'
             }`}
-            style={markerPosition(agency, mapCenter)}
+            style={markerPosition(agency, mapCenter, mapRadius)}
           >
             {agency.scope === 'international' ? <Plane className="h-5 w-5" /> : <Package className="h-5 w-5" />}
           </button>
@@ -776,7 +862,7 @@ export default function UgaviPage() {
             className={`absolute z-20 flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full shadow-xl ring-2 ring-white/80 ${
               selectedCourierId === courier.id ? 'bg-orange-600 text-white' : 'bg-white text-slate-800'
             }`}
-            style={markerPosition(courier, mapCenter)}
+            style={markerPosition(courier, mapCenter, mapRadius)}
           >
             <LocomotionIcon type={courier.locomotion} />
           </button>
@@ -798,7 +884,7 @@ export default function UgaviPage() {
             />
           </svg>
           <span
-            className="absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-600 ring-4 ring-white/80"
+            className="absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-600 ring-4 ring-white/80"
             style={{ left: `${routeLine.start.left}%`, top: `${routeLine.start.top}%` }}
           />
           <span
@@ -822,6 +908,33 @@ export default function UgaviPage() {
           Business
         </Button>
       </header>
+
+      <div className="absolute right-4 top-24 z-30 flex flex-col gap-2">
+        <button
+          type="button"
+          onClick={() => zoomMap('in')}
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-white/92 text-lg font-black text-emerald-700 shadow-lg backdrop-blur"
+          title="Zoomer"
+        >
+          +
+        </button>
+        <button
+          type="button"
+          onClick={() => zoomMap('out')}
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-white/92 text-lg font-black text-emerald-700 shadow-lg backdrop-blur"
+          title="Dezoomer"
+        >
+          -
+        </button>
+        <button
+          type="button"
+          onClick={recenterMap}
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-600 text-white shadow-lg"
+          title="Recentrer"
+        >
+          <Navigation className="h-4 w-4" />
+        </button>
+      </div>
 
       <section className="absolute left-3 right-3 top-16 z-30 mx-auto max-w-md">
         <div className="grid grid-cols-3 gap-1 rounded-2xl bg-white/92 p-1.5 shadow-2xl backdrop-blur-xl ring-1 ring-black/5">
@@ -962,7 +1075,7 @@ export default function UgaviPage() {
                   </div>
 
                   <Button onClick={handleAgencyRouteButton} disabled={isRouteReady && tripStatus === 'running'} className="h-11 w-full rounded-xl bg-emerald-600 hover:bg-emerald-700">
-                    {isRouteReady ? (tripStatus === 'running' ? 'Itineraire en cours' : "Commencer l'itineraire") : "Creer l'itineraire"}
+                    {isRouteReady ? (tripStatus === 'running' ? 'Suivi actif' : "Commencer l'itineraire") : "Creer l'itineraire"}
                   </Button>
                 </>
               )}

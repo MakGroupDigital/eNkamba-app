@@ -66,15 +66,15 @@ export default function DashboardLayout({
 
   const showMasoloButton = !pathname.includes('/miyiki-chat');
   const isChatSubpage = pathname.startsWith('/dashboard/miyiki-chat/') && pathname !== '/dashboard/miyiki-chat';
-  const isUgaviHome = pathname === '/dashboard/ugavi';
+  const isUgaviHome = pathname === '/dashboard/ugavi' || pathname === '/dashboard/ugavi/';
   const isCallPage = pathname.includes('/dashboard/miyiki-chat/audiocall/') || pathname.includes('/dashboard/miyiki-chat/call/');
   const showLogisticsClientButton = !isCallPage && !isUgaviHome;
 
   return (
     <AuthGuard>
       <ModuleKycGate>
-        <div className="flex h-screen flex-col bg-background">
-          <main className={isCallPage ? 'fixed inset-0 z-[200] overflow-hidden bg-black' : isChatSubpage || isUgaviHome ? 'flex-grow overflow-hidden pb-0' : 'flex-grow overflow-y-auto pb-40'}>
+        <div className="flex h-dvh overflow-hidden flex-col bg-background">
+          <main className={isCallPage ? 'fixed inset-0 z-[200] overflow-hidden bg-black' : isUgaviHome ? 'min-h-0 flex-1 touch-none overflow-hidden overscroll-none pb-0' : isChatSubpage ? 'min-h-0 flex-1 overflow-hidden pb-0' : 'flex-grow overflow-y-auto pb-40'}>
             {children}
           </main>
 
