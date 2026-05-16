@@ -118,6 +118,7 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
     useState<BiometricRegistration | null>(null);
   const [hasAutoPromptedBiometric, setHasAutoPromptedBiometric] =
     useState(false);
+  const [userLabel, setUserLabel] = useState("Utilisateur eNkamba");
 
   const shouldSkipGate = useMemo(() => {
     return (
@@ -129,7 +130,6 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
 
   const sessionKey = user?.uid ? `${SESSION_PREFIX}:${user.uid}` : "";
   const biometricKey = user?.uid ? `${BIOMETRIC_PREFIX}:${user.uid}` : "";
-  const userLabel = getStoredUserLabel(user);
 
   const markUnlocked = useCallback(() => {
     if (sessionKey) {
@@ -187,6 +187,7 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
       setConfirmPin("");
       setAttempts(0);
       setMessage("");
+      setUserLabel(getStoredUserLabel(currentUser));
       setHasAutoPromptedBiometric(false);
       void loadSecurityState(currentUser);
     });

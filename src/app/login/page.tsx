@@ -158,7 +158,7 @@ export default function LoginPage() {
         className: "bg-[#32BB78] text-white border-none",
       });
 
-      router.push("/dashboard");
+      router.push("/dashboard/miyiki-chat");
     } catch (error: any) {
       console.error("Google Login Error:", error);
       
@@ -284,7 +284,7 @@ export default function LoginPage() {
           className: "bg-[#32BB78] text-white border-none",
         });
 
-        router.push("/dashboard");
+        router.push("/dashboard/miyiki-chat");
       } else {
         throw new Error("Code incorrect.");
       }
@@ -354,7 +354,7 @@ export default function LoginPage() {
         className: "bg-[#32BB78] text-white border-none",
       });
 
-      router.push("/dashboard");
+      router.push("/dashboard/miyiki-chat");
     } catch (error: any) {
       toast({
         variant: "destructive",

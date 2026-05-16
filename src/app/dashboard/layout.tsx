@@ -18,7 +18,7 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname() ?? '';
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState('Paiement');
+  const [activeTab, setActiveTab] = useState('Messagerie unifiée');
   usePushNotifications();
   // useSupabaseNotifications(); // Disabled - Supabase realtime not needed
 
@@ -26,7 +26,8 @@ export default function DashboardLayout({
     if (pathname.includes('/miyiki-chat')) setActiveTab('Messagerie unifiée');
     else if (pathname.includes('/nkampa')) setActiveTab('E-comm');
     else if (pathname.includes('/ugavi')) setActiveTab('Logistique');
-    else if (pathname.includes('/mbongo-dashboard') || pathname.endsWith('/dashboard')) setActiveTab('Paiement');
+    else if (pathname.includes('/mbongo-dashboard')) setActiveTab('Paiement');
+    else if (pathname.endsWith('/dashboard')) setActiveTab('Messagerie unifiée');
     else if (pathname.includes('/estream')) setActiveTab('eStream');
     else if (pathname.includes('/makutano')) setActiveTab('Connexion');
     else if (pathname.includes('/ai')) setActiveTab('AI');

@@ -141,10 +141,10 @@ export default function OnboardingPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [direction, setDirection] = useState(0);
 
-  // Rediriger les utilisateurs authentifiés vers le dashboard
+  // Rediriger les utilisateurs authentifiés vers la messagerie
   useEffect(() => {
     if (!authLoading && user) {
-      router.push("/dashboard");
+      router.push("/dashboard/miyiki-chat");
     }
   }, [user, authLoading, router]);
 
