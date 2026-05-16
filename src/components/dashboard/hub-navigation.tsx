@@ -15,7 +15,7 @@ import {
 } from '@/components/icons/service-icons';
 
 const navItems = [
-  { name: 'Chat', icon: ChatNavIcon, href: '/dashboard/miyiki-chat', color: '#32BB78' },
+  { name: 'Messagerie unifiée', icon: ChatNavIcon, href: '/dashboard/miyiki-chat', color: '#32BB78' },
   { name: 'E-comm', icon: ShopNavIcon, href: '/dashboard/nkampa', color: '#FF8C00' },
   { name: 'Logistique', icon: LogisticsNavIcon, href: '/dashboard/ugavi', color: '#0E5A59' },
   { name: 'Paiement', icon: PaymentNavIcon, href: '/dashboard/mbongo-dashboard', color: '#32BB78' },
@@ -112,7 +112,7 @@ export default function HubNavigation({
                 {/* Label avec animation */}
                 <motion.span 
                   className={cn(
-                    "relative z-10 text-[10px] md:text-xs truncate max-w-full px-1",
+                    "relative z-10 max-w-full px-0 text-center text-[10px] leading-[1.05] md:text-xs md:leading-tight",
                     isActive ? "font-semibold" : "font-normal"
                   )}
                   animate={{ 

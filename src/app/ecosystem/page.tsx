@@ -50,7 +50,7 @@ const solutions = [
     color: 'bg-primary',
   },
   {
-    title: 'Miyiki-Chat',
+    title: 'eChat',
     subtitle: 'Messagerie Unifiée',
     description:
       "Communiquez, collaborez et interagissez avec les services clients et les autres utilisateurs de l'écosystème. Une messagerie centralisée pour rester connecté.",

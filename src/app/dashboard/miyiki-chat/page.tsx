@@ -16,10 +16,10 @@ import {
 } from "@/components/ui/dialog";
 import { useConversations } from '@/hooks/useConversations';
 import { useFirestoreContacts } from '@/hooks/useFirestoreContacts';
-import { useAllTransactions } from '@/hooks/useAllTransactions';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useStories } from '@/hooks/useStories';
 import { useChatSettings } from '@/hooks/useChatSettings';
+import { useNotifications, type Notification } from '@/hooks/useNotifications';
 import { ChatContactsDialog } from '@/components/chat-contacts-dialog';
 import { StartChatEmptyState } from '@/components/start-chat-empty-state';
 import { StoriesOnboarding } from '@/components/stories/StoriesOnboarding';
@@ -33,20 +33,19 @@ import {
 import {
   ChatDiscussionsIcon,
   ChatStoriesIcon,
-  ChatTransactionsIcon,
   ChatSettingsIcon,
   ChatFilterAllIcon,
   ChatFilterUnreadIcon,
   ChatFilterReadIcon,
   ChatFilterGroupsIcon,
 } from "@/components/icons/chat-icons";
-import { MessageSquare, Check, CheckCheck, Circle, Users, Plus, TrendingUp, Settings, Edit, Zap, MapPin, ShoppingBag, Video, Mic, Image as ImageIcon, Eye, EyeOff } from 'lucide-react';
+import { MessageSquare, Check, CheckCheck, Circle, Users, Plus, Settings, Edit, Zap, MapPin, Video, Mic, Image as ImageIcon, Eye, EyeOff, Bell, BellRing, Phone } from 'lucide-react';
 import { CreateGroupDialog } from '@/components/create-group-dialog';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useRouter } from 'next/navigation';
 
-type ChatTab = 'discussions' | 'stories' | 'transactions' | 'settings';
+type ChatTab = 'discussions' | 'stories' | 'notifications' | 'settings';
 type MessageFilter = 'all' | 'unread' | 'read' | 'groups';
 
 const messageFilters = [
@@ -65,7 +64,7 @@ export default function MiyikiChatPage() {
     hasConversations,
   } = useConversations();
   const { contacts, isLoading: contactsLoading } = useFirestoreContacts();
-  const { transactions, loading: transactionsLoading } = useAllTransactions();
+  const { allNotifications, unreadCount, isLoading: notificationsLoading, markAsRead, acknowledgeNotification } = useNotifications();
   const { profile } = useUserProfile();
   const { stories, myStories, loading: storiesLoading, markAsViewed, replyToStory } = useStories();
   const { settings, loading: settingsLoading, updateSetting } = useChatSettings();
@@ -211,7 +210,9 @@ export default function MiyikiChatPage() {
                         <Users size={12} className="text-white" />
                       </div>
                     )}
-                    <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-green-500 border-2 border-background"></div>
+                    {convo.otherOnlineStatusVisible && convo.otherIsOnline && (
+                      <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-green-500 border-2 border-background"></div>
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
@@ -389,96 +390,101 @@ export default function MiyikiChatPage() {
     );
   };
 
-  const renderTransactions = () => {
-    if (transactionsLoading) {
+  const renderNotifications = () => {
+    const filteredNotifications = searchQuery.trim()
+      ? allNotifications.filter((notification) => {
+          const query = searchQuery.toLowerCase();
+          return (
+            notification.title?.toLowerCase().includes(query) ||
+            notification.message?.toLowerCase().includes(query) ||
+            notification.senderName?.toLowerCase().includes(query)
+          );
+        })
+      : allNotifications;
+
+    const formatNotificationDate = (notification: Notification) => {
+      const date =
+        notification.timestamp?.toDate?.() ||
+        (typeof notification.createdAt === 'string'
+          ? new Date(notification.createdAt)
+          : notification.createdAt?.toDate?.());
+
+      if (!date || Number.isNaN(date.getTime())) return '';
+      return formatDistanceToNow(date, { addSuffix: true, locale: fr });
+    };
+
+    const getNotificationIcon = (type: string) => {
+      switch (type) {
+        case 'transfer_received':
+        case 'BUSINESS_APPROVED':
+          return <CheckCheck size={20} />;
+        case 'incoming_call':
+          return <Phone size={20} />;
+        case 'payment_request':
+          return <BellRing size={20} />;
+        default:
+          return <Bell size={20} />;
+      }
+    };
+
+    if (notificationsLoading) {
       return (
         <div className="text-center py-8">
-          <p className="text-muted-foreground">Chargement des transactions...</p>
+          <p className="text-muted-foreground">Chargement des notifications...</p>
         </div>
       );
     }
 
-    if (transactions.length === 0) {
+    if (filteredNotifications.length === 0) {
       return (
         <div className="text-center py-12">
-          <TrendingUp size={64} className="mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-xl font-bold mb-2">Aucune transaction</h3>
-          <p className="text-muted-foreground">Vos transactions de paiement apparaîtront ici</p>
+          <Bell size={64} className="mx-auto text-muted-foreground mb-4" />
+          <h3 className="text-xl font-bold mb-2">Aucune notification</h3>
+          <p className="text-muted-foreground">Les notifications de l’application apparaîtront ici</p>
         </div>
       );
     }
-
-    const getTransactionIcon = (type: string) => {
-      switch (type) {
-        case 'transfer_sent':
-        case 'transfer_received':
-          return <TrendingUp size={20} />;
-        case 'deposit':
-          return <Plus size={20} />;
-        case 'withdrawal':
-          return <TrendingUp size={20} className="rotate-180" />;
-        case 'payment_link':
-        case 'contact_payment':
-          return <ShoppingBag size={20} />;
-        default:
-          return <TrendingUp size={20} />;
-      }
-    };
-
-    const getTransactionLabel = (type: string) => {
-      switch (type) {
-        case 'transfer_sent': return 'Transfert envoyé';
-        case 'transfer_received': return 'Transfert reçu';
-        case 'deposit': return 'Dépôt';
-        case 'withdrawal': return 'Retrait';
-        case 'payment_link': return 'Paiement par lien';
-        case 'contact_payment': return 'Paiement contact';
-        case 'money_request_sent': return 'Demande envoyée';
-        case 'money_request_received': return 'Demande reçue';
-        default: return type;
-      }
-    };
 
     return (
       <div className="space-y-2">
-        {transactions.map((tx, i) => {
-          const isReceived = tx.type === 'transfer_received' || tx.type === 'deposit' || tx.type === 'money_request_received';
-          const displayName = isReceived ? tx.senderName : tx.recipientName;
-          
+        {filteredNotifications.map((notification) => {
           return (
-            <Card key={tx.id} className="p-4 rounded-2xl">
+            <Card
+              key={notification.id}
+              className={`p-4 rounded-2xl transition-shadow ${notification.read ? 'bg-card' : 'bg-primary/5 border-primary/20'}`}
+            >
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <div className={`h-12 w-12 rounded-full flex items-center justify-center ${
-                    isReceived ? 'bg-green-100 text-green-600' : 'bg-primary/10 text-primary'
-                  }`}>
-                    {getTransactionIcon(tx.type)}
+                  <div className="h-12 w-12 rounded-full flex items-center justify-center bg-primary/10 text-primary">
+                    {getNotificationIcon(notification.type)}
                   </div>
-                  <div className="absolute -bottom-1 -right-1 bg-primary rounded-full p-1">
-                    <span className="text-[8px] text-white font-bold">eNk</span>
-                  </div>
+                  {!notification.read && <div className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-red-500 border-2 border-background" />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <p className="font-bold text-foreground">eNkamba-Pay</p>
-                    <Badge variant={tx.status === 'completed' ? 'default' : 'secondary'} className="text-xs">
-                      {tx.status === 'completed' ? 'Confirmé' : tx.status}
-                    </Badge>
+                    <p className="font-bold text-foreground truncate">{notification.title || 'Notification'}</p>
+                    {!notification.read && <Badge className="text-xs">Nouveau</Badge>}
                   </div>
                   <p className="text-sm text-muted-foreground truncate">
-                    {getTransactionLabel(tx.type)} {displayName && `• ${displayName}`}
+                    {notification.message || notification.senderName || 'Notification eNkamba'}
                   </p>
-                  <p className="text-xs text-muted-foreground">
-                    Transaction #{tx.id.slice(0, 8)}
-                  </p>
+                  {notification.amount && (
+                    <p className="text-xs font-semibold text-primary mt-1">
+                      {notification.amount.toLocaleString('fr-FR')} {notification.currency || 'CDF'}
+                    </p>
+                  )}
                 </div>
-                <div className="text-right flex flex-col items-end gap-1">
-                  <p className={`font-bold ${isReceived ? 'text-green-600' : 'text-foreground'}`}>
-                    {isReceived ? '+' : '-'} {tx.amount.toLocaleString()} {tx.currency || 'CDF'}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {tx.timestamp?.toDate ? formatDistanceToNow(tx.timestamp.toDate(), { addSuffix: true, locale: fr }) : tx.createdAt}
-                  </p>
+                <div className="text-right flex flex-col items-end gap-2">
+                  <p className="text-xs text-muted-foreground whitespace-nowrap">{formatNotificationDate(notification)}</p>
+                  {notification.type === 'transfer_received' && !notification.acknowledged ? (
+                    <Button size="sm" className="h-8 rounded-full" onClick={() => acknowledgeNotification(notification.id)}>
+                      Confirmer
+                    </Button>
+                  ) : !notification.read ? (
+                    <Button size="sm" variant="outline" className="h-8 rounded-full" onClick={() => markAsRead(notification.id)}>
+                      Marquer lu
+                    </Button>
+                  ) : null}
                 </div>
               </div>
             </Card>
@@ -671,7 +677,7 @@ export default function MiyikiChatPage() {
               <MiyikiChatIcon size={28} className="text-white" />
             </div>
             <div>
-              <h1 className="font-headline text-xl font-bold text-white">Miyiki-Chat</h1>
+              <h1 className="font-headline text-xl font-bold text-white">eChat</h1>
               <p className="text-xs text-white/70">Communication intelligente</p>
             </div>
         </div>
@@ -724,18 +730,18 @@ export default function MiyikiChatPage() {
               </button>
               
               <button
-                onClick={() => setActiveTab('transactions')}
+                onClick={() => setActiveTab('notifications')}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-full font-medium text-sm transition-all whitespace-nowrap ${
-                  activeTab === 'transactions'
+                  activeTab === 'notifications'
                     ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg shadow-green-600/30'
                     : 'bg-muted/50 text-muted-foreground hover:bg-muted'
                 }`}
               >
-                <ChatTransactionsIcon size={20} />
-                <span>Transactions</span>
-                {transactions.length > 0 && (
+                <Bell size={20} />
+                <span>Notifications</span>
+                {unreadCount > 0 && (
                   <Badge className="bg-white/20 text-white rounded-full h-5 min-w-[20px] px-1.5 text-xs">
-                    {transactions.length > 9 ? '9+' : transactions.length}
+                    {unreadCount > 9 ? '9+' : unreadCount}
                   </Badge>
                 )}
               </button>
@@ -760,7 +766,7 @@ export default function MiyikiChatPage() {
               <SearchIcon size={20} className="text-muted-foreground" />
             </div>
             <Input
-              placeholder={activeTab === 'discussions' ? "Rechercher message ou contact..." : activeTab === 'transactions' ? "Rechercher une transaction..." : "Rechercher..."}
+              placeholder={activeTab === 'discussions' ? "Rechercher message ou contact..." : activeTab === 'notifications' ? "Rechercher une notification..." : "Rechercher..."}
               className="h-12 w-full rounded-full bg-muted/50 pl-14 text-base shadow-inner border-0 focus-visible:ring-2 focus-visible:ring-primary/20"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -821,7 +827,7 @@ export default function MiyikiChatPage() {
           {/* Content based on active tab */}
           {activeTab === 'discussions' && renderDiscussions()}
           {activeTab === 'stories' && renderStories()}
-          {activeTab === 'transactions' && renderTransactions()}
+          {activeTab === 'notifications' && renderNotifications()}
           {activeTab === 'settings' && renderSettings()}
         </div>
       </main>

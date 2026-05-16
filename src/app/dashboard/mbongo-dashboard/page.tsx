@@ -10,57 +10,166 @@ import DashboardHeader from "@/components/dashboard/dashboard-header";
 import { SavingsIcon, CreditIcon, TontineIcon, ConversionIcon, ReferralIcon, AgentIcon, LinkAccountIcon, BonusIcon, TaxIcon, YangoIcon, WaterIcon, TvIcon, AcademicIcon, SchoolIcon, FlightIcon, HotelIcon, EventIcon, PhoneCreditIcon, InsuranceIcon, ESimIcon } from "@/components/icons/service-icons";
 import { useUserProfile } from '@/hooks/useUserProfile';
 
+type DashboardCopy = Record<string, string>;
+
+const DEFAULT_COPY: DashboardCopy = {
+  scanner: 'Scanner',
+  payReceive: 'Payer/Recevoir',
+  invest: 'Investir',
+  wallet: 'Portefeuille',
+  aiAssistant: 'Assistant Financier IA',
+  aiAssistantText: 'Analysez votre historique pour détecter des anomalies et obtenir des recommandations.',
+  generateReport: 'Générer un rapport',
+  financialServices: 'Services Financiers',
+  billsServices: 'Factures et autres Services',
+  savings: 'Épargne',
+  credit: 'Crédit',
+  tontine: 'Tontine',
+  conversion: 'Conversion',
+  referral: 'Parrainage',
+  agentAccount: 'Compte Agent',
+  linkAccount: 'Lier un compte',
+  bonus: 'Bonus',
+  esim: 'eSIM-eNkamba',
+  tax: 'Taxe et Impôt',
+  yango: 'Yango',
+  regideso: 'Regideso',
+  canal: 'Canal+',
+  academicFees: 'Frais Académiques',
+  schoolFees: 'Frais Scolaires',
+  flight: "Billet d'avion",
+  hotel: 'Hôtel',
+  events: 'Événements',
+  phoneCredit: 'Crédit Téléphone',
+  insurance: 'Assurance',
+};
+
+const LOCAL_LANGUAGE_COPY: Record<string, Partial<DashboardCopy>> = {
+  fr: DEFAULT_COPY,
+  tsh: {
+    scanner: 'Scanner',
+    payReceive: 'Payer/Recevoir',
+    invest: 'Investir',
+    wallet: 'Portefeuille',
+    aiAssistant: 'Assistant Financier IA',
+    aiAssistantText: DEFAULT_COPY.aiAssistantText,
+    generateReport: 'Générer un rapport',
+    financialServices: 'Services Financiers',
+    billsServices: 'Factures et autres Services',
+  },
+};
+
 const quickActions = [
   { 
     icon: QrCode,
-    label: 'Scanner',
+    labelKey: 'scanner',
     href: '/dashboard/scanner-simple'
   },
   { 
     icon: ArrowLeftRight,
-    label: 'Payer/Recevoir',
+    labelKey: 'payReceive',
     href: '/dashboard/pay-receive'
   },
   { 
     icon: TrendingUp,
-    label: 'Investir',
+    labelKey: 'invest',
     href: '/dashboard/invest'
   },
   { 
     icon: Wallet,
-    label: 'Portefeuille',
+    labelKey: 'wallet',
     href: '/dashboard/wallet'
   },
 ];
 
 const financialServices = [
-  { icon: SavingsIcon, label: 'Épargne', href: '/dashboard/savings' },
-  { icon: CreditIcon, label: 'Crédit', href: '/dashboard/credit' },
-  { icon: TontineIcon, label: 'Tontine', href: '/dashboard/tontine' },
-  { icon: ConversionIcon, label: 'Conversion', href: '/dashboard/conversion' },
-  { icon: ReferralIcon, label: 'Parrainage', href: '/dashboard/referral' },
-  { icon: AgentIcon, label: 'Compte Agent', href: '/dashboard/agent' },
-  { icon: LinkAccountIcon, label: 'Lier un compte', href: '/dashboard/link-account' },
-  { icon: BonusIcon, label: 'Bonus', href: '/dashboard/bonus' },
+  { icon: SavingsIcon, labelKey: 'savings', href: '/dashboard/savings' },
+  { icon: CreditIcon, labelKey: 'credit', href: '/dashboard/credit' },
+  { icon: TontineIcon, labelKey: 'tontine', href: '/dashboard/tontine' },
+  { icon: ConversionIcon, labelKey: 'conversion', href: '/dashboard/conversion' },
+  { icon: ReferralIcon, labelKey: 'referral', href: '/dashboard/referral' },
+  { icon: AgentIcon, labelKey: 'agentAccount', href: '/dashboard/agent' },
+  { icon: LinkAccountIcon, labelKey: 'linkAccount', href: '/dashboard/link-account' },
+  { icon: BonusIcon, labelKey: 'bonus', href: '/dashboard/bonus' },
 ];
 
 const bills = [
-  { icon: ESimIcon, label: 'eSIM-eNkamba', href: '/dashboard/partner-services' },
-  { icon: TaxIcon, label: 'Taxe et Impôt', href: '/dashboard/tax-declaration' },
-  { icon: YangoIcon, label: 'Yango', href: '/dashboard/pay-bill?type=yango' },
-  { icon: WaterIcon, label: 'Regideso', href: '/dashboard/pay-bill?type=water' },
-  { icon: TvIcon, label: 'Canal+', href: '/dashboard/pay-bill?type=tv' },
-  { icon: AcademicIcon, label: 'Frais Académiques', href: '/dashboard/academic-fees' },
-  { icon: SchoolIcon, label: 'Frais Scolaires', href: '/dashboard/school-fees' },
-  { icon: FlightIcon, label: 'Billet d\'avion', href: '/dashboard/flights' },
-  { icon: HotelIcon, label: 'Hôtel', href: '/dashboard/hotels' },
-  { icon: EventIcon, label: 'Événements', href: '/dashboard/events' },
-  { icon: PhoneCreditIcon, label: 'Crédit Téléphone', href: '/dashboard/pay-bill?type=phone' },
-  { icon: InsuranceIcon, label: 'Assurance', href: '/dashboard/insurance' },
+  { icon: ESimIcon, labelKey: 'esim', href: '/dashboard/partner-services' },
+  { icon: TaxIcon, labelKey: 'tax', href: '/dashboard/tax-declaration' },
+  { icon: YangoIcon, labelKey: 'yango', href: '/dashboard/pay-bill?type=yango' },
+  { icon: WaterIcon, labelKey: 'regideso', href: '/dashboard/pay-bill?type=water' },
+  { icon: TvIcon, labelKey: 'canal', href: '/dashboard/pay-bill?type=tv' },
+  { icon: AcademicIcon, labelKey: 'academicFees', href: '/dashboard/academic-fees' },
+  { icon: SchoolIcon, labelKey: 'schoolFees', href: '/dashboard/school-fees' },
+  { icon: FlightIcon, labelKey: 'flight', href: '/dashboard/flights' },
+  { icon: HotelIcon, labelKey: 'hotel', href: '/dashboard/hotels' },
+  { icon: EventIcon, labelKey: 'events', href: '/dashboard/events' },
+  { icon: PhoneCreditIcon, labelKey: 'phoneCredit', href: '/dashboard/pay-bill?type=phone' },
+  { icon: InsuranceIcon, labelKey: 'insurance', href: '/dashboard/insurance' },
 ];
 
 export default function MbongoDashboard() {
   const { profile } = useUserProfile();
+  const [copy, setCopy] = useState<DashboardCopy>(DEFAULT_COPY);
+  const [language, setLanguage] = useState('fr');
+  const [isTranslating, setIsTranslating] = useState(false);
+
+  useEffect(() => {
+    const storedLanguage = window.localStorage.getItem('enkamba-dashboard-language') || 'fr';
+    setLanguage(storedLanguage);
+
+    const handleLanguageChange = (event: Event) => {
+      const customEvent = event as CustomEvent<{ language?: string }>;
+      setLanguage(customEvent.detail?.language || 'fr');
+    };
+
+    window.addEventListener('enkamba-dashboard-language-change', handleLanguageChange);
+    return () => window.removeEventListener('enkamba-dashboard-language-change', handleLanguageChange);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const translateDashboard = async () => {
+      const localCopy = LOCAL_LANGUAGE_COPY[language];
+      if (language === 'fr' || localCopy) {
+        setCopy({ ...DEFAULT_COPY, ...(localCopy || {}) } as DashboardCopy);
+        setIsTranslating(false);
+        return;
+      }
+
+      setIsTranslating(true);
+      try {
+        const entries = Object.entries(DEFAULT_COPY);
+        const translatedEntries = await Promise.all(
+          entries.map(async ([key, text]) => {
+            const response = await fetch('/api/chat/translate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ text, targetLanguage: language }),
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data?.error || 'Traduction impossible');
+            return [key, data.translatedText || text] as const;
+          })
+        );
+
+        if (!cancelled) {
+          setCopy(Object.fromEntries(translatedEntries) as DashboardCopy);
+        }
+      } catch (error) {
+        console.error('Erreur traduction dashboard paiement:', error);
+        if (!cancelled) setCopy(DEFAULT_COPY);
+      } finally {
+        if (!cancelled) setIsTranslating(false);
+      }
+    };
+
+    void translateDashboard();
+    return () => {
+      cancelled = true;
+    };
+  }, [language]);
 
   return (
     <>
@@ -72,13 +181,13 @@ export default function MbongoDashboard() {
             const IconComponent = action.icon;
             
             return (
-              <Link key={action.label} href={action.href} className="flex flex-col items-center gap-2 group">
+              <Link key={action.labelKey} href={action.href} className="flex flex-col items-center gap-2 group">
                 {/* Icon Circle - Green background */}
                 <div className="flex items-center justify-center w-16 h-16 rounded-full bg-[#32BB78] hover:bg-[#2a9d63] transition-all duration-300 hover:scale-110 flex-shrink-0 shadow-md text-white">
                   <IconComponent size={32} className="text-white" />
                 </div>
                 {/* Label */}
-                <p className="text-xs font-medium text-gray-800 text-center">{action.label}</p>
+                <p className="text-xs font-medium text-gray-800 text-center">{copy[action.labelKey]}</p>
               </Link>
             );
           })}
@@ -91,19 +200,20 @@ export default function MbongoDashboard() {
           <CardHeader className="relative">
             <CardTitle className="font-headline flex items-center gap-2">
               <Sparkles className="text-accent" />
-              Assistant Financier IA
+              {copy.aiAssistant}
             </CardTitle>
           </CardHeader>
           <CardContent className="relative">
-            <p className="mb-4 text-sm">Analysez votre historique pour détecter des anomalies et obtenir des recommandations.</p>
-            <Button variant="secondary" asChild><Link href="/dashboard/report">Générer un rapport</Link></Button>
+            <p className="mb-4 text-sm">{copy.aiAssistantText}</p>
+            <Button variant="secondary" asChild><Link href="/dashboard/report">{copy.generateReport}</Link></Button>
           </CardContent>
         </Card>
         <Card className="overflow-hidden">
           <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent">
             <CardTitle className="font-headline flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-              Services Financiers
+              {copy.financialServices}
+              {isTranslating && <span className="text-xs font-normal text-muted-foreground">...</span>}
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
@@ -111,11 +221,11 @@ export default function MbongoDashboard() {
               {financialServices.map(service => {
                 const IconComponent = service.icon;
                 return (
-                  <Link href={service.href} key={service.label} className="flex flex-col items-center gap-3 text-sm font-medium text-foreground hover:text-primary transition-all group">
+                  <Link href={service.href} key={service.labelKey} className="flex flex-col items-center gap-3 text-sm font-medium text-foreground hover:text-primary transition-all group">
                     <div className={cn("flex h-14 w-14 items-center justify-center rounded-2xl", "bg-gradient-to-br from-muted to-muted/50", "group-hover:shadow-lg group-hover:scale-105 transition-all duration-300", "border border-transparent group-hover:border-primary/20")}>
                       <IconComponent size={32} />
                     </div>
-                    <span className="text-center text-xs leading-tight">{service.label}</span>
+                    <span className="text-center text-xs leading-tight">{copy[service.labelKey]}</span>
                   </Link>
                 );
               })}
@@ -126,7 +236,7 @@ export default function MbongoDashboard() {
           <CardHeader className="bg-gradient-to-r from-accent/10 to-transparent">
             <CardTitle className="font-headline flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-accent animate-pulse" />
-              Factures et autres Services
+              {copy.billsServices}
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
@@ -134,11 +244,11 @@ export default function MbongoDashboard() {
               {bills.map(bill => {
                 const IconComponent = bill.icon;
                 return (
-                  <Link href={bill.href} key={bill.label} className={cn("flex flex-col items-center gap-2 rounded-xl p-4 text-center", "bg-gradient-to-br from-background to-muted/30", "border border-border/50 hover:border-primary/30", "text-sm font-medium text-foreground", "hover:shadow-md hover:scale-[1.02] transition-all duration-300", "group")}>
+                  <Link href={bill.href} key={bill.labelKey} className={cn("flex flex-col items-center gap-2 rounded-xl p-4 text-center", "bg-gradient-to-br from-background to-muted/30", "border border-border/50 hover:border-primary/30", "text-sm font-medium text-foreground", "hover:shadow-md hover:scale-[1.02] transition-all duration-300", "group")}>
                     <div className="group-hover:scale-110 transition-transform duration-300">
                       <IconComponent size={36} />
                     </div>
-                    <span className="text-center text-xs leading-tight">{bill.label}</span>
+                    <span className="text-center text-xs leading-tight">{copy[bill.labelKey]}</span>
                   </Link>
                 );
               })}

@@ -31,6 +31,7 @@ export interface Notification {
 export function useNotifications() {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [allNotifications, setAllNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -38,6 +39,9 @@ export function useNotifications() {
   useEffect(() => {
     if (!user) {
       console.log('useNotifications: Pas d\'utilisateur connecté');
+      setAllNotifications([]);
+      setNotifications([]);
+      setUnreadCount(0);
       setIsLoading(false);
       return;
     }
@@ -58,6 +62,12 @@ export function useNotifications() {
           ...(doc.data() as Omit<Notification, 'id'>),
         }));
         console.log('useNotifications: Toutes les notifications:', allNotifs);
+
+        allNotifs.sort((a, b) => {
+          const timeA = a.timestamp?.toMillis?.() || (typeof a.createdAt === 'string' ? new Date(a.createdAt).getTime() : a.createdAt?.toMillis?.() || 0);
+          const timeB = b.timestamp?.toMillis?.() || (typeof b.createdAt === 'string' ? new Date(b.createdAt).getTime() : b.createdAt?.toMillis?.() || 0);
+          return timeB - timeA;
+        });
         
         const notifs = allNotifs.filter(notif => !notif.read) as Notification[]; // Filtrer côté client
         console.log('useNotifications: Notifications non lues:', notifs.length);
@@ -70,6 +80,7 @@ export function useNotifications() {
         });
 
         console.log('Notifications chargées:', notifs.length, notifs);
+        setAllNotifications(allNotifs);
         setNotifications(notifs);
         setUnreadCount(notifs.length);
         setIsLoading(false);
@@ -126,6 +137,7 @@ export function useNotifications() {
 
   return {
     notifications,
+    allNotifications,
     unreadCount,
     isLoading,
     markAsRead,

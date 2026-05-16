@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useUnifiedPayment, PaymentMethod, PaymentContext } from '@/hooks/useUnifiedPayment';
 import { QRScannerComponent } from './QRScannerComponent';
 import { PinVerification } from './PinVerification';
+import { TranslationDialog } from '@/components/translation/TranslationDialog';
 import {
   ArrowLeft,
   Loader2,
@@ -20,6 +21,7 @@ import {
   Wifi,
   CheckCircle2,
   Camera,
+  Languages,
 } from 'lucide-react';
 
 export interface UnifiedPaymentFlowProps {
@@ -62,6 +64,7 @@ export function UnifiedPaymentFlow(props: UnifiedPaymentFlowProps) {
   const [isScanning, setIsScanning] = useState(false);
   const [transactionId, setTransactionId] = useState<string>('');
   const [showPinDialog, setShowPinDialog] = useState(false);
+  const [showDescriptionTranslation, setShowDescriptionTranslation] = useState(false);
 
   const paymentMethods = [
     { id: 'qrcode' as PaymentMethod, icon: QrCode, label: 'Scanner QR Code', description: 'Scannez le code QR' },
@@ -272,7 +275,20 @@ export function UnifiedPaymentFlow(props: UnifiedPaymentFlowProps) {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Description (optionnel)</label>
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <label className="text-sm font-medium">Description (optionnel)</label>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 gap-1 px-2 text-xs"
+                      onClick={() => setShowDescriptionTranslation(true)}
+                      disabled={!description.trim()}
+                    >
+                      <Languages className="h-3.5 w-3.5" />
+                      Traduire
+                    </Button>
+                  </div>
                   <Input
                     type="text"
                     placeholder="Ex: Remboursement, Partage de frais..."
@@ -413,6 +429,15 @@ export function UnifiedPaymentFlow(props: UnifiedPaymentFlowProps) {
           amount: amount,
           currency: 'CDF',
         } : undefined}
+      />
+
+      <TranslationDialog
+        open={showDescriptionTranslation}
+        onOpenChange={setShowDescriptionTranslation}
+        sourceText={description}
+        title="Traduire la description"
+        description="Traduisez la description du paiement avant de l'envoyer."
+        onUseTranslation={setDescription}
       />
     </div>
   );

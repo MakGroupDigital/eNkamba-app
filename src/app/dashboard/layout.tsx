@@ -23,7 +23,7 @@ export default function DashboardLayout({
   // useSupabaseNotifications(); // Disabled - Supabase realtime not needed
 
   useEffect(() => {
-    if (pathname.includes('/miyiki-chat')) setActiveTab('Chat');
+    if (pathname.includes('/miyiki-chat')) setActiveTab('Messagerie unifiée');
     else if (pathname.includes('/nkampa')) setActiveTab('E-comm');
     else if (pathname.includes('/ugavi')) setActiveTab('Logistique');
     else if (pathname.includes('/mbongo-dashboard') || pathname.endsWith('/dashboard')) setActiveTab('Paiement');

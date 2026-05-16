@@ -25,6 +25,10 @@ export interface Conversation {
   otherUserId?: string;
   lastMessageSenderId?: string;
   lastMessageReadByOther?: boolean;
+  otherOnlineStatusVisible?: boolean;
+  otherLastSeenVisible?: boolean;
+  otherIsOnline?: boolean;
+  otherLastSeen?: Timestamp;
 }
 
 export function useConversations() {
@@ -33,6 +37,13 @@ export function useConversations() {
   const [error, setError] = useState<string | null>(null);
   const [userAvatars, setUserAvatars] = useState<Record<string, string>>({});
   const [userNames, setUserNames] = useState<Record<string, string>>({});
+  const [userPrivacy, setUserPrivacy] = useState<Record<string, {
+    onlineStatus: boolean;
+    readReceipts: boolean;
+    lastSeen: boolean;
+    isOnline: boolean;
+    lastSeenAt?: Timestamp;
+  }>>({});
   const userAvatarsRef = useRef<Record<string, string>>({});
 
   useEffect(() => {
@@ -47,15 +58,34 @@ export function useConversations() {
         if (c.isGroup || !c.otherUserId) return c;
         const avatar = c.avatar || userAvatars[c.otherUserId];
         const name = userNames[c.otherUserId] || c.name;
-        if (avatar !== c.avatar || name !== c.name) {
+        const privacy = userPrivacy[c.otherUserId];
+        const nextReadByOther = privacy?.readReceipts === false ? false : c.lastMessageReadByOther;
+        if (
+          avatar !== c.avatar ||
+          name !== c.name ||
+          nextReadByOther !== c.lastMessageReadByOther ||
+          privacy?.onlineStatus !== c.otherOnlineStatusVisible ||
+          privacy?.lastSeen !== c.otherLastSeenVisible ||
+          privacy?.isOnline !== c.otherIsOnline ||
+          privacy?.lastSeenAt !== c.otherLastSeen
+        ) {
           changed = true;
-          return { ...c, avatar, name };
+          return {
+            ...c,
+            avatar,
+            name,
+            lastMessageReadByOther: nextReadByOther,
+            otherOnlineStatusVisible: privacy?.onlineStatus ?? true,
+            otherLastSeenVisible: privacy?.lastSeen ?? true,
+            otherIsOnline: privacy?.isOnline ?? false,
+            otherLastSeen: privacy?.lastSeenAt,
+          };
         }
         return c;
       });
       return changed ? next : prev;
     });
-  }, [userAvatars, userNames]);
+  }, [userAvatars, userNames, userPrivacy]);
 
   // Charger les conversations depuis Firebase
   useEffect(() => {
@@ -147,8 +177,8 @@ export function useConversations() {
                 return otherUid || undefined;
               })(),
               lastMessageSenderId: data.lastMessageSenderId || undefined,
-              lastMessageReadByOther: (() => {
-                if (isGroup) return false;
+                lastMessageReadByOther: (() => {
+                  if (isGroup) return false;
                 const otherParticipantIdx = data.participants?.findIndex((id: string) => id !== currentUser.uid);
                 const otherUid =
                   otherParticipantIdx !== -1 && otherParticipantIdx !== undefined ? data.participants?.[otherParticipantIdx] : undefined;
@@ -156,11 +186,14 @@ export function useConversations() {
                 if (data.lastMessageSenderId !== currentUser.uid) return false;
                 const lastRead = data.lastReadAtByUid?.[otherUid];
                 const lastMsg = data.lastMessageTime;
-                const lastReadMs = lastRead?.toMillis?.() || 0;
-                const lastMsgMs = lastMsg?.toMillis?.() || 0;
-                return lastReadMs >= lastMsgMs && lastMsgMs > 0;
-              })(),
-            });
+                  const lastReadMs = lastRead?.toMillis?.() || 0;
+                  const lastMsgMs = lastMsg?.toMillis?.() || 0;
+                  return lastReadMs >= lastMsgMs && lastMsgMs > 0;
+                })(),
+                otherOnlineStatusVisible: true,
+                otherLastSeenVisible: true,
+                otherIsOnline: false,
+              });
           });
 
           // Trier par dernier message (plus récent en premier)
@@ -212,6 +245,45 @@ export function useConversations() {
               }
             })();
           }
+
+          const privacyIds = Array.from(otherUserIds).filter((id) => id && !userPrivacy[id]);
+          if (privacyIds.length) {
+            (async () => {
+              try {
+                const nextPrivacy: Record<string, {
+                  onlineStatus: boolean;
+                  readReceipts: boolean;
+                  lastSeen: boolean;
+                  isOnline: boolean;
+                  lastSeenAt?: Timestamp;
+                }> = {};
+
+                await Promise.all(
+                  privacyIds.map(async (uid) => {
+                    const [settingsSnap, presenceSnap] = await Promise.all([
+                      getDocs(query(collection(db, 'users', uid, 'settings'), where(documentId(), '==', 'chat'))),
+                      getDocs(query(collection(db, 'users', uid, 'presence'), where(documentId(), '==', 'chat'))),
+                    ]);
+                    const settingsData: any = settingsSnap.docs[0]?.data() || {};
+                    const presenceData: any = presenceSnap.docs[0]?.data() || {};
+                    nextPrivacy[uid] = {
+                      onlineStatus: settingsData.onlineStatus !== false,
+                      readReceipts: settingsData.readReceipts !== false,
+                      lastSeen: settingsData.lastSeen !== false,
+                      isOnline: presenceData.isOnline === true,
+                      lastSeenAt: presenceData.lastSeen,
+                    };
+                  })
+                );
+
+                if (Object.keys(nextPrivacy).length) {
+                  setUserPrivacy((prev) => ({ ...prev, ...nextPrivacy }));
+                }
+              } catch (e) {
+                console.error('Erreur chargement confidentialité chat:', e);
+              }
+            })();
+          }
         });
 
         return () => unsubscribeSnapshot();
@@ -223,7 +295,7 @@ export function useConversations() {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [userPrivacy]);
 
   // Ajouter une nouvelle conversation (pour compatibilité)
   const addConversation = useCallback((conversation: Conversation) => {

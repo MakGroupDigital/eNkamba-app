@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useFirestoreConversations } from '@/hooks/useFirestoreConversations';
 import { useAuth } from '@/hooks/useAuth';
+import { useChatSettings } from '@/hooks/useChatSettings';
 import { ChatNavIcon } from '@/components/icons/service-icons';
 import { LocationMessage } from '@/components/chat/LocationMessage';
 import { FileMessage } from '@/components/chat/FileMessage';
@@ -52,6 +53,8 @@ const TRANSLATION_LANGUAGES = [
     { code: 'zh', label: 'Chinois' },
 ];
 
+const LANGUAGE_STORAGE_KEY = 'enkamba-dashboard-language';
+
 export default function ConversationClient() {
     const params = useParams();
     const router = useRouter();
@@ -59,6 +62,7 @@ export default function ConversationClient() {
 
     const { loadMessages, sendMessage, deleteMessage, updateMessage } = useFirestoreConversations();
     const { user: currentUser } = useAuth();
+    const { settings: chatSettings } = useChatSettings();
     const { getCurrentLocation } = useLocationSharing();
     const { sendMoney, acceptTransfer, rejectTransfer } = useChatMoneyTransfer();
     
@@ -68,6 +72,12 @@ export default function ConversationClient() {
     const [sendingProgress, setSendingProgress] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
     const [contact, setContact] = useState<any>(null);
+    const [contactPrivacy, setContactPrivacy] = useState<{
+        onlineStatus: boolean;
+        lastSeen: boolean;
+        isOnline: boolean;
+        lastSeenAt?: any;
+    }>({ onlineStatus: true, lastSeen: true, isOnline: false });
     const [showMoreActions, setShowMoreActions] = useState(false);
     const [isRecording, setIsRecording] = useState(false);
     const [recordingType, setRecordingType] = useState<'audio' | 'video' | null>(null);
@@ -226,6 +236,23 @@ export default function ConversationClient() {
                                 isGroup: false,
                             };
                             setContact(contactData);
+
+                            try {
+                                const [settingsSnap, presenceSnap] = await Promise.all([
+                                    getDoc(doc(db, 'users', otherUid, 'settings', 'chat')),
+                                    getDoc(doc(db, 'users', otherUid, 'presence', 'chat')),
+                                ]);
+                                const settingsData: any = settingsSnap.exists() ? settingsSnap.data() : {};
+                                const presenceData: any = presenceSnap.exists() ? presenceSnap.data() : {};
+                                setContactPrivacy({
+                                    onlineStatus: settingsData.onlineStatus !== false,
+                                    lastSeen: settingsData.lastSeen !== false,
+                                    isOnline: presenceData.isOnline === true,
+                                    lastSeenAt: presenceData.lastSeen,
+                                });
+                            } catch (e) {
+                                console.warn('Chargement confidentialité contact (non critique):', e);
+                            }
                         }
                     }
                 }
@@ -290,14 +317,14 @@ export default function ConversationClient() {
                 await updateDoc(convRef, {
                     [`unreadCountByUid.${currentUser.uid}`]: 0,
                     unreadCount: 0,
-                    [`lastReadAtByUid.${currentUser.uid}`]: serverTimestamp(),
+                    ...(chatSettings.readReceipts ? { [`lastReadAtByUid.${currentUser.uid}`]: serverTimestamp() } : {}),
                 } as any);
             } catch (e) {
                 console.warn('Marquage lu (non critique):', e);
             }
         };
         run();
-    }, [conversationId, currentUser?.uid]);
+    }, [chatSettings.readReceipts, conversationId, currentUser?.uid]);
 
     // Update video preview stream when recording
     useEffect(() => {
@@ -340,6 +367,24 @@ export default function ConversationClient() {
                 clearTimeout(longPressTimerRef.current);
             }
         };
+    }, []);
+
+    useEffect(() => {
+        const storedLanguage = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
+        if (storedLanguage && TRANSLATION_LANGUAGES.some((language) => language.code === storedLanguage)) {
+            setTargetLanguage(storedLanguage);
+        }
+
+        const handleLanguageChange = (event: Event) => {
+            const customEvent = event as CustomEvent<{ language?: string }>;
+            const nextLanguage = customEvent.detail?.language;
+            if (nextLanguage && TRANSLATION_LANGUAGES.some((language) => language.code === nextLanguage)) {
+                setTargetLanguage(nextLanguage);
+            }
+        };
+
+        window.addEventListener('enkamba-dashboard-language-change', handleLanguageChange);
+        return () => window.removeEventListener('enkamba-dashboard-language-change', handleLanguageChange);
     }, []);
 
     const isGroupConversation = useMemo(() => Boolean(isGroup), [isGroup]);
@@ -766,6 +811,11 @@ export default function ConversationClient() {
         }
     };
     const handleShareLocation = async () => {
+        if (!chatSettings.locationSharing) {
+            alert('Activez le partage de localisation dans les paramètres du chat.');
+            return;
+        }
+
         try {
             const locationData = await getCurrentLocation();
             if (!locationData) return;
@@ -786,6 +836,20 @@ export default function ConversationClient() {
             alert('Impossible d\'accéder à votre localisation');
         }
     };
+
+    const contactStatusText = useMemo(() => {
+        if (isGroup) return `${groupData?.participants?.length || 0} membres`;
+        if (contactPrivacy.onlineStatus && contactPrivacy.isOnline) return 'En ligne';
+        if (contactPrivacy.lastSeen && contactPrivacy.lastSeenAt?.toDate) {
+            return `Vu ${contactPrivacy.lastSeenAt.toDate().toLocaleDateString('fr-FR', {
+                day: '2-digit',
+                month: 'short',
+                hour: '2-digit',
+                minute: '2-digit',
+            })}`;
+        }
+        return 'Statut masqué';
+    }, [contactPrivacy.isOnline, contactPrivacy.lastSeen, contactPrivacy.lastSeenAt, contactPrivacy.onlineStatus, groupData?.participants?.length, isGroup]);
 
     // Envoyer de l'argent
     const handleSendMoney = async () => {
@@ -931,7 +995,7 @@ export default function ConversationClient() {
                                 {contact?.name || 'Conversation'}
                             </h1>
                             <p className="text-xs text-white/70">
-                                {isGroup ? `${groupData?.participants?.length || 0} membres` : 'En ligne'}
+                                {contactStatusText}
                             </p>
                         </div>
                     </div>
@@ -1619,7 +1683,8 @@ export default function ConversationClient() {
                             variant="outline"
                             className="gap-2"
                             onClick={handleShareLocation}
-                            disabled={isSending}
+                            disabled={isSending || !chatSettings.locationSharing}
+                            title={chatSettings.locationSharing ? 'Partager ma localisation' : 'Activez le partage de localisation dans les paramètres du chat'}
                         >
                             <MapPin className="h-4 w-4" />
                             Localisation

@@ -60,8 +60,8 @@ const slides = [
   },
   {
     id: 3,
-    module: "Miyiki-Chat",
-    title: "Miyiki-Chat",
+    module: "eChat",
+    title: "eChat",
     description:
       "Une messagerie intégrée pour rester connecté. Discutez avec vos contacts, vos groupes, le support client et notre assistant IA, le tout au même endroit.",
     icon: MessageSquare,

@@ -7,11 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useUserProfile';
-import { Loader2, Copy, Share2, QrCode, Link as LinkIcon, Zap, CheckCircle2, Download, Wifi, Bluetooth, AlertTriangle } from 'lucide-react';
+import { Loader2, Copy, Share2, QrCode, Link as LinkIcon, Zap, CheckCircle2, Download, Wifi, Bluetooth, AlertTriangle, Languages } from 'lucide-react';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '@/lib/firebase';
 import QRCode from 'qrcode';
 import Image from 'next/image';
+import { TranslationDialog } from '@/components/translation/TranslationDialog';
 
 type ReceiveMethod = 'link' | 'qr' | 'phone' | 'code' | 'nfc' | 'bluetooth' | 'wifi' | null;
 
@@ -55,6 +56,7 @@ export function UnifiedReceiveFlow({
   const [nfcSupported, setNfcSupported] = useState(false);
   const [bluetoothSupported, setBluetoothSupported] = useState(false);
   const [codeTimeLeft, setCodeTimeLeft] = useState(300);
+  const [showDescriptionTranslation, setShowDescriptionTranslation] = useState(false);
 
   useEffect(() => {
     if (initialMethod && ['link', 'qr', 'phone', 'code', 'nfc', 'bluetooth', 'wifi'].includes(initialMethod)) {
@@ -362,7 +364,20 @@ export function UnifiedReceiveFlow({
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">Description (optionnel)</label>
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <label className="text-sm font-medium">Description (optionnel)</label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 gap-1 px-2 text-xs"
+                  onClick={() => setShowDescriptionTranslation(true)}
+                  disabled={!description.trim()}
+                >
+                  <Languages className="h-3.5 w-3.5" />
+                  Traduire
+                </Button>
+              </div>
               <Input
                 type="text"
                 placeholder="Ex: Paiement de facture, Partage de frais..."
@@ -537,6 +552,15 @@ export function UnifiedReceiveFlow({
           </Card>
         </div>
       )}
+
+      <TranslationDialog
+        open={showDescriptionTranslation}
+        onOpenChange={setShowDescriptionTranslation}
+        sourceText={description}
+        title="Traduire la description"
+        description="Traduisez la description du lien d'encaissement avant de le partager."
+        onUseTranslation={setDescription}
+      />
     </div>
   );
 }
