@@ -1,12 +1,14 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback, type PointerEvent, type TouchEvent } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { collection, doc, documentId, getDoc, getDocs, onSnapshot, query, serverTimestamp, updateDoc, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useFirestoreConversations } from '@/hooks/useFirestoreConversations';
 import { useAuth } from '@/hooks/useAuth';
 import { ChatNavIcon } from '@/components/icons/service-icons';
@@ -16,7 +18,7 @@ import { MoneyTransferMessage } from '@/components/chat/MoneyTransferMessage';
 import { useLocationSharing } from '@/hooks/useLocationSharing';
 import { useChatMoneyTransfer } from '@/hooks/useChatMoneyTransfer';
 import { uploadToCloudinary } from '@/lib/cloudinary-upload';
-import { ChevronLeft, Send, Loader2, Mail, Phone, Mic, Video, MapPin, DollarSign, Paperclip, Plus, X, Check, Square, Settings, Users, Trash2, Edit2, MoreVertical } from 'lucide-react';
+import { ChevronLeft, Send, Loader2, Mail, Phone, Mic, Video, MapPin, DollarSign, Paperclip, Plus, X, Check, Square, Settings, Users, Trash2, Edit2, MoreVertical, Languages } from 'lucide-react';
 import Link from 'next/link';
 import { GroupSettingsDialog } from '@/components/group-settings-dialog';
 
@@ -26,6 +28,29 @@ type IncomingCallDoc = {
     fromUid: string;
     createdAtMs: number;
 };
+
+type TranslationResult = {
+    translatedText: string;
+    detectedSourceLanguage: string;
+    sourceLanguageName: string;
+    targetLanguage: string;
+    targetLanguageName: string;
+    service: string;
+};
+
+const TRANSLATION_LANGUAGES = [
+    { code: 'fr', label: 'Francais' },
+    { code: 'en', label: 'Anglais' },
+    { code: 'ln', label: 'Lingala' },
+    { code: 'sw', label: 'Swahili' },
+    { code: 'pt', label: 'Portugais' },
+    { code: 'es', label: 'Espagnol' },
+    { code: 'de', label: 'Allemand' },
+    { code: 'it', label: 'Italien' },
+    { code: 'nl', label: 'Neerlandais' },
+    { code: 'ar', label: 'Arabe' },
+    { code: 'zh', label: 'Chinois' },
+];
 
 export default function ConversationClient() {
     const params = useParams();
@@ -60,7 +85,14 @@ export default function ConversationClient() {
     const [senderAvatars, setSenderAvatars] = useState<Record<string, string>>({});
     const [myAvatar, setMyAvatar] = useState<string>('');
     const [incomingCall, setIncomingCall] = useState<{ id: string; callType: 'audio' | 'video'; fromUid: string } | null>(null);
+    const [translationMessage, setTranslationMessage] = useState<any>(null);
+    const [targetLanguage, setTargetLanguage] = useState('fr');
+    const [translation, setTranslation] = useState<TranslationResult | null>(null);
+    const [translationError, setTranslationError] = useState('');
+    const [isTranslating, setIsTranslating] = useState(false);
     const seenIncomingCallIdsRef = useRef<Set<string>>(new Set());
+    const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const longPressPointRef = useRef<{ x: number; y: number } | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const textAreaRef = useRef<HTMLTextAreaElement | null>(null);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -302,7 +334,123 @@ export default function ConversationClient() {
         el.style.height = `${Math.max(next, 44)}px`;
     }, [inputValue]);
 
+    useEffect(() => {
+        return () => {
+            if (longPressTimerRef.current) {
+                clearTimeout(longPressTimerRef.current);
+            }
+        };
+    }, []);
+
     const isGroupConversation = useMemo(() => Boolean(isGroup), [isGroup]);
+
+    const translateText = useCallback(async (text: string, language: string) => {
+        const cleanText = text.trim();
+        if (!cleanText) return;
+
+        setIsTranslating(true);
+        setTranslationError('');
+        setTranslation(null);
+
+        try {
+            const response = await fetch('/api/chat/translate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    text: cleanText,
+                    targetLanguage: language,
+                }),
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data?.error || 'Impossible de traduire le message');
+            }
+
+            setTranslation(data as TranslationResult);
+        } catch (error) {
+            setTranslationError(error instanceof Error ? error.message : 'Impossible de traduire le message');
+        } finally {
+            setIsTranslating(false);
+        }
+    }, []);
+
+    const canTranslateMessage = useCallback((message: any) => {
+        return (
+            !message?.isDeleted &&
+            (!message?.messageType || message.messageType === 'text') &&
+            typeof message?.text === 'string' &&
+            message.text.trim().length > 0
+        );
+    }, []);
+
+    const openTranslationModal = useCallback((message: any, language = targetLanguage) => {
+        if (!canTranslateMessage(message)) return;
+        setTranslationMessage(message);
+        void translateText(message.text, language);
+    }, [canTranslateMessage, targetLanguage, translateText]);
+
+    const closeTranslationModal = useCallback((open: boolean) => {
+        if (open) return;
+        setTranslationMessage(null);
+        setTranslation(null);
+        setTranslationError('');
+        setIsTranslating(false);
+    }, []);
+
+    const clearMessageLongPress = useCallback(() => {
+        if (longPressTimerRef.current) {
+            clearTimeout(longPressTimerRef.current);
+            longPressTimerRef.current = null;
+        }
+        longPressPointRef.current = null;
+    }, []);
+
+    const startMessageLongPress = useCallback((message: any, point: { x: number; y: number }) => {
+        clearMessageLongPress();
+        if (!canTranslateMessage(message)) return;
+
+        longPressPointRef.current = point;
+        longPressTimerRef.current = setTimeout(() => {
+            longPressTimerRef.current = null;
+            longPressPointRef.current = null;
+            openTranslationModal(message);
+        }, 650);
+    }, [canTranslateMessage, clearMessageLongPress, openTranslationModal]);
+
+    const handleMessagePointerMove = useCallback((e: PointerEvent) => {
+        const point = longPressPointRef.current;
+        if (!point) return;
+
+        const distance = Math.hypot(e.clientX - point.x, e.clientY - point.y);
+        if (distance > 12) {
+            clearMessageLongPress();
+        }
+    }, [clearMessageLongPress]);
+
+    const handleMessageTouchStart = useCallback((message: any, e: TouchEvent) => {
+        const touch = e.touches[0];
+        if (!touch) return;
+        startMessageLongPress(message, { x: touch.clientX, y: touch.clientY });
+    }, [startMessageLongPress]);
+
+    const handleMessageTouchMove = useCallback((e: TouchEvent) => {
+        const point = longPressPointRef.current;
+        const touch = e.touches[0];
+        if (!point || !touch) return;
+
+        const distance = Math.hypot(touch.clientX - point.x, touch.clientY - point.y);
+        if (distance > 12) {
+            clearMessageLongPress();
+        }
+    }, [clearMessageLongPress]);
+
+    const handleTargetLanguageChange = useCallback((language: string) => {
+        setTargetLanguage(language);
+        if (translationMessage?.text) {
+            void translateText(translationMessage.text, language);
+        }
+    }, [translateText, translationMessage]);
 
     // Charger les avatars des expéditeurs (groupe + fallback 1-1)
     useEffect(() => {
@@ -966,10 +1114,26 @@ export default function ConversationClient() {
                                                     ? 'bg-primary text-white rounded-br-none'
                                                     : 'bg-muted text-foreground rounded-bl-none'
                                             } ${message.isDeleted ? 'opacity-60 italic' : ''}`}
+                                            onPointerDown={(e) => {
+                                                if (e.pointerType === 'mouse') return;
+                                                startMessageLongPress(message, { x: e.clientX, y: e.clientY });
+                                            }}
+                                            onPointerUp={clearMessageLongPress}
+                                            onPointerCancel={clearMessageLongPress}
+                                            onPointerLeave={clearMessageLongPress}
+                                            onPointerMove={handleMessagePointerMove}
+                                            onTouchStart={(e) => handleMessageTouchStart(message, e)}
+                                            onTouchEnd={clearMessageLongPress}
+                                            onTouchCancel={clearMessageLongPress}
+                                            onTouchMove={handleMessageTouchMove}
                                             onContextMenu={(e) => {
                                                 e.preventDefault();
                                                 if (!message.isDeleted) {
-                                                    setReplyingTo(message);
+                                                    if (canTranslateMessage(message)) {
+                                                        openTranslationModal(message);
+                                                    } else {
+                                                        setReplyingTo(message);
+                                                    }
                                                 }
                                             }}
                                         >
@@ -1303,6 +1467,20 @@ export default function ConversationClient() {
                                             Répondre
                                         </Button>
                                     )}
+
+                                    {canTranslateMessage(message) && (
+                                        <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className={`text-xs h-7 gap-1 ${
+                                                isOwn ? 'text-primary self-end' : 'text-muted-foreground self-start'
+                                            }`}
+                                            onClick={() => openTranslationModal(message)}
+                                        >
+                                            <Languages className="h-3.5 w-3.5" />
+                                            Traduire
+                                        </Button>
+                                    )}
                                 </div>
                             </div>
                         );
@@ -1631,6 +1809,88 @@ export default function ConversationClient() {
                 )}
                 </div>
             </footer>
+
+            <Dialog open={Boolean(translationMessage)} onOpenChange={closeTranslationModal}>
+                <DialogContent className="max-w-md rounded-2xl">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Languages className="h-5 w-5 text-primary" />
+                            Traduction du message
+                        </DialogTitle>
+                        <DialogDescription>
+                            Langue source detectee automatiquement, puis traduction dans la langue choisie.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-4">
+                        <div className="rounded-xl border bg-muted/40 p-3">
+                            <p className="mb-1 text-xs font-medium text-muted-foreground">Message original</p>
+                            <p className="whitespace-pre-wrap break-words text-sm leading-6">
+                                {translationMessage?.text}
+                            </p>
+                        </div>
+
+                        <div className="space-y-2">
+                            <p className="text-xs font-medium text-muted-foreground">Traduire en</p>
+                            <Select value={targetLanguage} onValueChange={handleTargetLanguageChange}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Choisir une langue" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {TRANSLATION_LANGUAGES.map((language) => (
+                                        <SelectItem key={language.code} value={language.code}>
+                                            {language.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="rounded-xl border p-3">
+                            <div className="mb-2 flex items-center justify-between gap-2">
+                                <p className="text-xs font-medium text-muted-foreground">
+                                    {translation
+                                        ? `${translation.sourceLanguageName} vers ${translation.targetLanguageName}`
+                                        : 'Traduction'}
+                                </p>
+                                {isTranslating && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
+                            </div>
+
+                            {translationError ? (
+                                <p className="text-sm text-red-600">{translationError}</p>
+                            ) : translation ? (
+                                <p className="whitespace-pre-wrap break-words text-sm leading-6">
+                                    {translation.translatedText}
+                                </p>
+                            ) : (
+                                <p className="text-sm text-muted-foreground">Traduction en cours...</p>
+                            )}
+                        </div>
+
+                        <div className="flex justify-end gap-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => translationMessage && void translateText(translationMessage.text, targetLanguage)}
+                                disabled={isTranslating || !translationMessage?.text}
+                            >
+                                {isTranslating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Languages className="mr-2 h-4 w-4" />}
+                                Retraduire
+                            </Button>
+                            <Button
+                                type="button"
+                                onClick={() => {
+                                    setReplyingTo(translationMessage);
+                                    closeTranslationModal(false);
+                                }}
+                                disabled={!translationMessage}
+                            >
+                                Repondre
+                            </Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
 
             {/* Group Settings Dialog */}
             {isGroup && groupData && (
