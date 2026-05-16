@@ -6,19 +6,26 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
-  MessageCircle,
-  Share2,
-  Heart,
   Music2,
   Plus,
+  MoreHorizontal,
+  MessageCircleMore,
+  Pause,
+  Play,
+  SendHorizontal,
+  ThumbsUp,
+  Volume2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useStories } from '@/hooks/useStories';
+import { useNkampaEcommerce } from '@/hooks/useNkampaEcommerce';
 import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, increment, limit, onSnapshot, orderBy, query, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
+import { StoryViewer } from '@/components/stories/StoryViewer';
 import {
   MakutanoIcon,
   HomeNavIcon,
@@ -72,6 +79,7 @@ const navItems = [
 interface Post {
   id: string;
   author: { name: string; location: string; avatar: string };
+  authorId?: string;
   text: string;
   mediaUrl: string;
   mediaType: 'image' | 'video' | 'audio';
@@ -91,6 +99,80 @@ interface PostComment {
 }
 
 const postCategories: Array<Post['category']> = ['Savoir', 'Entrepreneur', 'Projets', 'Local', 'Accueil'];
+const RECOMMENDATION_STORAGE_PREFIX = 'makutano-recommendation-profile';
+
+type RecommendationSignal = 'view' | 'like' | 'unlike' | 'comment' | 'share';
+
+type RecommendationProfile = {
+  categories: Partial<Record<Post['category'], number>>;
+  mediaTypes: Partial<Record<Post['mediaType'], number>>;
+  authors: Record<string, number>;
+  postViews: Record<string, number>;
+  postInteractions: Record<string, number>;
+};
+
+type StoryOffer = {
+  id: string;
+  name: string;
+  storeName: string;
+  image: string;
+  href: string;
+  popularityScore: number;
+  createdAt: any;
+};
+
+const createEmptyRecommendationProfile = (): RecommendationProfile => ({
+  categories: {},
+  mediaTypes: {},
+  authors: {},
+  postViews: {},
+  postInteractions: {},
+});
+
+function getPostTimestamp(createdAt: any) {
+  if (!createdAt) return 0;
+  if (typeof createdAt.toMillis === 'function') return createdAt.toMillis();
+  if (typeof createdAt.seconds === 'number') return createdAt.seconds * 1000;
+  if (createdAt instanceof Date) return createdAt.getTime();
+  if (typeof createdAt === 'number') return createdAt;
+  return 0;
+}
+
+function stableHash(value: string) {
+  let hash = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 31 + value.charCodeAt(index)) % 100000;
+  }
+  return hash / 100000;
+}
+
+function scorePostForUser(post: Post, profile: RecommendationProfile) {
+  const ageHours = Math.max(0, (Date.now() - getPostTimestamp(post.createdAt)) / 36e5);
+  const freshnessScore = Math.max(0, 18 - ageHours * 0.35);
+  const engagementScore = Math.log1p(Number(post.likes || 0)) * 2.3 + Math.log1p(Number(post.comments || 0)) * 3;
+  const categoryScore = Number(profile.categories[post.category] || 0) * 5;
+  const mediaScore = Number(profile.mediaTypes[post.mediaType] || 0) * 3.5;
+  const authorScore = post.authorId ? Number(profile.authors[post.authorId] || 0) * 2.5 : 0;
+  const personalInteractionScore = Number(profile.postInteractions[post.id] || 0) * 0.7;
+  const fatiguePenalty = Math.min(18, Number(profile.postViews[post.id] || 0) * 5.5);
+  const explorationScore = stableHash(post.id) * 2.2;
+
+  return freshnessScore + engagementScore + categoryScore + mediaScore + authorScore + personalInteractionScore + explorationScore - fatiguePenalty;
+}
+
+function getProductPopularityScore(product: any) {
+  const clicks = Number(product?.clickCount ?? product?.viewCount ?? product?.views ?? 0);
+  const sold = Number(product?.sold ?? product?.sales ?? 0);
+  const reviews = Number(product?.reviews ?? 0);
+  const rating = Number(product?.rating ?? 0);
+  const discount = Number(product?.discount ?? product?.discountPercent ?? 0);
+  return clicks * 1000000 + sold * 10000 + reviews * 100 + Math.round(rating * 10) + discount;
+}
+
+function getProductHref(product: any) {
+  if (product?.storeSlug) return `/shop/${product.storeSlug}/product/${product.id}`;
+  return '/dashboard/nkampa';
+}
 
 function inferMediaType(mediaUrl: string): 'image' | 'video' | 'audio' {
   const lowerUrl = mediaUrl.toLowerCase();
@@ -115,8 +197,18 @@ function inferMediaType(mediaUrl: string): 'image' | 'video' | 'audio' {
   return 'image';
 }
 
-function MakutanoAudioPlayer({ src, isActive }: { src: string; isActive: boolean }) {
+function formatMediaTime(seconds: number) {
+  if (!Number.isFinite(seconds) || seconds <= 0) return '0:00';
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60).toString().padStart(2, '0');
+  return `${mins}:${secs}`;
+}
+
+function MakutanoAudioPlayer({ src, isActive = false }: { src: string; isActive?: boolean }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [duration, setDuration] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
@@ -125,37 +217,104 @@ function MakutanoAudioPlayer({ src, isActive }: { src: string; isActive: boolean
 
     if (isActive) {
       audio.play().catch(() => undefined);
+      setIsPlaying(true);
       return;
     }
 
     audio.pause();
-    audio.currentTime = 0;
+    setIsPlaying(false);
   }, [isActive, src]);
 
+  const togglePlay = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    if (audio.paused) {
+      audio.play().catch(() => undefined);
+      setIsPlaying(true);
+      return;
+    }
+
+    audio.pause();
+    setIsPlaying(false);
+  };
+
+  const handleSeek = (value: string) => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const nextTime = Number(value);
+    audio.currentTime = nextTime;
+    setCurrentTime(nextTime);
+  };
+
   return (
-    <div className="relative flex h-full w-full items-center justify-center bg-gradient-to-br from-emerald-700 via-teal-700 to-cyan-700">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.18),transparent_60%)]" />
-      <div className="relative z-10 flex w-[78%] flex-col items-center gap-5 rounded-2xl border border-white/25 bg-black/25 p-5 backdrop-blur-md">
-        <div className="flex items-end gap-1.5">
-          <span className="h-4 w-1.5 animate-pulse rounded-full bg-emerald-200 [animation-delay:0ms]" />
-          <span className="h-7 w-1.5 animate-pulse rounded-full bg-emerald-100 [animation-delay:120ms]" />
-          <span className="h-10 w-1.5 animate-pulse rounded-full bg-white [animation-delay:240ms]" />
-          <span className="h-6 w-1.5 animate-pulse rounded-full bg-emerald-100 [animation-delay:360ms]" />
-          <span className="h-9 w-1.5 animate-pulse rounded-full bg-emerald-200 [animation-delay:480ms]" />
-          <span className="h-5 w-1.5 animate-pulse rounded-full bg-white [animation-delay:600ms]" />
-          <span className="h-8 w-1.5 animate-pulse rounded-full bg-emerald-100 [animation-delay:720ms]" />
+    <div className="relative flex min-h-[280px] w-full flex-col justify-between overflow-hidden bg-[#0E5A59] p-5 text-white">
+      <div className="absolute inset-0 bg-[#0E5A59]" />
+      <div className="relative z-10 flex items-center justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/60">Audio</p>
+          <p className="mt-1 text-lg font-bold">Makutano</p>
         </div>
-        <div className="rounded-full bg-white/20 p-3">
-          <Music2 className="h-6 w-6 text-white" />
+        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white/15 text-white">
+          <Volume2 className="h-5 w-5" />
         </div>
-        <audio ref={audioRef} src={src} controls loop className="w-full" />
+      </div>
+
+      <button
+        type="button"
+        onClick={togglePlay}
+        className="relative z-10 mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-white text-[#0E5A59] shadow-lg transition hover:scale-105"
+        aria-label={isPlaying ? 'Mettre en pause' : 'Lire'}
+      >
+        {isPlaying ? <Pause className="h-8 w-8" /> : <Play className="ml-1 h-8 w-8" />}
+      </button>
+
+      <div className="relative z-10">
+        <div className="mb-4 flex h-24 items-end justify-center gap-1.5">
+          {Array.from({ length: 36 }).map((_, index) => (
+            <span
+              key={index}
+              className={cn('w-1.5 rounded-full bg-white/75', isPlaying && 'animate-pulse')}
+              style={{
+                height: `${18 + ((index * 9) % 64)}px`,
+                animationDelay: `${index * 28}ms`,
+              }}
+            />
+          ))}
+        </div>
+
+        <input
+          type="range"
+          min={0}
+          max={duration || 0}
+          value={Math.min(currentTime, duration || 0)}
+          onChange={(event) => handleSeek(event.target.value)}
+          className="h-2 w-full accent-white"
+          aria-label="Progression audio"
+        />
+        <div className="mt-2 flex items-center justify-between text-xs font-medium text-white/75">
+          <span>{formatMediaTime(currentTime)}</span>
+          <span>{formatMediaTime(duration)}</span>
+        </div>
+        <audio
+          ref={audioRef}
+          src={src}
+          preload="metadata"
+          onLoadedMetadata={(event) => setDuration(event.currentTarget.duration || 0)}
+          onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime || 0)}
+          onEnded={() => setIsPlaying(false)}
+          className="hidden"
+        />
       </div>
     </div>
   );
 }
 
-function MakutanoVideoPlayer({ src, isActive }: { src: string; isActive: boolean }) {
+function MakutanoVideoPlayer({ src, isActive = false }: { src: string; isActive?: boolean }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [duration, setDuration] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
@@ -164,23 +323,86 @@ function MakutanoVideoPlayer({ src, isActive }: { src: string; isActive: boolean
 
     if (isActive) {
       video.play().catch(() => undefined);
+      setIsPlaying(true);
       return;
     }
 
     video.pause();
-    video.currentTime = 0;
+    setIsPlaying(false);
   }, [isActive, src]);
 
+  const togglePlay = () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (video.paused) {
+      video.play().catch(() => undefined);
+      setIsPlaying(true);
+      return;
+    }
+
+    video.pause();
+    setIsPlaying(false);
+  };
+
+  const handleSeek = (value: string) => {
+    const video = videoRef.current;
+    if (!video) return;
+    const nextTime = Number(value);
+    video.currentTime = nextTime;
+    setCurrentTime(nextTime);
+  };
+
   return (
-    <video
-      ref={videoRef}
-      src={src}
-      className="h-full w-full object-cover"
-      muted
-      loop
-      playsInline
-      preload="metadata"
-    />
+    <div className="group relative max-h-[620px] min-h-[280px] overflow-hidden bg-[#0E5A59]">
+      <video
+        ref={videoRef}
+        src={src}
+        className="h-full max-h-[620px] min-h-[280px] w-full object-cover"
+        playsInline
+        preload="metadata"
+        onClick={togglePlay}
+        onLoadedMetadata={(event) => setDuration(event.currentTarget.duration || 0)}
+        onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime || 0)}
+        onEnded={() => setIsPlaying(false)}
+      />
+
+      {!isPlaying && (
+        <button
+          type="button"
+          onClick={togglePlay}
+          className="absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-[#122116] shadow-lg transition hover:scale-105"
+          aria-label="Lire la vidéo"
+        >
+          <Play className="ml-1 h-7 w-7" />
+        </button>
+      )}
+
+      <div className="absolute bottom-0 left-0 right-0 bg-black/55 px-4 py-3 text-white backdrop-blur-sm">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={togglePlay}
+            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#32BB78] transition hover:bg-[#2a9d63]"
+            aria-label={isPlaying ? 'Mettre en pause' : 'Lire'}
+          >
+            {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="ml-0.5 h-5 w-5" />}
+          </button>
+          <input
+            type="range"
+            min={0}
+            max={duration || 0}
+            value={Math.min(currentTime, duration || 0)}
+            onChange={(event) => handleSeek(event.target.value)}
+            className="h-2 min-w-0 flex-1 accent-[#32BB78]"
+            aria-label="Progression vidéo"
+          />
+          <span className="w-20 text-right text-xs font-medium">
+            {formatMediaTime(currentTime)} / {formatMediaTime(duration)}
+          </span>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -189,6 +411,8 @@ export default function MakutanoPage() {
   const router = useRouter();
   const { user } = useAuth();
   const { profile } = useUserProfile();
+  const { stories, myStories, loading: storiesLoading, markAsViewed, replyToStory } = useStories();
+  const { products: ecommerceProducts, isLoading: ecommerceProductsLoading } = useNkampaEcommerce();
   const [activeTab, setActiveTab] = useState('Accueil');
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoadingPosts, setIsLoadingPosts] = useState(true);
@@ -198,13 +422,110 @@ export default function MakutanoPage() {
   const [isLoadingCommentsByPost, setIsLoadingCommentsByPost] = useState<Record<string, boolean>>({});
   const [isSubmittingCommentByPost, setIsSubmittingCommentByPost] = useState<Record<string, boolean>>({});
   const [likedPostIds, setLikedPostIds] = useState<Set<string>>(new Set());
+  const [activeMediaPostId, setActiveMediaPostId] = useState<string | null>(null);
+  const [viewingStories, setViewingStories] = useState<{ stories: any[]; index: number } | null>(null);
+  const [recommendationProfile, setRecommendationProfile] = useState<RecommendationProfile>(() => createEmptyRecommendationProfile());
   const mainFeedRef = useRef<HTMLElement | null>(null);
   const postRefs = useRef<Record<string, HTMLElement | null>>({});
+  const viewedPostTimersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const recordedVisiblePostsRef = useRef<Set<string>>(new Set());
 
   const filteredPosts = useMemo(
-    () => posts.filter((post) => post.category === activeTab || activeTab === 'Accueil'),
-    [posts, activeTab]
+    () => posts
+      .filter((post) => post.category === activeTab || activeTab === 'Accueil')
+      .map((post) => ({ post, score: scorePostForUser(post, recommendationProfile) }))
+      .sort((a, b) => b.score - a.score || getPostTimestamp(b.post.createdAt) - getPostTimestamp(a.post.createdAt))
+      .map(({ post }) => post),
+    [posts, activeTab, recommendationProfile]
   );
+
+  const storyOffers = useMemo<StoryOffer[]>(() => {
+    return [...(ecommerceProducts || [])]
+      .filter((product: any) => product?.id && (product?.image || product?.images?.[0]))
+      .map((product: any) => ({
+        id: product.id,
+        name: product.name || 'Offre populaire',
+        storeName: product.storeName || product.sellerName || product.shopName || 'Boutique',
+        image: product.image || product.images?.[0] || 'https://picsum.photos/seed/nkampa-offer/200/200',
+        href: getProductHref(product),
+        popularityScore: getProductPopularityScore(product),
+        createdAt: product.createdAt,
+      }))
+      .sort((left, right) => right.popularityScore - left.popularityScore || getPostTimestamp(right.createdAt) - getPostTimestamp(left.createdAt))
+      .slice(0, 12);
+  }, [ecommerceProducts]);
+
+  const recommendationStorageKey = `${RECOMMENDATION_STORAGE_PREFIX}:${user?.uid || 'anonymous'}`;
+
+  useEffect(() => {
+    try {
+      const storedProfile = window.localStorage.getItem(recommendationStorageKey);
+      setRecommendationProfile(storedProfile ? { ...createEmptyRecommendationProfile(), ...JSON.parse(storedProfile) } : createEmptyRecommendationProfile());
+    } catch {
+      setRecommendationProfile(createEmptyRecommendationProfile());
+    }
+  }, [recommendationStorageKey]);
+
+  const persistRecommendationProfile = (nextProfile: RecommendationProfile) => {
+    try {
+      window.localStorage.setItem(recommendationStorageKey, JSON.stringify(nextProfile));
+    } catch {
+      // The feed still works without local personalization persistence.
+    }
+  };
+
+  const recordCategoryPreference = (category: Post['category'], weight = 0.7) => {
+    setRecommendationProfile((currentProfile) => {
+      const nextProfile: RecommendationProfile = {
+        ...currentProfile,
+        categories: {
+          ...currentProfile.categories,
+          [category]: Math.min(10, Number(currentProfile.categories[category] || 0) * 0.98 + weight),
+        },
+      };
+      persistRecommendationProfile(nextProfile);
+      return nextProfile;
+    });
+  };
+
+  const recordPostSignal = (post: Post, signal: RecommendationSignal) => {
+    const signalWeight: Record<RecommendationSignal, number> = {
+      view: 0.45,
+      like: 2.6,
+      unlike: -1.8,
+      comment: 3.4,
+      share: 2.2,
+    };
+    const weight = signalWeight[signal];
+
+    setRecommendationProfile((currentProfile) => {
+      const authorId = post.authorId || 'unknown';
+      const nextProfile: RecommendationProfile = {
+        categories: {
+          ...currentProfile.categories,
+          [post.category]: Math.max(-3, Math.min(10, Number(currentProfile.categories[post.category] || 0) * 0.98 + weight)),
+        },
+        mediaTypes: {
+          ...currentProfile.mediaTypes,
+          [post.mediaType]: Math.max(-3, Math.min(10, Number(currentProfile.mediaTypes[post.mediaType] || 0) * 0.98 + weight * 0.8)),
+        },
+        authors: {
+          ...currentProfile.authors,
+          [authorId]: Math.max(-3, Math.min(10, Number(currentProfile.authors[authorId] || 0) * 0.98 + weight * 0.65)),
+        },
+        postViews: {
+          ...currentProfile.postViews,
+          [post.id]: Number(currentProfile.postViews[post.id] || 0) + (signal === 'view' ? 1 : 0),
+        },
+        postInteractions: {
+          ...currentProfile.postInteractions,
+          [post.id]: Math.max(-5, Math.min(20, Number(currentProfile.postInteractions[post.id] || 0) + weight)),
+        },
+      };
+      persistRecommendationProfile(nextProfile);
+      return nextProfile;
+    });
+  };
 
   useEffect(() => {
     const postsQuery = query(
@@ -228,6 +549,7 @@ export default function MakutanoPage() {
               location: data.author?.location || data.authorLocation || 'RDC',
               avatar: data.author?.avatar || data.authorAvatar || 'https://picsum.photos/seed/default-user/40/40',
             },
+            authorId: data.authorId || data.author?.id || '',
             text: data.text || data.caption || '',
             mediaUrl,
             mediaType: data.mediaType || inferMediaType(mediaUrl),
@@ -289,6 +611,80 @@ export default function MakutanoPage() {
     setPosts((prev) => prev.map((post) => ({ ...post, isLiked: likedPostIds.has(post.id) })));
   }, [likedPostIds]);
 
+  useEffect(() => {
+    const mediaPosts = filteredPosts.filter((post) => post.mediaUrl && (post.mediaType === 'audio' || post.mediaType === 'video'));
+    if (!mediaPosts.length) {
+      setActiveMediaPostId(null);
+      return;
+    }
+
+    setActiveMediaPostId((current) => {
+      if (current && mediaPosts.some((post) => post.id === current)) return current;
+      return mediaPosts[0]?.id || null;
+    });
+  }, [filteredPosts]);
+
+  useEffect(() => {
+    const root = mainFeedRef.current;
+    if (!root) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visibleEntries = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+
+        entries.forEach((entry) => {
+          const visiblePostId = entry.target.getAttribute('data-post-id');
+          if (!visiblePostId) return;
+
+          if (!entry.isIntersecting || entry.intersectionRatio < 0.65) {
+            if (viewedPostTimersRef.current[visiblePostId]) {
+              clearTimeout(viewedPostTimersRef.current[visiblePostId]);
+              delete viewedPostTimersRef.current[visiblePostId];
+            }
+            return;
+          }
+
+          if (recordedVisiblePostsRef.current.has(visiblePostId) || viewedPostTimersRef.current[visiblePostId]) return;
+
+          viewedPostTimersRef.current[visiblePostId] = setTimeout(() => {
+            const visiblePost = filteredPosts.find((item) => item.id === visiblePostId);
+            if (visiblePost) {
+              recordPostSignal(visiblePost, 'view');
+              recordedVisiblePostsRef.current.add(visiblePostId);
+            }
+            delete viewedPostTimersRef.current[visiblePostId];
+          }, 1400);
+        });
+
+        const bestEntry = visibleEntries[0];
+        const postId = bestEntry?.target.getAttribute('data-post-id');
+        if (!postId) return;
+
+        const post = filteredPosts.find((item) => item.id === postId);
+        if (!post?.mediaUrl || (post.mediaType !== 'audio' && post.mediaType !== 'video')) return;
+
+        setActiveMediaPostId(postId);
+      },
+      {
+        root,
+        threshold: [0.55, 0.7, 0.85],
+      }
+    );
+
+    filteredPosts.forEach((post) => {
+      const node = postRefs.current[post.id];
+      if (node) observer.observe(node);
+    });
+
+    return () => {
+      observer.disconnect();
+      Object.values(viewedPostTimersRef.current).forEach((timer) => clearTimeout(timer));
+      viewedPostTimersRef.current = {};
+    };
+  }, [filteredPosts]);
+
   const handleLike = async (postId: string) => {
     if (!user?.uid) {
       toast({
@@ -300,6 +696,8 @@ export default function MakutanoPage() {
     }
 
     const wasLiked = likedPostIds.has(postId);
+    const targetPost = posts.find((post) => post.id === postId);
+    if (targetPost) recordPostSignal(targetPost, wasLiked ? 'unlike' : 'like');
 
     setLikedPostIds((prev) => {
       const next = new Set(prev);
@@ -394,6 +792,8 @@ export default function MakutanoPage() {
 
   const handleComment = async (postId: string) => {
     const nextOpenPostId = activeCommentPostId === postId ? null : postId;
+    const targetPost = posts.find((post) => post.id === postId);
+    if (nextOpenPostId && targetPost) recordPostSignal(targetPost, 'comment');
     setActiveCommentPostId(nextOpenPostId);
     if (nextOpenPostId && !commentsByPost[postId]) {
       await loadComments(postId);
@@ -446,6 +846,8 @@ export default function MakutanoPage() {
       setPosts((prev) =>
         prev.map((post) => (post.id === postId ? { ...post, comments: Number(post.comments || 0) + 1 } : post))
       );
+      const targetPost = posts.find((post) => post.id === postId);
+      if (targetPost) recordPostSignal(targetPost, 'comment');
 
       updateDoc(doc(db, 'makutano_posts', postId), {
         comments: increment(1),
@@ -467,97 +869,203 @@ export default function MakutanoPage() {
   };
 
   const handleShare = (id: string) => {
+    const targetPost = posts.find((post) => post.id === id);
+    if (targetPost) recordPostSignal(targetPost, 'share');
     toast({
       title: "Partage",
       description: "Lien de partage copié.",
     });
   };
 
+  const handleCreateStory = () => {
+    router.push('/dashboard/miyiki-chat/stories/create');
+  };
+
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-gradient-to-b from-emerald-50 via-white to-orange-50">
       {/* Header avec catégories */}
-      <header className="sticky top-0 z-50 w-full border-b border-white/20 bg-gradient-to-r from-primary via-primary to-green-800 pt-[env(safe-area-inset-top)] text-white shadow-lg backdrop-blur">
-        <div className="px-4 py-3">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="h-10 w-10 rounded-lg bg-white/20 backdrop-blur flex items-center justify-center">
-              <MakutanoIcon size={24} />
-            </div>
-            <div>
-              <h1 className="font-headline text-xl font-bold">Makutano</h1>
-              <p className="text-xs text-white/70">Réseau social</p>
+      <header className="sticky top-0 z-50 w-full bg-transparent px-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] text-white">
+        <div className="relative mx-auto max-w-xl overflow-hidden rounded-[2rem] border border-white/45 bg-[#32BB78]/95 shadow-[0_18px_45px_rgba(50,187,120,0.28)] backdrop-blur-xl">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/70" />
+          <div className="pointer-events-none absolute -right-10 -top-14 h-28 w-28 rounded-full bg-white/25 blur-2xl" />
+          <div className="pointer-events-none absolute -bottom-12 left-8 h-24 w-24 rounded-full bg-[#1e9f5e]/35 blur-2xl" />
+
+          <div className="relative px-4 pb-3 pt-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl border border-white/30 bg-white/15 shadow-inner backdrop-blur">
+                  <MakutanoIcon size={28} />
+                </div>
+                <div className="min-w-0">
+                  <h1 className="font-headline text-[1.35rem] font-bold leading-tight tracking-normal">Réseau social</h1>
+                  <p className="mt-0.5 text-xs font-medium text-white/75">Communauté eNkamba</p>
+                </div>
+              </div>
+
+              {/* Bouton créer post */}
+              <Button
+                size="icon"
+                className="relative h-12 w-12 flex-shrink-0 rounded-2xl border border-white/45 bg-white text-[#32BB78] shadow-[0_12px_28px_rgba(20,120,72,0.24)] transition-transform hover:scale-105 hover:bg-white/95"
+                onClick={() => router.push('/dashboard/makutano/create')}
+              >
+                <span className="pointer-events-none absolute inset-1 rounded-[1.15rem] border border-white/20" />
+                <div className="relative z-10 flex items-center gap-0.5">
+                  <Plus className="h-5 w-5" />
+                  <Music2 className="h-3.5 w-3.5" />
+                </div>
+              </Button>
             </div>
           </div>
-        </div>
-        
-        {/* Navigation des catégories */}
-        <div className="px-4 pb-4 flex gap-2 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-          {navItems.map(item => {
-            const IconComponent = item.icon;
-            
-            // Si l'item a un lien, c'est un lien externe (vers IA)
-            if (item.link) {
+
+          {/* Navigation des catégories */}
+          <div className="relative flex gap-2 overflow-x-auto px-4 pb-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            {navItems.map(item => {
+              const IconComponent = item.icon;
+
+              // Si l'item a un lien, c'est un lien externe (vers IA)
+              if (item.link) {
+                return (
+                  <button
+                    key={item.name}
+                    onClick={() => router.push(item.link)}
+                    className="flex items-center gap-2 whitespace-nowrap rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-all hover:bg-white/18"
+                  >
+                    <IconComponent size={16} />
+                    <span>{item.name}</span>
+                  </button>
+                );
+              }
+
+              // Sinon, c'est un onglet de catégorie
               return (
                 <button
                   key={item.name}
-                  onClick={() => router.push(item.link)}
-                  className="flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold transition-all whitespace-nowrap bg-white/10 text-white hover:bg-white/20"
+                  onClick={() => {
+                    setActiveTab(item.name);
+                    recordCategoryPreference(item.name as Post['category']);
+                  }}
+                  className={cn(
+                    'flex items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2 text-xs font-semibold transition-all',
+                    activeTab === item.name
+                      ? 'border-white bg-white text-[#32BB78] shadow-[0_8px_20px_rgba(255,255,255,0.22)]'
+                      : 'border-white/15 bg-white/10 text-white hover:bg-white/18'
+                  )}
                 >
                   <IconComponent size={16} />
                   <span>{item.name}</span>
                 </button>
               );
-            }
-            
-            // Sinon, c'est un onglet de catégorie
-            return (
-              <button
-                key={item.name}
-                onClick={() => setActiveTab(item.name)}
-                className={cn(
-                  'flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold transition-all whitespace-nowrap',
-                  activeTab === item.name
-                    ? 'bg-white text-primary shadow-md'
-                    : 'bg-white/10 text-white hover:bg-white/20'
-                )}
-              >
-                <IconComponent size={16} />
-                <span>{item.name}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Bouton créer post */}
-        <div className="absolute right-4 top-[calc(env(safe-area-inset-top)+1rem)] z-30">
-          <Button
-            size="icon"
-            className="relative h-12 w-12 rounded-full border border-white/50 bg-gradient-to-r from-emerald-400 via-emerald-500 to-teal-600 text-white shadow-2xl transition-transform hover:scale-110"
-            onClick={() => router.push('/dashboard/makutano/create')}
-          >
-            <span className="pointer-events-none absolute inset-0 rounded-full bg-white/20 animate-ping" />
-            <div className="relative z-10 flex items-center gap-0.5">
-              <Plus className="h-5 w-5" />
-              <Music2 className="h-3.5 w-3.5" />
-            </div>
-          </Button>
+            })}
+          </div>
         </div>
       </header>
 
-      {/* Feed vertical avec cartes compactes type Instagram */}
+      <section className="border-b border-[#dbe8df] bg-white px-3 py-3">
+        <div className="mx-auto flex max-w-xl gap-3 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div className="flex w-[74px] flex-shrink-0 flex-col items-center gap-1.5">
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => {
+                  if (myStories.length) setViewingStories({ stories: myStories, index: 0 });
+                }}
+                className={cn(
+                  'rounded-full p-0.5',
+                  myStories.length ? 'bg-gradient-to-tr from-[#32BB78] via-[#0E5A59] to-[#FF8C00]' : 'bg-[#dbe8df]'
+                )}
+                aria-label={myStories.length ? 'Voir ma story' : 'Aucune story'}
+              >
+                <Avatar className="h-16 w-16 border-2 border-white">
+                  <AvatarImage src={profile?.photoURL || profile?.profileImage} />
+                  <AvatarFallback className="bg-[#e8f4ec] text-[#22945d]">
+                    {profile?.displayName?.charAt(0) || profile?.fullName?.charAt(0) || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+              </button>
+              <button
+                type="button"
+                onClick={handleCreateStory}
+                className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-[#32BB78] text-white"
+                aria-label="Ajouter une story"
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            <span className="max-w-full truncate text-[11px] font-medium text-[#122116]">Ma story</span>
+          </div>
+
+          {storiesLoading ? (
+            <div className="flex items-center px-2 text-xs text-[#52635a]">Chargement...</div>
+          ) : stories.length > 0 ? (
+            stories.map((contactStory) => (
+              <button
+                key={contactStory.userId}
+                onClick={() => setViewingStories({ stories: contactStory.stories, index: 0 })}
+                className="flex w-[74px] flex-shrink-0 flex-col items-center gap-1.5"
+              >
+                <div className={cn(
+                  'rounded-full p-0.5',
+                  contactStory.hasUnviewed ? 'bg-gradient-to-tr from-[#32BB78] via-[#0E5A59] to-[#FF8C00]' : 'bg-[#dbe8df]'
+                )}>
+                  <Avatar className="h-16 w-16 border-2 border-white">
+                    <AvatarImage src={contactStory.userAvatar} />
+                    <AvatarFallback className="bg-[#e8f4ec] text-[#22945d]">
+                      {contactStory.userName.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
+                <span className="max-w-full truncate text-[11px] font-medium text-[#122116]">
+                  {contactStory.userName}
+                </span>
+              </button>
+            ))
+          ) : ecommerceProductsLoading ? (
+            <div className="flex items-center px-2 text-xs text-[#52635a]">Chargement des offres...</div>
+          ) : (
+            storyOffers.map((offer) => (
+              <button
+                key={offer.id}
+                type="button"
+                onClick={() => router.push(offer.href)}
+                className="flex w-[74px] flex-shrink-0 flex-col items-center gap-1.5"
+              >
+                <div className="rounded-full bg-gradient-to-tr from-[#32BB78] via-[#1e9f5e] to-[#FF8C00] p-0.5">
+                  <div className="relative h-16 w-16 overflow-hidden rounded-full border-2 border-white bg-[#e8f4ec]">
+                    <img
+                      src={offer.image}
+                      alt={offer.name}
+                      className="h-full w-full object-cover"
+                      loading="lazy"
+                    />
+                    <span className="absolute bottom-0 left-0 right-0 bg-[#32BB78]/90 px-1 py-0.5 text-[9px] font-bold text-white">
+                      Offre
+                    </span>
+                  </div>
+                </div>
+                <span className="max-w-full truncate text-[11px] font-medium text-[#122116]">
+                  {offer.storeName}
+                </span>
+              </button>
+            ))
+          )}
+        </div>
+      </section>
+
+      {/* Feed vertical minimaliste */}
       <main
         ref={mainFeedRef}
-        className="flex-1 overflow-y-auto px-4 pb-20 pt-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+        className="flex-1 overflow-y-auto bg-[#f6faf7] px-3 pb-24 pt-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] sm:px-4"
       >
         {isLoadingPosts ? (
-          <div className="flex h-full items-center justify-center text-emerald-900/60">
-            <p>Chargement des posts...</p>
+          <div className="flex h-full items-center justify-center text-[#52635a]">
+            <p className="text-sm">Chargement des publications...</p>
           </div>
         ) : filteredPosts.length === 0 ? (
-          <div className="flex h-full items-center justify-center text-emerald-900/60">
-            <p>Aucun post dans cette catégorie.</p>
+          <div className="flex h-full items-center justify-center text-[#52635a]">
+            <p className="text-sm">Aucune publication dans cette catégorie.</p>
           </div>
         ) : (
-          <div className="mx-auto max-w-2xl space-y-4">
+          <div className="mx-auto max-w-xl space-y-3">
             {filteredPosts.map((post) => (
               <article
                 key={post.id}
@@ -565,141 +1073,121 @@ export default function MakutanoPage() {
                   postRefs.current[post.id] = node;
                 }}
                 data-post-id={post.id}
-                className="overflow-hidden rounded-2xl border border-emerald-100 bg-white shadow-md transition-shadow hover:shadow-lg"
+                className="overflow-hidden rounded-2xl border border-[#dbe8df] bg-white shadow-sm transition-shadow hover:shadow-md"
               >
                 {/* Header du post */}
-                <div className="flex items-center justify-between p-4 pb-3">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-10 w-10 ring-2 ring-emerald-100">
+                <div className="flex items-center justify-between gap-3 px-4 py-3">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <Avatar className="h-10 w-10 border border-[#e4eee8]">
                       <AvatarImage src={post.author.avatar} />
-                      <AvatarFallback className="bg-emerald-100 text-emerald-700">
+                      <AvatarFallback className="bg-[#e8f4ec] text-[#22945d]">
                         {post.author.name.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
-                    <div>
-                      <p className="font-semibold text-sm text-gray-900">{post.author.name}</p>
-                      <p className="text-xs text-gray-500">{post.author.location}</p>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-[#122116]">{post.author.name}</p>
+                      <p className="truncate text-xs text-[#52635a]">{post.author.location || 'Makutano'}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="rounded-full bg-emerald-50 px-3 py-1 text-[10px] font-semibold text-emerald-700">
+                    <span className="rounded-full bg-[#e8f4ec] px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-[#22945d]">
                       {post.category}
                     </span>
-                    <Button size="sm" variant="ghost" className="h-8 w-8 rounded-full p-0 text-emerald-600 hover:bg-emerald-50">
-                      <Plus className="h-4 w-4" />
+                    <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full text-[#52635a] hover:bg-[#f0f6f2]">
+                      <MoreHorizontal className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
 
                 {/* Média */}
-                <div className="relative aspect-square w-full bg-gray-100">
+                <div className="relative mx-3 overflow-hidden rounded-[1.4rem] bg-[#eef5f1]">
                   {post.mediaUrl ? (
                     post.mediaType === 'audio' ? (
-                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-emerald-500 to-teal-600 p-8">
-                        <div className="w-full space-y-4 text-center">
-                          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-white/20 backdrop-blur">
-                            <Music2 className="h-10 w-10 text-white" />
-                          </div>
-                          <div className="flex items-end justify-center gap-1">
-                            {[...Array(12)].map((_, i) => (
-                              <span
-                                key={i}
-                                className="w-1 animate-pulse rounded-full bg-white"
-                                style={{
-                                  height: `${20 + (i % 3) * 15}px`,
-                                  animationDelay: `${i * 100}ms`,
-                                }}
-                              />
-                            ))}
-                          </div>
-                          <audio src={post.mediaUrl} controls className="w-full" />
-                        </div>
-                      </div>
+                      <MakutanoAudioPlayer src={post.mediaUrl} isActive={activeMediaPostId === post.id} />
                     ) : post.mediaType === 'video' ? (
-                      <video
-                        src={post.mediaUrl}
-                        className="h-full w-full object-cover"
-                        controls
-                        playsInline
-                        preload="metadata"
-                      />
+                      <MakutanoVideoPlayer src={post.mediaUrl} isActive={activeMediaPostId === post.id} />
                     ) : (
                       <img
                         src={post.mediaUrl}
                         alt={post.text}
-                        className="h-full w-full object-cover"
+                        className="max-h-[620px] w-full object-cover"
                         loading="lazy"
                       />
                     )
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-emerald-100 to-teal-100">
-                      <p className="text-sm font-medium text-emerald-700">Média indisponible</p>
+                    <div className="flex min-h-[220px] w-full items-center justify-center bg-[#e8f4ec]">
+                      <p className="text-sm font-medium text-[#22945d]">Média indisponible</p>
                     </div>
                   )}
                 </div>
 
-                {/* Actions */}
-                <div className="flex items-center gap-4 px-4 py-3">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      void handleLike(post.id);
-                    }}
-                    className="flex items-center gap-2 transition-colors hover:text-red-500"
-                  >
-                    <Heart
-                      className={cn(
-                        "h-6 w-6 transition-all",
-                        post.isLiked ? "fill-red-500 text-red-500" : "text-gray-700"
-                      )}
-                    />
-                    <span className="text-sm font-semibold text-gray-700">{post.likes}</span>
-                  </button>
+                <div className="space-y-3 px-4 py-4">
+                  {/* Texte du post */}
+                  {post.text && (
+                    <p className="text-sm leading-6 text-[#122116]">
+                      <span className="font-semibold">{post.author.name}</span>{' '}
+                      {post.text}
+                    </p>
+                  )}
 
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      void handleComment(post.id);
-                    }}
-                    className="flex items-center gap-2 transition-colors hover:text-emerald-600"
-                  >
-                    <MessageCircle className="h-6 w-6 text-gray-700" />
-                    <span className="text-sm font-semibold text-gray-700">{post.comments}</span>
-                  </button>
+                  {/* Actions */}
+                  <div className="flex items-center justify-between border-t border-[#edf3ef] pt-3">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          void handleLike(post.id);
+                        }}
+                        className={cn(
+                          'flex h-10 items-center gap-2 rounded-full px-3.5 text-sm font-semibold transition-all',
+                          post.isLiked
+                            ? 'bg-[#32BB78] text-white shadow-sm'
+                            : 'bg-[#f4faf6] text-[#52635a] hover:bg-[#e8f4ec] hover:text-[#22945d]'
+                        )}
+                      >
+                        <ThumbsUp className={cn('h-4 w-4', post.isLiked && 'fill-white')} />
+                        <span>{post.likes}</span>
+                      </button>
 
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleShare(post.id);
-                    }}
-                    className="flex items-center gap-2 transition-colors hover:text-blue-600"
-                  >
-                    <Share2 className="h-6 w-6 text-gray-700" />
-                  </button>
-                </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          void handleComment(post.id);
+                        }}
+                        className="flex h-10 items-center gap-2 rounded-full bg-[#f4faf6] px-3.5 text-sm font-semibold text-[#52635a] transition-colors hover:bg-[#e8f4ec] hover:text-[#22945d]"
+                      >
+                        <MessageCircleMore className="h-4 w-4" />
+                        <span>{post.comments}</span>
+                      </button>
+                    </div>
 
-                {/* Texte du post */}
-                <div className="px-4 pb-3">
-                  <p className="text-sm text-gray-900">
-                    <span className="font-semibold">{post.author.name}</span>{' '}
-                    {post.text}
-                  </p>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleShare(post.id);
+                      }}
+                      className="flex h-10 w-10 items-center justify-center rounded-full bg-[#f4faf6] text-[#52635a] transition-colors hover:bg-[#e8f4ec] hover:text-[#22945d]"
+                      aria-label="Partager"
+                    >
+                      <SendHorizontal className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Section commentaires */}
                 {activeCommentPostId === post.id && (
-                  <div className="border-t border-gray-100 bg-gray-50 p-4">
-                    <p className="mb-3 text-xs font-semibold text-gray-700">Commentaires</p>
-                    <div className="mb-3 max-h-40 space-y-2 overflow-y-auto">
+                  <div className="border-t border-[#edf3ef] bg-[#fbfdfc] p-4">
+                    <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-[#52635a]">Commentaires</p>
+                    <div className="mb-3 max-h-44 space-y-2 overflow-y-auto pr-1">
                       {isLoadingCommentsByPost[post.id] ? (
-                        <p className="text-xs text-gray-500">Chargement...</p>
+                        <p className="text-xs text-[#52635a]">Chargement...</p>
                       ) : (commentsByPost[post.id] || []).length === 0 ? (
-                        <p className="text-xs text-gray-500">Aucun commentaire.</p>
+                        <p className="text-xs text-[#52635a]">Aucun commentaire.</p>
                       ) : (
                         (commentsByPost[post.id] || []).map((comment) => (
-                          <div key={comment.id} className="rounded-lg bg-white p-2">
-                            <p className="text-xs font-semibold text-gray-900">{comment.authorName}</p>
-                            <p className="text-xs text-gray-700">{comment.text}</p>
+                          <div key={comment.id} className="rounded-xl border border-[#edf3ef] bg-white p-3">
+                            <p className="text-xs font-semibold text-[#122116]">{comment.authorName}</p>
+                            <p className="mt-1 text-xs leading-5 text-[#52635a]">{comment.text}</p>
                           </div>
                         ))
                       )}
@@ -717,7 +1205,7 @@ export default function MakutanoPage() {
                           }
                         }}
                         placeholder="Ajouter un commentaire..."
-                        className="h-9 flex-1 text-sm"
+                        className="h-10 flex-1 rounded-full border-[#dbe8df] bg-white text-sm focus-visible:ring-[#32BB78]"
                       />
                       <Button
                         size="sm"
@@ -726,7 +1214,7 @@ export default function MakutanoPage() {
                           void submitComment(post.id);
                         }}
                         disabled={isSubmittingCommentByPost[post.id]}
-                        className="h-9 bg-emerald-600 hover:bg-emerald-700"
+                        className="h-10 rounded-full bg-[#32BB78] px-4 hover:bg-[#2a9d63]"
                       >
                         {isSubmittingCommentByPost[post.id] ? '...' : 'Publier'}
                       </Button>
@@ -738,6 +1226,27 @@ export default function MakutanoPage() {
           </div>
         )}
       </main>
+
+      {viewingStories && (
+        <StoryViewer
+          stories={viewingStories.stories}
+          initialIndex={viewingStories.index}
+          onClose={() => setViewingStories(null)}
+          onMarkViewed={markAsViewed}
+          onReply={async (storyId, message) => {
+            const story = viewingStories.stories.find((item) => item.id === storyId);
+            if (!story) return;
+            await replyToStory(
+              storyId,
+              message,
+              story.userId,
+              story.userName,
+              story.mediaUrl,
+              story.type
+            );
+          }}
+        />
+      )}
     </div>
   );
 }

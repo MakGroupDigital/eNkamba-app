@@ -3,10 +3,10 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Camera, Video, Mic, MapPin, X, Check, Clock, Upload, Square } from 'lucide-react';
+import { Camera, Video, Mic, MapPin, X, Check, Clock, Upload } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useStories } from '@/hooks/useStories';
-import { StoryType, StoryDuration } from '@/types/story.types';
+import { StoryType } from '@/types/story.types';
 import { LocationStoryCreator } from '@/components/stories/LocationStoryCreator';
 
 export default function CreateStoryPage() {
@@ -30,7 +30,6 @@ export default function CreateStoryPage() {
   const streamRef = useRef<MediaStream | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaInputRef = useRef<HTMLInputElement>(null);
 
   // Durée: 30 min à 3 jours (4320 minutes)
@@ -76,11 +75,11 @@ export default function CreateStoryPage() {
     }
   }, [isCameraActive]);
 
-  const startCamera = async () => {
+  const startCamera = async (cameraFacingMode = facingMode) => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode }, 
-        audio: mode === 'video' 
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: cameraFacingMode },
+        audio: mode === 'video'
       });
       streamRef.current = stream;
       setIsCameraActive(true);
@@ -94,8 +93,9 @@ export default function CreateStoryPage() {
   const switchCamera = async () => {
     stopCamera();
     setIsCameraActive(false);
-    setFacingMode(prev => prev === 'user' ? 'environment' : 'user');
-    await startCamera();
+    const nextFacingMode = facingMode === 'user' ? 'environment' : 'user';
+    setFacingMode(nextFacingMode);
+    await startCamera(nextFacingMode);
   };
 
   const capturePhoto = () => {
@@ -192,15 +192,6 @@ export default function CreateStoryPage() {
     }
   };
 
-  const handleFileImport = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setMediaFile(file);
-      setPreviewUrl(URL.createObjectURL(file));
-      setShowMediaOptions(false);
-    }
-  };
-
   const stopCamera = () => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
@@ -239,11 +230,15 @@ export default function CreateStoryPage() {
     }
 
     if (previewUrl) URL.revokeObjectURL(previewUrl);
+    stopCamera();
     setMediaFile(file);
     setPreviewUrl(URL.createObjectURL(file));
+    setShowMediaOptions(false);
   };
 
   const handlePickFile = () => {
+    if (!mode || mode === 'location') return;
+    stopCamera();
     mediaInputRef.current?.click();
   };
 
@@ -286,9 +281,21 @@ export default function CreateStoryPage() {
     : null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 flex flex-col">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-gradient-to-br from-purple-500 via-pink-500 to-red-500">
+      <input
+        ref={mediaInputRef}
+        type="file"
+        accept={mode ? getAcceptForMode(mode) : '*/*'}
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleMediaFileSelected(file);
+          e.currentTarget.value = '';
+        }}
+      />
+
       {/* Header */}
-      <header className="p-4 flex items-center justify-between bg-black/20 backdrop-blur">
+      <header className="flex flex-shrink-0 items-center justify-between bg-black/20 p-4 backdrop-blur">
         <Button
           variant="ghost"
           size="icon"
@@ -302,10 +309,11 @@ export default function CreateStoryPage() {
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col items-center justify-center p-4">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 pb-28">
+        <div className="mx-auto w-full max-w-md space-y-4 py-4">
         {!mode ? (
           /* Mode Selection */
-          <div className="w-full max-w-md space-y-4">
+          <div className="w-full space-y-4">
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold text-white mb-2">Que voulez-vous partager?</h2>
               <p className="text-white/80">Choisissez un type de contenu</p>
@@ -347,7 +355,7 @@ export default function CreateStoryPage() {
           </div>
         ) : showMediaOptions && mode === 'photo' && !previewUrl ? (
           /* Photo Options Menu */
-          <div className="w-full max-w-md space-y-4">
+          <div className="w-full space-y-4">
             <div className="text-center mb-6">
               <h2 className="text-2xl font-bold text-white mb-2">Photo Story</h2>
               <p className="text-white/80">Choisissez une option</p>
@@ -367,7 +375,7 @@ export default function CreateStoryPage() {
             </button>
             
             <button
-              onClick={() => { setShowMediaOptions(false); handlePickFile(); }}
+              onClick={handlePickFile}
               className="w-full p-6 rounded-3xl bg-white/10 backdrop-blur border-2 border-white/20 hover:bg-white/20 transition-all flex items-center gap-4"
             >
               <div className="w-16 h-16 rounded-full bg-blue-500/20 flex items-center justify-center">
@@ -386,9 +394,46 @@ export default function CreateStoryPage() {
               Annuler
             </button>
           </div>
+        ) : mode === 'photo' && !previewUrl && !isCameraActive ? (
+          <div className="w-full space-y-4">
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-white mb-2">Ajouter une photo</h2>
+              <p className="text-white/80">Prenez une photo ou importez une image</p>
+            </div>
+            <button
+              onClick={() => startCamera()}
+              className="w-full p-6 rounded-3xl bg-white/10 backdrop-blur border-2 border-white/20 hover:bg-white/20 transition-all flex items-center gap-4"
+            >
+              <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center">
+                <Camera size={32} className="text-white" />
+              </div>
+              <div className="flex-1 text-left">
+                <p className="text-white font-bold text-lg">Prendre une photo</p>
+                <p className="text-white/70 text-sm">Ouvrir la caméra</p>
+              </div>
+            </button>
+            <button
+              onClick={handlePickFile}
+              className="w-full p-6 rounded-3xl bg-white/10 backdrop-blur border-2 border-white/20 hover:bg-white/20 transition-all flex items-center gap-4"
+            >
+              <div className="w-16 h-16 rounded-full bg-blue-500/20 flex items-center justify-center">
+                <Upload size={32} className="text-white" />
+              </div>
+              <div className="flex-1 text-left">
+                <p className="text-white font-bold text-lg">Importer une photo</p>
+                <p className="text-white/70 text-sm">Choisir une image sur l’appareil</p>
+              </div>
+            </button>
+            <button
+              onClick={() => setMode(null)}
+              className="w-full p-4 rounded-2xl bg-white/10 backdrop-blur border border-white/20 hover:bg-white/20 transition-all text-white font-semibold"
+            >
+              Retour
+            </button>
+          </div>
         ) : mode === 'photo' && !previewUrl && isCameraActive ? (
           /* Camera View */
-          <div className="relative w-full max-w-md aspect-[9/16] rounded-3xl overflow-hidden bg-black">
+          <div className="relative w-full aspect-[9/16] max-h-[calc(100dvh-8rem)] rounded-3xl overflow-hidden bg-black">
             <video
               ref={videoRef}
               autoPlay
@@ -408,7 +453,7 @@ export default function CreateStoryPage() {
             
             <div className="absolute bottom-8 left-0 right-0 flex justify-center gap-4">
               <button
-                onClick={() => { stopCamera(); setMode(null); }}
+              onClick={() => { stopCamera(); setShowMediaOptions(true); }}
                 className="w-14 h-14 rounded-full bg-white/20 backdrop-blur flex items-center justify-center hover:bg-white/30 transition-all"
               >
                 <X size={24} className="text-white" />
@@ -427,7 +472,7 @@ export default function CreateStoryPage() {
           </div>
         ) : showMediaOptions && mode === 'video' && !previewUrl ? (
           /* Video Options Menu */
-          <div className="w-full max-w-md space-y-4">
+          <div className="w-full space-y-4">
             <div className="text-center mb-6">
               <h2 className="text-2xl font-bold text-white mb-2">Vidéo Story</h2>
               <p className="text-white/80">Choisissez une option</p>
@@ -447,7 +492,7 @@ export default function CreateStoryPage() {
             </button>
             
             <button
-              onClick={() => { setShowMediaOptions(false); handlePickFile(); }}
+              onClick={handlePickFile}
               className="w-full p-6 rounded-3xl bg-white/10 backdrop-blur border-2 border-white/20 hover:bg-white/20 transition-all flex items-center gap-4"
             >
               <div className="w-16 h-16 rounded-full bg-blue-500/20 flex items-center justify-center">
@@ -468,7 +513,7 @@ export default function CreateStoryPage() {
           </div>
         ) : showMediaOptions && mode === 'audio' && !previewUrl ? (
           /* Audio Options Menu */
-          <div className="w-full max-w-md space-y-4">
+          <div className="w-full space-y-4">
             <div className="text-center mb-6">
               <h2 className="text-2xl font-bold text-white mb-2">Audio Story</h2>
               <p className="text-white/80">Choisissez une option</p>
@@ -509,7 +554,7 @@ export default function CreateStoryPage() {
           </div>
         ) : mode === 'video' && !previewUrl && isCameraActive ? (
           /* Video Recording View */
-          <div className="relative w-full max-w-md aspect-[9/16] rounded-3xl overflow-hidden bg-black">
+          <div className="relative w-full aspect-[9/16] max-h-[calc(100dvh-8rem)] rounded-3xl overflow-hidden bg-black">
             <video
               ref={videoRef}
               autoPlay
@@ -559,7 +604,7 @@ export default function CreateStoryPage() {
           </div>
         ) : mode === 'audio' && !previewUrl && isRecording ? (
           /* Audio Recording View */
-          <div className="w-full max-w-md rounded-3xl bg-gradient-to-br from-purple-600 to-pink-600 p-8">
+          <div className="w-full rounded-3xl bg-gradient-to-br from-purple-600 to-pink-600 p-8">
             <div className="text-center space-y-6">
               <div className="w-32 h-32 mx-auto rounded-full bg-white/20 backdrop-blur flex items-center justify-center animate-pulse">
                 <Mic size={64} className="text-white" />
@@ -580,7 +625,7 @@ export default function CreateStoryPage() {
                     key={i}
                     className="w-1 bg-white/60 rounded-full animate-pulse"
                     style={{
-                      height: `${Math.random() * 60 + 10}px`,
+                      height: `${18 + ((i * 11) % 52)}px`,
                       animationDelay: `${i * 0.05}s`
                     }}
                   />
@@ -604,7 +649,7 @@ export default function CreateStoryPage() {
             </div>
           </div>
         ) : (mode === 'video' || mode === 'audio') && !previewUrl ? (
-          <div className="w-full max-w-md rounded-3xl border-2 border-dashed border-white/30 bg-white/10 p-8 text-center">
+          <div className="w-full rounded-3xl border-2 border-dashed border-white/30 bg-white/10 p-8 text-center">
             <p className="mb-4 text-white/90">
               {mode === 'video' ? 'Sélectionnez une vidéo à publier' : 'Sélectionnez un audio à publier'}
             </p>
@@ -614,7 +659,7 @@ export default function CreateStoryPage() {
             </Button>
           </div>
         ) : mode === 'location' && !selectedLocation ? (
-          <div className="w-full max-w-md h-[70vh] rounded-3xl overflow-hidden">
+          <div className="w-full h-[70vh] rounded-3xl overflow-hidden">
             <LocationStoryCreator
               onComplete={(location) => setSelectedLocation(location)}
               onCancel={() => setMode(null)}
@@ -622,29 +667,18 @@ export default function CreateStoryPage() {
           </div>
         ) : (
           /* Preview & Settings */
-          <div className="w-full max-w-md space-y-4">
-            <input
-              ref={mediaInputRef}
-              type="file"
-              accept={mode ? getAcceptForMode(mode) : '*/*'}
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) handleMediaFileSelected(file);
-                e.currentTarget.value = '';
-              }}
-            />
+          <div className="w-full space-y-4 pb-8">
             {previewUrl && (
-              <div className="aspect-[9/16] rounded-3xl overflow-hidden bg-black">
+              <div className="max-h-[42dvh] rounded-3xl overflow-hidden bg-white/10">
                 {mode === 'audio' ? (
-                  <div className="flex h-full flex-col items-center justify-center gap-4 bg-gradient-to-br from-purple-700 to-pink-700 p-6">
+                  <div className="flex min-h-[240px] flex-col items-center justify-center gap-4 bg-gradient-to-br from-purple-700 to-pink-700 p-6">
                     <Mic size={56} className="text-white" />
                     <audio src={previewUrl} controls className="w-full" />
                   </div>
                 ) : mode === 'video' ? (
-                  <video src={previewUrl} controls className="h-full w-full object-cover" />
+                  <video src={previewUrl} controls className="max-h-[42dvh] w-full object-cover" />
                 ) : (
-                  <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                  <img src={previewUrl} alt="Preview" className="max-h-[42dvh] min-h-[220px] w-full object-cover" />
                 )}
               </div>
             )}
@@ -762,18 +796,32 @@ export default function CreateStoryPage() {
             >
               {loading ? 'Publication...' : 'Publier la Story'}
             </Button>
-            {(mode === 'video' || mode === 'audio') && (
+            {mode !== 'location' && (
               <Button
                 variant="outline"
                 onClick={handlePickFile}
                 className="w-full gap-2 border-white/40 bg-white/10 text-white hover:bg-white/20"
               >
                 <Upload size={16} />
-                Changer le fichier
+                {mode === 'photo' ? 'Changer la photo' : 'Changer le fichier'}
+              </Button>
+            )}
+            {mode === 'photo' && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  resetMediaState();
+                  setShowMediaOptions(true);
+                }}
+                className="w-full gap-2 border-white/40 bg-white/10 text-white hover:bg-white/20"
+              >
+                <Camera size={16} />
+                Reprendre une photo
               </Button>
             )}
           </div>
         )}
+        </div>
       </div>
 
       {/* Confirmation Modal */}
