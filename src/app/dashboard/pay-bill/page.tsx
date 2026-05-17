@@ -14,11 +14,10 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 type Currency = 'CDF' | 'USD' | 'EUR';
-type BillType = 'tax' | 'yango' | 'water' | 'tv' | 'academic' | 'school' | 'flight' | 'hotel' | 'event' | 'phone' | 'insurance' | 'donation';
+type BillType = 'tax' | 'water' | 'tv' | 'academic' | 'school' | 'flight' | 'hotel' | 'event' | 'phone' | 'insurance' | 'donation';
 
 const billTypes: Record<BillType, { label: string; description: string; fields: string[] }> = {
   tax: { label: 'Impôts', description: 'Paiement des impôts et taxes', fields: ['Numéro fiscal', 'Période'] },
-  yango: { label: 'Yango', description: 'Recharger votre compte Yango', fields: ['Numéro de téléphone', 'Montant'] },
   water: { label: 'Regideso', description: 'Paiement de facture d\'eau', fields: ['Numéro de compte', 'Période'] },
   tv: { label: 'Canal+', description: 'Abonnement Canal+', fields: ['Numéro d\'abonnement', 'Période'] },
   academic: { label: 'Frais Académiques', description: 'Paiement des frais académiques', fields: ['Matricule étudiant', 'Semestre'] },
@@ -35,7 +34,8 @@ function PayBillContent() {
   const { toast } = useToast();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const billType = (searchParams?.get('type') || 'tax') as BillType;
+  const requestedBillType = searchParams?.get('type') || 'tax';
+  const billType = requestedBillType in billTypes ? (requestedBillType as BillType) : 'tax';
   const billInfo = billTypes[billType];
   
   const [amount, setAmount] = useState('');
@@ -127,7 +127,7 @@ function PayBillContent() {
                   Scanner un QR code pour payer
                 </AlertTitle>
                 <AlertDescription className="text-xs text-muted-foreground">
-                  Vous pouvez utiliser le scanner QR pour payer ce service (Impôts, Yango, Regideso, Canal+, frais, billets, etc.) directement.
+                  Vous pouvez utiliser le scanner QR pour payer ce service (Impôts, Regideso, Canal+, frais, billets, etc.) directement.
                 </AlertDescription>
                 <Button
                   type="button"

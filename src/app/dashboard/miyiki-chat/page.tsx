@@ -38,8 +38,23 @@ import {
   ChatFilterUnreadIcon,
   ChatFilterReadIcon,
   ChatFilterGroupsIcon,
+  ChatCallIcon,
+  ChatEditIcon,
+  ChatEmptyIcon,
+  ChatEyeIcon,
+  ChatEyeOffIcon,
+  ChatGroupCustomIcon,
+  ChatLastSeenIcon,
+  ChatLocationCustomIcon,
+  ChatMicCustomIcon,
+  ChatNotificationIcon,
+  ChatPhotoIcon,
+  ChatPlusIcon,
+  ChatReadIcon,
+  ChatSentIcon,
+  ChatVideoCustomIcon,
 } from "@/components/icons/chat-icons";
-import { MessageSquare, Check, CheckCheck, Circle, Users, Plus, Settings, Edit, Zap, MapPin, Video, Mic, Image as ImageIcon, Eye, EyeOff, Bell, BellRing, Phone } from 'lucide-react';
+import { Settings } from 'lucide-react';
 import { CreateGroupDialog } from '@/components/create-group-dialog';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -53,7 +68,7 @@ const messageFilters = [
   { value: 'unread' as MessageFilter, label: "Non lu", icon: ChatFilterUnreadIcon },
   { value: 'read' as MessageFilter, label: "Lu", icon: ChatFilterReadIcon },
   { value: 'groups' as MessageFilter, label: "Groupes", icon: ChatFilterGroupsIcon },
-  { value: 'add' as MessageFilter, label: "Plus", icon: Plus, isAction: true },
+  { value: 'add' as MessageFilter, label: "Plus", icon: ChatPlusIcon, isAction: true },
 ];
 
 export default function MiyikiChatPage() {
@@ -170,7 +185,7 @@ export default function MiyikiChatPage() {
       return (
         <div className="text-center py-12">
           <div className="mb-4">
-            <MessageSquare size={48} className="mx-auto text-muted-foreground opacity-50" />
+            <ChatEmptyIcon size={56} className="mx-auto opacity-80" />
           </div>
           <p className="text-muted-foreground text-lg font-semibold mb-2">
             Aucune conversation trouvée
@@ -207,7 +222,7 @@ export default function MiyikiChatPage() {
                     </Avatar>
                     {convo.isGroup && (
                       <div className="absolute -bottom-1 -right-1 bg-primary rounded-full p-1">
-                        <Users size={12} className="text-white" />
+                        <ChatGroupCustomIcon size={14} />
                       </div>
                     )}
                     {convo.otherOnlineStatusVisible && convo.otherIsOnline && (
@@ -236,12 +251,12 @@ export default function MiyikiChatPage() {
                         if (!sentByMe) return null;
                         return convo.lastMessageReadByOther ? (
                           <div className="flex items-center gap-1 text-xs text-green-600">
-                            <CheckCheck size={14} />
+                            <ChatReadIcon size={15} />
                             <span className="font-medium">Lu</span>
                           </div>
                         ) : (
                           <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <Check size={14} />
+                            <ChatSentIcon size={15} />
                             <span className="font-medium">Envoyé</span>
                           </div>
                         );
@@ -301,7 +316,7 @@ export default function MiyikiChatPage() {
                   className="absolute -bottom-1 -right-1 bg-primary rounded-full p-1"
                   aria-label="Ajouter une story"
                 >
-                  <Plus size={16} className="text-white" />
+                  <ChatPlusIcon size={18} />
                 </button>
               </div>
               <span className="text-xs font-medium">Ma Story</span>
@@ -319,7 +334,7 @@ export default function MiyikiChatPage() {
                   </AvatarFallback>
                 </Avatar>
                 <div className="absolute -bottom-1 -right-1 bg-primary rounded-full p-1">
-                  <Plus size={16} className="text-white" />
+                  <ChatPlusIcon size={18} />
                 </div>
               </div>
               <span className="text-xs font-medium">Ma Story</span>
@@ -362,10 +377,10 @@ export default function MiyikiChatPage() {
                   className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-muted/50 transition-all cursor-pointer"
                 >
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                    {story.type === 'photo' && <ImageIcon size={20} className="text-white" />}
-                    {story.type === 'video' && <Video size={20} className="text-white" />}
-                    {story.type === 'audio' && <Mic size={20} className="text-white" />}
-                    {story.type === 'location' && <MapPin size={20} className="text-white" />}
+                    {story.type === 'photo' && <ChatPhotoIcon size={24} />}
+                    {story.type === 'video' && <ChatVideoCustomIcon size={24} />}
+                    {story.type === 'audio' && <ChatMicCustomIcon size={24} />}
+                    {story.type === 'location' && <ChatLocationCustomIcon size={24} />}
                   </div>
                   <div className="flex-1 text-left">
                     <p className="text-sm font-medium">{story.caption || 'Story sans légende'}</p>
@@ -381,11 +396,11 @@ export default function MiyikiChatPage() {
 
         {stories.length === 0 && myStories.length === 0 && (
           <div className="text-center py-12">
-            <Zap size={64} className="mx-auto text-primary mb-4" />
+            <ChatStoriesIcon size={72} className="mx-auto mb-4 text-primary" />
             <h3 className="text-xl font-bold mb-2">Aucune story</h3>
             <p className="text-muted-foreground mb-6">Soyez le premier à partager un moment</p>
             <Button onClick={handleCreateStory} className="rounded-full">
-              <Plus size={20} className="mr-2" />
+              <ChatPlusIcon size={22} className="mr-2" />
               Créer une story
             </Button>
           </div>
@@ -421,13 +436,13 @@ export default function MiyikiChatPage() {
       switch (type) {
         case 'transfer_received':
         case 'BUSINESS_APPROVED':
-          return <CheckCheck size={20} />;
+          return <ChatReadIcon size={24} />;
         case 'incoming_call':
-          return <Phone size={20} />;
+          return <ChatCallIcon size={24} />;
         case 'payment_request':
-          return <BellRing size={20} />;
+          return <ChatNotificationIcon size={24} />;
         default:
-          return <Bell size={20} />;
+          return <ChatNotificationIcon size={24} />;
       }
     };
 
@@ -442,7 +457,7 @@ export default function MiyikiChatPage() {
     if (filteredNotifications.length === 0) {
       return (
         <div className="text-center py-12">
-          <Bell size={64} className="mx-auto text-muted-foreground mb-4" />
+          <ChatNotificationIcon size={72} className="mx-auto mb-4 opacity-80" />
           <h3 className="text-xl font-bold mb-2">Aucune notification</h3>
           <p className="text-muted-foreground">Les notifications de l’application apparaîtront ici</p>
         </div>
@@ -515,7 +530,7 @@ export default function MiyikiChatPage() {
               className="w-full justify-start"
               onClick={() => router.push('/dashboard/settings/edit-profile')}
             >
-              <Edit size={20} className="mr-3" />
+              <ChatEditIcon size={22} className="mr-3" />
               Modifier le profil
             </Button>
             <Button 
@@ -523,7 +538,7 @@ export default function MiyikiChatPage() {
               className="w-full justify-start"
               onClick={() => handleCreateGroup()}
             >
-              <Users size={20} className="mr-3" />
+              <ChatGroupCustomIcon size={22} className="mr-3" />
               Gérer les groupes
             </Button>
             <Button 
@@ -531,7 +546,7 @@ export default function MiyikiChatPage() {
               className="w-full justify-start"
               onClick={() => setShowLocationDialog(true)}
             >
-              <MapPin size={20} className="mr-3" />
+              <ChatLocationCustomIcon size={22} className="mr-3" />
               Partager ma localisation
             </Button>
           </div>
@@ -546,7 +561,7 @@ export default function MiyikiChatPage() {
                 <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
                   settings.onlineStatus ? 'bg-green-100 text-green-600' : 'bg-muted text-muted-foreground'
                 }`}>
-                  {settings.onlineStatus ? <Eye size={20} /> : <EyeOff size={20} />}
+                  {settings.onlineStatus ? <ChatEyeIcon size={22} /> : <ChatEyeOffIcon size={22} />}
                 </div>
                 <div>
                   <p className="font-medium">Statut en ligne</p>
@@ -572,7 +587,7 @@ export default function MiyikiChatPage() {
                 <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
                   settings.readReceipts ? 'bg-blue-100 text-blue-600' : 'bg-muted text-muted-foreground'
                 }`}>
-                  <CheckCheck size={20} />
+                  <ChatReadIcon size={22} />
                 </div>
                 <div>
                   <p className="font-medium">Confirmation de lecture</p>
@@ -598,7 +613,7 @@ export default function MiyikiChatPage() {
                 <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
                   settings.lastSeen ? 'bg-purple-100 text-purple-600' : 'bg-muted text-muted-foreground'
                 }`}>
-                  <Circle size={20} />
+                  <ChatLastSeenIcon size={22} />
                 </div>
                 <div>
                   <p className="font-medium">Dernière connexion</p>
@@ -624,7 +639,7 @@ export default function MiyikiChatPage() {
                 <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
                   settings.locationSharing ? 'bg-red-100 text-red-600' : 'bg-muted text-muted-foreground'
                 }`}>
-                  <MapPin size={20} />
+                  <ChatLocationCustomIcon size={22} />
                 </div>
                 <div>
                   <p className="font-medium">Partage de localisation</p>
@@ -741,7 +756,7 @@ export default function MiyikiChatPage() {
                     : 'bg-muted/50 text-muted-foreground hover:bg-muted'
                 }`}
               >
-                <Bell size={20} />
+                <ChatNotificationIcon size={22} />
                 <span>Notifications</span>
                 {unreadCount > 0 && (
                   <Badge className="bg-white/20 text-white rounded-full h-5 min-w-[20px] px-1.5 text-xs">
@@ -896,7 +911,7 @@ export default function MiyikiChatPage() {
               className="w-full flex items-center gap-4 p-4 rounded-2xl hover:bg-primary/5 transition-all border-2 border-transparent hover:border-primary/20"
             >
               <div className="h-14 w-14 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg">
-                <Users size={24} className="text-white" />
+                <ChatGroupCustomIcon size={26} />
               </div>
               <div className="flex-1 text-left">
                 <p className="font-bold text-base">Créer un groupe</p>

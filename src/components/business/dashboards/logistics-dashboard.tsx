@@ -1,8 +1,16 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { BusinessUser } from '@/types/business-dashboard.types';
 import { BusinessDashboardIcons } from '@/components/icons/business-dashboard-icons';
+import {
+  MapPinIcon,
+  SendPackageIcon,
+  TrackPackageIcon,
+  UgaviIcon,
+  UgaviPlayIcon,
+  UgaviShareIcon,
+} from '@/components/icons/service-icons';
 import { addDoc, collection, doc, onSnapshot, query, serverTimestamp, setDoc, updateDoc, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { uploadToCloudinary } from '@/lib/cloudinary-upload';
@@ -100,6 +108,14 @@ const FLEET_TAB: LogisticsTab = { id: 'fleet', label: 'Ressources', icon: Busine
 const SHIPMENTS_TAB: LogisticsTab = { id: 'shipments', label: 'Colis & missions', icon: BusinessDashboardIcons.MapPin };
 const RELAY_TAB: LogisticsTab = { id: 'relay', label: 'Scanner QR', icon: BusinessDashboardIcons.QRCode };
 const REGISTER_TAB: LogisticsTab = { id: 'register', label: 'Enregistrer colis', icon: BusinessDashboardIcons.QRCode };
+
+const TAB_ICON_MAP: Record<string, React.ComponentType<any>> = {
+  overview: UgaviIcon,
+  fleet: SendPackageIcon,
+  shipments: TrackPackageIcon,
+  relay: UgaviShareIcon,
+  register: SendPackageIcon,
+};
 
 const ROLE_CONFIGS: Record<string, LogisticsRoleConfig> = {
   RELAY: {
@@ -247,6 +263,19 @@ export function LogisticsDashboard({ businessUser }: LogisticsDashboardProps) {
   const [activeTab, setActiveTab] = useState(tabs[0]?.id || 'overview');
   const [shipments, setShipments] = useState<AgencyShipment[]>([]);
   const [isShipmentsLoading, setIsShipmentsLoading] = useState(true);
+  const liveStats = useMemo(() => {
+    const activeCount = shipments.filter((shipment) => !['delivered', 'returned', 'blocked'].includes(shipment.logisticsStatus)).length;
+    const deliveredCount = shipments.filter((shipment) => shipment.logisticsStatus === 'delivered').length;
+    const issueCount = shipments.filter((shipment) => ['returned', 'blocked'].includes(shipment.logisticsStatus)).length;
+    const successRate = shipments.length ? Math.round((deliveredCount / shipments.length) * 100) : 0;
+
+    return [
+      { label: 'Missions actives', value: String(activeCount), icon: TrackPackageIcon, color: 'orange' as const },
+      { label: 'Colis suivis', value: String(shipments.length), icon: SendPackageIcon, color: 'blue' as const },
+      { label: 'Taux de succès', value: `${successRate}%`, icon: BusinessDashboardIcons.CheckCircle, color: 'green' as const },
+      { label: 'Incidents', value: String(issueCount), icon: BusinessDashboardIcons.AlertCircle, color: 'yellow' as const },
+    ];
+  }, [shipments]);
 
   useEffect(() => {
     const agencyQuery = query(
@@ -291,131 +320,126 @@ export function LogisticsDashboard({ businessUser }: LogisticsDashboardProps) {
       label: canRegisterPackages ? 'Enregistrer colis' : 'Voir missions',
       description: canRegisterPackages ? 'Créer un suivi et QR code' : 'Consulter les courses assignées',
       tab: canRegisterPackages ? 'register' : 'shipments',
-      icon: canRegisterPackages ? BusinessDashboardIcons.QRCode : BusinessDashboardIcons.MapPin,
+      icon: canRegisterPackages ? SendPackageIcon : MapPinIcon,
       tone: 'emerald',
     },
     {
       label: 'Scanner',
       description: 'Pickup, depot ou remise',
       tab: tabs.some((tab) => tab.id === 'relay') ? 'relay' : 'shipments',
-      icon: BusinessDashboardIcons.QRCode,
+      icon: UgaviShareIcon,
       tone: 'orange',
     },
     {
       label: 'Ressources',
       description: 'Livreurs, vehicules, moyens',
       tab: tabs.some((tab) => tab.id === 'fleet') ? 'fleet' : 'overview',
-      icon: BusinessDashboardIcons.Truck,
+      icon: UgaviIcon,
       tone: 'blue',
     },
     {
       label: 'Flux actifs',
       description: 'Colis, missions et priorites',
       tab: 'shipments',
-      icon: BusinessDashboardIcons.TrendingUp,
+      icon: TrackPackageIcon,
       tone: 'slate',
     },
   ];
 
   return (
-    <div className="min-h-screen bg-[#f6f8f7] pb-24 text-emerald-950">
-      <div className="border-b border-slate-200 bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-lg shadow-emerald-600/20">
-                <BusinessDashboardIcons.Truck className="h-6 w-6" />
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(50,187,120,0.14),transparent_34%),linear-gradient(180deg,#f7fbf8_0%,#eef8f1_54%,#f8faf8_100%)] pb-24 text-[#122116]">
+      <div className="sticky top-0 z-30 rounded-b-[32px] bg-gradient-to-r from-[#32BB78] via-[#22945d] to-[#0E5A59] px-4 pb-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] text-white shadow-lg shadow-[#0E5A59]/20">
+        <div className="mx-auto max-w-5xl">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl border border-white/30 bg-white shadow-md">
+                <UgaviIcon size={38} />
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">Ugavi Pro</p>
-                <h1 className="truncate text-2xl font-black text-emerald-950">{businessUser.businessName}</h1>
-                <p className="truncate text-sm text-slate-500">{roleConfig.title}</p>
+                <p className="text-[11px] font-black uppercase tracking-[0.18em] text-white/70">Ugavi Business</p>
+                <h1 className="truncate text-xl font-black leading-tight">{businessUser.businessName}</h1>
+                <p className="truncate text-xs font-medium text-white/75">{roleConfig.title.replace('Dashboard Ugavi — ', '')}</p>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-              {quickActions.slice(0, 2).map((action) => {
-                const Icon = action.icon;
-                return (
-                  <button
-                    key={action.label}
-                    type="button"
-                    onClick={() => setActiveTab(action.tab)}
-                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
-                  >
-                    <Icon className="h-4 w-4" />
-                    {action.label}
-                  </button>
-                );
-              })}
-              <div className="col-span-2 inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700 sm:col-span-1">
-                <BusinessDashboardIcons.CheckCircle className="h-4 w-4" />
-                Approuve
-              </div>
+            <div className="hidden items-center gap-2 rounded-full border border-white/30 bg-white/15 px-3 py-2 text-xs font-bold backdrop-blur sm:flex">
+              <BusinessDashboardIcons.CheckCircle className="h-4 w-4" />
+              Compte actif
             </div>
+          </div>
+
+          <div className="mt-4 grid grid-cols-4 gap-3">
+            {quickActions.map((action) => {
+              const Icon = action.icon;
+              return (
+                <button
+                  key={action.label}
+                  type="button"
+                  onClick={() => setActiveTab(action.tab)}
+                  className="group flex min-w-0 flex-col items-center gap-2 rounded-2xl bg-white/12 p-2.5 text-center ring-1 ring-white/18 transition hover:bg-white/20"
+                >
+                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-md transition group-hover:scale-105">
+                    <Icon size={32} />
+                  </span>
+                  <span className="line-clamp-2 text-[11px] font-bold leading-tight text-white">{action.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
 
-      <div className="border-b border-slate-200 bg-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="flex gap-2 overflow-x-auto py-3">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex min-w-fit items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition ${
-                  activeTab === tab.id
-                    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20'
-                    : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-900'
-                }`}
-              >
-                <tab.icon className="h-4 w-4" />
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="mx-auto max-w-7xl space-y-5 px-4 py-5 sm:px-6">
-        <section className="grid gap-4 lg:grid-cols-[1.35fr_0.65fr]">
-          <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 via-emerald-600 to-orange-500 text-white shadow-xl">
-            <div className="grid min-h-56 gap-6 p-5 sm:p-6 lg:grid-cols-[1fr_260px]">
-              <div className="flex flex-col justify-between gap-8">
-                <div>
-                  <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-emerald-200">
-                    <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                    Operations logistiques
-                  </div>
-                  <h2 className="mt-4 max-w-2xl text-3xl font-black leading-tight sm:text-4xl">
-                    Pilotez les colis, les scans et les ressources depuis un seul espace.
-                  </h2>
-                  <p className="mt-3 max-w-xl text-sm text-slate-300">{roleConfig.summary}</p>
+      <div className="mx-auto max-w-5xl space-y-5 px-4 py-5">
+        <section className="overflow-hidden rounded-3xl border border-white bg-white shadow-sm">
+          <div className="relative bg-gradient-to-br from-[#32BB78] via-[#22945d] to-[#0E5A59] p-5 text-white">
+            <div className="pointer-events-none absolute -right-8 -top-10 h-32 w-32 rounded-full bg-white/15 blur-2xl" />
+            <div className="relative flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <div className="inline-flex items-center gap-2 rounded-full bg-white/14 px-3 py-1 text-xs font-bold text-white/80">
+                  <span className="h-2 w-2 rounded-full bg-[#FF8C00]" />
+                  Operations logistiques
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {roleConfig.capabilities.slice(0, 4).map((capability) => (
-                    <span key={capability} className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-white">
-                      {capability}
-                    </span>
-                  ))}
-                </div>
+                <h2 className="mt-4 max-w-2xl text-2xl font-black leading-tight sm:text-3xl">
+                  Pilotez colis, scans, relais et ressources depuis un seul espace.
+                </h2>
+                <p className="mt-2 max-w-xl text-sm text-white/75">{roleConfig.summary}</p>
               </div>
-              <div className="grid grid-cols-2 gap-3 lg:grid-cols-1">
-                <MetricPill label="Temps moyen" value="18 min" />
-                <MetricPill label="SLA" value="98%" />
-                <MetricPill label="Incidents" value="0" />
+              <div className="grid grid-cols-3 gap-2 sm:min-w-72">
+                <MetricPill label="Colis" value={String(shipments.length)} />
+                <MetricPill label="Actifs" value={liveStats[0].value} />
+                <MetricPill label="SLA" value={liveStats[2].value} />
               </div>
             </div>
           </div>
-
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-            {quickActions.map((action) => (
-              <QuickActionButton key={action.label} action={action} onClick={() => setActiveTab(action.tab)} />
+          <div className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-4">
+            {liveStats.map((stat) => (
+              <BusinessMetricCard key={stat.label} stat={stat} />
             ))}
           </div>
         </section>
 
-        {activeTab === 'overview' && <LogisticsOverview stats={roleConfig.stats} capabilities={roleConfig.capabilities} shipments={shipments} setActiveTab={setActiveTab} />}
+        <section className="overflow-hidden rounded-3xl border border-[#dbe8df] bg-white shadow-sm">
+          <div className="flex gap-2 overflow-x-auto p-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            {tabs.map((tab) => {
+              const Icon = TAB_ICON_MAP[tab.id] || tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex min-w-fit items-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold transition ${
+                    activeTab === tab.id
+                      ? 'bg-[#32BB78] text-white shadow-md shadow-[#32BB78]/20'
+                      : 'bg-[#f4faf6] text-[#52635a] hover:bg-[#e8f4ec] hover:text-[#22945d]'
+                  }`}
+                >
+                  <Icon size={22} />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        {activeTab === 'overview' && <LogisticsOverview stats={liveStats} capabilities={roleConfig.capabilities} shipments={shipments} setActiveTab={setActiveTab} />}
         {activeTab === 'fleet' && <LogisticsFleet title={roleConfig.fleetTitle} emptyState={roleConfig.fleetEmptyState} businessUser={businessUser} />}
         {activeTab === 'shipments' && <LogisticsShipments title={roleConfig.shipmentsTitle} emptyState={roleConfig.shipmentsEmptyState} businessUser={businessUser} shipments={shipments} isLoading={isShipmentsLoading} />}
         {activeTab === 'relay' && <RelayScanner title={roleConfig.relayTitle} description={roleConfig.relayDescription} />}
@@ -427,36 +451,35 @@ export function LogisticsDashboard({ businessUser }: LogisticsDashboardProps) {
 
 function MetricPill({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/10 p-4">
-      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-300">{label}</p>
+    <div className="rounded-2xl border border-white/18 bg-white/14 p-3 text-center backdrop-blur">
+      <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-white/65">{label}</p>
       <p className="mt-2 text-2xl font-black text-white">{value}</p>
     </div>
   );
 }
 
-function QuickActionButton({ action, onClick }: { action: QuickAction; onClick: () => void }) {
-  const Icon = action.icon;
-  const toneClasses = {
-    emerald: 'bg-emerald-50 text-emerald-700 ring-emerald-100',
-    orange: 'bg-orange-50 text-orange-700 ring-orange-100',
-    blue: 'bg-blue-50 text-blue-700 ring-blue-100',
-    slate: 'bg-slate-100 text-slate-800 ring-slate-200',
+function BusinessMetricCard({ stat }: { stat: LogisticsStat }) {
+  const Icon = stat.icon;
+  const colorClasses = {
+    orange: 'bg-[#fff7ed] text-[#9a4a00] border-[#fed7aa]',
+    blue: 'bg-[#eff6ff] text-[#1d4ed8] border-[#bfdbfe]',
+    green: 'bg-[#ecfdf3] text-[#0E5A59] border-[#b8efd2]',
+    yellow: 'bg-[#fffbeb] text-[#92400e] border-[#fde68a]',
+    purple: 'bg-[#f5f3ff] text-[#6d28d9] border-[#ddd6fe]',
   };
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex items-center gap-3 rounded-2xl bg-white p-4 text-left shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-lg"
-    >
-      <span className={`flex h-11 w-11 items-center justify-center rounded-xl ring-1 ${toneClasses[action.tone]}`}>
-        <Icon className="h-5 w-5" />
-      </span>
-      <span className="min-w-0">
-        <span className="block font-bold text-emerald-950">{action.label}</span>
-        <span className="block truncate text-sm text-slate-500">{action.description}</span>
-      </span>
-    </button>
+    <div className={`rounded-2xl border p-4 ${colorClasses[stat.color]}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-bold opacity-75">{stat.label}</p>
+          <p className="mt-2 text-2xl font-black">{stat.value}</p>
+        </div>
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/70">
+          <Icon className="h-6 w-6 opacity-80" size={28} />
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -1177,16 +1200,19 @@ function LogisticsFleet({ title, emptyState, businessUser }: { title: string; em
         )}
         <div className="grid gap-3 md:grid-cols-3">
           {[
-            { label: 'Livreurs', value: resources.filter((item) => item.type === 'Livreur').length },
-            { label: 'Vehicules', value: resources.filter((item) => ['Moto', 'Voiture', 'Camion', 'Drone'].includes(item.type)).length },
-            { label: 'Zones', value: agencyZone ? 1 : 0 },
-          ].map((item) => (
+            { label: 'Livreurs', value: resources.filter((item) => item.type === 'Livreur').length, icon: UgaviIcon },
+            { label: 'Vehicules', value: resources.filter((item) => ['Moto', 'Voiture', 'Camion', 'Drone'].includes(item.type)).length, icon: SendPackageIcon },
+            { label: 'Zones', value: agencyZone ? 1 : 0, icon: MapPinIcon },
+          ].map((item) => {
+            const Icon = item.icon;
+            return (
             <div key={item.label} className="rounded-2xl bg-slate-50 p-4">
-              <BusinessDashboardIcons.Truck className="mb-4 h-7 w-7 text-slate-400" />
+              <Icon className="mb-4" size={32} />
               <p className="text-2xl font-black text-emerald-950">{item.value}</p>
               <p className="text-sm font-semibold text-slate-500">{item.label}</p>
             </div>
-          ))}
+          );
+          })}
         </div>
         {resources.length > 0 ? (
           <div className="mt-5 grid gap-2">
@@ -1386,7 +1412,7 @@ function RelayScanner({ title, description }: { title: string; description: stri
     <div className="grid gap-5 lg:grid-cols-[0.85fr_1.15fr]">
       <div className="rounded-2xl bg-gradient-to-br from-emerald-600 to-orange-500 p-6 text-white shadow-sm">
         <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white/10">
-          <BusinessDashboardIcons.QRCode className="h-10 w-10 text-emerald-300" />
+          <UgaviShareIcon size={48} />
         </div>
         <h2 className="mt-6 text-2xl font-black">{title}</h2>
         <p className="mt-2 text-sm text-slate-300">{description}</p>
@@ -1399,7 +1425,7 @@ function RelayScanner({ title, description }: { title: string; description: stri
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
           {['Reception', 'Depart', 'Remise'].map((mode) => (
             <button key={mode} className="rounded-2xl bg-slate-50 p-4 text-left">
-              <BusinessDashboardIcons.QRCode className="mb-4 h-7 w-7 text-slate-500" />
+              <UgaviShareIcon className="mb-4" size={32} />
               <p className="font-bold text-emerald-950">{mode}</p>
               <p className="text-sm text-slate-500">Scanner et valider</p>
             </button>

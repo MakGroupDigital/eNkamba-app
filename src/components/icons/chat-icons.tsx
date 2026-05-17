@@ -5,6 +5,157 @@ interface IconProps {
   className?: string;
 }
 
+const SvgDefs = () => (
+  <defs>
+    <linearGradient id="chatPrimaryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stopColor="#32BB78" />
+      <stop offset="100%" stopColor="#0E5A59" />
+    </linearGradient>
+    <linearGradient id="chatAccentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stopColor="#FF8C00" />
+      <stop offset="100%" stopColor="#E67E00" />
+    </linearGradient>
+  </defs>
+);
+
+export const ChatEmptyIcon: React.FC<IconProps> = ({ size = 48, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <SvgDefs />
+    <path d="M8 10C8 7.8 9.8 6 12 6H36C38.2 6 40 7.8 40 10V27C40 29.2 38.2 31 36 31H22L12 40V31C9.8 31 8 29.2 8 27V10Z" fill="url(#chatPrimaryGrad)" />
+    <circle cx="17" cy="18" r="2.5" fill="#fff" />
+    <circle cx="24" cy="18" r="2.5" fill="#fff" />
+    <circle cx="31" cy="18" r="2.5" fill="#fff" />
+    <path d="M28 34H40L34 42L28 34Z" fill="url(#chatAccentGrad)" opacity="0.95" />
+  </svg>
+);
+
+export const ChatPlusIcon: React.FC<IconProps> = ({ size = 24, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <SvgDefs />
+    <circle cx="24" cy="24" r="18" fill="url(#chatPrimaryGrad)" />
+    <rect x="21" y="13" width="6" height="22" rx="2" fill="#fff" />
+    <rect x="13" y="21" width="22" height="6" rx="2" fill="#fff" />
+    <circle cx="36" cy="12" r="5" fill="url(#chatAccentGrad)" />
+  </svg>
+);
+
+export const ChatGroupCustomIcon: React.FC<IconProps> = ({ size = 24, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <SvgDefs />
+    <circle cx="18" cy="17" r="7" fill="url(#chatPrimaryGrad)" />
+    <circle cx="32" cy="18" r="6" fill="url(#chatAccentGrad)" />
+    <path d="M7 40C8 31 12 27 18 27C24 27 28 31 29 40H7Z" fill="url(#chatPrimaryGrad)" />
+    <path d="M25 40C26 32 29 29 34 29C39 29 42 33 43 40H25Z" fill="#0E5A59" opacity="0.9" />
+  </svg>
+);
+
+export const ChatSentIcon: React.FC<IconProps> = ({ size = 24, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <SvgDefs />
+    <circle cx="24" cy="24" r="18" fill="url(#chatPrimaryGrad)" />
+    <path d="M15 24L22 31L34 17" stroke="#fff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+export const ChatReadIcon: React.FC<IconProps> = ({ size = 24, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <SvgDefs />
+    <circle cx="24" cy="24" r="18" fill="url(#chatPrimaryGrad)" />
+    <path d="M12 25L18 31L29 18" stroke="#fff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M23 28L28 33L38 20" stroke="#FF8C00" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+export const ChatPhotoIcon: React.FC<IconProps> = ({ size = 24, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <SvgDefs />
+    <rect x="8" y="10" width="32" height="28" rx="5" fill="url(#chatPrimaryGrad)" />
+    <circle cx="30" cy="18" r="4" fill="#FF8C00" />
+    <path d="M11 34L19 25L25 31L29 27L38 36H12C11.4 36 11 35.6 11 35V34Z" fill="#fff" opacity="0.92" />
+  </svg>
+);
+
+export const ChatVideoCustomIcon: React.FC<IconProps> = ({ size = 24, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <SvgDefs />
+    <rect x="8" y="14" width="25" height="20" rx="5" fill="url(#chatPrimaryGrad)" />
+    <path d="M33 20L42 15V33L33 28V20Z" fill="url(#chatAccentGrad)" />
+    <circle cx="18" cy="24" r="4" fill="#fff" opacity="0.9" />
+  </svg>
+);
+
+export const ChatMicCustomIcon: React.FC<IconProps> = ({ size = 24, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <SvgDefs />
+    <rect x="17" y="6" width="14" height="24" rx="7" fill="url(#chatPrimaryGrad)" />
+    <path d="M12 23C12 30 17 35 24 35C31 35 36 30 36 23" stroke="#FF8C00" strokeWidth="4" strokeLinecap="round" />
+    <path d="M24 35V42" stroke="#0E5A59" strokeWidth="4" strokeLinecap="round" />
+    <path d="M18 42H30" stroke="#0E5A59" strokeWidth="4" strokeLinecap="round" />
+  </svg>
+);
+
+export const ChatLocationCustomIcon: React.FC<IconProps> = ({ size = 24, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <SvgDefs />
+    <path d="M24 4C16 4 10 10 10 18C10 29 24 43 24 43C24 43 38 29 38 18C38 10 32 4 24 4Z" fill="url(#chatPrimaryGrad)" />
+    <circle cx="24" cy="18" r="7" fill="#fff" />
+    <circle cx="24" cy="18" r="3" fill="#FF8C00" />
+  </svg>
+);
+
+export const ChatNotificationIcon: React.FC<IconProps> = ({ size = 24, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <SvgDefs />
+    <path d="M14 22C14 14 18 9 24 9C30 9 34 14 34 22V30L39 36H9L14 30V22Z" fill="url(#chatPrimaryGrad)" />
+    <path d="M20 39C21 42 23 43 24 43C25 43 27 42 28 39H20Z" fill="#FF8C00" />
+    <circle cx="34" cy="12" r="5" fill="url(#chatAccentGrad)" />
+  </svg>
+);
+
+export const ChatCallIcon: React.FC<IconProps> = ({ size = 24, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <SvgDefs />
+    <circle cx="24" cy="24" r="18" fill="url(#chatPrimaryGrad)" />
+    <path d="M17 17C18 27 24 32 31 33L35 28L30 24L27 27C24 25 22 23 21 20L24 17L20 13L17 17Z" fill="#fff" />
+    <path d="M33 12C37 14 39 17 40 22" stroke="#FF8C00" strokeWidth="3" strokeLinecap="round" />
+  </svg>
+);
+
+export const ChatEditIcon: React.FC<IconProps> = ({ size = 24, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <SvgDefs />
+    <rect x="10" y="9" width="24" height="30" rx="4" fill="url(#chatPrimaryGrad)" />
+    <path d="M25 31L36 20L40 24L29 35L23 37L25 31Z" fill="#FF8C00" />
+    <path d="M15 17H28M15 23H24" stroke="#fff" strokeWidth="3" strokeLinecap="round" />
+  </svg>
+);
+
+export const ChatEyeIcon: React.FC<IconProps> = ({ size = 24, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <SvgDefs />
+    <path d="M5 24C10 14 16 10 24 10C32 10 38 14 43 24C38 34 32 38 24 38C16 38 10 34 5 24Z" fill="url(#chatPrimaryGrad)" />
+    <circle cx="24" cy="24" r="8" fill="#fff" />
+    <circle cx="24" cy="24" r="4" fill="#FF8C00" />
+  </svg>
+);
+
+export const ChatEyeOffIcon: React.FC<IconProps> = ({ size = 24, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <SvgDefs />
+    <path d="M6 24C11 15 17 11 24 11C31 11 37 15 42 24C37 33 31 37 24 37C17 37 11 33 6 24Z" fill="url(#chatPrimaryGrad)" opacity="0.75" />
+    <path d="M10 40L39 9" stroke="#FF8C00" strokeWidth="4" strokeLinecap="round" />
+  </svg>
+);
+
+export const ChatLastSeenIcon: React.FC<IconProps> = ({ size = 24, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <SvgDefs />
+    <circle cx="24" cy="24" r="18" fill="url(#chatPrimaryGrad)" />
+    <path d="M24 13V25L32 30" stroke="#fff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+    <circle cx="36" cy="14" r="5" fill="url(#chatAccentGrad)" />
+  </svg>
+);
+
 // Icône Discussions - Bulles de chat modernes
 export const ChatDiscussionsIcon: React.FC<IconProps> = ({ size = 24, className = '' }) => (
   <svg

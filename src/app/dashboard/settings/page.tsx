@@ -28,6 +28,8 @@ import { useState, useEffect } from 'react';
 import { useKycStatus } from '@/hooks/useKycStatus';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useBusinessStatus } from '@/hooks/useBusinessStatus';
+import { useAuth } from '@/hooks/useAuth';
+import { useNkampaStore } from '@/hooks/useNkampaStore';
 import { getBusinessDashboardPath, getBusinessStatusLabel } from '@/lib/business-routing';
 import { ContactQRCode } from '@/components/settings/ContactQRCode';
 import { AgentRelaySection } from '@/components/agent-relay/AgentRelaySection';
@@ -40,6 +42,9 @@ import {
   LanguageIcon,
   HelpIcon,
   LogoutIcon,
+  NkampaIcon,
+  UgaviIcon,
+  PaymentNavIcon,
 } from '@/components/icons/service-icons';
 
 // Document Icon
@@ -104,6 +109,38 @@ const SettingsItem = ({
   );
 };
 
+const BusinessAccessItem = ({
+  icon: IconComponent,
+  title,
+  description,
+  href,
+  label,
+}: {
+  icon: React.ComponentType<{ size?: number }>;
+  title: string;
+  description: string;
+  href: string;
+  label: string;
+}) => (
+  <>
+    <div className="flex items-center justify-between gap-4 p-4 transition-all hover:bg-muted/50">
+      <div className="flex min-w-0 items-center gap-4">
+        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/10 to-primary/5">
+          <IconComponent size={28} />
+        </div>
+        <div className="min-w-0">
+          <p className="font-semibold text-foreground">{title}</p>
+          <p className="text-sm text-muted-foreground">{description}</p>
+        </div>
+      </div>
+      <Button variant="outline" size="sm" className="flex-shrink-0 rounded-xl" asChild>
+        <Link href={href}>{label}</Link>
+      </Button>
+    </div>
+    <Separator />
+  </>
+);
+
 interface UserData {
   name: string;
   email: string;
@@ -121,6 +158,8 @@ export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
   const { isKycCompleted } = useKycStatus();
   const { profile, isLoading: profileLoading } = useUserProfile();
+  const { user } = useAuth();
+  const { store: nkampaStore, hasChecked: hasCheckedNkampaStore } = useNkampaStore(user?.uid);
   const [isMounted, setIsMounted] = useState(false);
   const [userData, setUserData] = useState<UserData>(getDefaultUser());
   const [showDetailedInfo, setShowDetailedInfo] = useState(false);
@@ -174,6 +213,16 @@ export default function SettingsPage() {
   const businessActionLabel = businessUser?.status === 'APPROVED'
     ? 'Basculer vers le compte entreprise'
     : 'Afficher la demande et le statut';
+
+  const isBusinessApproved = businessUser?.status === 'APPROVED';
+  const businessRequestLabel = businessUser
+    ? `Statut : ${getBusinessStatusLabel(businessUser.status)}`
+    : 'Demander un compte business';
+  const nkampaStoreHref = nkampaStore ? '/dashboard/nkampa/store/dashboard' : '/dashboard/nkampa/store';
+  const nkampaStoreLabel = hasCheckedNkampaStore && nkampaStore ? 'Ma boutique' : 'Créer boutique';
+  const nkampaStoreDescription = hasCheckedNkampaStore && nkampaStore
+    ? `Accéder à ${nkampaStore.storeName || 'votre boutique Nkampa'}.`
+    : 'Créer ou demander une boutique pour vendre sur Nkampa.';
 
   return (
     <div className="container mx-auto max-w-4xl p-4 space-y-6 animate-in fade-in duration-500">
@@ -373,19 +422,19 @@ export default function SettingsPage() {
         </CardFooter>
       </Card>
 
-      {/* Business Account */}
+      {/* Business */}
       <Card className="overflow-hidden border-2 border-primary/20">
         <CardHeader className="bg-gradient-to-r from-primary/10 to-transparent">
           <CardTitle className="font-headline text-lg flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-primary" />
-            Compte Entreprise
+            Business
           </CardTitle>
-          <CardDescription>Gérez votre compte professionnel eNkamba</CardDescription>
+          <CardDescription>Demandes business et accès professionnels par module</CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           <SettingsItem
             icon={businessUser?.businessType === 'LOGISTICS' ? UgaviBusinessAccountIcon : DocumentIcon}
-            title="Compte entreprise"
+            title="Compte business eNkamba"
             description={businessDescription}
             action={
               <Button variant="outline" size="sm" className="rounded-xl" asChild>
@@ -394,6 +443,34 @@ export default function SettingsPage() {
                 </Link>
               </Button>
             }
+          />
+          <BusinessAccessItem
+            icon={UgaviIcon}
+            title="Ugavi Business"
+            description={isBusinessApproved ? 'Accéder au dashboard logistique, relais, flotte et colis.' : businessRequestLabel}
+            href={isBusinessApproved ? getBusinessDashboardPath('LOGISTICS') : '/dashboard/settings/business-account'}
+            label={isBusinessApproved ? 'Accéder' : 'Obtenir'}
+          />
+          <BusinessAccessItem
+            icon={NkampaIcon}
+            title="Nkampa Business"
+            description={isBusinessApproved ? 'Accéder au dashboard commerce pro, catalogue et commandes.' : businessRequestLabel}
+            href={isBusinessApproved ? getBusinessDashboardPath('COMMERCE') : '/dashboard/settings/business-account'}
+            label={isBusinessApproved ? 'Accéder' : 'Obtenir'}
+          />
+          <BusinessAccessItem
+            icon={NkampaIcon}
+            title="Boutique Nkampa"
+            description={nkampaStoreDescription}
+            href={nkampaStoreHref}
+            label={nkampaStoreLabel}
+          />
+          <BusinessAccessItem
+            icon={PaymentNavIcon}
+            title="Mbongo Business"
+            description={isBusinessApproved ? 'Accéder au dashboard paiement pro, API et reporting.' : businessRequestLabel}
+            href={isBusinessApproved ? getBusinessDashboardPath('PAYMENT') : '/dashboard/settings/business-account'}
+            label={isBusinessApproved ? 'Accéder' : 'Obtenir'}
           />
         </CardContent>
       </Card>

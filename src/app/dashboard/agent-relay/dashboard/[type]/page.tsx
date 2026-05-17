@@ -6,17 +6,6 @@ import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import {
   ArrowLeft,
-  BadgeCheck,
-  CreditCard,
-  HandCoins,
-  QrCode,
-  Send,
-  ShoppingBag,
-  Smartphone,
-  Store,
-  Truck,
-  Users,
-  Wallet,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -24,6 +13,24 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useAgentRelayStatus } from '@/hooks/useAgentRelayStatus';
+import {
+  AgentIcon,
+  CreditIcon,
+  LogisticsNavIcon,
+  PhoneCreditIcon,
+  ReferralIcon,
+  ShopNavIcon,
+  WalletNavIcon,
+} from '@/components/icons/service-icons';
+import {
+  BulkPaymentTransactionIcon,
+  DepositTransactionIcon,
+  PaymentTransactionIcon,
+  ReceiveTransactionIcon,
+  TransferTransactionIcon,
+  WithdrawalTransactionIcon,
+} from '@/components/icons/transaction-icons';
+import { VerifiedIcon } from '@/components/icons/seller-portal-icons';
 
 type AgentRelayAccountType = 'agent-relais' | 'cabinet' | 'point-service';
 
@@ -31,7 +38,7 @@ type DashboardAction = {
   key: string;
   title: string;
   description: string;
-  icon: ComponentType<{ size?: number | string; className?: string }>;
+  icon: ComponentType<{ size?: number; className?: string }>;
   href?: string;
   comingSoon?: boolean;
   badge?: string;
@@ -40,7 +47,7 @@ type DashboardAction = {
 type DashboardModule = {
   key: string;
   title: string;
-  icon: ComponentType<{ size?: number | string; className?: string }>;
+  icon: ComponentType<{ size?: number; className?: string }>;
   href: string;
 };
 
@@ -57,29 +64,29 @@ const typeThemes: Record<
     accent: string;
     accentSoft: string;
     accentText: string;
-    heroIcon: ComponentType<{ size?: number | string; className?: string }>;
+    heroIcon: ComponentType<{ size?: number; className?: string }>;
   }
 > = {
   'agent-relais': {
-    gradient: 'from-[#32BB78] via-[#2BA86A] to-[#32BB78]',
-    accent: '#32BB78',
+    gradient: 'from-[#0E5A59] via-[#32BB78] to-[#0E5A59]',
+    accent: '#0E5A59',
     accentSoft: 'bg-[#32BB78]/10',
-    accentText: 'text-[#32BB78]',
-    heroIcon: HandCoins,
+    accentText: 'text-[#0E5A59]',
+    heroIcon: AgentIcon,
   },
   cabinet: {
-    gradient: 'from-[#FF6B35] via-[#FF5722] to-[#FF6B35]',
-    accent: '#FF6B35',
-    accentSoft: 'bg-[#FF6B35]/10',
-    accentText: 'text-[#FF6B35]',
-    heroIcon: Store,
+    gradient: 'from-[#0E5A59] via-[#32BB78] to-[#0E5A59]',
+    accent: '#0E5A59',
+    accentSoft: 'bg-[#32BB78]/10',
+    accentText: 'text-[#0E5A59]',
+    heroIcon: AgentIcon,
   },
   'point-service': {
-    gradient: 'from-[#FF6B35] via-[#FF5722] to-[#FF6B35]',
-    accent: '#FF6B35',
-    accentSoft: 'bg-[#FF6B35]/10',
-    accentText: 'text-[#FF6B35]',
-    heroIcon: Truck,
+    gradient: 'from-[#0E5A59] via-[#32BB78] to-[#0E5A59]',
+    accent: '#0E5A59',
+    accentSoft: 'bg-[#32BB78]/10',
+    accentText: 'text-[#0E5A59]',
+    heroIcon: LogisticsNavIcon,
   },
 };
 
@@ -89,42 +96,42 @@ const actionsByType: Record<AgentRelayAccountType, DashboardAction[]> = {
       key: 'credit',
       title: 'Créditer mon compte',
       description: 'Ajouter des fonds sur votre solde',
-      icon: Wallet,
+      icon: DepositTransactionIcon,
       href: '/dashboard/agent-relay/ops/credit',
     },
     {
       key: 'withdraw',
       title: 'Retrait',
       description: 'Retirer des fonds en caisse',
-      icon: HandCoins,
+      icon: WithdrawalTransactionIcon,
       href: '/dashboard/agent-relay/ops/withdraw',
     },
     {
       key: 'collect',
       title: 'Encaisser',
       description: 'Recevoir un paiement (QR / lien)',
-      icon: QrCode,
+      icon: ReceiveTransactionIcon,
       href: '/dashboard/agent-relay/ops/collect',
     },
     {
       key: 'transfer',
       title: 'Transfert',
       description: 'Envoyer de l’argent à un client',
-      icon: Send,
+      icon: TransferTransactionIcon,
       href: '/dashboard/agent-relay/ops/transfer',
     },
     {
       key: 'airtime',
       title: 'Airtime',
       description: 'Vendre du crédit téléphonique',
-      icon: Smartphone,
+      icon: PhoneCreditIcon,
       href: '/dashboard/agent-relay/ops/airtime',
     },
     {
       key: 'referral',
       title: 'Parrainage',
       description: 'Inviter et gagner des bonus',
-      icon: Users,
+      icon: ReferralIcon,
       href: '/dashboard/agent-relay/ops/referral',
     },
   ],
@@ -133,35 +140,35 @@ const actionsByType: Record<AgentRelayAccountType, DashboardAction[]> = {
       key: 'deposit_withdraw',
       title: 'Dépôt & Retrait',
       description: 'Opérations cash avec les clients',
-      icon: HandCoins,
+      icon: BulkPaymentTransactionIcon,
       href: '/dashboard/agent-relay/ops/deposit-withdraw',
     },
     {
       key: 'transfer',
       title: 'Transfert d’argent',
       description: 'Envoyer / recevoir pour un client',
-      icon: Send,
+      icon: TransferTransactionIcon,
       href: '/dashboard/agent-relay/ops/transfer',
     },
     {
       key: 'collect',
       title: 'Encaisser',
       description: 'Paiement par QR ou lien',
-      icon: QrCode,
+      icon: ReceiveTransactionIcon,
       href: '/dashboard/agent-relay/ops/collect',
     },
     {
       key: 'qr_scan',
       title: 'QR Scan',
       description: 'Scanner un code pour payer',
-      icon: QrCode,
+      icon: PaymentTransactionIcon,
       href: '/dashboard/agent-relay/ops/collect?mode=scan',
     },
     {
       key: 'create_account',
       title: 'Créer compte',
       description: 'Onboarder un nouveau client',
-      icon: CreditCard,
+      icon: CreditIcon,
       href: '/dashboard/agent-relay/ops/create-account',
       badge: 'Nouveau',
     },
@@ -169,7 +176,7 @@ const actionsByType: Record<AgentRelayAccountType, DashboardAction[]> = {
       key: 'clients',
       title: 'Mes clients',
       description: 'Gérer les clients servis',
-      icon: Users,
+      icon: AgentIcon,
       href: '/dashboard/agent-relay/ops/clients',
     },
   ],
@@ -178,42 +185,42 @@ const actionsByType: Record<AgentRelayAccountType, DashboardAction[]> = {
       key: 'ecommerce',
       title: 'E‑Commerce',
       description: 'Accéder aux commandes',
-      icon: ShoppingBag,
+      icon: ShopNavIcon,
       href: '/dashboard/nkampa',
     },
     {
       key: 'logistics',
       title: 'Logistique',
       description: 'Suivre et gérer les colis',
-      icon: Truck,
+      icon: LogisticsNavIcon,
       href: '/dashboard/ugavi',
     },
     {
       key: 'scan_colis',
       title: 'Scannez colis',
       description: 'Scanner / vérifier un colis',
-      icon: QrCode,
+      icon: PaymentTransactionIcon,
       href: '/dashboard/ugavi',
     },
     {
       key: 'collect',
       title: 'Encaisser',
       description: 'Recevoir un paiement (QR / lien)',
-      icon: QrCode,
+      icon: ReceiveTransactionIcon,
       href: '/dashboard/agent-relay/ops/collect',
     },
     {
       key: 'airtime',
       title: 'Airtime',
       description: 'Vendre du crédit téléphonique',
-      icon: Smartphone,
+      icon: PhoneCreditIcon,
       href: '/dashboard/agent-relay/ops/airtime',
     },
     {
       key: 'referral',
       title: 'Parrainage',
       description: 'Inviter et gagner des bonus',
-      icon: Users,
+      icon: ReferralIcon,
       href: '/dashboard/agent-relay/ops/referral',
     },
   ],
@@ -221,15 +228,15 @@ const actionsByType: Record<AgentRelayAccountType, DashboardAction[]> = {
 
 const modulesByType: Record<AgentRelayAccountType, DashboardModule[]> = {
   'agent-relais': [
-    { key: 'mobile_money', title: 'Mobile Money', icon: Wallet, href: '/dashboard/wallet' },
+    { key: 'mobile_money', title: 'Mobile Money', icon: WalletNavIcon, href: '/dashboard/wallet' },
   ],
   cabinet: [
-    { key: 'mobile_money', title: 'Mobile Money', icon: Wallet, href: '/dashboard/wallet' },
+    { key: 'mobile_money', title: 'Mobile Money', icon: WalletNavIcon, href: '/dashboard/wallet' },
   ],
   'point-service': [
-    { key: 'ecommerce', title: 'E‑Commerce', icon: ShoppingBag, href: '/dashboard/nkampa' },
-    { key: 'logistique', title: 'Logistique', icon: Truck, href: '/dashboard/ugavi' },
-    { key: 'mobile_money', title: 'Mobile Money', icon: Wallet, href: '/dashboard/wallet' },
+    { key: 'ecommerce', title: 'E‑Commerce', icon: ShopNavIcon, href: '/dashboard/nkampa' },
+    { key: 'logistique', title: 'Logistique', icon: LogisticsNavIcon, href: '/dashboard/ugavi' },
+    { key: 'mobile_money', title: 'Mobile Money', icon: WalletNavIcon, href: '/dashboard/wallet' },
   ],
 };
 
@@ -348,7 +355,9 @@ export default function AgentRelayTypeDashboardPage() {
                       {application.fullName || 'Agent'}
                     </p>
                     <Badge className="rounded-full bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
-                      <BadgeCheck size={14} className="mr-1" />
+                      <span className="mr-1 grid h-4 w-4 place-items-center">
+                        <VerifiedIcon size={16} />
+                      </span>
                       Validé
                     </Badge>
                   </div>

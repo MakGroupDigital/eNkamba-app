@@ -122,16 +122,51 @@ const PRODUCER_SUBCATEGORIES: SubcategoryOption[] = [
   { id: 'artisanat', label: 'Artisanat', icon: '🧵' },
 ];
 
+const NKAMPA_IMAGE_PLACEHOLDER =
+  'data:image/svg+xml;charset=utf-8,' +
+  encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#32BB78"/><stop offset="1" stop-color="#0E5A59"/></linearGradient></defs><rect width="900" height="420" fill="url(#g)"/><circle cx="720" cy="70" r="180" fill="#fff" opacity=".12"/><circle cx="120" cy="360" r="150" fill="#FF8C00" opacity=".22"/></svg>`
+  );
+
+function optimizeMarketplaceImage(src?: string, width = 420, height = 420) {
+  if (!src) return NKAMPA_IMAGE_PLACEHOLDER;
+  if (src.startsWith('data:') || src.startsWith('blob:')) return src;
+
+  try {
+    const url = new URL(src);
+
+    if (url.hostname.includes('res.cloudinary.com') && url.pathname.includes('/image/upload/')) {
+      const transform = `f_auto,q_auto:eco,c_fill,g_auto,w_${width},h_${height},dpr_auto`;
+      url.pathname = url.pathname.replace('/image/upload/', `/image/upload/${transform}/`);
+      return url.toString();
+    }
+
+    if (url.hostname === 'picsum.photos') {
+      const seedMatch = url.pathname.match(/^\/seed\/([^/]+)/);
+      if (seedMatch?.[1]) {
+        return `https://picsum.photos/seed/${seedMatch[1]}/${width}/${height}`;
+      }
+    }
+  } catch {
+    return src;
+  }
+
+  return src;
+}
+
 const SupplierCard = memo(function SupplierCard({ supplier }: { supplier: any }) {
+  const imageUrl = optimizeMarketplaceImage(supplier.logoUrl || supplier.coverUrl || 'https://picsum.photos/seed/store/300/300');
+
   return (
     <Link href={`/shop/${supplier.slug || ''}`} className={!supplier.slug ? 'pointer-events-none opacity-60' : ''}>
       <Card className="rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer h-full">
         <div className="relative w-full aspect-square bg-gray-100">
           <Image
-            src={supplier.logoUrl || supplier.coverUrl || 'https://picsum.photos/seed/store/300/300'}
+            src={imageUrl}
             alt={supplier.storeName || 'Boutique'}
             fill
             className="object-cover"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 180px"
           />
         </div>
         <CardContent className="p-3 space-y-2">
@@ -152,16 +187,18 @@ const ProductCard = memo(function ProductCard({ product }: { product: any }) {
   const priceInCDF = Math.round(
     convertToCDFSync(Number(product.price || 0), product.currency || 'CDF')
   );
+  const imageUrl = optimizeMarketplaceImage(product.image || product.images?.[0] || 'https://picsum.photos/seed/product/300/300');
 
   return (
     <Link href={product?.storeSlug ? `/shop/${product.storeSlug}/product/${product.id}` : `/dashboard/nkampa`} className={!product?.storeSlug ? 'pointer-events-none opacity-60' : ''}>
       <Card className="rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer h-full">
         <div className="relative w-full aspect-square bg-gray-100">
           <Image
-            src={product.image || product.images?.[0] || 'https://picsum.photos/seed/product/300/300'}
+            src={imageUrl}
             alt={product.name || 'Produit'}
             fill
             className="object-cover"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 180px"
           />
         </div>
         <CardContent className="p-3 space-y-2">
@@ -373,6 +410,16 @@ export default function NkampaPage() {
   }, [firestoreProducts]);
 
   const bannerProducts = useMemo(() => sortedProducts.slice(0, 6), [sortedProducts]);
+  const activeBannerProduct = bannerProducts[bannerIndex] || null;
+  const activeBannerImage = useMemo(
+    () =>
+      optimizeMarketplaceImage(
+        activeBannerProduct?.image || activeBannerProduct?.images?.[0] || 'https://picsum.photos/seed/banner/900/420',
+        900,
+        420
+      ),
+    [activeBannerProduct?.image, activeBannerProduct?.images]
+  );
 
   // Rotation automatique des bannières (uniquement si on a des produits)
   // Rotation automatique des bannières (uniquement si on a des produits)
@@ -816,10 +863,12 @@ export default function NkampaPage() {
               <div className="absolute inset-0">
                 {bannerProducts.length > 0 && (
                   <Image
-                    src={bannerProducts[bannerIndex]?.image || bannerProducts[bannerIndex]?.images?.[0] || 'https://picsum.photos/seed/banner/1200/600'}
-                    alt="Bannière"
+                    src={activeBannerImage}
+                    alt={activeBannerProduct?.name || 'Bannière Nkampa'}
                     fill
                     className="object-cover"
+                    priority={bannerIndex === 0}
+                    sizes="(max-width: 768px) calc(100vw - 32px), 900px"
                   />
                 )}
               </div>
@@ -851,14 +900,14 @@ export default function NkampaPage() {
                         <p className="text-xs font-semibold text-white/90">Produit vedette</p>
                       </div>
                       <h2 className="text-white font-black text-2xl drop-shadow-lg line-clamp-2">
-                        {bannerProducts[bannerIndex]?.name}
+                        {activeBannerProduct?.name}
                       </h2>
                       <div className="flex items-baseline gap-2">
                         <p className="text-white font-black text-3xl drop-shadow-lg">
-                          {Number(bannerProducts[bannerIndex]?.price || 0).toLocaleString()}
+                          {Number(activeBannerProduct?.price || 0).toLocaleString()}
                         </p>
                         <p className="text-white/90 font-semibold text-lg drop-shadow">
-                          {bannerProducts[bannerIndex]?.currency || 'CDF'}
+                          {activeBannerProduct?.currency || 'CDF'}
                         </p>
                       </div>
                     </>

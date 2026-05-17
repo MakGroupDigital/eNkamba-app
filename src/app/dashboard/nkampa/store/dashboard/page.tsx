@@ -1,9 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { ExternalLink, Loader2, PlusCircle, Store, LayoutDashboard, Boxes, Briefcase, Wallet, Megaphone, Image as ImageIcon, ShieldCheck, Save, Share2, Pencil, Trash2 } from 'lucide-react';
+import { ExternalLink, Loader2, PlusCircle, Megaphone, Image as ImageIcon, Save, Share2, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +17,9 @@ import { db } from '@/lib/firebase';
 import Image from 'next/image';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { NkampaNavOrdersIcon, NkampaNavSellerIcon, NkampaNavShopIcon } from '@/components/icons/nkampa-nav-icons';
+import { CustomersIcon, OrdersIcon, ProductsIcon, RatingIcon, StoreStatsIcon, VerifiedIcon } from '@/components/icons/seller-portal-icons';
+import { RequestTransactionIcon, WithdrawalTransactionIcon } from '@/components/icons/transaction-icons';
 
 const SUBCATEGORIES_BY_CATEGORY: Record<string, Array<{ id: string; label: string }>> = {
   tech: [
@@ -90,13 +93,78 @@ function roleLabel(role: string) {
   return map[role] || role;
 }
 
+function StoreMetric({
+  label,
+  value,
+  detail,
+  icon,
+  accent = 'green',
+}: {
+  label: string;
+  value: string | number;
+  detail: string;
+  icon: ReactNode;
+  accent?: 'green' | 'blue' | 'amber' | 'ink';
+}) {
+  const styles = {
+    green: 'border-[#32BB78]/20 bg-[#32BB78]/10 text-[#0E5A59]',
+    blue: 'border-sky-200 bg-sky-50 text-sky-700',
+    amber: 'border-amber-200 bg-amber-50 text-amber-800',
+    ink: 'border-slate-200 bg-slate-50 text-slate-800',
+  };
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500">{label}</p>
+          <p className="mt-2 text-2xl font-black tracking-tight text-slate-950">{value}</p>
+          <p className="mt-1 text-xs text-slate-500">{detail}</p>
+        </div>
+        <div className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl border ${styles[accent]}`}>{icon}</div>
+      </div>
+    </div>
+  );
+}
+
+function StoreActionCard({
+  title,
+  desc,
+  href,
+  cta,
+  icon,
+}: {
+  title: string;
+  desc: string;
+  href: string;
+  cta: string;
+  icon: ReactNode;
+}) {
+  return (
+    <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex items-start gap-3">
+        <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#32BB78]/10">{icon}</div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-black text-slate-950">{title}</p>
+          <p className="mt-1 text-xs leading-5 text-slate-500">{desc}</p>
+        </div>
+      </div>
+      <Button asChild className="mt-4 h-10 w-full rounded-2xl bg-[#0E5A59] hover:bg-[#0A4747]">
+        <Link href={href}>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          {cta}
+        </Link>
+      </Button>
+    </div>
+  );
+}
+
 export default function NkampaStoreDashboardPage() {
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
   const { store, hasChecked } = useNkampaStore(user?.uid);
   const didLoginRedirectRef = useRef(false);
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'media' | 'promo' | 'finance' | 'approval'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'media' | 'promo' | 'finance' | 'clients' | 'approval'>('overview');
   const [isSaving, setIsSaving] = useState(false);
 
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -186,6 +254,26 @@ export default function NkampaStoreDashboardPage() {
   }, [sellerOrders]);
 
   const pendingCount = useMemo(() => sellerOrders.filter((o) => o.status === 'pending' || o.status === 'paid').length, [sellerOrders]);
+
+  const storeCustomers = useMemo(() => {
+    const grouped = new Map<string, { id: string; name: string; email: string; orders: number; total: number; lastStatus: string }>();
+    sellerOrders.forEach((order) => {
+      const id = order.buyerId || order.buyerEmail || order.buyerName || order.id;
+      const current = grouped.get(id) || {
+        id,
+        name: order.buyerName || 'Client Nkampa',
+        email: order.buyerEmail || '',
+        orders: 0,
+        total: 0,
+        lastStatus: order.status || 'pending',
+      };
+      current.orders += 1;
+      current.total += Number(order.totalPrice || 0);
+      current.lastStatus = order.status || current.lastStatus;
+      grouped.set(id, current);
+    });
+    return Array.from(grouped.values()).sort((a, b) => b.total - a.total);
+  }, [sellerOrders]);
 
   const handleFile = (file: File, kind: 'logo' | 'cover' | 'promo') => {
     const reader = new FileReader();
@@ -367,35 +455,41 @@ export default function NkampaStoreDashboardPage() {
 
   if (!store) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="sticky top-0 z-10 bg-gradient-to-r from-primary to-green-800 text-white p-4 shadow-lg">
-          <div className="flex items-center gap-2">
-            <Store className="h-5 w-5" />
-            <h1 className="text-lg font-extrabold">Ma boutique</h1>
-          </div>
-          <p className="text-xs text-white/80">Aucune boutique trouvée</p>
-        </div>
+      <div className="min-h-screen bg-[#F6F8F7]">
+        <div className="mx-auto flex min-h-screen max-w-3xl items-center px-4 py-8">
+          <div className="w-full overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-xl">
+            <div className="relative h-44 bg-[#0E5A59]">
+              <div className="absolute inset-x-0 top-0 h-16 bg-white/10" />
+              <div className="absolute left-8 top-8 flex items-center gap-3 text-white">
+                <div className="grid h-14 w-14 place-items-center rounded-3xl bg-white">
+                  <NkampaNavSellerIcon size={36} />
+                </div>
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wide text-white/70">Back-office boutique</p>
+                  <h1 className="text-2xl font-black">Ma boutique Nkampa</h1>
+                </div>
+              </div>
+              <div className="absolute bottom-0 left-8 right-8 h-16 rounded-t-3xl border border-white/20 bg-white/15 backdrop-blur" />
+            </div>
 
-        <div className="mx-auto max-w-2xl p-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Créer votre boutique</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                Vous n’avez pas encore de boutique Nkampa. Créez-en une pour commencer à vendre.
-              </p>
-              <Button asChild className="w-full bg-primary hover:bg-primary/90">
+            <div className="space-y-4 p-5">
+              <div>
+                <h2 className="text-xl font-black text-slate-950">Créer votre boutique</h2>
+                <p className="mt-1 text-sm leading-6 text-slate-500">
+                  Aucune boutique Nkampa n’est liée à ce compte. Créez la vitrine pour publier vos produits, recevoir des commandes et gérer vos promos.
+                </p>
+              </div>
+              <Button asChild className="h-12 w-full rounded-2xl bg-[#0E5A59] hover:bg-[#0A4747]">
                 <Link href="/dashboard/nkampa/store">
                   <PlusCircle className="h-4 w-4 mr-2" />
                   Créer une boutique
                 </Link>
               </Button>
-              <Button asChild variant="outline" className="w-full">
+              <Button asChild variant="outline" className="h-12 w-full rounded-2xl">
                 <Link href="/dashboard/nkampa">Retour à Nkampa</Link>
               </Button>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -404,7 +498,6 @@ export default function NkampaStoreDashboardPage() {
   const blocks: Array<{
     key: string;
     title: string;
-    icon: any;
     desc: string;
     href: string;
     cta: string;
@@ -412,7 +505,6 @@ export default function NkampaStoreDashboardPage() {
     {
       key: 'listing',
       title: store.sellType === 'product' ? 'Gérer les produits' : 'Gérer les services',
-      icon: store.sellType === 'product' ? Boxes : Briefcase,
       desc: store.sellType === 'product' ? 'Ajouter, modifier, prix, stock.' : 'Créer des offres, tarifs, disponibilité.',
       href: '/dashboard/nkampa/seller',
       cta: store.sellType === 'product' ? 'Ajouter un produit' : 'Ajouter une offre',
@@ -420,7 +512,6 @@ export default function NkampaStoreDashboardPage() {
     {
       key: 'orders',
       title: 'Commandes',
-      icon: LayoutDashboard,
       desc: 'Suivi, statuts, expédition.',
       href: '/dashboard/nkampa/orders',
       cta: 'Voir commandes',
@@ -451,46 +542,50 @@ export default function NkampaStoreDashboardPage() {
       ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="sticky top-0 z-10 bg-gradient-to-r from-primary to-green-800 text-white p-4 shadow-lg">
-        <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <Store className="h-5 w-5" />
-              <h1 className="text-lg font-extrabold truncate">{store.storeName}</h1>
+    <div className="min-h-screen bg-[#F6F8F7] text-slate-950">
+      <div className="border-b border-slate-200 bg-white">
+        <div className="mx-auto max-w-7xl px-4 py-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-3xl bg-[#32BB78]/10">
+                <NkampaNavSellerIcon size={32} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[11px] font-black uppercase tracking-wide text-[#0E5A59]">Gestion boutique</p>
+                <h1 className="truncate text-xl font-black tracking-tight">{store.storeName}</h1>
+                <p className="truncate text-xs text-slate-500">
+                  {sellLabel}
+                  {isBusiness && roles.length > 0 ? ` • ${roles.map(roleLabel).join(' • ')}` : ''}
+                  {store.category ? ` • Rayon ${store.category}` : ''}
+                </p>
+              </div>
             </div>
-            <p className="text-xs text-white/80 truncate">
-              {sellLabel}
-              {isBusiness && roles.length > 0 ? ` • ${roles.map(roleLabel).join(' • ')}` : ''}
-              {store.category ? ` • ${store.category}` : ''}
-            </p>
+            {isApproved ? (
+              <Button asChild className="rounded-2xl bg-[#0E5A59] hover:bg-[#0A4747]">
+                <Link href={storeUrl} target="_blank" rel="noreferrer">
+                  Vitrine <ExternalLink className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            ) : (
+              <Badge className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-amber-800">En attente</Badge>
+            )}
           </div>
-          {isApproved ? (
-            <Button asChild variant="secondary" className="bg-white/15 text-white border border-white/20 hover:bg-white/20">
-              <Link href={storeUrl} target="_blank" rel="noreferrer">
-                Voir <ExternalLink className="h-4 w-4 ml-2" />
-              </Link>
-            </Button>
-          ) : (
-            <Badge className="bg-white/15 text-white border border-white/20">En attente</Badge>
-          )}
         </div>
       </div>
 
-      <div className="mx-auto max-w-6xl p-4 space-y-4">
-        {/* Floating management bar */}
-        <div className="sticky top-[76px] z-10">
-          <div className="rounded-3xl border border-primary/15 bg-white/75 backdrop-blur-xl shadow-[0_18px_45px_rgba(0,0,0,0.10)] px-3 py-2">
+      <div className="mx-auto max-w-7xl space-y-5 p-4">
+        <div className="sticky top-0 z-10">
+          <div className="rounded-[26px] border border-slate-200 bg-white/90 px-2 py-2 shadow-sm backdrop-blur-xl">
             <div className="flex items-center justify-between gap-2 overflow-x-auto scrollbar-hide">
               {[
-                { id: 'overview', label: 'Aperçu', icon: LayoutDashboard },
-                { id: 'products', label: store.sellType === 'product' ? 'Produits' : 'Services', icon: store.sellType === 'product' ? Boxes : Briefcase },
-                { id: 'media', label: 'Médias', icon: ImageIcon },
-                { id: 'promo', label: 'Promo', icon: Megaphone },
-                { id: 'finance', label: 'Finance', icon: Wallet },
-                ...(store.profileType === 'business' ? [{ id: 'approval', label: 'Statut', icon: ShieldCheck }] : []),
+                { id: 'overview', label: 'Aperçu', icon: <StoreStatsIcon size={22} /> },
+                { id: 'products', label: store.sellType === 'product' ? 'Produits' : 'Services', icon: <ProductsIcon size={22} /> },
+                { id: 'media', label: 'Médias', icon: <NkampaNavShopIcon size={22} /> },
+                { id: 'promo', label: 'Promo', icon: <RatingIcon size={22} /> },
+                { id: 'finance', label: 'Finance', icon: <WithdrawalTransactionIcon size={22} /> },
+                { id: 'clients', label: 'Clients', icon: <CustomersIcon size={22} /> },
+                ...(store.profileType === 'business' ? [{ id: 'approval', label: 'Statut', icon: <VerifiedIcon size={22} /> }] : []),
               ].map((t: any) => {
-                const Icon = t.icon;
                 const active = activeTab === t.id;
                 return (
                   <button
@@ -498,11 +593,11 @@ export default function NkampaStoreDashboardPage() {
                     type="button"
                     onClick={() => setActiveTab(t.id)}
                     className={[
-                      'flex items-center gap-2 rounded-2xl px-3 py-2 text-xs font-semibold transition whitespace-nowrap',
-                      active ? 'bg-primary/10 text-primary' : 'text-foreground/70 hover:bg-primary/5 hover:text-foreground',
+                      'flex h-10 items-center gap-2 rounded-2xl px-3 text-xs font-black transition whitespace-nowrap',
+                      active ? 'bg-[#0E5A59] text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950',
                     ].join(' ')}
                   >
-                    <Icon className="h-4 w-4" />
+                    <span className="grid h-6 w-6 place-items-center">{t.icon}</span>
                     {t.label}
                   </button>
                 );
@@ -510,12 +605,12 @@ export default function NkampaStoreDashboardPage() {
 
               <div className="flex-1" />
               {activeTab === 'media' ? (
-                <Button size="sm" className="bg-primary hover:bg-primary/90" onClick={saveProfile} disabled={isSaving}>
+                <Button size="sm" className="rounded-2xl bg-[#0E5A59] hover:bg-[#0A4747]" onClick={saveProfile} disabled={isSaving}>
                   <Save className="h-4 w-4 mr-2" />
                   Sauver
                 </Button>
               ) : activeTab === 'promo' ? (
-                <Button size="sm" className="bg-primary hover:bg-primary/90" onClick={savePromo} disabled={isSaving}>
+                <Button size="sm" className="rounded-2xl bg-[#0E5A59] hover:bg-[#0A4747]" onClick={savePromo} disabled={isSaving}>
                   <Save className="h-4 w-4 mr-2" />
                   Sauver
                 </Button>
@@ -536,22 +631,30 @@ export default function NkampaStoreDashboardPage() {
         )}
 
         {activeTab === 'overview' ? (
-          <Card>
-            <CardContent className="p-0">
-              <div className="relative">
-                <div className="relative h-44 sm:h-52 w-full overflow-hidden rounded-t-lg bg-gradient-to-br from-primary via-emerald-700 to-green-900">
-                  {store.coverUrl ? (
-                    <>
-                      <Image src={store.coverUrl} alt="Cover boutique" fill className="object-cover" />
-                      <div className="absolute inset-0 bg-gradient-to-r from-primary/80 via-emerald-800/60 to-green-900/55" />
-                    </>
-                  ) : (
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.18),transparent_55%),radial-gradient(circle_at_70%_30%,rgba(255,255,255,0.12),transparent_60%)]" />
-                  )}
+          <div className="grid gap-5 lg:grid-cols-[1.35fr_0.65fr]">
+            <div className="overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-sm">
+              <div className="relative h-72 bg-[#0E5A59] sm:h-80">
+                {store.coverUrl ? (
+                  <>
+                    <Image src={store.coverUrl} alt="Cover boutique" fill className="object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/15 to-transparent" />
+                  </>
+                ) : (
+                  <div className="absolute inset-0 bg-[linear-gradient(135deg,#0E5A59_0%,#32BB78_52%,#101827_100%)]" />
+                )}
+
+                <div className="absolute left-5 top-5 flex items-center gap-2">
+                  <Badge className="rounded-full border border-white/20 bg-white/90 text-[#0E5A59]">
+                    {isApproved ? 'Boutique publiée' : 'Publication bloquée'}
+                  </Badge>
+                  {promoEnabled ? (
+                    <Badge className="rounded-full border border-white/20 bg-[#32BB78] text-white">Promo active</Badge>
+                  ) : null}
                 </div>
 
-                <div className="absolute -bottom-7 left-4 flex items-end gap-4">
-                  <div className="relative h-20 w-20 rounded-3xl overflow-hidden bg-white shadow-[0_18px_45px_rgba(0,0,0,0.18)] ring-4 ring-white">
+                <div className="absolute bottom-5 left-5 right-5">
+                  <div className="flex items-end gap-4">
+                    <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-[28px] bg-white shadow-2xl ring-4 ring-white">
                     {store.logoUrl ? (
                       <Image src={store.logoUrl} alt="Logo boutique" fill className="object-cover" />
                     ) : (
@@ -559,67 +662,138 @@ export default function NkampaStoreDashboardPage() {
                         <span className="text-2xl font-black text-primary">{String(store.storeName || 'B').slice(0, 1).toUpperCase()}</span>
                       </div>
                     )}
+                    </div>
+                    <div className="min-w-0 pb-1 text-white">
+                      <p className="text-xs font-bold uppercase tracking-wide text-white/70">Vitrine publique</p>
+                      <h2 className="truncate text-3xl font-black tracking-tight">{store.storeName}</h2>
+                      <p className="mt-1 truncate text-sm text-white/80">
+                        {sellLabel}
+                        {store.category ? ` • ${store.category}` : ''}
+                        {isBusiness && roles.length ? ` • ${roles.map(roleLabel).join(' • ')}` : ''}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="px-4 pt-10 pb-4">
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold text-muted-foreground">Profil boutique</p>
-                    <h2 className="text-xl font-extrabold tracking-tight truncate">{store.storeName}</h2>
-                    <p className="text-xs text-muted-foreground mt-1 truncate">
-                      {sellLabel}
-                      {store.category ? ` • ${store.category}` : ''}
-                      {isBusiness && roles.length ? ` • ${roles.map(roleLabel).join(' • ')}` : ''}
-                    </p>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    {isApproved ? (
-                      <Button asChild size="sm" className="bg-primary hover:bg-primary/90">
-                        <Link href={storeUrl} target="_blank" rel="noreferrer">
-                          Voir la boutique <ExternalLink className="h-4 w-4 ml-2" />
-                        </Link>
-                      </Button>
-                    ) : (
-                      <Badge className="bg-amber-100 text-amber-900 border border-amber-200">En attente</Badge>
-                    )}
-                    <Button size="sm" variant="outline" onClick={() => setActiveTab('media')}>
-                      Personnaliser
+              <div className="grid gap-4 p-5 md:grid-cols-[1fr_auto]">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-wide text-slate-500">Description boutique</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">
+                    {store.description || 'Ajoutez une bio claire pour expliquer ce que la boutique vend et donner confiance aux clients.'}
+                  </p>
+                </div>
+                <div className="flex flex-col gap-2 sm:min-w-48">
+                  {isApproved ? (
+                    <Button asChild className="rounded-2xl bg-[#0E5A59] hover:bg-[#0A4747]">
+                      <Link href={storeUrl} target="_blank" rel="noreferrer">
+                        Ouvrir la vitrine <ExternalLink className="ml-2 h-4 w-4" />
+                      </Link>
                     </Button>
+                  ) : (
+                    <Badge className="justify-center rounded-2xl border border-amber-200 bg-amber-50 py-3 text-amber-800">En attente</Badge>
+                  )}
+                  <Button className="rounded-2xl" variant="outline" onClick={() => setActiveTab('media')}>
+                    Personnaliser
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="rounded-[32px] border border-slate-200 bg-white p-5 shadow-sm">
+                <div className="flex items-center gap-3">
+                  <div className="grid h-14 w-14 place-items-center rounded-3xl bg-[#32BB78]/10">
+                    <StoreStatsIcon size={34} />
+                  </div>
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-wide text-slate-500">Caisse boutique</p>
+                    <p className="text-2xl font-black text-[#0E5A59]">{revenue.toLocaleString()} CDF</p>
                   </div>
                 </div>
-
-                {store.description ? (
-                  <p className="text-sm text-muted-foreground mt-3 line-clamp-2">{store.description}</p>
-                ) : null}
+                <div className="mt-5 grid grid-cols-2 gap-3">
+                  <div className="rounded-2xl bg-slate-50 p-3">
+                    <p className="text-xl font-black">{myProducts.length}</p>
+                    <p className="text-[11px] font-semibold text-slate-500">{sellLabel}</p>
+                  </div>
+                  <div className="rounded-2xl bg-slate-50 p-3">
+                    <p className="text-xl font-black">{pendingCount}</p>
+                    <p className="text-[11px] font-semibold text-slate-500">À traiter</p>
+                  </div>
+                </div>
               </div>
-            </CardContent>
-          </Card>
+
+              <div className="rounded-[32px] border border-slate-200 bg-[#101827] p-5 text-white shadow-sm">
+                <p className="text-xs font-black uppercase tracking-wide text-white/55">Rayon prioritaire</p>
+                <p className="mt-2 text-lg font-black">{store.category || 'Catalogue principal'}</p>
+                <p className="mt-1 text-xs leading-5 text-white/65">
+                  Mettez une cover propre, 3 à 6 produits forts et une promo courte pour donner un vrai effet de boutique.
+                </p>
+              </div>
+            </div>
+          </div>
         ) : null}
 
         {activeTab === 'overview' ? (
-          <Card>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
+            <StoreMetric
+              label="Catalogue"
+              value={myProducts.length}
+              detail={`${sellLabel.toLowerCase()} publiés`}
+              icon={<ProductsIcon size={28} />}
+            />
+            <StoreMetric
+              label="Commandes"
+              value={pendingCount}
+              detail="paiement ou préparation"
+              icon={<NkampaNavOrdersIcon size={28} />}
+              accent="blue"
+            />
+            <StoreMetric
+              label="Chiffre"
+              value={`${revenue.toLocaleString()}`}
+              detail="CDF encaissés"
+              icon={<WithdrawalTransactionIcon size={28} />}
+              accent="ink"
+            />
+            <StoreMetric
+              label="Clients"
+              value={storeCustomers.length}
+              detail="acheteurs uniques"
+              icon={<CustomersIcon size={28} />}
+              accent="green"
+            />
+            <StoreMetric
+              label="Statut"
+              value={isApproved ? 'Publié' : 'Pause'}
+              detail={isApproved ? 'vitrine accessible' : 'attente validation'}
+              icon={<VerifiedIcon size={28} />}
+              accent={isApproved ? 'green' : 'amber'}
+            />
+          </div>
+        ) : null}
+
+        {activeTab === 'overview' ? (
+          <Card className="rounded-[32px] border-slate-200 shadow-sm">
             <CardHeader>
-              <CardTitle className="flex items-center justify-between gap-2">
-                <span>Résumé</span>
-                <Badge className="bg-primary/10 text-primary border border-primary/15">
+              <CardTitle className="flex items-center justify-between gap-2 text-base">
+                <span>Organisation de la boutique</span>
+                <Badge className="rounded-full border border-[#32BB78]/20 bg-[#32BB78]/10 text-[#0E5A59]">
                   {isBusiness ? 'Entreprise' : 'Individu'}
                 </Badge>
               </CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <CardContent className="grid grid-cols-1 gap-3 md:grid-cols-3">
               {typeCards.map((t) => (
-                <div key={t.title} className="rounded-2xl border border-primary/10 bg-white p-4">
-                  <p className="text-sm font-bold">{t.title}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{t.desc}</p>
+                <div key={t.title} className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-sm font-black">{t.title}</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-500">{t.desc}</p>
                 </div>
               ))}
               {isBusiness && roles.length > 0 ? (
-                <div className="rounded-2xl border border-primary/10 bg-white p-4">
-                  <p className="text-sm font-bold">Rôles</p>
-                  <p className="text-xs text-muted-foreground mt-1">
+                <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-sm font-black">Rôles</p>
+                  <p className="mt-1 text-xs text-slate-500">
                     {roles.map((r: string) => roleLabel(r)).join(' • ')}
                   </p>
                   {Object.keys(subroles).length > 0 ? (
@@ -637,20 +811,20 @@ export default function NkampaStoreDashboardPage() {
                   ) : null}
                 </div>
               ) : null}
-              <div className="rounded-2xl border border-primary/10 bg-white p-4">
-                <p className="text-sm font-bold">Lien boutique</p>
-                <p className="text-xs text-muted-foreground mt-1">{isApproved ? storeUrl : 'Activé après approbation'}</p>
+              <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                <p className="text-sm font-black">Lien boutique</p>
+                <p className="mt-1 break-all text-xs text-slate-500">{isApproved ? storeUrl : 'Activé après approbation'}</p>
               </div>
             </CardContent>
           </Card>
         ) : null}
 
         {activeTab === 'products' ? (
-          <Card>
+          <Card className="rounded-[32px] border-slate-200 shadow-sm">
             <CardHeader>
               <CardTitle className="flex items-center justify-between gap-2">
-                <span>{store.sellType === 'product' ? 'Produits' : 'Services'}</span>
-                <Button asChild size="sm" className="bg-primary hover:bg-primary/90">
+                <span>Rayons {store.sellType === 'product' ? 'produits' : 'services'}</span>
+                <Button asChild size="sm" className="rounded-2xl bg-[#0E5A59] hover:bg-[#0A4747]">
                   <Link href="/dashboard/nkampa/seller">
                     <PlusCircle className="h-4 w-4 mr-2" />
                     Ajouter
@@ -660,12 +834,18 @@ export default function NkampaStoreDashboardPage() {
             </CardHeader>
             <CardContent className="space-y-3">
               {myProducts.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Aucun élément pour le moment.</p>
+                <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
+                  <div className="mx-auto grid h-16 w-16 place-items-center rounded-3xl bg-white">
+                    <ProductsIcon size={38} />
+                  </div>
+                  <p className="mt-3 text-sm font-black">Aucun élément en rayon</p>
+                  <p className="mt-1 text-xs text-slate-500">Ajoutez vos premiers articles pour remplir la vitrine.</p>
+                </div>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                   {myProducts.map((p) => (
-                    <div key={p.id} className="rounded-2xl border border-primary/10 bg-white overflow-hidden">
-                      <div className="relative w-full aspect-square bg-gray-100">
+                    <div key={p.id} className="overflow-hidden rounded-[26px] border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+                      <div className="relative aspect-square w-full bg-slate-100">
                         <div className="absolute inset-0 flex overflow-x-auto snap-x snap-mandatory scrollbar-hide">
                           {(Array.isArray(p.images) && p.images.length ? p.images : p.image ? [p.image] : []).map((src: string, idx: number) => (
                             <div key={`${p.id}-${idx}`} className="relative min-w-full h-full snap-center">
@@ -678,20 +858,23 @@ export default function NkampaStoreDashboardPage() {
                             <span key={`${p.id}-dot-${idx}`} className="h-1.5 w-1.5 rounded-full bg-white/80 shadow" />
                           ))}
                         </div>
+                        <div className="absolute right-2 top-2 rounded-full bg-white/90 px-2 py-1 text-[10px] font-black text-[#0E5A59] shadow">
+                          En vitrine
+                        </div>
                       </div>
-                      <div className="p-2">
-                        <p className="text-xs font-bold line-clamp-1">{p.name}</p>
-                        <p className="text-[11px] text-muted-foreground line-clamp-1">{p.location}</p>
-                        <p className="text-xs font-extrabold text-primary mt-1">
+                      <div className="p-3">
+                        <p className="line-clamp-1 text-xs font-black">{p.name}</p>
+                        <p className="line-clamp-1 text-[11px] text-slate-500">{p.location}</p>
+                        <p className="mt-1 text-sm font-black text-[#0E5A59]">
                           {(p.price || 0).toLocaleString()} {p.currency || 'CDF'}
                         </p>
                         <div className="flex items-center gap-2 mt-2">
-                          <Button variant="outline" size="sm" className="flex-1 h-8 text-xs" onClick={() => openEdit(p)}>
-                            <Pencil className="h-4 w-4 mr-1" />
+                          <Button variant="outline" size="sm" className="h-8 flex-1 rounded-xl text-xs" onClick={() => openEdit(p)}>
+                            <Pencil className="mr-1 h-4 w-4" />
                             Éditer
                           </Button>
-                          <Button variant="outline" size="sm" className="flex-1 h-8 text-xs" onClick={() => shareProduct(p)}>
-                            <Share2 className="h-4 w-4 mr-1" />
+                          <Button variant="outline" size="sm" className="h-8 flex-1 rounded-xl text-xs" onClick={() => shareProduct(p)}>
+                            <Share2 className="mr-1 h-4 w-4" />
                             Lien
                           </Button>
                         </div>
@@ -859,41 +1042,158 @@ export default function NkampaStoreDashboardPage() {
         ) : null}
 
         {activeTab === 'finance' ? (
-          <Card>
+          <Card className="rounded-[32px] border-slate-200 shadow-sm">
             <CardHeader>
-              <CardTitle>Finance</CardTitle>
+              <CardTitle className="flex items-center justify-between gap-3">
+                <span>Finance boutique</span>
+                <Button asChild className="rounded-2xl bg-[#0E5A59] hover:bg-[#0A4747]">
+                  <Link href="/dashboard/withdraw">
+                    <span className="mr-2 grid h-5 w-5 place-items-center">
+                      <WithdrawalTransactionIcon size={22} />
+                    </span>
+                    Demander le retrait
+                  </Link>
+                </Button>
+              </CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div className="rounded-2xl border border-primary/10 bg-white p-4">
-                <p className="text-xs text-muted-foreground">Revenu total</p>
-                <p className="text-2xl font-extrabold text-primary mt-1">{revenue.toLocaleString()} CDF</p>
+            <CardContent className="grid grid-cols-1 gap-3 md:grid-cols-3">
+              <div className="rounded-3xl border border-slate-200 bg-[#0E5A59] p-4 text-white">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-bold text-white/65">Revenu total</p>
+                    <p className="mt-1 text-2xl font-black">{revenue.toLocaleString()} CDF</p>
+                  </div>
+                  <div className="grid h-12 w-12 place-items-center rounded-2xl bg-white">
+                    <StoreStatsIcon size={32} />
+                  </div>
+                </div>
               </div>
-              <div className="rounded-2xl border border-primary/10 bg-white p-4">
-                <p className="text-xs text-muted-foreground">Commandes (en cours)</p>
-                <p className="text-2xl font-extrabold text-foreground mt-1">{pendingCount}</p>
+              <div className="rounded-3xl border border-slate-200 bg-white p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-bold text-slate-500">Commandes en cours</p>
+                    <p className="mt-1 text-2xl font-black text-slate-950">{pendingCount}</p>
+                  </div>
+                  <OrdersIcon size={32} />
+                </div>
               </div>
-              <div className="rounded-2xl border border-primary/10 bg-white p-4">
-                <p className="text-xs text-muted-foreground">Articles</p>
-                <p className="text-2xl font-extrabold text-foreground mt-1">{myProducts.length}</p>
+              <div className="rounded-3xl border border-slate-200 bg-white p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-bold text-slate-500">Articles</p>
+                    <p className="mt-1 text-2xl font-black text-slate-950">{myProducts.length}</p>
+                  </div>
+                  <ProductsIcon size={32} />
+                </div>
               </div>
-              <div className="md:col-span-3 rounded-2xl border border-primary/10 bg-white p-4">
-                <p className="text-sm font-bold">Dernières commandes</p>
+              <div className="rounded-3xl border border-[#32BB78]/20 bg-[#32BB78]/10 p-4 md:col-span-3">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="grid h-14 w-14 place-items-center rounded-3xl bg-white">
+                      <RequestTransactionIcon size={34} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-black text-slate-950">Demander le retrait</p>
+                      <p className="mt-1 text-xs leading-5 text-slate-600">Transférer le solde disponible de la boutique vers votre portefeuille ou votre moyen de retrait.</p>
+                    </div>
+                  </div>
+                  <Button asChild className="h-11 rounded-2xl bg-[#0E5A59] hover:bg-[#0A4747]">
+                    <Link href="/dashboard/withdraw">Ouvrir le retrait</Link>
+                  </Button>
+                </div>
+              </div>
+              <div className="rounded-3xl border border-slate-200 bg-white p-4 md:col-span-3">
+                <p className="text-sm font-black">Dernières commandes</p>
                 {sellerOrders.length === 0 ? (
-                  <p className="text-xs text-muted-foreground mt-1">Aucune commande.</p>
+                  <p className="mt-1 text-xs text-slate-500">Aucune commande.</p>
                 ) : (
                   <div className="mt-2 space-y-2">
                     {sellerOrders.slice(0, 5).map((o) => (
-                      <div key={o.id} className="flex items-center justify-between text-sm">
+                      <div key={o.id} className="flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-2 text-sm">
                         <div className="min-w-0">
                           <p className="font-semibold truncate">{o.productName}</p>
-                          <p className="text-xs text-muted-foreground truncate">#{String(o.id).slice(0, 8)} • {o.status}</p>
+                          <p className="text-xs text-slate-500 truncate">#{String(o.id).slice(0, 8)} • {o.status}</p>
                         </div>
-                        <p className="font-extrabold text-primary">{Number(o.totalPrice || 0).toLocaleString()} {o.currency || 'CDF'}</p>
+                        <p className="font-black text-[#0E5A59]">{Number(o.totalPrice || 0).toLocaleString()} {o.currency || 'CDF'}</p>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
+            </CardContent>
+          </Card>
+        ) : null}
+
+        {activeTab === 'clients' ? (
+          <Card className="rounded-[32px] border-slate-200 shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between gap-3">
+                <span>Clients boutique</span>
+                <Badge className="rounded-full border border-[#32BB78]/20 bg-[#32BB78]/10 text-[#0E5A59]">
+                  {storeCustomers.length} client{storeCustomers.length > 1 ? 's' : ''}
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                <div className="rounded-3xl border border-slate-200 bg-white p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-bold text-slate-500">Clients uniques</p>
+                      <p className="mt-1 text-2xl font-black text-slate-950">{storeCustomers.length}</p>
+                    </div>
+                    <CustomersIcon size={34} />
+                  </div>
+                </div>
+                <div className="rounded-3xl border border-slate-200 bg-white p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-bold text-slate-500">Commandes client</p>
+                      <p className="mt-1 text-2xl font-black text-slate-950">{sellerOrders.length}</p>
+                    </div>
+                    <OrdersIcon size={34} />
+                  </div>
+                </div>
+                <div className="rounded-3xl border border-slate-200 bg-white p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-bold text-slate-500">Meilleur client</p>
+                      <p className="mt-1 line-clamp-1 text-xl font-black text-slate-950">{storeCustomers[0]?.name || 'Aucun'}</p>
+                    </div>
+                    <RatingIcon size={34} />
+                  </div>
+                </div>
+              </div>
+
+              {storeCustomers.length === 0 ? (
+                <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
+                  <div className="mx-auto grid h-16 w-16 place-items-center rounded-3xl bg-white">
+                    <CustomersIcon size={38} />
+                  </div>
+                  <p className="mt-3 text-sm font-black">Aucun client pour le moment</p>
+                  <p className="mt-1 text-xs text-slate-500">Les clients apparaîtront ici dès qu’ils passeront commande dans la boutique.</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {storeCustomers.map((client) => (
+                    <div key={client.id} className="flex items-center justify-between gap-3 rounded-3xl border border-slate-200 bg-white p-3">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#32BB78]/10">
+                          <CustomersIcon size={30} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-black text-slate-950">{client.name}</p>
+                          <p className="truncate text-xs text-slate-500">{client.email || 'Contact non renseigné'}</p>
+                        </div>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <p className="text-sm font-black text-[#0E5A59]">{client.total.toLocaleString()} CDF</p>
+                        <p className="text-xs text-slate-500">{client.orders} commande{client.orders > 1 ? 's' : ''} • {client.lastStatus}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         ) : null}
@@ -917,29 +1217,32 @@ export default function NkampaStoreDashboardPage() {
         ) : null}
 
         {activeTab === 'overview' ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {blocks.map((b) => {
-              const Icon = b.icon;
-              return (
-                <Card key={b.key} className="overflow-hidden">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-base">
-                      <Icon className="h-5 w-5 text-primary" />
-                      {b.title}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <p className="text-sm text-muted-foreground">{b.desc}</p>
-                    <Button asChild className="w-full bg-primary hover:bg-primary/90">
-                      <Link href={b.href}>
-                        <PlusCircle className="h-4 w-4 mr-2" />
-                        {b.cta}
-                      </Link>
-                    </Button>
-                  </CardContent>
-                </Card>
-              );
-            })}
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+            {blocks.map((b) => (
+              <StoreActionCard
+                key={b.key}
+                title={b.title}
+                desc={b.desc}
+                href={b.href}
+                cta={b.cta}
+                icon={b.key === 'orders' ? <OrdersIcon size={32} /> : <NkampaNavShopIcon size={32} />}
+              />
+            ))}
+            <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+              <div className="flex items-start gap-3">
+                <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#32BB78]/10">
+                  <RatingIcon size={32} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-black text-slate-950">Merchandising</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-500">Logo, cover, bio et image promo pour donner une vraie identité à la boutique.</p>
+                </div>
+              </div>
+              <Button className="mt-4 h-10 w-full rounded-2xl bg-[#0E5A59] hover:bg-[#0A4747]" onClick={() => setActiveTab('media')}>
+                <ImageIcon className="mr-2 h-4 w-4" />
+                Ouvrir médias
+              </Button>
+            </div>
           </div>
         ) : null}
       </div>

@@ -7,7 +7,7 @@ import { Sparkles, QrCode, ArrowLeftRight, TrendingUp, Wallet } from "lucide-rea
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import DashboardHeader from "@/components/dashboard/dashboard-header";
-import { SavingsIcon, CreditIcon, TontineIcon, ConversionIcon, ReferralIcon, AgentIcon, LinkAccountIcon, BonusIcon, TaxIcon, YangoIcon, WaterIcon, TvIcon, AcademicIcon, SchoolIcon, FlightIcon, HotelIcon, EventIcon, PhoneCreditIcon, InsuranceIcon, ESimIcon } from "@/components/icons/service-icons";
+import { SavingsIcon, CreditIcon, TontineIcon, ConversionIcon, ReferralIcon, AgentIcon, LinkAccountIcon, BonusIcon, TaxIcon, WaterIcon, TvIcon, AcademicIcon, SchoolIcon, EventIcon, PhoneCreditIcon, InsuranceIcon, ESimIcon, HealthIcon, FiveGoIcon, MobilityIcon } from "@/components/icons/service-icons";
 import { useUserProfile } from '@/hooks/useUserProfile';
 
 type DashboardCopy = Record<string, string>;
@@ -32,13 +32,15 @@ const DEFAULT_COPY: DashboardCopy = {
   bonus: 'Bonus',
   esim: 'eSIM-eNkamba',
   tax: 'Taxe et Impôt',
-  yango: 'Yango',
   regideso: 'Regideso',
   canal: 'Canal+',
   academicFees: 'Frais Académiques',
   schoolFees: 'Frais Scolaires',
   flight: "Billet d'avion",
   hotel: 'Hôtel',
+  health: 'Santé',
+  fivego: '5go',
+  mobility: 'Mobilité',
   events: 'Événements',
   phoneCredit: 'Crédit Téléphone',
   insurance: 'Assurance',
@@ -96,13 +98,13 @@ const financialServices = [
 const bills = [
   { icon: ESimIcon, labelKey: 'esim', href: '/dashboard/partner-services' },
   { icon: TaxIcon, labelKey: 'tax', href: '/dashboard/tax-declaration' },
-  { icon: YangoIcon, labelKey: 'yango', href: '/dashboard/pay-bill?type=yango' },
   { icon: WaterIcon, labelKey: 'regideso', href: '/dashboard/pay-bill?type=water' },
   { icon: TvIcon, labelKey: 'canal', href: '/dashboard/pay-bill?type=tv' },
   { icon: AcademicIcon, labelKey: 'academicFees', href: '/dashboard/academic-fees' },
   { icon: SchoolIcon, labelKey: 'schoolFees', href: '/dashboard/school-fees' },
-  { icon: FlightIcon, labelKey: 'flight', href: '/dashboard/flights' },
-  { icon: HotelIcon, labelKey: 'hotel', href: '/dashboard/hotels' },
+  { icon: HealthIcon, labelKey: 'health', href: '/dashboard/health' },
+  { icon: FiveGoIcon, labelKey: 'fivego', href: '/dashboard/5go' },
+  { icon: MobilityIcon, labelKey: 'mobility', href: '/dashboard/mobility' },
   { icon: EventIcon, labelKey: 'events', href: '/dashboard/events' },
   { icon: PhoneCreditIcon, labelKey: 'phoneCredit', href: '/dashboard/pay-bill?type=phone' },
   { icon: InsuranceIcon, labelKey: 'insurance', href: '/dashboard/insurance' },

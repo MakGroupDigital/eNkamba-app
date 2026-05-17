@@ -515,6 +515,409 @@ export const HotelIcon = ({ className, size = 24 }: IconProps) => (
   </svg>
 );
 
+// Santé - Croix médicale avec cœur
+export const HealthIcon = ({ className, size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={cn("", className)}
+  >
+    <defs>
+      <linearGradient id="healthGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#32BB78" />
+        <stop offset="100%" stopColor="#0E5A59" />
+      </linearGradient>
+    </defs>
+    {/* Capsule médicale */}
+    <rect x="8" y="10" width="32" height="28" rx="8" fill="url(#healthGrad)" />
+    {/* Croix */}
+    <rect x="21" y="15" width="6" height="18" rx="2" fill="#fff" />
+    <rect x="15" y="21" width="18" height="6" rx="2" fill="#fff" />
+    {/* Cœur */}
+    <path d="M24 43C24 43 14 37 14 31C14 27 18 25 24 30C30 25 34 27 34 31C34 37 24 43 24 43Z" fill="#FF8C00" />
+    {/* Signal vital */}
+    <path d="M10 9H16L19 5L23 13L27 8H38" stroke="#FF8C00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+// Urgence - Ambulance
+export const HealthEmergencyIcon = ({ className, size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={cn("", className)}
+  >
+    <defs>
+      <linearGradient id="healthEmergencyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#32BB78" />
+        <stop offset="100%" stopColor="#0E5A59" />
+      </linearGradient>
+    </defs>
+    <rect x="6" y="18" width="24" height="16" rx="3" fill="url(#healthEmergencyGrad)" />
+    <path d="M30 22H38L42 28V34H30V22Z" fill="#FF8C00" />
+    <rect x="15" y="21" width="4" height="10" rx="1" fill="#fff" />
+    <rect x="12" y="24" width="10" height="4" rx="1" fill="#fff" />
+    <circle cx="14" cy="36" r="4" fill="#333" />
+    <circle cx="36" cy="36" r="4" fill="#333" />
+    <path d="M34 25H38L40 28H34V25Z" fill="#fff" opacity="0.85" />
+    <path d="M8 13H16" stroke="#FF8C00" strokeWidth="2" strokeLinecap="round" />
+    <path d="M10 9H18" stroke="#FF8C00" strokeWidth="2" strokeLinecap="round" />
+  </svg>
+);
+
+// Hôpitaux - Bâtiment médical
+export const HealthHospitalIcon = ({ className, size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={cn("", className)}
+  >
+    <defs>
+      <linearGradient id="healthHospitalGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#32BB78" />
+        <stop offset="100%" stopColor="#0E5A59" />
+      </linearGradient>
+    </defs>
+    <rect x="10" y="12" width="28" height="32" rx="3" fill="url(#healthHospitalGrad)" />
+    <path d="M18 8H30V16H18V8Z" fill="#FF8C00" />
+    <rect x="22" y="18" width="4" height="12" rx="1" fill="#fff" />
+    <rect x="18" y="22" width="12" height="4" rx="1" fill="#fff" />
+    <rect x="16" y="34" width="6" height="10" rx="1" fill="#0E5A59" />
+    <rect x="26" y="34" width="6" height="10" rx="1" fill="#0E5A59" />
+    <rect x="14" y="28" width="5" height="4" rx="1" fill="#fff" opacity="0.75" />
+    <rect x="29" y="28" width="5" height="4" rx="1" fill="#fff" opacity="0.75" />
+  </svg>
+);
+
+// Médecin - Stéthoscope
+export const HealthDoctorIcon = ({ className, size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={cn("", className)}
+  >
+    <defs>
+      <linearGradient id="healthDoctorGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#32BB78" />
+        <stop offset="100%" stopColor="#0E5A59" />
+      </linearGradient>
+    </defs>
+    <circle cx="24" cy="12" r="6" fill="#FF8C00" />
+    <path d="M12 42C13 31 17 24 24 24C31 24 35 31 36 42H12Z" fill="url(#healthDoctorGrad)" />
+    <path d="M16 14V24C16 30 20 34 24 34C28 34 32 30 32 24V14" stroke="#0E5A59" strokeWidth="3" strokeLinecap="round" />
+    <circle cx="16" cy="14" r="3" fill="#32BB78" />
+    <circle cx="32" cy="14" r="3" fill="#32BB78" />
+    <path d="M24 34V39" stroke="#fff" strokeWidth="3" strokeLinecap="round" />
+    <circle cx="24" cy="41" r="4" fill="#fff" />
+    <circle cx="24" cy="41" r="2" fill="#FF8C00" />
+  </svg>
+);
+
+// Pharmacie - Pilules
+export const HealthPharmacyIcon = ({ className, size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={cn("", className)}
+  >
+    <defs>
+      <linearGradient id="healthPharmacyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#32BB78" />
+        <stop offset="100%" stopColor="#0E5A59" />
+      </linearGradient>
+    </defs>
+    <rect x="10" y="8" width="28" height="34" rx="5" fill="url(#healthPharmacyGrad)" />
+    <rect x="20" y="13" width="8" height="14" rx="1.5" fill="#fff" />
+    <rect x="17" y="16" width="14" height="8" rx="1.5" fill="#fff" />
+    <path d="M16 35L24 27L32 35C28 40 20 40 16 35Z" fill="#FF8C00" />
+    <path d="M24 27L32 19L36 23L28 31" fill="#fff" opacity="0.9" />
+    <circle cx="17" cy="29" r="3" fill="#fff" opacity="0.75" />
+    <circle cx="35" cy="34" r="3" fill="#FF8C00" />
+  </svg>
+);
+
+// Téléconsultation - Consultation vidéo
+export const HealthTeleconsultIcon = ({ className, size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={cn("", className)}
+  >
+    <defs>
+      <linearGradient id="healthTeleconsultGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#32BB78" />
+        <stop offset="100%" stopColor="#0E5A59" />
+      </linearGradient>
+    </defs>
+    <rect x="6" y="10" width="36" height="26" rx="4" fill="url(#healthTeleconsultGrad)" />
+    <rect x="10" y="14" width="20" height="18" rx="3" fill="#fff" opacity="0.95" />
+    <circle cx="20" cy="20" r="4" fill="#FF8C00" />
+    <path d="M13 31C14 26 16 24 20 24C24 24 26 26 27 31H13Z" fill="#32BB78" />
+    <path d="M32 19L42 14V32L32 27V19Z" fill="#FF8C00" />
+    <rect x="18" y="38" width="12" height="4" rx="1" fill="#0E5A59" />
+    <rect x="14" y="42" width="20" height="2" rx="1" fill="#0E5A59" />
+  </svg>
+);
+
+// 5go - Voyage et services
+export const FiveGoIcon = ({ className, size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={cn("", className)}
+  >
+    <defs>
+      <linearGradient id="fiveGoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#32BB78" />
+        <stop offset="100%" stopColor="#0E5A59" />
+      </linearGradient>
+    </defs>
+    {/* Pin carte */}
+    <path d="M24 4C15 4 8 11 8 20C8 32 24 44 24 44C24 44 40 32 40 20C40 11 33 4 24 4Z" fill="url(#fiveGoGrad)" />
+    <circle cx="24" cy="20" r="8" fill="#fff" opacity="0.95" />
+    {/* Lit */}
+    <rect x="17" y="20" width="14" height="5" rx="1.5" fill="#32BB78" />
+    <rect x="17" y="16" width="6" height="4" rx="1.5" fill="#0E5A59" />
+    <rect x="16" y="25" width="16" height="3" rx="1" fill="#0E5A59" />
+    {/* Avion */}
+    <path d="M35 10L29 16L25 15L24 16L28 19L25 22L22 21L21 22L25 25L28 29L29 28L28 25L31 22L34 26L35 25L34 21L40 15L35 10Z" fill="#FF8C00" />
+  </svg>
+);
+
+// 5go Hôtels - Séjour
+export const FiveGoHotelIcon = ({ className, size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={cn("", className)}
+  >
+    <defs>
+      <linearGradient id="fiveGoHotelGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#32BB78" />
+        <stop offset="100%" stopColor="#0E5A59" />
+      </linearGradient>
+    </defs>
+    <rect x="7" y="18" width="34" height="24" rx="3" fill="url(#fiveGoHotelGrad)" />
+    <path d="M12 12H36V22H12V12Z" fill="#0E5A59" />
+    <rect x="11" y="27" width="26" height="7" rx="2" fill="#fff" opacity="0.95" />
+    <rect x="13" y="24" width="8" height="5" rx="2" fill="#FF8C00" />
+    <rect x="23" y="24" width="8" height="5" rx="2" fill="#FF8C00" />
+    <rect x="18" y="34" width="12" height="8" rx="1.5" fill="#0E5A59" />
+    <g fill="#FF8C00">
+      <path d="M16 5L17 8H20L17.5 10L18.5 13L16 11L13.5 13L14.5 10L12 8H15L16 5Z" />
+      <path d="M24 5L25 8H28L25.5 10L26.5 13L24 11L21.5 13L22.5 10L20 8H23L24 5Z" />
+      <path d="M32 5L33 8H36L33.5 10L34.5 13L32 11L29.5 13L30.5 10L28 8H31L32 5Z" />
+    </g>
+  </svg>
+);
+
+// 5go Vols - Billet d'avion
+export const FiveGoFlightIcon = ({ className, size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={cn("", className)}
+  >
+    <defs>
+      <linearGradient id="fiveGoFlightGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#32BB78" />
+        <stop offset="100%" stopColor="#0E5A59" />
+      </linearGradient>
+    </defs>
+    <path d="M8 12H34C38 12 42 16 42 20V36H8V30C10 30 12 28 12 26C12 24 10 22 8 22V12Z" fill="url(#fiveGoFlightGrad)" />
+    <path d="M42 20H34V12C38 12 42 16 42 20Z" fill="#FF8C00" />
+    <path d="M35 8L26 18L18 16L16 18L24 23L19 29L14 28L13 30L20 34L24 41L26 40L25 35L31 30L36 38L38 36L36 28L46 19L35 8Z" fill="#FF8C00" />
+    <rect x="13" y="16" width="12" height="2" rx="1" fill="#fff" opacity="0.8" />
+    <rect x="13" y="22" width="8" height="2" rx="1" fill="#fff" opacity="0.8" />
+    <rect x="13" y="30" width="16" height="2" rx="1" fill="#fff" opacity="0.65" />
+    <circle cx="35" cy="30" r="3" fill="#fff" opacity="0.85" />
+  </svg>
+);
+
+// 5go Bus - Billet de bus
+export const FiveGoBusIcon = ({ className, size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={cn("", className)}
+  >
+    <defs>
+      <linearGradient id="fiveGoBusGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#32BB78" />
+        <stop offset="100%" stopColor="#0E5A59" />
+      </linearGradient>
+    </defs>
+    <rect x="8" y="10" width="32" height="28" rx="5" fill="url(#fiveGoBusGrad)" />
+    <rect x="12" y="15" width="24" height="10" rx="2" fill="#fff" opacity="0.9" />
+    <rect x="14" y="28" width="6" height="4" rx="1" fill="#FF8C00" />
+    <rect x="22" y="28" width="6" height="4" rx="1" fill="#FF8C00" />
+    <rect x="30" y="28" width="6" height="4" rx="1" fill="#FF8C00" />
+    <circle cx="16" cy="38" r="4" fill="#333" />
+    <circle cx="16" cy="38" r="1.7" fill="#777" />
+    <circle cx="32" cy="38" r="4" fill="#333" />
+    <circle cx="32" cy="38" r="1.7" fill="#777" />
+    <path d="M6 6H26C30 6 33 9 33 13V13H8C7 13 6 12 6 11V6Z" fill="#FF8C00" />
+    <rect x="10" y="8" width="12" height="2" rx="1" fill="#fff" opacity="0.8" />
+  </svg>
+);
+
+// Mobilité - Taxi connecté
+export const MobilityIcon = ({ className, size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={cn("", className)}
+  >
+    <defs>
+      <linearGradient id="mobilityGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#FF8C00" />
+        <stop offset="100%" stopColor="#E67E00" />
+      </linearGradient>
+    </defs>
+    {/* Route */}
+    <path d="M8 42C14 35 18 31 24 28C30 25 35 20 40 12" stroke="#32BB78" strokeWidth="4" strokeLinecap="round" strokeDasharray="5 4" />
+    {/* Voiture */}
+    <path d="M8 30L12 21H36L40 30V36H8V30Z" fill="url(#mobilityGrad)" />
+    <path d="M15 21L18 14H30L33 21H15Z" fill="#32BB78" />
+    <path d="M17 21L19 16H23V21H17Z" fill="#0E5A59" opacity="0.55" />
+    <path d="M25 21V16H29L31 21H25Z" fill="#0E5A59" opacity="0.55" />
+    <circle cx="15" cy="36" r="5" fill="#333" />
+    <circle cx="15" cy="36" r="2" fill="#666" />
+    <circle cx="33" cy="36" r="5" fill="#333" />
+    <circle cx="33" cy="36" r="2" fill="#666" />
+    {/* Pin destination */}
+    <path d="M38 4C34 4 31 7 31 11C31 16 38 22 38 22C38 22 45 16 45 11C45 7 42 4 38 4Z" fill="#0E5A59" />
+    <circle cx="38" cy="11" r="2.5" fill="#fff" />
+  </svg>
+);
+
+// Moto - Course rapide
+export const MotoRideIcon = ({ className, size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={cn("", className)}
+  >
+    <defs>
+      <linearGradient id="motoRideGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#32BB78" />
+        <stop offset="100%" stopColor="#0E5A59" />
+      </linearGradient>
+    </defs>
+    <path d="M12 32H22L28 22H36L40 28" stroke="url(#motoRideGrad)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+    <circle cx="12" cy="34" r="6" fill="#333" />
+    <circle cx="12" cy="34" r="2.5" fill="#777" />
+    <circle cx="36" cy="34" r="6" fill="#333" />
+    <circle cx="36" cy="34" r="2.5" fill="#777" />
+    <path d="M24 18L29 22L23 30H18L22 22L18 19" fill="#FF8C00" />
+    <circle cx="25" cy="12" r="4" fill="#0E5A59" />
+    <path d="M4 24H14" stroke="#FF8C00" strokeWidth="2" strokeLinecap="round" strokeDasharray="3 3" />
+  </svg>
+);
+
+// Appel chauffeur
+export const RidePhoneIcon = ({ className, size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={cn("", className)}
+  >
+    <defs>
+      <linearGradient id="ridePhoneGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#32BB78" />
+        <stop offset="100%" stopColor="#0E5A59" />
+      </linearGradient>
+    </defs>
+    <rect x="14" y="5" width="20" height="38" rx="5" fill="url(#ridePhoneGrad)" />
+    <rect x="17" y="10" width="14" height="25" rx="2" fill="#fff" opacity="0.92" />
+    <circle cx="24" cy="39" r="2" fill="#fff" />
+    <path d="M20 25C24 30 28 32 32 28L29 24C28 25 27 25 26 24L23 21C22 20 22 19 23 18L19 15C15 19 16 23 20 25Z" fill="#FF8C00" />
+  </svg>
+);
+
+// Sécurité trajet
+export const RideShieldIcon = ({ className, size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={cn("", className)}
+  >
+    <defs>
+      <linearGradient id="rideShieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#32BB78" />
+        <stop offset="100%" stopColor="#0E5A59" />
+      </linearGradient>
+    </defs>
+    <path d="M24 4L8 10V22C8 32 14 40 24 44C34 40 40 32 40 22V10L24 4Z" fill="url(#rideShieldGrad)" />
+    <path d="M17 25L22 30L32 18" stroke="#fff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+    <circle cx="36" cy="12" r="5" fill="#FF8C00" />
+  </svg>
+);
+
+// Note chauffeur
+export const RideStarIcon = ({ className, size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={cn("", className)}
+  >
+    <defs>
+      <linearGradient id="rideStarGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#FF8C00" />
+        <stop offset="100%" stopColor="#E67E00" />
+      </linearGradient>
+    </defs>
+    <path d="M24 5L29 17H42L31.5 25L35.5 39L24 31L12.5 39L16.5 25L6 17H19L24 5Z" fill="url(#rideStarGrad)" />
+    <circle cx="24" cy="24" r="7" fill="#32BB78" opacity="0.9" />
+    <path d="M21 24L23 26L28 21" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
 // Événements - Ticket
 export const EventIcon = ({ className, size = 24 }: IconProps) => (
   <svg
@@ -1328,6 +1731,163 @@ export const MakutanoIcon = ({ className, size = 24 }: IconProps) => (
   </svg>
 );
 
+export const MakutanoCreateIcon = ({ className, size = 24 }: IconProps) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={cn("", className)}>
+    <defs>
+      <linearGradient id="makutanoCreateGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#32BB78" />
+        <stop offset="100%" stopColor="#0E5A59" />
+      </linearGradient>
+    </defs>
+    <rect x="8" y="10" width="28" height="28" rx="8" fill="url(#makutanoCreateGrad)" />
+    <path d="M22 17V31M15 24H29" stroke="#fff" strokeWidth="4" strokeLinecap="round" />
+    <circle cx="35" cy="13" r="7" fill="#FF8C00" />
+    <path d="M32 13H38M35 10V16" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
+  </svg>
+);
+
+export const MakutanoMusicIcon = ({ className, size = 24 }: IconProps) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={cn("", className)}>
+    <defs>
+      <linearGradient id="makutanoMusicGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#FF8C00" />
+        <stop offset="100%" stopColor="#E67E00" />
+      </linearGradient>
+    </defs>
+    <path d="M18 10V32" stroke="url(#makutanoMusicGrad)" strokeWidth="5" strokeLinecap="round" />
+    <path d="M18 10L36 6V26" stroke="url(#makutanoMusicGrad)" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+    <circle cx="14" cy="34" r="7" fill="#32BB78" />
+    <circle cx="32" cy="28" r="7" fill="#0E5A59" />
+    <path d="M8 14C11 11 14 10 18 10" stroke="#32BB78" strokeWidth="2" strokeLinecap="round" opacity="0.7" />
+  </svg>
+);
+
+export const MakutanoMoreIcon = ({ className, size = 24 }: IconProps) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={cn("", className)}>
+    <circle cx="14" cy="24" r="5" fill="#32BB78" />
+    <circle cx="24" cy="24" r="5" fill="#0E5A59" />
+    <circle cx="34" cy="24" r="5" fill="#FF8C00" />
+    <path d="M14 34C20 38 28 38 34 34" stroke="#32BB78" strokeWidth="2" strokeLinecap="round" opacity="0.55" />
+  </svg>
+);
+
+export const MakutanoLikeIcon = ({ className, size = 24 }: IconProps) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={cn("", className)}>
+    <defs>
+      <linearGradient id="makutanoLikeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#32BB78" />
+        <stop offset="100%" stopColor="#0E5A59" />
+      </linearGradient>
+    </defs>
+    <path d="M17 20V40H10C8 40 6 38 6 36V24C6 22 8 20 10 20H17Z" fill="#FF8C00" />
+    <path d="M17 20L24 8C26 5 31 7 30 11L28 18H37C41 18 43 22 42 26L39 37C38 40 36 42 32 42H17V20Z" fill="url(#makutanoLikeGrad)" />
+    <path d="M22 21L27 12" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" opacity="0.65" />
+  </svg>
+);
+
+export const MakutanoCommentIcon = ({ className, size = 24 }: IconProps) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={cn("", className)}>
+    <defs>
+      <linearGradient id="makutanoCommentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#32BB78" />
+        <stop offset="100%" stopColor="#0E5A59" />
+      </linearGradient>
+    </defs>
+    <path d="M8 12C8 8 11 6 15 6H33C37 6 40 8 40 12V27C40 31 37 33 33 33H24L13 42V33C10 33 8 30 8 27V12Z" fill="url(#makutanoCommentGrad)" />
+    <circle cx="18" cy="20" r="2.5" fill="#fff" />
+    <circle cx="24" cy="20" r="2.5" fill="#fff" />
+    <circle cx="30" cy="20" r="2.5" fill="#fff" />
+    <circle cx="38" cy="10" r="5" fill="#FF8C00" />
+  </svg>
+);
+
+export const MakutanoShareIcon = ({ className, size = 24 }: IconProps) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={cn("", className)}>
+    <defs>
+      <linearGradient id="makutanoShareGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#32BB78" />
+        <stop offset="100%" stopColor="#0E5A59" />
+      </linearGradient>
+    </defs>
+    <path d="M7 24L41 8L33 40L25 28L15 34L18 25L7 24Z" fill="url(#makutanoShareGrad)" />
+    <path d="M18 25L41 8L25 28" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.7" />
+    <circle cx="35" cy="13" r="5" fill="#FF8C00" />
+  </svg>
+);
+
+export const MakutanoPlayIcon = ({ className, size = 24 }: IconProps) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={cn("", className)}>
+    <defs>
+      <linearGradient id="makutanoPlayGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#32BB78" />
+        <stop offset="100%" stopColor="#0E5A59" />
+      </linearGradient>
+    </defs>
+    <circle cx="24" cy="24" r="18" fill="url(#makutanoPlayGrad)" />
+    <path d="M20 15L34 24L20 33V15Z" fill="#fff" />
+    <circle cx="36" cy="12" r="5" fill="#FF8C00" />
+  </svg>
+);
+
+export const MakutanoPauseIcon = ({ className, size = 24 }: IconProps) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={cn("", className)}>
+    <defs>
+      <linearGradient id="makutanoPauseGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#32BB78" />
+        <stop offset="100%" stopColor="#0E5A59" />
+      </linearGradient>
+    </defs>
+    <circle cx="24" cy="24" r="18" fill="url(#makutanoPauseGrad)" />
+    <rect x="17" y="15" width="5" height="18" rx="2" fill="#fff" />
+    <rect x="26" y="15" width="5" height="18" rx="2" fill="#fff" />
+    <circle cx="12" cy="36" r="5" fill="#FF8C00" />
+  </svg>
+);
+
+export const MakutanoAudioIcon = ({ className, size = 24 }: IconProps) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={cn("", className)}>
+    <defs>
+      <linearGradient id="makutanoAudioGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#32BB78" />
+        <stop offset="100%" stopColor="#0E5A59" />
+      </linearGradient>
+    </defs>
+    <path d="M8 18H16L28 8V40L16 30H8V18Z" fill="url(#makutanoAudioGrad)" />
+    <path d="M34 18C37 21 37 27 34 30" stroke="#FF8C00" strokeWidth="4" strokeLinecap="round" />
+    <path d="M39 13C45 19 45 29 39 35" stroke="#FF8C00" strokeWidth="3" strokeLinecap="round" opacity="0.7" />
+  </svg>
+);
+
+export const MakutanoBookIcon = ({ className, size = 24 }: IconProps) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={cn("", className)}>
+    <defs>
+      <linearGradient id="makutanoBookGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#32BB78" />
+        <stop offset="100%" stopColor="#0E5A59" />
+      </linearGradient>
+    </defs>
+    <path d="M8 8H22V40H9C6 40 4 38 4 35V12C4 10 6 8 8 8Z" fill="url(#makutanoBookGrad)" />
+    <path d="M26 8H40C42 8 44 10 44 12V35C44 38 42 40 39 40H26V8Z" fill="#FF8C00" />
+    <path d="M24 8V40" stroke="#0E5A59" strokeWidth="2.5" strokeLinecap="round" />
+    <path d="M11 16H18M11 22H17M31 16H38M31 22H37" stroke="#fff" strokeWidth="2" strokeLinecap="round" opacity="0.75" />
+  </svg>
+);
+
+export const MakutanoIdeaIcon = ({ className, size = 24 }: IconProps) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={cn("", className)}>
+    <defs>
+      <linearGradient id="makutanoIdeaGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#FF8C00" />
+        <stop offset="100%" stopColor="#E67E00" />
+      </linearGradient>
+    </defs>
+    <path d="M24 4C14 4 7 12 7 21C7 27 10 32 16 35V39C16 42 18 44 21 44H27C30 44 32 42 32 39V35C38 32 41 27 41 21C41 12 34 4 24 4Z" fill="url(#makutanoIdeaGrad)" />
+    <path d="M18 39H30M20 44H28" stroke="#0E5A59" strokeWidth="2.5" strokeLinecap="round" />
+    <path d="M18 22C18 18 20 16 24 16" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" opacity="0.65" />
+    <path d="M33 8L36 4M39 15L44 13M39 24H44" stroke="#32BB78" strokeWidth="2.5" strokeLinecap="round" />
+  </svg>
+);
+
 // eNkamba AI Icon
 export const EnkambaAIIcon = ({ className, size = 24 }: IconProps) => (
   <svg
@@ -1713,6 +2273,64 @@ export const TrackPackageIcon = ({ className, size = 24 }: IconProps) => (
   </svg>
 );
 
+export const UgaviPlayIcon = ({ className, size = 24 }: IconProps) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={cn("", className)}>
+    <defs>
+      <linearGradient id="ugaviPlayGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#32BB78" />
+        <stop offset="100%" stopColor="#0E5A59" />
+      </linearGradient>
+    </defs>
+    <circle cx="24" cy="24" r="18" fill="url(#ugaviPlayGrad)" />
+    <path d="M20 16L34 24L20 32V16Z" fill="#fff" />
+    <path d="M9 39C15 35 21 34 28 35" stroke="#FF8C00" strokeWidth="3" strokeLinecap="round" strokeDasharray="4 3" />
+  </svg>
+);
+
+export const UgaviPauseIcon = ({ className, size = 24 }: IconProps) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={cn("", className)}>
+    <defs>
+      <linearGradient id="ugaviPauseGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#32BB78" />
+        <stop offset="100%" stopColor="#0E5A59" />
+      </linearGradient>
+    </defs>
+    <circle cx="24" cy="24" r="18" fill="url(#ugaviPauseGrad)" />
+    <rect x="17" y="15" width="5" height="18" rx="2" fill="#fff" />
+    <rect x="26" y="15" width="5" height="18" rx="2" fill="#fff" />
+    <circle cx="36" cy="12" r="5" fill="#FF8C00" />
+  </svg>
+);
+
+export const UgaviStopIcon = ({ className, size = 24 }: IconProps) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={cn("", className)}>
+    <defs>
+      <linearGradient id="ugaviStopGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#FF8C00" />
+        <stop offset="100%" stopColor="#E67E00" />
+      </linearGradient>
+    </defs>
+    <circle cx="24" cy="24" r="18" fill="url(#ugaviStopGrad)" />
+    <rect x="16" y="16" width="16" height="16" rx="3" fill="#fff" />
+    <path d="M10 38H38" stroke="#0E5A59" strokeWidth="3" strokeLinecap="round" />
+  </svg>
+);
+
+export const UgaviShareIcon = ({ className, size = 24 }: IconProps) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={cn("", className)}>
+    <defs>
+      <linearGradient id="ugaviShareGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#32BB78" />
+        <stop offset="100%" stopColor="#0E5A59" />
+      </linearGradient>
+    </defs>
+    <circle cx="14" cy="24" r="6" fill="#FF8C00" />
+    <circle cx="34" cy="13" r="6" fill="url(#ugaviShareGrad)" />
+    <circle cx="34" cy="35" r="6" fill="url(#ugaviShareGrad)" />
+    <path d="M19 22L29 16M19 26L29 32" stroke="#0E5A59" strokeWidth="3" strokeLinecap="round" />
+  </svg>
+);
+
 // Calculator Icon
 export const CalculatorIcon = ({ className, size = 24 }: IconProps) => (
   <svg
@@ -1793,6 +2411,21 @@ export const ServiceIcons = {
   school: SchoolIcon,
   flight: FlightIcon,
   hotel: HotelIcon,
+  health: HealthIcon,
+  healthEmergency: HealthEmergencyIcon,
+  healthHospital: HealthHospitalIcon,
+  healthDoctor: HealthDoctorIcon,
+  healthPharmacy: HealthPharmacyIcon,
+  healthTeleconsult: HealthTeleconsultIcon,
+  fiveGo: FiveGoIcon,
+  fiveGoHotel: FiveGoHotelIcon,
+  fiveGoFlight: FiveGoFlightIcon,
+  fiveGoBus: FiveGoBusIcon,
+  mobility: MobilityIcon,
+  motoRide: MotoRideIcon,
+  ridePhone: RidePhoneIcon,
+  rideShield: RideShieldIcon,
+  rideStar: RideStarIcon,
   event: EventIcon,
   phoneCredit: PhoneCreditIcon,
   insurance: InsuranceIcon,
@@ -1814,6 +2447,17 @@ export const ServiceIcons = {
   nkampa: NkampaIcon,
   ugavi: UgaviIcon,
   makutano: MakutanoIcon,
+  makutanoCreate: MakutanoCreateIcon,
+  makutanoMusic: MakutanoMusicIcon,
+  makutanoMore: MakutanoMoreIcon,
+  makutanoLike: MakutanoLikeIcon,
+  makutanoComment: MakutanoCommentIcon,
+  makutanoShare: MakutanoShareIcon,
+  makutanoPlay: MakutanoPlayIcon,
+  makutanoPause: MakutanoPauseIcon,
+  makutanoAudio: MakutanoAudioIcon,
+  makutanoBook: MakutanoBookIcon,
+  makutanoIdea: MakutanoIdeaIcon,
   enkambaAI: EnkambaAIIcon,
   settingsPage: SettingsPageIcon,
   userProfile: UserProfileIcon,
@@ -1827,6 +2471,10 @@ export const ServiceIcons = {
   search: SearchIcon,
   sendPackage: SendPackageIcon,
   trackPackage: TrackPackageIcon,
+  ugaviPlay: UgaviPlayIcon,
+  ugaviPause: UgaviPauseIcon,
+  ugaviStop: UgaviStopIcon,
+  ugaviShare: UgaviShareIcon,
   calculator: CalculatorIcon,
   mapPin: MapPinIcon,
 };

@@ -3,6 +3,17 @@
 import React, { useState } from 'react';
 import { BusinessUser } from '@/types/business-dashboard.types';
 import { BusinessDashboardIcons } from '@/components/icons/business-dashboard-icons';
+import {
+  NkampaIcon,
+  ShopNavIcon,
+  TrackPackageIcon,
+} from '@/components/icons/service-icons';
+import {
+  B2BProductIcon,
+  PriceIcon,
+  TrackingIcon,
+} from '@/components/icons/nkampa-ecommerce-icons';
+import { ProductIcon } from '@/components/icons/nkampa-category-icons';
 
 interface CommerceDashboardProps {
   businessUser: BusinessUser;
@@ -10,56 +21,107 @@ interface CommerceDashboardProps {
 
 export function CommerceDashboard({ businessUser }: CommerceDashboardProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'orders' | 'marketing'>('overview');
+  const tabs = [
+    { id: 'overview', label: 'Vue d’ensemble', icon: NkampaIcon },
+    { id: 'products', label: 'Catalogue', icon: ProductIcon },
+    { id: 'orders', label: 'Commandes', icon: TrackPackageIcon },
+    { id: 'marketing', label: 'Marketing', icon: PriceIcon },
+  ] as const;
+  const quickActions = [
+    { label: 'Catalogue', description: 'Produits et services', tab: 'products' as const, icon: ProductIcon },
+    { label: 'Commandes', description: 'Suivi et préparation', tab: 'orders' as const, icon: TrackPackageIcon },
+    { label: 'Promos', description: 'Offres et coupons', tab: 'marketing' as const, icon: PriceIcon },
+    { label: 'Boutique', description: 'Espace vendeur', tab: 'overview' as const, icon: ShopNavIcon },
+  ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                {businessUser.businessName}
-              </h1>
-              <p className="text-gray-600 mt-1">Dashboard Commerce</p>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(50,187,120,0.14),transparent_34%),linear-gradient(180deg,#f7fbf8_0%,#eef8f1_54%,#f8faf8_100%)] pb-24 text-[#122116]">
+      <div className="sticky top-0 z-30 rounded-b-[32px] bg-gradient-to-r from-[#32BB78] via-[#22945d] to-[#0E5A59] px-4 pb-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] text-white shadow-lg shadow-[#0E5A59]/20">
+        <div className="mx-auto max-w-5xl">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl border border-white/30 bg-white shadow-md">
+                <NkampaIcon size={38} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[11px] font-black uppercase tracking-[0.18em] text-white/70">Nkampa Business</p>
+                <h1 className="truncate text-xl font-black leading-tight">{businessUser.businessName}</h1>
+                <p className="truncate text-xs font-medium text-white/75">Dashboard Commerce</p>
+              </div>
             </div>
-            <div className="flex items-center gap-2 px-4 py-2 bg-green-100 text-green-800 rounded-full">
+            <div className="hidden items-center gap-2 rounded-full border border-white/30 bg-white/15 px-3 py-2 text-xs font-bold backdrop-blur sm:flex">
               <BusinessDashboardIcons.CheckCircle className="w-5 h-5" />
-              <span className="font-semibold">Compte Actif</span>
+              Compte actif
             </div>
+          </div>
+
+          <div className="mt-4 grid grid-cols-4 gap-3">
+            {quickActions.map((action) => {
+              const Icon = action.icon;
+              return (
+                <button
+                  key={action.label}
+                  type="button"
+                  onClick={() => setActiveTab(action.tab)}
+                  className="group flex min-w-0 flex-col items-center gap-2 rounded-2xl bg-white/12 p-2.5 text-center ring-1 ring-white/18 transition hover:bg-white/20"
+                >
+                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-md transition group-hover:scale-105">
+                    <Icon size={32} />
+                  </span>
+                  <span className="line-clamp-2 text-[11px] font-bold leading-tight text-white">{action.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
 
-      {/* Navigation Tabs */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex gap-8">
-            {[
-              { id: 'overview', label: 'Vue d\'ensemble', icon: BusinessDashboardIcons.TrendingUp },
-              { id: 'products', label: 'Catalogue', icon: BusinessDashboardIcons.Product },
-              { id: 'orders', label: 'Commandes', icon: BusinessDashboardIcons.ShoppingCart },
-              { id: 'marketing', label: 'Marketing', icon: BusinessDashboardIcons.TrendingUp },
-            ].map(({ id, label, icon: Icon }) => (
+      <div className="mx-auto max-w-5xl space-y-5 px-4 py-5">
+        <section className="overflow-hidden rounded-3xl border border-white bg-white shadow-sm">
+          <div className="relative bg-gradient-to-br from-[#32BB78] via-[#22945d] to-[#0E5A59] p-5 text-white">
+            <div className="pointer-events-none absolute -right-8 -top-10 h-32 w-32 rounded-full bg-white/15 blur-2xl" />
+            <div className="relative flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <div className="inline-flex items-center gap-2 rounded-full bg-white/14 px-3 py-1 text-xs font-bold text-white/80">
+                  <span className="h-2 w-2 rounded-full bg-[#FF8C00]" />
+                  Commerce & e-commerce
+                </div>
+                <h2 className="mt-4 max-w-2xl text-2xl font-black leading-tight sm:text-3xl">
+                  Gérez boutique, catalogue, commandes et promotions dans un seul espace.
+                </h2>
+                <p className="mt-2 max-w-xl text-sm text-white/75">
+                  Suivi vendeur, visibilité produits, offres commerciales et pilotage B2B/B2C.
+                </p>
+              </div>
+              <div className="grid grid-cols-3 gap-2 sm:min-w-72">
+                <CommercePill label="Ventes" value="0 FC" />
+                <CommercePill label="Commandes" value="0" />
+                <CommercePill label="Stock" value="0" />
+              </div>
+            </div>
+          </div>
+          <CommerceOverview />
+        </section>
+
+        <section className="overflow-hidden rounded-3xl border border-[#dbe8df] bg-white shadow-sm">
+          <div className="flex gap-2 overflow-x-auto p-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            {tabs.map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
-                onClick={() => setActiveTab(id as any)}
-                className={`py-4 px-2 border-b-2 font-semibold flex items-center gap-2 transition-colors ${
+                onClick={() => setActiveTab(id)}
+                className={`flex min-w-fit items-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold transition ${
                   activeTab === id
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-600 hover:text-gray-900'
+                    ? 'bg-[#32BB78] text-white shadow-md shadow-[#32BB78]/20'
+                    : 'bg-[#f4faf6] text-[#52635a] hover:bg-[#e8f4ec] hover:text-[#22945d]'
                 }`}
               >
-                <Icon className="w-5 h-5" />
+                <Icon size={22} />
                 {label}
               </button>
             ))}
           </div>
-        </div>
-      </div>
+        </section>
 
-      {/* Content */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
         {activeTab === 'overview' && <CommerceOverview />}
         {activeTab === 'products' && <CommerceProducts />}
         {activeTab === 'orders' && <CommerceOrders />}
@@ -71,28 +133,30 @@ export function CommerceDashboard({ businessUser }: CommerceDashboardProps) {
 
 function CommerceOverview() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <div className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-4">
       {[
-        { label: 'Chiffre d\'affaires', value: '0 FC', icon: BusinessDashboardIcons.DollarSign, color: 'blue' },
-        { label: 'Commandes en attente', value: '0', icon: BusinessDashboardIcons.ShoppingCart, color: 'yellow' },
-        { label: 'Produits', value: '0', icon: BusinessDashboardIcons.Product, color: 'green' },
+        { label: 'Chiffre d\'affaires', value: '0 FC', icon: PriceIcon, color: 'blue' },
+        { label: 'Commandes en attente', value: '0', icon: TrackPackageIcon, color: 'yellow' },
+        { label: 'Produits', value: '0', icon: ProductIcon, color: 'green' },
         { label: 'Ruptures de stock', value: '0', icon: BusinessDashboardIcons.AlertCircle, color: 'red' },
       ].map((stat, idx) => {
         const Icon = stat.icon;
         const colorClasses = {
-          blue: 'bg-blue-50 text-blue-600 border-blue-200',
-          yellow: 'bg-yellow-50 text-yellow-600 border-yellow-200',
-          green: 'bg-green-50 text-green-600 border-green-200',
-          red: 'bg-red-50 text-red-600 border-red-200',
+          blue: 'bg-[#eff6ff] text-[#1d4ed8] border-[#bfdbfe]',
+          yellow: 'bg-[#fffbeb] text-[#92400e] border-[#fde68a]',
+          green: 'bg-[#ecfdf3] text-[#0E5A59] border-[#b8efd2]',
+          red: 'bg-[#fef2f2] text-[#b91c1c] border-[#fecaca]',
         };
         return (
-          <div key={idx} className={`${colorClasses[stat.color as keyof typeof colorClasses]} border-2 rounded-xl p-6`}>
-            <div className="flex items-center justify-between">
+          <div key={idx} className={`${colorClasses[stat.color as keyof typeof colorClasses]} rounded-2xl border p-4`}>
+            <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold opacity-75">{stat.label}</p>
-                <p className="text-3xl font-bold mt-2">{stat.value}</p>
+                <p className="text-xs font-bold opacity-75">{stat.label}</p>
+                <p className="mt-2 text-2xl font-black">{stat.value}</p>
               </div>
-              <Icon className="w-12 h-12 opacity-20" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/70">
+                <Icon className="h-6 w-6 opacity-80" size={28} />
+              </div>
             </div>
           </div>
         );
@@ -103,46 +167,73 @@ function CommerceOverview() {
 
 function CommerceProducts() {
   return (
-    <div className="bg-white rounded-xl border-2 border-gray-200 p-8">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Gestion du Catalogue</h2>
-        <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
+    <div className="rounded-3xl border border-[#dbe8df] bg-white p-5 shadow-sm">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-xl font-black text-[#122116]">Gestion du Catalogue</h2>
+          <p className="text-sm text-[#52635a]">Ajoutez vos produits, services et offres B2B/B2C.</p>
+        </div>
+        <button className="rounded-2xl bg-[#32BB78] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#2a9d63]">
           + Ajouter un produit
         </button>
       </div>
-      <div className="text-center py-12">
-        <BusinessDashboardIcons.Product className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-        <p className="text-gray-500">Aucun produit pour le moment</p>
-      </div>
+      <EmptyCommerceState icon={B2BProductIcon} title="Aucun produit pour le moment" text="Votre catalogue apparaîtra ici dès que vous publiez vos premiers articles." />
     </div>
   );
 }
 
 function CommerceOrders() {
   return (
-    <div className="bg-white rounded-xl border-2 border-gray-200 p-8">
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">Gestion des Commandes</h2>
-      <div className="text-center py-12">
-        <BusinessDashboardIcons.ShoppingCart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-        <p className="text-gray-500">Aucune commande pour le moment</p>
-      </div>
+    <div className="rounded-3xl border border-[#dbe8df] bg-white p-5 shadow-sm">
+      <h2 className="mb-1 text-xl font-black text-[#122116]">Gestion des Commandes</h2>
+      <p className="mb-6 text-sm text-[#52635a]">Préparation, paiement, livraison et suivi client.</p>
+      <EmptyCommerceState icon={TrackingIcon} title="Aucune commande pour le moment" text="Les commandes Nkampa apparaîtront dans cette section." />
     </div>
   );
 }
 
 function CommerceMarketing() {
   return (
-    <div className="bg-white rounded-xl border-2 border-gray-200 p-8">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Promotions & Coupons</h2>
-        <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
+    <div className="rounded-3xl border border-[#dbe8df] bg-white p-5 shadow-sm">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-xl font-black text-[#122116]">Promotions & Coupons</h2>
+          <p className="text-sm text-[#52635a]">Animez les offres, réductions et campagnes boutique.</p>
+        </div>
+        <button className="rounded-2xl bg-[#FF8C00] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#E67E00]">
           + Créer une promo
         </button>
       </div>
-      <div className="text-center py-12">
-        <BusinessDashboardIcons.TrendingUp className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-        <p className="text-gray-500">Aucune promotion pour le moment</p>
+      <EmptyCommerceState icon={PriceIcon} title="Aucune promotion pour le moment" text="Créez une offre pour la pousser dans l’écosystème eNkamba." />
+    </div>
+  );
+}
+
+function CommercePill({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-white/18 bg-white/14 p-3 text-center backdrop-blur">
+      <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-white/65">{label}</p>
+      <p className="mt-2 text-2xl font-black text-white">{value}</p>
+    </div>
+  );
+}
+
+function EmptyCommerceState({
+  icon: Icon,
+  title,
+  text,
+}: {
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+  title: string;
+  text: string;
+}) {
+  return (
+    <div className="rounded-3xl border border-dashed border-[#dbe8df] bg-[#f6faf7] px-5 py-12 text-center">
+      <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-3xl bg-white shadow-sm">
+        <Icon size={48} />
       </div>
+      <p className="font-black text-[#122116]">{title}</p>
+      <p className="mx-auto mt-2 max-w-sm text-sm text-[#52635a]">{text}</p>
     </div>
   );
 }

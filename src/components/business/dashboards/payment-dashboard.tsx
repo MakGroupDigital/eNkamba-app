@@ -3,209 +3,397 @@
 import React, { useState } from 'react';
 import { BusinessUser } from '@/types/business-dashboard.types';
 import { BusinessDashboardIcons } from '@/components/icons/business-dashboard-icons';
+import {
+  CreditIcon,
+  LinkAccountIcon,
+  PaymentNavIcon,
+  ReportNavIcon,
+  SecurityIcon,
+  WalletNavIcon,
+} from '@/components/icons/service-icons';
 
 interface PaymentDashboardProps {
   businessUser: BusinessUser;
 }
 
+type PaymentTab = 'overview' | 'api' | 'tokens' | 'generation' | 'integration' | 'docs' | 'transactions' | 'balance';
+
+const tabs: Array<{ id: PaymentTab; label: string; icon: React.ComponentType<{ size?: number; className?: string }> }> = [
+  { id: 'overview', label: 'Vue d’ensemble', icon: PaymentNavIcon },
+  { id: 'api', label: 'API', icon: LinkAccountIcon },
+  { id: 'tokens', label: 'Tokens', icon: SecurityIcon },
+  { id: 'generation', label: 'Génération', icon: CreditIcon },
+  { id: 'integration', label: 'Intégration', icon: WalletNavIcon },
+  { id: 'docs', label: 'Documentation', icon: ReportNavIcon },
+  { id: 'transactions', label: 'Transactions', icon: BusinessDashboardIcons.BarChart },
+  { id: 'balance', label: 'Solde', icon: WalletNavIcon },
+];
+
 export function PaymentDashboard({ businessUser }: PaymentDashboardProps) {
-  const [activeTab, setActiveTab] = useState<'overview' | 'api' | 'transactions' | 'balance'>('overview');
+  const [activeTab, setActiveTab] = useState<PaymentTab>('overview');
   const isIntegrator = businessUser.subCategory === 'INTEGRATOR';
+  const quickActions = [
+    { label: 'API', tab: 'api' as const, icon: LinkAccountIcon },
+    { label: 'Tokens', tab: 'tokens' as const, icon: SecurityIcon },
+    { label: 'Générer', tab: 'generation' as const, icon: CreditIcon },
+    { label: 'Docs', tab: 'docs' as const, icon: ReportNavIcon },
+  ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                {businessUser.businessName}
-              </h1>
-              <p className="text-gray-600 mt-1">
-                Dashboard Paiement - {isIntegrator ? 'Intégrateur API' : 'Agent Agréé'}
-              </p>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(50,187,120,0.14),transparent_34%),linear-gradient(180deg,#f7fbf8_0%,#eef8f1_54%,#f8faf8_100%)] pb-24 text-[#122116]">
+      <div className="sticky top-0 z-30 rounded-b-[32px] bg-gradient-to-r from-[#32BB78] via-[#22945d] to-[#0E5A59] px-4 pb-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] text-white shadow-lg shadow-[#0E5A59]/20">
+        <div className="mx-auto max-w-5xl">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl border border-white/30 bg-white shadow-md">
+                <PaymentNavIcon size={38} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[11px] font-black uppercase tracking-[0.18em] text-white/70">Mbongo Business</p>
+                <h1 className="truncate text-xl font-black leading-tight">{businessUser.businessName}</h1>
+                <p className="truncate text-xs font-medium text-white/75">
+                  {isIntegrator ? 'Intégrateur API' : 'Agent agréé / compte paiement'}
+                </p>
+              </div>
             </div>
-            <div className="flex items-center gap-2 px-4 py-2 bg-green-100 text-green-800 rounded-full">
-              <BusinessDashboardIcons.CheckCircle className="w-5 h-5" />
-              <span className="font-semibold">Compte Actif</span>
+            <div className="hidden items-center gap-2 rounded-full border border-white/30 bg-white/15 px-3 py-2 text-xs font-bold backdrop-blur sm:flex">
+              <BusinessDashboardIcons.CheckCircle className="h-4 w-4" />
+              Compte actif
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Navigation Tabs */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex gap-8">
-            {[
-              { id: 'overview', label: 'Vue d\'ensemble', icon: BusinessDashboardIcons.BarChart },
-              isIntegrator && { id: 'api', label: 'Clés API', icon: BusinessDashboardIcons.CreditCard },
-              { id: 'transactions', label: 'Transactions', icon: BusinessDashboardIcons.DollarSign },
-              !isIntegrator && { id: 'balance', label: 'Solde', icon: BusinessDashboardIcons.DollarSign },
-            ]
-              .filter(Boolean)
-              .map((tab: any) => (
+          <div className="mt-4 grid grid-cols-4 gap-3">
+            {quickActions.map((action) => {
+              const Icon = action.icon;
+              return (
                 <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`py-4 px-2 border-b-2 font-semibold flex items-center gap-2 transition-colors ${
-                    activeTab === tab.id
-                      ? 'border-purple-600 text-purple-600'
-                      : 'border-transparent text-gray-600 hover:text-gray-900'
-                  }`}
+                  key={action.label}
+                  type="button"
+                  onClick={() => setActiveTab(action.tab)}
+                  className="group flex min-w-0 flex-col items-center gap-2 rounded-2xl bg-white/12 p-2.5 text-center ring-1 ring-white/18 transition hover:bg-white/20"
                 >
-                  <tab.icon className="w-5 h-5" />
-                  {tab.label}
+                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-md transition group-hover:scale-105">
+                    <Icon size={32} />
+                  </span>
+                  <span className="line-clamp-2 text-[11px] font-bold leading-tight text-white">{action.label}</span>
                 </button>
-              ))}
+              );
+            })}
           </div>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="mx-auto max-w-5xl space-y-5 px-4 py-5">
+        <section className="overflow-hidden rounded-3xl border border-white bg-white shadow-sm">
+          <div className="relative bg-gradient-to-br from-[#32BB78] via-[#22945d] to-[#0E5A59] p-5 text-white">
+            <div className="pointer-events-none absolute -right-8 -top-10 h-32 w-32 rounded-full bg-white/15 blur-2xl" />
+            <div className="relative flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <div className="inline-flex items-center gap-2 rounded-full bg-white/14 px-3 py-1 text-xs font-bold text-white/80">
+                  <span className="h-2 w-2 rounded-full bg-[#FF8C00]" />
+                  Paiement, API & intégrations
+                </div>
+                <h2 className="mt-4 max-w-2xl text-2xl font-black leading-tight sm:text-3xl">
+                  Gérez paiements, tokens, clés API et documentation développeur.
+                </h2>
+                <p className="mt-2 max-w-xl text-sm text-white/75">
+                  Un centre technique pour connecter Mbongo à vos boutiques, apps, plateformes et agents.
+                </p>
+              </div>
+              <div className="grid grid-cols-3 gap-2 sm:min-w-72">
+                <PaymentPill label="Volume" value="0 FC" />
+                <PaymentPill label="API calls" value="0" />
+                <PaymentPill label="Succès" value="0%" />
+              </div>
+            </div>
+          </div>
+          <PaymentOverview isIntegrator={isIntegrator} />
+        </section>
+
+        <section className="overflow-hidden rounded-3xl border border-[#dbe8df] bg-white shadow-sm">
+          <div className="flex gap-2 overflow-x-auto p-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            {tabs.map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                onClick={() => setActiveTab(id)}
+                className={`flex min-w-fit items-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold transition ${
+                  activeTab === id
+                    ? 'bg-[#32BB78] text-white shadow-md shadow-[#32BB78]/20'
+                    : 'bg-[#f4faf6] text-[#52635a] hover:bg-[#e8f4ec] hover:text-[#22945d]'
+                }`}
+              >
+                <Icon size={22} />
+                {label}
+              </button>
+            ))}
+          </div>
+        </section>
+
         {activeTab === 'overview' && <PaymentOverview isIntegrator={isIntegrator} />}
-        {activeTab === 'api' && isIntegrator && <PaymentAPI />}
+        {activeTab === 'api' && <PaymentAPI />}
+        {activeTab === 'tokens' && <PaymentTokens />}
+        {activeTab === 'generation' && <PaymentGeneration />}
+        {activeTab === 'integration' && <PaymentIntegration />}
+        {activeTab === 'docs' && <PaymentDocumentation />}
         {activeTab === 'transactions' && <PaymentTransactions />}
-        {activeTab === 'balance' && !isIntegrator && <AgentBalance />}
+        {activeTab === 'balance' && <AgentBalance />}
       </div>
     </div>
   );
 }
 
 function PaymentOverview({ isIntegrator }: { isIntegrator: boolean }) {
+  const stats = [
+    { label: 'Volume du jour', value: '0 FC', icon: CreditIcon, color: 'green' },
+    { label: 'Transactions', value: '0', icon: BusinessDashboardIcons.BarChart, color: 'blue' },
+    { label: 'Taux de succès', value: '0%', icon: BusinessDashboardIcons.CheckCircle, color: 'emerald' },
+    isIntegrator
+      ? { label: 'Appels API', value: '0', icon: LinkAccountIcon, color: 'orange' }
+      : { label: 'Commissions', value: '0 FC', icon: WalletNavIcon, color: 'orange' },
+  ];
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-      {[
-        { label: 'Volume du jour', value: '0 FC', icon: BusinessDashboardIcons.DollarSign, color: 'purple' },
-        { label: 'Transactions', value: '0', icon: BusinessDashboardIcons.BarChart, color: 'blue' },
-        { label: 'Taux de succès', value: '0%', icon: BusinessDashboardIcons.CheckCircle, color: 'green' },
-        isIntegrator
-          ? { label: 'Appels API', value: '0', icon: BusinessDashboardIcons.CreditCard, color: 'pink' }
-          : { label: 'Commissions', value: '0 FC', icon: BusinessDashboardIcons.DollarSign, color: 'yellow' },
-      ]
-        .filter(Boolean)
-        .map((stat: any, idx) => {
-          const Icon = stat.icon;
-          const colorClasses = {
-            purple: 'bg-purple-50 text-purple-600 border-purple-200',
-            blue: 'bg-blue-50 text-blue-600 border-blue-200',
-            green: 'bg-green-50 text-green-600 border-green-200',
-            pink: 'bg-pink-50 text-pink-600 border-pink-200',
-            yellow: 'bg-yellow-50 text-yellow-600 border-yellow-200',
-          };
-          return (
-            <div key={idx} className={`${colorClasses[stat.color as keyof typeof colorClasses]} border-2 rounded-xl p-6`}>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold opacity-75">{stat.label}</p>
-                  <p className="text-3xl font-bold mt-2">{stat.value}</p>
-                </div>
-                <Icon className="w-12 h-12 opacity-20" />
-              </div>
-            </div>
-          );
-        })}
+    <div className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-4">
+      {stats.map((stat, idx) => (
+        <PaymentMetricCard key={`${stat.label}-${idx}`} stat={stat} />
+      ))}
     </div>
   );
 }
 
 function PaymentAPI() {
   return (
-    <div className="bg-white rounded-xl border-2 border-gray-200 p-8">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Gestion des Clés API</h2>
-        <button className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
-          + Générer une clé
-        </button>
-      </div>
-
-      <div className="space-y-4 mb-8">
-        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-          <p className="text-sm text-gray-600 mb-2">Clé Publique</p>
-          <div className="flex items-center gap-2">
-            <code className="flex-1 bg-white p-2 rounded border border-gray-300 text-sm font-mono text-gray-700">
-              pk_live_xxxxxxxxxxxxx
-            </code>
-            <button className="text-blue-600 hover:text-blue-700 font-semibold">Copier</button>
-          </div>
+    <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+      <Panel title="Clés API" subtitle="Séparez toujours les environnements test et production." action="+ Générer une clé">
+        <ApiCredential label="Clé publique" value="pk_live_xxxxxxxxxxxxx" />
+        <ApiCredential label="Clé secrète" value="sk_live_xxxxxxxxxxxxx" sensitive />
+        <ApiCredential label="Webhook secret" value="whsec_xxxxxxxxxxxxx" sensitive />
+      </Panel>
+      <Panel title="Statut API" subtitle="Préparation du trafic technique Mbongo.">
+        <div className="grid gap-3">
+          {[
+            ['Environnement', 'Live + Sandbox'],
+            ['Version API', 'v1'],
+            ['Webhooks', 'Non configurés'],
+            ['Dernier appel', 'Aucun'],
+          ].map(([label, value]) => (
+            <div key={label} className="flex items-center justify-between rounded-2xl bg-[#f6faf7] px-4 py-3">
+              <span className="text-sm font-semibold text-[#52635a]">{label}</span>
+              <span className="text-sm font-black text-[#122116]">{value}</span>
+            </div>
+          ))}
         </div>
-
-        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-          <p className="text-sm text-gray-600 mb-2">Clé Secrète</p>
-          <div className="flex items-center gap-2">
-            <code className="flex-1 bg-white p-2 rounded border border-gray-300 text-sm font-mono text-gray-700">
-              sk_live_xxxxxxxxxxxxx
-            </code>
-            <button className="text-blue-600 hover:text-blue-700 font-semibold">Copier</button>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
-        <p className="text-sm text-blue-700">
-          <strong>Sécurité:</strong> Ne partagez jamais votre clé secrète. Utilisez uniquement la clé publique côté client.
-        </p>
-      </div>
+      </Panel>
     </div>
+  );
+}
+
+function PaymentTokens() {
+  return (
+    <Panel title="Tokens d’accès" subtitle="Créez des tokens limités par usage, durée et module." action="+ Nouveau token">
+      <div className="grid gap-3 md:grid-cols-3">
+        {[
+          { title: 'Token checkout', scope: 'Paiement client', status: 'Prêt' },
+          { title: 'Token wallet', scope: 'Solde & mouvements', status: 'À générer' },
+          { title: 'Token reporting', scope: 'Rapports & exports', status: 'À générer' },
+        ].map((token) => (
+          <div key={token.title} className="rounded-3xl border border-[#dbe8df] bg-[#f6faf7] p-4">
+            <SecurityIcon size={34} />
+            <p className="mt-3 font-black text-[#122116]">{token.title}</p>
+            <p className="mt-1 text-sm text-[#52635a]">{token.scope}</p>
+            <span className="mt-4 inline-flex rounded-full bg-white px-3 py-1 text-xs font-bold text-[#22945d]">
+              {token.status}
+            </span>
+          </div>
+        ))}
+      </div>
+    </Panel>
+  );
+}
+
+function PaymentGeneration() {
+  const [generatedKey, setGeneratedKey] = useState('pk_test_demo_xxxxxxxx');
+  const generateKey = () => {
+    const suffix = Math.random().toString(36).slice(2, 12);
+    setGeneratedKey(`pk_test_${suffix}`);
+  };
+
+  return (
+    <Panel title="Génération" subtitle="Génération locale de prévisualisation. La clé réelle doit être créée côté serveur sécurisé.">
+      <div className="rounded-3xl bg-[#0E5A59] p-5 text-white">
+        <p className="text-xs font-bold uppercase tracking-[0.16em] text-white/60">Nouvelle clé test</p>
+        <code className="mt-3 block overflow-x-auto rounded-2xl bg-white/10 p-4 text-sm font-bold text-white">{generatedKey}</code>
+        <div className="mt-4 grid gap-2 sm:grid-cols-3">
+          <button onClick={generateKey} className="rounded-2xl bg-[#32BB78] px-4 py-3 text-sm font-bold text-white">Générer</button>
+          <button className="rounded-2xl bg-white px-4 py-3 text-sm font-bold text-[#0E5A59]">Copier</button>
+          <button className="rounded-2xl bg-[#FF8C00] px-4 py-3 text-sm font-bold text-white">Révoquer</button>
+        </div>
+      </div>
+    </Panel>
+  );
+}
+
+function PaymentIntegration() {
+  return (
+    <Panel title="Intégration" subtitle="Points d’intégration recommandés pour vos apps, sites et boutiques.">
+      <div className="grid gap-3 md:grid-cols-2">
+        {[
+          ['Checkout web', 'Redirection sécurisée ou composant embarqué.'],
+          ['Mobile money', 'Encaissements client et confirmation de statut.'],
+          ['Wallet business', 'Solde, commissions et mouvements.'],
+          ['Webhooks', 'Notifications paiement réussi, échoué, remboursé.'],
+        ].map(([title, text]) => (
+          <div key={title} className="rounded-3xl border border-[#dbe8df] bg-white p-4">
+            <LinkAccountIcon size={34} />
+            <p className="mt-3 font-black text-[#122116]">{title}</p>
+            <p className="mt-1 text-sm leading-6 text-[#52635a]">{text}</p>
+          </div>
+        ))}
+      </div>
+    </Panel>
+  );
+}
+
+function PaymentDocumentation() {
+  return (
+    <Panel title="Documentation" subtitle="Guides rapides pour brancher Mbongo dans un produit.">
+      <div className="space-y-3">
+        {[
+          ['Démarrage rapide', 'Créer une clé test, appeler le checkout, vérifier le statut.'],
+          ['Référence API', 'Endpoints paiement, wallet, remboursement, reporting.'],
+          ['Webhooks', 'Signature, retry, idempotence et événements.'],
+          ['Sécurité', 'Rotation des secrets, scopes, tokens courts et logs.'],
+        ].map(([title, text]) => (
+          <button key={title} className="flex w-full items-center justify-between gap-4 rounded-2xl bg-[#f6faf7] px-4 py-4 text-left">
+            <span>
+              <span className="block font-black text-[#122116]">{title}</span>
+              <span className="mt-1 block text-sm text-[#52635a]">{text}</span>
+            </span>
+            <ReportNavIcon size={28} />
+          </button>
+        ))}
+      </div>
+    </Panel>
   );
 }
 
 function PaymentTransactions() {
   return (
-    <div className="bg-white rounded-xl border-2 border-gray-200 p-8">
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">Historique des Transactions</h2>
-      <div className="text-center py-12">
-        <BusinessDashboardIcons.BarChart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-        <p className="text-gray-500">Aucune transaction pour le moment</p>
-      </div>
-    </div>
+    <Panel title="Historique des transactions" subtitle="Les paiements, remboursements et encaissements apparaîtront ici.">
+      <EmptyPaymentState icon={BusinessDashboardIcons.BarChart} text="Aucune transaction pour le moment" />
+    </Panel>
   );
 }
 
 function AgentBalance() {
   return (
-    <div className="space-y-6">
-      {/* Balance Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-gradient-to-br from-purple-600 to-purple-700 rounded-xl p-8 text-white">
-          <p className="text-sm opacity-90 mb-2">Solde Total</p>
-          <p className="text-4xl font-bold">0 FC</p>
+    <div className="space-y-5">
+      <div className="grid gap-3 md:grid-cols-2">
+        <div className="rounded-3xl bg-gradient-to-br from-[#32BB78] to-[#0E5A59] p-6 text-white">
+          <p className="text-sm font-bold text-white/70">Solde total</p>
+          <p className="mt-2 text-4xl font-black">0 FC</p>
         </div>
-        <div className="bg-gradient-to-br from-pink-600 to-pink-700 rounded-xl p-8 text-white">
-          <p className="text-sm opacity-90 mb-2">Commissions Gagnées</p>
-          <p className="text-4xl font-bold">0 FC</p>
+        <div className="rounded-3xl bg-gradient-to-br from-[#FF8C00] to-[#E67E00] p-6 text-white">
+          <p className="text-sm font-bold text-white/70">Commissions gagnées</p>
+          <p className="mt-2 text-4xl font-black">0 FC</p>
         </div>
       </div>
+      <Panel title="Relevé du jour" subtitle="Synthèse des dépôts, retraits et net business.">
+        {['Dépôts', 'Retraits', 'Net du jour'].map((item) => (
+          <div key={item} className="mb-3 flex items-center justify-between rounded-2xl bg-[#f6faf7] px-4 py-3">
+            <span className="text-sm font-bold text-[#52635a]">{item}</span>
+            <span className="font-black text-[#122116]">0 FC</span>
+          </div>
+        ))}
+      </Panel>
+    </div>
+  );
+}
 
-      {/* Transactions */}
-      <div className="bg-white rounded-xl border-2 border-gray-200 p-8">
-        <h3 className="text-xl font-bold text-gray-900 mb-6">Transactions Récentes</h3>
-        <div className="text-center py-12">
-          <BusinessDashboardIcons.DollarSign className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500">Aucune transaction pour le moment</p>
+function Panel({
+  title,
+  subtitle,
+  action,
+  children,
+}: {
+  title: string;
+  subtitle: string;
+  action?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="rounded-3xl border border-[#dbe8df] bg-white p-5 shadow-sm">
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-xl font-black text-[#122116]">{title}</h2>
+          <p className="text-sm text-[#52635a]">{subtitle}</p>
         </div>
+        {action && (
+          <button className="rounded-2xl bg-[#32BB78] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#2a9d63]">
+            {action}
+          </button>
+        )}
       </div>
+      {children}
+    </section>
+  );
+}
 
-      {/* Daily Report */}
-      <div className="bg-white rounded-xl border-2 border-gray-200 p-8">
-        <h3 className="text-xl font-bold text-gray-900 mb-6">Relevé du Jour</h3>
-        <div className="space-y-4">
-          <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-            <span className="text-gray-700">Dépôts</span>
-            <span className="font-semibold">0 FC</span>
-          </div>
-          <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-            <span className="text-gray-700">Retraits</span>
-            <span className="font-semibold">0 FC</span>
-          </div>
-          <div className="flex justify-between items-center p-4 bg-purple-50 rounded-lg border-2 border-purple-200">
-            <span className="text-purple-700 font-semibold">Net du jour</span>
-            <span className="font-bold text-purple-700">0 FC</span>
-          </div>
+function ApiCredential({ label, value, sensitive = false }: { label: string; value: string; sensitive?: boolean }) {
+  return (
+    <div className="mb-3 rounded-2xl border border-[#dbe8df] bg-[#f6faf7] p-4">
+      <p className="mb-2 text-xs font-bold uppercase tracking-[0.14em] text-[#52635a]">{label}</p>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <code className="min-w-0 flex-1 overflow-x-auto rounded-xl bg-white p-3 text-sm font-bold text-[#122116]">
+          {sensitive ? value.replace(/x/g, '•') : value}
+        </code>
+        <button className="rounded-xl bg-white px-4 py-3 text-sm font-bold text-[#22945d] ring-1 ring-[#dbe8df]">Copier</button>
+      </div>
+    </div>
+  );
+}
+
+function PaymentMetricCard({ stat }: { stat: { label: string; value: string; icon: React.ComponentType<any>; color: string } }) {
+  const Icon = stat.icon;
+  const colorClasses = {
+    green: 'bg-[#ecfdf3] text-[#0E5A59] border-[#b8efd2]',
+    blue: 'bg-[#eff6ff] text-[#1d4ed8] border-[#bfdbfe]',
+    emerald: 'bg-[#f0fdfa] text-[#0f766e] border-[#99f6e4]',
+    orange: 'bg-[#fff7ed] text-[#9a4a00] border-[#fed7aa]',
+  };
+  const className = colorClasses[stat.color as keyof typeof colorClasses] || colorClasses.green;
+
+  return (
+    <div className={`rounded-2xl border p-4 ${className}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-bold opacity-75">{stat.label}</p>
+          <p className="mt-2 text-2xl font-black">{stat.value}</p>
+        </div>
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/70">
+          <Icon className="h-6 w-6 opacity-80" size={28} />
         </div>
       </div>
+    </div>
+  );
+}
+
+function PaymentPill({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-white/18 bg-white/14 p-3 text-center backdrop-blur">
+      <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-white/65">{label}</p>
+      <p className="mt-2 text-2xl font-black text-white">{value}</p>
+    </div>
+  );
+}
+
+function EmptyPaymentState({ icon: Icon, text }: { icon: React.ComponentType<any>; text: string }) {
+  return (
+    <div className="rounded-3xl border border-dashed border-[#dbe8df] bg-[#f6faf7] px-5 py-12 text-center">
+      <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-3xl bg-white shadow-sm">
+        <Icon className="h-12 w-12 text-[#32BB78]" size={48} />
+      </div>
+      <p className="font-black text-[#122116]">{text}</p>
     </div>
   );
 }

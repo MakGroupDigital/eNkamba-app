@@ -5,17 +5,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import {
-  Music2,
-  Plus,
-  MoreHorizontal,
-  MessageCircleMore,
-  Pause,
-  Play,
-  SendHorizontal,
-  ThumbsUp,
-  Volume2,
-} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -28,51 +17,27 @@ import { useRouter } from 'next/navigation';
 import { StoryViewer } from '@/components/stories/StoryViewer';
 import {
   MakutanoIcon,
+  MakutanoAudioIcon,
+  MakutanoBookIcon,
+  MakutanoCommentIcon,
+  MakutanoCreateIcon,
+  MakutanoIdeaIcon,
+  MakutanoLikeIcon,
+  MakutanoMoreIcon,
+  MakutanoMusicIcon,
+  MakutanoPauseIcon,
+  MakutanoPlayIcon,
+  MakutanoShareIcon,
   HomeNavIcon,
   AgentIcon,
   MapPinIcon,
 } from '@/components/icons/service-icons';
 
-// Icônes spécifiques pour Makutano
-const BookIcon = ({ size = 24 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="bookGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#9C27B0" />
-        <stop offset="100%" stopColor="#7B1FA2" />
-      </linearGradient>
-    </defs>
-    <path d="M8 8H22V40H8C6 40 4 38 4 36V12C4 10 6 8 8 8Z" fill="url(#bookGrad)" />
-    <path d="M26 8H40C42 8 44 10 44 12V36C44 38 42 40 40 40H26V8Z" fill="#32BB78" />
-    <line x1="24" y1="8" x2="24" y2="40" stroke="#0E5A59" strokeWidth="2" />
-    <rect x="10" y="14" width="8" height="2" rx="1" fill="#fff" fillOpacity="0.5" />
-    <rect x="10" y="20" width="6" height="2" rx="1" fill="#fff" fillOpacity="0.5" />
-    <rect x="30" y="14" width="8" height="2" rx="1" fill="#fff" fillOpacity="0.5" />
-    <rect x="30" y="20" width="6" height="2" rx="1" fill="#fff" fillOpacity="0.5" />
-  </svg>
-);
-
-const IdeaIcon = ({ size = 24 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="ideaGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#FF8C00" />
-        <stop offset="100%" stopColor="#E67E00" />
-      </linearGradient>
-    </defs>
-    <path d="M24 4C14 4 6 12 6 22C6 28 10 34 16 36V40C16 42 18 44 20 44H28C30 44 32 42 32 40V36C38 34 42 28 42 22C42 12 34 4 24 4Z" fill="url(#ideaGrad)" />
-    <rect x="18" y="40" width="12" height="2" rx="1" fill="#0E5A59" />
-    <rect x="20" y="44" width="8" height="2" rx="1" fill="#0E5A59" />
-    <path d="M18 22C18 18 20 16 24 16" stroke="#fff" strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.6" />
-    <path d="M30 10L32 6M36 14L40 12M38 22H42" stroke="#FFE066" strokeWidth="2" strokeLinecap="round" />
-  </svg>
-);
-
 const navItems = [
   { name: 'Accueil', icon: HomeNavIcon },
-  { name: 'Savoir', icon: BookIcon, link: '/dashboard/ai' },
+  { name: 'Savoir', icon: MakutanoBookIcon, link: '/dashboard/ai' },
   { name: 'Entrepreneur', icon: AgentIcon },
-  { name: 'Projets', icon: IdeaIcon },
+  { name: 'Projets', icon: MakutanoIdeaIcon },
   { name: 'Local', icon: MapPinIcon },
 ];
 
@@ -256,7 +221,7 @@ function MakutanoAudioPlayer({ src, isActive = false }: { src: string; isActive?
           <p className="mt-1 text-lg font-bold">Makutano</p>
         </div>
         <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white/15 text-white">
-          <Volume2 className="h-5 w-5" />
+          <MakutanoAudioIcon size={24} />
         </div>
       </div>
 
@@ -266,7 +231,7 @@ function MakutanoAudioPlayer({ src, isActive = false }: { src: string; isActive?
         className="relative z-10 mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-white text-[#0E5A59] shadow-lg transition hover:scale-105"
         aria-label={isPlaying ? 'Mettre en pause' : 'Lire'}
       >
-        {isPlaying ? <Pause className="h-8 w-8" /> : <Play className="ml-1 h-8 w-8" />}
+        {isPlaying ? <MakutanoPauseIcon size={40} /> : <MakutanoPlayIcon size={40} />}
       </button>
 
       <div className="relative z-10">
@@ -374,7 +339,7 @@ function MakutanoVideoPlayer({ src, isActive = false }: { src: string; isActive?
           className="absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-[#122116] shadow-lg transition hover:scale-105"
           aria-label="Lire la vidéo"
         >
-          <Play className="ml-1 h-7 w-7" />
+          <MakutanoPlayIcon size={38} />
         </button>
       )}
 
@@ -386,7 +351,7 @@ function MakutanoVideoPlayer({ src, isActive = false }: { src: string; isActive?
             className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#32BB78] transition hover:bg-[#2a9d63]"
             aria-label={isPlaying ? 'Mettre en pause' : 'Lire'}
           >
-            {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="ml-0.5 h-5 w-5" />}
+            {isPlaying ? <MakutanoPauseIcon size={24} /> : <MakutanoPlayIcon size={24} />}
           </button>
           <input
             type="range"
@@ -910,8 +875,8 @@ export default function MakutanoPage() {
               >
                 <span className="pointer-events-none absolute inset-1 rounded-[1.15rem] border border-white/20" />
                 <div className="relative z-10 flex items-center gap-0.5">
-                  <Plus className="h-5 w-5" />
-                  <Music2 className="h-3.5 w-3.5" />
+                  <MakutanoCreateIcon size={24} />
+                  <MakutanoMusicIcon size={17} />
                 </div>
               </Button>
             </div>
@@ -988,7 +953,7 @@ export default function MakutanoPage() {
                 className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-[#32BB78] text-white"
                 aria-label="Ajouter une story"
               >
-                <Plus className="h-3.5 w-3.5" />
+                <MakutanoCreateIcon size={16} />
               </button>
             </div>
             <span className="max-w-full truncate text-[11px] font-medium text-[#122116]">Ma story</span>
@@ -1094,7 +1059,7 @@ export default function MakutanoPage() {
                       {post.category}
                     </span>
                     <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full text-[#52635a] hover:bg-[#f0f6f2]">
-                      <MoreHorizontal className="h-4 w-4" />
+                      <MakutanoMoreIcon size={18} />
                     </Button>
                   </div>
                 </div>
@@ -1145,7 +1110,7 @@ export default function MakutanoPage() {
                             : 'bg-[#f4faf6] text-[#52635a] hover:bg-[#e8f4ec] hover:text-[#22945d]'
                         )}
                       >
-                        <ThumbsUp className={cn('h-4 w-4', post.isLiked && 'fill-white')} />
+                        <MakutanoLikeIcon size={18} />
                         <span>{post.likes}</span>
                       </button>
 
@@ -1156,7 +1121,7 @@ export default function MakutanoPage() {
                         }}
                         className="flex h-10 items-center gap-2 rounded-full bg-[#f4faf6] px-3.5 text-sm font-semibold text-[#52635a] transition-colors hover:bg-[#e8f4ec] hover:text-[#22945d]"
                       >
-                        <MessageCircleMore className="h-4 w-4" />
+                        <MakutanoCommentIcon size={18} />
                         <span>{post.comments}</span>
                       </button>
                     </div>
@@ -1169,7 +1134,7 @@ export default function MakutanoPage() {
                       className="flex h-10 w-10 items-center justify-center rounded-full bg-[#f4faf6] text-[#52635a] transition-colors hover:bg-[#e8f4ec] hover:text-[#22945d]"
                       aria-label="Partager"
                     >
-                      <SendHorizontal className="h-4 w-4" />
+                      <MakutanoShareIcon size={18} />
                     </button>
                   </div>
                 </div>

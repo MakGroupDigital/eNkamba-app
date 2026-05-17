@@ -1,31 +1,8 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ComponentType } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import {
-  Bike,
-  Car,
-  ChevronLeft,
-  ChevronRight,
-  Clock,
-  Footprints,
-  MapPin,
-  Navigation,
-  Package,
-  Pause,
-  Plane,
-  Play,
-  RadioTower,
-  Route,
-  Search,
-  Send,
-  Share2,
-  Square,
-  Star,
-  Truck,
-  X,
-  type LucideIcon,
-} from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PinVerification } from '@/components/payment/PinVerification';
@@ -35,6 +12,22 @@ import { useBusinessStatus } from '@/hooks/useBusinessStatus';
 import { addDoc, collection, doc, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { buildUgaviStatusEntry } from '@/lib/ugavi-requests';
+import {
+  FiveGoFlightIcon,
+  MapPinIcon,
+  MobilityIcon,
+  MotoRideIcon,
+  RideStarIcon,
+  SearchIcon as CustomSearchIcon,
+  SendIcon as CustomSendIcon,
+  SendPackageIcon,
+  TrackPackageIcon,
+  UgaviPauseIcon,
+  UgaviPlayIcon,
+  UgaviShareIcon,
+  UgaviStopIcon,
+  UgaviIcon,
+} from '@/components/icons/service-icons';
 
 const KINSHASA_CENTER = { lat: -4.325, lon: 15.3222 };
 
@@ -44,6 +37,7 @@ type AgencyScope = 'national' | 'international';
 type TripStatus = 'idle' | 'running' | 'paused';
 type TransportMode = 'walk' | 'bike' | 'car' | 'taxi';
 type PaymentChoice = 'wallet' | 'cod';
+type CustomIcon = ComponentType<{ size?: number; className?: string }>;
 
 type Agency = GeoPoint & {
   id: string;
@@ -136,12 +130,11 @@ function markerPosition(point: GeoPoint, center: GeoPoint, radius = 0.06) {
 }
 
 function LocomotionIcon({ type }: { type: Courier['locomotion'] }) {
-  if (type === 'foot') return <Footprints className="h-4 w-4" />;
-  if (type === 'bike') return <Bike className="h-4 w-4" />;
-  if (type === 'car') return <Car className="h-4 w-4" />;
-  if (type === 'truck') return <Truck className="h-4 w-4" />;
-  if (type === 'drone') return <RadioTower className="h-4 w-4" />;
-  return <Navigation className="h-4 w-4" />;
+  if (type === 'moto' || type === 'bike') return <MotoRideIcon size={20} />;
+  if (type === 'car') return <MobilityIcon size={20} />;
+  if (type === 'truck') return <SendPackageIcon size={20} />;
+  if (type === 'drone') return <FiveGoFlightIcon size={20} />;
+  return <MapPinIcon size={20} />;
 }
 
 function AddressAutocompleteInput({
@@ -158,7 +151,7 @@ function AddressAutocompleteInput({
 }: {
   value: string;
   placeholder: string;
-  Icon: LucideIcon;
+  Icon: CustomIcon;
   iconClassName: string;
   suggestions: AddressSuggestion[];
   isLoading: boolean;
@@ -193,7 +186,7 @@ function AddressAutocompleteInput({
                 }}
                 className="flex w-full items-start gap-2 px-3 py-2 text-left transition hover:bg-emerald-50"
               >
-                <MapPin className="mt-0.5 h-4 w-4 flex-none text-emerald-600" />
+                <MapPinIcon size={18} />
                 <span className="min-w-0">
                   <span className="block truncate text-sm font-bold text-slate-900">{suggestion.label}</span>
                   <span className="block truncate text-xs text-slate-500">{suggestion.secondary}</span>
@@ -800,7 +793,7 @@ export default function UgaviPage() {
         style={markerPosition(userPosition, mapCenter, mapRadius)}
       >
         <span className="absolute h-12 w-12 animate-ping rounded-full bg-emerald-400/25" />
-        <Navigation className="relative h-5 w-5 fill-emerald-600" />
+        <MapPinIcon className="relative" size={22} />
       </button>
 
       {pickupPoint && (
@@ -810,7 +803,7 @@ export default function UgaviPage() {
           className="absolute z-20 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-full bg-emerald-600 px-2.5 py-1.5 text-xs font-semibold text-white shadow-lg ring-2 ring-white/80"
           style={markerPosition(pickupPoint, mapCenter, mapRadius)}
         >
-          <MapPin className="h-3.5 w-3.5" />
+          <MapPinIcon size={16} />
           Depart
         </button>
       )}
@@ -822,7 +815,7 @@ export default function UgaviPage() {
           className="absolute z-20 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-full bg-orange-600 px-2.5 py-1.5 text-xs font-semibold text-white shadow-lg ring-2 ring-white/80"
           style={markerPosition(dropoffPoint, mapCenter, mapRadius)}
         >
-          <Navigation className="h-3.5 w-3.5" />
+          <MapPinIcon size={16} />
           Destination
         </button>
       )}
@@ -843,7 +836,7 @@ export default function UgaviPage() {
             }`}
             style={markerPosition(agency, mapCenter, mapRadius)}
           >
-            {agency.scope === 'international' ? <Plane className="h-5 w-5" /> : <Package className="h-5 w-5" />}
+            {agency.scope === 'international' ? <FiveGoFlightIcon size={24} /> : <SendPackageIcon size={24} />}
           </button>
         ))}
 
@@ -896,7 +889,10 @@ export default function UgaviPage() {
 
       <header className="absolute left-0 right-0 top-0 z-30 flex items-center justify-between px-4 py-3">
         <div className="rounded-full bg-white/88 px-4 py-2 shadow-lg backdrop-blur">
-          <p className="text-sm font-black text-emerald-700">Ugavi</p>
+          <p className="flex items-center gap-2 text-sm font-black text-emerald-700">
+            <UgaviIcon size={22} />
+            Ugavi
+          </p>
         </div>
         <Button
           type="button"
@@ -932,16 +928,16 @@ export default function UgaviPage() {
           className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-600 text-white shadow-lg"
           title="Recentrer"
         >
-          <Navigation className="h-4 w-4" />
+          <UgaviIcon size={20} />
         </button>
       </div>
 
       <section className="absolute left-3 right-3 top-16 z-30 mx-auto max-w-md">
         <div className="grid grid-cols-3 gap-1 rounded-2xl bg-white/92 p-1.5 shadow-2xl backdrop-blur-xl ring-1 ring-black/5">
           {[
-            { id: 'send', label: 'Envoyer', icon: Send },
-            { id: 'track', label: 'Suivi', icon: Search },
-            { id: 'express', label: 'Express', icon: Navigation },
+            { id: 'send', label: 'Envoyer', icon: CustomSendIcon },
+            { id: 'track', label: 'Suivi', icon: TrackPackageIcon },
+            { id: 'express', label: 'Express', icon: UgaviIcon },
           ].map((item) => {
             const Icon = item.icon;
             const isActive = mode === item.id;
@@ -954,7 +950,7 @@ export default function UgaviPage() {
                   isActive ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
-                <Icon className="h-4 w-4" />
+                <Icon size={20} />
                 {item.label}
               </button>
             );
@@ -968,7 +964,9 @@ export default function UgaviPage() {
           {mode === 'track' ? (
             <div className="space-y-3">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                  <CustomSearchIcon size={18} />
+                </div>
                 <Input
                   value={trackingQuery}
                   onChange={(event) => setTrackingQuery(event.target.value)}
@@ -990,7 +988,7 @@ export default function UgaviPage() {
                   onFocus={() => setActiveAddressField('pickup')}
                   onSelect={(suggestion) => selectAddressSuggestion('pickup', suggestion)}
                   placeholder="Point de depart"
-                  Icon={MapPin}
+                  Icon={MapPinIcon}
                   iconClassName="text-emerald-600"
                   suggestions={addressSuggestions.pickup}
                   isLoading={isAddressSearchLoading && activeAddressField === 'pickup'}
@@ -1002,7 +1000,7 @@ export default function UgaviPage() {
                   onFocus={() => setActiveAddressField('dropoff')}
                   onSelect={(suggestion) => selectAddressSuggestion('dropoff', suggestion)}
                   placeholder="Destination"
-                  Icon={Navigation}
+                  Icon={UgaviIcon}
                   iconClassName="text-orange-600"
                   suggestions={addressSuggestions.dropoff}
                   isLoading={isAddressSearchLoading && activeAddressField === 'dropoff'}
@@ -1110,7 +1108,7 @@ export default function UgaviPage() {
                           <div className="text-right">
                             <p className="text-sm font-bold text-slate-900">{selectedCourier.fare.toLocaleString('fr-FR')} FC</p>
                             <p className="flex items-center justify-end gap-1 text-xs text-amber-600">
-                              <Star className="h-3 w-3 fill-current" />
+                              <RideStarIcon size={14} />
                               {selectedCourier.rating}
                             </p>
                           </div>
@@ -1197,19 +1195,19 @@ export default function UgaviPage() {
             </div>
             <div className="flex items-center gap-2">
               <Button type="button" size="icon" variant="outline" onClick={startTrip} disabled={!activeRouteTarget || tripStatus === 'running'} title="Demarrer">
-                <Play className="h-4 w-4" />
+                <UgaviPlayIcon size={20} />
               </Button>
               <Button type="button" size="icon" variant="outline" onClick={pauseTrip} disabled={tripStatus !== 'running'} title="Pause">
-                <Pause className="h-4 w-4" />
+                <UgaviPauseIcon size={20} />
               </Button>
               <Button type="button" size="icon" variant="outline" onClick={stopTrip} disabled={tripStatus === 'idle'} title="Arreter">
-                <Square className="h-4 w-4" />
+                <UgaviStopIcon size={20} />
               </Button>
               <Button type="button" size="icon" variant="outline" onClick={() => void shareRoute()} disabled={!activeRouteTarget} title="Partager">
-                <Share2 className="h-4 w-4" />
+                <UgaviShareIcon size={20} />
               </Button>
               <span className="rounded-full bg-slate-900 px-3 py-2 text-xs font-semibold text-white">
-                <Route className="mr-1 inline h-3.5 w-3.5" />
+                <UgaviIcon className="mr-1 inline" size={16} />
                 {transportLabels[transportMode]}
               </span>
             </div>
