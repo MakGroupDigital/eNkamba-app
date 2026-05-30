@@ -12,7 +12,7 @@ import { useUserProfile } from '@/hooks/useUserProfile';
 import { useStories } from '@/hooks/useStories';
 import { useNkampaEcommerce } from '@/hooks/useNkampaEcommerce';
 import { useFirestoreContacts } from '@/hooks/useFirestoreContacts';
-import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, increment, limit, onSnapshot, orderBy, query, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, increment, limit, onSnapshot, orderBy, query, serverTimestamp, setDoc, updateDoc, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import { StoryViewer } from '@/components/stories/StoryViewer';
