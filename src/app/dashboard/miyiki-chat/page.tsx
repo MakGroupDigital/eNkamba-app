@@ -198,7 +198,7 @@ export default function MiyikiChatPage() {
     }
 
     return (
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         {filteredConversations.map((convo, i) => {
           let displayName = convo.name;
           
@@ -213,16 +213,16 @@ export default function MiyikiChatPage() {
           
           return (
             <Link href={convo.href || `/dashboard/miyiki-chat/${convo.id}`} key={convo.id} className="block">
-              <Card className="p-4 rounded-2xl transition-all duration-300 hover:shadow-lg hover:scale-[1.01]">
-                <div className="flex items-center gap-3">
+              <Card className="p-3 rounded-xl transition-all duration-300 hover:shadow-md hover:scale-[1.005]">
+                <div className="flex items-center gap-2.5">
                   <div className="relative">
-                    <Avatar className="h-14 w-14 border-2 border-primary/10">
+                    <Avatar className="h-11 w-11 border-2 border-primary/10">
                       <AvatarImage src={convo.avatar || undefined} alt={displayName} />
                       <AvatarFallback className="bg-primary/10 text-primary font-bold">{displayName?.charAt(0) || '?'}</AvatarFallback>
                     </Avatar>
                     {convo.isGroup && (
-                      <div className="absolute -bottom-1 -right-1 bg-primary rounded-full p-1">
-                        <ChatGroupCustomIcon size={14} />
+                      <div className="absolute -bottom-1 -right-1 bg-primary rounded-full p-0.5">
+                        <ChatGroupCustomIcon size={12} />
                       </div>
                     )}
                     {convo.otherOnlineStatusVisible && convo.otherIsOnline && (
@@ -230,18 +230,18 @@ export default function MiyikiChatPage() {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="font-bold text-foreground truncate">{displayName}</p>
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <p className="font-bold text-sm text-foreground truncate">{displayName}</p>
                       {convo.isGroup && (
-                        <Badge variant="outline" className="text-xs">Groupe</Badge>
+                        <Badge variant="outline" className="h-5 px-1.5 text-[10px]">Groupe</Badge>
                       )}
                     </div>
-                    <p className="text-sm text-muted-foreground truncate">{convo.lastMessage}</p>
+                    <p className="text-xs text-muted-foreground truncate leading-4">{convo.lastMessage}</p>
                   </div>
-                  <div className="text-right flex flex-col items-end gap-2">
+                  <div className="text-right flex flex-col items-end gap-1">
                     <p className="text-xs text-muted-foreground whitespace-nowrap">{convo.time}</p>
                     {!!convo.unread && convo.unread > 0 ? (
-                      <Badge className="bg-red-500 text-white rounded-full h-6 min-w-[24px] px-2 flex items-center justify-center text-xs">
+                      <Badge className="bg-red-500 text-white rounded-full h-5 min-w-5 px-1.5 flex items-center justify-center text-[10px]">
                         {convo.unread}
                       </Badge>
                     ) : (

@@ -2,7 +2,7 @@
 
 import { memo, useState, useEffect, useRef, useMemo } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { Search, Mic, X, Loader2, ArrowLeft, ShoppingCart } from 'lucide-react';
+import { Search, Mic, X, Loader2, ArrowLeft, ShoppingCart, Camera } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -145,8 +145,88 @@ function optimizeMarketplaceImage(src?: string, width = 420, height = 420) {
       const seedMatch = url.pathname.match(/^\/seed\/([^/]+)/);
       if (seedMatch?.[1]) {
         return `https://picsum.photos/seed/${seedMatch[1]}/${width}/${height}`;
-      }
+  }
+}
+
+type ImageSignature = {
+  r: number;
+  g: number;
+  b: number;
+};
+
+function getProductImageSource(product: any) {
+  return product?.image || product?.images?.[0] || '';
+}
+
+function colorDistance(left: ImageSignature, right: ImageSignature) {
+  return Math.sqrt(
+    (left.r - right.r) ** 2 +
+    (left.g - right.g) ** 2 +
+    (left.b - right.b) ** 2
+  );
+}
+
+function computeImageSignatureFromSource(src: string): Promise<ImageSignature | null> {
+  return new Promise((resolve) => {
+    if (!src) {
+      resolve(null);
+      return;
     }
+
+    const image = new window.Image();
+    image.crossOrigin = 'anonymous';
+    image.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        const size = 32;
+        canvas.width = size;
+        canvas.height = size;
+        const context = canvas.getContext('2d', { willReadFrequently: true });
+        if (!context) {
+          resolve(null);
+          return;
+        }
+
+        context.drawImage(image, 0, 0, size, size);
+        const pixels = context.getImageData(0, 0, size, size).data;
+        let r = 0;
+        let g = 0;
+        let b = 0;
+        let count = 0;
+
+        for (let index = 0; index < pixels.length; index += 4) {
+          const alpha = pixels[index + 3];
+          if (alpha < 40) continue;
+          r += pixels[index];
+          g += pixels[index + 1];
+          b += pixels[index + 2];
+          count += 1;
+        }
+
+        resolve(count ? { r: r / count, g: g / count, b: b / count } : null);
+      } catch {
+        resolve(null);
+      }
+    };
+    image.onerror = () => resolve(null);
+    image.src = src;
+  });
+}
+
+function computeImageSignatureFromFile(file: File) {
+  return new Promise<ImageSignature | null>((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result !== 'string') {
+        resolve(null);
+        return;
+      }
+      void computeImageSignatureFromSource(reader.result).then(resolve);
+    };
+    reader.onerror = () => resolve(null);
+    reader.readAsDataURL(file);
+  });
+}
   } catch {
     return src;
   }
@@ -275,6 +355,32 @@ export default function NkampaPage() {
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
   const [isListening, setIsListening] = useState(false);
   const bannerTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const photoSearchInputRef = useRef<HTMLInputElement | null>(null);
+  const [isPhotoSearching, setIsPhotoSearching] = useState(false);
+  const [photoSearchPreview, setPhotoSearchPreview] = useState('');
+  const [photoSearchResultIds, setPhotoSearchResultIds] = useState<string[]>([]);
+  const [photoSearchLabel, setPhotoSearchLabel] = useState('');
+
+  const clearPhotoSearch = () => {
+    if (photoSearchPreview) URL.revokeObjectURL(photoSearchPreview);
+    setPhotoSearchPreview('');
+    setPhotoSearchResultIds([]);
+    setPhotoSearchLabel('');
+    if (photoSearchInputRef.current) photoSearchInputRef.current.value = '';
+  };
+
+  const handleTextSearchChange = (value: string) => {
+    if (photoSearchPreview || photoSearchResultIds.length) {
+      clearPhotoSearch();
+    }
+    setSearchQuery(value);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (photoSearchPreview) URL.revokeObjectURL(photoSearchPreview);
+    };
+  }, [photoSearchPreview]);
 
   // Fonction de recherche vocale
   const handleVoiceSearch = () => {
@@ -309,6 +415,7 @@ export default function NkampaPage() {
       // Réinitialiser les filtres pour voir tous les résultats
       setSelectedMainCategory(null);
       setSelectedSubcategory(null);
+      clearPhotoSearch();
       
       // Définir la recherche
       setSearchQuery(transcript);
@@ -359,6 +466,102 @@ export default function NkampaPage() {
         description: 'Impossible de démarrer la reconnaissance vocale',
         variant: 'destructive',
       });
+    }
+  };
+
+  const handlePhotoSearch = async (file: File | null) => {
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: 'Image requise',
+        description: 'Choisissez une photo du produit ou de l’article.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsPhotoSearching(true);
+    setSelectedMainCategory(null);
+    setSelectedSubcategory(null);
+    setSearchQuery('');
+    setPhotoSearchResultIds([]);
+    setPhotoSearchLabel(file.name && !file.name.startsWith('image') ? file.name.replace(/\.[^.]+$/, '') : 'Photo produit');
+    setPhotoSearchPreview((current) => {
+      if (current) URL.revokeObjectURL(current);
+      return URL.createObjectURL(file);
+    });
+
+    try {
+      const fileSignature = await computeImageSignatureFromFile(file);
+      const filenameTokens = file.name
+        .replace(/\.[^.]+$/, '')
+        .toLowerCase()
+        .split(/[^a-z0-9à-ÿ]+/i)
+        .filter((token) => token.length >= 3 && !['image', 'photo', 'product', 'produit'].includes(token));
+
+      const scoredProducts: Array<{ id: string; score: number }> = [];
+
+      for (const product of sortedProducts.slice(0, 80)) {
+        const productId = String(product?.id || '');
+        if (!productId) continue;
+
+        let score = 0;
+        const searchableText = [
+          product?.name,
+          product?.description,
+          product?.storeCategory,
+          product?.storeSubcategory,
+          product?.sellerName,
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase();
+
+        if (filenameTokens.some((token) => searchableText.includes(token))) {
+          score += 140;
+        }
+
+        if (fileSignature) {
+          const productSignature = await computeImageSignatureFromSource(getProductImageSource(product));
+          if (productSignature) {
+            score += Math.max(0, 180 - colorDistance(fileSignature, productSignature));
+          }
+        }
+
+        if (score > 45) scoredProducts.push({ id: productId, score });
+      }
+
+      const matches = scoredProducts
+        .sort((left, right) => right.score - left.score)
+        .slice(0, 24)
+        .map((item) => item.id);
+
+      setPhotoSearchResultIds(matches);
+
+      const resultsSection = document.querySelector('[data-results-section]');
+      if (resultsSection) {
+        resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+
+      toast({
+        title: matches.length ? 'Recherche par photo effectuée' : 'Aucun produit similaire',
+        description: matches.length
+          ? `${matches.length} article(s) proche(s) de la photo.`
+          : 'Essayez une photo plus claire ou un autre angle du produit.',
+        className: matches.length ? 'bg-green-600 text-white border-none' : undefined,
+        variant: matches.length ? undefined : 'destructive',
+      });
+    } catch (error) {
+      console.error('Erreur recherche par photo:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible d’analyser cette photo.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsPhotoSearching(false);
+      if (photoSearchInputRef.current) photoSearchInputRef.current.value = '';
     }
   };
 
@@ -480,8 +683,14 @@ export default function NkampaPage() {
       );
     }
 
+    if (photoSearchPreview) {
+      const visualMatches = new Set(photoSearchResultIds);
+      filtered = filtered.filter((p) => visualMatches.has(String(p?.id || '')));
+      filtered = [...filtered].sort((left, right) => photoSearchResultIds.indexOf(String(left?.id || '')) - photoSearchResultIds.indexOf(String(right?.id || '')));
+    }
+
     return filtered;
-  }, [sortedProducts, activeMainCategory?.type, activeMainCategory?.id, isSupplierView, selectedSubcategory, searchQuery]);
+  }, [sortedProducts, activeMainCategory?.type, activeMainCategory?.id, isSupplierView, selectedSubcategory, searchQuery, photoSearchResultIds, photoSearchPreview]);
 
   // Filtrer les fournisseurs selon la catégorie
   const filteredSuppliers = useMemo(() => {
@@ -506,6 +715,13 @@ export default function NkampaPage() {
 
   // Déterminer si on affiche les fournisseurs ou les produits
   const categoryLabel = MAIN_CATEGORIES.find((c) => c.id === selectedMainCategory)?.label || 'Tous les produits';
+  const hasActiveProductSearch = Boolean(searchQuery || photoSearchPreview);
+  const visibleDefaultProducts = hasActiveProductSearch ? filteredProducts : sortedProducts;
+  const productResultsTitle = photoSearchPreview
+    ? 'Résultats par photo'
+    : searchQuery
+      ? `Résultats pour "${searchQuery}"`
+      : 'Tous les produits';
 
   const handleCheckoutFromCart = () => {
     if (cart.length === 0) {
@@ -576,6 +792,14 @@ export default function NkampaPage() {
       {/* Header avec fond vert et bordures arrondies en haut */}
       <header className="sticky top-0 z-50 bg-gradient-to-r from-green-600 via-green-700 to-green-600 backdrop-blur-xl shadow-lg shadow-green-900/20 rounded-b-[32px] overflow-hidden">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
+          <input
+            ref={photoSearchInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={(event) => void handlePhotoSearch(event.target.files?.[0] || null)}
+          />
           {/* Top Bar */}
           <div className="flex items-center justify-between h-16 pt-2">
             {/* Left: Logo */}
@@ -610,9 +834,23 @@ export default function NkampaPage() {
                   type="text"
                   placeholder="Rechercher..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => handleTextSearchChange(e.target.value)}
                   className="flex-1 bg-transparent text-sm text-white placeholder:text-white/70 outline-none"
                 />
+                <button
+                  type="button"
+                  onClick={() => photoSearchInputRef.current?.click()}
+                  disabled={isPhotoSearching}
+                  className={`relative rounded-lg p-1.5 transition-all ${
+                    photoSearchPreview
+                      ? 'bg-white text-green-700'
+                      : 'text-white hover:bg-white/20'
+                  } disabled:cursor-not-allowed disabled:opacity-70`}
+                  aria-label="Rechercher par photo"
+                  title="Rechercher par photo"
+                >
+                  {isPhotoSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+                </button>
                 <button
                   type="button"
                   onClick={handleVoiceSearch}
@@ -687,9 +925,23 @@ export default function NkampaPage() {
                 type="text"
                 placeholder="Rechercher..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => handleTextSearchChange(e.target.value)}
                 className="flex-1 bg-transparent text-sm text-white placeholder:text-white/70 outline-none"
               />
+              <button
+                type="button"
+                onClick={() => photoSearchInputRef.current?.click()}
+                disabled={isPhotoSearching}
+                className={`relative rounded-lg p-1.5 transition-all ${
+                  photoSearchPreview
+                    ? 'bg-white text-green-700'
+                    : 'text-white hover:bg-white/20'
+                } disabled:cursor-not-allowed disabled:opacity-70`}
+                aria-label="Rechercher par photo"
+                title="Rechercher par photo"
+              >
+                {isPhotoSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+              </button>
               <button
                 type="button"
                 onClick={handleVoiceSearch}
@@ -706,6 +958,25 @@ export default function NkampaPage() {
                 )}
               </button>
             </div>
+            {photoSearchPreview && (
+              <div className="mt-2 flex items-center gap-2 rounded-xl bg-white/20 p-2 text-xs font-semibold text-white">
+                <span
+                  role="img"
+                  aria-label="Recherche photo"
+                  className="h-8 w-8 rounded-lg bg-cover bg-center ring-1 ring-white/40"
+                  style={{ backgroundImage: `url(${photoSearchPreview})` }}
+                />
+                <span className="min-w-0 flex-1 truncate">{photoSearchLabel || 'Recherche par photo'}</span>
+                <button
+                  type="button"
+                  onClick={clearPhotoSearch}
+                  className="rounded-lg p-1 text-white/80 hover:bg-white/20 hover:text-white"
+                  aria-label="Effacer la recherche photo"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -948,15 +1219,18 @@ export default function NkampaPage() {
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h2 className="text-lg font-bold text-gray-900">
-                    {searchQuery ? `Résultats pour "${searchQuery}"` : 'Tous les produits'}
+                    {productResultsTitle}
                   </h2>
                   <p className="text-xs text-gray-600">
-                    {searchQuery ? filteredProducts.length : sortedProducts.length} produit{(searchQuery ? filteredProducts.length : sortedProducts.length) !== 1 ? 's' : ''}
+                    {visibleDefaultProducts.length} produit{visibleDefaultProducts.length !== 1 ? 's' : ''}
                   </p>
                 </div>
-                {searchQuery && (
+                {hasActiveProductSearch && (
                   <button
-                    onClick={() => setSearchQuery('')}
+                    onClick={() => {
+                      setSearchQuery('');
+                      clearPhotoSearch();
+                    }}
                     className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-sm font-medium text-gray-700 transition-colors"
                   >
                     <X className="h-4 w-4" />
@@ -968,15 +1242,19 @@ export default function NkampaPage() {
                 <div className="py-10 flex items-center justify-center text-gray-500">
                   <Loader2 className="w-5 h-5 animate-spin mr-2" /> Chargement…
                 </div>
-              ) : (searchQuery ? filteredProducts : sortedProducts).length > 0 ? (
+              ) : visibleDefaultProducts.length > 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-                  {(searchQuery ? filteredProducts : sortedProducts).map((product) => (
+                  {visibleDefaultProducts.map((product) => (
                     <ProductCard key={product.id} product={product} />
                   ))}
                 </div>
               ) : (
                 <div className="text-center py-10 text-gray-500">
-                  {searchQuery ? `Aucun produit trouvé pour "${searchQuery}"` : 'Aucun produit pour le moment.'}
+                  {photoSearchPreview
+                    ? 'Aucun produit similaire trouvé pour cette photo.'
+                    : searchQuery
+                      ? `Aucun produit trouvé pour "${searchQuery}"`
+                      : 'Aucun produit pour le moment.'}
                 </div>
               )}
             </div>

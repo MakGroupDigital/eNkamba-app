@@ -13,6 +13,7 @@ import {
   Boxes,
   BrainCircuit,
   BriefcaseBusiness,
+  Bug,
   CheckCircle2,
   ChevronRight,
   CircleDollarSign,
@@ -20,6 +21,7 @@ import {
   Database,
   Eye,
   EyeOff,
+  Fingerprint,
   FileCheck2,
   KeyRound,
   Landmark,
@@ -32,6 +34,8 @@ import {
   RotateCcw,
   Save,
   Search,
+  Server,
+  ShieldAlert,
   ShieldCheck,
   ShoppingBag,
   SlidersHorizontal,
@@ -558,6 +562,42 @@ export default function AdminDashboardPage() {
               </Card>
             );
           })}
+        </section>
+
+        <section className="rounded-[8px] border border-emerald-900/10 bg-white p-4 shadow-sm">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="font-headline text-xl font-bold">Centres de supervision</h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Le dashboard garde l'essentiel. Les fonctions de surveillance avancee sont dans leurs pages dediees.
+              </p>
+            </div>
+            <Badge className="w-fit bg-[#32BB78] hover:bg-[#32BB78]">Pages dediees</Badge>
+          </div>
+
+          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            {[
+              { title: 'Infrastructure', text: 'Carte mondiale, serveurs modules, pare-feu, agents et points GPS.', href: '/admin/infrastructure', icon: Server, tone: 'bg-emerald-50 text-emerald-700' },
+              { title: 'Logs erreurs', text: 'Erreur exacte, module, page, utilisateur, copie et partage.', href: '/admin/logs', icon: Bug, tone: 'bg-red-50 text-red-700' },
+              { title: 'Cyber intelligence', text: 'Actions utilisateurs, temps passe, IP, localisation et pages.', href: '/admin/cyber', icon: Fingerprint, tone: 'bg-sky-50 text-sky-700' },
+              { title: 'Attaques', text: 'Signaux suspects, faille probable, methode et contre-mesure.', href: '/admin/attacks', icon: ShieldAlert, tone: 'bg-orange-50 text-orange-700' },
+            ].map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link key={item.href} href={item.href} className="group rounded-[8px] border border-slate-200 p-4 transition hover:border-[#32BB78]/50 hover:shadow-md">
+                  <div className={cn('flex h-11 w-11 items-center justify-center rounded-[8px]', item.tone)}>
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <h3 className="mt-3 font-bold">{item.title}</h3>
+                  <p className="mt-1 text-sm leading-6 text-slate-500">{item.text}</p>
+                  <span className="mt-4 flex items-center gap-1 text-sm font-semibold text-[#32BB78]">
+                    Ouvrir
+                    <ChevronRight className="h-4 w-4 transition group-hover:translate-x-1" />
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
         </section>
 
         <section className="grid gap-6 xl:grid-cols-3">

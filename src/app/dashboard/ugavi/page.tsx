@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, type ComponentType } from 'react';
+import { useEffect, useMemo, useRef, useState, type ComponentType, type ReactNode } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Clock, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, MessageCircle, Phone, Share2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PinVerification } from '@/components/payment/PinVerification';
@@ -28,14 +28,27 @@ import {
   UgaviStopIcon,
   UgaviIcon,
 } from '@/components/icons/service-icons';
+import {
+  LogisticsAgencyIcon,
+  LogisticsExpressIcon,
+  LogisticsInternationalIcon,
+  LogisticsRelayIcon,
+  LogisticsStandardIcon,
+  LogisticsTrackingIcon,
+} from '@/components/icons/logistics-generated-icons';
 
 const KINSHASA_CENTER = { lat: -4.325, lon: 15.3222 };
 
 type GeoPoint = typeof KINSHASA_CENTER;
 type UgaviMode = 'send' | 'track' | 'express';
-type AgencyScope = 'national' | 'international';
+type AgencyScope = 'relay' | 'national' | 'international';
 type TripStatus = 'idle' | 'running' | 'paused';
 type TransportMode = 'walk' | 'bike' | 'car' | 'taxi';
+type InternationalTransportMode = 'air' | 'sea' | 'rail' | 'road';
+type InternationalServiceType = 'deposit' | 'transit' | 'customs' | 'delivery';
+type InternationalSearchScope = 'current_country' | 'foreign_country';
+type NationalTransportMode = 'air' | 'truck' | 'bus' | 'rail' | 'boat';
+type RelayDeliveryMode = 'deposit' | 'pickup' | 'moto' | 'express' | 'truck';
 type PaymentChoice = 'wallet' | 'cod';
 type CustomIcon = ComponentType<{ size?: number; className?: string }>;
 
@@ -45,6 +58,26 @@ type Agency = GeoPoint & {
   scope: AgencyScope;
   zone: string;
   eta: string;
+  country?: string;
+  city?: string;
+  address?: string;
+  status?: 'open' | 'closed';
+  hours?: string;
+  phone?: string;
+  services?: string[];
+  destinations?: string[];
+  transports?: InternationalTransportMode[];
+  estimatedDelay?: string;
+  estimatedFees?: string;
+  documents?: string[];
+  landmarks?: string;
+  province?: string;
+  capacity?: string;
+  reliability?: string;
+  nationalTransports?: NationalTransportMode[];
+  relayServices?: RelayDeliveryMode[];
+  couriersAvailable?: number;
+  zoneCovered?: string;
 };
 
 type Courier = GeoPoint & {
@@ -57,6 +90,8 @@ type Courier = GeoPoint & {
   eta: string;
 };
 
+type DeliveryStep = 'route' | 'options' | 'parcel' | 'payment' | 'confirmed';
+
 type AddressField = 'pickup' | 'dropoff';
 
 type AddressSuggestion = GeoPoint & {
@@ -67,11 +102,238 @@ type AddressSuggestion = GeoPoint & {
 };
 
 const AGENCIES: Agency[] = [
-  { id: 'nat-gombe', name: 'Ugavi National Gombe', scope: 'national', zone: 'Gombe', eta: '12 min', lat: -4.3152, lon: 15.3066 },
-  { id: 'nat-limete', name: 'Ugavi Hub Limete', scope: 'national', zone: 'Limete', eta: '18 min', lat: -4.3439, lon: 15.3446 },
-  { id: 'nat-matete', name: 'Ugavi Relais Matete', scope: 'national', zone: 'Matete', eta: '25 min', lat: -4.3837, lon: 15.3422 },
-  { id: 'int-ndjili', name: 'Ugavi Cargo N\'djili', scope: 'international', zone: 'Aeroport', eta: '35 min', lat: -4.3858, lon: 15.4446 },
-  { id: 'int-port', name: 'Ugavi Port International', scope: 'international', zone: 'Port de Kinshasa', eta: '22 min', lat: -4.3019, lon: 15.3158 },
+  {
+    id: 'relay-gombe-centre',
+    name: 'Agence Relais Gombe Centre',
+    scope: 'relay',
+    zone: 'Gombe Centre',
+    eta: '6 min',
+    lat: -4.3181,
+    lon: 15.3145,
+    country: 'RDC',
+    city: 'Kinshasa',
+    province: 'Kinshasa',
+    address: 'Avenue du Port, Gombe, Kinshasa',
+    status: 'open',
+    hours: '08:00-18:00',
+    phone: '+243 800 200 301',
+    destinations: ['Gombe', 'Kinshasa', 'Limete', 'Ngaliema', 'Kasa-Vubu'],
+    estimatedDelay: '30 min a 4h',
+    estimatedFees: 'a partir de 4 500 FC',
+    capacity: '80 colis / jour',
+    reliability: '4.8/5',
+    relayServices: ['deposit', 'pickup', 'moto', 'express'],
+    couriersAvailable: 5,
+    zoneCovered: 'Gombe, Centre-ville, Gare centrale',
+    landmarks: 'Pres du port et de la gare',
+  },
+  {
+    id: 'relay-limete-industriel',
+    name: 'Agence Relais Limete Industriel',
+    scope: 'relay',
+    zone: 'Limete Industriel',
+    eta: '14 min',
+    lat: -4.3439,
+    lon: 15.3446,
+    country: 'RDC',
+    city: 'Kinshasa',
+    province: 'Kinshasa',
+    address: 'Boulevard Lumumba, Limete Industriel',
+    status: 'open',
+    hours: '07:30-19:30',
+    phone: '+243 800 200 302',
+    destinations: ['Limete', 'Masina', 'Matete', 'Ndjili', 'Kingabwa'],
+    estimatedDelay: '45 min a 6h',
+    estimatedFees: 'a partir de 5 500 FC',
+    capacity: '120 colis / jour',
+    reliability: '4.6/5',
+    relayServices: ['deposit', 'pickup', 'moto', 'truck'],
+    couriersAvailable: 8,
+    zoneCovered: 'Limete, Kingabwa, Masina',
+    landmarks: 'Zone industrielle',
+  },
+  {
+    id: 'relay-ngaliema',
+    name: 'Agence Relais Ngaliema UPN',
+    scope: 'relay',
+    zone: 'Ngaliema',
+    eta: '20 min',
+    lat: -4.3195,
+    lon: 15.2811,
+    country: 'RDC',
+    city: 'Kinshasa',
+    province: 'Kinshasa',
+    address: 'Route de Matadi, quartier UPN',
+    status: 'open',
+    hours: '08:30-17:30',
+    phone: '+243 800 200 303',
+    destinations: ['Ngaliema', 'Binza', 'Kintambo', 'Bandalungwa'],
+    estimatedDelay: '1h a 5h',
+    estimatedFees: 'a partir de 6 000 FC',
+    capacity: '60 colis / jour',
+    reliability: '4.4/5',
+    relayServices: ['deposit', 'pickup', 'express'],
+    couriersAvailable: 3,
+    zoneCovered: 'Ngaliema, UPN, Binza',
+    landmarks: 'Arret UPN',
+  },
+  {
+    id: 'nat-gombe',
+    name: 'Agence Nationale Congo Express Gombe',
+    scope: 'national',
+    zone: 'Gombe',
+    eta: '12 min',
+    lat: -4.3152,
+    lon: 15.3066,
+    country: 'RDC',
+    city: 'Kinshasa',
+    province: 'Kinshasa',
+    address: 'Avenue du Port, Gombe, Kinshasa',
+    status: 'open',
+    hours: 'Lun-Sam 07:30-18:00',
+    phone: '+243 800 100 201',
+    destinations: ['Lubumbashi', 'Goma', 'Kisangani', 'Kolwezi', 'Matadi'],
+    nationalTransports: ['truck', 'air', 'boat'],
+    estimatedDelay: '24h a 72h',
+    estimatedFees: 'a partir de 18 USD',
+    capacity: 'Colis petits, moyens et palettes legeres',
+    reliability: '4.7/5',
+    landmarks: 'Pres du port commercial',
+  },
+  {
+    id: 'nat-limete',
+    name: 'Ugavi Hub National Limete',
+    scope: 'national',
+    zone: 'Limete',
+    eta: '18 min',
+    lat: -4.3439,
+    lon: 15.3446,
+    country: 'RDC',
+    city: 'Kinshasa',
+    province: 'Kinshasa',
+    address: 'Boulevard Lumumba, Limete Industriel',
+    status: 'open',
+    hours: 'Lun-Dim 08:00-20:00',
+    phone: '+243 800 100 202',
+    destinations: ['Lubumbashi', 'Bukavu', 'Bunia', 'Kisangani', 'Mbuji-Mayi'],
+    nationalTransports: ['truck', 'bus', 'air'],
+    estimatedDelay: '1 a 4 jours',
+    estimatedFees: 'a partir de 12 USD',
+    capacity: 'Depot fort volume et groupage',
+    reliability: '4.5/5',
+    landmarks: 'Zone industrielle Limete',
+  },
+  {
+    id: 'nat-matete',
+    name: 'Ugavi Relais National Matete',
+    scope: 'national',
+    zone: 'Matete',
+    eta: '25 min',
+    lat: -4.3837,
+    lon: 15.3422,
+    country: 'RDC',
+    city: 'Kinshasa',
+    province: 'Kinshasa',
+    address: 'Avenue Kianza, Matete',
+    status: 'closed',
+    hours: 'Lun-Sam 08:00-17:00',
+    phone: '+243 800 100 203',
+    destinations: ['Kikwit', 'Mbandaka', 'Kananga', 'Matadi'],
+    nationalTransports: ['bus', 'truck', 'boat'],
+    estimatedDelay: '2 a 5 jours',
+    estimatedFees: 'a partir de 10 USD',
+    capacity: 'Colis standards',
+    reliability: '4.2/5',
+    landmarks: 'Rond-point Matete',
+  },
+  {
+    id: 'int-ndjili',
+    name: 'Ugavi Cargo N\'djili',
+    scope: 'international',
+    zone: 'Aeroport',
+    eta: '35 min',
+    lat: -4.3858,
+    lon: 15.4446,
+    country: 'RDC',
+    city: 'Kinshasa',
+    address: 'Aeroport International de N\'djili, zone cargo',
+    status: 'open',
+    hours: 'Lun-Sam 08:00-18:00',
+    phone: '+243 800 000 901',
+    services: ['depot', 'transit', 'dedouanement', 'livraison'],
+    destinations: ['Chine', 'Dubai', 'France', 'Angola', 'Tanzanie'],
+    transports: ['air', 'sea', 'road'],
+    estimatedDelay: '3 a 12 jours',
+    estimatedFees: 'a partir de 60 USD',
+    documents: ['piece d\'identite', 'facture', 'description colis'],
+    landmarks: 'Entree cargo, cote fret international',
+  },
+  {
+    id: 'int-port',
+    name: 'Ugavi Port International',
+    scope: 'international',
+    zone: 'Port de Kinshasa',
+    eta: '22 min',
+    lat: -4.3019,
+    lon: 15.3158,
+    country: 'RDC',
+    city: 'Kinshasa',
+    address: 'Port de Kinshasa, quai transit international',
+    status: 'open',
+    hours: 'Lun-Ven 07:30-17:00',
+    phone: '+243 800 000 902',
+    services: ['depot', 'transit', 'consolidation', 'dedouanement'],
+    destinations: ['Angola', 'Tanzanie', 'Congo-Brazzaville', 'Dubai'],
+    transports: ['sea', 'road', 'rail'],
+    estimatedDelay: '7 a 21 jours',
+    estimatedFees: 'a partir de 45 USD',
+    documents: ['piece d\'identite', 'facture', 'liste colisage'],
+    landmarks: 'Quai logistique principal',
+  },
+  {
+    id: 'int-guangzhou',
+    name: 'Agence Transitaire Guangzhou eNKAMBA Partner',
+    scope: 'international',
+    zone: 'Baiyun District',
+    eta: 'Agence distante',
+    lat: 23.2608,
+    lon: 113.302,
+    country: 'Chine',
+    city: 'Guangzhou',
+    address: 'Baiyun District, Logistics Center, Guangzhou',
+    status: 'open',
+    hours: 'Lun-Sam 09:00-19:00',
+    phone: '+86 20 0000 0984',
+    services: ['depot', 'transit', 'consolidation', 'export', 'fret aerien', 'fret maritime'],
+    destinations: ['RDC', 'Angola', 'Tanzanie', 'Kenya'],
+    transports: ['air', 'sea', 'rail', 'road'],
+    estimatedDelay: '5 a 25 jours',
+    estimatedFees: 'a partir de 38 USD',
+    documents: ['facture fournisseur', 'packing list', 'photo colis'],
+    landmarks: 'Entrepot partenaire pres du corridor Baiyun',
+  },
+  {
+    id: 'int-dubai',
+    name: 'Ugavi Dubai Cargo Partner',
+    scope: 'international',
+    zone: 'Deira Cargo',
+    eta: 'Agence distante',
+    lat: 25.276987,
+    lon: 55.296249,
+    country: 'Dubai',
+    city: 'Dubai',
+    address: 'Deira Cargo Village, Dubai',
+    status: 'open',
+    hours: 'Lun-Sam 08:30-18:30',
+    phone: '+971 4 000 0984',
+    services: ['depot', 'transit', 'dedouanement', 'livraison'],
+    destinations: ['RDC', 'Angola', 'France', 'Tanzanie'],
+    transports: ['air', 'sea', 'road'],
+    estimatedDelay: '3 a 14 jours',
+    estimatedFees: 'a partir de 55 USD',
+    documents: ['piece deposant', 'facture', 'declaration valeur'],
+    landmarks: 'Zone cargo Deira',
+  },
 ];
 
 const COURIERS: Courier[] = [
@@ -88,6 +350,36 @@ const transportLabels: Record<TransportMode, string> = {
   bike: 'Velo',
   car: 'Voiture',
   taxi: 'Taxi',
+};
+
+const internationalTransportLabels: Record<InternationalTransportMode, string> = {
+  air: 'Avion',
+  sea: 'Bateau',
+  rail: 'Train',
+  road: 'Vehicule',
+};
+
+const internationalServiceLabels: Record<InternationalServiceType, string> = {
+  deposit: 'Depot',
+  transit: 'Transit',
+  customs: 'Dedouanement',
+  delivery: 'Livraison',
+};
+
+const nationalTransportLabels: Record<NationalTransportMode, string> = {
+  air: 'Avion',
+  truck: 'Camion',
+  bus: 'Bus',
+  rail: 'Train',
+  boat: 'Bateau',
+};
+
+const relayDeliveryLabels: Record<RelayDeliveryMode, string> = {
+  deposit: 'Depot',
+  pickup: 'Retrait',
+  moto: 'Livraison moto',
+  express: 'Express',
+  truck: 'Camion',
 };
 
 const locomotionLabels: Record<Courier['locomotion'], string> = {
@@ -137,6 +429,27 @@ function LocomotionIcon({ type }: { type: Courier['locomotion'] }) {
   return <MapPinIcon size={20} />;
 }
 
+function FloatingBadge({
+  children,
+  tone = 'emerald',
+}: {
+  children: ReactNode;
+  tone?: 'emerald' | 'orange' | 'slate';
+}) {
+  const toneClass =
+    tone === 'orange'
+      ? 'border-orange-200/70 bg-orange-50/76 shadow-orange-900/10'
+      : tone === 'slate'
+        ? 'border-slate-200/70 bg-white/74 shadow-slate-900/10'
+        : 'border-emerald-200/70 bg-emerald-50/76 shadow-emerald-900/10';
+
+  return (
+    <div className={`rounded-2xl border p-2 shadow-2xl backdrop-blur-2xl ring-1 ring-white/55 ${toneClass}`}>
+      {children}
+    </div>
+  );
+}
+
 function AddressAutocompleteInput({
   value,
   placeholder,
@@ -168,10 +481,10 @@ function AddressAutocompleteInput({
         onChange={(event) => onChange(event.target.value)}
         onFocus={onFocus}
         placeholder={placeholder}
-        className="h-11 rounded-xl border-slate-200 bg-white pl-9"
+        className="h-11 rounded-xl border-white/70 bg-white/78 pl-9 shadow-xl backdrop-blur-xl"
       />
       {isOpen && (isLoading || suggestions.length > 0) && (
-        <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-50 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl">
+        <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-50 overflow-hidden rounded-xl border border-white/70 bg-white/90 shadow-2xl backdrop-blur-xl">
           {isLoading && (
             <div className="px-3 py-2 text-xs font-semibold text-slate-500">Recherche d'adresse...</div>
           )}
@@ -197,6 +510,51 @@ function AddressAutocompleteInput({
       )}
     </div>
   );
+}
+
+function buildAgencySuggestions(scope: AgencyScope, field: AddressField, query: string): AddressSuggestion[] {
+  const normalizedQuery = query.trim().toLowerCase();
+  if (normalizedQuery.length < 2) return [];
+
+  const suggestions: AddressSuggestion[] = [];
+  const addSuggestion = (suggestion: AddressSuggestion) => {
+    const key = `${suggestion.label}-${suggestion.secondary}`.toLowerCase();
+    if (!suggestions.some((item) => `${item.label}-${item.secondary}`.toLowerCase() === key)) {
+      suggestions.push(suggestion);
+    }
+  };
+
+  AGENCIES.filter((agency) => agency.scope === scope).forEach((agency) => {
+    if (field === 'pickup') {
+      const pickupValues = [agency.city, agency.country, agency.province, agency.zone, agency.address, agency.name].filter(Boolean) as string[];
+      if (pickupValues.some((value) => value.toLowerCase().includes(normalizedQuery))) {
+        addSuggestion({
+          id: `agency-${agency.id}`,
+          label: agency.city || agency.zone,
+          secondary: agency.country ? `${agency.country} · ${agency.name}` : agency.name,
+          lat: agency.lat,
+          lon: agency.lon,
+          source: 'local',
+        });
+      }
+      return;
+    }
+
+    agency.destinations?.forEach((destination) => {
+      if (destination.toLowerCase().includes(normalizedQuery)) {
+        addSuggestion({
+          id: `destination-${agency.id}-${destination}`,
+          label: destination,
+          secondary: agency.name,
+          lat: agency.lat,
+          lon: agency.lon,
+          source: 'local',
+        });
+      }
+    });
+  });
+
+  return suggestions.slice(0, 6);
 }
 
 export default function UgaviPage() {
@@ -228,6 +586,15 @@ export default function UgaviPage() {
   const [courierInstructions, setCourierInstructions] = useState('');
   const [instructionsConfirmed, setInstructionsConfirmed] = useState(false);
   const [paymentChoice, setPaymentChoice] = useState<PaymentChoice | null>(null);
+  const [deliveryStep, setDeliveryStep] = useState<DeliveryStep>('route');
+  const [deliverySenderName, setDeliverySenderName] = useState('');
+  const [deliverySenderPhone, setDeliverySenderPhone] = useState('');
+  const [deliveryRecipientName, setDeliveryRecipientName] = useState('');
+  const [deliveryRecipientPhone, setDeliveryRecipientPhone] = useState('');
+  const [deliveryPackageType, setDeliveryPackageType] = useState('');
+  const [deliveryPackageWeight, setDeliveryPackageWeight] = useState('');
+  const [deliveryPackageValue, setDeliveryPackageValue] = useState('');
+  const [confirmedDeliveryTracking, setConfirmedDeliveryTracking] = useState<string | null>(null);
   const [showPinDialog, setShowPinDialog] = useState(false);
   const [isClientPanelOpen, setIsClientPanelOpen] = useState(false);
   const [isProcessingExpressPayment, setIsProcessingExpressPayment] = useState(false);
@@ -235,7 +602,55 @@ export default function UgaviPage() {
   const [mapViewCenter, setMapViewCenter] = useState(KINSHASA_CENTER);
   const [mapRadius, setMapRadius] = useState(0.06);
   const [hasUserMovedMap, setHasUserMovedMap] = useState(false);
-  const [recentShipments, setRecentShipments] = useState<Array<{ id: string; trackingNumber: string; destination: string; status: string; source: 'ugavi' | 'nkampa' }>>([]);
+  const [clientSearchQuery, setClientSearchQuery] = useState('');
+  const [recentShipments, setRecentShipments] = useState<Array<{
+    id: string;
+    trackingNumber: string;
+    destination: string;
+    origin: string;
+    status: string;
+    source: 'ugavi' | 'nkampa';
+    serviceMode: string;
+    transportLabel: string;
+    agencyName: string;
+    courierName: string;
+    paymentLabel: string;
+    packageDescription: string;
+    amountLabel: string;
+    updatedAtLabel: string;
+    operationLabel: string;
+    detailLines: string[];
+  }>>([]);
+  const [relayCity, setRelayCity] = useState('Kinshasa');
+  const [relayArea, setRelayArea] = useState('Gombe');
+  const [relayDestination, setRelayDestination] = useState('Gombe');
+  const [relayDeliveryMode, setRelayDeliveryMode] = useState<RelayDeliveryMode>('moto');
+  const [hasRelaySearch, setHasRelaySearch] = useState(false);
+  const [relayParcelDescription, setRelayParcelDescription] = useState('');
+  const [relayTrackingCode, setRelayTrackingCode] = useState<string | null>(null);
+  const [isCreatingRelayParcel, setIsCreatingRelayParcel] = useState(false);
+  const [nationalCity, setNationalCity] = useState('Kinshasa');
+  const [nationalArea, setNationalArea] = useState('Gombe');
+  const [nationalDestination, setNationalDestination] = useState('Lubumbashi');
+  const [nationalTransport, setNationalTransport] = useState<NationalTransportMode>('truck');
+  const [hasNationalSearch, setHasNationalSearch] = useState(false);
+  const [nationalDepositDescription, setNationalDepositDescription] = useState('');
+  const [nationalDepositCode, setNationalDepositCode] = useState<string | null>(null);
+  const [isCreatingNationalDeposit, setIsCreatingNationalDeposit] = useState(false);
+  const [internationalSearchScope, setInternationalSearchScope] = useState<InternationalSearchScope>('foreign_country');
+  const [requesterCountry, setRequesterCountry] = useState('RDC');
+  const [packageCountry, setPackageCountry] = useState('Chine');
+  const [packageCity, setPackageCity] = useState('Guangzhou');
+  const [destinationCountry, setDestinationCountry] = useState('RDC');
+  const [destinationCity, setDestinationCity] = useState('Kinshasa');
+  const [internationalTransport, setInternationalTransport] = useState<InternationalTransportMode>('air');
+  const [internationalService, setInternationalService] = useState<InternationalServiceType>('deposit');
+  const [hasInternationalSearch, setHasInternationalSearch] = useState(false);
+  const [depositDescription, setDepositDescription] = useState('');
+  const [depositDeadline, setDepositDeadline] = useState('');
+  const [depositInstructions, setDepositInstructions] = useState<string | null>(null);
+  const [depositInstructionCode, setDepositInstructionCode] = useState<string | null>(null);
+  const [isCreatingDepositInstruction, setIsCreatingDepositInstruction] = useState(false);
 
   useEffect(() => {
     if (!('geolocation' in navigator)) return;
@@ -270,6 +685,15 @@ export default function UgaviPage() {
     const query = activeAddressField === 'pickup' ? pickupLocation : dropoffLocation;
     const trimmedQuery = query.trim();
 
+    if (mode === 'send') {
+      setAddressSuggestions((current) => ({
+        ...current,
+        [activeAddressField]: buildAgencySuggestions(shipmentType, activeAddressField, trimmedQuery),
+      }));
+      setIsAddressSearchLoading(false);
+      return;
+    }
+
     if (trimmedQuery.length < 2) {
       setAddressSuggestions((current) => ({ ...current, [activeAddressField]: [] }));
       setIsAddressSearchLoading(false);
@@ -302,7 +726,7 @@ export default function UgaviPage() {
       controller.abort();
       window.clearTimeout(timeout);
     };
-  }, [activeAddressField, pickupLocation, dropoffLocation]);
+  }, [activeAddressField, mode, pickupLocation, dropoffLocation, shipmentType]);
 
   useEffect(() => {
     if (!user?.uid) {
@@ -327,15 +751,67 @@ export default function UgaviPage() {
           if (['blocked', 'failed', 'cancelled', 'returned'].includes(lowered)) return 'Incident';
           return 'En attente';
         };
+        const formatDate = (value: any) => {
+          const date = value?.toDate?.() || (value?.seconds ? new Date(value.seconds * 1000) : null);
+          return date ? date.toLocaleString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Mise a jour recente';
+        };
+        const getOperationLabel = (data: any) => {
+          const mode = (data.serviceMode || data.shipmentType || '').toString();
+          if (mode === 'international') return 'Agence internationale';
+          if (mode === 'national') return 'Agence nationale';
+          if (mode === 'relay') return 'Agence relais';
+          if (mode === 'express') return 'Livraison';
+          if (data.relayShipment) return 'Agence relais';
+          if (data.nationalShipment) return 'Agence nationale';
+          if (data.internationalShipment) return 'Agence internationale';
+          return 'Operation logistique';
+        };
+        const getTransportLabel = (data: any) =>
+          data.transportCategoryLabel ||
+          data.internationalShipment?.transportLabel ||
+          data.nationalShipment?.transportLabel ||
+          data.relayShipment?.serviceLabel ||
+          data.selectedCourier?.locomotion ||
+          data.serviceMode ||
+          'Transport';
+        const getAmountLabel = (data: any) => {
+          const pricingTotal = data.pricing?.total;
+          const total = pricingTotal ?? data.totalAmount ?? data.amount ?? 0;
+          const currency = data.pricing?.currency || data.currency || 'CDF';
+          return Number(total) > 0 ? `${Number(total).toLocaleString('fr-FR')} ${currency}` : 'A confirmer';
+        };
 
         const ugaviItems = ugaviSnapshot.docs.map((shipmentDoc) => {
           const data = shipmentDoc.data() as any;
+          const agencyName = data.selectedAgency?.name || data.registrationAgency || data.agencyName || '';
+          const courierName = data.selectedCourier?.name || data.courierName || '';
+          const detailLines = [
+            data.packageDescription || data.description || data.parcelName || data.packageType ? `Colis: ${data.packageDescription || data.description || data.parcelName || data.packageType}` : '',
+            getTransportLabel(data) ? `Transport: ${getTransportLabel(data)}` : '',
+            agencyName ? `Agence: ${agencyName}` : '',
+            courierName ? `Livreur: ${courierName}` : '',
+            data.cbm || data.totalVolumeCbm ? `CBM: ${data.totalVolumeCbm || data.cbm}` : '',
+            data.volumetricWeightKg ? `Poids volumetrique: ${data.volumetricWeightKg} kg` : '',
+            data.invoice?.invoiceNumber ? `Facture: ${data.invoice.invoiceNumber}` : '',
+            data.paymentStatus ? `Paiement: ${data.paymentStatus}` : '',
+          ].filter(Boolean);
           return {
             id: shipmentDoc.id,
             trackingNumber: data.trackingNumber || `UGV-${shipmentDoc.id.slice(0, 6).toUpperCase()}`,
             destination: data.receiverAddress || 'Destination Ugavi',
+            origin: data.senderAddress || data.pickupLocation || 'Point de depart',
             status: normalizeStatus(data.logisticsStatus || data.status || 'pending_payment'),
             source: 'ugavi' as const,
+            serviceMode: data.serviceMode || data.shipmentType || '',
+            transportLabel: getTransportLabel(data),
+            agencyName,
+            courierName,
+            paymentLabel: data.paymentStatus === 'completed' ? 'Payé' : data.paymentStatus === 'cash_on_delivery' ? 'A la livraison' : 'En attente',
+            packageDescription: data.packageDescription || data.description || data.parcelName || data.packageType || 'Colis Ugavi',
+            amountLabel: getAmountLabel(data),
+            updatedAtLabel: formatDate(data.updatedAt || data.createdAt),
+            operationLabel: getOperationLabel(data),
+            detailLines,
             updatedAt: data.updatedAt?.toMillis?.() || 0,
           };
         });
@@ -348,8 +824,24 @@ export default function UgaviPage() {
               id: orderDoc.id,
               trackingNumber: data.trackingNumber,
               destination: data.shippingAddress || data.pickupRoute?.storeLocationLabel || 'Destination Nkampa',
+              origin: data.pickupRoute?.storeLocationLabel || data.storeName || 'Boutique Nkampa',
               status: normalizeStatus(data.status || 'pending'),
               source: 'nkampa' as const,
+              serviceMode: 'nkampa_order',
+              transportLabel: data.deliveryOption || 'Livraison Nkampa',
+              agencyName: data.storeName || data.sellerName || 'Boutique Nkampa',
+              courierName: data.courierName || '',
+              paymentLabel: data.paymentStatus === 'paid' ? 'Payé' : 'En attente',
+              packageDescription: data.items?.[0]?.name || data.productName || 'Commande Nkampa',
+              amountLabel: data.totalAmount ? `${Number(data.totalAmount).toLocaleString('fr-FR')} CDF` : 'A confirmer',
+              updatedAtLabel: formatDate(data.updatedAt || data.createdAt),
+              operationLabel: 'Commande e-commerce',
+              detailLines: [
+                data.items?.[0]?.name || data.productName ? `Produit: ${data.items?.[0]?.name || data.productName}` : '',
+                data.storeName || data.sellerName ? `Boutique: ${data.storeName || data.sellerName}` : '',
+                data.deliveryOption ? `Mode: ${data.deliveryOption}` : '',
+                data.paymentStatus ? `Paiement: ${data.paymentStatus}` : '',
+              ].filter(Boolean),
               updatedAt: data.updatedAt?.toMillis?.() || 0,
             };
           })
@@ -357,7 +849,7 @@ export default function UgaviPage() {
 
         const merged = [...ugaviItems, ...nkampaItems]
           .sort((left, right) => right.updatedAt - left.updatedAt)
-          .slice(0, 3)
+          .slice(0, 20)
           .map(({ updatedAt, ...shipment }) => shipment);
 
         if (!isCancelled) setRecentShipments(merged);
@@ -373,9 +865,102 @@ export default function UgaviPage() {
     };
   }, [user?.uid]);
 
+  const filteredInternationalAgencies = useMemo(() => {
+    if (!hasInternationalSearch) {
+      return AGENCIES.filter((agency) => agency.scope === 'international');
+    }
+
+    const lookupCountry = internationalSearchScope === 'current_country' ? requesterCountry : packageCountry;
+    const lookupCity = internationalSearchScope === 'current_country' ? '' : packageCity;
+    const normalizedCountry = lookupCountry.trim().toLowerCase();
+    const normalizedCity = lookupCity.trim().toLowerCase();
+    const normalizedDestination = destinationCountry.trim().toLowerCase();
+    const selectedServiceLabel = internationalServiceLabels[internationalService].toLowerCase();
+
+    return AGENCIES.filter((agency) => {
+      if (agency.scope !== 'international') return false;
+      const countryMatch = !normalizedCountry || agency.country?.toLowerCase().includes(normalizedCountry);
+      const cityMatch = !normalizedCity || agency.city?.toLowerCase().includes(normalizedCity);
+      const destinationMatch = !normalizedDestination || agency.destinations?.some((destination) => destination.toLowerCase().includes(normalizedDestination));
+      const transportMatch = !agency.transports || agency.transports.includes(internationalTransport);
+      const serviceMatch = !agency.services || agency.services.some((service) => service.toLowerCase().includes(selectedServiceLabel));
+      return countryMatch && cityMatch && destinationMatch && transportMatch && serviceMatch;
+    });
+  }, [
+    destinationCountry,
+    hasInternationalSearch,
+    internationalSearchScope,
+    internationalService,
+    internationalTransport,
+    packageCity,
+    packageCountry,
+    requesterCountry,
+  ]);
+
+  const filteredClientShipments = useMemo(() => {
+    const queryValue = clientSearchQuery.trim().toLowerCase();
+    if (!queryValue) return recentShipments;
+
+    return recentShipments.filter((shipment) => [
+      shipment.trackingNumber,
+      shipment.destination,
+      shipment.origin,
+      shipment.status,
+      shipment.operationLabel,
+      shipment.transportLabel,
+      shipment.agencyName,
+      shipment.courierName,
+      shipment.packageDescription,
+      shipment.paymentLabel,
+      ...shipment.detailLines,
+    ].some((value) => value.toLowerCase().includes(queryValue)));
+  }, [clientSearchQuery, recentShipments]);
+
+  const filteredNationalAgencies = useMemo(() => {
+    if (!hasNationalSearch) {
+      return AGENCIES.filter((agency) => agency.scope === 'national');
+    }
+
+    const normalizedCity = nationalCity.trim().toLowerCase();
+    const normalizedArea = nationalArea.trim().toLowerCase();
+    const normalizedDestination = nationalDestination.trim().toLowerCase();
+
+    return AGENCIES.filter((agency) => {
+      if (agency.scope !== 'national') return false;
+      const cityMatch = !normalizedCity || agency.city?.toLowerCase().includes(normalizedCity) || agency.province?.toLowerCase().includes(normalizedCity);
+      const areaMatch = !normalizedArea || agency.zone.toLowerCase().includes(normalizedArea) || agency.address?.toLowerCase().includes(normalizedArea) || agency.name.toLowerCase().includes(normalizedArea);
+      const destinationMatch = !normalizedDestination || agency.destinations?.some((destination) => destination.toLowerCase().includes(normalizedDestination));
+      const transportMatch = !agency.nationalTransports || agency.nationalTransports.includes(nationalTransport);
+      return cityMatch && areaMatch && destinationMatch && transportMatch;
+    });
+  }, [hasNationalSearch, nationalArea, nationalCity, nationalDestination, nationalTransport]);
+
+  const filteredRelayAgencies = useMemo(() => {
+    if (!hasRelaySearch) {
+      return AGENCIES.filter((agency) => agency.scope === 'relay');
+    }
+
+    const normalizedCity = relayCity.trim().toLowerCase();
+    const normalizedArea = relayArea.trim().toLowerCase();
+    const normalizedDestination = relayDestination.trim().toLowerCase();
+
+    return AGENCIES.filter((agency) => {
+      if (agency.scope !== 'relay') return false;
+      const cityMatch = !normalizedCity || agency.city?.toLowerCase().includes(normalizedCity) || agency.province?.toLowerCase().includes(normalizedCity);
+      const areaMatch = !normalizedArea || agency.zone.toLowerCase().includes(normalizedArea) || agency.address?.toLowerCase().includes(normalizedArea) || agency.name.toLowerCase().includes(normalizedArea);
+      const destinationMatch = !normalizedDestination || agency.destinations?.some((destination) => destination.toLowerCase().includes(normalizedDestination));
+      const serviceMatch = !agency.relayServices || agency.relayServices.includes(relayDeliveryMode);
+      return cityMatch && areaMatch && destinationMatch && serviceMatch;
+    });
+  }, [hasRelaySearch, relayArea, relayCity, relayDeliveryMode, relayDestination]);
+
   const availableAgencies = useMemo(
-    () => AGENCIES.filter((agency) => agency.scope === shipmentType),
-    [shipmentType]
+    () => {
+      if (shipmentType === 'international') return filteredInternationalAgencies;
+      if (shipmentType === 'relay') return filteredRelayAgencies;
+      return filteredNationalAgencies;
+    },
+    [filteredInternationalAgencies, filteredNationalAgencies, filteredRelayAgencies, shipmentType]
   );
 
   const selectedAgency = availableAgencies.find((agency) => agency.id === selectedAgencyId) || null;
@@ -384,6 +969,13 @@ export default function UgaviPage() {
   const routeStartPoint = tripStatus === 'running' ? userPosition : pickupPoint || userPosition;
   const activeDistance = activeRouteTarget ? distanceKm(routeStartPoint, activeRouteTarget) : null;
   const activeEtaMinutes = activeDistance ? Math.max(4, Math.round((activeDistance / (transportMode === 'walk' ? 4 : transportMode === 'bike' ? 12 : 24)) * 60)) : null;
+  const deliveryRouteDistance = pickupPoint && dropoffPoint ? distanceKm(pickupPoint, dropoffPoint) : null;
+  const deliveryWeight = Number(deliveryPackageWeight || '0');
+  const deliveryBaseFare = selectedCourier?.fare || 0;
+  const deliveryDistanceFee = deliveryRouteDistance ? Math.round(deliveryRouteDistance * 650) : 0;
+  const deliveryWeightFee = Number.isFinite(deliveryWeight) && deliveryWeight > 1 ? Math.round((deliveryWeight - 1) * 1200) : 0;
+  const deliveryInsuranceFee = Number(deliveryPackageValue || '0') > 0 ? 500 : 0;
+  const deliveryTotal = deliveryBaseFare + deliveryDistanceFee + deliveryWeightFee + deliveryInsuranceFee;
   const defaultMapCenter = useMemo(() => {
     if (activeRouteTarget && isRouteReady) {
       return {
@@ -394,8 +986,16 @@ export default function UgaviPage() {
     return userPosition;
   }, [activeRouteTarget, isRouteReady, routeStartPoint, userPosition]);
   const mapCenter = mapViewCenter;
-  const showAgencyMarkers = mode === 'send' && pickupLocation && dropoffLocation;
-  const showCourierMarkers = mode === 'express' && pickupLocation && dropoffLocation;
+  const showAgencyMarkers = mode === 'send' && (
+    shipmentType === 'international'
+      ? hasInternationalSearch
+      : shipmentType === 'relay'
+        ? hasRelaySearch
+        : hasNationalSearch
+  );
+  const showCourierMarkers =
+    (mode === 'express' && pickupLocation && dropoffLocation && deliveryStep !== 'route') ||
+    (mode === 'send' && shipmentType === 'relay' && Boolean(selectedAgency));
   const hasExpressRoute = Boolean(pickupLocation.trim() && dropoffLocation.trim());
   const routeLine = useMemo(() => {
     if (!activeRouteTarget) return null;
@@ -512,6 +1112,224 @@ export default function UgaviPage() {
     toast({ title: 'Itineraire copie', description: text });
   };
 
+  const shareAgencyAddress = async () => {
+    if (!selectedAgency) return;
+    const text = [
+      selectedAgency.name,
+      `${selectedAgency.city || selectedAgency.zone}, ${selectedAgency.country || ''}`.trim(),
+      selectedAgency.address,
+      selectedAgency.phone ? `Contact: ${selectedAgency.phone}` : null,
+      selectedAgency.landmarks ? `Repere: ${selectedAgency.landmarks}` : null,
+      `GPS: ${selectedAgency.lat}, ${selectedAgency.lon}`,
+    ].filter(Boolean).join('\n');
+
+    if (navigator.share) {
+      await navigator.share({ title: selectedAgency.name, text });
+      return;
+    }
+    await navigator.clipboard?.writeText(text);
+    toast({ title: 'Adresse partagee', description: 'Les informations de depot ont ete copiees.' });
+  };
+
+  const sendDepositInstructions = async () => {
+    if (!selectedAgency) {
+      toast({ variant: 'destructive', title: 'Agence requise', description: 'Choisissez une agence internationale.' });
+      return;
+    }
+    if (!depositDescription.trim()) {
+      toast({ variant: 'destructive', title: 'Description requise', description: 'Ajoutez une description du colis.' });
+      return;
+    }
+
+    const provisionalCode = `ENK-DEP-${new Date().getFullYear()}-${(selectedAgency.country || 'INT').slice(0, 2).toUpperCase()}-${Date.now().toString().slice(-6)}`;
+    const requesterName = user?.displayName || user?.email || 'Requerant eNKAMBA';
+    const requesterPhone = user?.phoneNumber || 'Numero non renseigne';
+    const instructions = [
+      `Fiche depot eNKAMBA Logistique`,
+      `Code provisoire: ${provisionalCode}`,
+      `Requerant: ${requesterName}`,
+      `Telephone requerant: ${requesterPhone}`,
+      `Agence: ${selectedAgency.name}`,
+      `Adresse: ${selectedAgency.address || selectedAgency.zone}`,
+      `Contact agence: ${selectedAgency.phone || 'Non renseigne'}`,
+      `Destination finale: ${destinationCountry} / ${destinationCity}`,
+      `Transport: ${internationalTransportLabels[internationalTransport]}`,
+      `Service: ${internationalServiceLabels[internationalService]}`,
+      `Colis: ${depositDescription || 'Description a completer au depot'}`,
+      `Date limite: ${depositDeadline || 'A definir'}`,
+      `GPS: ${selectedAgency.lat}, ${selectedAgency.lon}`,
+      `QR: ${provisionalCode}`,
+    ].join('\n');
+
+    setIsCreatingDepositInstruction(true);
+    try {
+      await addDoc(collection(db, 'ugaviRequests'), {
+        userId: user?.uid || null,
+        status: 'pending_deposit',
+        paymentStatus: 'pending',
+        logisticsStatus: 'draft',
+        serviceMode: 'international',
+        trackingNumber: provisionalCode,
+        provisionalDepositCode: provisionalCode,
+        senderName: requesterName,
+        senderAddress: `${packageCity}, ${packageCountry}`,
+        receiverName: 'Destinataire international',
+        receiverAddress: `${destinationCity}, ${destinationCountry}`,
+        packageWeight: 0,
+        description: depositDescription,
+        serviceInstructions: instructions,
+        eta: selectedAgency.estimatedDelay || 'Selon trajet international',
+        selectedAgency,
+        internationalShipment: {
+          requesterCountry,
+          packageCountry,
+          packageCity,
+          destinationCountry,
+          destinationCity,
+          transport: internationalTransport,
+          transportLabel: internationalTransportLabels[internationalTransport],
+          service: internationalService,
+          serviceLabel: internationalServiceLabels[internationalService],
+          depositDeadline,
+        },
+        totalAmount: 0,
+        statusHistory: [
+          buildUgaviStatusEntry('draft', requesterName, `${packageCity}, ${packageCountry}`, 'Instructions de depot international creees'),
+        ],
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+
+      setDepositInstructionCode(provisionalCode);
+      setDepositInstructions(instructions);
+      await navigator.clipboard?.writeText(instructions);
+      toast({ title: 'Instructions enregistrees', description: provisionalCode });
+    } catch (error) {
+      console.error('Erreur instructions depot international:', error);
+      toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible d\'enregistrer les instructions.' });
+    } finally {
+      setIsCreatingDepositInstruction(false);
+    }
+  };
+
+  const createNationalDepositIntent = async () => {
+    if (!selectedAgency) {
+      toast({ variant: 'destructive', title: 'Agence requise', description: 'Choisissez une agence nationale.' });
+      return;
+    }
+    if (!nationalDepositDescription.trim()) {
+      toast({ variant: 'destructive', title: 'Description requise', description: 'Ajoutez une description du colis.' });
+      return;
+    }
+
+    const provisionalCode = `ENK-NAT-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
+    const requesterName = user?.displayName || user?.email || 'Client eNKAMBA';
+
+    setIsCreatingNationalDeposit(true);
+    try {
+      await addDoc(collection(db, 'ugaviRequests'), {
+        userId: user?.uid || null,
+        status: 'pending_deposit',
+        paymentStatus: 'pending',
+        logisticsStatus: 'draft',
+        serviceMode: 'national',
+        trackingNumber: provisionalCode,
+        provisionalDepositCode: provisionalCode,
+        senderName: requesterName,
+        senderAddress: `${nationalArea}, ${nationalCity}`,
+        receiverName: 'Destinataire national',
+        receiverAddress: nationalDestination,
+        packageWeight: 0,
+        description: nationalDepositDescription,
+        serviceInstructions: `Depot national a effectuer chez ${selectedAgency.name}. Adresse: ${selectedAgency.address}. Destination: ${nationalDestination}. Transport: ${nationalTransportLabels[nationalTransport]}.`,
+        eta: selectedAgency.estimatedDelay || 'Selon trajet national',
+        selectedAgency,
+        nationalShipment: {
+          city: nationalCity,
+          area: nationalArea,
+          destination: nationalDestination,
+          transport: nationalTransport,
+          transportLabel: nationalTransportLabels[nationalTransport],
+        },
+        totalAmount: 0,
+        statusHistory: [
+          buildUgaviStatusEntry('draft', requesterName, `${nationalArea}, ${nationalCity}`, 'Depot national prepare'),
+        ],
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+
+      setNationalDepositCode(provisionalCode);
+      await navigator.clipboard?.writeText(provisionalCode);
+      toast({ title: 'Depot national prepare', description: provisionalCode });
+    } catch (error) {
+      console.error('Erreur depot national Ugavi:', error);
+      toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de preparer le depot national.' });
+    } finally {
+      setIsCreatingNationalDeposit(false);
+    }
+  };
+
+  const createRelayParcelIntent = async () => {
+    if (!selectedAgency) {
+      toast({ variant: 'destructive', title: 'Agence requise', description: 'Choisissez une agence relais.' });
+      return;
+    }
+    if (!relayParcelDescription.trim()) {
+      toast({ variant: 'destructive', title: 'Description requise', description: 'Ajoutez une description du colis.' });
+      return;
+    }
+
+    const trackingNumber = `ENK-REL-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
+    const requesterName = user?.displayName || user?.email || 'Client eNKAMBA';
+
+    setIsCreatingRelayParcel(true);
+    try {
+      await addDoc(collection(db, 'ugaviRequests'), {
+        userId: user?.uid || null,
+        status: 'registered',
+        paymentStatus: 'pending',
+        logisticsStatus: selectedCourier ? 'assigned' : 'registered',
+        serviceMode: 'relay',
+        trackingNumber,
+        senderName: requesterName,
+        senderAddress: `${relayArea}, ${relayCity}`,
+        receiverName: 'Destinataire relais',
+        receiverAddress: relayDestination,
+        packageWeight: 0,
+        description: relayParcelDescription,
+        serviceInstructions: `Colis enregistre via ${selectedAgency.name}. Service: ${relayDeliveryLabels[relayDeliveryMode]}.`,
+        eta: selectedAgency.estimatedDelay || 'Selon agence relais',
+        selectedAgency,
+        selectedCourier,
+        relayShipment: {
+          city: relayCity,
+          area: relayArea,
+          destination: relayDestination,
+          service: relayDeliveryMode,
+          serviceLabel: relayDeliveryLabels[relayDeliveryMode],
+          couriersAvailable: selectedAgency.couriersAvailable || 0,
+        },
+        totalAmount: selectedCourier?.fare || 0,
+        statusHistory: [
+          buildUgaviStatusEntry('registered', requesterName, `${relayArea}, ${relayCity}`, 'Colis enregistre en agence relais'),
+          ...(selectedCourier ? [buildUgaviStatusEntry('assigned', selectedCourier.name, selectedCourier.zone, 'Livreur relais assigne')] : []),
+        ],
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+
+      setRelayTrackingCode(trackingNumber);
+      await navigator.clipboard?.writeText(trackingNumber);
+      toast({ title: 'Colis relais enregistre', description: trackingNumber });
+    } catch (error) {
+      console.error('Erreur enregistrement relais Ugavi:', error);
+      toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible d\'enregistrer le colis relais.' });
+    } finally {
+      setIsCreatingRelayParcel(false);
+    }
+  };
+
   const searchTracking = () => {
     if (!trackingQuery.trim()) {
       toast({ variant: 'destructive', title: 'Numero requis', description: 'Veuillez entrer un numero de suivi.' });
@@ -521,12 +1339,33 @@ export default function UgaviPage() {
   };
 
   const prepareAgencyRoute = () => {
-    if (!pickupLocation.trim() || !dropoffLocation.trim()) {
-      toast({ variant: 'destructive', title: 'Trajet incomplet', description: 'Renseignez le depart et la destination.' });
+    if (shipmentType === 'international') {
+      if (!hasInternationalSearch) {
+        toast({ variant: 'destructive', title: 'Recherche requise', description: 'Recherchez une agence internationale avant de continuer.' });
+        return;
+      }
+      if (!selectedAgency) {
+        toast({ variant: 'destructive', title: 'Agence requise', description: 'Selectionnez une agence internationale.' });
+        return;
+      }
+      setIsRouteReady(true);
+      setTripStatus('idle');
+      setMapViewCenter({ lat: selectedAgency.lat, lon: selectedAgency.lon });
+      setHasUserMovedMap(true);
+      toast({
+        title: 'Agence internationale choisie',
+        description: `${selectedAgency.name} · ${selectedAgency.city || selectedAgency.zone}`,
+        className: 'bg-green-600 text-white border-none',
+      });
+      return;
+    }
+
+    if (!hasNationalSearch) {
+      toast({ variant: 'destructive', title: 'Recherche requise', description: 'Recherchez une agence nationale avant de continuer.' });
       return;
     }
     if (!selectedAgency) {
-      toast({ variant: 'destructive', title: 'Agence requise', description: 'Selectionnez une agence sur la carte.' });
+      toast({ variant: 'destructive', title: 'Agence requise', description: 'Selectionnez une agence nationale.' });
       return;
     }
     setIsRouteReady(true);
@@ -539,11 +1378,42 @@ export default function UgaviPage() {
   };
 
   const handleAgencyRouteButton = () => {
+    if (shipmentType === 'international') {
+      prepareAgencyRoute();
+      return;
+    }
     if (isRouteReady) {
       startTrip();
       return;
     }
     prepareAgencyRoute();
+  };
+
+  const searchAgenciesFromCompactFields = () => {
+    if (!pickupLocation.trim() || !dropoffLocation.trim()) {
+      toast({ variant: 'destructive', title: 'Recherche incomplete', description: 'Renseignez la zone de depot et la destination.' });
+      return;
+    }
+
+    setSelectedAgencyId(null);
+    setIsRouteReady(false);
+    setTripStatus('idle');
+
+    if (shipmentType === 'international') {
+      setHasInternationalSearch(true);
+      setDepositInstructions(null);
+      setDepositInstructionCode(null);
+      return;
+    }
+
+    if (shipmentType === 'relay') {
+      setHasRelaySearch(true);
+      setRelayTrackingCode(null);
+      return;
+    }
+
+    setHasNationalSearch(true);
+    setNationalDepositCode(null);
   };
 
   const openBusinessArea = () => {
@@ -565,8 +1435,8 @@ export default function UgaviPage() {
       toast({ variant: 'destructive', title: 'Livraison incomplete', description: 'Renseignez le trajet et choisissez un livreur.' });
       return false;
     }
-    if (!courierInstructions.trim()) {
-      toast({ variant: 'destructive', title: 'Instructions requises', description: 'Ajoutez une instruction pour le livreur.' });
+    if (!deliveryRecipientName.trim() || !deliveryRecipientPhone.trim() || !deliveryPackageType.trim()) {
+      toast({ variant: 'destructive', title: 'Colis incomplet', description: 'Renseignez le destinataire et le type de colis.' });
       return false;
     }
     if (!paymentChoice) {
@@ -586,21 +1456,33 @@ export default function UgaviPage() {
       paymentStatus: options.paidByWallet ? 'completed' : 'cash_on_delivery',
       logisticsStatus: 'assigned',
       serviceMode: 'express',
-      senderName: actorName,
+      senderName: deliverySenderName || actorName,
       senderAddress: pickupLocation,
-      receiverName: 'Destinataire',
+      senderPhone: deliverySenderPhone,
+      receiverName: deliveryRecipientName || 'Destinataire',
+      receiverPhone: deliveryRecipientPhone,
       receiverAddress: dropoffLocation,
-      packageWeight: 1,
-      description: 'Livraison express',
+      packageWeight: Number(deliveryPackageWeight || '1'),
+      declaredValue: Number(deliveryPackageValue || '0'),
+      packageType: deliveryPackageType,
+      description: courierInstructions || deliveryPackageType || 'Livraison',
       serviceInstructions: courierInstructions,
       eta: selectedCourier.eta,
       selectedCourier,
-      totalAmount: selectedCourier.fare,
+      totalAmount: deliveryTotal || selectedCourier.fare,
+      deliveryPricing: {
+        baseFare: deliveryBaseFare,
+        distanceFee: deliveryDistanceFee,
+        weightFee: deliveryWeightFee,
+        insuranceFee: deliveryInsuranceFee,
+        total: deliveryTotal || selectedCourier.fare,
+        distanceKm: deliveryRouteDistance || 0,
+      },
       paymentChoice,
       trackingNumber,
       transactionId: options.transactionId || '',
       statusHistory: [
-        buildUgaviStatusEntry('draft', actorName, pickupLocation, 'Demande express creee'),
+        buildUgaviStatusEntry('draft', actorName, pickupLocation, 'Demande livraison creee'),
         ...(options.paidByWallet
           ? [buildUgaviStatusEntry('payment_confirmed', actorName, 'eNkambaPay', 'Paiement confirme')]
           : []),
@@ -623,7 +1505,8 @@ export default function UgaviPage() {
 
     try {
       const { trackingNumber } = await createExpressRequest({ paidByWallet: false });
-      router.push(`/dashboard/ugavi/tracking?tracking=${encodeURIComponent(trackingNumber)}`);
+      setConfirmedDeliveryTracking(trackingNumber);
+      setDeliveryStep('confirmed');
     } catch (error) {
       console.error('Erreur commande express Ugavi:', error);
       toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de creer la commande express.' });
@@ -638,7 +1521,7 @@ export default function UgaviPage() {
       const userRef = doc(db, 'users', user.uid);
       const userDoc = await getDoc(userRef);
       const currentBalance = userDoc.exists() ? Number(userDoc.data()?.walletBalance || 0) : 0;
-      const amount = selectedCourier.fare;
+      const amount = deliveryTotal || selectedCourier.fare;
 
       if (currentBalance < amount) {
         throw new Error('Solde insuffisant');
@@ -658,7 +1541,7 @@ export default function UgaviPage() {
         amount,
         amountInCDF: amount,
         status: 'completed',
-        description: `Livraison Express Ugavi - ${selectedCourier.name}`,
+        description: `Livraison Ugavi - ${selectedCourier.name}`,
         previousBalance: currentBalance,
         newBalance,
         timestamp: serverTimestamp(),
@@ -703,7 +1586,8 @@ export default function UgaviPage() {
         className: 'bg-green-600 text-white border-none',
       });
       setShowPinDialog(false);
-      router.push(`/dashboard/ugavi/tracking?tracking=${encodeURIComponent(trackingNumber)}`);
+      setConfirmedDeliveryTracking(trackingNumber);
+      setDeliveryStep('confirmed');
     } catch (error: any) {
       console.error('Erreur paiement express Ugavi:', error);
       toast({ variant: 'destructive', title: 'Erreur paiement', description: error?.message || 'Paiement impossible.' });
@@ -722,6 +1606,8 @@ export default function UgaviPage() {
     setCourierInstructions('');
     setInstructionsConfirmed(false);
     setPaymentChoice(null);
+    setDeliveryStep('route');
+    setConfirmedDeliveryTracking(null);
     setActiveAddressField(null);
   };
 
@@ -732,9 +1618,37 @@ export default function UgaviPage() {
     if (field === 'pickup') {
       setPickupLocation(label);
       setPickupPoint(point);
+      if (mode === 'send' && shipmentType === 'national') {
+        setNationalCity(suggestion.label);
+        setNationalArea(suggestion.label);
+        setHasNationalSearch(false);
+      }
+      if (mode === 'send' && shipmentType === 'relay') {
+        setRelayCity(suggestion.label);
+        setRelayArea(suggestion.label);
+        setHasRelaySearch(false);
+      }
+      if (mode === 'send' && shipmentType === 'international') {
+        setPackageCity(suggestion.label);
+        setPackageCountry(suggestion.secondary.split('·')[0]?.trim() || suggestion.label);
+        setHasInternationalSearch(false);
+      }
     } else {
       setDropoffLocation(label);
       setDropoffPoint(point);
+      if (mode === 'send' && shipmentType === 'national') {
+        setNationalDestination(suggestion.label);
+        setHasNationalSearch(false);
+      }
+      if (mode === 'send' && shipmentType === 'relay') {
+        setRelayDestination(suggestion.label);
+        setHasRelaySearch(false);
+      }
+      if (mode === 'send' && shipmentType === 'international') {
+        setDestinationCountry(suggestion.label);
+        setDestinationCity(suggestion.label);
+        setHasInternationalSearch(false);
+      }
     }
 
     setActiveAddressField(null);
@@ -746,11 +1660,31 @@ export default function UgaviPage() {
   const updatePickupLocation = (value: string) => {
     setPickupLocation(value);
     setPickupPoint(null);
+    if (mode === 'send' && shipmentType === 'national') {
+      setNationalCity(value);
+      setNationalArea(value);
+      setHasNationalSearch(false);
+      setSelectedAgencyId(null);
+    }
+    if (mode === 'send' && shipmentType === 'relay') {
+      setRelayCity(value);
+      setRelayArea(value);
+      setHasRelaySearch(false);
+      setSelectedAgencyId(null);
+    }
+    if (mode === 'send' && shipmentType === 'international') {
+      setPackageCity(value);
+      setPackageCountry(value);
+      setHasInternationalSearch(false);
+      setSelectedAgencyId(null);
+    }
     if (mode === 'express') {
       setSelectedCourierId(null);
       setCourierInstructions('');
       setInstructionsConfirmed(false);
       setPaymentChoice(null);
+      setDeliveryStep('route');
+      setConfirmedDeliveryTracking(null);
     }
     if (mode === 'send') setIsRouteReady(false);
   };
@@ -758,11 +1692,29 @@ export default function UgaviPage() {
   const updateDropoffLocation = (value: string) => {
     setDropoffLocation(value);
     setDropoffPoint(null);
+    if (mode === 'send' && shipmentType === 'national') {
+      setNationalDestination(value);
+      setHasNationalSearch(false);
+      setSelectedAgencyId(null);
+    }
+    if (mode === 'send' && shipmentType === 'relay') {
+      setRelayDestination(value);
+      setHasRelaySearch(false);
+      setSelectedAgencyId(null);
+    }
+    if (mode === 'send' && shipmentType === 'international') {
+      setDestinationCountry(value);
+      setDestinationCity(value);
+      setHasInternationalSearch(false);
+      setSelectedAgencyId(null);
+    }
     if (mode === 'express') {
       setSelectedCourierId(null);
       setCourierInstructions('');
       setInstructionsConfirmed(false);
       setPaymentChoice(null);
+      setDeliveryStep('route');
+      setConfirmedDeliveryTracking(null);
     }
     if (mode === 'send') setIsRouteReady(false);
   };
@@ -836,7 +1788,7 @@ export default function UgaviPage() {
             }`}
             style={markerPosition(agency, mapCenter, mapRadius)}
           >
-            {agency.scope === 'international' ? <FiveGoFlightIcon size={24} /> : <SendPackageIcon size={24} />}
+            {agency.scope === 'international' ? <FiveGoFlightIcon size={24} /> : agency.scope === 'relay' ? <LogisticsRelayIcon size={30} /> : <SendPackageIcon size={24} />}
           </button>
         ))}
 
@@ -933,11 +1885,11 @@ export default function UgaviPage() {
       </div>
 
       <section className="absolute left-3 right-3 top-16 z-30 mx-auto max-w-md">
-        <div className="grid grid-cols-3 gap-1 rounded-2xl bg-white/92 p-1.5 shadow-2xl backdrop-blur-xl ring-1 ring-black/5">
+        <div className="grid grid-cols-3 gap-1 rounded-[22px] border border-white/70 bg-white/70 p-1.5 shadow-2xl shadow-emerald-950/10 backdrop-blur-2xl ring-1 ring-white/50">
           {[
-            { id: 'send', label: 'Envoyer', icon: CustomSendIcon },
-            { id: 'track', label: 'Suivi', icon: TrackPackageIcon },
-            { id: 'express', label: 'Express', icon: UgaviIcon },
+            { id: 'send', label: 'Envoyer', icon: LogisticsStandardIcon },
+            { id: 'track', label: 'Suivi', icon: LogisticsTrackingIcon },
+            { id: 'express', label: 'Livraison', icon: LogisticsExpressIcon },
           ].map((item) => {
             const Icon = item.icon;
             const isActive = mode === item.id;
@@ -946,11 +1898,11 @@ export default function UgaviPage() {
                 key={item.id}
                 type="button"
                 onClick={() => resetContextForMode(item.id as UgaviMode)}
-                className={`flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold transition ${
-                  isActive ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'
+                className={`flex items-center justify-center gap-1.5 rounded-2xl px-2 py-1.5 text-sm font-semibold transition ${
+                  isActive ? 'bg-white text-emerald-800 shadow-lg shadow-emerald-950/10' : 'text-slate-500 hover:bg-white/50 hover:text-slate-800'
                 }`}
               >
-                <Icon size={20} />
+                <Icon size={26} />
                 {item.label}
               </button>
             );
@@ -958,189 +1910,864 @@ export default function UgaviPage() {
         </div>
       </section>
 
-      <section className="absolute bottom-24 left-3 right-3 z-30 mx-auto grid max-w-6xl gap-3 lg:grid-cols-[minmax(330px,390px)_1fr]">
-        <div className="rounded-2xl bg-white/92 p-3 shadow-2xl backdrop-blur-xl ring-1 ring-black/5">
+      <section className="absolute bottom-24 left-3 right-3 z-30 mx-auto grid max-w-md gap-2 lg:left-4 lg:right-auto lg:mx-0 lg:w-[380px]">
+        <div className="space-y-2">
 
           {mode === 'track' ? (
-            <div className="space-y-3">
+            <FloatingBadge tone="slate">
+              <div className="space-y-2">
               <div className="relative">
                 <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                  <CustomSearchIcon size={18} />
+                  <LogisticsTrackingIcon size={26} />
                 </div>
                 <Input
                   value={trackingQuery}
                   onChange={(event) => setTrackingQuery(event.target.value)}
                   onKeyDown={(event) => event.key === 'Enter' && searchTracking()}
                   placeholder="Numero de suivi"
-                  className="h-12 rounded-xl border-slate-200 bg-white pl-9"
+                  className="h-12 rounded-2xl border-white/70 bg-white/86 pl-12 font-semibold shadow-inner"
                 />
               </div>
               <Button onClick={searchTracking} className="h-11 w-full rounded-xl bg-emerald-600 hover:bg-emerald-700">
                 Rechercher
               </Button>
-            </div>
+              </div>
+            </FloatingBadge>
           ) : (
             <div className="space-y-3">
-              <div className="space-y-2">
-                <AddressAutocompleteInput
-                  value={pickupLocation}
-                  onChange={updatePickupLocation}
-                  onFocus={() => setActiveAddressField('pickup')}
-                  onSelect={(suggestion) => selectAddressSuggestion('pickup', suggestion)}
-                  placeholder="Point de depart"
-                  Icon={MapPinIcon}
-                  iconClassName="text-emerald-600"
-                  suggestions={addressSuggestions.pickup}
-                  isLoading={isAddressSearchLoading && activeAddressField === 'pickup'}
-                  isOpen={activeAddressField === 'pickup'}
-                />
-                <AddressAutocompleteInput
-                  value={dropoffLocation}
-                  onChange={updateDropoffLocation}
-                  onFocus={() => setActiveAddressField('dropoff')}
-                  onSelect={(suggestion) => selectAddressSuggestion('dropoff', suggestion)}
-                  placeholder="Destination"
-                  Icon={UgaviIcon}
-                  iconClassName="text-orange-600"
-                  suggestions={addressSuggestions.dropoff}
-                  isLoading={isAddressSearchLoading && activeAddressField === 'dropoff'}
-                  isOpen={activeAddressField === 'dropoff'}
-                />
-              </div>
+              {mode === 'express' && (
+                <div className="space-y-2">
+                  <AddressAutocompleteInput
+                    value={pickupLocation}
+                    onChange={updatePickupLocation}
+                    onFocus={() => setActiveAddressField('pickup')}
+                    onSelect={(suggestion) => selectAddressSuggestion('pickup', suggestion)}
+                    placeholder="Point de depart"
+                    Icon={MapPinIcon}
+                    iconClassName="text-emerald-600"
+                    suggestions={addressSuggestions.pickup}
+                    isLoading={isAddressSearchLoading && activeAddressField === 'pickup'}
+                    isOpen={activeAddressField === 'pickup'}
+                  />
+                  <AddressAutocompleteInput
+                    value={dropoffLocation}
+                    onChange={updateDropoffLocation}
+                    onFocus={() => setActiveAddressField('dropoff')}
+                    onSelect={(suggestion) => selectAddressSuggestion('dropoff', suggestion)}
+                    placeholder="Destination"
+                    Icon={UgaviIcon}
+                    iconClassName="text-orange-600"
+                    suggestions={addressSuggestions.dropoff}
+                    isLoading={isAddressSearchLoading && activeAddressField === 'dropoff'}
+                    isOpen={activeAddressField === 'dropoff'}
+                  />
+                </div>
+              )}
 
               {mode === 'send' && (
                 <>
-                  <div className="grid grid-cols-3 gap-2">
+                  <FloatingBadge tone="slate">
+                    <div className="grid grid-cols-3 gap-1">
                     {[
-                      { id: 'national', label: 'National' },
-                      { id: 'international', label: 'International' },
-                      { id: 'national', label: 'Express' },
-                    ].map((option, index) => (
+                      { id: 'relay', label: 'Relais', icon: LogisticsRelayIcon },
+                      { id: 'national', label: 'National', icon: LogisticsAgencyIcon },
+                      { id: 'international', label: 'International', icon: LogisticsInternationalIcon },
+                    ].map((option) => (
                       <button
-                        key={`${option.label}-${index}`}
+                        key={option.id}
                         type="button"
                         onClick={() => {
-                          if (option.label === 'Express') {
-                            resetContextForMode('express');
-                            return;
-                          }
                           setShipmentType(option.id as AgencyScope);
                           setSelectedAgencyId(null);
+                          setSelectedCourierId(null);
                           setIsRouteReady(false);
                           setTripStatus('idle');
+                          setHasRelaySearch(false);
+                          setHasNationalSearch(false);
+                          setHasInternationalSearch(false);
+                          setPickupLocation('');
+                          setDropoffLocation('');
+                          setRelayTrackingCode(null);
                         }}
-                        className={`rounded-xl border px-2 py-2 text-xs font-semibold ${
-                          option.id === shipmentType && option.label !== 'Express'
-                            ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                            : 'border-slate-200 text-slate-600'
-                        }`}
+	                        className={`flex items-center justify-center gap-1 rounded-2xl px-2 py-1.5 text-xs font-semibold ${
+	                          option.id === shipmentType
+	                            ? 'bg-white text-emerald-800 shadow-lg shadow-emerald-950/10'
+	                            : 'text-slate-600 hover:bg-white/55'
+	                        }`}
                       >
+                        <option.icon size={24} />
                         {option.label}
                       </button>
                     ))}
+                    </div>
+                  </FloatingBadge>
+
+                  <div className="space-y-2">
+                    <AddressAutocompleteInput
+                      value={pickupLocation}
+                      onChange={updatePickupLocation}
+                      onFocus={() => setActiveAddressField('pickup')}
+                      onSelect={(suggestion) => selectAddressSuggestion('pickup', suggestion)}
+                      placeholder={shipmentType === 'international' ? 'Pays ou ville du colis' : shipmentType === 'relay' ? 'Ville, commune ou agence relais' : 'Ville, commune, quartier ou agence'}
+                      Icon={MapPinIcon}
+                      iconClassName="text-emerald-600"
+                      suggestions={addressSuggestions.pickup}
+                      isLoading={isAddressSearchLoading && activeAddressField === 'pickup'}
+                      isOpen={activeAddressField === 'pickup'}
+                    />
+                    <AddressAutocompleteInput
+                      value={dropoffLocation}
+                      onChange={updateDropoffLocation}
+                      onFocus={() => setActiveAddressField('dropoff')}
+                      onSelect={(suggestion) => selectAddressSuggestion('dropoff', suggestion)}
+                      placeholder={shipmentType === 'international' ? 'Pays ou ville destination' : shipmentType === 'relay' ? 'Point de livraison ou zone' : 'Ville de destination'}
+                      Icon={UgaviIcon}
+                      iconClassName="text-orange-600"
+                      suggestions={addressSuggestions.dropoff}
+                      isLoading={isAddressSearchLoading && activeAddressField === 'dropoff'}
+                      isOpen={activeAddressField === 'dropoff'}
+                    />
+                    <FloatingBadge tone={shipmentType === 'international' ? 'orange' : 'emerald'}>
+                    <div className="flex items-center gap-2">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white shadow-sm">
+                        {shipmentType === 'international' ? <LogisticsInternationalIcon size={30} /> : shipmentType === 'relay' ? <LogisticsRelayIcon size={30} /> : <LogisticsAgencyIcon size={30} />}
+                      </span>
+                      <select
+                        value={shipmentType === 'international' ? internationalTransport : shipmentType === 'relay' ? relayDeliveryMode : nationalTransport}
+                        onChange={(event) => {
+                          if (shipmentType === 'international') {
+                            setInternationalTransport(event.target.value as InternationalTransportMode);
+                            setHasInternationalSearch(false);
+                          } else if (shipmentType === 'relay') {
+                            setRelayDeliveryMode(event.target.value as RelayDeliveryMode);
+                            setHasRelaySearch(false);
+                          } else {
+                            setNationalTransport(event.target.value as NationalTransportMode);
+                            setHasNationalSearch(false);
+                          }
+                          setSelectedAgencyId(null);
+                        }}
+                        className="h-10 min-w-0 flex-1 rounded-2xl border border-white/70 bg-white/90 px-3 text-sm font-semibold text-slate-700 shadow-inner"
+                      >
+                        {Object.entries(shipmentType === 'international' ? internationalTransportLabels : shipmentType === 'relay' ? relayDeliveryLabels : nationalTransportLabels).map(([value, label]) => (
+                          <option key={value} value={value}>{label}</option>
+                        ))}
+                      </select>
+                      <Button type="button" onClick={searchAgenciesFromCompactFields} className="h-10 rounded-2xl bg-emerald-600 px-4 shadow-lg shadow-emerald-950/15 hover:bg-emerald-700">
+                        Rechercher
+                      </Button>
+                    </div>
+                    </FloatingBadge>
                   </div>
 
-                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">
-                    {selectedAgency ? (
+                  {false && shipmentType === 'national' && (
+                    <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-xs font-black uppercase text-slate-700">1. Recherche agence nationale</p>
+                        {hasNationalSearch && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setHasNationalSearch(false);
+                              setSelectedAgencyId(null);
+                              setNationalDepositCode(null);
+                            }}
+                            className="text-xs font-semibold text-slate-500"
+                          >
+                            Modifier
+                          </button>
+                        )}
+                      </div>
+
+                      {!hasNationalSearch ? (
+                        <>
+                          <div className="grid grid-cols-2 gap-2">
+                            <Input
+                              value={nationalCity}
+                              onChange={(event) => setNationalCity(event.target.value)}
+                              placeholder="Ville actuelle"
+                              className="h-10 rounded-xl bg-white text-sm"
+                            />
+                            <Input
+                              value={nationalArea}
+                              onChange={(event) => setNationalArea(event.target.value)}
+                              placeholder="Commune, quartier, province"
+                              className="h-10 rounded-xl bg-white text-sm"
+                            />
+                            <Input
+                              value={nationalDestination}
+                              onChange={(event) => setNationalDestination(event.target.value)}
+                              placeholder="Destination"
+                              className="h-10 rounded-xl bg-white text-sm"
+                            />
+                            <select
+                              value={nationalTransport}
+                              onChange={(event) => setNationalTransport(event.target.value as NationalTransportMode)}
+                              className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700"
+                            >
+                              {Object.entries(nationalTransportLabels).map(([value, label]) => (
+                                <option key={value} value={value}>{label}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <Button
+                            type="button"
+                            onClick={() => {
+                              setHasNationalSearch(true);
+                              setSelectedAgencyId(null);
+                              setNationalDepositCode(null);
+                            }}
+                            className="h-10 w-full rounded-xl bg-emerald-600 hover:bg-emerald-700"
+                          >
+                            Rechercher une agence nationale
+                          </Button>
+                        </>
+                      ) : (
+                        <div className="rounded-xl bg-white p-3 text-xs text-slate-600">
+                          <p className="font-semibold text-slate-900">{nationalArea}, {nationalCity} {'->'} {nationalDestination}</p>
+                          <p>{nationalTransportLabels[nationalTransport]} · {availableAgencies.length} agence(s) disponible(s)</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {false && shipmentType === 'international' && (
+                    <div className="space-y-3 rounded-xl border border-emerald-100 bg-emerald-50/60 p-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-xs font-black uppercase text-emerald-800">1. Recherche agence</p>
+                        {hasInternationalSearch && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setHasInternationalSearch(false);
+                              setSelectedAgencyId(null);
+                              setDepositInstructions(null);
+                              setDepositInstructionCode(null);
+                            }}
+                            className="text-xs font-semibold text-slate-500"
+                          >
+                            Modifier
+                          </button>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {[
+                          { id: 'current_country', label: 'Agence dans mon pays' },
+                          { id: 'foreign_country', label: 'Agence dans un autre pays' },
+                        ].map((option) => (
+                          <button
+                            key={option.id}
+                            type="button"
+                            onClick={() => {
+                              setInternationalSearchScope(option.id as InternationalSearchScope);
+                              setSelectedAgencyId(null);
+                              setHasInternationalSearch(false);
+                              setDepositInstructions(null);
+                              setDepositInstructionCode(null);
+                            }}
+                            className={`rounded-xl border px-2 py-2 text-xs font-semibold ${
+                              internationalSearchScope === option.id
+                                ? 'border-emerald-600 bg-white text-emerald-700 shadow-sm'
+                                : 'border-emerald-100 bg-white/60 text-slate-600'
+                            }`}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+
+                      {!hasInternationalSearch ? (
+                        <>
+                          <div className="grid grid-cols-2 gap-2">
+                            <Input
+                              value={requesterCountry}
+                              onChange={(event) => setRequesterCountry(event.target.value)}
+                              placeholder="Pays actuel du requerant"
+                              className="h-10 rounded-xl bg-white text-sm"
+                            />
+                            <Input
+                              value={packageCountry}
+                              onChange={(event) => setPackageCountry(event.target.value)}
+                              placeholder="Pays ou se trouve le colis"
+                              className="h-10 rounded-xl bg-white text-sm"
+                            />
+                            <Input
+                              value={packageCity}
+                              onChange={(event) => setPackageCity(event.target.value)}
+                              placeholder="Ville de depot"
+                              className="h-10 rounded-xl bg-white text-sm"
+                            />
+                            <Input
+                              value={destinationCountry}
+                              onChange={(event) => setDestinationCountry(event.target.value)}
+                              placeholder="Pays de destination"
+                              className="h-10 rounded-xl bg-white text-sm"
+                            />
+                            <Input
+                              value={destinationCity}
+                              onChange={(event) => setDestinationCity(event.target.value)}
+                              placeholder="Ville de destination"
+                              className="h-10 rounded-xl bg-white text-sm"
+                            />
+                            <select
+                              value={internationalTransport}
+                              onChange={(event) => setInternationalTransport(event.target.value as InternationalTransportMode)}
+                              className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700"
+                            >
+                              {Object.entries(internationalTransportLabels).map(([value, label]) => (
+                                <option key={value} value={value}>{label}</option>
+                              ))}
+                            </select>
+                            <select
+                              value={internationalService}
+                              onChange={(event) => setInternationalService(event.target.value as InternationalServiceType)}
+                              className="col-span-2 h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700"
+                            >
+                              {Object.entries(internationalServiceLabels).map(([value, label]) => (
+                                <option key={value} value={value}>{label}</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <Button
+                            type="button"
+                            onClick={() => {
+                              setHasInternationalSearch(true);
+                              setSelectedAgencyId(null);
+                              setDepositInstructions(null);
+                              setDepositInstructionCode(null);
+                            }}
+                            className="h-10 w-full rounded-xl bg-emerald-600 hover:bg-emerald-700"
+                          >
+                            Rechercher une agence internationale
+                          </Button>
+                        </>
+                      ) : (
+                        <div className="rounded-xl bg-white p-3 text-xs text-slate-600">
+                          <p className="font-semibold text-slate-900">
+                            {internationalSearchScope === 'current_country' ? requesterCountry : `${packageCity}, ${packageCountry}`} {'->'} {destinationCity}, {destinationCountry}
+                          </p>
+                          <p>{internationalTransportLabels[internationalTransport]} · {internationalServiceLabels[internationalService]}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {selectedAgency ? (
+                    <div className="rounded-[24px] border border-white/70 bg-white/76 p-3 text-sm shadow-2xl shadow-emerald-950/10 backdrop-blur-2xl ring-1 ring-white/55">
                       <div className="space-y-2">
                         <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <p className="font-bold text-slate-900">{selectedAgency.name}</p>
-                            <p className="text-xs text-slate-500">{selectedAgency.zone} · {selectedAgency.eta}</p>
+                          <div className="flex min-w-0 items-center gap-2">
+                            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white shadow-sm">
+                              {shipmentType === 'international' ? <LogisticsInternationalIcon size={34} /> : shipmentType === 'relay' ? <LogisticsRelayIcon size={34} /> : <LogisticsAgencyIcon size={34} />}
+                            </span>
+                            <span className="min-w-0">
+                            <p className="truncate font-bold text-slate-900">{selectedAgency.name}</p>
+                            <p className="text-xs text-slate-500">
+                              {selectedAgency.city || selectedAgency.zone}{selectedAgency.country ? `, ${selectedAgency.country}` : ''} · {selectedAgency.eta}
+                            </p>
+                            </span>
                           </div>
-                          <span className="rounded-full bg-white px-2 py-1 text-xs font-semibold text-emerald-700">
-                            {activeDistance?.toFixed(1)} km
+                          <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-100">
+                            {selectedAgency.country === requesterCountry ? `${activeDistance?.toFixed(1)} km` : selectedAgency.status === 'open' ? 'Ouverte' : 'Fermee'}
                           </span>
                         </div>
-                        <div className="flex flex-wrap gap-1.5">
-                          {(Object.keys(transportLabels) as TransportMode[]).map((item) => (
-                            <button
-                              key={item}
-                              type="button"
-                              onClick={() => setTransportMode(item)}
-                              className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                                transportMode === item ? 'bg-slate-900 text-white' : 'bg-white text-slate-600'
-                              }`}
-                            >
-                              {transportLabels[item]}
-                            </button>
-                          ))}
+                        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                          <Button type="button" size="sm" onClick={prepareAgencyRoute} className="h-9 shrink-0 rounded-2xl bg-emerald-600 shadow-lg shadow-emerald-950/15 hover:bg-emerald-700">
+                            Choisir
+                          </Button>
+                          <Button type="button" size="sm" variant="outline" onClick={handleAgencyRouteButton} className="h-9 shrink-0 rounded-2xl border-white/80 bg-white/76 shadow-sm">
+                            Carte
+                          </Button>
+                          {shipmentType === 'international' && (
+                            <Button type="button" size="sm" variant="outline" onClick={() => void shareAgencyAddress()} className="h-9 shrink-0 rounded-2xl border-white/80 bg-white/76 shadow-sm">
+                              <Share2 className="mr-1 h-3.5 w-3.5" />
+                              Partager
+                            </Button>
+                          )}
+                          <Button type="button" size="sm" variant="outline" onClick={() => window.open(`tel:${selectedAgency.phone || ''}`)} className="h-9 shrink-0 rounded-2xl border-white/80 bg-white/76 shadow-sm">
+                            <Phone className="mr-1 h-3.5 w-3.5" />
+                            Appeler
+                          </Button>
+                          <Button type="button" size="sm" variant="outline" onClick={() => router.push('/dashboard/chat')} className="h-9 shrink-0 rounded-2xl border-white/80 bg-white/76 shadow-sm">
+                            <MessageCircle className="mr-1 h-3.5 w-3.5" />
+                            Ecrire
+                          </Button>
                         </div>
+                        <details className="rounded-2xl bg-white/66 px-3 py-2 text-xs text-slate-600 ring-1 ring-white/70">
+                          <summary className="cursor-pointer font-semibold text-slate-800">Details agence</summary>
+                          <div className="mt-2 space-y-1">
+                            <p>{selectedAgency.address}</p>
+                            <p>Horaires: {selectedAgency.hours} · Delai: {selectedAgency.estimatedDelay} · Frais: {selectedAgency.estimatedFees}</p>
+                            <p>Destinations: {selectedAgency.destinations?.join(', ')}</p>
+                            {shipmentType === 'international' ? (
+                              <>
+                                <p>Services: {selectedAgency.services?.join(', ')}</p>
+                                <p>Transport: {selectedAgency.transports?.map((item) => internationalTransportLabels[item]).join(', ')}</p>
+                                <p>Documents: {selectedAgency.documents?.join(', ')}</p>
+                              </>
+                            ) : shipmentType === 'relay' ? (
+                              <>
+                                <p>Services: {selectedAgency.relayServices?.map((item) => relayDeliveryLabels[item]).join(', ')}</p>
+                                <p>Livreurs disponibles: {selectedAgency.couriersAvailable || 0}</p>
+                                <p>Zone couverte: {selectedAgency.zoneCovered}</p>
+                              </>
+                            ) : (
+                              <>
+                                <p>Transport: {selectedAgency.nationalTransports?.map((item) => nationalTransportLabels[item]).join(', ')}</p>
+                                <p>Capacite: {selectedAgency.capacity} · Fiabilite: {selectedAgency.reliability}</p>
+                              </>
+                            )}
+                          </div>
+                        </details>
                       </div>
-                    ) : (
-                      <p className="text-slate-600">Renseignez le trajet, puis choisissez une agence sur la carte.</p>
-                    )}
-                  </div>
+                    </div>
+                  ) : null}
 
-                  <Button onClick={handleAgencyRouteButton} disabled={isRouteReady && tripStatus === 'running'} className="h-11 w-full rounded-xl bg-emerald-600 hover:bg-emerald-700">
-                    {isRouteReady ? (tripStatus === 'running' ? 'Suivi actif' : "Commencer l'itineraire") : "Creer l'itineraire"}
-                  </Button>
+                  {shipmentType === 'national' && hasNationalSearch && !selectedAgency && availableAgencies.length > 0 && (
+                    <div className="max-h-36 space-y-1 overflow-y-auto pr-1">
+                      {availableAgencies.map((agency) => (
+                        <button
+                          key={`${agency.id}-national-card`}
+                          type="button"
+                          onClick={() => {
+                            setSelectedAgencyId(agency.id);
+                            setNationalDepositCode(null);
+                          }}
+                          className="w-full rounded-2xl border border-white/70 bg-white/78 px-3 py-2 text-left text-sm shadow-lg shadow-emerald-950/5 backdrop-blur-xl transition hover:border-emerald-200 hover:bg-white/90"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex min-w-0 items-center gap-2">
+                              <LogisticsAgencyIcon size={30} />
+                              <span className="min-w-0">
+                              <p className="truncate font-bold text-slate-900">{agency.name}</p>
+                              <p className="text-xs text-slate-500">{agency.address}</p>
+                              </span>
+                            </div>
+                            <span className={`rounded-full px-2 py-1 text-[11px] font-semibold ${agency.status === 'open' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>
+                              {agency.status === 'open' ? 'Ouverte' : 'Fermee'}
+                            </span>
+                          </div>
+                          <p className="mt-1 text-xs text-slate-600">
+                            {agency.eta} · {agency.estimatedDelay} · {agency.estimatedFees} · {agency.reliability}
+                          </p>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {shipmentType === 'relay' && hasRelaySearch && !selectedAgency && availableAgencies.length > 0 && (
+                    <div className="max-h-40 space-y-1 overflow-y-auto pr-1">
+                      {availableAgencies.map((agency) => (
+                        <button
+                          key={`${agency.id}-relay-card`}
+                          type="button"
+                          onClick={() => {
+                            setSelectedAgencyId(agency.id);
+                            setSelectedCourierId(null);
+                            setRelayTrackingCode(null);
+                          }}
+                          className="w-full rounded-2xl border border-white/70 bg-white/78 px-3 py-2 text-left text-sm shadow-lg shadow-emerald-950/5 backdrop-blur-xl transition hover:border-emerald-200 hover:bg-white/90"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex min-w-0 items-center gap-2">
+                              <LogisticsRelayIcon size={30} />
+                              <span className="min-w-0">
+                                <p className="truncate font-bold text-slate-900">{agency.name}</p>
+                                <p className="truncate text-xs text-slate-500">{agency.address}</p>
+                              </span>
+                            </div>
+                            <span className="rounded-full bg-emerald-50 px-2 py-1 text-[11px] font-semibold text-emerald-700">
+                              {agency.couriersAvailable || 0} livreurs
+                            </span>
+                          </div>
+                          <p className="mt-1 text-xs text-slate-600">
+                            {agency.eta} · {agency.hours} · {agency.reliability}
+                          </p>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {shipmentType === 'national' && selectedAgency && (
+                    <div className="space-y-2 rounded-[24px] border border-emerald-100/80 bg-emerald-50/78 p-3 shadow-2xl shadow-emerald-950/10 backdrop-blur-2xl ring-1 ring-white/55">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-xs font-black uppercase text-emerald-800">3. Depot agence</p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedAgencyId(null);
+                            setNationalDepositCode(null);
+                          }}
+                          className="text-xs font-semibold text-slate-500"
+                        >
+                          Changer agence
+                        </button>
+                      </div>
+                      <Input
+                        value={nationalDepositDescription}
+                        onChange={(event) => setNationalDepositDescription(event.target.value)}
+                        placeholder="Description du colis"
+                        className="h-10 rounded-xl bg-white text-sm"
+                      />
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          disabled={isCreatingNationalDeposit}
+                          onClick={() => void createNationalDepositIntent()}
+                          className="h-10 rounded-xl bg-white"
+                        >
+                          {isCreatingNationalDeposit ? 'Preparation...' : 'Deposer mon colis'}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => router.push(`/dashboard/ugavi/tracking${nationalDepositCode ? `?tracking=${encodeURIComponent(nationalDepositCode)}` : ''}`)}
+                          className="h-10 rounded-xl bg-white"
+                        >
+                          {nationalDepositCode ? 'Suivre ce depot' : 'Entrer code suivi'}
+                        </Button>
+                      </div>
+                      {nationalDepositCode && (
+                        <div className="rounded-xl bg-white p-3 text-xs text-slate-700">
+                          <p className="font-mono font-black text-emerald-700">{nationalDepositCode}</p>
+                          <p className="mt-1">Code provisoire cree. L'agent national pourra enregistrer le colis officiellement et poursuivre le suivi.</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {shipmentType === 'relay' && selectedAgency && (
+                    <div className="space-y-2 rounded-[24px] border border-emerald-100/80 bg-emerald-50/78 p-3 shadow-2xl shadow-emerald-950/10 backdrop-blur-2xl ring-1 ring-white/55">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-xs font-black uppercase text-emerald-800">Enregistrer colis relais</p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedAgencyId(null);
+                            setSelectedCourierId(null);
+                            setRelayTrackingCode(null);
+                          }}
+                          className="text-xs font-semibold text-slate-500"
+                        >
+                          Changer agence
+                        </button>
+                      </div>
+                      <Input
+                        value={relayParcelDescription}
+                        onChange={(event) => setRelayParcelDescription(event.target.value)}
+                        placeholder="Description du colis"
+                        className="h-10 rounded-2xl border-white/70 bg-white/86 text-sm shadow-inner"
+                      />
+                      <div className="grid grid-cols-3 gap-1">
+                        {COURIERS.slice(0, 3).map((courier) => (
+                          <button
+                            key={`relay-courier-${courier.id}`}
+                            type="button"
+                            onClick={() => setSelectedCourierId(courier.id)}
+                            className={`rounded-2xl border px-2 py-2 text-left text-xs shadow-sm ${
+                              selectedCourierId === courier.id
+                                ? 'border-emerald-500 bg-white text-emerald-800'
+                                : 'border-white/70 bg-white/70 text-slate-600'
+                            }`}
+                          >
+                            <span className="mb-1 flex items-center gap-1">
+                              <LocomotionIcon type={courier.locomotion} />
+                              <span className="font-bold">{locomotionLabels[courier.locomotion]}</span>
+                            </span>
+                            <span className="block truncate">{courier.eta} · {courier.rating}/5</span>
+                          </button>
+                        ))}
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          disabled={isCreatingRelayParcel}
+                          onClick={() => void createRelayParcelIntent()}
+                          className="h-10 rounded-2xl border-white/70 bg-white"
+                        >
+                          {isCreatingRelayParcel ? 'Enregistrement...' : 'Enregistrer'}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => router.push(`/dashboard/ugavi/tracking${relayTrackingCode ? `?tracking=${encodeURIComponent(relayTrackingCode)}` : ''}`)}
+                          className="h-10 rounded-2xl border-white/70 bg-white"
+                        >
+                          {relayTrackingCode ? 'Suivre' : 'Code suivi'}
+                        </Button>
+                      </div>
+                      {relayTrackingCode && (
+                        <div className="rounded-2xl bg-white/80 p-3 text-xs text-slate-700">
+                          <p className="font-mono font-black text-emerald-700">{relayTrackingCode}</p>
+                          <p className="mt-1">Colis relais enregistre. Le suivi est actif.</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {shipmentType === 'international' && hasInternationalSearch && !selectedAgency && availableAgencies.length > 0 && (
+                    <div className="max-h-40 space-y-1 overflow-y-auto pr-1">
+                      <p className="px-1 text-xs font-black uppercase text-slate-500">2. Choisir une agence</p>
+                      {availableAgencies.map((agency) => (
+                        <button
+                          key={`${agency.id}-card`}
+                          type="button"
+                          onClick={() => {
+                            setSelectedAgencyId(agency.id);
+                            setDepositInstructions(null);
+                            setDepositInstructionCode(null);
+                          }}
+                          className={`w-full rounded-2xl border bg-white/78 px-3 py-2 text-left text-sm shadow-lg shadow-orange-950/5 backdrop-blur-xl transition ${
+	                            selectedAgencyId === agency.id ? 'border-emerald-500' : 'border-white/70 hover:border-emerald-200'
+	                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex min-w-0 items-center gap-2">
+                              <LogisticsInternationalIcon size={30} />
+                              <span className="min-w-0">
+                              <p className="font-bold text-slate-900">{agency.name}</p>
+                              <p className="text-xs text-slate-500">{agency.city}, {agency.country} · {agency.address}</p>
+                              </span>
+                            </div>
+                            <span className={`rounded-full px-2 py-1 text-[11px] font-semibold ${agency.status === 'open' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>
+                              {agency.status === 'open' ? 'Ouverte' : 'Fermee'}
+                            </span>
+                          </div>
+                          <div className="mt-2 flex flex-wrap gap-1">
+                            {agency.transports?.map((transport) => (
+                              <span key={transport} className="rounded-full bg-slate-100 px-2 py-1 text-[11px] font-semibold text-slate-600">
+                                {internationalTransportLabels[transport]}
+                              </span>
+                            ))}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {shipmentType === 'international' && selectedAgency && (
+                    <div className="space-y-2 rounded-[24px] border border-orange-100/80 bg-orange-50/78 p-3 shadow-2xl shadow-orange-950/10 backdrop-blur-2xl ring-1 ring-white/55">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-xs font-black uppercase text-orange-800">3. Instructions de depot</p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedAgencyId(null);
+                            setDepositInstructions(null);
+                            setDepositInstructionCode(null);
+                          }}
+                          className="text-xs font-semibold text-slate-500"
+                        >
+                          Changer agence
+                        </button>
+                      </div>
+                      <Input
+                        value={depositDescription}
+                        onChange={(event) => setDepositDescription(event.target.value)}
+                        placeholder="Description du colis"
+                        className="h-10 rounded-xl bg-white text-sm"
+                      />
+                      <Input
+                        value={depositDeadline}
+                        onChange={(event) => setDepositDeadline(event.target.value)}
+                        placeholder="Date limite de depot"
+                        className="h-10 rounded-xl bg-white text-sm"
+                      />
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          disabled={isCreatingDepositInstruction}
+                          onClick={() => void sendDepositInstructions()}
+                          className="h-10 rounded-xl bg-white"
+                        >
+                          {isCreatingDepositInstruction ? 'Enregistrement...' : 'Envoyer instructions'}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => router.push(`/dashboard/ugavi/tracking${depositInstructionCode ? `?tracking=${encodeURIComponent(depositInstructionCode)}` : ''}`)}
+                          className="h-10 rounded-xl bg-white"
+                        >
+                          {depositInstructionCode ? 'Suivre ce depot' : 'Entrer code suivi'}
+                        </Button>
+                      </div>
+                      {depositInstructions && (
+                        <div className="rounded-xl bg-white p-3 text-xs text-slate-700">
+                          <p className="font-mono font-black text-emerald-700">{depositInstructionCode}</p>
+                          <p className="mt-1">Fiche enregistree et copiee. Elle est partageable au deposant et consultable dans le suivi Ugavi.</p>
+                          <details className="mt-2">
+                            <summary className="cursor-pointer font-semibold text-slate-800">Voir la fiche complete</summary>
+                            <pre className="mt-2 max-h-40 overflow-y-auto whitespace-pre-wrap rounded-xl bg-slate-50 p-3 text-[11px] text-slate-700">
+                              {depositInstructions}
+                            </pre>
+                          </details>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                 </>
               )}
 
               {mode === 'express' && (
                 <>
-                  {!hasExpressRoute && (
-                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
-                      Renseignez seulement le point de depart et la destination.
-                    </div>
-                  )}
-
-                  {hasExpressRoute && !selectedCourier && (
-                    <div className="rounded-xl border border-orange-200 bg-orange-50 p-3 text-sm text-orange-800">
-                      Les livreurs disponibles sont sur la carte. Touchez un marqueur pour continuer.
-                    </div>
-                  )}
-
-                  {selectedCourier && !instructionsConfirmed && (
+                  {deliveryStep === 'route' && (
                     <>
-                      <div className="rounded-xl border border-slate-200 bg-white p-3">
-                        <div className="flex items-center justify-between gap-3">
-                          <div className="flex items-center gap-3">
-                            <span className="rounded-full bg-orange-50 p-2 text-orange-700">
-                              <LocomotionIcon type={selectedCourier.locomotion} />
-                            </span>
-                            <div>
-                              <p className="text-sm font-bold text-slate-900">{selectedCourier.name}</p>
-                              <p className="text-xs text-slate-500">{locomotionLabels[selectedCourier.locomotion]} · {selectedCourier.zone} · {selectedCourier.eta}</p>
+                      {!hasExpressRoute && (
+                        <div className="rounded-2xl border border-white/70 bg-white/78 p-3 text-sm text-slate-600 shadow-xl backdrop-blur-xl">
+                          Renseignez le point de depart et la destination.
+                        </div>
+                      )}
+                      {hasExpressRoute && (
+                        <FloatingBadge tone="orange">
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between gap-3">
+                              <div>
+                                <p className="text-xs font-black uppercase text-orange-800">Trajet analyse</p>
+                                <p className="text-sm font-bold text-slate-900">{pickupLocation} → {dropoffLocation}</p>
+                              </div>
+                              <span className="rounded-full bg-white px-2 py-1 text-xs font-bold text-orange-700">
+                                {deliveryRouteDistance ? `${deliveryRouteDistance.toFixed(1)} km` : 'Distance'}
+                              </span>
                             </div>
+                            <Button
+                              type="button"
+                              onClick={() => setDeliveryStep('options')}
+                              className="h-10 w-full rounded-2xl bg-orange-600 hover:bg-orange-700"
+                            >
+                              Continuer
+                            </Button>
                           </div>
-                          <div className="text-right">
-                            <p className="text-sm font-bold text-slate-900">{selectedCourier.fare.toLocaleString('fr-FR')} FC</p>
-                            <p className="flex items-center justify-end gap-1 text-xs text-amber-600">
-                              <RideStarIcon size={14} />
-                              {selectedCourier.rating}
-                            </p>
+                        </FloatingBadge>
+                      )}
+                    </>
+                  )}
+
+                  {deliveryStep === 'options' && (
+                    <div className="grid max-h-56 grid-cols-2 gap-2 overflow-y-auto pr-1">
+                      {COURIERS.map((courier) => (
+                        <button
+                          key={`delivery-${courier.id}`}
+                          type="button"
+                          onClick={() => {
+                            setSelectedCourierId(courier.id);
+                            setTransportMode(courier.locomotion === 'foot' ? 'walk' : courier.locomotion === 'bike' ? 'bike' : courier.locomotion === 'car' ? 'car' : 'taxi');
+                            setPaymentChoice(null);
+                            setConfirmedDeliveryTracking(null);
+                            setDeliveryStep('parcel');
+                          }}
+                          className="rounded-2xl border border-white/70 bg-white/78 p-3 text-left shadow-xl backdrop-blur-xl transition hover:border-orange-200 hover:bg-white/90"
+                        >
+                          <div className="mb-2 flex items-center justify-between">
+                            <span className="rounded-2xl bg-orange-50 p-2 text-orange-700">
+                              <LocomotionIcon type={courier.locomotion} />
+                            </span>
+                            <span className="text-xs font-bold text-emerald-700">Disponible</span>
+                          </div>
+                          <p className="text-sm font-black text-slate-900">{courier.locomotion === 'foot' ? 'Pieton' : locomotionLabels[courier.locomotion]}</p>
+                          <p className="mt-1 text-xs text-slate-500">{courier.eta} · {courier.zone}</p>
+                          <p className="mt-2 text-sm font-bold text-slate-900">{(courier.fare + (deliveryRouteDistance ? Math.round(deliveryRouteDistance * 650) : 0)).toLocaleString('fr-FR')} FC</p>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {deliveryStep === 'parcel' && selectedCourier && (
+                    <div className="space-y-2 rounded-[24px] border border-orange-100/80 bg-orange-50/78 p-3 shadow-2xl shadow-orange-950/10 backdrop-blur-2xl ring-1 ring-white/55">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="rounded-2xl bg-white p-2 text-orange-700 shadow-sm">
+                            <LocomotionIcon type={selectedCourier.locomotion} />
+                          </span>
+                          <div>
+                            <p className="text-sm font-black text-slate-900">{locomotionLabels[selectedCourier.locomotion]} selectionne</p>
+                            <p className="text-xs text-slate-500">{selectedCourier.eta} · {selectedCourier.rating}/5</p>
                           </div>
                         </div>
+                        <button type="button" onClick={() => setDeliveryStep('options')} className="text-xs font-semibold text-slate-500">
+                          Changer
+                        </button>
                       </div>
                       <Input
+                        value={deliveryRecipientName}
+                        onChange={(event) => setDeliveryRecipientName(event.target.value)}
+                        placeholder="Nom du destinataire"
+                        className="h-10 rounded-2xl border-white/70 bg-white/86"
+                      />
+                      <Input
+                        value={deliveryRecipientPhone}
+                        onChange={(event) => setDeliveryRecipientPhone(event.target.value)}
+                        placeholder="Telephone du destinataire"
+                        className="h-10 rounded-2xl border-white/70 bg-white/86"
+                      />
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input
+                          value={deliveryPackageType}
+                          onChange={(event) => setDeliveryPackageType(event.target.value)}
+                          placeholder="Type de colis"
+                          className="h-10 rounded-2xl border-white/70 bg-white/86"
+                        />
+                        <Input
+                          value={deliveryPackageWeight}
+                          onChange={(event) => setDeliveryPackageWeight(event.target.value)}
+                          placeholder="Poids kg"
+                          className="h-10 rounded-2xl border-white/70 bg-white/86"
+                        />
+                      </div>
+                      <Input
+                        value={deliveryPackageValue}
+                        onChange={(event) => setDeliveryPackageValue(event.target.value)}
+                        placeholder="Valeur declaree"
+                        className="h-10 rounded-2xl border-white/70 bg-white/86"
+                      />
+                      <Input
                         value={courierInstructions}
-                        onChange={(event) => {
-                          setCourierInstructions(event.target.value);
-                          setPaymentChoice(null);
-                        }}
-                        placeholder="Instruction pour le livreur"
-                        className="h-11 rounded-xl border-slate-200"
+                        onChange={(event) => setCourierInstructions(event.target.value)}
+                        placeholder="Description, repere ou instruction"
+                        className="h-10 rounded-2xl border-white/70 bg-white/86"
                       />
                       <Button
                         type="button"
                         onClick={() => {
-                          if (!courierInstructions.trim()) {
-                            toast({ variant: 'destructive', title: 'Instruction requise', description: 'Ajoutez une instruction avant de continuer.' });
+                          if (!deliveryRecipientName.trim() || !deliveryRecipientPhone.trim() || !deliveryPackageType.trim()) {
+                            toast({ variant: 'destructive', title: 'Colis incomplet', description: 'Renseignez destinataire, telephone et type de colis.' });
                             return;
                           }
                           setInstructionsConfirmed(true);
+                          setDeliveryStep('payment');
                         }}
-                        className="h-11 w-full rounded-xl bg-slate-900 hover:bg-slate-800"
+                        className="h-10 w-full rounded-2xl bg-slate-900 hover:bg-slate-800"
                       >
-                        Continuer
+                        Calculer le cout
                       </Button>
-                    </>
+                    </div>
                   )}
 
-                  {selectedCourier && instructionsConfirmed && !paymentChoice && (
-                    <div className="grid grid-cols-2 gap-2">
+                  {deliveryStep === 'payment' && selectedCourier && !paymentChoice && (
+                    <div className="space-y-2 rounded-[24px] border border-white/70 bg-white/78 p-3 shadow-2xl backdrop-blur-2xl ring-1 ring-white/55">
+                      <div className="grid grid-cols-2 gap-2 text-xs text-slate-600">
+                        <div className="rounded-2xl bg-slate-50 p-3">
+                          <p>Transport</p>
+                          <p className="font-bold text-slate-900">{deliveryBaseFare.toLocaleString('fr-FR')} FC</p>
+                        </div>
+                        <div className="rounded-2xl bg-slate-50 p-3">
+                          <p>Distance</p>
+                          <p className="font-bold text-slate-900">{deliveryDistanceFee.toLocaleString('fr-FR')} FC</p>
+                        </div>
+                        <div className="rounded-2xl bg-slate-50 p-3">
+                          <p>Poids / assurance</p>
+                          <p className="font-bold text-slate-900">{(deliveryWeightFee + deliveryInsuranceFee).toLocaleString('fr-FR')} FC</p>
+                        </div>
+                        <div className="rounded-2xl bg-emerald-50 p-3">
+                          <p>Total</p>
+                          <p className="font-black text-emerald-700">{deliveryTotal.toLocaleString('fr-FR')} FC</p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
                       {[
                         { id: 'wallet', label: 'eNkambapay' },
                         { id: 'cod', label: 'A la livraison' },
@@ -1149,18 +2776,35 @@ export default function UgaviPage() {
                           key={item.id}
                           type="button"
                           onClick={() => setPaymentChoice(item.id as PaymentChoice)}
-                          className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-600"
+	                          className="rounded-xl border border-white/70 bg-white/78 px-3 py-2 text-sm font-semibold text-slate-600 shadow-xl backdrop-blur-xl"
                         >
                           {item.label}
                         </button>
                       ))}
+                      </div>
                     </div>
                   )}
 
-                  {selectedCourier && instructionsConfirmed && paymentChoice && (
-                    <Button onClick={confirmExpressDelivery} className="h-11 w-full rounded-xl bg-orange-600 hover:bg-orange-700">
-                      Commander
+                  {deliveryStep === 'payment' && selectedCourier && paymentChoice && (
+                    <Button onClick={confirmExpressDelivery} className="h-11 w-full rounded-2xl bg-orange-600 hover:bg-orange-700">
+                      Confirmer et envoyer
                     </Button>
+                  )}
+
+                  {deliveryStep === 'confirmed' && confirmedDeliveryTracking && selectedCourier && (
+                    <div className="space-y-2 rounded-[24px] border border-emerald-100/80 bg-emerald-50/82 p-3 shadow-2xl backdrop-blur-2xl">
+                      <p className="text-xs font-black uppercase text-emerald-800">Livraison confirmee</p>
+                      <p className="font-mono text-lg font-black text-slate-900">{confirmedDeliveryTracking}</p>
+                      <p className="text-sm text-slate-600">{selectedCourier.name} · {locomotionLabels[selectedCourier.locomotion]} · {selectedCourier.eta}</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button type="button" onClick={() => router.push(`/dashboard/ugavi/tracking?tracking=${encodeURIComponent(confirmedDeliveryTracking)}`)} className="rounded-2xl bg-emerald-600 hover:bg-emerald-700">
+                          Suivre le colis
+                        </Button>
+                        <Button type="button" variant="outline" onClick={() => router.push('/dashboard/chat')} className="rounded-2xl bg-white">
+                          Contacter
+                        </Button>
+                      </div>
+                    </div>
                   )}
                 </>
               )}
@@ -1168,7 +2812,7 @@ export default function UgaviPage() {
           )}
         </div>
 
-        <div className="hidden rounded-2xl bg-white/88 p-3 shadow-2xl backdrop-blur-xl ring-1 ring-black/5 lg:block">
+	        <div className="hidden">
           <div className="grid h-full grid-cols-[1fr_auto] gap-3">
             <div>
               <p className="text-sm font-bold text-slate-900">Trajet actif</p>
@@ -1244,10 +2888,27 @@ export default function UgaviPage() {
             </div>
 
             <div className="flex-1 space-y-4 overflow-y-auto p-4">
+              <div className="rounded-2xl border border-emerald-100 bg-emerald-50/70 p-3">
+                <label className="relative block">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2">
+                    <CustomSearchIcon size={22} />
+                  </span>
+                  <Input
+                    value={clientSearchQuery}
+                    onChange={(event) => setClientSearchQuery(event.target.value)}
+                    placeholder="Rechercher colis, agence, transport..."
+                    className="h-11 rounded-2xl border-white/80 bg-white pl-11 text-sm font-semibold shadow-inner"
+                  />
+                </label>
+                <p className="mt-2 text-xs font-semibold text-emerald-800">
+                  Recherche dans vos livraisons, agences nationales, internationales, relais, paiements, factures et suivis.
+                </p>
+              </div>
+
               <div className="grid grid-cols-2 gap-2">
                 {[
                   { label: 'Livraisons', value: recentShipments.length, tone: 'bg-emerald-50 text-emerald-700' },
-                  { label: 'A deposer', value: 0, tone: 'bg-amber-50 text-amber-700' },
+                  { label: 'A deposer', value: recentShipments.filter((item) => item.status === 'En attente').length, tone: 'bg-amber-50 text-amber-700' },
                   { label: 'En transit', value: recentShipments.filter((item) => item.status === 'En transit').length, tone: 'bg-blue-50 text-blue-700' },
                   { label: 'Livres', value: recentShipments.filter((item) => item.status === 'Livre').length, tone: 'bg-slate-100 text-slate-700' },
                 ].map((section) => (
@@ -1264,7 +2925,12 @@ export default function UgaviPage() {
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-bold text-slate-900">Suivis recents</h3>
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-900">Operations logistiques</h3>
+                    <p className="text-xs font-semibold text-slate-500">
+                      {filteredClientShipments.length} resultat{filteredClientShipments.length > 1 ? 's' : ''}
+                    </p>
+                  </div>
                   <button
                     type="button"
                     className="text-xs font-semibold text-emerald-700"
@@ -1273,30 +2939,52 @@ export default function UgaviPage() {
                       resetContextForMode('track');
                     }}
                   >
-                    Rechercher
+                    Suivi
                   </button>
                 </div>
 
-                {recentShipments.length ? (
-                  recentShipments.map((shipment) => (
-                    <button
+                {filteredClientShipments.length ? (
+                  filteredClientShipments.map((shipment) => (
+                    <div
                       key={`${shipment.source}-${shipment.id}-side`}
-                      type="button"
-                      onClick={() => router.push(`/dashboard/ugavi/tracking?tracking=${encodeURIComponent(shipment.trackingNumber)}`)}
-                      className="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-white p-3 text-left transition hover:border-emerald-300"
+                      className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm transition hover:border-emerald-300"
                     >
-                      <div className="min-w-0">
-                        <p className="truncate font-mono text-xs font-bold text-slate-900">{shipment.trackingNumber}</p>
-                        <p className="truncate text-xs text-slate-500">{shipment.destination}</p>
+                      <button
+                        type="button"
+                        onClick={() => router.push(`/dashboard/ugavi/tracking?tracking=${encodeURIComponent(shipment.trackingNumber)}`)}
+                        className="flex w-full items-start justify-between gap-3 text-left"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate font-mono text-xs font-black text-slate-900">{shipment.trackingNumber}</p>
+                          <p className="mt-1 truncate text-xs font-semibold text-emerald-700">{shipment.operationLabel}</p>
+                          <p className="mt-1 truncate text-xs text-slate-500">{shipment.origin} → {shipment.destination}</p>
+                        </div>
+                        <span className="shrink-0 rounded-full bg-slate-100 px-2 py-1 text-[11px] font-semibold text-slate-600">
+                          {shipment.status}
+                        </span>
+                      </button>
+                      <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] font-semibold text-slate-600">
+                        <span className="rounded-xl bg-slate-50 px-2 py-1.5">Transport: {shipment.transportLabel}</span>
+                        <span className="rounded-xl bg-slate-50 px-2 py-1.5">Paiement: {shipment.paymentLabel}</span>
+                        <span className="rounded-xl bg-slate-50 px-2 py-1.5">Montant: {shipment.amountLabel}</span>
+                        <span className="rounded-xl bg-slate-50 px-2 py-1.5">Maj: {shipment.updatedAtLabel}</span>
                       </div>
-                      <span className="ml-2 rounded-full bg-slate-100 px-2 py-1 text-[11px] font-semibold text-slate-600">
-                        {shipment.status}
-                      </span>
-                    </button>
+                      <details className="mt-2 rounded-xl bg-emerald-50/70 px-3 py-2 text-xs text-slate-700">
+                        <summary className="cursor-pointer font-bold text-emerald-800">Details operation</summary>
+                        <div className="mt-2 space-y-1">
+                          <p>{shipment.packageDescription}</p>
+                          {shipment.agencyName && <p>Agence: {shipment.agencyName}</p>}
+                          {shipment.courierName && <p>Livreur: {shipment.courierName}</p>}
+                          {shipment.detailLines.map((line) => (
+                            <p key={line}>{line}</p>
+                          ))}
+                        </div>
+                      </details>
+                    </div>
                   ))
                 ) : (
                   <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
-                    Aucun colis recent pour le moment.
+                    {clientSearchQuery ? 'Aucune operation ne correspond a cette recherche.' : 'Aucun colis recent pour le moment.'}
                   </div>
                 )}
               </div>
@@ -1304,19 +2992,24 @@ export default function UgaviPage() {
               <div className="space-y-2">
                 <h3 className="text-sm font-bold text-slate-900">Sections</h3>
                 {[
-                  'Commandes express',
-                  'Colis en agence',
-                  'Colis a deposer',
-                  'Incidents et retours',
-                  'Recus et preuves',
+                  { label: 'Livraison', count: recentShipments.filter((item) => item.operationLabel.toLowerCase().includes('livraison')).length },
+                  { label: 'Agence nationale', count: recentShipments.filter((item) => item.operationLabel.toLowerCase().includes('nationale')).length },
+                  { label: 'Agence internationale', count: recentShipments.filter((item) => item.operationLabel.toLowerCase().includes('internationale')).length },
+                  { label: 'Agence relais', count: recentShipments.filter((item) => item.operationLabel.toLowerCase().includes('relais')).length },
+                  { label: 'Incidents et retours', count: recentShipments.filter((item) => item.status === 'Incident').length },
+                  { label: 'Recus et factures', count: recentShipments.filter((item) => item.detailLines.some((line) => line.toLowerCase().includes('facture'))).length },
                 ].map((item) => (
                   <button
-                    key={item}
+                    key={item.label}
                     type="button"
+                    onClick={() => setClientSearchQuery(item.label)}
                     className="flex w-full items-center justify-between rounded-xl border border-slate-200 px-3 py-3 text-sm font-semibold text-slate-700"
                   >
-                    {item}
-                    <ChevronLeft className="h-4 w-4 rotate-180 text-slate-400" />
+                    <span>{item.label}</span>
+                    <span className="flex items-center gap-2 text-xs text-slate-500">
+                      {item.count}
+                      <ChevronLeft className="h-4 w-4 rotate-180 text-slate-400" />
+                    </span>
                   </button>
                 ))}
               </div>
@@ -1333,7 +3026,7 @@ export default function UgaviPage() {
         onSuccess={() => void processExpressWalletPayment()}
         paymentDetails={selectedCourier ? {
           recipient: selectedCourier.name,
-          amount: selectedCourier.fare.toLocaleString('fr-FR'),
+          amount: (deliveryTotal || selectedCourier.fare).toLocaleString('fr-FR'),
           currency: 'CDF',
         } : undefined}
       />

@@ -10,6 +10,7 @@ import { GlobalCallOverlay } from "@/components/chat/global-call-overlay";
 import { CurrencyInitializer } from "@/components/currency/CurrencyInitializer";
 import { GlobalAutoTranslator } from "@/components/translation/GlobalAutoTranslator";
 import { UserPinAccessGate } from "@/components/security/UserPinAccessGate";
+import { AdminTelemetryAgent } from "@/components/admin/admin-telemetry-agent";
 
 export const metadata: Metadata = {
   title: "eNkamba - La vie simplifiée et meilleure",
@@ -62,6 +63,7 @@ export default function RootLayout({
           <UserPinAccessGate>
             <AccessCodeGate>
               <GlobalAutoTranslator />
+              <AdminTelemetryAgent />
               {children}
               <GlobalCallOverlay />
               <PendingPaymentWatcher />

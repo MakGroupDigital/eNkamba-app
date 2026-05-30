@@ -508,15 +508,28 @@ function downloadDataUrl(dataUrl: string, filename: string) {
   link.click();
 }
 
+function escapeReceiptValue(value: unknown) {
+  return String(value ?? '').replace(/[<>&"]/g, '');
+}
+
+function parsePackagePayload(payload: string) {
+  try {
+    return JSON.parse(payload) as Record<string, any>;
+  } catch {
+    return {};
+  }
+}
+
 function downloadPackageLabel(packageData: {
   trackingNumber: string;
   qrCodeUrl: string;
   barcodeUrl: string;
   payload: string;
 }) {
-  const html = `<!doctype html><html><head><meta charset="utf-8"><title>Ugavi ${packageData.trackingNumber}</title></head><body style="font-family:Arial,sans-serif;color:#0f5132;padding:24px"><section style="border:2px solid #32BB78;border-radius:18px;padding:24px;max-width:680px"><h1 style="margin:0 0 8px">Ugavi</h1><p style="font-family:monospace;font-size:22px;font-weight:800">${packageData.trackingNumber}</p><img src="${packageData.qrCodeUrl}" style="width:220px;height:220px"><img src="${packageData.barcodeUrl}" style="width:390px;max-width:100%"><pre style="white-space:pre-wrap;background:#f0fdf4;border-radius:12px;padding:12px">${packageData.payload.replace(/[<>&]/g, '')}</pre></section></body></html>`;
+  const payload = parsePackagePayload(packageData.payload);
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>Facture ${packageData.trackingNumber}</title></head><body style="font-family:Arial,sans-serif;color:#0f5132;padding:24px"><section style="border:2px solid #32BB78;border-radius:18px;padding:24px;max-width:760px"><h1 style="margin:0 0 8px">eNKAMBA Logistics</h1><p style="font-family:monospace;font-size:20px;font-weight:800">${packageData.trackingNumber}</p><p><strong>Facture:</strong> ${escapeReceiptValue(payload.invoiceNumber)}</p><div style="display:grid;grid-template-columns:220px 1fr;gap:20px;align-items:center"><img src="${packageData.qrCodeUrl}" style="width:220px;height:220px"><div><img src="${packageData.barcodeUrl}" style="width:390px;max-width:100%"><p><strong>Agence:</strong> ${escapeReceiptValue(payload.agencyName)}</p><p><strong>Expediteur:</strong> ${escapeReceiptValue(payload.senderName)} - ${escapeReceiptValue(payload.senderPhone)}</p><p><strong>Destinataire:</strong> ${escapeReceiptValue(payload.receiverName)} - ${escapeReceiptValue(payload.receiverPhone)}</p><p><strong>Colis:</strong> ${escapeReceiptValue(payload.parcelName)} / ${escapeReceiptValue(payload.parcelCategory)}</p><p><strong>CBM:</strong> ${escapeReceiptValue(payload.totalVolume)} | <strong>Poids:</strong> ${escapeReceiptValue(payload.weight)} kg</p><p><strong>Total:</strong> ${escapeReceiptValue(payload.quoteTotal)} ${escapeReceiptValue(payload.currency)}</p></div></div></section></body></html>`;
   const url = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
-  downloadDataUrl(url, `${packageData.trackingNumber}-etiquette.html`);
+  downloadDataUrl(url, `${packageData.trackingNumber}-facture.html`);
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
@@ -528,30 +541,39 @@ function printPackageLabel(packageData: {
 }) {
   const printWindow = window.open('', '_blank', 'width=760,height=900');
   if (!printWindow) return;
+  const payload = parsePackagePayload(packageData.payload);
 
   printWindow.document.write(`
     <html>
       <head>
-        <title>Etiquette ${packageData.trackingNumber}</title>
+        <title>Facture ${packageData.trackingNumber}</title>
         <style>
           body { font-family: Arial, sans-serif; padding: 24px; color: #0f5132; }
           .label { border: 2px solid #32BB78; border-radius: 18px; padding: 24px; max-width: 620px; }
           h1 { margin: 0 0 8px; font-size: 28px; }
           .tracking { font-family: monospace; font-size: 22px; font-weight: 800; margin-bottom: 18px; }
           .grid { display: grid; grid-template-columns: 220px 1fr; gap: 20px; align-items: center; }
+          .row { margin: 6px 0; font-size: 13px; }
+          .total { margin-top: 12px; padding: 10px; border-radius: 10px; background: #f0fdf4; font-weight: 800; }
           img { max-width: 100%; }
           pre { white-space: pre-wrap; background: #f0fdf4; border-radius: 12px; padding: 12px; font-size: 11px; color: #166534; }
         </style>
       </head>
       <body>
         <div class="label">
-          <h1>Ugavi</h1>
+          <h1>eNKAMBA Logistics</h1>
           <div class="tracking">${packageData.trackingNumber}</div>
+          <div class="row"><strong>Facture:</strong> ${escapeReceiptValue(payload.invoiceNumber)}</div>
           <div class="grid">
             <img src="${packageData.qrCodeUrl}" alt="QR" />
             <div>
               <img src="${packageData.barcodeUrl}" alt="Barcode" />
-              <pre>${packageData.payload.replace(/[<>&]/g, '')}</pre>
+              <div class="row"><strong>Agence:</strong> ${escapeReceiptValue(payload.agencyName)}</div>
+              <div class="row"><strong>Expediteur:</strong> ${escapeReceiptValue(payload.senderName)} - ${escapeReceiptValue(payload.senderPhone)}</div>
+              <div class="row"><strong>Destinataire:</strong> ${escapeReceiptValue(payload.receiverName)} - ${escapeReceiptValue(payload.receiverPhone)}</div>
+              <div class="row"><strong>Colis:</strong> ${escapeReceiptValue(payload.parcelName)} / ${escapeReceiptValue(payload.parcelCategory)}</div>
+              <div class="row"><strong>CBM:</strong> ${escapeReceiptValue(payload.totalVolume)} | <strong>Poids:</strong> ${escapeReceiptValue(payload.weight)} kg</div>
+              <div class="total">Total: ${escapeReceiptValue(payload.quoteTotal)} ${escapeReceiptValue(payload.currency)}</div>
             </div>
           </div>
         </div>
@@ -562,16 +584,118 @@ function printPackageLabel(packageData: {
   printWindow.document.close();
 }
 
+const SHIPMENT_TYPES = [
+  { value: 'national', label: 'National' },
+  { value: 'international', label: 'International' },
+] as const;
+
+const TRANSPORT_CATEGORIES = [
+  { value: 'boat', label: 'Bateau', method: 'CBM', baseRate: 120 },
+  { value: 'air', label: 'Avion', method: 'Kg volumetrique', baseRate: 8.5 },
+  { value: 'train', label: 'Train', method: 'Kg + distance', baseRate: 3.2 },
+  { value: 'bus', label: 'Bus', method: 'Kg', baseRate: 2.2 },
+  { value: 'vehicle', label: 'Vehicule', method: 'Distance + poids', baseRate: 2.8 },
+  { value: 'moto', label: 'Moto', method: 'Petit colis', baseRate: 1.6 },
+  { value: 'bike', label: 'Velo', method: 'Livraison locale', baseRate: 1.1 },
+  { value: 'foot', label: 'Pieton', method: 'Ultra local', baseRate: 0.8 },
+] as const;
+
+const PARCEL_CATEGORIES = ['Document', 'Aliment', 'Electronique', 'Vetement', 'Marchandise', 'Fragile'];
+const PACKAGING_TYPES = ['Carton', 'Sac', 'Palette', 'Conteneur'];
+const CURRENCIES = ['USD', 'CDF', 'RMB', 'EUR'];
+const CONTAINER_TYPES = [
+  { value: 'none', label: 'Sans conteneur', volume: 0 },
+  { value: '20ft', label: '20 pieds', volume: 33 },
+  { value: '40ft', label: '40 pieds', volume: 67 },
+  { value: '40hc', label: '40 HC', volume: 76 },
+] as const;
+
+function toNumber(value: string) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function roundMetric(value: number, decimals = 2) {
+  const factor = 10 ** decimals;
+  return Math.round(value * factor) / factor;
+}
+
+function calculateFreightQuote(params: {
+  transportCategory: string;
+  cbm: number;
+  volumetricWeight: number;
+  realWeight: number;
+  distanceKm: number;
+  insuranceEnabled: boolean;
+  homeDeliveryEnabled: boolean;
+}) {
+  const chargeableWeight = Math.max(params.realWeight, params.volumetricWeight);
+  let freight = 0;
+
+  if (params.transportCategory === 'boat') freight = params.cbm * 120;
+  else if (params.transportCategory === 'air') freight = chargeableWeight * 8.5;
+  else if (params.transportCategory === 'train') freight = params.realWeight * 3.2 + params.distanceKm * 0.08;
+  else if (params.transportCategory === 'bus') freight = params.realWeight * 2.2;
+  else if (params.transportCategory === 'vehicle') freight = params.distanceKm * 0.45 + params.realWeight * 2.8;
+  else if (params.transportCategory === 'moto') freight = 4 + params.realWeight * 1.6;
+  else if (params.transportCategory === 'bike') freight = 2.5 + params.realWeight * 1.1;
+  else freight = 1.5 + params.realWeight * 0.8;
+
+  const insurance = params.insuranceEnabled ? Math.max(freight * 0.05, 1) : 0;
+  const homeDelivery = params.homeDeliveryEnabled ? 3 : 0;
+  const taxes = freight * 0.08;
+  return {
+    freight: roundMetric(freight),
+    insurance: roundMetric(insurance),
+    homeDelivery: roundMetric(homeDelivery),
+    taxes: roundMetric(taxes),
+    total: roundMetric(freight + insurance + homeDelivery + taxes),
+    chargeableWeight: roundMetric(chargeableWeight),
+  };
+}
+
 function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUser }) {
   const videoRef = React.useRef<HTMLVideoElement | null>(null);
   const streamRef = React.useRef<MediaStream | null>(null);
+  const defaultShipmentType = businessUser.subCategory === 'INTERNATIONAL_AGENCY' ? 'international' : 'national';
+  const [shipmentType, setShipmentType] = useState(defaultShipmentType);
+  const [transportCategory, setTransportCategory] = useState('vehicle');
+  const [agencyName, setAgencyName] = useState(businessUser.businessName || '');
+  const [agentName, setAgentName] = useState('');
   const [senderName, setSenderName] = useState('');
   const [senderPhone, setSenderPhone] = useState('');
+  const [senderEmail, setSenderEmail] = useState('');
+  const [senderAddress, setSenderAddress] = useState('');
+  const [senderCountry, setSenderCountry] = useState('');
+  const [senderCity, setSenderCity] = useState('');
+  const [senderIdFile, setSenderIdFile] = useState<File | null>(null);
   const [receiverName, setReceiverName] = useState('');
   const [receiverPhone, setReceiverPhone] = useState('');
+  const [receiverEmail, setReceiverEmail] = useState('');
+  const [receiverAddress, setReceiverAddress] = useState('');
+  const [receiverCountry, setReceiverCountry] = useState('');
+  const [receiverCity, setReceiverCity] = useState('');
   const [origin, setOrigin] = useState('');
   const [destination, setDestination] = useState('');
+  const [parcelName, setParcelName] = useState('');
+  const [parcelCategory, setParcelCategory] = useState(PARCEL_CATEGORIES[0]);
+  const [quantity, setQuantity] = useState('1');
+  const [declaredValue, setDeclaredValue] = useState('');
+  const [declaredValueCurrency, setDeclaredValueCurrency] = useState('USD');
+  const [packagingType, setPackagingType] = useState(PACKAGING_TYPES[0]);
   const [weight, setWeight] = useState('');
+  const [lengthCm, setLengthCm] = useState('');
+  const [widthCm, setWidthCm] = useState('');
+  const [heightCm, setHeightCm] = useState('');
+  const [distanceKm, setDistanceKm] = useState('');
+  const [containerType, setContainerType] = useState('none');
+  const [billingCurrency, setBillingCurrency] = useState('USD');
+  const [insuranceEnabled, setInsuranceEnabled] = useState(false);
+  const [homeDeliveryEnabled, setHomeDeliveryEnabled] = useState(false);
+  const [paymentAtDestinationEnabled, setPaymentAtDestinationEnabled] = useState(false);
+  const [digitalSignatureRequired, setDigitalSignatureRequired] = useState(true);
+  const [idScanRequired, setIdScanRequired] = useState(true);
+  const [trackingHistoryEnabled, setTrackingHistoryEnabled] = useState(true);
   const [description, setDescription] = useState('');
   const [packagePhoto, setPackagePhoto] = useState<File | null>(null);
   const [packagePhotoPreview, setPackagePhotoPreview] = useState('');
@@ -580,13 +704,39 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
   const [isSaving, setIsSaving] = useState(false);
   const [registeredPackage, setRegisteredPackage] = useState<{
     trackingNumber: string;
+    invoiceNumber: string;
+    totalLabel: string;
+    parcelLabel: string;
     qrCodeUrl: string;
     barcodeUrl: string;
     payload: string;
     requestId: string;
   } | null>(null);
 
-  const canSubmit = senderName && receiverName && receiverPhone && origin && destination && weight && packagePhoto;
+  const lengthValue = toNumber(lengthCm);
+  const widthValue = toNumber(widthCm);
+  const heightValue = toNumber(heightCm);
+  const weightValue = toNumber(weight);
+  const quantityValue = Math.max(1, toNumber(quantity) || 1);
+  const cbm = roundMetric((lengthValue * widthValue * heightValue) / 1000000, 3);
+  const volumetricWeight = roundMetric((lengthValue * widthValue * heightValue) / 6000, 2);
+  const selectedContainer = CONTAINER_TYPES.find((container) => container.value === containerType) || CONTAINER_TYPES[0];
+  const totalVolume = roundMetric(cbm * quantityValue, 3);
+  const totalWeight = roundMetric(weightValue * quantityValue, 2);
+  const containerOccupancy = selectedContainer.volume ? roundMetric((totalVolume / selectedContainer.volume) * 100, 1) : 0;
+  const containerRemaining = selectedContainer.volume ? roundMetric(Math.max(selectedContainer.volume - totalVolume, 0), 3) : 0;
+  const selectedTransport = TRANSPORT_CATEGORIES.find((transport) => transport.value === transportCategory) || TRANSPORT_CATEGORIES[4];
+  const quote = calculateFreightQuote({
+    transportCategory,
+    cbm: totalVolume,
+    volumetricWeight,
+    realWeight: totalWeight,
+    distanceKm: toNumber(distanceKm),
+    insuranceEnabled,
+    homeDeliveryEnabled,
+  });
+
+  const canSubmit = senderName && senderPhone && receiverName && receiverPhone && origin && destination && parcelName && weight && lengthCm && widthCm && heightCm && packagePhoto;
 
   useEffect(() => {
     return () => {
@@ -667,18 +817,40 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
       const cleanOrigin = origin.slice(0, 3).toUpperCase().replace(/[^A-Z]/g, '') || 'ORG';
       const cleanDestination = destination.slice(0, 3).toUpperCase().replace(/[^A-Z]/g, '') || 'DST';
       const trackingNumber = `UGV-${new Date().getFullYear()}-${cleanOrigin}-${cleanDestination}-${Date.now().toString().slice(-5)}`;
+      const invoiceNumber = `FAC-${trackingNumber}`;
       const photoUpload = await uploadToCloudinary(packagePhoto, 'image');
+      const senderIdUpload = senderIdFile ? await uploadToCloudinary(senderIdFile, 'image') : null;
       const qrPayload = JSON.stringify({
         type: 'UGAVI_PACKAGE',
         packageNumber: trackingNumber,
         trackingNumber,
+        invoiceNumber,
+        shipmentType,
+        transportCategory,
+        transportLabel: selectedTransport.label,
         senderName,
         senderPhone,
+        senderEmail,
+        senderAddress,
+        senderCountry,
+        senderCity,
         receiverName,
         receiverPhone,
+        receiverEmail,
+        receiverAddress,
+        receiverCountry,
+        receiverCity,
         origin,
         destination,
-        weight,
+        parcelName,
+        parcelCategory,
+        quantity: quantityValue,
+        weight: totalWeight,
+        cbm,
+        totalVolume,
+        volumetricWeight,
+        quoteTotal: quote.total,
+        currency: billingCurrency,
         description,
         packagePhotoUrl: photoUpload.secureUrl,
         agencyName: businessUser.businessName,
@@ -699,14 +871,80 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
         agencyUserId: businessUser.uid,
         agencyName: businessUser.businessName,
         agencySubCategory: businessUser.subCategory || null,
+        registrationAgent: agentName || businessUser.businessName,
+        registrationAgency: agencyName || businessUser.businessName,
         userId: null,
         senderName,
         senderPhone,
+        senderEmail,
+        senderCountry,
+        senderCity,
+        senderFullAddress: senderAddress,
+        senderIdDocumentUrl: senderIdUpload?.secureUrl || null,
+        senderIdDocumentPublicId: senderIdUpload?.publicId || null,
         receiverName,
         receiverPhone,
+        receiverEmail,
+        receiverCountry,
+        receiverCity,
+        receiverFullAddress: receiverAddress,
         senderAddress: origin,
         receiverAddress: destination,
-        packageWeight: Number(weight),
+        shipmentType,
+        transportCategory,
+        transportCategoryLabel: selectedTransport.label,
+        transportPricingMethod: selectedTransport.method,
+        parcelName,
+        parcelCategory,
+        quantity: quantityValue,
+        declaredValue: toNumber(declaredValue),
+        declaredValueCurrency,
+        packagingType,
+        packageWeight: totalWeight,
+        realWeightKg: weightValue,
+        dimensions: {
+          lengthCm: lengthValue,
+          widthCm: widthValue,
+          heightCm: heightValue,
+        },
+        cbm,
+        totalVolumeCbm: totalVolume,
+        volumetricWeightKg: volumetricWeight,
+        chargeableWeightKg: quote.chargeableWeight,
+        distanceKm: toNumber(distanceKm),
+        container: {
+          type: containerType,
+          label: selectedContainer.label,
+          capacityCbm: selectedContainer.volume,
+          parcelCount: quantityValue,
+          volumeTotalCbm: totalVolume,
+          weightTotalKg: totalWeight,
+          occupancyPercent: containerOccupancy,
+          remainingCbm: containerRemaining,
+        },
+        pricing: {
+          currency: billingCurrency,
+          freight: quote.freight,
+          insurance: quote.insurance,
+          homeDelivery: quote.homeDelivery,
+          taxes: quote.taxes,
+          total: quote.total,
+          method: selectedTransport.method,
+        },
+        invoice: {
+          invoiceNumber,
+          printable: true,
+          qrCodeIncluded: true,
+          barcodeIncluded: true,
+        },
+        options: {
+          insurance: insuranceEnabled,
+          homeDelivery: homeDeliveryEnabled,
+          paymentAtDestination: paymentAtDestinationEnabled,
+          digitalSignature: digitalSignatureRequired,
+          idScan: idScanRequired,
+          trackingHistory: trackingHistoryEnabled,
+        },
         description,
         packagePhotoUrl: photoUpload.secureUrl,
         packagePhotoPublicId: photoUpload.publicId,
@@ -725,14 +963,54 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
         updatedAt: serverTimestamp(),
       });
 
-      setRegisteredPackage({ trackingNumber, qrCodeUrl, barcodeUrl, payload: qrPayload, requestId: requestDoc.id });
+      setRegisteredPackage({
+        trackingNumber,
+        invoiceNumber,
+        totalLabel: `${quote.total.toFixed(2)} ${billingCurrency}`,
+        parcelLabel: parcelName,
+        qrCodeUrl,
+        barcodeUrl,
+        payload: qrPayload,
+        requestId: requestDoc.id,
+      });
+      setShipmentType(defaultShipmentType);
+      setTransportCategory('vehicle');
+      setAgencyName(businessUser.businessName || '');
+      setAgentName('');
       setSenderName('');
       setSenderPhone('');
+      setSenderEmail('');
+      setSenderAddress('');
+      setSenderCountry('');
+      setSenderCity('');
+      setSenderIdFile(null);
       setReceiverName('');
       setReceiverPhone('');
+      setReceiverEmail('');
+      setReceiverAddress('');
+      setReceiverCountry('');
+      setReceiverCity('');
       setOrigin('');
       setDestination('');
+      setParcelName('');
+      setParcelCategory(PARCEL_CATEGORIES[0]);
+      setQuantity('1');
+      setDeclaredValue('');
+      setDeclaredValueCurrency('USD');
+      setPackagingType(PACKAGING_TYPES[0]);
       setWeight('');
+      setLengthCm('');
+      setWidthCm('');
+      setHeightCm('');
+      setDistanceKm('');
+      setContainerType('none');
+      setBillingCurrency('USD');
+      setInsuranceEnabled(false);
+      setHomeDeliveryEnabled(false);
+      setPaymentAtDestinationEnabled(false);
+      setDigitalSignatureRequired(true);
+      setIdScanRequired(true);
+      setTrackingHistoryEnabled(true);
       setDescription('');
       updatePackagePhoto(null);
     } catch (error) {
@@ -748,19 +1026,119 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
         <div className="mb-5">
           <h2 className="text-2xl font-bold text-emerald-950">Enregistrement agence</h2>
           <p className="mt-1 text-sm text-slate-500">
-            Le personnel valide le colis, puis Ugavi genere le QR code et le numero de suivi a transmettre au proprietaire et au destinataire.
+            Formulaire POS pour creer le colis, calculer CBM / tarif, generer la facture, le QR code et le code-barres.
           </p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <Field label="Expediteur" value={senderName} onChange={setSenderName} placeholder="Nom complet" />
-          <Field label="Telephone expediteur" value={senderPhone} onChange={setSenderPhone} placeholder="+243..." />
-          <Field label="Destinataire" value={receiverName} onChange={setReceiverName} placeholder="Nom complet" />
-          <Field label="Telephone destinataire" value={receiverPhone} onChange={setReceiverPhone} placeholder="+243..." />
-          <Field label="Agence / origine" value={origin} onChange={setOrigin} placeholder="Agence Gombe, Kinshasa" />
-          <Field label="Destination" value={destination} onChange={setDestination} placeholder="Ville, quartier, point relais" />
-          <Field label="Poids kg" value={weight} onChange={setWeight} placeholder="2.5" type="number" />
-          <Field label="Description" value={description} onChange={setDescription} placeholder="Contenu, fragilite, note" />
+        <div className="grid gap-5">
+          <div className="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4">
+            <p className="text-sm font-black text-emerald-950">Informations generales</p>
+            <div className="mt-3 grid gap-3 md:grid-cols-3">
+              <SelectField label="Type expedition" value={shipmentType} onChange={setShipmentType} options={SHIPMENT_TYPES} />
+              <SelectField label="Categorie transport" value={transportCategory} onChange={setTransportCategory} options={TRANSPORT_CATEGORIES} />
+              <Field label="Agent d'enregistrement" value={agentName} onChange={setAgentName} placeholder="Nom de l'agent" />
+              <Field label="Agence" value={agencyName} onChange={setAgencyName} placeholder="Agence selectionnee" />
+              <Field label="Agence / point depart" value={origin} onChange={setOrigin} placeholder="Agence Gombe, Kinshasa" />
+              <Field label="Destination" value={destination} onChange={setDestination} placeholder="Ville, quartier, point relais" />
+            </div>
+          </div>
+
+          <div className="grid gap-5 xl:grid-cols-2">
+            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+              <p className="text-sm font-black text-slate-900">Expediteur</p>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <Field label="Nom complet" value={senderName} onChange={setSenderName} placeholder="Nom complet" />
+                <Field label="Telephone" value={senderPhone} onChange={setSenderPhone} placeholder="+243..." />
+                <Field label="Email" value={senderEmail} onChange={setSenderEmail} placeholder="email@exemple.com" />
+                <Field label="Pays" value={senderCountry} onChange={setSenderCountry} placeholder="RDC" />
+                <Field label="Ville" value={senderCity} onChange={setSenderCity} placeholder="Kinshasa" />
+                <label className="space-y-1.5">
+                  <span className="text-sm font-semibold text-slate-700">Piece d'identite</span>
+                  <input
+                    type="file"
+                    accept="image/*,.pdf"
+                    onChange={(event) => setSenderIdFile(event.target.files?.[0] || null)}
+                    className="block h-11 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-emerald-50 file:px-3 file:py-1.5 file:text-sm file:font-bold file:text-emerald-700"
+                  />
+                </label>
+                <div className="sm:col-span-2">
+                  <Field label="Adresse complete" value={senderAddress} onChange={setSenderAddress} placeholder="Adresse physique de l'expediteur" />
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+              <p className="text-sm font-black text-slate-900">Destinataire</p>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <Field label="Nom complet" value={receiverName} onChange={setReceiverName} placeholder="Nom complet" />
+                <Field label="Telephone" value={receiverPhone} onChange={setReceiverPhone} placeholder="+243..." />
+                <Field label="Email" value={receiverEmail} onChange={setReceiverEmail} placeholder="email@exemple.com" />
+                <Field label="Pays" value={receiverCountry} onChange={setReceiverCountry} placeholder="RDC" />
+                <Field label="Ville" value={receiverCity} onChange={setReceiverCity} placeholder="Lubumbashi" />
+                <div />
+                <div className="sm:col-span-2">
+                  <Field label="Adresse complete" value={receiverAddress} onChange={setReceiverAddress} placeholder="Adresse ou agence de retrait" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-4">
+            <p className="text-sm font-black text-slate-900">Colis, dimensions et calcul automatique</p>
+            <div className="mt-3 grid gap-3 md:grid-cols-3">
+              <Field label="Nom du colis" value={parcelName} onChange={setParcelName} placeholder="Documents, telephone, cartons..." />
+              <SelectField label="Categorie colis" value={parcelCategory} onChange={setParcelCategory} options={PARCEL_CATEGORIES.map((item) => ({ value: item, label: item }))} />
+              <SelectField label="Emballage" value={packagingType} onChange={setPackagingType} options={PACKAGING_TYPES.map((item) => ({ value: item, label: item }))} />
+              <Field label="Quantite" value={quantity} onChange={setQuantity} placeholder="1" type="number" />
+              <Field label="Valeur declaree" value={declaredValue} onChange={setDeclaredValue} placeholder="100" type="number" />
+              <SelectField label="Devise valeur" value={declaredValueCurrency} onChange={setDeclaredValueCurrency} options={CURRENCIES.map((item) => ({ value: item, label: item }))} />
+              <Field label="Longueur cm" value={lengthCm} onChange={setLengthCm} placeholder="100" type="number" />
+              <Field label="Largeur cm" value={widthCm} onChange={setWidthCm} placeholder="50" type="number" />
+              <Field label="Hauteur cm" value={heightCm} onChange={setHeightCm} placeholder="40" type="number" />
+              <Field label="Poids reel kg" value={weight} onChange={setWeight} placeholder="2.5" type="number" />
+              <Field label="Distance km" value={distanceKm} onChange={setDistanceKm} placeholder="0 si inconnu" type="number" />
+              <SelectField label="Conteneur" value={containerType} onChange={setContainerType} options={CONTAINER_TYPES} />
+              <div className="md:col-span-3">
+                <Field label="Description" value={description} onChange={setDescription} placeholder="Contenu, fragilite, documents commerciaux, note agence" />
+              </div>
+            </div>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-4">
+            <MetricCard label="CBM unitaire" value={`${cbm.toFixed(3)} CBM`} />
+            <MetricCard label="Poids volumetrique" value={`${volumetricWeight.toFixed(2)} kg`} />
+            <MetricCard label="Volume total" value={`${totalVolume.toFixed(3)} CBM`} />
+            <MetricCard label="Poids facture" value={`${quote.chargeableWeight.toFixed(2)} kg`} />
+          </div>
+
+          <div className="rounded-2xl border border-orange-100 bg-orange-50/60 p-4">
+            <div className="grid gap-3 md:grid-cols-3">
+              <SelectField label="Devise facture" value={billingCurrency} onChange={setBillingCurrency} options={CURRENCIES.map((item) => ({ value: item, label: item }))} />
+              <MetricCard label="Methode tarifaire" value={selectedTransport.method} />
+              <MetricCard label="Total estime" value={`${quote.total.toFixed(2)} ${billingCurrency}`} />
+            </div>
+            <div className="mt-3 grid gap-2 md:grid-cols-4">
+              <p className="rounded-xl bg-white px-3 py-2 text-xs font-bold text-slate-600">Transport: {quote.freight.toFixed(2)} {billingCurrency}</p>
+              <p className="rounded-xl bg-white px-3 py-2 text-xs font-bold text-slate-600">Assurance: {quote.insurance.toFixed(2)} {billingCurrency}</p>
+              <p className="rounded-xl bg-white px-3 py-2 text-xs font-bold text-slate-600">Domicile: {quote.homeDelivery.toFixed(2)} {billingCurrency}</p>
+              <p className="rounded-xl bg-white px-3 py-2 text-xs font-bold text-slate-600">Taxes: {quote.taxes.toFixed(2)} {billingCurrency}</p>
+            </div>
+            {selectedContainer.volume > 0 && (
+              <div className="mt-3 rounded-xl bg-white p-3 text-sm text-slate-700">
+                Occupation conteneur {selectedContainer.label}: <strong>{containerOccupancy}%</strong>, reste disponible <strong>{containerRemaining} CBM</strong>.
+              </div>
+            )}
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-3">
+            <OptionToggle label="Assurance colis" checked={insuranceEnabled} onChange={setInsuranceEnabled} />
+            <OptionToggle label="Livraison domicile" checked={homeDeliveryEnabled} onChange={setHomeDeliveryEnabled} />
+            <OptionToggle label="Paiement destination" checked={paymentAtDestinationEnabled} onChange={setPaymentAtDestinationEnabled} />
+            <OptionToggle label="Signature numerique" checked={digitalSignatureRequired} onChange={setDigitalSignatureRequired} />
+            <OptionToggle label="Scan piece identite" checked={idScanRequired} onChange={setIdScanRequired} />
+            <OptionToggle label="Historique tracking" checked={trackingHistoryEnabled} onChange={setTrackingHistoryEnabled} />
+          </div>
+
           <div className="space-y-2 md:col-span-2">
             <span className="text-sm font-semibold text-slate-700">Photo du colis *</span>
             {!isCameraOpen && (
@@ -848,6 +1226,11 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
             <div className="rounded-xl bg-slate-50 p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Numero de suivi</p>
               <p className="mt-2 font-mono text-lg font-bold text-emerald-950">{registeredPackage.trackingNumber}</p>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                <p className="rounded-lg bg-white px-3 py-2 text-xs font-bold text-slate-600">Facture: {registeredPackage.invoiceNumber}</p>
+                <p className="rounded-lg bg-white px-3 py-2 text-xs font-bold text-slate-600">Total: {registeredPackage.totalLabel}</p>
+                <p className="rounded-lg bg-white px-3 py-2 text-xs font-bold text-slate-600 sm:col-span-2">Colis: {registeredPackage.parcelLabel}</p>
+              </div>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-xl border border-emerald-100 bg-white p-3 text-center">
@@ -946,6 +1329,71 @@ function Field({
         className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
       />
     </label>
+  );
+}
+
+function SelectField({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: ReadonlyArray<{ value: string; label: string }>;
+}) {
+  return (
+    <label className="space-y-1.5">
+      <span className="text-sm font-semibold text-slate-700">{label}</span>
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+      >
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function MetricCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-emerald-100 bg-white p-3 shadow-sm">
+      <p className="text-[11px] font-black uppercase tracking-[0.14em] text-emerald-700">{label}</p>
+      <p className="mt-1 text-lg font-black text-emerald-950">{value}</p>
+    </div>
+  );
+}
+
+function OptionToggle({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => onChange(!checked)}
+      className={`flex items-center justify-between rounded-2xl border px-4 py-3 text-left text-sm font-bold transition ${
+        checked
+          ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+          : 'border-slate-200 bg-white text-slate-600 hover:border-emerald-100'
+      }`}
+    >
+      <span>{label}</span>
+      <span className={`h-5 w-9 rounded-full p-0.5 transition ${checked ? 'bg-emerald-600' : 'bg-slate-200'}`}>
+        <span className={`block h-4 w-4 rounded-full bg-white transition ${checked ? 'translate-x-4' : ''}`} />
+      </span>
+    </button>
   );
 }
 

@@ -11,8 +11,8 @@ import { Loader2, Copy, Share2, QrCode, Link as LinkIcon, Zap, CheckCircle2, Dow
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '@/lib/firebase';
 import QRCode from 'qrcode';
-import Image from 'next/image';
 import { TranslationDialog } from '@/components/translation/TranslationDialog';
+import { BrandedQRCodeCard } from '@/components/qrcode/branded-qr-code-card';
 
 type ReceiveMethod = 'link' | 'qr' | 'phone' | 'code' | 'nfc' | 'bluetooth' | 'wifi' | null;
 
@@ -57,6 +57,8 @@ export function UnifiedReceiveFlow({
   const [bluetoothSupported, setBluetoothSupported] = useState(false);
   const [codeTimeLeft, setCodeTimeLeft] = useState(300);
   const [showDescriptionTranslation, setShowDescriptionTranslation] = useState(false);
+  const receiverName = profile?.fullName || profile?.name || profile?.displayName || user?.displayName || 'Utilisateur eNkamba';
+  const receiverPhoto = profile?.profileImage || profile?.photoURL || user?.photoURL || null;
 
   useEffect(() => {
     if (initialMethod && ['link', 'qr', 'phone', 'code', 'nfc', 'bluetooth', 'wifi'].includes(initialMethod)) {
@@ -111,6 +113,7 @@ export function UnifiedReceiveFlow({
           const qrImage = await QRCode.toDataURL(link.url, {
             width: 300,
             margin: 2,
+            errorCorrectionLevel: 'H',
             color: {
               dark: '#32BB78',
               light: '#ffffff',
@@ -451,12 +454,14 @@ export function UnifiedReceiveFlow({
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-center">
-                  <Image
-                    src={qrCodeImage}
-                    alt="Payment QR Code"
-                    width={300}
-                    height={300}
-                    className="border-4 border-[#32BB78] rounded-lg"
+                  <BrandedQRCodeCard
+                    qrCode={qrCodeImage}
+                    title="QR paiement eNkamba"
+                    name={receiverName}
+                    subtitle={paymentLink.code}
+                    centerImageSrc={receiverPhoto}
+                    variant="payment"
+                    qrAlt="Payment QR Code"
                   />
                 </div>
                 <Button

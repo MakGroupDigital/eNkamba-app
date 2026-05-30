@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, Package, Search, AlertCircle, CheckCircle, Clock, MapPin, Download, ReceiptText } from 'lucide-react';
+import { ArrowLeft, Package, Search, AlertCircle, CheckCircle, Clock, MapPin, Download, ReceiptText, ScanLine, X } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
@@ -25,6 +25,16 @@ interface TrackingInfo {
   totalAmount?: number;
   transactionId?: string;
   serviceMode?: string;
+  currentPosition?: string;
+  packageDescription?: string;
+  packageWeight?: number;
+  declaredValue?: number;
+  transportLabel?: string;
+  agencyName?: string;
+  courierName?: string;
+  recipientPhone?: string;
+  paymentLabel?: string;
+  proofLabel?: string;
   requestId?: string;
   logisticsStatus?: UgaviLogisticsStatus;
   events: Array<{
@@ -46,6 +56,13 @@ export default function UgaviTrackingPage() {
   const [searchError, setSearchError] = useState<string | null>(null);
   const hasAutoSearched = useRef(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [scannerError, setScannerError] = useState<string | null>(null);
+  const [isScannerReady, setIsScannerReady] = useState(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const scannerStreamRef = useRef<MediaStream | null>(null);
+  const scannerFrameRef = useRef<number | null>(null);
 
   const downloadUgaviReceipt = () => {
     if (!trackingInfo) return;
@@ -170,6 +187,22 @@ export default function UgaviTrackingPage() {
           totalAmount: ugaviData.totalAmount || 0,
           transactionId: ugaviData.transactionId || '',
           serviceMode: ugaviData.serviceMode || '',
+          currentPosition: events[0]?.location || ugaviData.currentLocation || ugaviData.senderAddress || 'Position en cours de mise a jour',
+          packageDescription: ugaviData.description || ugaviData.packageType || 'Colis Ugavi',
+          packageWeight: Number(ugaviData.packageWeight || 0),
+          declaredValue: Number(ugaviData.declaredValue || ugaviData.packageValue || 0),
+          transportLabel:
+            ugaviData.internationalShipment?.transportLabel ||
+            ugaviData.nationalShipment?.transportLabel ||
+            ugaviData.relayShipment?.serviceLabel ||
+            ugaviData.selectedCourier?.locomotion ||
+            ugaviData.serviceMode ||
+            'Ugavi',
+          agencyName: ugaviData.selectedAgency?.name || ugaviData.agencyName || '',
+          courierName: ugaviData.selectedCourier?.name || '',
+          recipientPhone: ugaviData.receiverPhone || '',
+          paymentLabel: ugaviData.paymentStatus === 'completed' ? 'Payé' : ugaviData.paymentStatus === 'cash_on_delivery' ? 'A la livraison' : 'En attente',
+          proofLabel: ugaviData.deliveryProof?.type || ugaviData.proofOfDelivery ? 'Preuve de livraison disponible' : 'Preuve attendue a la livraison',
           requestId: ugaviDoc.id,
           logisticsStatus,
           events,
@@ -273,6 +306,14 @@ export default function UgaviTrackingPage() {
         destination: orderData.shippingAddress || orderData.pickupRoute?.storeLocationLabel || 'Destination',
         estimatedDelivery: estimatedDelivery.toLocaleDateString('fr-FR'),
         lastUpdate: (orderData.updatedAt?.toDate?.() || new Date()).toLocaleString('fr-FR'),
+        currentPosition: events[0]?.location || orderData.shippingAddress || 'Position en cours de mise a jour',
+        packageDescription: orderData.items?.[0]?.name || orderData.description || 'Commande Nkampa',
+        packageWeight: Number(orderData.packageWeight || 0),
+        transportLabel: orderData.pickupRoute?.enabled ? 'Retrait boutique' : 'Livraison',
+        agencyName: orderData.pickupRoute?.storeLocationLabel || sellerData?.businessName || '',
+        recipientPhone: buyerData?.phoneNumber || orderData.buyerPhone || '',
+        paymentLabel: orderData.paymentStatus === 'paid' || orderData.status === 'paid' ? 'Payé' : 'Selon commande',
+        proofLabel: orderData.status === 'delivered' ? 'Livraison confirmee' : 'Preuve attendue a la livraison',
         events: events.reverse(),
       };
 
@@ -293,6 +334,110 @@ export default function UgaviTrackingPage() {
       setIsSearching(false);
     }
   }, [trackingNumber, toast]);
+
+  const stopScanner = useCallback(() => {
+    if (scannerFrameRef.current !== null) {
+      cancelAnimationFrame(scannerFrameRef.current);
+      scannerFrameRef.current = null;
+    }
+    scannerStreamRef.current?.getTracks().forEach((track) => track.stop());
+    scannerStreamRef.current = null;
+    setIsScannerReady(false);
+  }, []);
+
+  const handleScannedCode = useCallback((code: string) => {
+    const scannedCode = code.trim();
+    if (!scannedCode) return;
+    stopScanner();
+    setIsScannerOpen(false);
+    setTrackingNumber(scannedCode);
+    setSearchError(null);
+    void handleSearch(scannedCode);
+  }, [handleSearch, stopScanner]);
+
+  const startScanner = useCallback(async () => {
+    setScannerError(null);
+    setIsScannerReady(false);
+
+    try {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error('Camera indisponible sur cet appareil.');
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' } },
+        audio: false,
+      });
+      scannerStreamRef.current = stream;
+
+      const video = videoRef.current;
+      if (!video) return;
+
+      video.srcObject = stream;
+      await video.play();
+      setIsScannerReady(true);
+
+      const scanFrame = async () => {
+        const currentVideo = videoRef.current;
+        const canvas = canvasRef.current;
+        if (!currentVideo || !canvas || currentVideo.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
+          scannerFrameRef.current = requestAnimationFrame(scanFrame);
+          return;
+        }
+
+        canvas.width = currentVideo.videoWidth;
+        canvas.height = currentVideo.videoHeight;
+        const context = canvas.getContext('2d', { willReadFrequently: true });
+        if (!context) {
+          scannerFrameRef.current = requestAnimationFrame(scanFrame);
+          return;
+        }
+
+        context.drawImage(currentVideo, 0, 0, canvas.width, canvas.height);
+
+        try {
+          const BarcodeDetectorCtor = (window as any).BarcodeDetector;
+          if (BarcodeDetectorCtor) {
+            const detector = new BarcodeDetectorCtor({ formats: ['qr_code', 'code_128', 'code_39', 'ean_13', 'ean_8', 'upc_a', 'upc_e'] });
+            const codes = await detector.detect(canvas);
+            const rawValue = codes?.[0]?.rawValue;
+            if (rawValue) {
+              handleScannedCode(rawValue);
+              return;
+            }
+          } else {
+            const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+            const jsQR = (await import('jsqr')).default;
+            const result = jsQR(imageData.data, imageData.width, imageData.height);
+            if (result?.data) {
+              handleScannedCode(result.data);
+              return;
+            }
+          }
+        } catch (error) {
+          console.error('Erreur scan code colis:', error);
+        }
+
+        scannerFrameRef.current = requestAnimationFrame(scanFrame);
+      };
+
+      scannerFrameRef.current = requestAnimationFrame(scanFrame);
+    } catch (error: any) {
+      console.error('Erreur ouverture scanner:', error);
+      setScannerError(error?.message || 'Impossible d ouvrir la camera.');
+      stopScanner();
+    }
+  }, [handleScannedCode, stopScanner]);
+
+  useEffect(() => {
+    if (!isScannerOpen) {
+      stopScanner();
+      return;
+    }
+
+    void startScanner();
+    return () => stopScanner();
+  }, [isScannerOpen, startScanner, stopScanner]);
 
   const moveUgaviStatus = async (nextStatus: UgaviLogisticsStatus) => {
     if (!trackingInfo?.requestId || !trackingInfo.logisticsStatus || !user) return;
@@ -364,6 +509,19 @@ export default function UgaviTrackingPage() {
     }
   };
 
+  const progressSteps = [
+    { key: 'registered', label: 'Enregistré' },
+    { key: 'assigned', label: 'Ramassé' },
+    { key: 'in_transit', label: 'En transit' },
+    { key: 'arrived_depot', label: 'Arrivé' },
+    { key: 'delivered', label: 'Livré' },
+  ];
+
+  const activeProgressIndex = Math.max(
+    0,
+    progressSteps.findIndex((step) => step.key === trackingInfo?.logisticsStatus)
+  );
+
   return (
     <div className="container mx-auto flex min-h-screen max-w-2xl flex-col bg-muted/20 p-4">
       <header className="mb-6 flex items-center gap-4">
@@ -385,7 +543,7 @@ export default function UgaviTrackingPage() {
               <p className="mt-1 text-sm text-gray-600">Entrez le numéro de suivi de votre colis</p>
             </div>
 
-            <div className="flex gap-2">
+            <div className="grid gap-2 sm:grid-cols-[1fr_auto_auto]">
               <Input
                 id="tracking"
                 placeholder="Ex: ENK-2026-001234"
@@ -399,8 +557,17 @@ export default function UgaviTrackingPage() {
                     void handleSearch();
                   }
                 }}
-                className="h-12 flex-1 text-base"
+                className="h-12 text-base"
               />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsScannerOpen(true)}
+                className="h-12 px-4"
+              >
+                <ScanLine className="mr-2 h-4 w-4" />
+                Scanner QR / Code-barres
+              </Button>
               <Button
                 onClick={() => void handleSearch()}
                 disabled={isSearching || !trackingNumber.trim()}
@@ -428,6 +595,55 @@ export default function UgaviTrackingPage() {
         </Card>
       )}
 
+      {isScannerOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/70 p-3 sm:items-center">
+          <div className="w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+              <div>
+                <p className="text-sm font-bold text-slate-900">Scanner colis</p>
+                <p className="text-xs text-slate-500">QR code ou code-barres du reçu / colis</p>
+              </div>
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                onClick={() => {
+                  stopScanner();
+                  setIsScannerOpen(false);
+                }}
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            <div className="space-y-3 p-4">
+              <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-slate-950">
+                <video ref={videoRef} className="h-full w-full object-cover" playsInline muted />
+                <canvas ref={canvasRef} className="hidden" />
+                <div className="pointer-events-none absolute inset-10 rounded-2xl border-2 border-emerald-400 shadow-[0_0_0_999px_rgba(15,23,42,0.35)]" />
+                <div className="pointer-events-none absolute left-12 right-12 top-1/2 h-0.5 bg-emerald-300 shadow-[0_0_18px_rgba(52,211,153,0.95)]" />
+                {!isScannerReady && !scannerError && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-slate-950/60 text-sm font-semibold text-white">
+                    Ouverture de la camera...
+                  </div>
+                )}
+              </div>
+
+              {scannerError && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Scanner indisponible</AlertTitle>
+                  <AlertDescription>{scannerError}</AlertDescription>
+                </Alert>
+              )}
+
+              <p className="text-xs text-slate-500">
+                Le scan remplit automatiquement le numéro de suivi et lance la recherche. Seules les informations autorisées du colis sont affichées.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {trackingInfo && (
         <div className="flex-1 space-y-6">
           <Card className="border-2 border-blue-200 bg-blue-50">
@@ -444,6 +660,44 @@ export default function UgaviTrackingPage() {
               <p className="text-xs text-gray-600">
                 Numéro de suivi: <span className="font-mono font-semibold">{trackingInfo.trackingNumber}</span>
               </p>
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                <div className="rounded-xl bg-white/80 p-3">
+                  <p className="text-xs text-gray-600">Position actuelle</p>
+                  <p className="mt-1 text-sm font-bold text-slate-900">{trackingInfo.currentPosition || trackingInfo.origin}</p>
+                </div>
+                <div className="rounded-xl bg-white/80 p-3">
+                  <p className="text-xs text-gray-600">Transport</p>
+                  <p className="mt-1 text-sm font-bold text-slate-900">{trackingInfo.transportLabel || trackingInfo.serviceMode || 'Ugavi'}</p>
+                </div>
+                <div className="rounded-xl bg-white/80 p-3">
+                  <p className="text-xs text-gray-600">Dernière mise à jour</p>
+                  <p className="mt-1 text-sm font-bold text-slate-900">{trackingInfo.lastUpdate}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-lg font-semibold">Progression du colis</h3>
+                  <p className="text-sm text-gray-600">{trackingInfo.origin} → {trackingInfo.destination}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-5 gap-2">
+                {progressSteps.map((step, index) => {
+                  const isDone = index <= activeProgressIndex || trackingInfo.status === 'delivered';
+                  return (
+                    <div key={step.key} className="min-w-0">
+                      <div className={`h-2 rounded-full ${isDone ? 'bg-primary' : 'bg-slate-200'}`} />
+                      <p className={`mt-2 truncate text-[11px] font-semibold ${isDone ? 'text-primary' : 'text-slate-500'}`}>
+                        {step.label}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
             </CardContent>
           </Card>
 
@@ -468,6 +722,14 @@ export default function UgaviTrackingPage() {
                 <div>
                   <p className="mb-1 text-xs text-gray-600">Montant</p>
                   <p className="font-semibold text-gray-900">{(trackingInfo.totalAmount || 0).toLocaleString('fr-FR')} CDF</p>
+                </div>
+                <div>
+                  <p className="mb-1 text-xs text-gray-600">Paiement</p>
+                  <p className="font-semibold text-gray-900">{trackingInfo.paymentLabel || 'Selon dossier'}</p>
+                </div>
+                <div>
+                  <p className="mb-1 text-xs text-gray-600">Preuve livraison</p>
+                  <p className="font-semibold text-gray-900">{trackingInfo.proofLabel || 'A confirmer à la livraison'}</p>
                 </div>
               </div>
 
@@ -532,6 +794,7 @@ export default function UgaviTrackingPage() {
                 <div>
                   <p className="mb-1 text-xs text-gray-600">Destinataire</p>
                   <p className="font-semibold text-gray-900">{trackingInfo.recipient}</p>
+                  {trackingInfo.recipientPhone && <p className="text-xs text-gray-500">{trackingInfo.recipientPhone}</p>}
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -548,6 +811,27 @@ export default function UgaviTrackingPage() {
                     <MapPin className="h-4 w-4 text-primary" />
                     <p className="font-semibold text-gray-900">{trackingInfo.destination}</p>
                   </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="mb-1 text-xs text-gray-600">Colis</p>
+                  <p className="font-semibold text-gray-900">{trackingInfo.packageDescription || 'Colis'}</p>
+                </div>
+                <div>
+                  <p className="mb-1 text-xs text-gray-600">Poids / valeur</p>
+                  <p className="font-semibold text-gray-900">
+                    {trackingInfo.packageWeight ? `${trackingInfo.packageWeight} kg` : 'Non renseigné'}
+                    {trackingInfo.declaredValue ? ` · ${trackingInfo.declaredValue.toLocaleString('fr-FR')} CDF` : ''}
+                  </p>
+                </div>
+                <div>
+                  <p className="mb-1 text-xs text-gray-600">Agence responsable</p>
+                  <p className="font-semibold text-gray-900">{trackingInfo.agencyName || 'Ugavi'}</p>
+                </div>
+                <div>
+                  <p className="mb-1 text-xs text-gray-600">Livreur / agent</p>
+                  <p className="font-semibold text-gray-900">{trackingInfo.courierName || trackingInfo.events[0]?.actor || 'Selon affectation'}</p>
                 </div>
               </div>
             </CardContent>

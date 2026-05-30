@@ -1093,7 +1093,7 @@ export default function ConversationClient() {
             )}
 
             {/* Messages Container */}
-            <main className="flex-1 overflow-y-auto p-4 space-y-4 flex-shrink min-h-0">
+            <main className="flex-1 overflow-y-auto px-3 py-3 space-y-2 flex-shrink min-h-0 sm:px-4">
                 {isLoading ? (
                     <div className="flex items-center justify-center h-full">
                         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -1127,13 +1127,13 @@ export default function ConversationClient() {
                                 className={`w-full flex ${isOwn ? 'justify-end' : 'justify-start'}`}
                             >
                                 <div
-                                    className={`group relative flex flex-col gap-1 ${
+                                    className={`group relative flex flex-col gap-0.5 ${
                                         isOwn ? 'items-end' : 'items-start'
                                     } w-full max-w-[82%] sm:max-w-[74%]`}
                                 >
                                     {/* Nom de l'expéditeur pour les groupes (sauf pour ses propres messages) */}
                                     {isGroup && !isOwn && message.senderName && (
-                                        <p className="text-xs font-semibold text-primary px-3">
+                                        <p className="text-[11px] font-semibold text-primary px-2.5 leading-4">
                                             {message.senderName}
                                         </p>
                                     )}
@@ -1143,12 +1143,12 @@ export default function ConversationClient() {
                                         // Utiliser le message attaché dans metadata au lieu de chercher dans le tableau
                                         const repliedMessage = message.metadata.repliedMessage || messages.find(m => m.id === message.metadata.replyTo);
                                         return (
-                                            <div className={`text-xs px-3 py-2 rounded-lg border-l-4 ${
+                                            <div className={`text-xs px-2.5 py-1.5 rounded-lg border-l-4 ${
                                                 isOwn 
                                                     ? 'border-white/40 bg-white/10 text-white/80' 
                                                     : 'border-primary/40 bg-primary/10 text-primary/80'
                                             }`}>
-                                                <p className="font-semibold mb-1">
+                                                <p className="font-semibold mb-0.5">
                                                     {repliedMessage?.senderName || 'Utilisateur'}
                                                 </p>
                                                 <p className="truncate opacity-80">
@@ -1158,10 +1158,10 @@ export default function ConversationClient() {
                                         );
                                     })()}
                                     
-                                    <div className={`relative flex items-end gap-2 ${isOwn ? 'justify-end' : 'justify-start'} w-full`}>
+                                    <div className={`relative flex items-end gap-1.5 ${isOwn ? 'justify-end' : 'justify-start'} w-full`}>
                                         {/* Avatar for non-own messages */}
                                         {!isOwn && (
-                                            <Avatar className="h-8 w-8 flex-shrink-0 mt-1">
+                                            <Avatar className="h-7 w-7 flex-shrink-0 mt-0.5">
                                                 <AvatarImage 
                                                     src={message.senderPhoto || senderAvatars[message.senderId] || (!isGroup ? contact?.avatar : undefined) || undefined}
                                                     alt={message.senderName}
@@ -1173,7 +1173,7 @@ export default function ConversationClient() {
                                             </Avatar>
                                         )}
                                         <Card
-                                            className={`px-4 py-2 rounded-2xl cursor-pointer hover:shadow-md transition-shadow w-fit max-w-full ${
+                                            className={`px-3 py-1.5 rounded-2xl cursor-pointer hover:shadow-md transition-shadow w-fit max-w-full ${
                                                 isOwn
                                                     ? 'bg-primary text-white rounded-br-none'
                                                     : 'bg-muted text-foreground rounded-bl-none'
@@ -1202,12 +1202,12 @@ export default function ConversationClient() {
                                             }}
                                         >
                                         {(isAudioMessage || isLegacyAudioMessage) && audioUrl ? (
-                                            <div className="space-y-3 w-full">
-                                                <div className="flex items-center gap-3">
+                                            <div className="space-y-2 w-full">
+                                                <div className="flex items-center gap-2">
                                                     <Button
                                                         size="sm"
                                                         variant="ghost"
-                                                        className={`h-10 w-10 p-0 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                                        className={`h-9 w-9 p-0 rounded-full flex items-center justify-center flex-shrink-0 ${
                                                             isOwn ? 'hover:bg-white/20 text-white' : 'hover:bg-gray-200 text-gray-700'
                                                         }`}
                                                         onClick={() => {
@@ -1238,14 +1238,14 @@ export default function ConversationClient() {
                                                             </svg>
                                                         )}
                                                     </Button>
-                                                    <span className={`text-sm font-medium ${isOwn ? 'text-white' : 'text-gray-700'}`}>
+                                                    <span className={`text-sm font-medium leading-5 ${isOwn ? 'text-white' : 'text-gray-700'}`}>
                                                         {message.metadata?.duration ? `${Math.floor(message.metadata.duration / 60)}:${String(message.metadata.duration % 60).padStart(2, '0')}` : 'Vocal'}
                                                     </span>
                                                 </div>
                                                 
                                                 {/* Audio Spectrum Visualizer */}
                                                 {isPlaying && frequencyData && (
-                                                    <div className="flex items-center justify-center gap-0.5 h-12 bg-black/10 rounded-lg p-2">
+                                                    <div className="flex items-center justify-center gap-0.5 h-10 bg-black/10 rounded-lg p-1.5">
                                                         {Array.from({ length: 32 }).map((_, i) => {
                                                             const index = Math.floor((i / 32) * frequencyData.length);
                                                             const value = frequencyData[index] || 0;
@@ -1276,7 +1276,7 @@ export default function ConversationClient() {
                                                 )}
                                             </div>
                                         ) : (isVideoMessage || isLegacyVideoMessage) && videoUrl ? (
-                                            <div className="space-y-2">
+                                            <div className="space-y-1.5">
                                                 <video
                                                     src={videoUrl}
                                                     className="w-full h-48 bg-black rounded-lg"
@@ -1287,14 +1287,14 @@ export default function ConversationClient() {
                                                 </p>
                                         </div>
                                     ) : message.messageType === 'story_reply' && message.metadata?.storyId ? (
-                                        <div className="space-y-2">
+                                        <div className="space-y-1.5">
                                             {/* Référence à la story */}
                                             <div className="bg-black/10 dark:bg-white/10 rounded-lg p-2 border-l-4 border-purple-500">
-                                                <p className="text-xs font-semibold text-purple-600 dark:text-purple-400 mb-1">
+                                                <p className="text-xs font-semibold text-purple-600 dark:text-purple-400 mb-0.5">
                                                     Réponse à une story
                                                 </p>
                                                 {message.metadata.storyMediaUrl && (
-                                                    <div className="relative w-full h-32 rounded overflow-hidden mb-2">
+                                                    <div className="relative w-full h-32 rounded overflow-hidden mb-1.5">
                                                         {message.metadata.storyType === 'photo' ? (
                                                             <img
                                                                 src={message.metadata.storyMediaUrl}
@@ -1323,7 +1323,7 @@ export default function ConversationClient() {
                                                 )}
                                             </div>
                                             {/* Message de réponse */}
-                                            <p className="text-sm">{message.text}</p>
+                                            <p className="text-sm leading-5">{message.text}</p>
                                         </div>
                                     ) : message.messageType === 'location' && message.metadata?.latitude && message.metadata?.longitude ? (
                                         <LocationMessage
@@ -1372,11 +1372,11 @@ export default function ConversationClient() {
                                             }}
                                         />
                                     ) : message.messageType === 'call' && message.metadata?.callType ? (
-                                        <div className={`rounded-xl border px-4 py-3 ${
+                                        <div className={`rounded-xl border px-3 py-2 ${
                                             isOwn ? 'border-white/20 bg-white/10' : 'border-border bg-background'
                                         }`}>
-                                            <div className="flex items-center gap-3">
-                                                <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
+                                            <div className="flex items-center gap-2.5">
+                                                <div className={`h-9 w-9 rounded-full flex items-center justify-center ${
                                                     isOwn ? 'bg-white/15 text-white' : 'bg-primary/10 text-primary'
                                                 }`}>
                                                     {message.metadata.callType === 'video' ? <Video className="h-5 w-5" /> : <Phone className="h-5 w-5" />}
@@ -1394,7 +1394,7 @@ export default function ConversationClient() {
                                                                     ? `Durée: ${formatCallDuration(message.metadata.durationSec)}`
                                                                     : 'Appel terminé'}
                                                     </p>
-                                                    <div className={`mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-[11px] ${
+                                                    <div className={`mt-1.5 grid grid-cols-2 gap-x-3 gap-y-0.5 text-[11px] ${
                                                         isOwn ? 'text-white/70' : 'text-muted-foreground'
                                                     }`}>
                                                         {(() => {
@@ -1448,10 +1448,10 @@ export default function ConversationClient() {
                                             </div>
                                         </div>
                                     ) : (
-                                        <p className="text-sm">{message.text}</p>
+                                        <p className="text-sm leading-5 whitespace-pre-wrap break-words">{message.text}</p>
                                     )}
                                     <p
-                                        className={`text-xs mt-1 ${
+                                        className={`text-[11px] mt-0.5 leading-4 ${
                                             isOwn
                                                 ? 'text-white/70'
                                                 : 'text-muted-foreground'
@@ -1471,7 +1471,7 @@ export default function ConversationClient() {
                                             <Button
                                                 size="sm"
                                                 variant="ghost"
-                                                className={`opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0 ${
+                                                className={`opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 p-0 ${
                                                     isOwn ? 'text-white hover:bg-white/20' : 'text-muted-foreground hover:bg-muted'
                                                 }`}
                                                 onClick={() => setShowMessageMenu(showMessageMenu === message.id ? null : message.id)}
@@ -1505,7 +1505,7 @@ export default function ConversationClient() {
 
                                     {/* Avatar for own messages */}
                                     {isOwn && (
-                                        <Avatar className="h-8 w-8 flex-shrink-0 mt-1">
+                                        <Avatar className="h-7 w-7 flex-shrink-0 mt-0.5">
                                             <AvatarImage
                                                 src={message.senderPhoto || myAvatar || undefined}
                                                 alt={message.senderName || 'Moi'}
@@ -1523,7 +1523,7 @@ export default function ConversationClient() {
                                         <Button
                                             size="sm"
                                             variant="ghost"
-                                            className={`opacity-0 group-hover:opacity-100 transition-opacity text-xs h-6 ${
+                                            className={`opacity-0 group-hover:opacity-100 transition-opacity text-xs h-5 px-2 ${
                                                 isOwn ? 'text-primary' : 'text-muted-foreground'
                                             } ${isOwn ? 'self-end' : 'self-start'}`}
                                             onClick={() => setReplyingTo(message)}
@@ -1536,7 +1536,7 @@ export default function ConversationClient() {
                                         <Button
                                             size="sm"
                                             variant="ghost"
-                                            className={`text-xs h-7 gap-1 ${
+                                            className={`text-xs h-5 px-2 gap-1 ${
                                                 isOwn ? 'text-primary self-end' : 'text-muted-foreground self-start'
                                             }`}
                                             onClick={() => openTranslationModal(message)}

@@ -15,6 +15,7 @@ import { useMoneyTransfer } from '@/hooks/useMoneyTransfer';
 import { useToast } from '@/hooks/use-toast';
 import { PinVerification } from '@/components/payment/PinVerification';
 import { TransferByIdentifier } from '@/components/payment/TransferByIdentifier';
+import { BrandedQRCodeCard } from '@/components/qrcode/branded-qr-code-card';
 import QRCodeLib from 'qrcode';
 import jsQR from 'jsqr';
 import { Card, CardContent } from '@/components/ui/card';
@@ -93,6 +94,7 @@ export default function PayReceivePage() {
       QRCodeLib.toDataURL(qrData, {
         width: 300,
         margin: 2,
+        errorCorrectionLevel: 'H',
         color: { dark: '#32BB78', light: '#ffffff' },
       }).then(setQrCode);
     }
@@ -129,6 +131,8 @@ export default function PayReceivePage() {
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, isScanning]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const paymentProfileImage = profile?.profileImage || profile?.photoURL || user?.photoURL || null;
 
   const parseQRData = (data: string): ScannedQRData | null => {
     try {
@@ -449,17 +453,18 @@ export default function PayReceivePage() {
           {mode === 'receive' && (
             <>
               <div className="w-full max-w-sm space-y-4">
-                <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20 rounded-2xl p-6 flex flex-col items-center gap-4">
-                  <h3 className="font-bold text-lg">Votre QR Code eNkamba</h3>
+                <div className="flex flex-col items-center gap-4">
                   {qrCode && (
-                    <div className="bg-white p-4 rounded-2xl shadow-lg border-2 border-blue-500/20">
-                      <img src={qrCode} alt="Mon QR Code" className="w-40 h-40" />
-                    </div>
+                    <BrandedQRCodeCard
+                      qrCode={qrCode}
+                      title="QR paiement eNkamba"
+                      name={accountName}
+                      subtitle={accountNumber}
+                      centerImageSrc={paymentProfileImage}
+                      variant="payment"
+                      qrAlt="Mon QR Code paiement eNkamba"
+                    />
                   )}
-                  <div className="text-center text-sm">
-                    <p className="font-semibold text-primary">{accountName}</p>
-                    <p className="text-muted-foreground">{accountNumber}</p>
-                  </div>
 
                   <div className="flex gap-2 w-full">
                     <Button 

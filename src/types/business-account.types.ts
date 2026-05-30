@@ -64,6 +64,7 @@ export interface BusinessRequestData {
   paymentRole?: PaymentRole;
   primaryMarket?: string;
   expectedVolume?: string;
+  nationalAgencyCompliance?: NationalAgencyCompliance;
 
   // Document references
   documents: {
@@ -79,6 +80,23 @@ export interface BusinessRequestData {
   rejectionReason?: string;
   verifiedAt?: number;
   verifiedBy?: string;
+}
+
+export interface NationalAgencyCompliance {
+  coveredCities?: string;
+  transportModes?: string[];
+  depotsAndBranches?: string;
+  departureSchedule?: string;
+  pricingGridSummary?: string;
+  lossDelayDamagePolicy?: string;
+  insuranceProvider?: string;
+  verificationStatus: 'PENDING' | 'IN_REVIEW' | 'APPROVED' | 'CERTIFIED' | 'UNDER_WATCH' | 'SUSPENDED';
+  reliabilityScore: number;
+  requiredDocuments: string[];
+  verificationMethods: string[];
+  contractAccepted: boolean;
+  trackingCommitmentAccepted: boolean;
+  suspensionRulesAccepted: boolean;
 }
 
 export interface BusinessProfile extends BusinessRequestData {
@@ -105,6 +123,7 @@ export interface BusinessFormState {
   primaryMarket?: string;
   expectedVolume?: string;
   apiCallbackUrl?: string;
+  nationalAgencyCompliance: NationalAgencyCompliance;
   documents: {
     idCard: File | null;
     taxDocument: File | null;

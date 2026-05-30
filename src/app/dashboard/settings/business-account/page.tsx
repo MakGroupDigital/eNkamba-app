@@ -247,6 +247,52 @@ const PAYMENT_ROLES: { value: PaymentRole; label: string }[] = [
   { value: 'FINTECH_PARTNER', label: 'Plateforme fintech ou institution' },
 ];
 
+const NATIONAL_AGENCY_REQUIRED_DOCUMENTS = [
+  'RCCM ou document d’existence légale',
+  'ID Nat / numéro fiscal',
+  'Autorisation d’exploitation ou licence de transport',
+  'Adresse physique de l’agence principale',
+  'Adresses des dépôts ou agences secondaires',
+  'Pièce d’identité du responsable légal',
+  'Photos du bureau, dépôt, véhicules ou espace colis',
+  'Liste des villes/provinces desservies',
+  'Liste des moyens de transport disponibles',
+  'Assurance transport ou responsabilité civile',
+  'Grille tarifaire',
+  'Horaires de départ et d’arrivée',
+  'Politique perte, retard ou colis endommagé',
+];
+
+const NATIONAL_AGENCY_VERIFICATION_METHODS = [
+  'Appel vidéo',
+  'Visite terrain',
+  'Photos géolocalisées',
+  'Contrôle par agent eNKAMBA local',
+  'Test colis pilote',
+];
+
+const NATIONAL_AGENCY_BADGES = [
+  'Agence vérifiée',
+  'Adresse confirmée',
+  'Transport assuré',
+  'Tracking actif',
+  'Certifiée eNKAMBA',
+  'Agence Premium',
+  'Sous observation',
+];
+
+const NATIONAL_AGENCY_TRACKING_STEPS = [
+  'Colis enregistré',
+  'Colis déposé à l’agence de départ',
+  'Colis chargé dans le véhicule',
+  'Colis en transit',
+  'Colis arrivé dans la ville de destination',
+  'Colis reçu par l’agence d’arrivée',
+  'Colis disponible pour retrait',
+  'Colis remis au livreur local',
+  'Colis livré au destinataire',
+];
+
 const LOGISTICS_ROLE_PRESETS: Record<string, { title: string; badge: string; dashboard: string; capabilities: string[] }> = {
   RELAY: {
     title: 'Point relais Ugavi',
@@ -275,8 +321,8 @@ const LOGISTICS_ROLE_PRESETS: Record<string, { title: string; badge: string; das
   NATIONAL_AGENCY: {
     title: 'Agence nationale',
     badge: 'National',
-    dashboard: 'Inter-ville, dépôts, train, bateau, camion et relais de réception.',
-    capabilities: ['Création trajets', 'Gestion dépôts', 'Transferts inter-ville', 'Suivi national'],
+    dashboard: 'Inter-ville, dépôts, contrats, tracking obligatoire et fiabilité contrôlée.',
+    capabilities: ['Documents légaux', 'Contrat eNKAMBA', 'Tracking national obligatoire', 'Score fiabilité', 'Suspension automatique'],
   },
   INTERNATIONAL_AGENCY: {
     title: 'Agence internationale',
@@ -449,6 +495,22 @@ export default function BusinessAccountPage() {
     primaryMarket: '',
     expectedVolume: '',
     apiCallbackUrl: '',
+    nationalAgencyCompliance: {
+      coveredCities: '',
+      transportModes: [],
+      depotsAndBranches: '',
+      departureSchedule: '',
+      pricingGridSummary: '',
+      lossDelayDamagePolicy: '',
+      insuranceProvider: '',
+      verificationStatus: 'PENDING',
+      reliabilityScore: 0,
+      requiredDocuments: NATIONAL_AGENCY_REQUIRED_DOCUMENTS,
+      verificationMethods: [],
+      contractAccepted: false,
+      trackingCommitmentAccepted: false,
+      suspensionRulesAccepted: false,
+    },
     documents: {
       idCard: null,
       taxDocument: null,
@@ -502,6 +564,39 @@ export default function BusinessAccountPage() {
     }));
   };
 
+  const handleNationalAgencyComplianceChange = (
+    field: keyof BusinessFormState['nationalAgencyCompliance'],
+    value: any
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      nationalAgencyCompliance: {
+        ...prev.nationalAgencyCompliance,
+        [field]: value,
+      },
+    }));
+  };
+
+  const toggleNationalAgencyArrayValue = (
+    field: 'transportModes' | 'verificationMethods',
+    value: string
+  ) => {
+    setFormData((prev) => {
+      const current = prev.nationalAgencyCompliance[field] || [];
+      const next = current.includes(value)
+        ? current.filter((item) => item !== value)
+        : [...current, value];
+
+      return {
+        ...prev,
+        nationalAgencyCompliance: {
+          ...prev.nationalAgencyCompliance,
+          [field]: next,
+        },
+      };
+    });
+  };
+
   const toggleService = (serviceId: string) => {
     setFormData(prev => {
       const services = prev.moduleServices.includes(serviceId)
@@ -543,6 +638,25 @@ export default function BusinessAccountPage() {
         if (formData.type === 'LOGISTICS' && !formData.logisticsOperationMode) {
           toast({ variant: 'destructive', title: 'Mode d’exploitation', description: 'Indiquez si vous travaillez en fixe, mobile ou mixte.' });
           return false;
+        }
+        if (formData.type === 'LOGISTICS' && formData.subCategory === 'NATIONAL_AGENCY') {
+          const national = formData.nationalAgencyCompliance;
+          if (!national.coveredCities?.trim() || !national.depotsAndBranches?.trim() || national.transportModes.length === 0) {
+            toast({
+              variant: 'destructive',
+              title: 'Fiabilité agence nationale',
+              description: 'Indiquez les villes couvertes, dépôts/agences et moyens de transport.',
+            });
+            return false;
+          }
+          if (!national.contractAccepted || !national.trackingCommitmentAccepted || !national.suspensionRulesAccepted) {
+            toast({
+              variant: 'destructive',
+              title: 'Engagements obligatoires',
+              description: 'Acceptez le contrat, le tracking obligatoire et les règles de suspension.',
+            });
+            return false;
+          }
         }
         if (formData.type === 'PAYMENT' && !formData.paymentRole) {
           toast({ variant: 'destructive', title: 'Rôle', description: 'Précisez si vous êtes intégrateur, agent agréé ou plateforme fintech.' });
@@ -769,6 +883,178 @@ export default function BusinessAccountPage() {
                           {capability}
                         </div>
                       ))}
+                    </div>
+                  </div>
+                )}
+                {formData.subCategory === 'NATIONAL_AGENCY' && (
+                  <div className="space-y-4 rounded-2xl border border-emerald-200 bg-white p-4 shadow-sm">
+                    <div>
+                      <p className="text-sm font-semibold text-emerald-700">Vérification Agence Nationale</p>
+                      <h4 className="text-lg font-bold text-slate-900">Fiabilité, contrat et tracking obligatoire</h4>
+                      <p className="mt-1 text-sm text-slate-600">
+                        Une agence nationale ne sera pas visible tant que les documents, l’adresse, l’assurance et le contrat ne sont pas validés par eNKAMBA.
+                      </p>
+                    </div>
+
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div>
+                        <Label htmlFor="nationalCoveredCities">Villes / provinces desservies *</Label>
+                        <Textarea
+                          id="nationalCoveredCities"
+                          value={formData.nationalAgencyCompliance.coveredCities || ''}
+                          onChange={(event) => handleNationalAgencyComplianceChange('coveredCities', event.target.value)}
+                          placeholder="Ex : Kinshasa, Lubumbashi, Kolwezi, Goma, Bukavu..."
+                          disabled={isSubmitting}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="nationalDepots">Dépôts et agences secondaires *</Label>
+                        <Textarea
+                          id="nationalDepots"
+                          value={formData.nationalAgencyCompliance.depotsAndBranches || ''}
+                          onChange={(event) => handleNationalAgencyComplianceChange('depotsAndBranches', event.target.value)}
+                          placeholder="Adresses des dépôts, agences de départ et d’arrivée."
+                          disabled={isSubmitting}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="nationalSchedule">Horaires départ / arrivée</Label>
+                        <Textarea
+                          id="nationalSchedule"
+                          value={formData.nationalAgencyCompliance.departureSchedule || ''}
+                          onChange={(event) => handleNationalAgencyComplianceChange('departureSchedule', event.target.value)}
+                          placeholder="Ex : départ Kinshasa lundi/jeudi 08h, arrivée Lubumbashi 48h."
+                          disabled={isSubmitting}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="nationalPricing">Grille tarifaire</Label>
+                        <Textarea
+                          id="nationalPricing"
+                          value={formData.nationalAgencyCompliance.pricingGridSummary || ''}
+                          onChange={(event) => handleNationalAgencyComplianceChange('pricingGridSummary', event.target.value)}
+                          placeholder="Résumé des tarifs par kg, volume, ville ou moyen de transport."
+                          disabled={isSubmitting}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="nationalInsurance">Assurance / responsabilité civile</Label>
+                        <Input
+                          id="nationalInsurance"
+                          value={formData.nationalAgencyCompliance.insuranceProvider || ''}
+                          onChange={(event) => handleNationalAgencyComplianceChange('insuranceProvider', event.target.value)}
+                          placeholder="Nom assureur, police ou couverture transport"
+                          disabled={isSubmitting}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="nationalPolicy">Politique litige</Label>
+                        <Textarea
+                          id="nationalPolicy"
+                          value={formData.nationalAgencyCompliance.lossDelayDamagePolicy || ''}
+                          onChange={(event) => handleNationalAgencyComplianceChange('lossDelayDamagePolicy', event.target.value)}
+                          placeholder="Perte, retard, colis endommagé, remboursement."
+                          disabled={isSubmitting}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label>Moyens de transport disponibles *</Label>
+                      <div className="mt-2 grid gap-2 md:grid-cols-3">
+                        {['Véhicule', 'Bus', 'Camion', 'Train', 'Bateau', 'Avion national'].map((mode) => (
+                          <label key={mode} className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm">
+                            <Checkbox
+                              checked={formData.nationalAgencyCompliance.transportModes.includes(mode)}
+                              onCheckedChange={() => toggleNationalAgencyArrayValue('transportModes', mode)}
+                              disabled={isSubmitting}
+                            />
+                            {mode}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                        <p className="mb-2 text-sm font-semibold text-slate-900">Documents obligatoires</p>
+                        <ul className="list-disc space-y-1 pl-5 text-sm text-slate-600">
+                          {NATIONAL_AGENCY_REQUIRED_DOCUMENTS.map((document) => (
+                            <li key={document}>{document}</li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                        <p className="mb-2 text-sm font-semibold text-slate-900">Vérification avant activation</p>
+                        <div className="space-y-2">
+                          {NATIONAL_AGENCY_VERIFICATION_METHODS.map((method) => (
+                            <label key={method} className="flex items-center gap-2 text-sm text-slate-700">
+                              <Checkbox
+                                checked={formData.nationalAgencyCompliance.verificationMethods.includes(method)}
+                                onCheckedChange={() => toggleNationalAgencyArrayValue('verificationMethods', method)}
+                                disabled={isSubmitting}
+                              />
+                              {method}
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                      <p className="mb-2 text-sm font-semibold text-emerald-900">Tracking national obligatoire</p>
+                      <div className="grid gap-2 md:grid-cols-3">
+                        {NATIONAL_AGENCY_TRACKING_STEPS.map((step) => (
+                          <div key={step} className="rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-700">
+                            {step}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="grid gap-3 md:grid-cols-3">
+                      <label className="flex items-start gap-2 rounded-xl border border-slate-200 p-3 text-sm">
+                        <Checkbox
+                          checked={formData.nationalAgencyCompliance.contractAccepted}
+                          onCheckedChange={(checked) => handleNationalAgencyComplianceChange('contractAccepted', Boolean(checked))}
+                          disabled={isSubmitting}
+                        />
+                        <span>Contrat eNKAMBA requis avant activation</span>
+                      </label>
+                      <label className="flex items-start gap-2 rounded-xl border border-slate-200 p-3 text-sm">
+                        <Checkbox
+                          checked={formData.nationalAgencyCompliance.trackingCommitmentAccepted}
+                          onCheckedChange={(checked) => handleNationalAgencyComplianceChange('trackingCommitmentAccepted', Boolean(checked))}
+                          disabled={isSubmitting}
+                        />
+                        <span>Aucun colis ne sort sans tracking, QR ou code-barres</span>
+                      </label>
+                      <label className="flex items-start gap-2 rounded-xl border border-slate-200 p-3 text-sm">
+                        <Checkbox
+                          checked={formData.nationalAgencyCompliance.suspensionRulesAccepted}
+                          onCheckedChange={(checked) => handleNationalAgencyComplianceChange('suspensionRulesAccepted', Boolean(checked))}
+                          disabled={isSubmitting}
+                        />
+                        <span>Suspension possible en cas de retards, pertes, plaintes ou documents expirés</span>
+                      </label>
+                    </div>
+
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <div className="rounded-xl border border-slate-200 p-4">
+                        <p className="text-sm font-semibold text-slate-900">Score fiabilité initial</p>
+                        <p className="mt-1 text-3xl font-black text-emerald-700">0/100</p>
+                        <p className="text-sm text-slate-600">Calculé après vérification documents, adresse, assurance, tracking et premières expéditions.</p>
+                      </div>
+                      <div className="rounded-xl border border-slate-200 p-4">
+                        <p className="mb-2 text-sm font-semibold text-slate-900">Badges possibles après validation</p>
+                        <div className="flex flex-wrap gap-2">
+                          {NATIONAL_AGENCY_BADGES.map((badge) => (
+                            <span key={badge} className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                              {badge}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}

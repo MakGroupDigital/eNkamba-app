@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Download, Share2, QrCode as QrCodeIcon } from 'lucide-react';
+import { ChatNavIcon } from '@/components/icons/service-icons';
+import { BrandedQRCodeCard } from '@/components/qrcode/branded-qr-code-card';
 import QRCode from 'qrcode';
-import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
 
 interface ContactQRCodeProps {
@@ -36,7 +37,7 @@ export function ContactQRCode({ open, onOpenChange, userData }: ContactQRCodePro
           margin: 4,
           errorCorrectionLevel: 'H',
           color: {
-            dark: '#000000',
+            dark: '#0E5A59',
             light: '#ffffff',
           },
         });
@@ -126,14 +127,17 @@ export function ContactQRCode({ open, onOpenChange, userData }: ContactQRCodePro
 
         <div className="space-y-4 py-4">
           {/* QR Code Display */}
-          <div className="flex flex-col items-center gap-4 p-6 bg-gradient-to-br from-primary/10 to-green-800/5 rounded-lg border border-primary/20">
-            <p className="text-sm font-semibold text-center">Scannez pour m'ajouter</p>
-            {qrCode && (
-              <div className="bg-white p-4 rounded-lg shadow-lg">
-                <Image src={qrCode} alt="QR Code Contact" width={300} height={300} />
-              </div>
-            )}
-          </div>
+          {qrCode && (
+            <BrandedQRCodeCard
+              qrCode={qrCode}
+              title="QR contact Masolo"
+              name={userData.name}
+              subtitle="Scannez pour m'ajouter"
+              centerIcon={<ChatNavIcon size={28} className="text-white" />}
+              variant="contact"
+              qrAlt="QR Code Contact"
+            />
+          )}
 
           {/* Contact Info */}
           <div className="bg-muted/50 rounded-lg p-4 space-y-2">
