@@ -12,7 +12,7 @@ import { httpsCallable } from 'firebase/functions';
 import { functions } from '@/lib/firebase';
 import QRCode from 'qrcode';
 import { TranslationDialog } from '@/components/translation/TranslationDialog';
-import { BrandedQRCodeCard } from '@/components/qrcode/branded-qr-code-card';
+import { BrandedQRCodeCard, createBrandedQRCodeDataUrl } from '@/components/qrcode/branded-qr-code-card';
 
 type ReceiveMethod = 'link' | 'qr' | 'phone' | 'code' | 'nfc' | 'bluetooth' | 'wifi' | null;
 
@@ -190,8 +190,17 @@ export function UnifiedReceiveFlow({
   const downloadQR = async () => {
     if (!qrCodeImage) return;
 
+    const brandedQRCode = await createBrandedQRCodeDataUrl({
+      qrCode: qrCodeImage,
+      title: 'QR paiement eNkamba',
+      name: receiverName,
+      subtitle: paymentLink?.code,
+      centerImageSrc: receiverPhoto,
+      variant: 'payment',
+    });
+
     const link = document.createElement('a');
-    link.href = qrCodeImage;
+    link.href = brandedQRCode;
     link.download = `payment-qr-${paymentLink?.code}.png`;
     
     try {

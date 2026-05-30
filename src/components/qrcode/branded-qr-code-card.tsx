@@ -17,6 +17,201 @@ type BrandedQRCodeCardProps = {
   qrClassName?: string;
 };
 
+type ExportBrandedQRCodeOptions = {
+  qrCode: string;
+  name: string;
+  title?: string;
+  subtitle?: string;
+  centerImageSrc?: string | null;
+  centerLabel?: string;
+  variant?: 'payment' | 'contact';
+};
+
+const loadCanvasImage = (src: string) =>
+  new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new Image();
+    image.crossOrigin = 'anonymous';
+    image.onload = () => resolve(image);
+    image.onerror = reject;
+    image.src = src;
+  });
+
+const drawRoundRect = (
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number,
+) => {
+  context.beginPath();
+  context.moveTo(x + radius, y);
+  context.lineTo(x + width - radius, y);
+  context.quadraticCurveTo(x + width, y, x + width, y + radius);
+  context.lineTo(x + width, y + height - radius);
+  context.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+  context.lineTo(x + radius, y + height);
+  context.quadraticCurveTo(x, y + height, x, y + height - radius);
+  context.lineTo(x, y + radius);
+  context.quadraticCurveTo(x, y, x + radius, y);
+  context.closePath();
+};
+
+const drawCoverImage = (
+  context: CanvasRenderingContext2D,
+  image: HTMLImageElement,
+  x: number,
+  y: number,
+  size: number,
+) => {
+  const sourceRatio = image.width / image.height;
+  let sourceWidth = image.width;
+  let sourceHeight = image.height;
+  let sourceX = 0;
+  let sourceY = 0;
+
+  if (sourceRatio > 1) {
+    sourceWidth = image.height;
+    sourceX = (image.width - sourceWidth) / 2;
+  } else if (sourceRatio < 1) {
+    sourceHeight = image.width;
+    sourceY = (image.height - sourceHeight) / 2;
+  }
+
+  context.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, x, y, size, size);
+};
+
+export async function createBrandedQRCodeDataUrl({
+  qrCode,
+  name,
+  title,
+  subtitle,
+  centerImageSrc,
+  centerLabel,
+  variant = 'payment',
+}: ExportBrandedQRCodeOptions) {
+  const isPayment = variant === 'payment';
+  const canvas = document.createElement('canvas');
+  const scale = 3;
+  const width = 520;
+  const height = 680;
+  canvas.width = width * scale;
+  canvas.height = height * scale;
+
+  const context = canvas.getContext('2d');
+  if (!context) return qrCode;
+
+  context.scale(scale, scale);
+  context.clearRect(0, 0, width, height);
+
+  const background = context.createLinearGradient(0, 0, width, height);
+  background.addColorStop(0, '#ffffff');
+  background.addColorStop(1, isPayment ? '#effbf4' : '#f2fbf8');
+  context.fillStyle = background;
+  drawRoundRect(context, 18, 18, width - 36, height - 36, 20);
+  context.fill();
+
+  const glow = context.createRadialGradient(isPayment ? 110 : 400, 90, 10, isPayment ? 110 : 400, 90, 260);
+  glow.addColorStop(0, isPayment ? 'rgba(50,187,120,0.26)' : 'rgba(14,90,89,0.24)');
+  glow.addColorStop(1, 'rgba(255,255,255,0)');
+  context.fillStyle = glow;
+  context.fillRect(18, 18, width - 36, height - 36);
+
+  const topLine = context.createLinearGradient(40, 34, width - 40, 34);
+  topLine.addColorStop(0, '#32BB78');
+  topLine.addColorStop(0.55, '#0E5A59');
+  topLine.addColorStop(1, '#FF8C00');
+  context.fillStyle = topLine;
+  drawRoundRect(context, 40, 34, width - 80, 8, 4);
+  context.fill();
+
+  if (title) {
+    context.fillStyle = '#334155';
+    context.font = '700 17px Arial, sans-serif';
+    context.textAlign = 'center';
+    context.fillText(title.toUpperCase(), width / 2, 92);
+  }
+
+  const qrImage = await loadCanvasImage(qrCode);
+  const qrBoxSize = 360;
+  const qrBoxX = (width - qrBoxSize) / 2;
+  const qrBoxY = title ? 122 : 98;
+
+  context.save();
+  context.shadowColor = 'rgba(15,23,42,0.16)';
+  context.shadowBlur = 34;
+  context.shadowOffsetY = 18;
+  context.fillStyle = '#ffffff';
+  drawRoundRect(context, qrBoxX, qrBoxY, qrBoxSize, qrBoxSize, 18);
+  context.fill();
+  context.restore();
+
+  context.strokeStyle = 'rgba(15,23,42,0.10)';
+  context.lineWidth = 1;
+  drawRoundRect(context, qrBoxX, qrBoxY, qrBoxSize, qrBoxSize, 18);
+  context.stroke();
+  context.drawImage(qrImage, qrBoxX + 22, qrBoxY + 22, qrBoxSize - 44, qrBoxSize - 44);
+
+  const centerSize = 88;
+  const centerX = width / 2;
+  const centerY = qrBoxY + qrBoxSize / 2;
+
+  context.save();
+  context.beginPath();
+  context.arc(centerX, centerY, centerSize / 2 + 7, 0, Math.PI * 2);
+  context.fillStyle = '#ffffff';
+  context.shadowColor = 'rgba(15,23,42,0.24)';
+  context.shadowBlur = 18;
+  context.shadowOffsetY = 8;
+  context.fill();
+  context.restore();
+
+  context.save();
+  context.beginPath();
+  context.arc(centerX, centerY, centerSize / 2, 0, Math.PI * 2);
+  context.clip();
+
+  let centerImageDrawn = false;
+  if (centerImageSrc) {
+    try {
+      const centerImage = await loadCanvasImage(centerImageSrc);
+      drawCoverImage(context, centerImage, centerX - centerSize / 2, centerY - centerSize / 2, centerSize);
+      centerImageDrawn = true;
+    } catch {
+      centerImageDrawn = false;
+    }
+  }
+
+  if (!centerImageDrawn) {
+    context.fillStyle = isPayment ? '#32BB78' : '#0E5A59';
+    context.fillRect(centerX - centerSize / 2, centerY - centerSize / 2, centerSize, centerSize);
+    context.fillStyle = '#ffffff';
+    context.font = '800 26px Arial, sans-serif';
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.fillText((centerLabel || name.charAt(0)).slice(0, 3).toUpperCase(), centerX, centerY);
+  }
+  context.restore();
+
+  context.fillStyle = '#020617';
+  context.font = '900 24px Arial, sans-serif';
+  context.textAlign = 'center';
+  context.textBaseline = 'alphabetic';
+  context.fillText(name, width / 2, qrBoxY + qrBoxSize + 72);
+
+  if (subtitle) {
+    context.fillStyle = '#64748b';
+    context.font = '600 15px Arial, sans-serif';
+    context.fillText(subtitle, width / 2, qrBoxY + qrBoxSize + 102);
+  }
+
+  context.fillStyle = isPayment ? '#32BB78' : '#0E5A59';
+  context.font = '700 14px Arial, sans-serif';
+  context.fillText('eNkamba', width / 2, height - 52);
+
+  return canvas.toDataURL('image/png');
+}
+
 export function BrandedQRCodeCard({
   qrCode,
   title,

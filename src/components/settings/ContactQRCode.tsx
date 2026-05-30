@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Download, Share2, QrCode as QrCodeIcon } from 'lucide-react';
 import { ChatNavIcon } from '@/components/icons/service-icons';
-import { BrandedQRCodeCard } from '@/components/qrcode/branded-qr-code-card';
+import { BrandedQRCodeCard, createBrandedQRCodeDataUrl } from '@/components/qrcode/branded-qr-code-card';
 import QRCode from 'qrcode';
 import { useToast } from '@/hooks/use-toast';
 
@@ -56,11 +56,20 @@ export function ContactQRCode({ open, onOpenChange, userData }: ContactQRCodePro
     generateQR();
   }, [open, userData, toast]);
 
-  const handleDownloadQR = () => {
+  const handleDownloadQR = async () => {
     if (!qrCode) return;
 
+    const brandedQRCode = await createBrandedQRCodeDataUrl({
+      qrCode,
+      title: 'QR contact Masolo',
+      name: userData.name,
+      subtitle: "Scannez pour m'ajouter",
+      centerLabel: 'Chat',
+      variant: 'contact',
+    });
+
     const link = document.createElement('a');
-    link.href = qrCode;
+    link.href = brandedQRCode;
     link.download = `enkamba-contact-${userData.name.replace(/\s+/g, '-')}.png`;
     document.body.appendChild(link);
     link.click();

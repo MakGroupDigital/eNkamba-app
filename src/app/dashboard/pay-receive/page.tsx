@@ -15,7 +15,7 @@ import { useMoneyTransfer } from '@/hooks/useMoneyTransfer';
 import { useToast } from '@/hooks/use-toast';
 import { PinVerification } from '@/components/payment/PinVerification';
 import { TransferByIdentifier } from '@/components/payment/TransferByIdentifier';
-import { BrandedQRCodeCard } from '@/components/qrcode/branded-qr-code-card';
+import { BrandedQRCodeCard, createBrandedQRCodeDataUrl } from '@/components/qrcode/branded-qr-code-card';
 import QRCodeLib from 'qrcode';
 import jsQR from 'jsqr';
 import { Card, CardContent } from '@/components/ui/card';
@@ -305,9 +305,18 @@ export default function PayReceivePage() {
 
   const downloadQRCode = async () => {
     if (!qrCode) return;
-    
+
+    const brandedQRCode = await createBrandedQRCodeDataUrl({
+      qrCode,
+      title: 'QR paiement eNkamba',
+      name: accountName,
+      subtitle: accountNumber,
+      centerImageSrc: paymentProfileImage,
+      variant: 'payment',
+    });
+
     const link = document.createElement('a');
-    link.href = qrCode;
+    link.href = brandedQRCode;
     link.download = `eNkamba-QR-${accountNumber}.png`;
     
     try {
