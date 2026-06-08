@@ -25,6 +25,7 @@ import { StartChatEmptyState } from '@/components/start-chat-empty-state';
 import { StoriesOnboarding } from '@/components/stories/StoriesOnboarding';
 import { StoryViewer } from '@/components/stories/StoryViewer';
 import { LocationSharingDialog } from '@/components/chat/LocationSharingDialog';
+import { ContactQRCode } from '@/components/settings/ContactQRCode';
 import {
   MiyikiChatIcon,
   NewChatIcon,
@@ -54,7 +55,7 @@ import {
   ChatSentIcon,
   ChatVideoCustomIcon,
 } from "@/components/icons/chat-icons";
-import { Settings } from 'lucide-react';
+import { QrCode, Settings } from 'lucide-react';
 import { CreateGroupDialog } from '@/components/create-group-dialog';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -62,6 +63,7 @@ import { useRouter } from 'next/navigation';
 
 type ChatTab = 'discussions' | 'stories' | 'notifications' | 'settings';
 type MessageFilter = 'all' | 'unread' | 'read' | 'groups';
+type MessageScope = 'personal' | 'business';
 
 const messageFilters = [
   { value: 'all' as MessageFilter, label: "Tout", icon: ChatFilterAllIcon },
@@ -70,6 +72,36 @@ const messageFilters = [
   { value: 'groups' as MessageFilter, label: "Groupes", icon: ChatFilterGroupsIcon },
   { value: 'add' as MessageFilter, label: "Plus", icon: ChatPlusIcon, isAction: true },
 ];
+
+const isBusinessConversation = (conversation: {
+  type?: string;
+  source?: string;
+  shopId?: string;
+  shopName?: string;
+  businessId?: string;
+  businessName?: string;
+  sellerId?: string;
+  sellerName?: string;
+}) => {
+  const markers = [
+    conversation.type,
+    conversation.source,
+    conversation.shopId,
+    conversation.shopName,
+    conversation.businessId,
+    conversation.businessName,
+    conversation.sellerId,
+    conversation.sellerName,
+  ]
+    .filter(Boolean)
+    .map((value) => String(value).toLowerCase());
+
+  return markers.some((value) =>
+    ['business', 'shop', 'store', 'seller', 'vendeur', 'nkampa', 'ugavi', 'logistique', 'order', 'commande'].some((keyword) =>
+      value.includes(keyword)
+    )
+  );
+};
 
 export default function MiyikiChatPage() {
   const router = useRouter();
@@ -87,12 +119,14 @@ export default function MiyikiChatPage() {
   const [activeTab, setActiveTab] = useState<ChatTab>('discussions');
   const [showChatContactsDialog, setShowChatContactsDialog] = useState(false);
   const [showCreateGroupDialog, setShowCreateGroupDialog] = useState(false);
+  const [messageScope, setMessageScope] = useState<MessageScope>('personal');
   const [activeFilter, setActiveFilter] = useState<MessageFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [showStoriesOnboarding, setShowStoriesOnboarding] = useState(false);
   const [viewingStories, setViewingStories] = useState<{ stories: any[]; index: number } | null>(null);
   const [showActionsMenu, setShowActionsMenu] = useState(false);
   const [showLocationDialog, setShowLocationDialog] = useState(false);
+  const [showContactQRCode, setShowContactQRCode] = useState(false);
 
   // Vérifier si c'est la première visite aux stories
   useEffect(() => {
@@ -104,6 +138,14 @@ export default function MiyikiChatPage() {
   }, [activeTab]);
   const profileDisplayName = profile?.fullName || profile?.name || 'User';
   const profileAvatar = profile?.profileImage || undefined;
+  const contactQRCodeUserData = profile
+    ? {
+        name: profile.fullName || profile.name || profile.displayName || 'Utilisateur eNkamba',
+        email: profile.email || '',
+        phone: profile.phone || profile.phoneNumber,
+        uid: profile.uid,
+      }
+    : null;
 
   useEffect(() => {
     const hasSeenOnboarding = localStorage.getItem('stories_onboarding_seen');
@@ -135,7 +177,10 @@ export default function MiyikiChatPage() {
 
   // Filtrer les conversations selon le filtre actif et la recherche
   const filteredConversations = useMemo(() => {
-    let filtered = [...conversations];
+    let filtered = conversations.filter((conversation) => {
+      const isBusiness = isBusinessConversation(conversation);
+      return messageScope === 'business' ? isBusiness : !isBusiness;
+    });
 
     // Appliquer le filtre de type
     switch (activeFilter) {
@@ -165,7 +210,21 @@ export default function MiyikiChatPage() {
     }
 
     return filtered;
-  }, [conversations, activeFilter, searchQuery]);
+  }, [conversations, activeFilter, searchQuery, messageScope]);
+
+  const conversationScopeCounts = useMemo(() => {
+    return conversations.reduce(
+      (counts, conversation) => {
+        if (isBusinessConversation(conversation)) {
+          counts.business += 1;
+        } else {
+          counts.personal += 1;
+        }
+        return counts;
+      },
+      { personal: 0, business: 0 }
+    );
+  }, [conversations]);
 
   // Render functions for each tab
   const renderDiscussions = () => {
@@ -701,8 +760,18 @@ export default function MiyikiChatPage() {
             </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="relative">
-            <Avatar className="h-10 w-10 border-2 border-white/30 shadow-lg cursor-pointer hover:scale-105 transition-transform">
+          <button
+            type="button"
+            onClick={() => {
+              if (profile?.uid) {
+                router.push(`/dashboard/makutano/profile/${profile.uid}`);
+              }
+            }}
+            disabled={!profile?.uid}
+            className="relative rounded-full outline-none transition-transform hover:scale-105 focus-visible:ring-2 focus-visible:ring-white/70 disabled:cursor-not-allowed disabled:opacity-70"
+            aria-label="Ouvrir mon profil public"
+          >
+            <Avatar className="h-10 w-10 border-2 border-white/30 shadow-lg">
               <AvatarImage src={profileAvatar} alt={profileDisplayName} />
               <AvatarFallback className="bg-white/20 text-white font-bold">
                 {profileDisplayName.charAt(0) || 'U'}
@@ -710,7 +779,7 @@ export default function MiyikiChatPage() {
             </Avatar>
             {/* Indicateur de connexion */}
             <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-green-500 border-2 border-white"></div>
-          </div>
+          </button>
         </div>
       </header>
 
@@ -778,6 +847,31 @@ export default function MiyikiChatPage() {
               </button>
             </div>
           </div>
+
+          {activeTab === 'discussions' && (
+            <div className="grid grid-cols-2 items-center overflow-hidden rounded-xl border border-border/40 bg-muted/20 text-sm font-medium text-muted-foreground">
+              {([
+                { value: 'personal' as MessageScope, label: 'Personnel', count: conversationScopeCounts.personal },
+                { value: 'business' as MessageScope, label: 'Business', count: conversationScopeCounts.business },
+              ]).map((scope) => {
+                const isSelected = messageScope === scope.value;
+
+                return (
+                  <button
+                    key={scope.value}
+                    type="button"
+                    onClick={() => setMessageScope(scope.value)}
+                    className={`flex items-center justify-center gap-2 px-3 py-2 transition-colors ${
+                      isSelected ? 'bg-background/80 text-foreground' : 'hover:bg-background/40'
+                    }`}
+                  >
+                    <span>{scope.label}</span>
+                    <span className="text-xs text-muted-foreground">{scope.count}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
 
           {/* Search Bar */}
           <div className="relative">
@@ -919,24 +1013,47 @@ export default function MiyikiChatPage() {
               </div>
             </button>
             
-            <button
-              onClick={() => {
-                setShowActionsMenu(false);
-                handleStartChat();
-              }}
-              className="w-full flex items-center gap-4 p-4 rounded-2xl hover:bg-green-500/5 transition-all border-2 border-transparent hover:border-green-500/20"
-            >
-              <div className="h-14 w-14 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg">
-                <NewChatIcon size={24} className="text-white" />
-              </div>
-              <div className="flex-1 text-left">
-                <p className="font-bold text-base">Ajouter un contact</p>
-                <p className="text-sm text-muted-foreground">Démarrer une conversation</p>
-              </div>
-            </button>
+            <div className="flex items-stretch gap-2">
+              <button
+                onClick={() => {
+                  setShowActionsMenu(false);
+                  handleStartChat();
+                }}
+                className="flex flex-1 items-center gap-4 rounded-2xl border-2 border-transparent p-4 transition-all hover:border-green-500/20 hover:bg-green-500/5"
+              >
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-green-600 shadow-lg">
+                  <NewChatIcon size={24} className="text-white" />
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="font-bold text-base">Ajouter un contact</p>
+                  <p className="text-sm text-muted-foreground">Démarrer une conversation</p>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowActionsMenu(false);
+                  setShowContactQRCode(true);
+                }}
+                disabled={!contactQRCodeUserData}
+                className="flex w-20 flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-green-500/25 bg-green-500/5 text-green-700 transition-all hover:border-green-500/45 hover:bg-green-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+                aria-label="Afficher mon QR contact"
+              >
+                <QrCode className="h-6 w-6" />
+                <span className="text-[11px] font-bold">QR</span>
+              </button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
+
+      {contactQRCodeUserData && (
+        <ContactQRCode
+          open={showContactQRCode}
+          onOpenChange={setShowContactQRCode}
+          userData={contactQRCodeUserData}
+        />
+      )}
     </div>
   );
 }

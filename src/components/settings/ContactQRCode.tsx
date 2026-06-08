@@ -23,6 +23,11 @@ interface ContactQRCodeProps {
 export function ContactQRCode({ open, onOpenChange, userData }: ContactQRCodeProps) {
   const [qrCode, setQrCode] = useState<string>('');
   const { toast } = useToast();
+  const contactDetails = [
+    { label: 'Nom', value: userData.name },
+    { label: 'Email', value: userData.email },
+    { label: 'Téléphone', value: userData.phone },
+  ];
 
   useEffect(() => {
     if (!open || !userData.uid) return;
@@ -64,13 +69,16 @@ export function ContactQRCode({ open, onOpenChange, userData }: ContactQRCodePro
       title: 'QR contact Masolo',
       name: userData.name,
       subtitle: "Scannez pour m'ajouter",
+      details: contactDetails,
       centerLabel: 'Chat',
       variant: 'contact',
+      outputType: 'image/jpeg',
+      quality: 0.95,
     });
 
     const link = document.createElement('a');
     link.href = brandedQRCode;
-    link.download = `enkamba-contact-${userData.name.replace(/\s+/g, '-')}.png`;
+    link.download = `enkamba-contact-${userData.name.replace(/\s+/g, '-')}.jpg`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -86,10 +94,21 @@ export function ContactQRCode({ open, onOpenChange, userData }: ContactQRCodePro
     if (!qrCode) return;
 
     try {
-      // Convertir le data URL en blob
-      const response = await fetch(qrCode);
+      const brandedQRCode = await createBrandedQRCodeDataUrl({
+        qrCode,
+        title: 'QR contact Masolo',
+        name: userData.name,
+        subtitle: "Scannez pour m'ajouter",
+        details: contactDetails,
+        centerLabel: 'Chat',
+        variant: 'contact',
+        outputType: 'image/jpeg',
+        quality: 0.95,
+      });
+
+      const response = await fetch(brandedQRCode);
       const blob = await response.blob();
-      const file = new File([blob], `enkamba-contact-${userData.name}.png`, { type: 'image/png' });
+      const file = new File([blob], `enkamba-contact-${userData.name}.jpg`, { type: 'image/jpeg' });
 
       if (navigator.share && navigator.canShare({ files: [file] })) {
         await navigator.share({
@@ -142,26 +161,12 @@ export function ContactQRCode({ open, onOpenChange, userData }: ContactQRCodePro
               title="QR contact Masolo"
               name={userData.name}
               subtitle="Scannez pour m'ajouter"
+              details={contactDetails}
               centerIcon={<ChatNavIcon size={28} className="text-white" />}
               variant="contact"
               qrAlt="QR Code Contact"
             />
           )}
-
-          {/* Contact Info */}
-          <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-            <p className="text-sm">
-              <span className="font-semibold">Nom:</span> {userData.name}
-            </p>
-            <p className="text-sm break-all">
-              <span className="font-semibold">Email:</span> {userData.email}
-            </p>
-            {userData.phone && (
-              <p className="text-sm">
-                <span className="font-semibold">Téléphone:</span> {userData.phone}
-              </p>
-            )}
-          </div>
 
           {/* Actions */}
           <div className="flex gap-2">

@@ -29,6 +29,14 @@ export interface Conversation {
   otherLastSeenVisible?: boolean;
   otherIsOnline?: boolean;
   otherLastSeen?: Timestamp;
+  type?: string;
+  source?: string;
+  shopId?: string;
+  shopName?: string;
+  businessId?: string;
+  businessName?: string;
+  sellerId?: string;
+  sellerName?: string;
 }
 
 export function useConversations() {
@@ -111,6 +119,8 @@ export function useConversations() {
           
           snapshot.forEach((doc) => {
             const data = doc.data();
+            const hiddenByUid = (data.hiddenByUid || {}) as Record<string, boolean>;
+            if (hiddenByUid[currentUser.uid]) return;
             
             // Déterminer si c'est un groupe
             const isGroup = data.isGroup === true || (data.participants?.length || 0) > 2;
@@ -191,8 +201,16 @@ export function useConversations() {
                   return lastReadMs >= lastMsgMs && lastMsgMs > 0;
                 })(),
                 otherOnlineStatusVisible: true,
-                otherLastSeenVisible: true,
-                otherIsOnline: false,
+              otherLastSeenVisible: true,
+              otherIsOnline: false,
+              type: typeof data.type === 'string' ? data.type : undefined,
+              source: typeof data.source === 'string' ? data.source : undefined,
+              shopId: typeof data.shopId === 'string' ? data.shopId : undefined,
+              shopName: typeof data.shopName === 'string' ? data.shopName : undefined,
+              businessId: typeof data.businessId === 'string' ? data.businessId : undefined,
+              businessName: typeof data.businessName === 'string' ? data.businessName : undefined,
+              sellerId: typeof data.sellerId === 'string' ? data.sellerId : undefined,
+              sellerName: typeof data.sellerName === 'string' ? data.sellerName : undefined,
               });
           });
 

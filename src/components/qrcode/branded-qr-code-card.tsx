@@ -10,6 +10,7 @@ type BrandedQRCodeCardProps = {
   title?: string;
   name: string;
   subtitle?: string;
+  details?: Array<{ label: string; value?: string | null }>;
   centerImageSrc?: string | null;
   centerIcon?: ReactNode;
   variant?: 'payment' | 'contact';
@@ -22,9 +23,12 @@ type ExportBrandedQRCodeOptions = {
   name: string;
   title?: string;
   subtitle?: string;
+  details?: Array<{ label: string; value?: string | null }>;
   centerImageSrc?: string | null;
   centerLabel?: string;
   variant?: 'payment' | 'contact';
+  outputType?: 'image/png' | 'image/jpeg';
+  quality?: number;
 };
 
 const loadCanvasImage = (src: string) =>
@@ -86,15 +90,19 @@ export async function createBrandedQRCodeDataUrl({
   name,
   title,
   subtitle,
+  details,
   centerImageSrc,
   centerLabel,
   variant = 'payment',
+  outputType = 'image/png',
+  quality,
 }: ExportBrandedQRCodeOptions) {
   const isPayment = variant === 'payment';
   const canvas = document.createElement('canvas');
   const scale = 3;
+  const visibleDetails = (details || []).filter((detail) => detail.value);
   const width = 520;
-  const height = 680;
+  const height = visibleDetails.length ? 760 : 680;
   canvas.width = width * scale;
   canvas.height = height * scale;
 
@@ -205,11 +213,36 @@ export async function createBrandedQRCodeDataUrl({
     context.fillText(subtitle, width / 2, qrBoxY + qrBoxSize + 102);
   }
 
+  if (visibleDetails.length) {
+    const detailsY = qrBoxY + qrBoxSize + 130;
+    const detailsHeight = 26 + visibleDetails.length * 26;
+
+    context.fillStyle = 'rgba(255,255,255,0.78)';
+    drawRoundRect(context, 62, detailsY, width - 124, detailsHeight, 14);
+    context.fill();
+
+    visibleDetails.forEach((detail, index) => {
+      const lineY = detailsY + 30 + index * 26;
+      context.fillStyle = '#64748b';
+      context.font = '700 13px Arial, sans-serif';
+      context.textAlign = 'right';
+      context.fillText(`${detail.label}:`, 170, lineY);
+
+      context.fillStyle = '#0f172a';
+      context.font = '700 13px Arial, sans-serif';
+      context.textAlign = 'left';
+      const value = String(detail.value || '');
+      const text = value.length > 38 ? `${value.slice(0, 35)}...` : value;
+      context.fillText(text, 184, lineY);
+    });
+  }
+
   context.fillStyle = isPayment ? '#32BB78' : '#0E5A59';
   context.font = '700 14px Arial, sans-serif';
+  context.textAlign = 'center';
   context.fillText('eNkamba', width / 2, height - 52);
 
-  return canvas.toDataURL('image/png');
+  return canvas.toDataURL(outputType, quality);
 }
 
 export function BrandedQRCodeCard({
@@ -217,6 +250,7 @@ export function BrandedQRCodeCard({
   title,
   name,
   subtitle,
+  details,
   centerImageSrc,
   centerIcon,
   variant = 'payment',
@@ -276,6 +310,18 @@ export function BrandedQRCodeCard({
         <p className="text-base font-black text-slate-950">{name}</p>
         {subtitle && <p className="mt-1 text-xs font-medium text-slate-500">{subtitle}</p>}
       </div>
+
+      {details?.some((detail) => detail.value) && (
+        <div className="mt-4 rounded-[8px] bg-white/75 p-3 text-left ring-1 ring-slate-900/5">
+          {details
+            .filter((detail) => detail.value)
+            .map((detail) => (
+              <p key={detail.label} className="break-words text-xs leading-5 text-slate-700">
+                <span className="font-bold text-slate-950">{detail.label}:</span> {detail.value}
+              </p>
+            ))}
+        </div>
+      )}
     </div>
   );
 }

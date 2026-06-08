@@ -15,7 +15,7 @@ import {
 } from '@/components/icons/service-icons';
 
 const navItems = [
-  { name: 'Messagerie unifiée', icon: ChatNavIcon, href: '/dashboard/miyiki-chat', color: '#32BB78' },
+  { name: 'Chat', icon: ChatNavIcon, href: '/dashboard/miyiki-chat', color: '#32BB78' },
   { name: 'E-comm', icon: ShopNavIcon, href: '/dashboard/nkampa', color: '#FF8C00' },
   { name: 'Logistique', icon: LogisticsNavIcon, href: '/dashboard/ugavi', color: '#0E5A59' },
   { name: 'Paiement', icon: PaymentNavIcon, href: '/dashboard/mbongo-dashboard', color: '#32BB78' },

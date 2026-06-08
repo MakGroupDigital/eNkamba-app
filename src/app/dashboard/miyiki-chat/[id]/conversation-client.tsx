@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef, useCallback, type PointerEvent, type TouchEvent } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { collection, doc, documentId, getDoc, getDocs, onSnapshot, query, serverTimestamp, updateDoc, where } from 'firebase/firestore';
+import { collection, deleteDoc, doc, documentId, getDoc, getDocs, onSnapshot, query, serverTimestamp, setDoc, updateDoc, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -19,7 +19,7 @@ import { MoneyTransferMessage } from '@/components/chat/MoneyTransferMessage';
 import { useLocationSharing } from '@/hooks/useLocationSharing';
 import { useChatMoneyTransfer } from '@/hooks/useChatMoneyTransfer';
 import { uploadToCloudinary } from '@/lib/cloudinary-upload';
-import { ChevronLeft, Send, Loader2, Mail, Phone, Mic, Video, MapPin, DollarSign, Paperclip, Plus, X, Check, Square, Settings, Users, Trash2, Edit2, MoreVertical, Languages } from 'lucide-react';
+import { Ban, Bell, BellOff, ChevronLeft, Image as ImageIcon, Send, Loader2, Mail, Phone, Mic, Video, MapPin, DollarSign, Paperclip, Plus, X, Check, Square, Settings, ShieldAlert, UserMinus, Users, Trash2, Edit2, MoreVertical, Languages } from 'lucide-react';
 import Link from 'next/link';
 import { GroupSettingsDialog } from '@/components/group-settings-dialog';
 
@@ -72,6 +72,13 @@ export default function ConversationClient() {
     const [sendingProgress, setSendingProgress] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
     const [contact, setContact] = useState<any>(null);
+    const [showContactDetails, setShowContactDetails] = useState(false);
+    const [isConversationMuted, setIsConversationMuted] = useState(false);
+    const [relationshipControl, setRelationshipControl] = useState({
+        restricted: false,
+        blocked: false,
+        isLoading: false,
+    });
     const [contactPrivacy, setContactPrivacy] = useState<{
         onlineStatus: boolean;
         lastSeen: boolean;
@@ -100,6 +107,7 @@ export default function ConversationClient() {
     const [translation, setTranslation] = useState<TranslationResult | null>(null);
     const [translationError, setTranslationError] = useState('');
     const [isTranslating, setIsTranslating] = useState(false);
+    const [translationAction, setTranslationAction] = useState<{ message: any; x: number; y: number } | null>(null);
     const seenIncomingCallIdsRef = useRef<Set<string>>(new Set());
     const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const longPressPointRef = useRef<{ x: number; y: number } | null>(null);
@@ -183,6 +191,8 @@ export default function ConversationClient() {
 
                 if (convSnap.exists()) {
                     const convData = convSnap.data();
+                    const mutedByUid = (convData.mutedByUid || {}) as Record<string, boolean>;
+                    setIsConversationMuted(Boolean(mutedByUid[currentUser.uid]));
                     
                     const participants = convData.participants || [];
                     const participantNames = convData.participantNames || [];
@@ -236,6 +246,18 @@ export default function ConversationClient() {
                                 isGroup: false,
                             };
                             setContact(contactData);
+
+                            try {
+                                const relationshipSnap = await getDoc(doc(db, 'makutano_relationship_controls', `${currentUser.uid}_${otherUid}`));
+                                const relationshipData: any = relationshipSnap.exists() ? relationshipSnap.data() : {};
+                                setRelationshipControl((current) => ({
+                                    ...current,
+                                    restricted: relationshipData.restricted === true,
+                                    blocked: relationshipData.blocked === true,
+                                }));
+                            } catch (e) {
+                                console.warn('Chargement controle relation chat (non critique):', e);
+                            }
 
                             try {
                                 const [settingsSnap, presenceSnap] = await Promise.all([
@@ -431,6 +453,7 @@ export default function ConversationClient() {
 
     const openTranslationModal = useCallback((message: any, language = targetLanguage) => {
         if (!canTranslateMessage(message)) return;
+        setTranslationAction(null);
         setTranslationMessage(message);
         void translateText(message.text, language);
     }, [canTranslateMessage, targetLanguage, translateText]);
@@ -442,6 +465,22 @@ export default function ConversationClient() {
         setTranslationError('');
         setIsTranslating(false);
     }, []);
+
+    const showTranslationAction = useCallback((message: any, point: { x: number; y: number }) => {
+        if (!canTranslateMessage(message)) return;
+
+        const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 360;
+        const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 640;
+        const floatingWidth = 210;
+        const floatingHeight = 86;
+        const margin = 12;
+
+        setTranslationAction({
+            message,
+            x: Math.min(Math.max(point.x, margin + floatingWidth / 2), viewportWidth - margin - floatingWidth / 2),
+            y: Math.min(Math.max(point.y - floatingHeight - 10, margin), viewportHeight - margin - floatingHeight),
+        });
+    }, [canTranslateMessage]);
 
     const clearMessageLongPress = useCallback(() => {
         if (longPressTimerRef.current) {
@@ -459,9 +498,9 @@ export default function ConversationClient() {
         longPressTimerRef.current = setTimeout(() => {
             longPressTimerRef.current = null;
             longPressPointRef.current = null;
-            openTranslationModal(message);
+            showTranslationAction(message, point);
         }, 650);
-    }, [canTranslateMessage, clearMessageLongPress, openTranslationModal]);
+    }, [canTranslateMessage, clearMessageLongPress, showTranslationAction]);
 
     const handleMessagePointerMove = useCallback((e: PointerEvent) => {
         const point = longPressPointRef.current;
@@ -563,6 +602,10 @@ export default function ConversationClient() {
     // Envoyer un message
     const handleSendMessage = async () => {
         if (!inputValue.trim()) return;
+        if (!isGroup && relationshipControl.blocked) {
+            alert('Ce contact est bloqué. Débloquez-le pour envoyer un message.');
+            return;
+        }
 
         const messageText = inputValue;
         setInputValue('');
@@ -851,6 +894,87 @@ export default function ConversationClient() {
         return 'Statut masqué';
     }, [contactPrivacy.isOnline, contactPrivacy.lastSeen, contactPrivacy.lastSeenAt, contactPrivacy.onlineStatus, groupData?.participants?.length, isGroup]);
 
+    const mediaMessages = useMemo(() => {
+        return messages.filter((message) =>
+            message?.metadata?.mediaUrl ||
+            message?.metadata?.thumbnailUrl ||
+            message?.metadata?.fileType?.startsWith?.('image/') ||
+            message?.messageType === 'video' ||
+            message?.messageType === 'voice'
+        );
+    }, [messages]);
+
+    const toggleConversationNotifications = async () => {
+        if (!currentUser?.uid) return;
+        const nextMuted = !isConversationMuted;
+        setIsConversationMuted(nextMuted);
+        try {
+            await updateDoc(doc(db, 'conversations', conversationId), {
+                [`mutedByUid.${currentUser.uid}`]: nextMuted,
+                updatedAt: serverTimestamp(),
+            });
+        } catch (error) {
+            setIsConversationMuted(!nextMuted);
+            console.error('Erreur notification conversation:', error);
+            alert('Impossible de mettre à jour les notifications.');
+        }
+    };
+
+    const updateContactRelationship = async (updates: { restricted?: boolean; blocked?: boolean }) => {
+        if (!currentUser?.uid || !contact?.id || relationshipControl.isLoading) return;
+
+        setRelationshipControl((current) => ({ ...current, isLoading: true }));
+        try {
+            const nextRestricted = updates.restricted ?? relationshipControl.restricted;
+            const nextBlocked = updates.blocked ?? relationshipControl.blocked;
+
+            await setDoc(
+                doc(db, 'makutano_relationship_controls', `${currentUser.uid}_${contact.id}`),
+                {
+                    ownerId: currentUser.uid,
+                    targetId: contact.id,
+                    targetName: contact.name || 'Contact',
+                    restricted: nextBlocked ? false : nextRestricted,
+                    blocked: nextBlocked,
+                    updatedAt: serverTimestamp(),
+                    createdAt: serverTimestamp(),
+                },
+                { merge: true }
+            );
+
+            if (nextBlocked) {
+                await deleteDoc(doc(db, 'makutano_follows', `${currentUser.uid}_${contact.id}`)).catch(() => undefined);
+            }
+
+            setRelationshipControl({
+                restricted: nextBlocked ? false : nextRestricted,
+                blocked: nextBlocked,
+                isLoading: false,
+            });
+        } catch (error) {
+            console.error('Erreur controle relation chat:', error);
+            setRelationshipControl((current) => ({ ...current, isLoading: false }));
+            alert('Impossible d’appliquer cette action.');
+        }
+    };
+
+    const hideConversationForMe = async () => {
+        if (!currentUser?.uid) return;
+        const confirmed = window.confirm('Retirer cette discussion de votre liste ?');
+        if (!confirmed) return;
+
+        try {
+            await updateDoc(doc(db, 'conversations', conversationId), {
+                [`hiddenByUid.${currentUser.uid}`]: true,
+                updatedAt: serverTimestamp(),
+            });
+            router.push('/dashboard/miyiki-chat');
+        } catch (error) {
+            console.error('Erreur retrait conversation:', error);
+            alert('Impossible de retirer cette discussion.');
+        }
+    };
+
     // Envoyer de l'argent
     const handleSendMoney = async () => {
         const amountStr = prompt('Montant à envoyer (en FC):');
@@ -977,7 +1101,17 @@ export default function ConversationClient() {
                             <ChevronLeft className="h-6 w-6" />
                         </Button>
                     </Link>
-                    <div className="flex items-center gap-3 flex-1">
+                    <button
+                        type="button"
+                        onClick={() => {
+                            if (isGroup) {
+                                setShowGroupSettings(true);
+                            } else {
+                                setShowContactDetails(true);
+                            }
+                        }}
+                        className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl text-left transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+                    >
                         <Avatar className="h-10 w-10 border-2 border-white/20">
                             {!isGroup && contact?.avatar && (
                                 <AvatarImage src={contact.avatar} alt={contact?.name || 'Contact'} className="object-cover" />
@@ -990,15 +1124,15 @@ export default function ConversationClient() {
                                 )}
                             </AvatarFallback>
                         </Avatar>
-                        <div>
-                            <h1 className="font-headline text-lg font-bold text-white">
+                        <div className="min-w-0">
+                            <h1 className="truncate font-headline text-lg font-bold text-white">
                                 {contact?.name || 'Conversation'}
                             </h1>
                             <p className="text-xs text-white/70">
                                 {contactStatusText}
                             </p>
                         </div>
-                    </div>
+                    </button>
 
                     {/* Group Settings Button */}
                     {isGroup && (
@@ -1093,7 +1227,7 @@ export default function ConversationClient() {
             )}
 
             {/* Messages Container */}
-            <main className="flex-1 overflow-y-auto px-3 py-3 space-y-2 flex-shrink min-h-0 sm:px-4">
+            <main className="flex-1 overflow-y-auto px-3 py-2 space-y-0.5 flex-shrink min-h-0 sm:px-4">
                 {isLoading ? (
                     <div className="flex items-center justify-center h-full">
                         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -1127,13 +1261,13 @@ export default function ConversationClient() {
                                 className={`w-full flex ${isOwn ? 'justify-end' : 'justify-start'}`}
                             >
                                 <div
-                                    className={`group relative flex flex-col gap-0.5 ${
+                                    className={`group relative flex flex-col gap-0 ${
                                         isOwn ? 'items-end' : 'items-start'
                                     } w-full max-w-[82%] sm:max-w-[74%]`}
                                 >
                                     {/* Nom de l'expéditeur pour les groupes (sauf pour ses propres messages) */}
                                     {isGroup && !isOwn && message.senderName && (
-                                        <p className="text-[11px] font-semibold text-primary px-2.5 leading-4">
+                                        <p className="text-[11px] font-semibold text-primary px-2.5 leading-3">
                                             {message.senderName}
                                         </p>
                                     )}
@@ -1158,7 +1292,7 @@ export default function ConversationClient() {
                                         );
                                     })()}
                                     
-                                    <div className={`relative flex items-end gap-1.5 ${isOwn ? 'justify-end' : 'justify-start'} w-full`}>
+                                    <div className={`relative flex items-end gap-1 ${isOwn ? 'justify-end' : 'justify-start'} w-full`}>
                                         {/* Avatar for non-own messages */}
                                         {!isOwn && (
                                             <Avatar className="h-7 w-7 flex-shrink-0 mt-0.5">
@@ -1173,7 +1307,7 @@ export default function ConversationClient() {
                                             </Avatar>
                                         )}
                                         <Card
-                                            className={`px-3 py-1.5 rounded-2xl cursor-pointer hover:shadow-md transition-shadow w-fit max-w-full ${
+                                            className={`px-3 py-1 rounded-2xl cursor-pointer hover:shadow-md transition-shadow w-fit max-w-full ${
                                                 isOwn
                                                     ? 'bg-primary text-white rounded-br-none'
                                                     : 'bg-muted text-foreground rounded-bl-none'
@@ -1194,7 +1328,7 @@ export default function ConversationClient() {
                                                 e.preventDefault();
                                                 if (!message.isDeleted) {
                                                     if (canTranslateMessage(message)) {
-                                                        openTranslationModal(message);
+                                                        showTranslationAction(message, { x: e.clientX, y: e.clientY });
                                                     } else {
                                                         setReplyingTo(message);
                                                     }
@@ -1451,7 +1585,7 @@ export default function ConversationClient() {
                                         <p className="text-sm leading-5 whitespace-pre-wrap break-words">{message.text}</p>
                                     )}
                                     <p
-                                        className={`text-[11px] mt-0.5 leading-4 ${
+                                        className={`text-[10px] mt-0 leading-3 ${
                                             isOwn
                                                 ? 'text-white/70'
                                                 : 'text-muted-foreground'
@@ -1467,13 +1601,11 @@ export default function ConversationClient() {
                                     
                                     {/* Message Actions Menu */}
                                     {isOwn && !message.isDeleted && (
-                                        <div className="relative flex-shrink-0">
+                                        <div className="absolute -left-8 top-1 flex-shrink-0">
                                             <Button
                                                 size="sm"
                                                 variant="ghost"
-                                                className={`opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 p-0 ${
-                                                    isOwn ? 'text-white hover:bg-white/20' : 'text-muted-foreground hover:bg-muted'
-                                                }`}
+                                                className="h-7 w-7 p-0 text-muted-foreground opacity-0 transition-opacity hover:bg-muted group-hover:opacity-100"
                                                 onClick={() => setShowMessageMenu(showMessageMenu === message.id ? null : message.id)}
                                             >
                                                 <MoreVertical className="h-4 w-4" />
@@ -1503,19 +1635,6 @@ export default function ConversationClient() {
                                         </div>
                                     )}
 
-                                    {/* Avatar for own messages */}
-                                    {isOwn && (
-                                        <Avatar className="h-7 w-7 flex-shrink-0 mt-0.5">
-                                            <AvatarImage
-                                                src={message.senderPhoto || myAvatar || undefined}
-                                                alt={message.senderName || 'Moi'}
-                                                className="object-cover"
-                                            />
-                                            <AvatarFallback className="bg-white/20 text-white text-xs font-bold">
-                                                {message.senderName?.charAt(0)?.toUpperCase() || 'U'}
-                                            </AvatarFallback>
-                                        </Avatar>
-                                    )}
                                     </div>
                                     
                                     {/* Reply Button */}
@@ -1532,19 +1651,6 @@ export default function ConversationClient() {
                                         </Button>
                                     )}
 
-                                    {canTranslateMessage(message) && (
-                                        <Button
-                                            size="sm"
-                                            variant="ghost"
-                                            className={`text-xs h-5 px-2 gap-1 ${
-                                                isOwn ? 'text-primary self-end' : 'text-muted-foreground self-start'
-                                            }`}
-                                            onClick={() => openTranslationModal(message)}
-                                        >
-                                            <Languages className="h-3.5 w-3.5" />
-                                            Traduire
-                                        </Button>
-                                    )}
                                 </div>
                             </div>
                         );
@@ -1552,6 +1658,60 @@ export default function ConversationClient() {
                 )}
                 <div ref={messagesEndRef} />
             </main>
+
+            {translationAction && (
+                <div
+                    className="fixed z-[90] w-[210px] rounded-2xl border border-primary/15 bg-background/95 p-2 shadow-2xl shadow-black/15 backdrop-blur-xl"
+                    style={{
+                        left: translationAction.x,
+                        top: translationAction.y,
+                        transform: 'translateX(-50%)',
+                    }}
+                >
+                    <div className="mb-2 flex items-center justify-between gap-2">
+                        <div className="flex min-w-0 items-center gap-2">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
+                                <Languages className="h-4 w-4" />
+                            </div>
+                            <div className="min-w-0">
+                                <p className="truncate text-xs font-bold text-foreground">Message sélectionné</p>
+                                <p className="truncate text-[11px] text-muted-foreground">Choisir une action</p>
+                            </div>
+                        </div>
+                        <Button
+                            type="button"
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 rounded-full"
+                            onClick={() => setTranslationAction(null)}
+                        >
+                            <X className="h-3.5 w-3.5" />
+                        </Button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-1.5">
+                        <Button
+                            type="button"
+                            size="sm"
+                            className="h-8 rounded-xl text-xs"
+                            onClick={() => openTranslationModal(translationAction.message)}
+                        >
+                            Traduire
+                        </Button>
+                        <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="h-8 rounded-xl text-xs"
+                            onClick={() => {
+                                setReplyingTo(translationAction.message);
+                                setTranslationAction(null);
+                            }}
+                        >
+                            Répondre
+                        </Button>
+                    </div>
+                </div>
+            )}
 
             {/* Fixed Input Footer */}
             <footer className="flex-shrink-0 border-t bg-background z-20 shadow-lg flex flex-col max-h-[30vh] overflow-y-auto mb-[calc(80px+env(safe-area-inset-bottom))]">
@@ -1683,7 +1843,7 @@ export default function ConversationClient() {
                             variant="outline"
                             className="gap-2"
                             onClick={handleShareLocation}
-                            disabled={isSending || !chatSettings.locationSharing}
+                            disabled={isSending || !chatSettings.locationSharing || (!isGroup && relationshipControl.blocked)}
                             title={chatSettings.locationSharing ? 'Partager ma localisation' : 'Activez le partage de localisation dans les paramètres du chat'}
                         >
                             <MapPin className="h-4 w-4" />
@@ -1696,7 +1856,7 @@ export default function ConversationClient() {
                                 variant="outline"
                                 className="gap-2"
                                 onClick={handleSendMoney}
-                                disabled={isSending}
+                                disabled={isSending || relationshipControl.blocked}
                             >
                                 <DollarSign className="h-4 w-4" />
                                 Argent
@@ -1707,7 +1867,7 @@ export default function ConversationClient() {
                             variant="outline"
                             className="gap-2"
                             onClick={handleSendFile}
-                            disabled={isSending}
+                            disabled={isSending || (!isGroup && relationshipControl.blocked)}
                         >
                             <Paperclip className="h-4 w-4" />
                             Fichier
@@ -1724,6 +1884,12 @@ export default function ConversationClient() {
                     </div>
                 )}
 
+                {!isGroup && relationshipControl.blocked && (
+                    <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-700">
+                        Contact bloqué. Débloquez-le dans les détails de la conversation pour reprendre l’échange.
+                    </div>
+                )}
+
                 {/* Main Input Area */}
                 {!recordingBlob && (
                     <div className="flex gap-2 items-end">
@@ -1733,7 +1899,7 @@ export default function ConversationClient() {
                             variant="outline"
                             className="rounded-full"
                             onClick={() => setShowMoreActions(!showMoreActions)}
-                            disabled={isSending || isRecording}
+                            disabled={isSending || isRecording || (!isGroup && relationshipControl.blocked)}
                         >
                             {showMoreActions ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
                         </Button>
@@ -1750,7 +1916,7 @@ export default function ConversationClient() {
                                     handleSendMessage();
                                 }
                             }}
-                            disabled={isSending || isRecording}
+                            disabled={isSending || isRecording || (!isGroup && relationshipControl.blocked)}
                             spellCheck={true}
                             autoCorrect="on"
                             autoCapitalize="sentences"
@@ -1764,7 +1930,7 @@ export default function ConversationClient() {
                             variant="outline"
                             className="rounded-full"
                             onClick={handleVoiceMessage}
-                            disabled={isSending || isRecording}
+                            disabled={isSending || isRecording || (!isGroup && relationshipControl.blocked)}
                             title={isRecording ? 'En cours d\'enregistrement...' : 'Enregistrer un message vocal'}
                         >
                             <Mic className={`h-4 w-4 ${isRecording ? 'text-red-500 animate-pulse' : ''}`} />
@@ -1776,7 +1942,7 @@ export default function ConversationClient() {
                             variant="outline"
                             className="rounded-full"
                             onClick={handleVideoMessage}
-                            disabled={isSending || isRecording}
+                            disabled={isSending || isRecording || (!isGroup && relationshipControl.blocked)}
                             title={isRecording ? 'En cours d\'enregistrement...' : 'Enregistrer un message vidéo'}
                         >
                             <Video className={`h-4 w-4 ${isRecording ? 'text-red-500 animate-pulse' : ''}`} />
@@ -1785,7 +1951,7 @@ export default function ConversationClient() {
                         {/* Send Button */}
                         <Button
                             onClick={handleSendMessage}
-                            disabled={isSending || !inputValue.trim() || isRecording}
+                            disabled={isSending || !inputValue.trim() || isRecording || (!isGroup && relationshipControl.blocked)}
                             className="rounded-full"
                             size="icon"
                         >
@@ -1876,19 +2042,23 @@ export default function ConversationClient() {
             </footer>
 
             <Dialog open={Boolean(translationMessage)} onOpenChange={closeTranslationModal}>
-                <DialogContent className="max-w-md rounded-2xl">
+                <DialogContent className="max-w-md rounded-3xl border-primary/10 p-0 shadow-2xl">
+                    <div className="rounded-t-3xl bg-gradient-to-r from-primary via-emerald-700 to-orange-500 px-5 py-4 text-white">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
-                            <Languages className="h-5 w-5 text-primary" />
+                            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/18">
+                                <Languages className="h-5 w-5" />
+                            </span>
                             Traduction du message
                         </DialogTitle>
-                        <DialogDescription>
+                        <DialogDescription className="text-white/75">
                             Langue source detectee automatiquement, puis traduction dans la langue choisie.
                         </DialogDescription>
                     </DialogHeader>
+                    </div>
 
-                    <div className="space-y-4">
-                        <div className="rounded-xl border bg-muted/40 p-3">
+                    <div className="space-y-4 p-5">
+                        <div className="rounded-2xl border bg-muted/40 p-3">
                             <p className="mb-1 text-xs font-medium text-muted-foreground">Message original</p>
                             <p className="whitespace-pre-wrap break-words text-sm leading-6">
                                 {translationMessage?.text}
@@ -1911,9 +2081,9 @@ export default function ConversationClient() {
                             </Select>
                         </div>
 
-                        <div className="rounded-xl border p-3">
+                        <div className="rounded-2xl border border-primary/10 bg-primary/5 p-3">
                             <div className="mb-2 flex items-center justify-between gap-2">
-                                <p className="text-xs font-medium text-muted-foreground">
+                                <p className="text-xs font-bold text-primary">
                                     {translation
                                         ? `${translation.sourceLanguageName} vers ${translation.targetLanguageName}`
                                         : 'Traduction'}
@@ -1952,6 +2122,127 @@ export default function ConversationClient() {
                             >
                                 Repondre
                             </Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={showContactDetails} onOpenChange={setShowContactDetails}>
+                <DialogContent className="max-w-md rounded-3xl p-0">
+                    <div className="rounded-t-3xl bg-gradient-to-r from-primary via-emerald-700 to-orange-500 px-5 py-5 text-white">
+                        <DialogHeader>
+                            <DialogTitle className="sr-only">Détails de la conversation</DialogTitle>
+                        </DialogHeader>
+                        <div className="flex items-center gap-4">
+                            <Avatar className="h-16 w-16 border-2 border-white/30">
+                                {contact?.avatar ? (
+                                    <AvatarImage src={contact.avatar} alt={contact?.name || 'Contact'} className="object-cover" />
+                                ) : null}
+                                <AvatarFallback className="bg-white/20 text-xl font-bold text-white">
+                                    {(contact?.name || 'U').charAt(0).toUpperCase()}
+                                </AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0 flex-1">
+                                <p className="truncate text-xl font-black">{contact?.name || 'Contact'}</p>
+                                <p className="text-sm text-white/75">{contactStatusText}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="max-h-[70vh] space-y-4 overflow-y-auto p-5">
+                        <div className="grid grid-cols-3 gap-2">
+                            <button
+                                type="button"
+                                onClick={toggleConversationNotifications}
+                                className="rounded-2xl border bg-muted/30 p-3 text-center transition-colors hover:bg-muted"
+                            >
+                                {isConversationMuted ? <BellOff className="mx-auto mb-1 h-5 w-5 text-primary" /> : <Bell className="mx-auto mb-1 h-5 w-5 text-primary" />}
+                                <span className="text-xs font-semibold">{isConversationMuted ? 'Réactiver' : 'Notifs'}</span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => contact?.id && router.push(`/dashboard/makutano/profile/${contact.id}`)}
+                                className="rounded-2xl border bg-muted/30 p-3 text-center transition-colors hover:bg-muted"
+                            >
+                                <Users className="mx-auto mb-1 h-5 w-5 text-primary" />
+                                <span className="text-xs font-semibold">Profil</span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={hideConversationForMe}
+                                className="rounded-2xl border bg-muted/30 p-3 text-center transition-colors hover:bg-muted"
+                            >
+                                <UserMinus className="mx-auto mb-1 h-5 w-5 text-primary" />
+                                <span className="text-xs font-semibold">Retirer</span>
+                            </button>
+                        </div>
+
+                        <div className="rounded-2xl border p-4">
+                            <p className="mb-3 text-sm font-bold">Informations</p>
+                            <div className="space-y-2 text-sm">
+                                <div className="flex items-center gap-2 text-muted-foreground">
+                                    <Phone className="h-4 w-4" />
+                                    <span>{contact?.phoneNumber || 'Numéro non renseigné'}</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-muted-foreground">
+                                    <Mail className="h-4 w-4" />
+                                    <span className="break-all">{contact?.email || 'Email non renseigné'}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="rounded-2xl border p-4">
+                            <div className="mb-3 flex items-center justify-between">
+                                <p className="text-sm font-bold">Médias de la conversation</p>
+                                <span className="text-xs font-semibold text-muted-foreground">{mediaMessages.length}</span>
+                            </div>
+                            {mediaMessages.length ? (
+                                <div className="grid grid-cols-4 gap-2">
+                                    {mediaMessages.slice(0, 8).map((message) => {
+                                        const mediaUrl = message.metadata?.thumbnailUrl || message.metadata?.mediaUrl;
+                                        return (
+                                            <div key={message.id} className="flex aspect-square items-center justify-center overflow-hidden rounded-xl bg-muted">
+                                                {mediaUrl && (message.metadata?.fileType?.startsWith?.('image/') || message.messageType === 'file') ? (
+                                                    <img src={mediaUrl} alt="Media" className="h-full w-full object-cover" />
+                                                ) : (
+                                                    <ImageIcon className="h-5 w-5 text-muted-foreground" />
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <p className="text-sm text-muted-foreground">Aucun média partagé.</p>
+                            )}
+                        </div>
+
+                        <div className="rounded-2xl border p-4">
+                            <p className="mb-3 text-sm font-bold">Contrôle</p>
+                            <div className="space-y-2">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    className="w-full justify-start rounded-xl"
+                                    disabled={!contact?.id || relationshipControl.blocked || relationshipControl.isLoading}
+                                    onClick={() => updateContactRelationship({ restricted: !relationshipControl.restricted })}
+                                >
+                                    <ShieldAlert className="mr-2 h-4 w-4" />
+                                    {relationshipControl.restricted ? 'Retirer la restriction' : 'Restreindre'}
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant={relationshipControl.blocked ? 'outline' : 'destructive'}
+                                    className="w-full justify-start rounded-xl"
+                                    disabled={!contact?.id || relationshipControl.isLoading}
+                                    onClick={() => updateContactRelationship({ blocked: !relationshipControl.blocked })}
+                                >
+                                    <Ban className="mr-2 h-4 w-4" />
+                                    {relationshipControl.blocked ? 'Débloquer' : 'Bloquer'}
+                                </Button>
+                            </div>
+                            {relationshipControl.blocked && (
+                                <p className="mt-2 text-xs text-red-600">Ce contact est bloqué. Vous pouvez le débloquer depuis ce panneau.</p>
+                            )}
                         </div>
                     </div>
                 </DialogContent>
