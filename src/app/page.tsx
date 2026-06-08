@@ -1,6 +1,13 @@
-import { redirect } from 'next/navigation';
+import type { Metadata } from "next";
 
-// This page acts as a gateway to the onboarding page.
+import { ServerMaintenancePage } from "@/components/server-maintenance-page";
+
+export const metadata: Metadata = {
+  title: "Serveur inaccessible | eNkamba",
+  description:
+    "eNkamba rencontre actuellement un probleme serveur. Veuillez contacter le support client.",
+};
+
 export default function RootPage() {
-  redirect('/onboarding');
+  return <ServerMaintenancePage />;
 }
