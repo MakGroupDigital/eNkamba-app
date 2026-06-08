@@ -27,7 +27,6 @@ import { StoryViewer } from '@/components/stories/StoryViewer';
 import { LocationSharingDialog } from '@/components/chat/LocationSharingDialog';
 import { ContactQRCode } from '@/components/settings/ContactQRCode';
 import {
-  MiyikiChatIcon,
   NewChatIcon,
   SearchIcon,
 } from "@/components/icons/service-icons";
@@ -750,15 +749,7 @@ export default function MiyikiChatPage() {
       
       {/* Header */}
       <header className="sticky top-0 z-10 flex h-16 items-center justify-between bg-gradient-to-r from-primary via-primary to-green-800 px-4 shadow-lg">
-        <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
-              <MiyikiChatIcon size={28} className="text-white" />
-            </div>
-            <div>
-              <h1 className="font-headline text-xl font-bold text-white">eChat</h1>
-              <p className="text-xs text-white/70">Communication intelligente</p>
-            </div>
-        </div>
+        <div />
         <div className="flex items-center gap-2">
           <button
             type="button"
