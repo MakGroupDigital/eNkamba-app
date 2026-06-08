@@ -179,13 +179,13 @@ export default function CreditPage() {
             {isEligible !== null && (
               <Alert variant={isEligible ? "default" : "destructive"} className={cn(
                 "animate-in fade-in-up",
-                isEligible && "border-green-200 bg-green-50 dark:bg-green-950/20"
+                isEligible && "border-primary/20 bg-primary/5 dark:bg-primary/20"
               )}>
                 {isEligible ? (
                   <>
-                    <CheckCircle2 className="h-4 w-4 text-green-600" />
-                    <AlertTitle className="text-green-700 dark:text-green-300">Éligible</AlertTitle>
-                    <AlertDescription className="text-green-700 dark:text-green-300">
+                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                    <AlertTitle className="text-primary dark:text-primary">Éligible</AlertTitle>
+                    <AlertDescription className="text-primary dark:text-primary">
                       Vous êtes éligible pour ce montant ! Choisissez une offre ci-dessous pour continuer.
                     </AlertDescription>
                   </>
@@ -244,7 +244,7 @@ export default function CreditPage() {
                 </p>
               </div>
             </div>
-            <div className="p-4 rounded-lg bg-gradient-to-r from-primary/10 to-green-800/10 border border-primary/20">
+            <div className="p-4 rounded-lg bg-gradient-to-r from-primary/10 to-primary/10 border border-primary/20">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Clock className="h-5 w-5 text-primary" />

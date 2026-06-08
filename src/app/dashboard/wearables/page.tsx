@@ -41,7 +41,7 @@ export default function WearablesPage() {
       title: 'Notifications Smartband',
       description: 'Recevez les alertes sur votre bracelet connecté',
       status: 'En cours de développement',
-      color: 'from-green-500 to-emerald-600',
+      color: 'from-primary to-primary',
     },
     {
       icon: Wifi,
@@ -178,10 +178,10 @@ export default function WearablesPage() {
         </Card>
 
         {/* Security Info */}
-        <Card className="border-green-200 bg-gradient-to-br from-green-50 to-emerald-50">
+        <Card className="border-primary/20 bg-gradient-to-br from-primary to-primary">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Lock className="w-5 h-5 text-green-600" />
+              <Lock className="w-5 h-5 text-primary" />
               Sécurité & Confidentialité
             </CardTitle>
           </CardHeader>
@@ -191,19 +191,19 @@ export default function WearablesPage() {
             </p>
             <ul className="space-y-2 text-muted-foreground">
               <li className="flex gap-2">
-                <span className="text-green-600">✓</span>
+                <span className="text-primary">✓</span>
                 <span>Authentification biométrique obligatoire</span>
               </li>
               <li className="flex gap-2">
-                <span className="text-green-600">✓</span>
+                <span className="text-primary">✓</span>
                 <span>Limite de paiement configurable par appareil</span>
               </li>
               <li className="flex gap-2">
-                <span className="text-green-600">✓</span>
+                <span className="text-primary">✓</span>
                 <span>Notifications instantanées de chaque transaction</span>
               </li>
               <li className="flex gap-2">
-                <span className="text-green-600">✓</span>
+                <span className="text-primary">✓</span>
                 <span>Blocage à distance en cas de perte</span>
               </li>
             </ul>

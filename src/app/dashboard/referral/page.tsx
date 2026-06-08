@@ -40,7 +40,7 @@ export default function ReferralPage() {
         const dataUrl = await QRCode.toDataURL(referralLink, { 
             width: 200, 
             margin: 2, 
-            color: { dark: '#0E5A59', light: '#FFFFFF' } 
+            color: { dark: '#32BB78', light: '#FFFFFF' } 
         });
         setQrCodeDataUrl(dataUrl);
     } catch (err) {

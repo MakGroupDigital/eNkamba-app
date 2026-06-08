@@ -93,7 +93,7 @@ export default function EnkambaFAQPage() {
           ))}
         </div>
 
-        <Card className="mt-12 bg-gradient-to-r from-primary/10 to-green-800/10 border-primary/20">
+        <Card className="mt-12 bg-gradient-to-r from-primary/10 to-primary/10 border-primary/20">
           <CardContent className="p-8 text-center">
             <h2 className="text-2xl font-bold mb-3">Vous n\'avez pas trouvé votre réponse?</h2>
             <p className="text-gray-600 mb-6">

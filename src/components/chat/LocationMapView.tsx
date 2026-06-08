@@ -71,7 +71,7 @@ export function LocationMapView({
   return (
     <div className="fixed inset-0 bg-background z-50 flex flex-col">
       {/* Header */}
-      <div className="sticky top-0 z-10 flex items-center gap-4 bg-gradient-to-r from-primary via-primary to-green-800 px-4 py-3 shadow-lg">
+      <div className="sticky top-0 z-10 flex items-center gap-4 bg-gradient-to-r from-primary via-primary to-primary px-4 py-3 shadow-lg">
         <Button
           size="icon"
           variant="ghost"
@@ -114,7 +114,7 @@ export function LocationMapView({
             Réinitialiser
           </Button>
           <Button
-            className="flex-1 gap-2 bg-gradient-to-r from-primary to-green-700 hover:from-primary/90 hover:to-green-700/90 text-white"
+            className="flex-1 gap-2 bg-gradient-to-r from-primary to-primary hover:from-primary/90 hover:to-primary/90 text-white"
             onClick={onGetDirections}
           >
             <Navigation className="h-4 w-4" />
@@ -124,7 +124,7 @@ export function LocationMapView({
 
         {/* Info Cards */}
         <div className="grid grid-cols-2 gap-2">
-          <Card className="p-3 bg-gradient-to-br from-primary/10 to-green-50 border-primary/20">
+          <Card className="p-3 bg-gradient-to-br from-primary/10 to-primary border-primary/20">
             <div className="flex items-center gap-2 mb-2">
               <Avatar className="h-8 w-8">
                 <AvatarImage src={senderPhoto} />
@@ -140,7 +140,7 @@ export function LocationMapView({
           </Card>
 
           {receiverName && (
-            <Card className="p-3 bg-gradient-to-br from-primary/10 to-green-50 border-primary/20">
+            <Card className="p-3 bg-gradient-to-br from-primary/10 to-primary border-primary/20">
               <div className="flex items-center gap-2 mb-2">
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={receiverPhoto} />

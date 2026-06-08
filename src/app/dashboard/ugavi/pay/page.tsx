@@ -55,7 +55,7 @@ export default function UgaviPayPage() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-cyan-50">
+    <div className="min-h-screen bg-gradient-to-br from-primary via-white to-cyan-50">
       <div className="container mx-auto max-w-2xl space-y-6 p-4">
         <header className="flex items-center gap-4 pt-4">
           <Button variant="ghost" size="icon" asChild>

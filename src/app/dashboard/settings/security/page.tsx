@@ -143,8 +143,8 @@ export default function SecurityPage() {
             />
           </div>
           {twoFactorEnabled && (
-            <div className="mt-4 p-4 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
-              <p className="text-sm text-green-700 dark:text-green-300">
+            <div className="mt-4 p-4 rounded-lg bg-primary/5 dark:bg-primary/20 border border-primary/20 dark:border-primary">
+              <p className="text-sm text-primary dark:text-primary">
                 ✓ Votre compte est protégé par l'authentification à deux facteurs.
               </p>
             </div>
@@ -260,7 +260,7 @@ export default function SecurityPage() {
             <Button variant="outline" onClick={() => setShowPasswordDialog(false)} disabled={isUpdating}>
               Annuler
             </Button>
-            <Button onClick={handlePasswordChange} disabled={isUpdating} className="bg-gradient-to-r from-primary to-green-800">
+            <Button onClick={handlePasswordChange} disabled={isUpdating} className="bg-gradient-to-r from-primary to-primary">
               {isUpdating ? "Mise à jour..." : "Changer le mot de passe"}
             </Button>
           </DialogFooter>

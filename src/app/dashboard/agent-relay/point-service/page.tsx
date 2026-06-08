@@ -174,7 +174,7 @@ export default function PointServicePage() {
                       variant="outline" 
                       className={`text-xs mt-1 ${
                         service.difficulty === 'Facile' 
-                          ? 'border-green-500 text-green-700' 
+                          ? 'border-primary text-primary' 
                           : 'border-orange-500 text-orange-700'
                       }`}
                     >

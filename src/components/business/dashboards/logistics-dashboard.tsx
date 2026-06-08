@@ -347,8 +347,8 @@ export function LogisticsDashboard({ businessUser }: LogisticsDashboardProps) {
   ];
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(50,187,120,0.14),transparent_34%),linear-gradient(180deg,#f7fbf8_0%,#eef8f1_54%,#f8faf8_100%)] pb-24 text-[#122116]">
-      <div className="sticky top-0 z-30 rounded-b-[32px] bg-gradient-to-r from-[#32BB78] via-[#22945d] to-[#0E5A59] px-4 pb-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] text-white shadow-lg shadow-[#0E5A59]/20">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(50,187,120,0.14),transparent_34%),linear-gradient(180deg,rgba(50,187,120,0.05)_0%,rgba(50,187,120,0.08)_54%,rgba(50,187,120,0.04)_100%)] pb-24 text-foreground">
+      <div className="sticky top-0 z-30 rounded-b-[32px] bg-gradient-to-r from-[#32BB78] via-[#32BB78] to-[#32BB78] px-4 pb-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] text-white shadow-lg shadow-[#32BB78]/20">
         <div className="mx-auto max-w-5xl">
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
@@ -390,7 +390,7 @@ export function LogisticsDashboard({ businessUser }: LogisticsDashboardProps) {
 
       <div className="mx-auto max-w-5xl space-y-5 px-4 py-5">
         <section className="overflow-hidden rounded-3xl border border-white bg-white shadow-sm">
-          <div className="relative bg-gradient-to-br from-[#32BB78] via-[#22945d] to-[#0E5A59] p-5 text-white">
+          <div className="relative bg-gradient-to-br from-[#32BB78] via-[#32BB78] to-[#32BB78] p-5 text-white">
             <div className="pointer-events-none absolute -right-8 -top-10 h-32 w-32 rounded-full bg-white/15 blur-2xl" />
             <div className="relative flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
               <div>
@@ -417,7 +417,7 @@ export function LogisticsDashboard({ businessUser }: LogisticsDashboardProps) {
           </div>
         </section>
 
-        <section className="overflow-hidden rounded-3xl border border-[#dbe8df] bg-white shadow-sm">
+        <section className="overflow-hidden rounded-3xl border border-[#32BB78] bg-white shadow-sm">
           <div className="flex gap-2 overflow-x-auto p-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {tabs.map((tab) => {
               const Icon = TAB_ICON_MAP[tab.id] || tab.icon;
@@ -428,7 +428,7 @@ export function LogisticsDashboard({ businessUser }: LogisticsDashboardProps) {
                   className={`flex min-w-fit items-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold transition ${
                     activeTab === tab.id
                       ? 'bg-[#32BB78] text-white shadow-md shadow-[#32BB78]/20'
-                      : 'bg-[#f4faf6] text-[#52635a] hover:bg-[#e8f4ec] hover:text-[#22945d]'
+                      : 'bg-primary/5 text-muted-foreground hover:bg-primary/10 hover:text-[#32BB78]'
                   }`}
                 >
                   <Icon size={22} />
@@ -463,7 +463,7 @@ function BusinessMetricCard({ stat }: { stat: LogisticsStat }) {
   const colorClasses = {
     orange: 'bg-[#fff7ed] text-[#9a4a00] border-[#fed7aa]',
     blue: 'bg-[#eff6ff] text-[#1d4ed8] border-[#bfdbfe]',
-    green: 'bg-[#ecfdf3] text-[#0E5A59] border-[#b8efd2]',
+    green: 'bg-[#32BB78] text-[#32BB78] border-[#32BB78]',
     yellow: 'bg-[#fffbeb] text-[#92400e] border-[#fde68a]',
     purple: 'bg-[#f5f3ff] text-[#6d28d9] border-[#ddd6fe]',
   };
@@ -1024,15 +1024,15 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
     <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
       <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="mb-5">
-          <h2 className="text-2xl font-bold text-emerald-950">Enregistrement agence</h2>
+          <h2 className="text-2xl font-bold text-primary">Enregistrement agence</h2>
           <p className="mt-1 text-sm text-slate-500">
             Formulaire POS pour creer le colis, calculer CBM / tarif, generer la facture, le QR code et le code-barres.
           </p>
         </div>
 
         <div className="grid gap-5">
-          <div className="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4">
-            <p className="text-sm font-black text-emerald-950">Informations generales</p>
+          <div className="rounded-2xl border border-primary/15 bg-primary/5/60 p-4">
+            <p className="text-sm font-black text-primary">Informations generales</p>
             <div className="mt-3 grid gap-3 md:grid-cols-3">
               <SelectField label="Type expedition" value={shipmentType} onChange={setShipmentType} options={SHIPMENT_TYPES} />
               <SelectField label="Categorie transport" value={transportCategory} onChange={setTransportCategory} options={TRANSPORT_CATEGORIES} />
@@ -1058,7 +1058,7 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
                     type="file"
                     accept="image/*,.pdf"
                     onChange={(event) => setSenderIdFile(event.target.files?.[0] || null)}
-                    className="block h-11 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-emerald-50 file:px-3 file:py-1.5 file:text-sm file:font-bold file:text-emerald-700"
+                    className="block h-11 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-primary/5 file:px-3 file:py-1.5 file:text-sm file:font-bold file:text-primary"
                   />
                 </label>
                 <div className="sm:col-span-2">
@@ -1145,17 +1145,17 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
               <button
                 type="button"
                 onClick={() => void openCamera()}
-                className="flex h-11 w-full items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50 px-3 text-sm font-bold text-emerald-700 transition hover:bg-emerald-100"
+                className="flex h-11 w-full items-center justify-center rounded-lg border border-primary/20 bg-primary/5 px-3 text-sm font-bold text-primary transition hover:bg-primary/10"
               >
                 Capturer la photo
               </button>
             )}
             {cameraError && <p className="text-sm font-semibold text-red-600">{cameraError}</p>}
             {isCameraOpen && (
-              <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-3">
+              <div className="rounded-xl border border-primary/15 bg-primary/5 p-3">
                 <div className="mb-2 flex items-center justify-between gap-2">
-                  <p className="text-sm font-bold text-emerald-800">Camera active</p>
-                  <span className="rounded-full bg-emerald-600 px-2 py-1 text-xs font-bold text-white">LIVE</span>
+                  <p className="text-sm font-bold text-primary">Camera active</p>
+                  <span className="rounded-full bg-primary px-2 py-1 text-xs font-bold text-white">LIVE</span>
                 </div>
                 <video
                   ref={videoRef}
@@ -1163,23 +1163,23 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
                   playsInline
                   muted
                   onLoadedMetadata={() => void videoRef.current?.play()}
-                  className="h-64 w-full rounded-xl bg-emerald-950 object-cover"
+                  className="h-64 w-full rounded-xl bg-primary object-cover"
                 />
-                <p className="mt-2 text-xs font-semibold text-emerald-700">
+                <p className="mt-2 text-xs font-semibold text-primary">
                   Placez le colis dans le cadre puis prenez la photo.
                 </p>
                 <div className="mt-3 grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => void capturePackagePhoto()}
-                    className="rounded-xl bg-emerald-600 px-3 py-2 text-sm font-bold text-white"
+                    className="rounded-xl bg-primary px-3 py-2 text-sm font-bold text-white"
                   >
                     Prendre photo
                   </button>
                   <button
                     type="button"
                     onClick={closeCamera}
-                    className="rounded-xl bg-white px-3 py-2 text-sm font-bold text-emerald-700 ring-1 ring-emerald-100"
+                    className="rounded-xl bg-white px-3 py-2 text-sm font-bold text-primary ring-1 ring-primary/20"
                   >
                     Annuler
                   </button>
@@ -1187,7 +1187,7 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
               </div>
             )}
             {packagePhotoPreview && (
-              <div className="rounded-xl border border-emerald-100 bg-white p-2">
+              <div className="rounded-xl border border-primary/15 bg-white p-2">
                 <img
                   src={packagePhotoPreview}
                   alt="Apercu colis"
@@ -1209,14 +1209,14 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
           type="button"
           onClick={registerPackage}
           disabled={!canSubmit || isSaving}
-          className="mt-5 w-full rounded-lg bg-emerald-600 px-4 py-3 font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+          className="mt-5 w-full rounded-lg bg-primary px-4 py-3 font-semibold text-white transition hover:bg-primary disabled:cursor-not-allowed disabled:bg-slate-300"
         >
           {isSaving ? 'Upload et enregistrement...' : 'Valider et generer QR'}
         </button>
       </div>
 
       <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h3 className="text-lg font-bold text-emerald-950">Transmission instantanee</h3>
+        <h3 className="text-lg font-bold text-primary">Transmission instantanee</h3>
         <p className="mt-1 text-sm text-slate-500">
           Le code sert a verifier le colis au scan, au depart, au depot et a la remise.
         </p>
@@ -1225,7 +1225,7 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
           <div className="mt-6 space-y-4">
             <div className="rounded-xl bg-slate-50 p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Numero de suivi</p>
-              <p className="mt-2 font-mono text-lg font-bold text-emerald-950">{registeredPackage.trackingNumber}</p>
+              <p className="mt-2 font-mono text-lg font-bold text-primary">{registeredPackage.trackingNumber}</p>
               <div className="mt-3 grid gap-2 sm:grid-cols-2">
                 <p className="rounded-lg bg-white px-3 py-2 text-xs font-bold text-slate-600">Facture: {registeredPackage.invoiceNumber}</p>
                 <p className="rounded-lg bg-white px-3 py-2 text-xs font-bold text-slate-600">Total: {registeredPackage.totalLabel}</p>
@@ -1233,8 +1233,8 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
               </div>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-xl border border-emerald-100 bg-white p-3 text-center">
-                <p className="mb-2 text-xs font-bold uppercase tracking-[0.14em] text-emerald-700">QR Code</p>
+              <div className="rounded-xl border border-primary/15 bg-white p-3 text-center">
+                <p className="mb-2 text-xs font-bold uppercase tracking-[0.14em] text-primary">QR Code</p>
                 <img
                   src={registeredPackage.qrCodeUrl}
                   alt={`QR ${registeredPackage.trackingNumber}`}
@@ -1243,7 +1243,7 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
                 <button
                   type="button"
                   onClick={() => downloadDataUrl(registeredPackage.qrCodeUrl, `${registeredPackage.trackingNumber}-qr.png`)}
-                  className="mt-3 w-full rounded-xl bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700"
+                  className="mt-3 w-full rounded-xl bg-primary/5 px-3 py-2 text-xs font-bold text-primary"
                 >
                   Telecharger QR
                 </button>
@@ -1268,7 +1268,7 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
               <button
                 type="button"
                 onClick={() => printPackageLabel(registeredPackage)}
-                className="rounded-xl bg-emerald-600 px-3 py-2 text-sm font-bold text-white"
+                className="rounded-xl bg-primary px-3 py-2 text-sm font-bold text-white"
               >
                 Imprimer
               </button>
@@ -1286,12 +1286,12 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
                   if (navigator.share) void navigator.share({ title: 'Colis Ugavi', text });
                   else void navigator.clipboard?.writeText(text);
                 }}
-                className="rounded-xl bg-emerald-50 px-3 py-2 text-sm font-bold text-emerald-700"
+                className="rounded-xl bg-primary/5 px-3 py-2 text-sm font-bold text-primary"
               >
                 Partager
               </button>
             </div>
-            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
+            <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 text-sm text-primary">
               Demande creee: {registeredPackage.requestId}. Le numero, le QR et le code-barres pointent vers le meme colis.
             </div>
           </div>
@@ -1326,7 +1326,7 @@ function Field({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+        className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
       />
     </label>
   );
@@ -1349,7 +1349,7 @@ function SelectField({
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+        className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>
@@ -1363,9 +1363,9 @@ function SelectField({
 
 function MetricCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-emerald-100 bg-white p-3 shadow-sm">
-      <p className="text-[11px] font-black uppercase tracking-[0.14em] text-emerald-700">{label}</p>
-      <p className="mt-1 text-lg font-black text-emerald-950">{value}</p>
+    <div className="rounded-2xl border border-primary/15 bg-white p-3 shadow-sm">
+      <p className="text-[11px] font-black uppercase tracking-[0.14em] text-primary">{label}</p>
+      <p className="mt-1 text-lg font-black text-primary">{value}</p>
     </div>
   );
 }
@@ -1385,12 +1385,12 @@ function OptionToggle({
       onClick={() => onChange(!checked)}
       className={`flex items-center justify-between rounded-2xl border px-4 py-3 text-left text-sm font-bold transition ${
         checked
-          ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
-          : 'border-slate-200 bg-white text-slate-600 hover:border-emerald-100'
+          ? 'border-primary/20 bg-primary/5 text-primary'
+          : 'border-slate-200 bg-white text-slate-600 hover:border-primary/15'
       }`}
     >
       <span>{label}</span>
-      <span className={`h-5 w-9 rounded-full p-0.5 transition ${checked ? 'bg-emerald-600' : 'bg-slate-200'}`}>
+      <span className={`h-5 w-9 rounded-full p-0.5 transition ${checked ? 'bg-primary' : 'bg-slate-200'}`}>
         <span className={`block h-4 w-4 rounded-full bg-white transition ${checked ? 'translate-x-4' : ''}`} />
       </span>
     </button>
@@ -1421,7 +1421,7 @@ function LogisticsOverview({
           const colorClasses = {
             orange: 'bg-orange-50 text-orange-700 ring-orange-100',
             blue: 'bg-blue-50 text-blue-700 ring-blue-100',
-            green: 'bg-emerald-50 text-emerald-700 ring-emerald-100',
+            green: 'bg-primary/5 text-primary ring-primary/20',
             yellow: 'bg-amber-50 text-amber-700 ring-amber-100',
             purple: 'bg-violet-50 text-violet-700 ring-violet-100',
           };
@@ -1444,11 +1444,11 @@ function LogisticsOverview({
         {capabilities.map((capability) => (
           <div key={capability} className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
             <div className="flex items-start gap-3">
-              <div className="rounded-xl bg-emerald-600 p-2 text-white">
+              <div className="rounded-xl bg-primary p-2 text-white">
                 <BusinessDashboardIcons.CheckCircle className="h-5 w-5" />
               </div>
               <div>
-                <p className="font-semibold text-emerald-950">{capability}</p>
+                <p className="font-semibold text-primary">{capability}</p>
                 <p className="mt-1 text-sm text-slate-500">
                   Disponible pour ce profil. Les données se rempliront au fil des opérations UGAVI.
                 </p>
@@ -1463,15 +1463,15 @@ function LogisticsOverview({
         <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-bold text-emerald-950">Pipeline du jour</p>
+              <p className="text-sm font-bold text-primary">Pipeline du jour</p>
               <p className="text-xs text-slate-500">Vue rapide des flux</p>
             </div>
-            <BusinessDashboardIcons.TrendingUp className="h-5 w-5 text-emerald-600" />
+            <BusinessDashboardIcons.TrendingUp className="h-5 w-5 text-primary" />
           </div>
           <div className="mt-5 space-y-4">
             {[
-              { label: 'A enregistrer', value: registeredCount, tone: 'bg-emerald-700' },
-              { label: 'En transit', value: inTransitCount, tone: 'bg-emerald-600' },
+              { label: 'A enregistrer', value: registeredCount, tone: 'bg-primary' },
+              { label: 'En transit', value: inTransitCount, tone: 'bg-primary' },
               { label: 'A remettre', value: finalCount, tone: 'bg-orange-500' },
             ].map((item) => (
               <button
@@ -1484,18 +1484,18 @@ function LogisticsOverview({
                   <span className={`h-2.5 w-2.5 rounded-full ${item.tone}`} />
                   <span className="text-sm font-semibold text-slate-700">{item.label}</span>
                 </span>
-                <span className="text-lg font-black text-emerald-950">{item.value}</span>
+                <span className="text-lg font-black text-primary">{item.value}</span>
               </button>
             ))}
           </div>
         </div>
 
         <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-          <p className="text-sm font-bold text-emerald-950">Activite recente</p>
+          <p className="text-sm font-bold text-primary">Activite recente</p>
           <div className="mt-4 space-y-3">
             {['Aucune anomalie signalee', 'Aucun colis en retard', 'Scanner pret'].map((item) => (
               <div key={item} className="flex items-center gap-3 rounded-xl bg-slate-50 px-3 py-2">
-                <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                <span className="h-2 w-2 rounded-full bg-primary" />
                 <span className="text-sm text-slate-600">{item}</span>
               </div>
             ))}
@@ -1602,29 +1602,29 @@ function LogisticsFleet({ title, emptyState, businessUser }: { title: string; em
       <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
         <div className="mb-5 flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-xl font-black text-emerald-950">{title}</h2>
+            <h2 className="text-xl font-black text-primary">{title}</h2>
             <p className="text-sm text-slate-500">Ajoutez les moyens et agents qui executent les missions.</p>
           </div>
           <button
             type="button"
             onClick={() => setShowResourceForm((current) => !current)}
-            className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
+            className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary"
           >
             Ajouter
           </button>
         </div>
         {showResourceForm && (
-          <div className="mb-5 grid gap-3 rounded-2xl border border-emerald-100 bg-emerald-50 p-4 md:grid-cols-[1fr_150px_1fr_auto]">
+          <div className="mb-5 grid gap-3 rounded-2xl border border-primary/15 bg-primary/5 p-4 md:grid-cols-[1fr_150px_1fr_auto]">
             <input
               value={resourceName}
               onChange={(event) => setResourceName(event.target.value)}
               placeholder="Nom ressource"
-              className="h-11 rounded-xl border border-emerald-100 bg-white px-3 text-sm outline-none focus:border-emerald-500"
+              className="h-11 rounded-xl border border-primary/15 bg-white px-3 text-sm outline-none focus:border-primary"
             />
             <select
               value={resourceType}
               onChange={(event) => setResourceType(event.target.value)}
-              className="h-11 rounded-xl border border-emerald-100 bg-white px-3 text-sm outline-none focus:border-emerald-500"
+              className="h-11 rounded-xl border border-primary/15 bg-white px-3 text-sm outline-none focus:border-primary"
             >
               {['Livreur', 'Moto', 'Voiture', 'Camion', 'Depot', 'Drone'].map((item) => (
                 <option key={item}>{item}</option>
@@ -1634,7 +1634,7 @@ function LogisticsFleet({ title, emptyState, businessUser }: { title: string; em
               value={resourceZone}
               onChange={(event) => setResourceZone(event.target.value)}
               placeholder="Zone"
-              className="h-11 rounded-xl border border-emerald-100 bg-white px-3 text-sm outline-none focus:border-emerald-500"
+              className="h-11 rounded-xl border border-primary/15 bg-white px-3 text-sm outline-none focus:border-primary"
             />
             <button
               type="button"
@@ -1656,7 +1656,7 @@ function LogisticsFleet({ title, emptyState, businessUser }: { title: string; em
             return (
             <div key={item.label} className="rounded-2xl bg-slate-50 p-4">
               <Icon className="mb-4" size={32} />
-              <p className="text-2xl font-black text-emerald-950">{item.value}</p>
+              <p className="text-2xl font-black text-primary">{item.value}</p>
               <p className="text-sm font-semibold text-slate-500">{item.label}</p>
             </div>
           );
@@ -1665,12 +1665,12 @@ function LogisticsFleet({ title, emptyState, businessUser }: { title: string; em
         {resources.length > 0 ? (
           <div className="mt-5 grid gap-2">
             {resources.map((resource) => (
-              <div key={resource.id} className="flex items-center justify-between rounded-2xl bg-white p-3 ring-1 ring-emerald-100">
+              <div key={resource.id} className="flex items-center justify-between rounded-2xl bg-white p-3 ring-1 ring-primary/20">
                 <div>
-                  <p className="font-bold text-emerald-950">{resource.name}</p>
+                  <p className="font-bold text-primary">{resource.name}</p>
                   <p className="text-sm text-slate-500">{resource.type} · {resource.zone}</p>
                 </div>
-                <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">Disponible</span>
+                <span className="rounded-full bg-primary/5 px-3 py-1 text-xs font-bold text-primary">Disponible</span>
               </div>
             ))}
           </div>
@@ -1680,8 +1680,8 @@ function LogisticsFleet({ title, emptyState, businessUser }: { title: string; em
           </div>
         )}
       </div>
-      <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-emerald-100">
-        <p className="text-sm font-bold text-emerald-950">Disponibilite live</p>
+      <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-primary/20">
+        <p className="text-sm font-bold text-primary">Disponibilite live</p>
         <p className="mt-2 text-sm text-slate-500">Activez les ressources pour les voir sur la carte client et dans le dispatch.</p>
         {showZoneForm && (
           <div className="mt-4 space-y-3">
@@ -1689,19 +1689,19 @@ function LogisticsFleet({ title, emptyState, businessUser }: { title: string; em
               value={zoneName}
               onChange={(event) => setZoneName(event.target.value)}
               placeholder="Nom de zone"
-              className="h-11 w-full rounded-xl border border-emerald-100 bg-emerald-50 px-3 text-sm outline-none focus:border-emerald-500"
+              className="h-11 w-full rounded-xl border border-primary/15 bg-primary/5 px-3 text-sm outline-none focus:border-primary"
             />
             <input
               value={zoneRadius}
               onChange={(event) => setZoneRadius(event.target.value)}
               placeholder="Rayon km"
               type="number"
-              className="h-11 w-full rounded-xl border border-emerald-100 bg-emerald-50 px-3 text-sm outline-none focus:border-emerald-500"
+              className="h-11 w-full rounded-xl border border-primary/15 bg-primary/5 px-3 text-sm outline-none focus:border-primary"
             />
           </div>
         )}
         {agencyZone && (
-          <div className="mt-4 rounded-2xl bg-emerald-50 p-4 text-sm text-emerald-800">
+          <div className="mt-4 rounded-2xl bg-primary/5 p-4 text-sm text-primary">
             Zone active: <strong>{agencyZone.name}</strong> · {agencyZone.radius || 0} km
           </div>
         )}
@@ -1763,7 +1763,7 @@ function LogisticsShipments({
     <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-black text-emerald-950">{title}</h2>
+          <h2 className="text-xl font-black text-primary">{title}</h2>
           <p className="text-sm text-slate-500">Suivez les colis, missions et statuts critiques.</p>
         </div>
         <div className="flex gap-2">
@@ -1777,7 +1777,7 @@ function LogisticsShipments({
               type="button"
               onClick={() => setStatusFilter(filter.id as any)}
               className={`rounded-xl px-3 py-2 text-sm font-semibold ${
-                statusFilter === filter.id ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600'
+                statusFilter === filter.id ? 'bg-primary text-white' : 'bg-slate-100 text-slate-600'
               }`}
             >
               {filter.label}
@@ -1797,12 +1797,12 @@ function LogisticsShipments({
               <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-mono text-sm font-black text-emerald-950">{shipment.trackingNumber}</p>
-                    <span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-700">
+                    <p className="font-mono text-sm font-black text-primary">{shipment.trackingNumber}</p>
+                    <span className="rounded-full bg-primary/5 px-2 py-1 text-xs font-bold text-primary">
                       {UGAVI_STATUS_LABELS[shipment.logisticsStatus] || shipment.logisticsStatus}
                     </span>
                   </div>
-                  <p className="mt-2 font-bold text-emerald-950">{shipment.senderName} vers {shipment.receiverName}</p>
+                  <p className="mt-2 font-bold text-primary">{shipment.senderName} vers {shipment.receiverName}</p>
                   <p className="mt-1 text-sm text-slate-500">{shipment.origin} vers {shipment.destination}</p>
                   <p className="mt-1 text-xs text-slate-500">
                     {shipment.weight || 0} kg {shipment.description ? `· ${shipment.description}` : ''}
@@ -1813,7 +1813,7 @@ function LogisticsShipments({
                     value={shipment.logisticsStatus}
                     onChange={(event) => void updateShipmentStatus(shipment, event.target.value as UgaviLogisticsStatus)}
                     disabled={updatingId === shipment.id}
-                    className="h-11 rounded-xl border border-emerald-100 bg-white px-3 text-sm font-semibold text-emerald-900 outline-none focus:border-emerald-500"
+                    className="h-11 rounded-xl border border-primary/15 bg-white px-3 text-sm font-semibold text-primary outline-none focus:border-primary"
                   >
                     {AGENCY_STATUS_OPTIONS.map((status) => (
                       <option key={status} value={status}>
@@ -1837,7 +1837,7 @@ function LogisticsShipments({
                     type="button"
                     onClick={() => void updateShipmentStatus(shipment, status)}
                     disabled={updatingId === shipment.id || shipment.logisticsStatus === status}
-                    className="rounded-full bg-white px-3 py-1 text-xs font-bold text-emerald-700 ring-1 ring-emerald-100 disabled:opacity-45"
+                    className="rounded-full bg-white px-3 py-1 text-xs font-bold text-primary ring-1 ring-primary/20 disabled:opacity-45"
                   >
                     {UGAVI_STATUS_LABELS[status]}
                   </button>
@@ -1858,23 +1858,23 @@ function LogisticsShipments({
 function RelayScanner({ title, description }: { title: string; description: string }) {
   return (
     <div className="grid gap-5 lg:grid-cols-[0.85fr_1.15fr]">
-      <div className="rounded-2xl bg-gradient-to-br from-emerald-600 to-orange-500 p-6 text-white shadow-sm">
+      <div className="rounded-2xl bg-gradient-to-br from-primary to-orange-500 p-6 text-white shadow-sm">
         <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white/10">
           <UgaviShareIcon size={48} />
         </div>
         <h2 className="mt-6 text-2xl font-black">{title}</h2>
         <p className="mt-2 text-sm text-slate-300">{description}</p>
-        <button className="mt-6 w-full rounded-xl bg-white px-4 py-3 font-bold text-emerald-700 transition hover:bg-emerald-50">
+        <button className="mt-6 w-full rounded-xl bg-white px-4 py-3 font-bold text-primary transition hover:bg-primary/5">
           Ouvrir le scanner
         </button>
       </div>
       <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-        <p className="text-sm font-bold text-emerald-950">Modes de scan</p>
+        <p className="text-sm font-bold text-primary">Modes de scan</p>
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
           {['Reception', 'Depart', 'Remise'].map((mode) => (
             <button key={mode} className="rounded-2xl bg-slate-50 p-4 text-left">
               <UgaviShareIcon className="mb-4" size={32} />
-              <p className="font-bold text-emerald-950">{mode}</p>
+              <p className="font-bold text-primary">{mode}</p>
               <p className="text-sm text-slate-500">Scanner et valider</p>
             </button>
           ))}

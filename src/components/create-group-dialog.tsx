@@ -117,7 +117,7 @@ export function CreateGroupDialog({ open, onOpenChange }: CreateGroupDialogProps
       toast({
         title: 'Succès',
         description: `Groupe "${groupName}" créé avec succès`,
-        className: 'bg-green-600 text-white border-none',
+        className: 'bg-primary text-white border-none',
       });
 
       handleClose();

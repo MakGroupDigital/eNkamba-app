@@ -9,7 +9,7 @@ export default function ContactsPage() {
   return (
     <div className="flex h-screen flex-col bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-10 flex h-16 items-center gap-4 bg-gradient-to-r from-primary via-primary to-green-800 px-4 shadow-lg">
+      <header className="sticky top-0 z-10 flex h-16 items-center gap-4 bg-gradient-to-r from-primary via-primary to-primary px-4 shadow-lg">
         <Link href="/dashboard">
           <Button size="icon" variant="ghost" className="text-white hover:bg-white/20">
             <ChevronLeft className="h-6 w-6" />

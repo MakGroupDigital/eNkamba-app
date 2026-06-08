@@ -252,7 +252,7 @@ export const ProCameraRecorder = ({ onClose, onPublish, isPublishing = false }: 
             <button
               onClick={handlePublish}
               disabled={isPublishing || !videoTitle.trim()}
-              className="flex-1 bg-gradient-to-r from-[#32BB78] to-green-700 hover:from-[#2a9d63] hover:to-green-800 disabled:opacity-50 text-white py-2 rounded-lg transition-all flex items-center justify-center gap-2 font-semibold text-sm"
+              className="flex-1 bg-gradient-to-r from-[#32BB78] to-primary hover:from-[#32BB78] hover:to-primary disabled:opacity-50 text-white py-2 rounded-lg transition-all flex items-center justify-center gap-2 font-semibold text-sm"
             >
               <Send size={16} />
               {isPublishing ? 'Publication...' : 'Publier'}
@@ -375,7 +375,7 @@ export const ProCameraRecorder = ({ onClose, onPublish, isPublishing = false }: 
 
               <button
                 onClick={() => setShowSettings(false)}
-                className="w-full bg-[#32BB78] hover:bg-[#2a9d63] text-white py-2 rounded-lg transition-all font-semibold"
+                className="w-full bg-[#32BB78] hover:bg-[#32BB78] text-white py-2 rounded-lg transition-all font-semibold"
               >
                 Fermer
               </button>
@@ -429,7 +429,7 @@ export const ProCameraRecorder = ({ onClose, onPublish, isPublishing = false }: 
             {isRecording ? (
               <span className="text-red-500 font-semibold">{formatTime(recordingTime)}</span>
             ) : recordedBlob ? (
-              <span className="text-green-500 font-semibold">Prêt à publier</span>
+              <span className="text-primary font-semibold">Prêt à publier</span>
             ) : (
               <span>Appuyez pour enregistrer</span>
             )}

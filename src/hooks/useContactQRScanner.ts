@@ -349,7 +349,7 @@ export function useContactQRScanner() {
         toast({
           title: 'Contact trouvé',
           description: `${user.displayName} est sur eNkamba`,
-          className: 'bg-green-600 text-white border-none',
+          className: 'bg-primary text-white border-none',
         });
       } else {
         console.log('❌ Contact non trouvé');

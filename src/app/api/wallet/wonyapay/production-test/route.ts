@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     // Générer plusieurs RefTransa pour le même utilisateur
     const refTransas = [];
     for (let i = 0; i < count; i++) {
-      const refTransa = generateRefTransa('ENK', userId);
+      const refTransa = generateRefTransa('ENK');
       refTransas.push({
         index: i + 1,
         refTransa,
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Générer une RefTransa unique pour cet utilisateur
-    const refTransa = generateRefTransa('ENK', userId);
+    const refTransa = generateRefTransa('ENK');
     
     // Configuration WonyaPay
     const config = getWonyaPayConfig();

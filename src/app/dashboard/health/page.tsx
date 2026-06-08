@@ -49,7 +49,7 @@ const healthSections = [
 
 export default function HealthPage() {
   return (
-    <div className="min-h-screen bg-[#f6faf7]">
+    <div className="min-h-screen bg-[#32BB78]">
       <div className="mx-auto max-w-4xl space-y-5 p-4">
         <header className="rounded-[1.75rem] bg-[#32BB78] p-5 text-white shadow-lg shadow-[#32BB78]/20">
           <div className="flex items-center gap-3">
@@ -63,9 +63,9 @@ export default function HealthPage() {
           </div>
         </header>
 
-        <Card className="overflow-hidden rounded-2xl border-[#dbe8df]">
+        <Card className="overflow-hidden rounded-2xl border-[#32BB78]">
           <CardHeader className="bg-gradient-to-r from-[#32BB78]/10 to-transparent">
-            <CardTitle className="font-headline flex items-center gap-2 text-[#122116]">
+            <CardTitle className="font-headline flex items-center gap-2 text-foreground">
               <span className="h-2 w-2 rounded-full bg-[#32BB78]" />
               Services santé
             </CardTitle>
@@ -92,7 +92,7 @@ export default function HealthPage() {
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl border-[#dbe8df]">
+        <Card className="rounded-2xl border-[#32BB78]">
           <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-3">
               <div className="mt-0.5">
@@ -103,7 +103,7 @@ export default function HealthPage() {
                 <p className="text-sm text-muted-foreground">La localisation permettra d’afficher les structures médicales les plus proches.</p>
               </div>
             </div>
-            <Button className="rounded-full bg-[#32BB78] hover:bg-[#2a9d63]">
+            <Button className="rounded-full bg-[#32BB78] hover:bg-[#32BB78]">
               <MapPin className="mr-2 h-4 w-4" />
               Activer la position
             </Button>

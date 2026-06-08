@@ -89,7 +89,7 @@ export default function ESIMPurchasePage() {
       toast({
         title: 'eSIM activé !',
         description: `Votre numéro ${selectedNumber} est maintenant actif`,
-        className: 'bg-green-600 text-white border-none',
+        className: 'bg-primary text-white border-none',
       });
     } catch (error: any) {
       setStep('confirm');
@@ -118,7 +118,7 @@ export default function ESIMPurchasePage() {
             </Link>
           </Button>
           <div>
-            <h1 className="font-headline text-3xl font-bold bg-gradient-to-r from-[#32BB78] to-[#2a9d63] bg-clip-text text-transparent">
+            <h1 className="font-headline text-3xl font-bold bg-gradient-to-r from-[#32BB78] to-[#32BB78] bg-clip-text text-transparent">
               eSIM-eNkamba
             </h1>
             <p className="text-sm text-muted-foreground">Numéro virtuel RDC</p>
@@ -143,7 +143,7 @@ export default function ESIMPurchasePage() {
                 
                 <div className="space-y-3">
                   <div className="flex items-start gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5" />
+                    <CheckCircle2 className="h-5 w-5 text-primary mt-0.5" />
                     <div>
                       <p className="font-semibold text-sm">Activation instantanée</p>
                       <p className="text-xs text-muted-foreground">Votre numéro est actif immédiatement après l'achat</p>
@@ -151,7 +151,7 @@ export default function ESIMPurchasePage() {
                   </div>
                   
                   <div className="flex items-start gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5" />
+                    <CheckCircle2 className="h-5 w-5 text-primary mt-0.5" />
                     <div>
                       <p className="font-semibold text-sm">Numéro RDC authentique</p>
                       <p className="text-xs text-muted-foreground">Format: +243 07XX XXX XXX (10 chiffres)</p>
@@ -159,7 +159,7 @@ export default function ESIMPurchasePage() {
                   </div>
                   
                   <div className="flex items-start gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5" />
+                    <CheckCircle2 className="h-5 w-5 text-primary mt-0.5" />
                     <div>
                       <p className="font-semibold text-sm">Gestion complète</p>
                       <p className="text-xs text-muted-foreground">Consultez l'historique, rechargez et gérez votre eSIM</p>
@@ -167,7 +167,7 @@ export default function ESIMPurchasePage() {
                   </div>
                   
                   <div className="flex items-start gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5" />
+                    <CheckCircle2 className="h-5 w-5 text-primary mt-0.5" />
                     <div>
                       <p className="font-semibold text-sm">Prix unique</p>
                       <p className="text-xs text-muted-foreground">Seulement {ESIM_PRICE.toLocaleString('fr-FR')} CDF</p>
@@ -350,19 +350,19 @@ export default function ESIMPurchasePage() {
         {/* Success Step */}
         {step === 'success' && purchasedESIM && (
           <div className="space-y-6">
-            <Card className="border-green-200">
+            <Card className="border-primary/20">
               <CardContent className="p-8 text-center">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle2 className="h-10 w-10 text-green-600" />
+                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle2 className="h-10 w-10 text-primary" />
                 </div>
                 <h3 className="text-2xl font-bold mb-2">eSIM activé avec succès !</h3>
                 <p className="text-muted-foreground mb-6">
                   Votre numéro est maintenant actif et prêt à l'emploi
                 </p>
                 
-                <div className="p-4 rounded-lg bg-green-50 border border-green-200 mb-6">
+                <div className="p-4 rounded-lg bg-primary/5 border border-primary/20 mb-6">
                   <p className="text-sm text-muted-foreground mb-1">Votre numéro eSIM</p>
-                  <p className="text-3xl font-mono font-bold text-green-700">
+                  <p className="text-3xl font-mono font-bold text-primary">
                     {purchasedESIM.phoneNumber}
                   </p>
                 </div>
@@ -374,7 +374,7 @@ export default function ESIMPurchasePage() {
                   </div>
                   <div className="flex justify-between p-2 rounded bg-muted">
                     <span className="text-muted-foreground">Statut:</span>
-                    <Badge className="bg-green-100 text-green-700">Actif</Badge>
+                    <Badge className="bg-primary/10 text-primary">Actif</Badge>
                   </div>
                   <div className="flex justify-between p-2 rounded bg-muted">
                     <span className="text-muted-foreground">Date d'activation:</span>

@@ -12,6 +12,7 @@ import { useBusinessStatus } from '@/hooks/useBusinessStatus';
 import { addDoc, collection, doc, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { buildUgaviStatusEntry } from '@/lib/ugavi-requests';
+import { DASHBOARD_LOCATION_EVENT, readDashboardLocation, toGeoPoint } from '@/lib/dashboard-location';
 import {
   FiveGoFlightIcon,
   MapPinIcon,
@@ -441,7 +442,7 @@ function FloatingBadge({
       ? 'border-orange-200/70 bg-orange-50/76 shadow-orange-900/10'
       : tone === 'slate'
         ? 'border-slate-200/70 bg-white/74 shadow-slate-900/10'
-        : 'border-emerald-200/70 bg-emerald-50/76 shadow-emerald-900/10';
+        : 'border-primary/20/70 bg-primary/5/76 shadow-primary/10';
 
   return (
     <div className={`rounded-2xl border p-2 shadow-2xl backdrop-blur-2xl ring-1 ring-white/55 ${toneClass}`}>
@@ -497,7 +498,7 @@ function AddressAutocompleteInput({
                   event.preventDefault();
                   onSelect(suggestion);
                 }}
-                className="flex w-full items-start gap-2 px-3 py-2 text-left transition hover:bg-emerald-50"
+                className="flex w-full items-start gap-2 px-3 py-2 text-left transition hover:bg-primary/5"
               >
                 <MapPinIcon size={18} />
                 <span className="min-w-0">
@@ -563,7 +564,6 @@ export default function UgaviPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { businessUser } = useBusinessStatus();
-  const locationWatchIdRef = useRef<number | null>(null);
   const mapGestureRef = useRef<{
     pointers: Map<number, { x: number; y: number }>;
     pinchDistance: number | null;
@@ -653,24 +653,17 @@ export default function UgaviPage() {
   const [isCreatingDepositInstruction, setIsCreatingDepositInstruction] = useState(false);
 
   useEffect(() => {
-    if (!('geolocation' in navigator)) return;
+    const syncStoredLocation = () => {
+      const storedLocation = readDashboardLocation();
+      setUserPosition(storedLocation ? toGeoPoint(storedLocation) : KINSHASA_CENTER);
+    };
 
-    locationWatchIdRef.current = navigator.geolocation.watchPosition(
-      (position) => {
-        const nextPosition = { lat: position.coords.latitude, lon: position.coords.longitude };
-        setUserPosition(nextPosition);
-      },
-      () => {
-        setUserPosition((current) => current || KINSHASA_CENTER);
-      },
-      { enableHighAccuracy: true, timeout: 12000, maximumAge: 3000 }
-    );
-
+    syncStoredLocation();
+    window.addEventListener(DASHBOARD_LOCATION_EVENT, syncStoredLocation);
+    window.addEventListener('storage', syncStoredLocation);
     return () => {
-      if (locationWatchIdRef.current !== null && 'geolocation' in navigator) {
-        navigator.geolocation.clearWatch(locationWatchIdRef.current);
-        locationWatchIdRef.current = null;
-      }
+      window.removeEventListener(DASHBOARD_LOCATION_EVENT, syncStoredLocation);
+      window.removeEventListener('storage', syncStoredLocation);
     };
   }, []);
 
@@ -1355,7 +1348,7 @@ export default function UgaviPage() {
       toast({
         title: 'Agence internationale choisie',
         description: `${selectedAgency.name} · ${selectedAgency.city || selectedAgency.zone}`,
-        className: 'bg-green-600 text-white border-none',
+        className: 'bg-primary text-white border-none',
       });
       return;
     }
@@ -1373,7 +1366,7 @@ export default function UgaviPage() {
     toast({
       title: 'Itineraire cree',
       description: `${selectedAgency.name} · ${activeDistance?.toFixed(1)} km`,
-      className: 'bg-green-600 text-white border-none',
+      className: 'bg-primary text-white border-none',
     });
   };
 
@@ -1583,7 +1576,7 @@ export default function UgaviPage() {
       toast({
         title: 'Paiement confirme',
         description: 'Votre portefeuille eNkambapay a ete debite.',
-        className: 'bg-green-600 text-white border-none',
+        className: 'bg-primary text-white border-none',
       });
       setShowPinDialog(false);
       setConfirmedDeliveryTracking(trackingNumber);
@@ -1741,10 +1734,10 @@ export default function UgaviPage() {
       <button
         type="button"
         title="Ma localisation"
-        className="absolute z-20 flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-emerald-700 shadow-xl ring-4 ring-emerald-500/25"
+        className="absolute z-20 flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-primary shadow-xl ring-4 ring-primary/25"
         style={markerPosition(userPosition, mapCenter, mapRadius)}
       >
-        <span className="absolute h-12 w-12 animate-ping rounded-full bg-emerald-400/25" />
+        <span className="absolute h-12 w-12 animate-ping rounded-full bg-primary/25" />
         <MapPinIcon className="relative" size={22} />
       </button>
 
@@ -1752,7 +1745,7 @@ export default function UgaviPage() {
         <button
           type="button"
           title={pickupLocation}
-          className="absolute z-20 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-full bg-emerald-600 px-2.5 py-1.5 text-xs font-semibold text-white shadow-lg ring-2 ring-white/80"
+          className="absolute z-20 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-full bg-primary px-2.5 py-1.5 text-xs font-semibold text-white shadow-lg ring-2 ring-white/80"
           style={markerPosition(pickupPoint, mapCenter, mapRadius)}
         >
           <MapPinIcon size={16} />
@@ -1784,7 +1777,7 @@ export default function UgaviPage() {
             }}
             title={agency.name}
             className={`absolute z-20 flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full shadow-xl ring-2 ring-white/80 ${
-              selectedAgencyId === agency.id ? 'bg-emerald-600 text-white' : 'bg-white text-slate-800'
+              selectedAgencyId === agency.id ? 'bg-primary text-white' : 'bg-white text-slate-800'
             }`}
             style={markerPosition(agency, mapCenter, mapRadius)}
           >
@@ -1829,11 +1822,11 @@ export default function UgaviPage() {
             />
           </svg>
           <span
-            className="absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-600 ring-4 ring-white/80"
+            className="absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary ring-4 ring-white/80"
             style={{ left: `${routeLine.start.left}%`, top: `${routeLine.start.top}%` }}
           />
           <span
-            className="absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-600 ring-4 ring-white/80"
+            className="absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary ring-4 ring-white/80"
             style={{ left: `${routeLine.end.left}%`, top: `${routeLine.end.top}%` }}
           />
         </div>
@@ -1841,7 +1834,7 @@ export default function UgaviPage() {
 
       <header className="absolute left-0 right-0 top-0 z-30 flex items-center justify-between px-4 py-3">
         <div className="rounded-full bg-white/88 px-4 py-2 shadow-lg backdrop-blur">
-          <p className="flex items-center gap-2 text-sm font-black text-emerald-700">
+          <p className="flex items-center gap-2 text-sm font-black text-primary">
             <UgaviIcon size={22} />
             Ugavi
           </p>
@@ -1861,7 +1854,7 @@ export default function UgaviPage() {
         <button
           type="button"
           onClick={() => zoomMap('in')}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-white/92 text-lg font-black text-emerald-700 shadow-lg backdrop-blur"
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-white/92 text-lg font-black text-primary shadow-lg backdrop-blur"
           title="Zoomer"
         >
           +
@@ -1869,7 +1862,7 @@ export default function UgaviPage() {
         <button
           type="button"
           onClick={() => zoomMap('out')}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-white/92 text-lg font-black text-emerald-700 shadow-lg backdrop-blur"
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-white/92 text-lg font-black text-primary shadow-lg backdrop-blur"
           title="Dezoomer"
         >
           -
@@ -1877,7 +1870,7 @@ export default function UgaviPage() {
         <button
           type="button"
           onClick={recenterMap}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-600 text-white shadow-lg"
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white shadow-lg"
           title="Recentrer"
         >
           <UgaviIcon size={20} />
@@ -1885,7 +1878,7 @@ export default function UgaviPage() {
       </div>
 
       <section className="absolute left-3 right-3 top-16 z-30 mx-auto max-w-md">
-        <div className="grid grid-cols-3 gap-1 rounded-[22px] border border-white/70 bg-white/70 p-1.5 shadow-2xl shadow-emerald-950/10 backdrop-blur-2xl ring-1 ring-white/50">
+        <div className="grid grid-cols-3 gap-1 rounded-[22px] border border-white/70 bg-white/70 p-1.5 shadow-2xl shadow-primary/10 backdrop-blur-2xl ring-1 ring-white/50">
           {[
             { id: 'send', label: 'Envoyer', icon: LogisticsStandardIcon },
             { id: 'track', label: 'Suivi', icon: LogisticsTrackingIcon },
@@ -1899,7 +1892,7 @@ export default function UgaviPage() {
                 type="button"
                 onClick={() => resetContextForMode(item.id as UgaviMode)}
                 className={`flex items-center justify-center gap-1.5 rounded-2xl px-2 py-1.5 text-sm font-semibold transition ${
-                  isActive ? 'bg-white text-emerald-800 shadow-lg shadow-emerald-950/10' : 'text-slate-500 hover:bg-white/50 hover:text-slate-800'
+                  isActive ? 'bg-white text-primary shadow-lg shadow-primary/10' : 'text-slate-500 hover:bg-white/50 hover:text-slate-800'
                 }`}
               >
                 <Icon size={26} />
@@ -1928,7 +1921,7 @@ export default function UgaviPage() {
                   className="h-12 rounded-2xl border-white/70 bg-white/86 pl-12 font-semibold shadow-inner"
                 />
               </div>
-              <Button onClick={searchTracking} className="h-11 w-full rounded-xl bg-emerald-600 hover:bg-emerald-700">
+              <Button onClick={searchTracking} className="h-11 w-full rounded-xl bg-primary hover:bg-primary">
                 Rechercher
               </Button>
               </div>
@@ -1944,7 +1937,7 @@ export default function UgaviPage() {
                     onSelect={(suggestion) => selectAddressSuggestion('pickup', suggestion)}
                     placeholder="Point de depart"
                     Icon={MapPinIcon}
-                    iconClassName="text-emerald-600"
+                    iconClassName="text-primary"
                     suggestions={addressSuggestions.pickup}
                     isLoading={isAddressSearchLoading && activeAddressField === 'pickup'}
                     isOpen={activeAddressField === 'pickup'}
@@ -1991,7 +1984,7 @@ export default function UgaviPage() {
                         }}
 	                        className={`flex items-center justify-center gap-1 rounded-2xl px-2 py-1.5 text-xs font-semibold ${
 	                          option.id === shipmentType
-	                            ? 'bg-white text-emerald-800 shadow-lg shadow-emerald-950/10'
+	                            ? 'bg-white text-primary shadow-lg shadow-primary/10'
 	                            : 'text-slate-600 hover:bg-white/55'
 	                        }`}
                       >
@@ -2010,7 +2003,7 @@ export default function UgaviPage() {
                       onSelect={(suggestion) => selectAddressSuggestion('pickup', suggestion)}
                       placeholder={shipmentType === 'international' ? 'Pays ou ville du colis' : shipmentType === 'relay' ? 'Ville, commune ou agence relais' : 'Ville, commune, quartier ou agence'}
                       Icon={MapPinIcon}
-                      iconClassName="text-emerald-600"
+                      iconClassName="text-primary"
                       suggestions={addressSuggestions.pickup}
                       isLoading={isAddressSearchLoading && activeAddressField === 'pickup'}
                       isOpen={activeAddressField === 'pickup'}
@@ -2053,7 +2046,7 @@ export default function UgaviPage() {
                           <option key={value} value={value}>{label}</option>
                         ))}
                       </select>
-                      <Button type="button" onClick={searchAgenciesFromCompactFields} className="h-10 rounded-2xl bg-emerald-600 px-4 shadow-lg shadow-emerald-950/15 hover:bg-emerald-700">
+                      <Button type="button" onClick={searchAgenciesFromCompactFields} className="h-10 rounded-2xl bg-primary px-4 shadow-lg shadow-primary/15 hover:bg-primary">
                         Rechercher
                       </Button>
                     </div>
@@ -2117,7 +2110,7 @@ export default function UgaviPage() {
                               setSelectedAgencyId(null);
                               setNationalDepositCode(null);
                             }}
-                            className="h-10 w-full rounded-xl bg-emerald-600 hover:bg-emerald-700"
+                            className="h-10 w-full rounded-xl bg-primary hover:bg-primary"
                           >
                             Rechercher une agence nationale
                           </Button>
@@ -2132,9 +2125,9 @@ export default function UgaviPage() {
                   )}
 
                   {false && shipmentType === 'international' && (
-                    <div className="space-y-3 rounded-xl border border-emerald-100 bg-emerald-50/60 p-3">
+                    <div className="space-y-3 rounded-xl border border-primary/15 bg-primary/5/60 p-3">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-xs font-black uppercase text-emerald-800">1. Recherche agence</p>
+                        <p className="text-xs font-black uppercase text-primary">1. Recherche agence</p>
                         {hasInternationalSearch && (
                           <button
                             type="button"
@@ -2167,8 +2160,8 @@ export default function UgaviPage() {
                             }}
                             className={`rounded-xl border px-2 py-2 text-xs font-semibold ${
                               internationalSearchScope === option.id
-                                ? 'border-emerald-600 bg-white text-emerald-700 shadow-sm'
-                                : 'border-emerald-100 bg-white/60 text-slate-600'
+                                ? 'border-primary bg-white text-primary shadow-sm'
+                                : 'border-primary/15 bg-white/60 text-slate-600'
                             }`}
                           >
                             {option.label}
@@ -2237,7 +2230,7 @@ export default function UgaviPage() {
                               setDepositInstructions(null);
                               setDepositInstructionCode(null);
                             }}
-                            className="h-10 w-full rounded-xl bg-emerald-600 hover:bg-emerald-700"
+                            className="h-10 w-full rounded-xl bg-primary hover:bg-primary"
                           >
                             Rechercher une agence internationale
                           </Button>
@@ -2254,7 +2247,7 @@ export default function UgaviPage() {
                   )}
 
                   {selectedAgency ? (
-                    <div className="rounded-[24px] border border-white/70 bg-white/76 p-3 text-sm shadow-2xl shadow-emerald-950/10 backdrop-blur-2xl ring-1 ring-white/55">
+                    <div className="rounded-[24px] border border-white/70 bg-white/76 p-3 text-sm shadow-2xl shadow-primary/10 backdrop-blur-2xl ring-1 ring-white/55">
                       <div className="space-y-2">
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex min-w-0 items-center gap-2">
@@ -2268,12 +2261,12 @@ export default function UgaviPage() {
                             </p>
                             </span>
                           </div>
-                          <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-100">
+                          <span className="shrink-0 rounded-full bg-primary/5 px-2 py-1 text-xs font-semibold text-primary ring-1 ring-primary/20">
                             {selectedAgency.country === requesterCountry ? `${activeDistance?.toFixed(1)} km` : selectedAgency.status === 'open' ? 'Ouverte' : 'Fermee'}
                           </span>
                         </div>
                         <div className="flex items-center gap-2 overflow-x-auto pb-1">
-                          <Button type="button" size="sm" onClick={prepareAgencyRoute} className="h-9 shrink-0 rounded-2xl bg-emerald-600 shadow-lg shadow-emerald-950/15 hover:bg-emerald-700">
+                          <Button type="button" size="sm" onClick={prepareAgencyRoute} className="h-9 shrink-0 rounded-2xl bg-primary shadow-lg shadow-primary/15 hover:bg-primary">
                             Choisir
                           </Button>
                           <Button type="button" size="sm" variant="outline" onClick={handleAgencyRouteButton} className="h-9 shrink-0 rounded-2xl border-white/80 bg-white/76 shadow-sm">
@@ -2334,7 +2327,7 @@ export default function UgaviPage() {
                             setSelectedAgencyId(agency.id);
                             setNationalDepositCode(null);
                           }}
-                          className="w-full rounded-2xl border border-white/70 bg-white/78 px-3 py-2 text-left text-sm shadow-lg shadow-emerald-950/5 backdrop-blur-xl transition hover:border-emerald-200 hover:bg-white/90"
+                          className="w-full rounded-2xl border border-white/70 bg-white/78 px-3 py-2 text-left text-sm shadow-lg shadow-primary/5 backdrop-blur-xl transition hover:border-primary/20 hover:bg-white/90"
                         >
                           <div className="flex items-start justify-between gap-2">
                             <div className="flex min-w-0 items-center gap-2">
@@ -2344,7 +2337,7 @@ export default function UgaviPage() {
                               <p className="text-xs text-slate-500">{agency.address}</p>
                               </span>
                             </div>
-                            <span className={`rounded-full px-2 py-1 text-[11px] font-semibold ${agency.status === 'open' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>
+                            <span className={`rounded-full px-2 py-1 text-[11px] font-semibold ${agency.status === 'open' ? 'bg-primary/5 text-primary' : 'bg-slate-100 text-slate-600'}`}>
                               {agency.status === 'open' ? 'Ouverte' : 'Fermee'}
                             </span>
                           </div>
@@ -2367,7 +2360,7 @@ export default function UgaviPage() {
                             setSelectedCourierId(null);
                             setRelayTrackingCode(null);
                           }}
-                          className="w-full rounded-2xl border border-white/70 bg-white/78 px-3 py-2 text-left text-sm shadow-lg shadow-emerald-950/5 backdrop-blur-xl transition hover:border-emerald-200 hover:bg-white/90"
+                          className="w-full rounded-2xl border border-white/70 bg-white/78 px-3 py-2 text-left text-sm shadow-lg shadow-primary/5 backdrop-blur-xl transition hover:border-primary/20 hover:bg-white/90"
                         >
                           <div className="flex items-start justify-between gap-2">
                             <div className="flex min-w-0 items-center gap-2">
@@ -2377,7 +2370,7 @@ export default function UgaviPage() {
                                 <p className="truncate text-xs text-slate-500">{agency.address}</p>
                               </span>
                             </div>
-                            <span className="rounded-full bg-emerald-50 px-2 py-1 text-[11px] font-semibold text-emerald-700">
+                            <span className="rounded-full bg-primary/5 px-2 py-1 text-[11px] font-semibold text-primary">
                               {agency.couriersAvailable || 0} livreurs
                             </span>
                           </div>
@@ -2390,9 +2383,9 @@ export default function UgaviPage() {
                   )}
 
                   {shipmentType === 'national' && selectedAgency && (
-                    <div className="space-y-2 rounded-[24px] border border-emerald-100/80 bg-emerald-50/78 p-3 shadow-2xl shadow-emerald-950/10 backdrop-blur-2xl ring-1 ring-white/55">
+                    <div className="space-y-2 rounded-[24px] border border-primary/15/80 bg-primary/5/78 p-3 shadow-2xl shadow-primary/10 backdrop-blur-2xl ring-1 ring-white/55">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-xs font-black uppercase text-emerald-800">3. Depot agence</p>
+                        <p className="text-xs font-black uppercase text-primary">3. Depot agence</p>
                         <button
                           type="button"
                           onClick={() => {
@@ -2431,7 +2424,7 @@ export default function UgaviPage() {
                       </div>
                       {nationalDepositCode && (
                         <div className="rounded-xl bg-white p-3 text-xs text-slate-700">
-                          <p className="font-mono font-black text-emerald-700">{nationalDepositCode}</p>
+                          <p className="font-mono font-black text-primary">{nationalDepositCode}</p>
                           <p className="mt-1">Code provisoire cree. L'agent national pourra enregistrer le colis officiellement et poursuivre le suivi.</p>
                         </div>
                       )}
@@ -2439,9 +2432,9 @@ export default function UgaviPage() {
                   )}
 
                   {shipmentType === 'relay' && selectedAgency && (
-                    <div className="space-y-2 rounded-[24px] border border-emerald-100/80 bg-emerald-50/78 p-3 shadow-2xl shadow-emerald-950/10 backdrop-blur-2xl ring-1 ring-white/55">
+                    <div className="space-y-2 rounded-[24px] border border-primary/15/80 bg-primary/5/78 p-3 shadow-2xl shadow-primary/10 backdrop-blur-2xl ring-1 ring-white/55">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-xs font-black uppercase text-emerald-800">Enregistrer colis relais</p>
+                        <p className="text-xs font-black uppercase text-primary">Enregistrer colis relais</p>
                         <button
                           type="button"
                           onClick={() => {
@@ -2468,7 +2461,7 @@ export default function UgaviPage() {
                             onClick={() => setSelectedCourierId(courier.id)}
                             className={`rounded-2xl border px-2 py-2 text-left text-xs shadow-sm ${
                               selectedCourierId === courier.id
-                                ? 'border-emerald-500 bg-white text-emerald-800'
+                                ? 'border-primary bg-white text-primary'
                                 : 'border-white/70 bg-white/70 text-slate-600'
                             }`}
                           >
@@ -2501,7 +2494,7 @@ export default function UgaviPage() {
                       </div>
                       {relayTrackingCode && (
                         <div className="rounded-2xl bg-white/80 p-3 text-xs text-slate-700">
-                          <p className="font-mono font-black text-emerald-700">{relayTrackingCode}</p>
+                          <p className="font-mono font-black text-primary">{relayTrackingCode}</p>
                           <p className="mt-1">Colis relais enregistre. Le suivi est actif.</p>
                         </div>
                       )}
@@ -2521,7 +2514,7 @@ export default function UgaviPage() {
                             setDepositInstructionCode(null);
                           }}
                           className={`w-full rounded-2xl border bg-white/78 px-3 py-2 text-left text-sm shadow-lg shadow-orange-950/5 backdrop-blur-xl transition ${
-	                            selectedAgencyId === agency.id ? 'border-emerald-500' : 'border-white/70 hover:border-emerald-200'
+	                            selectedAgencyId === agency.id ? 'border-primary' : 'border-white/70 hover:border-primary/20'
 	                          }`}
                         >
                           <div className="flex items-start justify-between gap-2">
@@ -2532,7 +2525,7 @@ export default function UgaviPage() {
                               <p className="text-xs text-slate-500">{agency.city}, {agency.country} · {agency.address}</p>
                               </span>
                             </div>
-                            <span className={`rounded-full px-2 py-1 text-[11px] font-semibold ${agency.status === 'open' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>
+                            <span className={`rounded-full px-2 py-1 text-[11px] font-semibold ${agency.status === 'open' ? 'bg-primary/5 text-primary' : 'bg-slate-100 text-slate-600'}`}>
                               {agency.status === 'open' ? 'Ouverte' : 'Fermee'}
                             </span>
                           </div>
@@ -2597,7 +2590,7 @@ export default function UgaviPage() {
                       </div>
                       {depositInstructions && (
                         <div className="rounded-xl bg-white p-3 text-xs text-slate-700">
-                          <p className="font-mono font-black text-emerald-700">{depositInstructionCode}</p>
+                          <p className="font-mono font-black text-primary">{depositInstructionCode}</p>
                           <p className="mt-1">Fiche enregistree et copiee. Elle est partageable au deposant et consultable dans le suivi Ugavi.</p>
                           <details className="mt-2">
                             <summary className="cursor-pointer font-semibold text-slate-800">Voir la fiche complete</summary>
@@ -2666,7 +2659,7 @@ export default function UgaviPage() {
                             <span className="rounded-2xl bg-orange-50 p-2 text-orange-700">
                               <LocomotionIcon type={courier.locomotion} />
                             </span>
-                            <span className="text-xs font-bold text-emerald-700">Disponible</span>
+                            <span className="text-xs font-bold text-primary">Disponible</span>
                           </div>
                           <p className="text-sm font-black text-slate-900">{courier.locomotion === 'foot' ? 'Pieton' : locomotionLabels[courier.locomotion]}</p>
                           <p className="mt-1 text-xs text-slate-500">{courier.eta} · {courier.zone}</p>
@@ -2762,9 +2755,9 @@ export default function UgaviPage() {
                           <p>Poids / assurance</p>
                           <p className="font-bold text-slate-900">{(deliveryWeightFee + deliveryInsuranceFee).toLocaleString('fr-FR')} FC</p>
                         </div>
-                        <div className="rounded-2xl bg-emerald-50 p-3">
+                        <div className="rounded-2xl bg-primary/5 p-3">
                           <p>Total</p>
-                          <p className="font-black text-emerald-700">{deliveryTotal.toLocaleString('fr-FR')} FC</p>
+                          <p className="font-black text-primary">{deliveryTotal.toLocaleString('fr-FR')} FC</p>
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-2">
@@ -2792,12 +2785,12 @@ export default function UgaviPage() {
                   )}
 
                   {deliveryStep === 'confirmed' && confirmedDeliveryTracking && selectedCourier && (
-                    <div className="space-y-2 rounded-[24px] border border-emerald-100/80 bg-emerald-50/82 p-3 shadow-2xl backdrop-blur-2xl">
-                      <p className="text-xs font-black uppercase text-emerald-800">Livraison confirmee</p>
+                    <div className="space-y-2 rounded-[24px] border border-primary/15/80 bg-primary/5/82 p-3 shadow-2xl backdrop-blur-2xl">
+                      <p className="text-xs font-black uppercase text-primary">Livraison confirmee</p>
                       <p className="font-mono text-lg font-black text-slate-900">{confirmedDeliveryTracking}</p>
                       <p className="text-sm text-slate-600">{selectedCourier.name} · {locomotionLabels[selectedCourier.locomotion]} · {selectedCourier.eta}</p>
                       <div className="grid grid-cols-2 gap-2">
-                        <Button type="button" onClick={() => router.push(`/dashboard/ugavi/tracking?tracking=${encodeURIComponent(confirmedDeliveryTracking)}`)} className="rounded-2xl bg-emerald-600 hover:bg-emerald-700">
+                        <Button type="button" onClick={() => router.push(`/dashboard/ugavi/tracking?tracking=${encodeURIComponent(confirmedDeliveryTracking)}`)} className="rounded-2xl bg-primary hover:bg-primary">
                           Suivre le colis
                         </Button>
                         <Button type="button" variant="outline" onClick={() => router.push('/dashboard/chat')} className="rounded-2xl bg-white">
@@ -2879,7 +2872,7 @@ export default function UgaviPage() {
           <aside className="absolute bottom-0 left-0 top-0 flex w-[86vw] max-w-sm flex-col bg-white shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-100 px-4 py-4">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">Espace client</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Espace client</p>
                 <h2 className="text-lg font-black text-slate-900">Mes colis</h2>
               </div>
               <Button type="button" size="icon" variant="ghost" onClick={() => setIsClientPanelOpen(false)}>
@@ -2888,7 +2881,7 @@ export default function UgaviPage() {
             </div>
 
             <div className="flex-1 space-y-4 overflow-y-auto p-4">
-              <div className="rounded-2xl border border-emerald-100 bg-emerald-50/70 p-3">
+              <div className="rounded-2xl border border-primary/15 bg-primary/5/70 p-3">
                 <label className="relative block">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2">
                     <CustomSearchIcon size={22} />
@@ -2900,14 +2893,14 @@ export default function UgaviPage() {
                     className="h-11 rounded-2xl border-white/80 bg-white pl-11 text-sm font-semibold shadow-inner"
                   />
                 </label>
-                <p className="mt-2 text-xs font-semibold text-emerald-800">
+                <p className="mt-2 text-xs font-semibold text-primary">
                   Recherche dans vos livraisons, agences nationales, internationales, relais, paiements, factures et suivis.
                 </p>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 {[
-                  { label: 'Livraisons', value: recentShipments.length, tone: 'bg-emerald-50 text-emerald-700' },
+                  { label: 'Livraisons', value: recentShipments.length, tone: 'bg-primary/5 text-primary' },
                   { label: 'A deposer', value: recentShipments.filter((item) => item.status === 'En attente').length, tone: 'bg-amber-50 text-amber-700' },
                   { label: 'En transit', value: recentShipments.filter((item) => item.status === 'En transit').length, tone: 'bg-blue-50 text-blue-700' },
                   { label: 'Livres', value: recentShipments.filter((item) => item.status === 'Livre').length, tone: 'bg-slate-100 text-slate-700' },
@@ -2933,7 +2926,7 @@ export default function UgaviPage() {
                   </div>
                   <button
                     type="button"
-                    className="text-xs font-semibold text-emerald-700"
+                    className="text-xs font-semibold text-primary"
                     onClick={() => {
                       setIsClientPanelOpen(false);
                       resetContextForMode('track');
@@ -2947,7 +2940,7 @@ export default function UgaviPage() {
                   filteredClientShipments.map((shipment) => (
                     <div
                       key={`${shipment.source}-${shipment.id}-side`}
-                      className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm transition hover:border-emerald-300"
+                      className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm transition hover:border-primary/30"
                     >
                       <button
                         type="button"
@@ -2956,7 +2949,7 @@ export default function UgaviPage() {
                       >
                         <div className="min-w-0">
                           <p className="truncate font-mono text-xs font-black text-slate-900">{shipment.trackingNumber}</p>
-                          <p className="mt-1 truncate text-xs font-semibold text-emerald-700">{shipment.operationLabel}</p>
+                          <p className="mt-1 truncate text-xs font-semibold text-primary">{shipment.operationLabel}</p>
                           <p className="mt-1 truncate text-xs text-slate-500">{shipment.origin} → {shipment.destination}</p>
                         </div>
                         <span className="shrink-0 rounded-full bg-slate-100 px-2 py-1 text-[11px] font-semibold text-slate-600">
@@ -2969,8 +2962,8 @@ export default function UgaviPage() {
                         <span className="rounded-xl bg-slate-50 px-2 py-1.5">Montant: {shipment.amountLabel}</span>
                         <span className="rounded-xl bg-slate-50 px-2 py-1.5">Maj: {shipment.updatedAtLabel}</span>
                       </div>
-                      <details className="mt-2 rounded-xl bg-emerald-50/70 px-3 py-2 text-xs text-slate-700">
-                        <summary className="cursor-pointer font-bold text-emerald-800">Details operation</summary>
+                      <details className="mt-2 rounded-xl bg-primary/5/70 px-3 py-2 text-xs text-slate-700">
+                        <summary className="cursor-pointer font-bold text-primary">Details operation</summary>
                         <div className="mt-2 space-y-1">
                           <p>{shipment.packageDescription}</p>
                           {shipment.agencyName && <p>Agence: {shipment.agencyName}</p>}

@@ -313,7 +313,7 @@ export function BiometricCapture({ type, onCapture, capturedUrl }: BiometricCapt
         
         {capturedUrl ? (
           <div className="space-y-4">
-            <div className="flex items-center justify-center gap-2 text-green-600">
+            <div className="flex items-center justify-center gap-2 text-primary">
               <CheckCircle2 size={20} />
               <span className="text-sm font-medium">
                 {type === 'photo' ? 'Photo capturée ✓' : 'Vidéo capturée ✓'}
@@ -379,7 +379,7 @@ export function BiometricCapture({ type, onCapture, capturedUrl }: BiometricCapt
                 {type === 'photo' ? (
                   <Button
                     onClick={capturePhoto}
-                    className="flex-1 bg-[#32BB78] hover:bg-[#2BA86A]"
+                    className="flex-1 bg-[#32BB78] hover:bg-[#32BB78]"
                   >
                     <Camera size={16} className="mr-2" />
                     Capturer
@@ -394,7 +394,7 @@ export function BiometricCapture({ type, onCapture, capturedUrl }: BiometricCapt
                 ) : (
                   <Button
                     onClick={startRecording}
-                    className="flex-1 bg-[#32BB78] hover:bg-[#2BA86A]"
+                    className="flex-1 bg-[#32BB78] hover:bg-[#32BB78]"
                   >
                     <Video size={16} className="mr-2" />
                     Enregistrer
@@ -425,7 +425,7 @@ export function BiometricCapture({ type, onCapture, capturedUrl }: BiometricCapt
             
             <Button
               onClick={startCamera}
-              className="bg-[#32BB78] hover:bg-[#2BA86A]"
+              className="bg-[#32BB78] hover:bg-[#32BB78]"
             >
               {type === 'photo' ? (
                 <>

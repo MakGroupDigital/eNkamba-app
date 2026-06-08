@@ -42,7 +42,7 @@ export function ContactQRCode({ open, onOpenChange, userData }: ContactQRCodePro
           margin: 4,
           errorCorrectionLevel: 'H',
           color: {
-            dark: '#0E5A59',
+            dark: '#32BB78',
             light: '#ffffff',
           },
         });
@@ -86,7 +86,7 @@ export function ContactQRCode({ open, onOpenChange, userData }: ContactQRCodePro
     toast({
       title: 'Succès',
       description: 'QR code téléchargé',
-      className: 'bg-green-600 text-white border-none',
+      className: 'bg-primary text-white border-none',
     });
   };
 
@@ -120,7 +120,7 @@ export function ContactQRCode({ open, onOpenChange, userData }: ContactQRCodePro
         toast({
           title: 'Succès',
           description: 'QR code partagé',
-          className: 'bg-green-600 text-white border-none',
+          className: 'bg-primary text-white border-none',
         });
       } else {
         // Fallback: copier le lien
@@ -130,7 +130,7 @@ export function ContactQRCode({ open, onOpenChange, userData }: ContactQRCodePro
         toast({
           title: 'Copié',
           description: 'Informations de contact copiées',
-          className: 'bg-green-600 text-white border-none',
+          className: 'bg-primary text-white border-none',
         });
       }
     } catch (error) {

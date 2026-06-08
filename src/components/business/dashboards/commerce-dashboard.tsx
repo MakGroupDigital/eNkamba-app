@@ -35,8 +35,8 @@ export function CommerceDashboard({ businessUser }: CommerceDashboardProps) {
   ];
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(50,187,120,0.14),transparent_34%),linear-gradient(180deg,#f7fbf8_0%,#eef8f1_54%,#f8faf8_100%)] pb-24 text-[#122116]">
-      <div className="sticky top-0 z-30 rounded-b-[32px] bg-gradient-to-r from-[#32BB78] via-[#22945d] to-[#0E5A59] px-4 pb-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] text-white shadow-lg shadow-[#0E5A59]/20">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(50,187,120,0.14),transparent_34%),linear-gradient(180deg,rgba(50,187,120,0.05)_0%,rgba(50,187,120,0.08)_54%,rgba(50,187,120,0.04)_100%)] pb-24 text-foreground">
+      <div className="sticky top-0 z-30 rounded-b-[32px] bg-gradient-to-r from-[#32BB78] via-[#32BB78] to-[#32BB78] px-4 pb-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] text-white shadow-lg shadow-[#32BB78]/20">
         <div className="mx-auto max-w-5xl">
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
@@ -78,7 +78,7 @@ export function CommerceDashboard({ businessUser }: CommerceDashboardProps) {
 
       <div className="mx-auto max-w-5xl space-y-5 px-4 py-5">
         <section className="overflow-hidden rounded-3xl border border-white bg-white shadow-sm">
-          <div className="relative bg-gradient-to-br from-[#32BB78] via-[#22945d] to-[#0E5A59] p-5 text-white">
+          <div className="relative bg-gradient-to-br from-[#32BB78] via-[#32BB78] to-[#32BB78] p-5 text-white">
             <div className="pointer-events-none absolute -right-8 -top-10 h-32 w-32 rounded-full bg-white/15 blur-2xl" />
             <div className="relative flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
               <div>
@@ -103,7 +103,7 @@ export function CommerceDashboard({ businessUser }: CommerceDashboardProps) {
           <CommerceOverview />
         </section>
 
-        <section className="overflow-hidden rounded-3xl border border-[#dbe8df] bg-white shadow-sm">
+        <section className="overflow-hidden rounded-3xl border border-[#32BB78] bg-white shadow-sm">
           <div className="flex gap-2 overflow-x-auto p-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {tabs.map(({ id, label, icon: Icon }) => (
               <button
@@ -112,7 +112,7 @@ export function CommerceDashboard({ businessUser }: CommerceDashboardProps) {
                 className={`flex min-w-fit items-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold transition ${
                   activeTab === id
                     ? 'bg-[#32BB78] text-white shadow-md shadow-[#32BB78]/20'
-                    : 'bg-[#f4faf6] text-[#52635a] hover:bg-[#e8f4ec] hover:text-[#22945d]'
+                    : 'bg-primary/5 text-muted-foreground hover:bg-primary/10 hover:text-[#32BB78]'
                 }`}
               >
                 <Icon size={22} />
@@ -144,7 +144,7 @@ function CommerceOverview() {
         const colorClasses = {
           blue: 'bg-[#eff6ff] text-[#1d4ed8] border-[#bfdbfe]',
           yellow: 'bg-[#fffbeb] text-[#92400e] border-[#fde68a]',
-          green: 'bg-[#ecfdf3] text-[#0E5A59] border-[#b8efd2]',
+          green: 'bg-[#32BB78] text-[#32BB78] border-[#32BB78]',
           red: 'bg-[#fef2f2] text-[#b91c1c] border-[#fecaca]',
         };
         return (
@@ -167,13 +167,13 @@ function CommerceOverview() {
 
 function CommerceProducts() {
   return (
-    <div className="rounded-3xl border border-[#dbe8df] bg-white p-5 shadow-sm">
+    <div className="rounded-3xl border border-[#32BB78] bg-white p-5 shadow-sm">
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-black text-[#122116]">Gestion du Catalogue</h2>
-          <p className="text-sm text-[#52635a]">Ajoutez vos produits, services et offres B2B/B2C.</p>
+          <h2 className="text-xl font-black text-foreground">Gestion du Catalogue</h2>
+          <p className="text-sm text-muted-foreground">Ajoutez vos produits, services et offres B2B/B2C.</p>
         </div>
-        <button className="rounded-2xl bg-[#32BB78] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#2a9d63]">
+        <button className="rounded-2xl bg-[#32BB78] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#32BB78]">
           + Ajouter un produit
         </button>
       </div>
@@ -184,9 +184,9 @@ function CommerceProducts() {
 
 function CommerceOrders() {
   return (
-    <div className="rounded-3xl border border-[#dbe8df] bg-white p-5 shadow-sm">
-      <h2 className="mb-1 text-xl font-black text-[#122116]">Gestion des Commandes</h2>
-      <p className="mb-6 text-sm text-[#52635a]">Préparation, paiement, livraison et suivi client.</p>
+    <div className="rounded-3xl border border-[#32BB78] bg-white p-5 shadow-sm">
+      <h2 className="mb-1 text-xl font-black text-foreground">Gestion des Commandes</h2>
+      <p className="mb-6 text-sm text-muted-foreground">Préparation, paiement, livraison et suivi client.</p>
       <EmptyCommerceState icon={TrackingIcon} title="Aucune commande pour le moment" text="Les commandes Nkampa apparaîtront dans cette section." />
     </div>
   );
@@ -194,11 +194,11 @@ function CommerceOrders() {
 
 function CommerceMarketing() {
   return (
-    <div className="rounded-3xl border border-[#dbe8df] bg-white p-5 shadow-sm">
+    <div className="rounded-3xl border border-[#32BB78] bg-white p-5 shadow-sm">
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-black text-[#122116]">Promotions & Coupons</h2>
-          <p className="text-sm text-[#52635a]">Animez les offres, réductions et campagnes boutique.</p>
+          <h2 className="text-xl font-black text-foreground">Promotions & Coupons</h2>
+          <p className="text-sm text-muted-foreground">Animez les offres, réductions et campagnes boutique.</p>
         </div>
         <button className="rounded-2xl bg-[#FF8C00] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#E67E00]">
           + Créer une promo
@@ -228,12 +228,12 @@ function EmptyCommerceState({
   text: string;
 }) {
   return (
-    <div className="rounded-3xl border border-dashed border-[#dbe8df] bg-[#f6faf7] px-5 py-12 text-center">
+    <div className="rounded-3xl border border-dashed border-[#32BB78] bg-[#32BB78] px-5 py-12 text-center">
       <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-3xl bg-white shadow-sm">
         <Icon size={48} />
       </div>
-      <p className="font-black text-[#122116]">{title}</p>
-      <p className="mx-auto mt-2 max-w-sm text-sm text-[#52635a]">{text}</p>
+      <p className="font-black text-foreground">{title}</p>
+      <p className="mx-auto mt-2 max-w-sm text-sm text-muted-foreground">{text}</p>
     </div>
   );
 }

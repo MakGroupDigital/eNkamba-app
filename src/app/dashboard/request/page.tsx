@@ -127,7 +127,7 @@ export default function RequestPage() {
         toast({
           title: 'Succès',
           description: `Demande de ${parseFloat(amount).toLocaleString('fr-FR')} CDF envoyée à ${foundUser.fullName}`,
-          className: 'bg-green-600 text-white border-none',
+          className: 'bg-primary text-white border-none',
         });
 
         router.push('/dashboard/wallet');
@@ -158,7 +158,7 @@ export default function RequestPage() {
             </Link>
           </Button>
           <div>
-            <h1 className="font-headline text-3xl font-bold bg-gradient-to-r from-[#32BB78] to-[#2a9d63] bg-clip-text text-transparent">
+            <h1 className="font-headline text-3xl font-bold bg-gradient-to-r from-[#32BB78] to-[#32BB78] bg-clip-text text-transparent">
               Demander de l'argent
             </h1>
             <p className="text-sm text-muted-foreground">Demandez un paiement à un utilisateur eNkamba</p>
@@ -275,7 +275,7 @@ export default function RequestPage() {
                   <Button
                     onClick={searchUser}
                     disabled={isSearching}
-                    className="bg-[#32BB78] hover:bg-[#2a9d63]"
+                    className="bg-[#32BB78] hover:bg-[#32BB78]"
                   >
                     {isSearching ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -307,7 +307,7 @@ export default function RequestPage() {
         {step === 'confirm' && foundUser && (
           <div className="space-y-4">
             {/* User Info Card */}
-            <Card className="border-[#32BB78]/20 bg-gradient-to-br from-[#32BB78]/10 to-[#2a9d63]/5">
+            <Card className="border-[#32BB78]/20 bg-gradient-to-br from-[#32BB78]/10 to-[#32BB78]/5">
               <CardHeader>
                 <CardTitle className="text-lg">Informations de l'utilisateur</CardTitle>
               </CardHeader>
@@ -387,7 +387,7 @@ export default function RequestPage() {
                   <Button
                     onClick={handleConfirm}
                     disabled={isSubmitting || !amount}
-                    className="flex-1 bg-[#32BB78] hover:bg-[#2a9d63]"
+                    className="flex-1 bg-[#32BB78] hover:bg-[#32BB78]"
                   >
                     {isSubmitting ? (
                       <>
@@ -406,18 +406,18 @@ export default function RequestPage() {
 
         {/* Step 4: Success */}
         {step === 'success' && (
-          <Card className="border-green-200 bg-green-50">
+          <Card className="border-primary/20 bg-primary/5">
             <CardContent className="pt-6">
               <div className="flex flex-col items-center gap-4 text-center">
-                <div className="p-4 rounded-full bg-green-100">
-                  <CheckCircle2 className="w-12 h-12 text-green-600" />
+                <div className="p-4 rounded-full bg-primary/10">
+                  <CheckCircle2 className="w-12 h-12 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg text-green-900">Demande envoyée avec succès!</h3>
-                  <p className="text-sm text-green-700 mt-2">
+                  <h3 className="font-semibold text-lg text-primary">Demande envoyée avec succès!</h3>
+                  <p className="text-sm text-primary mt-2">
                     {foundUser?.fullName} a reçu votre demande de {parseFloat(amount).toLocaleString('fr-FR')} CDF
                   </p>
-                  <p className="text-xs text-green-600 mt-4">
+                  <p className="text-xs text-primary mt-4">
                     Redirection vers le portefeuille dans 3 secondes...
                   </p>
                 </div>

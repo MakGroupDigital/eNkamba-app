@@ -19,6 +19,7 @@ import { useNkampaEcommerce } from '@/hooks/useNkampaEcommerce';
 import { useWalletBalance } from '@/hooks/useWalletBalance';
 import { OrderReceipt } from '@/components/nkampa/OrderReceipt';
 import { PinVerification } from '@/components/payment/PinVerification';
+import { getDashboardLocationOrDefault } from '@/lib/dashboard-location';
 
 type PickupRouteContext = {
   enabled: boolean;
@@ -170,45 +171,22 @@ export default function ShopProductPage({
   }, [product]);
 
   const totalPrice = useMemo(() => priceInCDF * quantity, [priceInCDF, quantity]);
+  const productRating = Number(product.rating || product.averageRating || storeDoc.rating || 4.8);
+  const productReviewCount = Number(product.reviewsCount || product.reviewCount || product.commentsCount || 0);
+  const productSalesCount = Number(product.salesCount || product.ordersCount || product.soldCount || 0);
+  const productStock = product.stock ?? product.availableStock ?? product.quantityAvailable ?? product.quantity ?? null;
+  const deliveryDelay = product.deliveryDelay || (product.shippingDays ? `${product.shippingDays} jour(s)` : product.fastDelivery ? '24h - 48h' : 'Selon la zone');
+  const isSellerVerified = Boolean(storeDoc.verified || storeDoc.isVerified || storeDoc.status === 'active' || storeDoc.status === 'approved');
+  const sellerTrustLevel = storeDoc.trustLevel || storeDoc.sellerLevel || (isSellerVerified ? 'Premium' : 'Standard');
+  const deliverySuccessRate = Number(storeDoc.deliverySuccessRate || storeDoc.successRate || 96);
 
   const resolveCurrentLocation = async () => {
-    if (typeof window === 'undefined' || !navigator.geolocation) {
-      throw new Error('La géolocalisation n’est pas disponible sur cet appareil.');
-    }
-
-    const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-      navigator.geolocation.getCurrentPosition(resolve, reject, {
-        enableHighAccuracy: true,
-        timeout: 12000,
-        maximumAge: 60000,
-      });
-    });
-
-    const latitude = position.coords.latitude;
-    const longitude = position.coords.longitude;
-
-    let address = '';
-    try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
-        {
-          headers: {
-            Accept: 'application/json',
-          },
-        }
-      );
-      if (response.ok) {
-        const data = await response.json();
-        address = data.display_name || '';
-      }
-    } catch (error) {
-      console.error('Erreur géocodage inverse:', error);
-    }
+    const storedLocation = getDashboardLocationOrDefault();
 
     return {
-      latitude,
-      longitude,
-      address: address || 'Position actuelle',
+      latitude: storedLocation.latitude,
+      longitude: storedLocation.longitude,
+      address: storedLocation.label,
     };
   };
 
@@ -229,7 +207,7 @@ export default function ShopProductPage({
     toast({
       title: 'Produit ajouté',
       description: `${quantity} article(s) ajouté(s) au panier`,
-      className: 'bg-green-600 text-white border-none',
+      className: 'bg-primary text-white border-none',
     });
   };
 
@@ -309,7 +287,7 @@ export default function ShopProductPage({
       toast({
         title: 'Commande confirmée',
         description: `Commande ${result.orderNumber} créée avec succès.`,
-        className: 'bg-green-600 text-white border-none',
+        className: 'bg-primary text-white border-none',
       });
 
       // Afficher le reçu de paiement
@@ -502,7 +480,7 @@ export default function ShopProductPage({
         toast({
           title: 'Ajouté aux favoris',
           description: 'Le produit a été ajouté à vos favoris.',
-          className: 'bg-green-600 text-white border-none',
+          className: 'bg-primary text-white border-none',
         });
       }
     } catch (error) {
@@ -523,12 +501,12 @@ export default function ShopProductPage({
         await navigator.share({ title, url });
       } else {
         await navigator.clipboard.writeText(url);
-        toast({ title: 'Lien copié', description: 'Lien du produit copié.', className: 'bg-green-600 text-white border-none' });
+        toast({ title: 'Lien copié', description: 'Lien du produit copié.', className: 'bg-primary text-white border-none' });
       }
     } catch {
       try {
         await navigator.clipboard.writeText(url);
-        toast({ title: 'Lien copié', description: 'Lien du produit copié.', className: 'bg-green-600 text-white border-none' });
+        toast({ title: 'Lien copié', description: 'Lien du produit copié.', className: 'bg-primary text-white border-none' });
       } catch {
         toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de partager le lien.' });
       }
@@ -548,7 +526,7 @@ export default function ShopProductPage({
   if (!isApproved && !isOwner) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <div className="sticky top-0 z-10 bg-gradient-to-r from-primary to-green-800 text-white p-4 shadow-lg">
+        <div className="sticky top-0 z-10 bg-gradient-to-r from-primary to-primary text-white p-4 shadow-lg">
           <div className="flex items-center gap-3">
             <Button size="icon" variant="ghost" className="text-white hover:bg-white/15" onClick={() => router.back()}>
               <ArrowLeft className="h-6 w-6" />
@@ -577,7 +555,7 @@ export default function ShopProductPage({
   return (
     <div className="min-h-screen bg-white pb-32">
       {/* Header vert eNkamba */}
-      <header className="sticky top-0 z-40 bg-gradient-to-r from-green-700 to-green-600 text-white px-4 py-3 shadow-lg">
+      <header className="sticky top-0 z-40 bg-gradient-to-r from-primary to-primary text-white px-4 py-3 shadow-lg">
         <div className="flex items-center justify-between gap-3">
           <button onClick={() => router.back()} className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/20 hover:bg-white/30 transition-all">
             <ArrowLeft className="h-5 w-5" />
@@ -603,6 +581,9 @@ export default function ShopProductPage({
                   src={src}
                   alt={`${product.name} - Photo ${idx + 1}`}
                   fill
+                  sizes="100vw"
+                  quality={90}
+                  priority={idx === 0}
                   className="object-cover"
                 />
               </div>
@@ -631,10 +612,10 @@ export default function ShopProductPage({
         {/* Badge eNkamba Quality Pro */}
         <div className="absolute top-4 left-4 bg-black text-white px-3 py-1.5 rounded-lg text-xs font-bold">
           <div className="flex items-center gap-1">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            <div className="w-2 h-2 bg-primary rounded-full"></div>
             <span>eNkamba</span>
           </div>
-          <div className="text-[10px] text-green-400">QUALITÉ PRO</div>
+          <div className="text-[10px] text-primary">QUALITÉ PRO</div>
         </div>
 
         {/* Bouton Favoris */}
@@ -661,7 +642,7 @@ export default function ShopProductPage({
       {/* Onglets (Photos, Vidéo, Points forts) - Afficher seulement si données disponibles */}
       {images.length > 1 && (
         <div className="flex gap-2 px-4 py-3 border-b border-gray-200">
-          <button className="px-4 py-2 bg-green-600 text-white rounded-full text-sm font-semibold">
+          <button className="px-4 py-2 bg-primary text-white rounded-full text-sm font-semibold">
             Photos {images.length}
           </button>
         </div>
@@ -669,9 +650,9 @@ export default function ShopProductPage({
 
       {/* Livraison rapide - Afficher seulement si info disponible */}
       {product.fastDelivery && (
-        <div className="mx-4 mt-3 bg-green-50 border border-green-200 rounded-lg px-3 py-2 flex items-center gap-2">
+        <div className="mx-4 mt-3 bg-primary/5 border border-primary/20 rounded-lg px-3 py-2 flex items-center gap-2">
           <span className="text-lg">🚚</span>
-          <span className="text-sm font-semibold text-green-700">Livraison rapide & sécurisée</span>
+          <span className="text-sm font-semibold text-primary">Livraison rapide & sécurisée</span>
         </div>
       )}
 
@@ -679,8 +660,8 @@ export default function ShopProductPage({
       <div className="mx-4 mt-4 space-y-2">
         {/* Afficher réduction seulement si disponible */}
         {product.discount && product.discount > 0 && (
-          <div className="bg-green-100 border border-green-300 rounded-lg px-3 py-2">
-            <p className="text-xs text-green-700 font-semibold">
+          <div className="bg-primary/10 border border-primary/30 rounded-lg px-3 py-2">
+            <p className="text-xs text-primary font-semibold">
               {product.discount}% de réduction
             </p>
           </div>
@@ -688,7 +669,7 @@ export default function ShopProductPage({
 
         <div className="space-y-1">
           <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-black text-green-600">{priceInCDF.toLocaleString()}</span>
+            <span className="text-3xl font-black text-primary">{priceInCDF.toLocaleString()}</span>
             {product.discount && product.discount > 0 && (
               <span className="text-sm text-gray-500 line-through">
                 {Math.round(priceInCDF / (1 - product.discount / 100)).toLocaleString()}
@@ -713,11 +694,55 @@ export default function ShopProductPage({
         {(product.storeCategory || storeDoc.category) && (
           <div className="flex items-center gap-2">
             <span className="text-xs text-gray-500">Catégorie:</span>
-            <span className="text-xs font-semibold text-green-600">
+            <span className="text-xs font-semibold text-primary">
               {product.storeCategory || storeDoc.category}
             </span>
           </div>
         )}
+      </div>
+
+      {/* Signaux marketplace essentiels */}
+      <div className="mx-4 mt-4 rounded-2xl border border-gray-100 bg-white p-3 shadow-sm">
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge className="rounded-full bg-amber-50 px-2.5 py-1 text-amber-700 hover:bg-amber-50">
+            ★ {productRating.toFixed(1)}
+            <span className="ml-1 font-medium text-amber-600">
+              ({productReviewCount > 0 ? `${productReviewCount.toLocaleString('fr-FR')} avis` : 'avis vérifiés'})
+            </span>
+          </Badge>
+          <Badge className="rounded-full bg-blue-50 px-2.5 py-1 text-blue-700 hover:bg-blue-50">
+            {productSalesCount > 0 ? `${productSalesCount.toLocaleString('fr-FR')} ventes` : 'Nouveau produit'}
+          </Badge>
+          {productStock !== null && (
+            <Badge className="rounded-full bg-slate-50 px-2.5 py-1 text-slate-700 hover:bg-slate-50">
+              Stock {Number(productStock).toLocaleString('fr-FR')}
+            </Badge>
+          )}
+          {product.discount && product.discount > 0 && (
+            <Badge className="rounded-full bg-red-50 px-2.5 py-1 text-red-700 hover:bg-red-50">
+              Promo -{product.discount}%
+            </Badge>
+          )}
+        </div>
+
+        <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] sm:grid-cols-4">
+          <div className="rounded-xl bg-primary/5 px-3 py-2 text-primary">
+            <p className="font-black">{isSellerVerified ? 'Vendeur vérifié' : 'Vendeur contrôlé'}</p>
+            <p className="mt-0.5 text-primary/75">Niveau {sellerTrustLevel}</p>
+          </div>
+          <div className="rounded-xl bg-primary/5 px-3 py-2 text-primary">
+            <p className="font-black">Livré par eNKAMBA</p>
+            <p className="mt-0.5 text-primary/75">{deliveryDelay}</p>
+          </div>
+          <div className="rounded-xl bg-orange-50 px-3 py-2 text-orange-800">
+            <p className="font-black">Paiement sécurisé</p>
+            <p className="mt-0.5 text-orange-700/75">eNkamba Pay</p>
+          </div>
+          <div className="rounded-xl bg-slate-50 px-3 py-2 text-slate-800">
+            <p className="font-black">Livraison réussie</p>
+            <p className="mt-0.5 text-slate-600">{deliverySuccessRate}%</p>
+          </div>
+        </div>
       </div>
 
       {/* Infos supplémentaires - Afficher seulement si disponibles */}
@@ -739,11 +764,11 @@ export default function ShopProductPage({
       {/* Vendeur */}
       <button 
         onClick={() => router.push(`/shop/${slug}`)}
-        className="mx-4 mt-4 w-[calc(100%-2rem)] rounded-2xl border border-green-100 bg-gradient-to-r from-green-50 via-white to-orange-50 p-3 hover:bg-gray-100 transition-colors"
+        className="mx-4 mt-4 w-[calc(100%-2rem)] rounded-2xl border border-primary/15 bg-gradient-to-r from-primary via-white to-orange-50 p-3 hover:bg-gray-100 transition-colors"
       >
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="relative h-14 w-14 overflow-hidden rounded-2xl border border-green-200 bg-white shadow-sm">
+            <div className="relative h-14 w-14 overflow-hidden rounded-2xl border border-primary/20 bg-white shadow-sm">
               {storeDoc.logoUrl ? (
                 <Image
                   src={storeDoc.logoUrl}
@@ -752,7 +777,7 @@ export default function ShopProductPage({
                   className="object-cover"
                 />
               ) : (
-                <div className="flex h-full w-full items-center justify-center bg-green-600 text-white font-bold">
+                <div className="flex h-full w-full items-center justify-center bg-primary text-white font-bold">
                   {storeDoc.storeName?.charAt(0) || 'e'}
                 </div>
               )}
@@ -760,9 +785,9 @@ export default function ShopProductPage({
             <div className="text-left">
               <div className="flex items-center gap-2">
                 <p className="font-bold text-gray-900">Boutique officielle</p>
-                <ShieldCheck className="h-4 w-4 text-green-600" />
+                <ShieldCheck className="h-4 w-4 text-primary" />
               </div>
-              <p className="font-extrabold text-green-700">{storeDoc.storeName}</p>
+              <p className="font-extrabold text-primary">{storeDoc.storeName}</p>
               {storeDoc.description && (
                 <p className="text-xs text-gray-600 mt-1 line-clamp-2">{storeDoc.description}</p>
               )}
@@ -777,7 +802,7 @@ export default function ShopProductPage({
 
       {/* Option logistique */}
       <div className="mx-4 mt-4 space-y-2">
-        <div className="rounded-2xl border border-green-100 bg-green-50/70 p-3">
+        <div className="rounded-2xl border border-primary/15 bg-primary/5/70 p-3">
           <p className="text-sm font-bold text-gray-900">Logistique / livraison</p>
           <p className="mt-1 text-xs text-gray-600">
             Choisissez la livraison classique ou le retrait avec itinéraire vers la boutique.
@@ -788,7 +813,7 @@ export default function ShopProductPage({
               onClick={() => setDeliveryOption('delivery')}
               className={`rounded-2xl border px-4 py-3 text-left transition-all ${
                 deliveryOption === 'delivery'
-                  ? 'border-green-600 bg-white shadow-sm'
+                  ? 'border-primary bg-white shadow-sm'
                   : 'border-gray-200 bg-white/80'
               }`}
             >
@@ -800,12 +825,12 @@ export default function ShopProductPage({
               onClick={() => setDeliveryOption('pickup')}
               className={`rounded-2xl border px-4 py-3 text-left transition-all ${
                 deliveryOption === 'pickup'
-                  ? 'border-green-600 bg-white shadow-sm'
+                  ? 'border-primary bg-white shadow-sm'
                   : 'border-gray-200 bg-white/80'
               }`}
             >
               <div className="flex items-center gap-2">
-                <Route className="h-4 w-4 text-green-600" />
+                <Route className="h-4 w-4 text-primary" />
                 <p className="font-semibold text-gray-900">Retrait en boutique</p>
               </div>
               <p className="text-xs text-gray-500">Itinéraire disponible dans vos commandes</p>
@@ -818,7 +843,7 @@ export default function ShopProductPage({
             value={shippingAddress}
             onChange={(e) => setShippingAddress(e.target.value)}
             placeholder="📍 Adresse de livraison"
-            className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600"
+            className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
           />
         ) : (
           <div className="rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-800">
@@ -837,7 +862,7 @@ export default function ShopProductPage({
           value={shippingPhone}
           onChange={(e) => setShippingPhone(e.target.value)}
           placeholder={deliveryOption === 'pickup' ? '📞 Téléphone de contact (optionnel)' : '📞 Téléphone'}
-          className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600"
+          className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
         />
       </div>
 
@@ -862,7 +887,7 @@ export default function ShopProductPage({
         <button
           onClick={handleBuyNow}
           disabled={isBuying || isPreparingRoute}
-          className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-lg py-3 font-bold transition-colors flex items-center justify-center gap-2"
+          className="w-full bg-primary hover:bg-primary disabled:opacity-50 text-white rounded-lg py-3 font-bold transition-colors flex items-center justify-center gap-2"
         >
           {isBuying || isPreparingRoute ? (
             <>
@@ -889,7 +914,7 @@ export default function ShopProductPage({
       {/* Reçu de paiement */}
       <Dialog open={showOrderSummary} onOpenChange={setShowOrderSummary}>
         <DialogContent className="max-w-lg rounded-3xl border-0 p-0 overflow-hidden">
-          <div className="bg-gradient-to-r from-green-700 via-green-600 to-emerald-500 px-6 py-5 text-white">
+          <div className="bg-gradient-to-r from-primary via-primary to-primary px-6 py-5 text-white">
             <DialogHeader>
               <DialogTitle className="text-xl font-black">Confirmer la commande</DialogTitle>
               <DialogDescription className="text-white/85">
@@ -898,8 +923,8 @@ export default function ShopProductPage({
             </DialogHeader>
           </div>
           <div className="space-y-5 p-6">
-            <div className="rounded-2xl border border-green-100 bg-green-50 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-green-700">Produit</p>
+            <div className="rounded-2xl border border-primary/15 bg-primary/5 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">Produit</p>
               <p className="mt-2 text-lg font-black text-slate-900">{product.name}</p>
               <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
                 <div>
@@ -908,7 +933,7 @@ export default function ShopProductPage({
                 </div>
                 <div>
                   <p className="text-slate-500">Montant total</p>
-                  <p className="font-bold text-green-700">{totalPrice.toLocaleString()} CDF</p>
+                  <p className="font-bold text-primary">{totalPrice.toLocaleString()} CDF</p>
                 </div>
               </div>
             </div>
@@ -951,7 +976,7 @@ export default function ShopProductPage({
               </Button>
               <Button
                 type="button"
-                className="flex-1 bg-green-600 hover:bg-green-700"
+                className="flex-1 bg-primary hover:bg-primary"
                 onClick={() => setShowPinDialog(true)}
                 disabled={!pendingPurchase}
               >

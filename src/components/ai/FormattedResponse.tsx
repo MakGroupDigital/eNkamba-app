@@ -246,7 +246,7 @@ export function FormattedResponse({
             onClick={handleExportExcel}
             variant="outline"
             size="sm"
-            className="flex items-center gap-2 hover:bg-green-500 hover:text-white transition-all"
+            className="flex items-center gap-2 hover:bg-primary hover:text-white transition-all"
           >
             <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-8-6z" />

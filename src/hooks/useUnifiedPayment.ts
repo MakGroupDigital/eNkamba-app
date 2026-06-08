@@ -181,7 +181,7 @@ export function useUnifiedPayment(config: UnifiedPaymentConfig) {
         toast({
           title: 'Succès',
           description: `Paiement de ${data.amount.toLocaleString('fr-FR')} CDF effectué avec succès`,
-          className: 'bg-green-600 text-white border-none',
+          className: 'bg-primary text-white border-none',
         });
 
         // Le solde sera mis à jour automatiquement via le listener Firestore
@@ -225,7 +225,7 @@ export function useUnifiedPayment(config: UnifiedPaymentConfig) {
       toast({
         title: 'Code généré',
         description: `Code de réception: ${receiveCode}`,
-        className: 'bg-green-600 text-white border-none',
+        className: 'bg-primary text-white border-none',
       });
 
       return true;

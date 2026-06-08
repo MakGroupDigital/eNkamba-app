@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { MapPinIcon, MobilityIcon, MotoRideIcon, RidePhoneIcon, RideShieldIcon, RideStarIcon } from '@/components/icons/service-icons';
+import { DASHBOARD_LOCATION_EVENT, readDashboardLocation, toGeoPoint } from '@/lib/dashboard-location';
 
 const KINSHASA_CENTER = { lat: -4.325, lon: 15.3222 };
 
@@ -111,7 +112,7 @@ function AddressAutocompleteInput({
                   event.preventDefault();
                   onSelect(suggestion);
                 }}
-                className="flex w-full items-start gap-3 px-4 py-3 text-left transition hover:bg-emerald-50"
+                className="flex w-full items-start gap-3 px-4 py-3 text-left transition hover:bg-primary/5"
               >
                 <MapPin className="mt-0.5 h-4 w-4 flex-none text-[#32BB78]" />
                 <span className="min-w-0">
@@ -160,17 +161,21 @@ export default function MobilityPage() {
   }, [destinationPoint, pickupPoint, userPosition]);
 
   useEffect(() => {
-    if (!('geolocation' in navigator)) return;
+    const syncStoredLocation = () => {
+      const storedLocation = readDashboardLocation();
+      const nextPosition = storedLocation ? toGeoPoint(storedLocation) : KINSHASA_CENTER;
+      setUserPosition(nextPosition);
+      setMapViewCenter(nextPosition);
+    };
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const nextPosition = { lat: position.coords.latitude, lon: position.coords.longitude };
-        setUserPosition(nextPosition);
-        setMapViewCenter(nextPosition);
-      },
-      () => undefined,
-      { enableHighAccuracy: true, timeout: 12000, maximumAge: 3000 }
-    );
+    syncStoredLocation();
+    window.addEventListener(DASHBOARD_LOCATION_EVENT, syncStoredLocation);
+    window.addEventListener('storage', syncStoredLocation);
+
+    return () => {
+      window.removeEventListener(DASHBOARD_LOCATION_EVENT, syncStoredLocation);
+      window.removeEventListener('storage', syncStoredLocation);
+    };
   }, []);
 
   useEffect(() => {
@@ -410,7 +415,7 @@ export default function MobilityPage() {
             <p className="text-xs font-medium text-slate-500">Taxi, moto et trajets urbains</p>
           </div>
         </div>
-        <Badge className="rounded-full bg-[#32BB78]/10 text-[#237E55] hover:bg-[#32BB78]/10">eNkamba</Badge>
+        <Badge className="rounded-full bg-[#32BB78]/10 text-[#32BB78] hover:bg-[#32BB78]/10">eNkamba</Badge>
       </div>
 
       {rideOrder && rideStatus !== 'idle' && (
@@ -439,7 +444,7 @@ export default function MobilityPage() {
               <p className="truncate text-sm font-bold text-slate-950">{rideOrder.ride.driver}</p>
               <p className="text-xs text-slate-500">{rideOrder.ride.name} · {rideOrder.ride.price.toLocaleString('fr-FR')} CDF</p>
             </div>
-            <Button size="icon" className="rounded-full bg-[#32BB78] hover:bg-[#2a9d63]">
+            <Button size="icon" className="rounded-full bg-[#32BB78] hover:bg-[#32BB78]">
               <RidePhoneIcon size={22} />
             </Button>
           </div>
@@ -451,7 +456,7 @@ export default function MobilityPage() {
           )}
 
           {(rideStatus === 'accepted' || rideStatus === 'arriving') && (
-            <Button onClick={startRide} className="mt-4 h-11 w-full rounded-full bg-[#32BB78] font-bold hover:bg-[#2a9d63]">
+            <Button onClick={startRide} className="mt-4 h-11 w-full rounded-full bg-[#32BB78] font-bold hover:bg-[#32BB78]">
               {rideStatusCopy[rideStatus].action}
             </Button>
           )}
@@ -569,7 +574,7 @@ export default function MobilityPage() {
               onFocus={() => setActiveAddressField('destination')}
               onSelect={(suggestion) => selectAddressSuggestion('destination', suggestion)}
             />
-            <button type="button" onClick={useCurrentPosition} className="text-xs font-semibold text-[#237E55]">
+            <button type="button" onClick={useCurrentPosition} className="text-xs font-semibold text-[#32BB78]">
               Utiliser ma position actuelle
             </button>
           </div>
@@ -608,7 +613,7 @@ export default function MobilityPage() {
             <p className="text-sm font-extrabold text-[#32BB78]">{selectedRideOption.eta}</p>
           </div>
 
-          <Button onClick={requestRide} className="h-12 w-full rounded-full bg-[#32BB78] text-base font-bold hover:bg-[#2a9d63]">
+          <Button onClick={requestRide} className="h-12 w-full rounded-full bg-[#32BB78] text-base font-bold hover:bg-[#32BB78]">
             Commander {selectedRideOption.name}
           </Button>
             </>

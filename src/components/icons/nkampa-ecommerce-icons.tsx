@@ -20,19 +20,19 @@ export const SuppliersIcon = ({ className, size = 24 }: IconProps) => (
     <defs>
       <linearGradient id="suppliersGrad" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="#32BB78" />
-        <stop offset="100%" stopColor="#0E5A59" />
+        <stop offset="100%" stopColor="#32BB78" />
       </linearGradient>
     </defs>
     {/* Bâtiment usine */}
     <rect x="8" y="18" width="32" height="22" rx="2" fill="url(#suppliersGrad)" />
     {/* Toit */}
-    <polygon points="8,18 24,6 40,18" fill="#0E5A59" />
+    <polygon points="8,18 24,6 40,18" fill="#32BB78" />
     {/* Fenêtres */}
     <rect x="12" y="22" width="6" height="6" fill="#fff" opacity="0.3" />
     <rect x="22" y="22" width="6" height="6" fill="#fff" opacity="0.3" />
     <rect x="32" y="22" width="6" height="6" fill="#fff" opacity="0.3" />
     {/* Cheminée */}
-    <rect x="20" y="8" width="4" height="8" fill="#0E5A59" />
+    <rect x="20" y="8" width="4" height="8" fill="#32BB78" />
     <circle cx="22" cy="6" r="2" fill="#FF8C00" />
   </svg>
 );
@@ -50,7 +50,7 @@ export const WholesalersIcon = ({ className, size = 24 }: IconProps) => (
     <defs>
       <linearGradient id="wholesalersGrad" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="#32BB78" />
-        <stop offset="100%" stopColor="#0E5A59" />
+        <stop offset="100%" stopColor="#32BB78" />
       </linearGradient>
     </defs>
     {/* Boîte 1 (bas) */}
@@ -78,16 +78,16 @@ export const RetailBuyIcon = ({ className, size = 24 }: IconProps) => (
     <defs>
       <linearGradient id="retailGrad" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="#32BB78" />
-        <stop offset="100%" stopColor="#0E5A59" />
+        <stop offset="100%" stopColor="#32BB78" />
       </linearGradient>
     </defs>
     {/* Panier */}
-    <path d="M10 16L12 8H36L38 16M12 16H36L34 32H14L12 16Z" fill="url(#retailGrad)" stroke="#0E5A59" strokeWidth="1.5" />
+    <path d="M10 16L12 8H36L38 16M12 16H36L34 32H14L12 16Z" fill="url(#retailGrad)" stroke="#32BB78" strokeWidth="1.5" />
     {/* Poignées */}
-    <path d="M16 8C16 4 20 2 24 2C28 2 32 4 32 8" stroke="#0E5A59" strokeWidth="2" strokeLinecap="round" />
+    <path d="M16 8C16 4 20 2 24 2C28 2 32 4 32 8" stroke="#32BB78" strokeWidth="2" strokeLinecap="round" />
     {/* Roues */}
-    <circle cx="18" cy="36" r="2" fill="#0E5A59" />
-    <circle cx="30" cy="36" r="2" fill="#0E5A59" />
+    <circle cx="18" cy="36" r="2" fill="#32BB78" />
+    <circle cx="30" cy="36" r="2" fill="#32BB78" />
   </svg>
 );
 
@@ -104,7 +104,7 @@ export const ProInvoiceIcon = ({ className, size = 24 }: IconProps) => (
     <defs>
       <linearGradient id="invoiceGrad" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="#32BB78" />
-        <stop offset="100%" stopColor="#0E5A59" />
+        <stop offset="100%" stopColor="#32BB78" />
       </linearGradient>
     </defs>
     {/* Document */}
@@ -132,7 +132,7 @@ export const TrackingIcon = ({ className, size = 24 }: IconProps) => (
     <defs>
       <linearGradient id="trackingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="#32BB78" />
-        <stop offset="100%" stopColor="#0E5A59" />
+        <stop offset="100%" stopColor="#32BB78" />
       </linearGradient>
     </defs>
     {/* Cabine */}
@@ -140,8 +140,8 @@ export const TrackingIcon = ({ className, size = 24 }: IconProps) => (
     {/* Benne */}
     <rect x="18" y="14" width="24" height="18" rx="1" fill="#32BB78" opacity="0.8" />
     {/* Roues */}
-    <circle cx="12" cy="34" r="3" fill="#0E5A59" />
-    <circle cx="38" cy="34" r="3" fill="#0E5A59" />
+    <circle cx="12" cy="34" r="3" fill="#32BB78" />
+    <circle cx="38" cy="34" r="3" fill="#32BB78" />
     {/* Fenêtre */}
     <rect x="8" y="20" width="6" height="6" fill="#fff" opacity="0.3" />
     {/* Flèche de mouvement */}
@@ -162,13 +162,13 @@ export const B2BProductIcon = ({ className, size = 24 }: IconProps) => (
     <defs>
       <linearGradient id="b2bGrad" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="#32BB78" />
-        <stop offset="100%" stopColor="#0E5A59" />
+        <stop offset="100%" stopColor="#32BB78" />
       </linearGradient>
     </defs>
     {/* Bâtiment */}
     <rect x="10" y="14" width="28" height="26" rx="2" fill="url(#b2bGrad)" />
     {/* Toit */}
-    <polygon points="10,14 24,4 38,14" fill="#0E5A59" />
+    <polygon points="10,14 24,4 38,14" fill="#32BB78" />
     {/* Fenêtres */}
     <rect x="14" y="18" width="5" height="5" fill="#fff" opacity="0.3" />
     <rect x="22" y="18" width="5" height="5" fill="#fff" opacity="0.3" />
@@ -177,7 +177,7 @@ export const B2BProductIcon = ({ className, size = 24 }: IconProps) => (
     <rect x="22" y="26" width="5" height="5" fill="#fff" opacity="0.3" />
     <rect x="30" y="26" width="5" height="5" fill="#fff" opacity="0.3" />
     {/* Porte */}
-    <rect x="21" y="32" width="6" height="8" fill="#0E5A59" />
+    <rect x="21" y="32" width="6" height="8" fill="#32BB78" />
   </svg>
 );
 
@@ -194,13 +194,13 @@ export const B2CProductIcon = ({ className, size = 24 }: IconProps) => (
     <defs>
       <linearGradient id="b2cGrad" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="#32BB78" />
-        <stop offset="100%" stopColor="#0E5A59" />
+        <stop offset="100%" stopColor="#32BB78" />
       </linearGradient>
     </defs>
     {/* Sac */}
-    <path d="M12 14L14 8H34L36 14L34 36H14L12 14Z" fill="url(#b2cGrad)" stroke="#0E5A59" strokeWidth="1.5" />
+    <path d="M12 14L14 8H34L36 14L34 36H14L12 14Z" fill="url(#b2cGrad)" stroke="#32BB78" strokeWidth="1.5" />
     {/* Poignées */}
-    <path d="M18 8C18 4 20 2 24 2C28 2 30 4 30 8" stroke="#0E5A59" strokeWidth="2" strokeLinecap="round" />
+    <path d="M18 8C18 4 20 2 24 2C28 2 30 4 30 8" stroke="#32BB78" strokeWidth="2" strokeLinecap="round" />
     {/* Motif */}
     <circle cx="24" cy="22" r="4" fill="#fff" opacity="0.3" />
   </svg>
@@ -219,11 +219,11 @@ export const ContactIcon = ({ className, size = 24 }: IconProps) => (
     <defs>
       <linearGradient id="contactGrad" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="#32BB78" />
-        <stop offset="100%" stopColor="#0E5A59" />
+        <stop offset="100%" stopColor="#32BB78" />
       </linearGradient>
     </defs>
     {/* Téléphone */}
-    <rect x="12" y="6" width="24" height="36" rx="3" fill="url(#contactGrad)" stroke="#0E5A59" strokeWidth="1.5" />
+    <rect x="12" y="6" width="24" height="36" rx="3" fill="url(#contactGrad)" stroke="#32BB78" strokeWidth="1.5" />
     {/* Écran */}
     <rect x="14" y="8" width="20" height="24" rx="2" fill="#fff" opacity="0.2" />
     {/* Bouton */}
@@ -244,7 +244,7 @@ export const BuyIcon = ({ className, size = 24 }: IconProps) => (
     <defs>
       <linearGradient id="buyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="#32BB78" />
-        <stop offset="100%" stopColor="#0E5A59" />
+        <stop offset="100%" stopColor="#32BB78" />
       </linearGradient>
     </defs>
     {/* Bouton */}
@@ -267,7 +267,7 @@ export const LocationIcon = ({ className, size = 24 }: IconProps) => (
     <defs>
       <linearGradient id="locationGrad" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="#32BB78" />
-        <stop offset="100%" stopColor="#0E5A59" />
+        <stop offset="100%" stopColor="#32BB78" />
       </linearGradient>
     </defs>
     {/* Épingle */}
@@ -311,14 +311,14 @@ export const MOQIcon = ({ className, size = 24 }: IconProps) => (
     <defs>
       <linearGradient id="moqGrad" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="#32BB78" />
-        <stop offset="100%" stopColor="#0E5A59" />
+        <stop offset="100%" stopColor="#32BB78" />
       </linearGradient>
     </defs>
     {/* Boîte */}
     <rect x="10" y="14" width="28" height="24" rx="2" fill="url(#moqGrad)" />
     <line x1="10" y1="20" x2="38" y2="20" stroke="#fff" strokeWidth="1" opacity="0.3" />
     {/* Couvercle */}
-    <path d="M10 14L14 8H34L38 14" fill="#0E5A59" />
+    <path d="M10 14L14 8H34L38 14" fill="#32BB78" />
   </svg>
 );
 
@@ -335,7 +335,7 @@ export const PriceIcon = ({ className, size = 24 }: IconProps) => (
     <defs>
       <linearGradient id="priceGrad" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="#32BB78" />
-        <stop offset="100%" stopColor="#0E5A59" />
+        <stop offset="100%" stopColor="#32BB78" />
       </linearGradient>
     </defs>
     {/* Cercle */}

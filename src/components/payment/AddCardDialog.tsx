@@ -201,7 +201,7 @@ export function AddCardDialog({
             </Button>
             <Button
               type="submit"
-              className="flex-1 bg-[#32BB78] hover:bg-[#2a9d63]"
+              className="flex-1 bg-[#32BB78] hover:bg-[#32BB78]"
               disabled={isLoading}
             >
               {isLoading ? (

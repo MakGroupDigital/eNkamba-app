@@ -95,7 +95,7 @@ export default function InvitePage() {
             </Link>
           </Button>
           <div>
-            <h1 className="font-headline text-3xl font-bold bg-gradient-to-r from-[#32BB78] to-[#2a9d63] bg-clip-text text-transparent">
+            <h1 className="font-headline text-3xl font-bold bg-gradient-to-r from-[#32BB78] to-[#32BB78] bg-clip-text text-transparent">
               Inviter des amis
             </h1>
             <p className="text-sm text-muted-foreground">Gagnez des bonus en parrainant</p>
@@ -112,7 +112,7 @@ export default function InvitePage() {
           <>
             {/* Referral Link Card */}
             {referralLink && (
-              <Card className="border-[#32BB78]/20 bg-gradient-to-br from-[#32BB78]/10 to-[#2a9d63]/5">
+              <Card className="border-[#32BB78]/20 bg-gradient-to-br from-[#32BB78]/10 to-[#32BB78]/5">
                 <CardHeader>
                   <CardTitle>Votre lien de parrainage</CardTitle>
                 </CardHeader>
@@ -140,7 +140,7 @@ export default function InvitePage() {
                     </Button>
                     <Button
                       onClick={shareLink}
-                      className="flex-1 bg-[#32BB78] hover:bg-[#2a9d63]"
+                      className="flex-1 bg-[#32BB78] hover:bg-[#32BB78]"
                     >
                       <Share2 className="w-4 h-4 mr-2" />
                       Partager
@@ -157,7 +157,7 @@ export default function InvitePage() {
                   <CardTitle>Votre code de parrainage</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="bg-gradient-to-r from-[#32BB78] to-[#2a9d63] p-8 rounded-lg text-center">
+                  <div className="bg-gradient-to-r from-[#32BB78] to-[#32BB78] p-8 rounded-lg text-center">
                     <p className="text-white text-sm mb-2">Code</p>
                     <p className="text-white text-4xl font-bold font-mono tracking-widest">
                       {referralCode}
@@ -166,7 +166,7 @@ export default function InvitePage() {
 
                   <Button
                     onClick={() => copyToClipboard(referralCode)}
-                    className="w-full bg-[#32BB78] hover:bg-[#2a9d63]"
+                    className="w-full bg-[#32BB78] hover:bg-[#32BB78]"
                   >
                     <Copy className="w-4 h-4 mr-2" />
                     Copier le code

@@ -194,7 +194,7 @@ export default function AgentOpsCreditPage() {
 
               <Button
                 onClick={() => setStep('confirm')}
-                className="w-full h-12 rounded-xl bg-[#32BB78] hover:bg-[#2BA86A] text-white"
+                className="w-full h-12 rounded-xl bg-[#32BB78] hover:bg-[#32BB78] text-white"
               >
                 Continuer
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -226,7 +226,7 @@ export default function AgentOpsCreditPage() {
                 <Button
                   onClick={handleConfirm}
                   disabled={isLoading}
-                  className="h-12 rounded-xl bg-[#32BB78] hover:bg-[#2BA86A] text-white"
+                  className="h-12 rounded-xl bg-[#32BB78] hover:bg-[#32BB78] text-white"
                 >
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Confirmer'}
                 </Button>

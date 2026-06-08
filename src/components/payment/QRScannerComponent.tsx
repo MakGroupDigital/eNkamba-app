@@ -57,12 +57,12 @@ export function QRScannerComponent({
 
             {/* Overlay avec guide de scan */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-64 h-64 border-2 border-green-500 rounded-lg opacity-50" />
+              <div className="w-64 h-64 border-2 border-primary rounded-lg opacity-50" />
             </div>
 
             {/* Indicateur de scan */}
             <div className="absolute top-4 right-4 flex items-center gap-2 bg-black/50 px-3 py-2 rounded-full">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
               <span className="text-xs text-white font-semibold">Scan en cours...</span>
             </div>
           </>

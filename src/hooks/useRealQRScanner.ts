@@ -177,7 +177,7 @@ export function useRealQRScanner(config: QRScannerConfig = {}) {
         toast({
           title: 'QR Code détecté',
           description: `Code: ${qrData}`,
-          className: 'bg-green-600 text-white border-none',
+          className: 'bg-primary text-white border-none',
         });
 
         if (config.onSuccess) {

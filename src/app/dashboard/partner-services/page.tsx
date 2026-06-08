@@ -169,7 +169,7 @@ export default function PartnerServicesPage() {
   const getStatusBadge = (status: ServiceStatus) => {
     switch (status) {
       case 'active':
-        return <Badge className="bg-green-100 text-green-700">Disponible</Badge>;
+        return <Badge className="bg-primary/10 text-primary">Disponible</Badge>;
       case 'inactive':
         return <Badge className="bg-gray-100 text-gray-700">Indisponible</Badge>;
       case 'coming-soon':

@@ -361,7 +361,7 @@ export default function EventDetailPage() {
               {/* Carte de réservation */}
               <div className="md:col-span-1">
                 <Card className="sticky top-4">
-                  <CardHeader className="bg-gradient-to-r from-primary/10 to-green-800/10">
+                  <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/10">
                     <CardTitle>Réserver vos billets</CardTitle>
                   </CardHeader>
                   <CardContent className="p-6 space-y-4">
@@ -387,7 +387,7 @@ export default function EventDetailPage() {
                     </div>
 
                     {ticket.quantity > 0 && (
-                      <div className="p-4 rounded-lg bg-gradient-to-r from-primary/10 to-green-800/10">
+                      <div className="p-4 rounded-lg bg-gradient-to-r from-primary/10 to-primary/10">
                         <div className="flex justify-between items-center">
                           <span className="font-semibold">Total:</span>
                           <span className="text-2xl font-bold text-primary">
@@ -398,7 +398,7 @@ export default function EventDetailPage() {
                     )}
 
                     <Button 
-                      className="w-full h-12 bg-gradient-to-r from-primary to-green-800" 
+                      className="w-full h-12 bg-gradient-to-r from-primary to-primary" 
                       onClick={handleBooking}
                       disabled={event.ticketsAvailable === 0}
                     >
@@ -475,7 +475,7 @@ export default function EventDetailPage() {
                 </div>
               </div>
 
-              <Button className="w-full h-12 bg-gradient-to-r from-primary to-green-800" onClick={handlePayment}>
+              <Button className="w-full h-12 bg-gradient-to-r from-primary to-primary" onClick={handlePayment}>
                 Confirmer et payer
               </Button>
             </CardContent>
@@ -497,7 +497,7 @@ export default function EventDetailPage() {
         {step === 'receipt' && receipt && (
           <div className="space-y-6">
             <div ref={receiptRef} className="bg-white rounded-2xl shadow-2xl overflow-hidden">
-              <div className="bg-gradient-to-r from-[#32BB78] to-[#2a9d63] p-6 text-white">
+              <div className="bg-gradient-to-r from-[#32BB78] to-[#32BB78] p-6 text-white">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">

@@ -13,10 +13,10 @@ import QRCodeLib from 'qrcode';
 
 // Actions rapides principales (4 boutons simples)
 const quickActions = [
-  { icon: QrCode, label: 'Scanner', href: '/dashboard/scanner', gradient: 'from-[#32BB78] to-[#2a9d63]' },
-  { icon: ArrowLeftRight, label: 'Payer/Recevoir', href: '/dashboard/pay-receive', gradient: 'from-[#32BB78] to-[#2a9d63]' },
-  { icon: Send, label: 'Encaisser', href: '/dashboard/send', gradient: 'from-[#32BB78] to-[#2a9d63]' },
-  { icon: Wallet, label: 'Portefeuille', href: '/dashboard/wallet', gradient: 'from-[#32BB78] to-[#2a9d63]' },
+  { icon: QrCode, label: 'Scanner', href: '/dashboard/scanner', gradient: 'from-[#32BB78] to-[#32BB78]' },
+  { icon: ArrowLeftRight, label: 'Payer/Recevoir', href: '/dashboard/pay-receive', gradient: 'from-[#32BB78] to-[#32BB78]' },
+  { icon: Send, label: 'Encaisser', href: '/dashboard/send', gradient: 'from-[#32BB78] to-[#32BB78]' },
+  { icon: Wallet, label: 'Portefeuille', href: '/dashboard/wallet', gradient: 'from-[#32BB78] to-[#32BB78]' },
 ];
 
 const financialServices = [
@@ -153,7 +153,7 @@ export default function MbongoDashboard() {
                     {/* Icon Container with Glow Effect */}
                     <div className="relative">
                       {/* Glow Effect */}
-                      <div className="absolute inset-0 bg-gradient-to-br from-[#32BB78]/40 to-[#2a9d63]/20 rounded-full blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      <div className="absolute inset-0 bg-gradient-to-br from-[#32BB78]/40 to-[#32BB78]/20 rounded-full blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                       
                       {/* Icon Background */}
                       <div className={`relative flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br ${action.gradient} shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300`}>
@@ -170,7 +170,7 @@ export default function MbongoDashboard() {
           </div>
         </div>
 
-        <Card className="bg-gradient-to-r from-primary to-green-800 text-primary-foreground shadow-lg overflow-hidden relative">
+        <Card className="bg-gradient-to-r from-primary to-primary text-primary-foreground shadow-lg overflow-hidden relative">
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iNCIvPjwvZz48L2c+PC9zdmc+')] opacity-50" />
           <CardHeader className="relative">
             <CardTitle className="font-headline flex items-center gap-2">

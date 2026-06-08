@@ -22,12 +22,12 @@ export const DepositTransactionIcon = ({ className, size = 24 }: IconProps) => (
     <defs>
       <linearGradient id="depositGrad" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="#32BB78" />
-        <stop offset="100%" stopColor="#0E5A59" />
+        <stop offset="100%" stopColor="#32BB78" />
       </linearGradient>
     </defs>
     {/* Portefeuille/Coffre */}
     <rect x="8" y="24" width="32" height="18" rx="3" fill="url(#depositGrad)" />
-    <rect x="12" y="28" width="24" height="10" rx="2" fill="#0E5A59" />
+    <rect x="12" y="28" width="24" height="10" rx="2" fill="#32BB78" />
     {/* Symbole dollar */}
     <circle cx="24" cy="33" r="4" fill="#32BB78" />
     <text x="24" y="36" textAnchor="middle" fontSize="6" fill="#fff" fontWeight="bold">$</text>
@@ -125,7 +125,7 @@ export const ReceiveTransactionIcon = ({ className, size = 24 }: IconProps) => (
     <defs>
       <linearGradient id="receiveTxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="#32BB78" />
-        <stop offset="100%" stopColor="#0E5A59" />
+        <stop offset="100%" stopColor="#32BB78" />
       </linearGradient>
     </defs>
     {/* Main ouverte (paume) */}
@@ -135,7 +135,7 @@ export const ReceiveTransactionIcon = ({ className, size = 24 }: IconProps) => (
     {/* Paume */}
     <path d="M8 28C8 32 12 36 20 38C28 36 36 32 36 28H8Z" fill="url(#receiveTxGrad)" />
     {/* Poignet */}
-    <rect x="14" y="38" width="16" height="6" rx="2" fill="#0E5A59" />
+    <rect x="14" y="38" width="16" height="6" rx="2" fill="#32BB78" />
     {/* Billets qui tombent dans la main */}
     <rect x="18" y="4" width="12" height="8" rx="1" fill="#FF8C00" />
     <circle cx="24" cy="8" r="3" fill="#E67E00" />
@@ -232,23 +232,23 @@ export const SavingsTransactionIcon = ({ className, size = 24 }: IconProps) => (
     <defs>
       <linearGradient id="savingsTxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="#32BB78" />
-        <stop offset="100%" stopColor="#0E5A59" />
+        <stop offset="100%" stopColor="#32BB78" />
       </linearGradient>
     </defs>
     {/* Corps de la tirelire */}
     <ellipse cx="24" cy="26" rx="16" ry="12" fill="url(#savingsTxGrad)" />
     {/* Fente pour pièces */}
-    <rect x="18" y="16" width="12" height="3" rx="1.5" fill="#0E5A59" />
+    <rect x="18" y="16" width="12" height="3" rx="1.5" fill="#32BB78" />
     {/* Pattes */}
-    <rect x="12" y="34" width="4" height="6" rx="2" fill="#0E5A59" />
-    <rect x="32" y="34" width="4" height="6" rx="2" fill="#0E5A59" />
+    <rect x="12" y="34" width="4" height="6" rx="2" fill="#32BB78" />
+    <rect x="32" y="34" width="4" height="6" rx="2" fill="#32BB78" />
     {/* Oreille */}
-    <ellipse cx="36" cy="20" rx="4" ry="3" fill="#32BB78" stroke="#0E5A59" strokeWidth="1" />
+    <ellipse cx="36" cy="20" rx="4" ry="3" fill="#32BB78" stroke="#32BB78" strokeWidth="1" />
     {/* Queue en tire-bouchon */}
-    <path d="M38 28C40 28 40 30 38 30C36 30 36 32 38 32" stroke="#0E5A59" strokeWidth="2" fill="none" strokeLinecap="round" />
+    <path d="M38 28C40 28 40 30 38 30C36 30 36 32 38 32" stroke="#32BB78" strokeWidth="2" fill="none" strokeLinecap="round" />
     {/* Œil */}
     <circle cx="32" cy="24" r="2" fill="#fff" />
-    <circle cx="32.5" cy="24" r="1" fill="#0E5A59" />
+    <circle cx="32.5" cy="24" r="1" fill="#32BB78" />
     {/* Pièce qui tombe */}
     <circle cx="24" cy="8" r="5" fill="#FF8C00" stroke="#E67E00" strokeWidth="1" />
     <text x="24" y="11" textAnchor="middle" fontSize="6" fill="#fff" fontWeight="bold">$</text>
@@ -297,7 +297,7 @@ export const BulkPaymentTransactionIcon = ({ className, size = 24 }: IconProps) 
     <path d="M24 28L24 32" stroke="#9C27B0" strokeWidth="1.5" strokeLinecap="round" />
     <path d="M34 26L34 30" stroke="#FF8C00" strokeWidth="1.5" strokeLinecap="round" />
     {/* Source centrale */}
-    <circle cx="24" cy="42" r="4" fill="#0E5A59" />
+    <circle cx="24" cy="42" r="4" fill="#32BB78" />
     <text x="24" y="45" textAnchor="middle" fontSize="5" fill="#fff" fontWeight="bold">$</text>
   </svg>
 );
@@ -325,7 +325,7 @@ export const TransferTransactionIcon = ({ className, size = 24 }: IconProps) => 
     <text x="12" y="25" textAnchor="middle" fontSize="4" fill="#fff" fontWeight="bold">$</text>
     {/* Portefeuille droit */}
     <rect x="28" y="16" width="16" height="16" rx="2" fill="#32BB78" />
-    <rect x="30" y="18" width="12" height="10" rx="1" fill="#0E5A59" />
+    <rect x="30" y="18" width="12" height="10" rx="1" fill="#32BB78" />
     <circle cx="36" cy="23" r="3" fill="#32BB78" />
     <text x="36" y="25" textAnchor="middle" fontSize="4" fill="#fff" fontWeight="bold">$</text>
     {/* Flèches d'échange */}

@@ -22,7 +22,7 @@ export const NkampaNavShopIcon = ({ className, size = 24 }: IconProps) => (
     <defs>
       <linearGradient id="shopGrad" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="#32BB78" />
-        <stop offset="100%" stopColor="#0E5A59" />
+        <stop offset="100%" stopColor="#32BB78" />
       </linearGradient>
     </defs>
     {/* Sac de shopping */}
@@ -30,10 +30,10 @@ export const NkampaNavShopIcon = ({ className, size = 24 }: IconProps) => (
     {/* Poignées du sac */}
     <path d="M14 16C14 10 18 6 24 6C30 6 34 10 34 16" stroke="currentColor" strokeWidth="3" strokeLinecap="round" fill="none" />
     {/* Détails du sac */}
-    <rect x="12" y="20" width="24" height="3" rx="1.5" fill="#0E5A59" opacity="0.6" />
+    <rect x="12" y="20" width="24" height="3" rx="1.5" fill="#32BB78" opacity="0.6" />
     {/* Tag de prix */}
     <circle cx="24" cy="30" r="6" fill="#FFD700" />
-    <text x="24" y="33" textAnchor="middle" fontSize="8" fill="#0E5A59" fontWeight="bold">%</text>
+    <text x="24" y="33" textAnchor="middle" fontSize="8" fill="#32BB78" fontWeight="bold">%</text>
     {/* Sparkles */}
     <circle cx="16" cy="12" r="2" fill="#32BB78" opacity="0.7" />
     <circle cx="32" cy="12" r="2" fill="#32BB78" opacity="0.7" />

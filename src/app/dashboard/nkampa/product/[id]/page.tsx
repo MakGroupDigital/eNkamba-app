@@ -228,7 +228,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
           </div>
 
           {/* Pricing */}
-          <div className="bg-gradient-to-r from-primary/10 to-green-800/10 p-4 rounded-xl">
+          <div className="bg-gradient-to-r from-primary/10 to-primary/10 p-4 rounded-xl">
             <div className="flex items-baseline gap-3 mb-2">
               <span className="text-3xl font-bold text-primary">{product.price.toLocaleString()} {product.currency}</span>
               {product.originalPrice > product.price && (
@@ -246,7 +246,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
           </div>
 
           {/* Seller Info */}
-          <Card className="border-0 bg-gradient-to-r from-green-50 to-emerald-50">
+          <Card className="border-0 bg-gradient-to-r from-primary to-primary">
             <CardContent className="p-4">
               <div className="space-y-4">
                 {/* Seller Header */}
@@ -258,7 +258,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-bold">{product.seller.name}</h3>
                       {product.seller.verified && (
-                        <Badge className="bg-green-600 text-white text-xs whitespace-nowrap">✓ {product.seller.badge}</Badge>
+                        <Badge className="bg-primary text-white text-xs whitespace-nowrap">✓ {product.seller.badge}</Badge>
                       )}
                     </div>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1 flex-wrap">
@@ -299,7 +299,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                   <Button
                     onClick={() => router.push(`/dashboard/nkampa/seller/${product.seller.id}`)}
                     size="sm"
-                    className="flex-1 gap-2 bg-gradient-to-r from-primary to-green-800 text-white"
+                    className="flex-1 gap-2 bg-gradient-to-r from-primary to-primary text-white"
                   >
                     🏪 <span className="hidden sm:inline">Voir la boutique</span><span className="sm:hidden">Boutique</span>
                   </Button>
@@ -311,7 +311,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
           {/* Stock Info */}
           <div className="flex items-center gap-4 text-sm">
             <div className="flex items-center gap-2">
-              <Shield className="w-4 h-4 text-green-600" />
+              <Shield className="w-4 h-4 text-primary" />
               <span>{product.stock} en stock</span>
             </div>
             <div className="flex items-center gap-2">
@@ -368,7 +368,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                     {option.verified && (
                       <div className="flex items-center gap-1">
                         <VerifiedBadgeIcon className="w-4 h-4" />
-                        <span className="text-xs text-green-600 font-medium">Vérifié</span>
+                        <span className="text-xs text-primary font-medium">Vérifié</span>
                       </div>
                     )}
                   </label>
@@ -442,7 +442,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             </Button>
             <Button
               onClick={handleBuyNow}
-              className="flex-1 bg-gradient-to-r from-primary to-green-800 text-white h-12 font-bold"
+              className="flex-1 bg-gradient-to-r from-primary to-primary text-white h-12 font-bold"
             >
               Acheter maintenant
             </Button>

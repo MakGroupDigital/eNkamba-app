@@ -101,7 +101,7 @@ export function LocationDirectionsView({
   return (
     <div className="fixed inset-0 bg-background z-50 flex flex-col">
       {/* Header */}
-      <div className="sticky top-0 z-10 flex items-center gap-4 bg-gradient-to-r from-primary via-primary to-green-800 px-4 py-3 shadow-lg">
+      <div className="sticky top-0 z-10 flex items-center gap-4 bg-gradient-to-r from-primary via-primary to-primary px-4 py-3 shadow-lg">
         <Button
           size="icon"
           variant="ghost"
@@ -161,7 +161,7 @@ export function LocationDirectionsView({
           <div className="p-4 space-y-3">
             {/* Summary */}
             <div className="grid grid-cols-2 gap-2">
-              <Card className="p-3 bg-gradient-to-br from-primary/10 to-green-50 border-primary/20">
+              <Card className="p-3 bg-gradient-to-br from-primary/10 to-primary border-primary/20">
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-primary" />
                   <div>
@@ -172,7 +172,7 @@ export function LocationDirectionsView({
                   </div>
                 </div>
               </Card>
-              <Card className="p-3 bg-gradient-to-br from-primary/10 to-green-50 border-primary/20">
+              <Card className="p-3 bg-gradient-to-br from-primary/10 to-primary border-primary/20">
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-primary" />
                   <div>

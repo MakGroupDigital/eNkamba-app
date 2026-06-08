@@ -106,7 +106,7 @@ export default function AgentOpsAirtimePage() {
       toast({
         title: 'Airtime réussi',
         description: 'Le solde a été débité.',
-        className: 'bg-green-600 text-white border-none',
+        className: 'bg-primary text-white border-none',
       });
 
       setShowPinDialog(false);
@@ -191,7 +191,7 @@ export default function AgentOpsAirtimePage() {
                     if (!validate()) return;
                     setStep('confirm');
                   }}
-                  className="w-full h-12 rounded-xl bg-[#32BB78] hover:bg-[#2BA86A] text-white"
+                  className="w-full h-12 rounded-xl bg-[#32BB78] hover:bg-[#32BB78] text-white"
                 >
                   Continuer
                   <ArrowRight className="ml-2 h-4 w-4" />
@@ -216,7 +216,7 @@ export default function AgentOpsAirtimePage() {
                   <Button
                     onClick={startPin}
                     disabled={isProcessing}
-                    className="h-12 rounded-xl bg-[#32BB78] hover:bg-[#2BA86A] text-white"
+                    className="h-12 rounded-xl bg-[#32BB78] hover:bg-[#32BB78] text-white"
                   >
                     {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Confirmer'}
                   </Button>

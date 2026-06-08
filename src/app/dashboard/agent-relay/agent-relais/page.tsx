@@ -38,7 +38,7 @@ export default function AgentRelaisPage() {
 
       {/* Hero Section */}
       <Card className="overflow-hidden">
-        <div className="bg-gradient-to-r from-primary via-primary to-green-800 p-8 text-white">
+        <div className="bg-gradient-to-r from-primary via-primary to-primary p-8 text-white">
           <div className="flex items-center gap-6">
             <div className="h-20 w-20 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
               <Handshake size={40} />
@@ -272,7 +272,7 @@ export default function AgentRelaisPage() {
       <div className="text-center space-y-4">
         <Button 
           size="lg" 
-          className="w-full h-14 rounded-xl text-base font-semibold bg-gradient-to-r from-primary to-green-800 hover:from-primary/90 hover:to-green-800/90 shadow-lg"
+          className="w-full h-14 rounded-xl text-base font-semibold bg-gradient-to-r from-primary to-primary hover:from-primary/90 hover:to-primary/90 shadow-lg"
           asChild
         >
           <Link href="/dashboard/agent-relay/application?type=agent-relais">

@@ -220,8 +220,8 @@ function MakutanoAudioPlayer({ src, isActive = false }: { src: string; isActive?
   };
 
   return (
-    <div className="relative flex h-full w-full flex-col justify-between overflow-hidden bg-[#0E5A59] p-5 text-white">
-      <div className="absolute inset-0 bg-[#0E5A59]" />
+    <div className="relative flex h-full w-full flex-col justify-between overflow-hidden bg-[#32BB78] p-5 text-white">
+      <div className="absolute inset-0 bg-[#32BB78]" />
       <div className="relative z-10 flex items-center justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/60">Audio</p>
@@ -235,7 +235,7 @@ function MakutanoAudioPlayer({ src, isActive = false }: { src: string; isActive?
       <button
         type="button"
         onClick={togglePlay}
-        className="relative z-10 mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-white text-[#0E5A59] shadow-lg transition hover:scale-105"
+        className="relative z-10 mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-white text-[#32BB78] shadow-lg transition hover:scale-105"
         aria-label={isPlaying ? 'Mettre en pause' : 'Lire'}
       >
         {isPlaying ? <MakutanoPauseIcon size={40} /> : <MakutanoPlayIcon size={40} />}
@@ -326,7 +326,7 @@ function MakutanoVideoPlayer({ src, isActive = false }: { src: string; isActive?
   };
 
   return (
-    <div className="group relative h-full overflow-hidden bg-[#0E5A59]">
+    <div className="group relative h-full overflow-hidden bg-[#32BB78]">
       <video
         ref={videoRef}
         src={src}
@@ -343,7 +343,7 @@ function MakutanoVideoPlayer({ src, isActive = false }: { src: string; isActive?
         <button
           type="button"
           onClick={togglePlay}
-          className="absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-[#122116] shadow-lg transition hover:scale-105"
+          className="absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-foreground shadow-lg transition hover:scale-105"
           aria-label="Lire la vidéo"
         >
           <MakutanoPlayIcon size={38} />
@@ -355,7 +355,7 @@ function MakutanoVideoPlayer({ src, isActive = false }: { src: string; isActive?
           <button
             type="button"
             onClick={togglePlay}
-            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#32BB78] transition hover:bg-[#2a9d63]"
+            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#32BB78] transition hover:bg-[#32BB78]"
             aria-label={isPlaying ? 'Mettre en pause' : 'Lire'}
           >
             {isPlaying ? <MakutanoPauseIcon size={24} /> : <MakutanoPlayIcon size={24} />}
@@ -939,13 +939,13 @@ export default function MakutanoPage() {
   };
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-gradient-to-b from-emerald-50 via-white to-orange-50">
+    <div className="flex h-screen flex-col overflow-hidden bg-gradient-to-b from-primary via-white to-orange-50">
       {/* Header avec catégories */}
       <header className="sticky top-0 z-50 w-full bg-transparent px-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] text-white">
         <div className="relative mx-auto max-w-xl overflow-hidden rounded-[2rem] border border-white/45 bg-[#32BB78]/95 shadow-[0_18px_45px_rgba(50,187,120,0.28)] backdrop-blur-xl">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/70" />
           <div className="pointer-events-none absolute -right-10 -top-14 h-28 w-28 rounded-full bg-white/25 blur-2xl" />
-          <div className="pointer-events-none absolute -bottom-12 left-8 h-24 w-24 rounded-full bg-[#1e9f5e]/35 blur-2xl" />
+          <div className="pointer-events-none absolute -bottom-12 left-8 h-24 w-24 rounded-full bg-[#32BB78]/35 blur-2xl" />
 
           <div className="relative px-4 pb-3 pt-4">
             <div className="flex items-center justify-between gap-3">
@@ -1064,7 +1064,7 @@ export default function MakutanoPage() {
         </div>
       </header>
 
-      <section className="border-b border-[#dbe8df] bg-white px-3 py-3">
+      <section className="border-b border-[#32BB78] bg-white px-3 py-3">
         <div className="mx-auto flex max-w-xl gap-3 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           <div className="flex w-[74px] flex-shrink-0 flex-col items-center gap-1.5">
             <div className="relative">
@@ -1075,13 +1075,13 @@ export default function MakutanoPage() {
                 }}
                 className={cn(
                   'rounded-full p-0.5',
-                  myStories.length ? 'bg-gradient-to-tr from-[#32BB78] via-[#0E5A59] to-[#FF8C00]' : 'bg-[#dbe8df]'
+                  myStories.length ? 'bg-gradient-to-tr from-[#32BB78] via-[#32BB78] to-[#FF8C00]' : 'bg-[#32BB78]'
                 )}
                 aria-label={myStories.length ? 'Voir ma story' : 'Aucune story'}
               >
                 <Avatar className="h-16 w-16 border-2 border-white">
                   <AvatarImage src={profile?.photoURL || profile?.profileImage} />
-                  <AvatarFallback className="bg-[#e8f4ec] text-[#22945d]">
+                  <AvatarFallback className="bg-primary/10 text-[#32BB78]">
                     {profile?.displayName?.charAt(0) || profile?.fullName?.charAt(0) || 'U'}
                   </AvatarFallback>
                 </Avatar>
@@ -1095,11 +1095,11 @@ export default function MakutanoPage() {
                 <MakutanoCreateIcon size={16} />
               </button>
             </div>
-            <span className="max-w-full truncate text-[11px] font-medium text-[#122116]">Ma story</span>
+            <span className="max-w-full truncate text-[11px] font-medium text-foreground">Ma story</span>
           </div>
 
           {storiesLoading ? (
-            <div className="flex items-center px-2 text-xs text-[#52635a]">Chargement...</div>
+            <div className="flex items-center px-2 text-xs text-muted-foreground">Chargement...</div>
           ) : (
             visibleStories.map((contactStory) => (
               <button
@@ -1109,16 +1109,16 @@ export default function MakutanoPage() {
               >
                 <div className={cn(
                   'rounded-full p-0.5',
-                  contactStory.hasUnviewed ? 'bg-gradient-to-tr from-[#32BB78] via-[#0E5A59] to-[#FF8C00]' : 'bg-[#dbe8df]'
+                  contactStory.hasUnviewed ? 'bg-gradient-to-tr from-[#32BB78] via-[#32BB78] to-[#FF8C00]' : 'bg-[#32BB78]'
                 )}>
                   <Avatar className="h-16 w-16 border-2 border-white">
                     <AvatarImage src={contactStory.userAvatar} />
-                    <AvatarFallback className="bg-[#e8f4ec] text-[#22945d]">
+                    <AvatarFallback className="bg-primary/10 text-[#32BB78]">
                       {contactStory.userName.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
                 </div>
-                <span className="max-w-full truncate text-[11px] font-medium text-[#122116]">
+                <span className="max-w-full truncate text-[11px] font-medium text-foreground">
                   {contactStory.userName}
                 </span>
               </button>
@@ -1126,7 +1126,7 @@ export default function MakutanoPage() {
           )}
 
           {ecommerceProductsLoading ? (
-            <div className="flex w-[74px] flex-shrink-0 items-center px-2 text-xs text-[#52635a]">Offres...</div>
+            <div className="flex w-[74px] flex-shrink-0 items-center px-2 text-xs text-muted-foreground">Offres...</div>
           ) : (
             rotatingStoryOffers.map((offer) => (
               <button
@@ -1135,8 +1135,8 @@ export default function MakutanoPage() {
                 onClick={() => router.push(offer.href)}
                 className="flex w-[74px] flex-shrink-0 flex-col items-center gap-1.5"
               >
-                <div className="rounded-full bg-gradient-to-tr from-[#32BB78] via-[#1e9f5e] to-[#FF8C00] p-0.5">
-                  <div className="relative h-16 w-16 overflow-hidden rounded-full border-2 border-white bg-[#e8f4ec]">
+                <div className="rounded-full bg-gradient-to-tr from-[#32BB78] via-[#32BB78] to-[#FF8C00] p-0.5">
+                  <div className="relative h-16 w-16 overflow-hidden rounded-full border-2 border-white bg-primary/10">
                     <img
                       src={offer.image}
                       alt={offer.name}
@@ -1148,7 +1148,7 @@ export default function MakutanoPage() {
                     </span>
                   </div>
                 </div>
-                <span className="max-w-full truncate text-[11px] font-medium text-[#122116]">
+                <span className="max-w-full truncate text-[11px] font-medium text-foreground">
                   {offer.storeName}
                 </span>
               </button>
@@ -1160,14 +1160,14 @@ export default function MakutanoPage() {
       {/* Feed vertical minimaliste */}
       <main
         ref={mainFeedRef}
-        className="flex-1 overflow-y-auto bg-[#f6faf7] px-3 pb-24 pt-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] sm:px-4"
+        className="flex-1 overflow-y-auto bg-[#32BB78] px-3 pb-24 pt-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] sm:px-4"
       >
         {isLoadingPosts ? (
-          <div className="flex h-full items-center justify-center text-[#52635a]">
+          <div className="flex h-full items-center justify-center text-muted-foreground">
             <p className="text-sm">Chargement des publications...</p>
           </div>
         ) : filteredPosts.length === 0 ? (
-          <div className="flex h-full items-center justify-center text-[#52635a]">
+          <div className="flex h-full items-center justify-center text-muted-foreground">
             <p className="text-sm">Aucune publication dans cette catégorie.</p>
           </div>
         ) : (
@@ -1179,32 +1179,32 @@ export default function MakutanoPage() {
                   postRefs.current[post.id] = node;
                 }}
                 data-post-id={post.id}
-                className="overflow-hidden rounded-2xl border border-[#dbe8df] bg-white shadow-sm transition-shadow hover:shadow-md"
+                className="overflow-hidden rounded-2xl border border-[#32BB78] bg-white shadow-sm transition-shadow hover:shadow-md"
               >
                 {/* Header du post */}
                 <div className="flex items-center justify-between gap-3 px-4 py-3">
                   <button
                     type="button"
                     onClick={() => openPublicProfile(post.authorId)}
-                    className="flex min-w-0 items-center gap-3 rounded-xl text-left transition hover:bg-[#f6faf7]"
+                    className="flex min-w-0 items-center gap-3 rounded-xl text-left transition hover:bg-[#32BB78]"
                     aria-label={`Ouvrir le profil de ${post.author.name}`}
                   >
                     <Avatar className="h-10 w-10 border border-[#e4eee8]">
                       <AvatarImage src={post.author.avatar} />
-                      <AvatarFallback className="bg-[#e8f4ec] text-[#22945d]">
+                      <AvatarFallback className="bg-primary/10 text-[#32BB78]">
                         {post.author.name.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-[#122116] hover:text-[#32BB78]">{post.author.name}</p>
-                      <p className="truncate text-xs text-[#52635a]">{post.author.location || 'Makutano'}</p>
+                      <p className="truncate text-sm font-semibold text-foreground hover:text-[#32BB78]">{post.author.name}</p>
+                      <p className="truncate text-xs text-muted-foreground">{post.author.location || 'Makutano'}</p>
                     </div>
                   </button>
                   <div className="flex items-center gap-2">
-                    <span className="rounded-full bg-[#e8f4ec] px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-[#22945d]">
+                    <span className="rounded-full bg-primary/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-[#32BB78]">
                       {post.category}
                     </span>
-                    <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full text-[#52635a] hover:bg-[#f0f6f2]">
+                    <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full text-muted-foreground hover:bg-primary/10">
                       <MakutanoMoreIcon size={18} />
                     </Button>
                   </div>
@@ -1226,8 +1226,8 @@ export default function MakutanoPage() {
                       />
                     )
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-[#e8f4ec]">
-                      <p className="text-sm font-medium text-[#22945d]">Média indisponible</p>
+                    <div className="flex h-full w-full items-center justify-center bg-primary/10">
+                      <p className="text-sm font-medium text-[#32BB78]">Média indisponible</p>
                     </div>
                   )}
                   {post.mediaUrl && (
@@ -1245,7 +1245,7 @@ export default function MakutanoPage() {
                 <div className="space-y-3 px-4 py-4">
                   {/* Texte du post */}
                   {post.text && (
-                    <p className="line-clamp-2 min-h-[3rem] text-sm leading-6 text-[#122116]">
+                    <p className="line-clamp-2 min-h-[3rem] text-sm leading-6 text-foreground">
                       <span className="font-semibold">{post.author.name}</span>{' '}
                       {post.text}
                     </p>
@@ -1263,7 +1263,7 @@ export default function MakutanoPage() {
                           'flex h-10 items-center gap-2 rounded-full px-3.5 text-sm font-semibold transition-all',
                           post.isLiked
                             ? 'bg-[#32BB78] text-white shadow-sm'
-                            : 'bg-[#f4faf6] text-[#52635a] hover:bg-[#e8f4ec] hover:text-[#22945d]'
+                            : 'bg-primary/5 text-muted-foreground hover:bg-primary/10 hover:text-[#32BB78]'
                         )}
                       >
                         <MakutanoLikeIcon size={18} />
@@ -1275,7 +1275,7 @@ export default function MakutanoPage() {
                           e.stopPropagation();
                           void handleComment(post.id);
                         }}
-                        className="flex h-10 items-center gap-2 rounded-full bg-[#f4faf6] px-3.5 text-sm font-semibold text-[#52635a] transition-colors hover:bg-[#e8f4ec] hover:text-[#22945d]"
+                        className="flex h-10 items-center gap-2 rounded-full bg-primary/5 px-3.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-primary/10 hover:text-[#32BB78]"
                       >
                         <MakutanoCommentIcon size={18} />
                         <span>{post.comments}</span>
@@ -1287,7 +1287,7 @@ export default function MakutanoPage() {
                         e.stopPropagation();
                         handleShare(post.id);
                       }}
-                      className="flex h-10 w-10 items-center justify-center rounded-full bg-[#f4faf6] text-[#52635a] transition-colors hover:bg-[#e8f4ec] hover:text-[#22945d]"
+                      className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/5 text-muted-foreground transition-colors hover:bg-primary/10 hover:text-[#32BB78]"
                       aria-label="Partager"
                     >
                       <MakutanoShareIcon size={18} />
@@ -1298,17 +1298,17 @@ export default function MakutanoPage() {
                 {/* Section commentaires */}
                 {activeCommentPostId === post.id && (
                   <div className="border-t border-[#edf3ef] bg-[#fbfdfc] p-4">
-                    <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-[#52635a]">Commentaires</p>
+                    <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Commentaires</p>
                     <div className="mb-3 max-h-44 space-y-2 overflow-y-auto pr-1">
                       {isLoadingCommentsByPost[post.id] ? (
-                        <p className="text-xs text-[#52635a]">Chargement...</p>
+                        <p className="text-xs text-muted-foreground">Chargement...</p>
                       ) : (commentsByPost[post.id] || []).length === 0 ? (
-                        <p className="text-xs text-[#52635a]">Aucun commentaire.</p>
+                        <p className="text-xs text-muted-foreground">Aucun commentaire.</p>
                       ) : (
                         (commentsByPost[post.id] || []).map((comment) => (
                           <div key={comment.id} className="rounded-xl border border-[#edf3ef] bg-white p-3">
-                            <p className="text-xs font-semibold text-[#122116]">{comment.authorName}</p>
-                            <p className="mt-1 text-xs leading-5 text-[#52635a]">{comment.text}</p>
+                            <p className="text-xs font-semibold text-foreground">{comment.authorName}</p>
+                            <p className="mt-1 text-xs leading-5 text-muted-foreground">{comment.text}</p>
                           </div>
                         ))
                       )}
@@ -1326,7 +1326,7 @@ export default function MakutanoPage() {
                           }
                         }}
                         placeholder="Ajouter un commentaire..."
-                        className="h-10 flex-1 rounded-full border-[#dbe8df] bg-white text-sm focus-visible:ring-[#32BB78]"
+                        className="h-10 flex-1 rounded-full border-[#32BB78] bg-white text-sm focus-visible:ring-[#32BB78]"
                       />
                       <Button
                         size="sm"
@@ -1335,7 +1335,7 @@ export default function MakutanoPage() {
                           void submitComment(post.id);
                         }}
                         disabled={isSubmittingCommentByPost[post.id]}
-                        className="h-10 rounded-full bg-[#32BB78] px-4 hover:bg-[#2a9d63]"
+                        className="h-10 rounded-full bg-[#32BB78] px-4 hover:bg-[#32BB78]"
                       >
                         {isSubmittingCommentByPost[post.id] ? '...' : 'Publier'}
                       </Button>
@@ -1370,7 +1370,7 @@ export default function MakutanoPage() {
                 className="max-h-full max-w-full rounded-2xl object-contain"
               />
             ) : fullscreenMedia.type === 'audio' ? (
-              <div className="w-full max-w-xl rounded-3xl bg-[#0E5A59] p-6 shadow-2xl">
+              <div className="w-full max-w-xl rounded-3xl bg-[#32BB78] p-6 shadow-2xl">
                 <p className="mb-4 text-xs font-bold uppercase tracking-[0.18em] text-white/60">Audio Makutano</p>
                 <audio src={fullscreenMedia.src} controls autoPlay className="w-full" />
               </div>

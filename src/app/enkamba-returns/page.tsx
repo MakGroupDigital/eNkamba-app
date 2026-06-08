@@ -20,7 +20,7 @@ export default function EnkambaReturnsPage() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-12">
-        <Card className="mb-8 bg-gradient-to-r from-primary/10 to-green-800/10 border-primary/20">
+        <Card className="mb-8 bg-gradient-to-r from-primary/10 to-primary/10 border-primary/20">
           <CardContent className="p-8">
             <h2 className="text-2xl font-bold mb-4">Politique de retours eNKAMBA</h2>
             <p className="text-gray-700">
@@ -48,23 +48,23 @@ export default function EnkambaReturnsPage() {
             <h3 className="text-xl font-bold mb-6">Conditions de retour</h3>
             <ul className="space-y-4">
               <li className="flex gap-3">
-                <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700">Le produit doit être dans son état original et non utilisé</span>
               </li>
               <li className="flex gap-3">
-                <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700">Tous les accessoires et emballages d\'origine doivent être inclus</span>
               </li>
               <li className="flex gap-3">
-                <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700">Aucun signe d\'usure, de dommage ou de manipulation</span>
               </li>
               <li className="flex gap-3">
-                <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700">Le reçu ou le numéro de commande eNKAMBA doit être fourni</span>
               </li>
               <li className="flex gap-3">
-                <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700">Le produit doit être retourné dans son emballage d\'origine</span>
               </li>
             </ul>
@@ -130,7 +130,7 @@ export default function EnkambaReturnsPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-r from-primary/10 to-green-800/10 border-primary/20">
+        <Card className="bg-gradient-to-r from-primary/10 to-primary/10 border-primary/20">
           <CardContent className="p-8 text-center">
             <h2 className="text-2xl font-bold mb-3">Des questions sur les retours?</h2>
             <p className="text-gray-600 mb-6">

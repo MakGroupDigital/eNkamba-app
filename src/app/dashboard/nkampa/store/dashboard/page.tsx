@@ -107,7 +107,7 @@ function StoreMetric({
   accent?: 'green' | 'blue' | 'amber' | 'ink';
 }) {
   const styles = {
-    green: 'border-[#32BB78]/20 bg-[#32BB78]/10 text-[#0E5A59]',
+    green: 'border-[#32BB78]/20 bg-[#32BB78]/10 text-[#32BB78]',
     blue: 'border-sky-200 bg-sky-50 text-sky-700',
     amber: 'border-amber-200 bg-amber-50 text-amber-800',
     ink: 'border-slate-200 bg-slate-50 text-slate-800',
@@ -148,7 +148,7 @@ function StoreActionCard({
           <p className="mt-1 text-xs leading-5 text-slate-500">{desc}</p>
         </div>
       </div>
-      <Button asChild className="mt-4 h-10 w-full rounded-2xl bg-[#0E5A59] hover:bg-[#0A4747]">
+      <Button asChild className="mt-4 h-10 w-full rounded-2xl bg-[#32BB78] hover:bg-[#0A4747]">
         <Link href={href}>
           <PlusCircle className="mr-2 h-4 w-4" />
           {cta}
@@ -326,12 +326,12 @@ export default function NkampaStoreDashboardPage() {
         await navigator.share({ title, url });
       } else {
         await navigator.clipboard.writeText(url);
-        toast({ title: 'Lien copié', description: 'Lien du produit copié.', className: 'bg-green-600 text-white border-none' });
+        toast({ title: 'Lien copié', description: 'Lien du produit copié.', className: 'bg-primary text-white border-none' });
       }
     } catch {
       try {
         await navigator.clipboard.writeText(url);
-        toast({ title: 'Lien copié', description: 'Lien du produit copié.', className: 'bg-green-600 text-white border-none' });
+        toast({ title: 'Lien copié', description: 'Lien du produit copié.', className: 'bg-primary text-white border-none' });
       } catch {
         toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de partager le lien.' });
       }
@@ -361,7 +361,7 @@ export default function NkampaStoreDashboardPage() {
         storeSubcategory: editSubcategory || '',
       } as any);
 
-      toast({ title: 'Sauvé', description: 'Produit mis à jour.', className: 'bg-green-600 text-white border-none' });
+      toast({ title: 'Sauvé', description: 'Produit mis à jour.', className: 'bg-primary text-white border-none' });
       setEditOpen(false);
     } catch (e: any) {
       console.error(e);
@@ -393,7 +393,7 @@ export default function NkampaStoreDashboardPage() {
         coverUrl,
       });
 
-      toast({ title: 'Sauvé', description: 'Profil boutique mis à jour.', className: 'bg-green-600 text-white border-none' });
+      toast({ title: 'Sauvé', description: 'Profil boutique mis à jour.', className: 'bg-primary text-white border-none' });
       setLogoFile(null);
       setCoverFile(null);
     } catch (e: any) {
@@ -420,7 +420,7 @@ export default function NkampaStoreDashboardPage() {
         promoText: promoText.trim(),
         promoImageUrl,
       });
-      toast({ title: 'Sauvé', description: 'Promo mise à jour.', className: 'bg-green-600 text-white border-none' });
+      toast({ title: 'Sauvé', description: 'Promo mise à jour.', className: 'bg-primary text-white border-none' });
       setPromoFile(null);
     } catch (e: any) {
       console.error(e);
@@ -458,7 +458,7 @@ export default function NkampaStoreDashboardPage() {
       <div className="min-h-screen bg-[#F6F8F7]">
         <div className="mx-auto flex min-h-screen max-w-3xl items-center px-4 py-8">
           <div className="w-full overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-xl">
-            <div className="relative h-44 bg-[#0E5A59]">
+            <div className="relative h-44 bg-[#32BB78]">
               <div className="absolute inset-x-0 top-0 h-16 bg-white/10" />
               <div className="absolute left-8 top-8 flex items-center gap-3 text-white">
                 <div className="grid h-14 w-14 place-items-center rounded-3xl bg-white">
@@ -479,7 +479,7 @@ export default function NkampaStoreDashboardPage() {
                   Aucune boutique Nkampa n’est liée à ce compte. Créez la vitrine pour publier vos produits, recevoir des commandes et gérer vos promos.
                 </p>
               </div>
-              <Button asChild className="h-12 w-full rounded-2xl bg-[#0E5A59] hover:bg-[#0A4747]">
+              <Button asChild className="h-12 w-full rounded-2xl bg-[#32BB78] hover:bg-[#0A4747]">
                 <Link href="/dashboard/nkampa/store">
                   <PlusCircle className="h-4 w-4 mr-2" />
                   Créer une boutique
@@ -551,7 +551,7 @@ export default function NkampaStoreDashboardPage() {
                 <NkampaNavSellerIcon size={32} />
               </div>
               <div className="min-w-0">
-                <p className="text-[11px] font-black uppercase tracking-wide text-[#0E5A59]">Gestion boutique</p>
+                <p className="text-[11px] font-black uppercase tracking-wide text-[#32BB78]">Gestion boutique</p>
                 <h1 className="truncate text-xl font-black tracking-tight">{store.storeName}</h1>
                 <p className="truncate text-xs text-slate-500">
                   {sellLabel}
@@ -561,7 +561,7 @@ export default function NkampaStoreDashboardPage() {
               </div>
             </div>
             {isApproved ? (
-              <Button asChild className="rounded-2xl bg-[#0E5A59] hover:bg-[#0A4747]">
+              <Button asChild className="rounded-2xl bg-[#32BB78] hover:bg-[#0A4747]">
                 <Link href={storeUrl} target="_blank" rel="noreferrer">
                   Vitrine <ExternalLink className="ml-2 h-4 w-4" />
                 </Link>
@@ -594,7 +594,7 @@ export default function NkampaStoreDashboardPage() {
                     onClick={() => setActiveTab(t.id)}
                     className={[
                       'flex h-10 items-center gap-2 rounded-2xl px-3 text-xs font-black transition whitespace-nowrap',
-                      active ? 'bg-[#0E5A59] text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950',
+                      active ? 'bg-[#32BB78] text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950',
                     ].join(' ')}
                   >
                     <span className="grid h-6 w-6 place-items-center">{t.icon}</span>
@@ -605,12 +605,12 @@ export default function NkampaStoreDashboardPage() {
 
               <div className="flex-1" />
               {activeTab === 'media' ? (
-                <Button size="sm" className="rounded-2xl bg-[#0E5A59] hover:bg-[#0A4747]" onClick={saveProfile} disabled={isSaving}>
+                <Button size="sm" className="rounded-2xl bg-[#32BB78] hover:bg-[#0A4747]" onClick={saveProfile} disabled={isSaving}>
                   <Save className="h-4 w-4 mr-2" />
                   Sauver
                 </Button>
               ) : activeTab === 'promo' ? (
-                <Button size="sm" className="rounded-2xl bg-[#0E5A59] hover:bg-[#0A4747]" onClick={savePromo} disabled={isSaving}>
+                <Button size="sm" className="rounded-2xl bg-[#32BB78] hover:bg-[#0A4747]" onClick={savePromo} disabled={isSaving}>
                   <Save className="h-4 w-4 mr-2" />
                   Sauver
                 </Button>
@@ -633,18 +633,18 @@ export default function NkampaStoreDashboardPage() {
         {activeTab === 'overview' ? (
           <div className="grid gap-5 lg:grid-cols-[1.35fr_0.65fr]">
             <div className="overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-sm">
-              <div className="relative h-72 bg-[#0E5A59] sm:h-80">
+              <div className="relative h-72 bg-[#32BB78] sm:h-80">
                 {store.coverUrl ? (
                   <>
                     <Image src={store.coverUrl} alt="Cover boutique" fill className="object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/15 to-transparent" />
                   </>
                 ) : (
-                  <div className="absolute inset-0 bg-[linear-gradient(135deg,#0E5A59_0%,#32BB78_52%,#101827_100%)]" />
+                  <div className="absolute inset-0 bg-[linear-gradient(135deg,#32BB78_0%,#32BB78_52%,#101827_100%)]" />
                 )}
 
                 <div className="absolute left-5 top-5 flex items-center gap-2">
-                  <Badge className="rounded-full border border-white/20 bg-white/90 text-[#0E5A59]">
+                  <Badge className="rounded-full border border-white/20 bg-white/90 text-[#32BB78]">
                     {isApproved ? 'Boutique publiée' : 'Publication bloquée'}
                   </Badge>
                   {promoEnabled ? (
@@ -685,7 +685,7 @@ export default function NkampaStoreDashboardPage() {
                 </div>
                 <div className="flex flex-col gap-2 sm:min-w-48">
                   {isApproved ? (
-                    <Button asChild className="rounded-2xl bg-[#0E5A59] hover:bg-[#0A4747]">
+                    <Button asChild className="rounded-2xl bg-[#32BB78] hover:bg-[#0A4747]">
                       <Link href={storeUrl} target="_blank" rel="noreferrer">
                         Ouvrir la vitrine <ExternalLink className="ml-2 h-4 w-4" />
                       </Link>
@@ -708,7 +708,7 @@ export default function NkampaStoreDashboardPage() {
                   </div>
                   <div>
                     <p className="text-xs font-black uppercase tracking-wide text-slate-500">Caisse boutique</p>
-                    <p className="text-2xl font-black text-[#0E5A59]">{revenue.toLocaleString()} CDF</p>
+                    <p className="text-2xl font-black text-[#32BB78]">{revenue.toLocaleString()} CDF</p>
                   </div>
                 </div>
                 <div className="mt-5 grid grid-cols-2 gap-3">
@@ -778,7 +778,7 @@ export default function NkampaStoreDashboardPage() {
             <CardHeader>
               <CardTitle className="flex items-center justify-between gap-2 text-base">
                 <span>Organisation de la boutique</span>
-                <Badge className="rounded-full border border-[#32BB78]/20 bg-[#32BB78]/10 text-[#0E5A59]">
+                <Badge className="rounded-full border border-[#32BB78]/20 bg-[#32BB78]/10 text-[#32BB78]">
                   {isBusiness ? 'Entreprise' : 'Individu'}
                 </Badge>
               </CardTitle>
@@ -824,7 +824,7 @@ export default function NkampaStoreDashboardPage() {
             <CardHeader>
               <CardTitle className="flex items-center justify-between gap-2">
                 <span>Rayons {store.sellType === 'product' ? 'produits' : 'services'}</span>
-                <Button asChild size="sm" className="rounded-2xl bg-[#0E5A59] hover:bg-[#0A4747]">
+                <Button asChild size="sm" className="rounded-2xl bg-[#32BB78] hover:bg-[#0A4747]">
                   <Link href="/dashboard/nkampa/seller">
                     <PlusCircle className="h-4 w-4 mr-2" />
                     Ajouter
@@ -858,14 +858,14 @@ export default function NkampaStoreDashboardPage() {
                             <span key={`${p.id}-dot-${idx}`} className="h-1.5 w-1.5 rounded-full bg-white/80 shadow" />
                           ))}
                         </div>
-                        <div className="absolute right-2 top-2 rounded-full bg-white/90 px-2 py-1 text-[10px] font-black text-[#0E5A59] shadow">
+                        <div className="absolute right-2 top-2 rounded-full bg-white/90 px-2 py-1 text-[10px] font-black text-[#32BB78] shadow">
                           En vitrine
                         </div>
                       </div>
                       <div className="p-3">
                         <p className="line-clamp-1 text-xs font-black">{p.name}</p>
                         <p className="line-clamp-1 text-[11px] text-slate-500">{p.location}</p>
-                        <p className="mt-1 text-sm font-black text-[#0E5A59]">
+                        <p className="mt-1 text-sm font-black text-[#32BB78]">
                           {(p.price || 0).toLocaleString()} {p.currency || 'CDF'}
                         </p>
                         <div className="flex items-center gap-2 mt-2">
@@ -1046,7 +1046,7 @@ export default function NkampaStoreDashboardPage() {
             <CardHeader>
               <CardTitle className="flex items-center justify-between gap-3">
                 <span>Finance boutique</span>
-                <Button asChild className="rounded-2xl bg-[#0E5A59] hover:bg-[#0A4747]">
+                <Button asChild className="rounded-2xl bg-[#32BB78] hover:bg-[#0A4747]">
                   <Link href="/dashboard/withdraw">
                     <span className="mr-2 grid h-5 w-5 place-items-center">
                       <WithdrawalTransactionIcon size={22} />
@@ -1057,7 +1057,7 @@ export default function NkampaStoreDashboardPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-1 gap-3 md:grid-cols-3">
-              <div className="rounded-3xl border border-slate-200 bg-[#0E5A59] p-4 text-white">
+              <div className="rounded-3xl border border-slate-200 bg-[#32BB78] p-4 text-white">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-xs font-bold text-white/65">Revenu total</p>
@@ -1097,7 +1097,7 @@ export default function NkampaStoreDashboardPage() {
                       <p className="mt-1 text-xs leading-5 text-slate-600">Transférer le solde disponible de la boutique vers votre portefeuille ou votre moyen de retrait.</p>
                     </div>
                   </div>
-                  <Button asChild className="h-11 rounded-2xl bg-[#0E5A59] hover:bg-[#0A4747]">
+                  <Button asChild className="h-11 rounded-2xl bg-[#32BB78] hover:bg-[#0A4747]">
                     <Link href="/dashboard/withdraw">Ouvrir le retrait</Link>
                   </Button>
                 </div>
@@ -1114,7 +1114,7 @@ export default function NkampaStoreDashboardPage() {
                           <p className="font-semibold truncate">{o.productName}</p>
                           <p className="text-xs text-slate-500 truncate">#{String(o.id).slice(0, 8)} • {o.status}</p>
                         </div>
-                        <p className="font-black text-[#0E5A59]">{Number(o.totalPrice || 0).toLocaleString()} {o.currency || 'CDF'}</p>
+                        <p className="font-black text-[#32BB78]">{Number(o.totalPrice || 0).toLocaleString()} {o.currency || 'CDF'}</p>
                       </div>
                     ))}
                   </div>
@@ -1129,7 +1129,7 @@ export default function NkampaStoreDashboardPage() {
             <CardHeader>
               <CardTitle className="flex items-center justify-between gap-3">
                 <span>Clients boutique</span>
-                <Badge className="rounded-full border border-[#32BB78]/20 bg-[#32BB78]/10 text-[#0E5A59]">
+                <Badge className="rounded-full border border-[#32BB78]/20 bg-[#32BB78]/10 text-[#32BB78]">
                   {storeCustomers.length} client{storeCustomers.length > 1 ? 's' : ''}
                 </Badge>
               </CardTitle>
@@ -1187,7 +1187,7 @@ export default function NkampaStoreDashboardPage() {
                         </div>
                       </div>
                       <div className="shrink-0 text-right">
-                        <p className="text-sm font-black text-[#0E5A59]">{client.total.toLocaleString()} CDF</p>
+                        <p className="text-sm font-black text-[#32BB78]">{client.total.toLocaleString()} CDF</p>
                         <p className="text-xs text-slate-500">{client.orders} commande{client.orders > 1 ? 's' : ''} • {client.lastStatus}</p>
                       </div>
                     </div>
@@ -1238,7 +1238,7 @@ export default function NkampaStoreDashboardPage() {
                   <p className="mt-1 text-xs leading-5 text-slate-500">Logo, cover, bio et image promo pour donner une vraie identité à la boutique.</p>
                 </div>
               </div>
-              <Button className="mt-4 h-10 w-full rounded-2xl bg-[#0E5A59] hover:bg-[#0A4747]" onClick={() => setActiveTab('media')}>
+              <Button className="mt-4 h-10 w-full rounded-2xl bg-[#32BB78] hover:bg-[#0A4747]" onClick={() => setActiveTab('media')}>
                 <ImageIcon className="mr-2 h-4 w-4" />
                 Ouvrir médias
               </Button>

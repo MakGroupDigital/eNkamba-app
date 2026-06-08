@@ -54,7 +54,7 @@ export const FloatingCart = ({
         {!isOpen && itemCount > 0 && (
           <button
             onClick={() => setIsExpanded(true)}
-            className="w-20 h-20 rounded-full bg-gradient-to-r from-primary to-green-800 text-white shadow-2xl hover:shadow-3xl transition-all hover:scale-110 flex items-center justify-center flex-col gap-1"
+            className="w-20 h-20 rounded-full bg-gradient-to-r from-primary to-primary text-white shadow-2xl hover:shadow-3xl transition-all hover:scale-110 flex items-center justify-center flex-col gap-1"
           >
             <ShoppingCart className="w-6 h-6" />
             <span className="text-xs font-bold">{itemCount}</span>
@@ -65,7 +65,7 @@ export const FloatingCart = ({
         {isOpen && (
           <div className="bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
             {/* Header */}
-            <div className="bg-gradient-to-r from-primary to-green-800 text-white p-4 flex items-center justify-between">
+            <div className="bg-gradient-to-r from-primary to-primary text-white p-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <ShoppingCart className="w-5 h-5" />
                 <h3 className="font-bold">Panier ({itemCount})</h3>
@@ -163,7 +163,7 @@ export const FloatingCart = ({
                 {/* Checkout Button */}
                 <Button
                   onClick={onCheckout}
-                  className="w-full bg-gradient-to-r from-primary to-green-800 text-white hover:from-primary/90 hover:to-green-800/90 h-10 font-semibold flex items-center justify-center gap-2"
+                  className="w-full bg-gradient-to-r from-primary to-primary text-white hover:from-primary/90 hover:to-primary/90 h-10 font-semibold flex items-center justify-center gap-2"
                 >
                   Passer la commande
                   <ArrowRight className="w-4 h-4" />

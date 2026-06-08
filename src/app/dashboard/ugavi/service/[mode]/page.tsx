@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { DASHBOARD_LOCATION_EVENT, readDashboardLocation, toGeoPoint } from '@/lib/dashboard-location';
 import {
   LogisticsCourierIcon,
   LogisticsExpressIcon,
@@ -117,16 +118,19 @@ export default function UgaviServiceModePage() {
   const shouldSelectCourierFirst = serviceConfig.mode === 'express' || serviceConfig.mode === 'standard';
 
   useEffect(() => {
-    if (!('geolocation' in navigator)) return;
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setUserPosition({ lat: position.coords.latitude, lon: position.coords.longitude });
-      },
-      () => {
-        setUserPosition(KINSHASA_CENTER);
-      },
-      { enableHighAccuracy: false, timeout: 8000, maximumAge: 10000 }
-    );
+    const syncStoredLocation = () => {
+      const storedLocation = readDashboardLocation();
+      setUserPosition(storedLocation ? toGeoPoint(storedLocation) : KINSHASA_CENTER);
+    };
+
+    syncStoredLocation();
+    window.addEventListener(DASHBOARD_LOCATION_EVENT, syncStoredLocation);
+    window.addEventListener('storage', syncStoredLocation);
+
+    return () => {
+      window.removeEventListener(DASHBOARD_LOCATION_EVENT, syncStoredLocation);
+      window.removeEventListener('storage', syncStoredLocation);
+    };
   }, []);
 
   const couriersByDistance = useMemo(
@@ -261,7 +265,7 @@ export default function UgaviServiceModePage() {
   const ServiceIcon = serviceConfig.icon;
 
   return (
-    <div className="mx-auto min-h-screen w-full max-w-4xl bg-gradient-to-b from-emerald-50 via-white to-cyan-50 p-3 md:p-4">
+    <div className="mx-auto min-h-screen w-full max-w-4xl bg-gradient-to-b from-primary via-white to-cyan-50 p-3 md:p-4">
       <header className="mb-4 flex items-center gap-3">
         <Button variant="outline" size="icon" asChild>
           <Link href="/dashboard/ugavi">
@@ -280,7 +284,7 @@ export default function UgaviServiceModePage() {
       </header>
 
       {shouldSelectCourierFirst && (
-        <Card className="mb-4 border-emerald-200">
+        <Card className="mb-4 border-primary/20">
           <CardHeader>
             <CardTitle className="text-base">1) Sélection du livreur sur la carte</CardTitle>
           </CardHeader>
@@ -297,7 +301,7 @@ export default function UgaviServiceModePage() {
                   key={courier.id}
                   type="button"
                   onClick={() => setSelectedCourierId(courier.id)}
-                  className={`absolute z-10 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/70 p-1.5 shadow ${selectedCourierId === courier.id ? 'ring-4 ring-primary/40 bg-primary' : 'bg-emerald-600'}`}
+                  className={`absolute z-10 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/70 p-1.5 shadow ${selectedCourierId === courier.id ? 'ring-4 ring-primary/40 bg-primary' : 'bg-primary'}`}
                   style={{ left: `${18 + index * 20}%`, top: `${35 + (index % 2) * 22}%` }}
                 >
                   <LogisticsCourierIcon size={20} />
@@ -321,7 +325,7 @@ export default function UgaviServiceModePage() {
         </Card>
       )}
 
-      <Card className="border-emerald-200">
+      <Card className="border-primary/20">
         <CardHeader>
           <CardTitle className="text-base">2) Détails mission / envoi</CardTitle>
         </CardHeader>
@@ -375,9 +379,9 @@ export default function UgaviServiceModePage() {
             </div>
           )}
 
-          <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm">
-            <p className="font-semibold text-emerald-900">Montant estimé: {totalAmount.toLocaleString('fr-FR')} CDF</p>
-            <p className="text-xs text-emerald-700">Calcul: base + poids + distance livreur (si express/standard) + formalités (si international).</p>
+          <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 text-sm">
+            <p className="font-semibold text-primary">Montant estimé: {totalAmount.toLocaleString('fr-FR')} CDF</p>
+            <p className="text-xs text-primary">Calcul: base + poids + distance livreur (si express/standard) + formalités (si international).</p>
           </div>
 
           <Button
@@ -391,19 +395,19 @@ export default function UgaviServiceModePage() {
       </Card>
 
       <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
-        <Card className="border-emerald-200">
+        <Card className="border-primary/20">
           <CardContent className="flex items-center gap-2 p-3 text-xs text-slate-700">
             <LogisticsExpressIcon size={20} />
             <span>Priorité forte</span>
           </CardContent>
         </Card>
-        <Card className="border-emerald-200">
+        <Card className="border-primary/20">
           <CardContent className="flex items-center gap-2 p-3 text-xs text-slate-700">
             <LogisticsStandardIcon size={20} />
             <span>Tarif optimisé</span>
           </CardContent>
         </Card>
-        <Card className="border-emerald-200">
+        <Card className="border-primary/20">
           <CardContent className="flex items-center gap-2 p-3 text-xs text-slate-700">
             <LogisticsCourierIcon size={20} />
             <span>Suivi mission</span>

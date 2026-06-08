@@ -94,7 +94,7 @@ export default function BillsPage() {
   const getStatusBadge = (status: BillStatus) => {
     switch (status) {
       case 'paid':
-        return <Badge className="bg-green-100 text-green-700">Payée</Badge>;
+        return <Badge className="bg-primary/10 text-primary">Payée</Badge>;
       case 'pending':
         return <Badge className="bg-yellow-100 text-yellow-700">En attente</Badge>;
       case 'overdue':
@@ -105,7 +105,7 @@ export default function BillsPage() {
   const getStatusIcon = (status: BillStatus) => {
     switch (status) {
       case 'paid':
-        return <CheckCircle2 className="h-5 w-5 text-green-600" />;
+        return <CheckCircle2 className="h-5 w-5 text-primary" />;
       case 'pending':
         return <Clock className="h-5 w-5 text-yellow-600" />;
       case 'overdue':
@@ -343,7 +343,7 @@ export default function BillsPage() {
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-1">
                       <p className="font-headline font-semibold">{bill.provider}</p>
-                      <CheckCircle2 className="h-5 w-5 text-green-600" />
+                      <CheckCircle2 className="h-5 w-5 text-primary" />
                     </div>
                     <p className="text-sm text-muted-foreground">{bill.description}</p>
                     <p className="text-sm font-semibold mt-2">{formatCurrency(bill.amount, bill.currency)}</p>

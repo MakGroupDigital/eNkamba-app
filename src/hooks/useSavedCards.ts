@@ -168,7 +168,7 @@ export function useSavedCards() {
       toast({
         title: 'Succès',
         description: 'Carte ajoutée avec succès',
-        className: 'bg-green-600 text-white border-none',
+        className: 'bg-primary text-white border-none',
       });
 
       return true;
@@ -197,7 +197,7 @@ export function useSavedCards() {
       toast({
         title: 'Succès',
         description: 'Carte supprimée',
-        className: 'bg-green-600 text-white border-none',
+        className: 'bg-primary text-white border-none',
       });
 
       return true;

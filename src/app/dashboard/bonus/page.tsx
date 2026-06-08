@@ -49,7 +49,7 @@ export default function BonusPage() {
                            <p className="text-xs text-muted-foreground">{bonus.description}</p>
                        </div>
                     </CardContent>
-                    <CardFooter className={`p-2 bg-muted/50 text-xs font-medium justify-end ${bonus.claimed ? 'text-green-600' : 'text-blue-600'}`}>
+                    <CardFooter className={`p-2 bg-muted/50 text-xs font-medium justify-end ${bonus.claimed ? 'text-primary' : 'text-blue-600'}`}>
                        {bonus.status}
                     </CardFooter>
                  </Card>

@@ -228,7 +228,7 @@ export function UnifiedPaymentFlow(props: UnifiedPaymentFlowProps) {
                 </div>
 
                 {!isScanning ? (
-                  <Button onClick={startQRScanning} className="w-full bg-[#32BB78] hover:bg-[#2a9d63] gap-2">
+                  <Button onClick={startQRScanning} className="w-full bg-[#32BB78] hover:bg-[#32BB78] gap-2">
                     <Camera className="h-4 w-4" />
                     Démarrer le scan
                   </Button>
@@ -299,7 +299,7 @@ export function UnifiedPaymentFlow(props: UnifiedPaymentFlowProps) {
 
                 <Button
                   onClick={() => setStep('confirm')}
-                  className="w-full bg-[#32BB78] hover:bg-[#2a9d63]"
+                  className="w-full bg-[#32BB78] hover:bg-[#32BB78]"
                 >
                   Continuer
                 </Button>
@@ -333,7 +333,7 @@ export function UnifiedPaymentFlow(props: UnifiedPaymentFlowProps) {
                     <Button
                       onClick={handleSearch}
                       disabled={isSearching}
-                      className="bg-[#32BB78] hover:bg-[#2a9d63]"
+                      className="bg-[#32BB78] hover:bg-[#32BB78]"
                     >
                       {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Chercher'}
                     </Button>
@@ -385,7 +385,7 @@ export function UnifiedPaymentFlow(props: UnifiedPaymentFlowProps) {
               </Button>
               <Button
                 onClick={handlePayment}
-                className="flex-1 bg-[#32BB78] hover:bg-[#2a9d63]"
+                className="flex-1 bg-[#32BB78] hover:bg-[#32BB78]"
                 disabled={isProcessing}
               >
                 {isProcessing ? (
@@ -404,13 +404,13 @@ export function UnifiedPaymentFlow(props: UnifiedPaymentFlowProps) {
 
       {/* Step 4: Success */}
       {step === 'success' && (
-        <Card className="border-green-200 bg-green-50">
+        <Card className="border-primary/20 bg-primary/5">
           <CardContent className="pt-6">
             <div className="flex flex-col items-center gap-4 text-center">
-              <CheckCircle2 className="w-12 h-12 text-green-600" />
+              <CheckCircle2 className="w-12 h-12 text-primary" />
               <div>
-                <h3 className="font-semibold text-lg text-green-900">Paiement Effectué!</h3>
-                <p className="text-sm text-green-700 mt-2">
+                <h3 className="font-semibold text-lg text-primary">Paiement Effectué!</h3>
+                <p className="text-sm text-primary mt-2">
                   {parseFloat(amount || '0').toLocaleString('fr-FR')} CDF ont été payés avec succès
                 </p>
               </div>

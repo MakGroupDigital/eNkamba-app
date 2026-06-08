@@ -16,7 +16,7 @@ const STATUS_CONFIG = {
   pending: { label: 'En attente', color: 'bg-yellow-100 text-yellow-800', icon: Package },
   paid: { label: 'Payé', color: 'bg-blue-100 text-blue-800', icon: DollarSign },
   shipped: { label: 'Expédié', color: 'bg-purple-100 text-purple-800', icon: Truck },
-  delivered: { label: 'Livré', color: 'bg-green-100 text-green-800', icon: CheckCircle },
+  delivered: { label: 'Livré', color: 'bg-primary/10 text-primary', icon: CheckCircle },
   cancelled: { label: 'Annulé', color: 'bg-red-100 text-red-800', icon: XCircle },
 };
 
@@ -195,7 +195,7 @@ export default function OrdersPage() {
     toast({
       title: 'Succès',
       description: 'Reçu téléchargé avec succès',
-      className: 'bg-green-600 text-white border-none',
+      className: 'bg-primary text-white border-none',
     });
   };
 
@@ -226,7 +226,7 @@ export default function OrdersPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-gradient-to-r from-primary via-primary to-green-800 text-white p-4 shadow-lg">
+      <div className="sticky top-0 z-10 bg-gradient-to-r from-primary via-primary to-primary text-white p-4 shadow-lg">
         <div className="flex items-center gap-4">
           <Link href="/dashboard/nkampa">
             <Button size="icon" variant="ghost" className="text-white hover:bg-white/20">
@@ -359,7 +359,7 @@ export default function OrdersPage() {
       {selectedOrder && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
           <Card className="w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-lg">
-            <CardHeader className="bg-gradient-to-r from-primary to-green-800 text-white">
+            <CardHeader className="bg-gradient-to-r from-primary to-primary text-white">
               <div className="flex items-center justify-between">
                 <CardTitle>Détails de la commande</CardTitle>
                 <Button
@@ -452,7 +452,7 @@ export default function OrdersPage() {
               {/* Paiement */}
               <div>
                 <p className="text-sm font-semibold text-gray-600 mb-2">Paiement</p>
-                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                <div className="bg-primary/5 p-4 rounded-lg border border-primary/20">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm text-gray-600">Méthode</span>
                     <span className="font-semibold">Portefeuille eNkamba</span>

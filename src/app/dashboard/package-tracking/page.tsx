@@ -183,7 +183,7 @@ export default function PackageTrackingPage() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'delivered':
-        return <CheckCircle className="w-6 h-6 text-green-600" />;
+        return <CheckCircle className="w-6 h-6 text-primary" />;
       case 'in_transit':
         return <Clock className="w-6 h-6 text-blue-600" />;
       case 'failed':
@@ -211,7 +211,7 @@ export default function PackageTrackingPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'delivered':
-        return 'bg-green-50 border-green-200';
+        return 'bg-primary/5 border-primary/20';
       case 'in_transit':
         return 'bg-blue-50 border-blue-200';
       case 'failed':

@@ -27,7 +27,7 @@ export default function AgentOpsCreateAccountPage() {
           </div>
 
           <Button
-            className="h-12 rounded-xl bg-[#32BB78] hover:bg-[#2BA86A] text-white"
+            className="h-12 rounded-xl bg-[#32BB78] hover:bg-[#32BB78] text-white"
             onClick={() =>
               toast({
                 title: 'Bientôt',

@@ -448,7 +448,7 @@ export default function ScannerPage() {
           {viewMode === 'default' && (
             <div className="w-full max-w-sm flex flex-col items-center justify-center gap-4">
               <Button
-                className="w-full h-14 bg-gradient-to-r from-[#32BB78] to-green-800 hover:from-[#2a9d63] hover:to-green-700 text-white font-bold text-base shadow-lg"
+                className="w-full h-14 bg-gradient-to-r from-[#32BB78] to-primary hover:from-[#32BB78] hover:to-primary text-white font-bold text-base shadow-lg"
                 onClick={() => {
                   setViewMode('camera-scan');
                   setIsScanning(true);
@@ -517,7 +517,7 @@ export default function ScannerPage() {
 
                   {isScanning && hasCameraPermission && !scanError && (
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="w-3/4 h-3/4 border-4 border-dashed border-green-500/70 rounded-2xl animate-pulse" />
+                      <div className="w-3/4 h-3/4 border-4 border-dashed border-primary/70 rounded-2xl animate-pulse" />
                     </div>
                   )}
 
@@ -621,7 +621,7 @@ export default function ScannerPage() {
                   </div>
 
                   <Button 
-                    className="w-full bg-gradient-to-r from-primary to-green-800 hover:from-primary/90 hover:to-green-800/90" 
+                    className="w-full bg-gradient-to-r from-primary to-primary hover:from-primary/90 hover:to-primary/90" 
                     size="lg" 
                     onClick={handlePayment}
                     disabled={!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0 || isPaying}

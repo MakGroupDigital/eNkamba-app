@@ -47,7 +47,7 @@ export function SearchOptions({ onOptionsChange, isLoading }: SearchOptionsProps
       label: 'Analyse Approfondie',
       description: 'Analyser en détail le sujet',
       icon: CheckCircle2,
-      color: 'text-green-600',
+      color: 'text-primary',
     },
     {
       key: 'reflection' as const,

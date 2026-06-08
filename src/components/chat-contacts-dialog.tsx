@@ -446,7 +446,7 @@ export function ChatContactsDialog({ open, onOpenChange }: ChatContactsDialogPro
             {showAddForm ? (
               <>
                 {qrScanData && (
-                  <div className="mb-2 p-2 rounded bg-green-50 text-green-900 text-xs">
+                  <div className="mb-2 p-2 rounded bg-primary/5 text-primary text-xs">
                     Infos récupérées du QR code :<br />
                     <span className="font-bold">Nom :</span> {qrScanData.name}<br />
                     {qrScanData.email && (<><span className="font-bold">Email :</span> {qrScanData.email}<br /></>)}

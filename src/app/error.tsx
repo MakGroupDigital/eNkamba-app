@@ -155,7 +155,7 @@ Date: ${new Date().toISOString()}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
             <Button
               onClick={reset}
-              className="w-full bg-gradient-to-r from-[#32BB78] to-[#2a9d63] hover:from-[#2a9d63] hover:to-[#1f7a4a] text-white gap-2"
+              className="w-full bg-gradient-to-r from-[#32BB78] to-[#32BB78] hover:from-[#32BB78] hover:to-[#32BB78] text-white gap-2"
             >
               <RefreshCw className="w-4 h-4" />
               Réessayer

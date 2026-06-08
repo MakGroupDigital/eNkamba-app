@@ -9,6 +9,7 @@ import { ModuleKycGate } from '@/components/module-kyc-gate';
 import { TransferNotificationModal } from '@/components/transfer-notification-modal';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { ChevronRight } from 'lucide-react';
+import { GlobalLocationBar } from '@/components/dashboard/global-location-bar';
 // import { useSupabaseNotifications } from '@/hooks/useSupabaseNotifications'; // Disabled - Supabase realtime not needed
 
 export default function DashboardLayout({
@@ -75,6 +76,7 @@ export default function DashboardLayout({
     <AuthGuard>
       <ModuleKycGate>
         <div className="flex h-dvh overflow-hidden flex-col bg-background">
+          {!isCallPage && <GlobalLocationBar />}
           <main className={isCallPage ? 'fixed inset-0 z-[200] overflow-hidden bg-black' : isUgaviHome ? 'min-h-0 flex-1 touch-none overflow-hidden overscroll-none pb-0' : isChatSubpage ? 'min-h-0 flex-1 overflow-hidden pb-0' : 'flex-grow overflow-y-auto pb-40'}>
             {children}
           </main>

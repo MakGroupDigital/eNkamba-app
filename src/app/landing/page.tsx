@@ -413,7 +413,7 @@ export default function LandingPage() {
         {/* Ecosystem & CTA Section */}
         <section id="ecosystem" className="w-full py-12 md:py-24 lg:py-32">
           <div className="container text-center">
-            <div className="bg-gradient-to-r from-primary to-green-800 rounded-2xl p-8 md:p-12 lg:p-16 text-primary-foreground shadow-2xl">
+            <div className="bg-gradient-to-r from-primary to-primary rounded-2xl p-8 md:p-12 lg:p-16 text-primary-foreground shadow-2xl">
               <div className="space-y-4 max-w-2xl mx-auto">
                   <h2 className="font-headline text-3xl font-bold tracking-tighter sm:text-4xl">Rejoignez l'écosystème eNkamba</h2>
                   <p className="md:text-lg">

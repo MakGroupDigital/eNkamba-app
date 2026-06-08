@@ -143,7 +143,7 @@ export default function ESIMManagePage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
-        return <Badge className="bg-green-100 text-green-700">Actif</Badge>;
+        return <Badge className="bg-primary/10 text-primary">Actif</Badge>;
       case 'suspended':
         return <Badge className="bg-yellow-100 text-yellow-700">Suspendu</Badge>;
       case 'expired':
@@ -265,7 +265,7 @@ export default function ESIMManagePage() {
                         {selectedESIM.status === 'active' ? 'Actif' : 'Inactif'}
                       </p>
                     </div>
-                    <CheckCircle2 className="h-8 w-8 text-green-600 opacity-20" />
+                    <CheckCircle2 className="h-8 w-8 text-primary opacity-20" />
                   </div>
                 </CardContent>
               </Card>
@@ -323,10 +323,10 @@ export default function ESIMManagePage() {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <div className={`p-2 rounded-full ${
-                              call.type === 'missed' ? 'bg-red-100' : 'bg-green-100'
+                              call.type === 'missed' ? 'bg-red-100' : 'bg-primary/10'
                             }`}>
                               <PhoneCall className={`h-4 w-4 ${
-                                call.type === 'missed' ? 'text-red-600' : 'text-green-600'
+                                call.type === 'missed' ? 'text-red-600' : 'text-primary'
                               }`} />
                             </div>
                             <div>

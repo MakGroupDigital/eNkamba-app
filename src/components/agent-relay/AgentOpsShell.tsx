@@ -23,7 +23,7 @@ const typeThemes: Record<
   { gradient: string; accent: string; accentSoft: string; accentText: string }
 > = {
   'agent-relais': {
-    gradient: 'from-[#32BB78] via-[#2BA86A] to-[#32BB78]',
+    gradient: 'from-[#32BB78] via-[#32BB78] to-[#32BB78]',
     accent: '#32BB78',
     accentSoft: 'bg-[#32BB78]/10',
     accentText: 'text-[#32BB78]',
@@ -115,7 +115,7 @@ export function AgentOpsShell({
               </div>
             </div>
 
-            <Badge className="rounded-full bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
+            <Badge className="rounded-full bg-primary/10 text-primary hover:bg-primary/10">
               <BadgeCheck size={14} className="mr-1" />
               Actif
             </Badge>

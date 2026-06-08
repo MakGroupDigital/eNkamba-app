@@ -47,7 +47,7 @@ export default function FavoritesPage() {
       await deleteDoc(doc(db, 'nkampa_favorites', favoriteId));
       toast({
         title: 'Retiré des favoris',
-        className: 'bg-green-600 text-white border-none',
+        className: 'bg-primary text-white border-none',
       });
     } catch (error) {
       console.error('Erreur suppression favori:', error);
@@ -70,7 +70,7 @@ export default function FavoritesPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-gradient-to-r from-primary via-primary to-green-800 text-white p-4 shadow-lg">
+      <div className="sticky top-0 z-10 bg-gradient-to-r from-primary via-primary to-primary text-white p-4 shadow-lg">
         <div className="flex items-center gap-4">
           <Link href="/dashboard/nkampa">
             <Button size="icon" variant="ghost" className="text-white hover:bg-white/20">

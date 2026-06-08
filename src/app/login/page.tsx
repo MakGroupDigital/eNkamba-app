@@ -388,7 +388,7 @@ export default function LoginPage() {
                 />
                 <path
                   d="M12.0003 24c3.2438 0 5.9578-1.0734 7.9453-2.9063l-3.9187-2.5312c-1.0781.7266-2.461 1.1578-4.0266 1.1578-3.1078 0-5.7422-2.1094-6.6844-4.9453H1.3815v2.625C3.391 21.3938 7.3972 24 12.0003 24z"
-                  fill="#34A853"
+                  fill="#32BB78"
                 />
                 <path
                   d="M5.3159 14.775c-.2444-.7313-.3831-1.5141-.3831-2.325 0-.8109.1388-1.5938.3831-2.325V7.5H1.3816C.5128 9.2437.0284 11.2172.0284 13.25c0 2.0328.4844 4.0063 1.3531 5.75l3.9344-2.625z"
@@ -451,7 +451,7 @@ export default function LoginPage() {
       </div>
       <Button
         type="submit"
-        className="w-full bg-[#209058] hover:bg-[#186a41] text-white"
+        className="w-full bg-[#32BB78] hover:bg-[#32BB78] text-white"
         disabled={isLoading}
       >
         {isLoading ? <Loader2 className="animate-spin" /> : "Recevoir un code par email"}
@@ -472,7 +472,7 @@ export default function LoginPage() {
       {selectedCountry && (
         <Button
           type="submit"
-          className="w-full bg-[#209058] hover:bg-[#186a41] text-white"
+          className="w-full bg-[#32BB78] hover:bg-[#32BB78] text-white"
           disabled={isLoading || !phone || phone === selectedCountry.dialCode + " "}
         >
           {isLoading ? <Loader2 className="animate-spin" /> : "Recevoir un code par SMS"}
@@ -507,7 +507,7 @@ export default function LoginPage() {
 
       <Button
         type="submit"
-        className="w-full bg-[#209058] hover:bg-[#186a41] text-white h-12 text-lg"
+        className="w-full bg-[#32BB78] hover:bg-[#32BB78] text-white h-12 text-lg"
         disabled={isLoading || otpCode.length < 6}
       >
         {isLoading ? <Loader2 className="animate-spin" /> : (
@@ -537,7 +537,7 @@ export default function LoginPage() {
       className="min-h-screen overflow-hidden relative"
       style={{
         background:
-          "linear-gradient(to bottom right, #32BB78, #28a86a, #1e9f5e)",
+          "linear-gradient(to bottom right, #32BB78, #32BB78, #32BB78)",
       }}
     >
       {/* Background Animations */}

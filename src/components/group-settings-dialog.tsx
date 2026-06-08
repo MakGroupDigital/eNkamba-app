@@ -120,7 +120,7 @@ export function GroupSettingsDialog({
       toast({
         title: 'Succès',
         description: 'Nom du groupe modifié',
-        className: 'bg-green-600 text-white border-none',
+        className: 'bg-primary text-white border-none',
       });
 
       setIsEditingName(false);
@@ -171,7 +171,7 @@ export function GroupSettingsDialog({
       toast({
         title: 'Succès',
         description: `${selectedContacts.length} membre(s) ajouté(s)`,
-        className: 'bg-green-600 text-white border-none',
+        className: 'bg-primary text-white border-none',
       });
 
       setSelectedContacts([]);
@@ -217,7 +217,7 @@ export function GroupSettingsDialog({
       toast({
         title: 'Succès',
         description: `${memberName} retiré du groupe`,
-        className: 'bg-green-600 text-white border-none',
+        className: 'bg-primary text-white border-none',
       });
 
       onUpdate?.();
@@ -245,7 +245,7 @@ export function GroupSettingsDialog({
       toast({
         title: 'Succès',
         description: `${memberName} est maintenant administrateur`,
-        className: 'bg-green-600 text-white border-none',
+        className: 'bg-primary text-white border-none',
       });
 
       onUpdate?.();
@@ -276,7 +276,7 @@ export function GroupSettingsDialog({
       toast({
         title: 'Succès',
         description: 'Vous avez quitté le groupe',
-        className: 'bg-green-600 text-white border-none',
+        className: 'bg-primary text-white border-none',
       });
 
       onClose();
@@ -299,7 +299,7 @@ export function GroupSettingsDialog({
     toast({
       title: 'Copié',
       description: 'Lien d\'invitation copié',
-      className: 'bg-green-600 text-white border-none',
+      className: 'bg-primary text-white border-none',
     });
   };
 
@@ -317,7 +317,7 @@ export function GroupSettingsDialog({
     toast({
       title: 'Succès',
       description: 'QR code téléchargé',
-      className: 'bg-green-600 text-white border-none',
+      className: 'bg-primary text-white border-none',
     });
   };
 
@@ -355,7 +355,7 @@ export function GroupSettingsDialog({
                     onClick={handleSaveGroupName}
                     disabled={isSavingName}
                     size="icon"
-                    className="bg-[#32BB78] hover:bg-[#2a9d63]"
+                    className="bg-[#32BB78] hover:bg-[#32BB78]"
                   >
                     {isSavingName ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                   </Button>
@@ -434,7 +434,7 @@ export function GroupSettingsDialog({
                     inviteTab?.click();
                   }}
                   size="sm"
-                  className="bg-[#32BB78] hover:bg-[#2a9d63] gap-2"
+                  className="bg-[#32BB78] hover:bg-[#32BB78] gap-2"
                 >
                   <UserPlus className="w-4 h-4" />
                   Ajouter
@@ -514,7 +514,7 @@ export function GroupSettingsDialog({
           {/* Onglet Inviter */}
           <TabsContent value="invite" className="space-y-4">
             {/* QR Code */}
-            <div className="flex flex-col items-center gap-4 p-6 bg-gradient-to-br from-[#32BB78]/10 to-[#2a9d63]/5 rounded-lg border border-[#32BB78]/20">
+            <div className="flex flex-col items-center gap-4 p-6 bg-gradient-to-br from-[#32BB78]/10 to-[#32BB78]/5 rounded-lg border border-[#32BB78]/20">
               <p className="text-sm font-semibold text-center">Scannez ce QR code pour rejoindre</p>
               {qrCode && (
                 <div className="bg-white p-4 rounded-lg shadow-lg">
@@ -604,7 +604,7 @@ export function GroupSettingsDialog({
                   <Button
                     onClick={handleAddMembers}
                     disabled={isAddingMembers}
-                    className="w-full bg-[#32BB78] hover:bg-[#2a9d63] gap-2"
+                    className="w-full bg-[#32BB78] hover:bg-[#32BB78] gap-2"
                   >
                     {isAddingMembers ? (
                       <>

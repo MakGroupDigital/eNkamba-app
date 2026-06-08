@@ -13,7 +13,7 @@ const AgentRelayIcon = ({ size = 24 }: { size?: number }) => (
     <defs>
       <linearGradient id="agentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="#32BB78" />
-        <stop offset="100%" stopColor="#1E7A4A" />
+        <stop offset="100%" stopColor="#32BB78" />
       </linearGradient>
     </defs>
     <circle cx="24" cy="24" r="20" fill="url(#agentGrad)" />
@@ -87,10 +87,10 @@ export function AgentRelaySection() {
   // Si approuvé, rediriger vers le compte agent
   if (status === 'approved') {
     return (
-      <Card className="overflow-hidden border-2 border-green-500/30 bg-green-50/50">
-        <CardHeader className="bg-gradient-to-r from-green-500/10 to-transparent">
+      <Card className="overflow-hidden border-2 border-primary/30 bg-primary/5/50">
+        <CardHeader className="bg-gradient-to-r from-primary/10 to-transparent">
           <CardTitle className="font-headline text-lg flex items-center gap-2">
-            <CheckCircle2 size={20} className="text-green-600" />
+            <CheckCircle2 size={20} className="text-primary" />
             Compte Agent Relais Actif
           </CardTitle>
         </CardHeader>
@@ -102,7 +102,7 @@ export function AgentRelaySection() {
             action={
                 <Button 
                   size="sm" 
-                  className="rounded-xl bg-green-600 hover:bg-green-700" 
+                  className="rounded-xl bg-primary hover:bg-primary" 
                   onClick={() =>
                     router.push(
                       `/dashboard/agent-relay/dashboard/${application?.agentType || 'agent-relais'}`
@@ -113,7 +113,7 @@ export function AgentRelaySection() {
                 </Button>
               }
             badge={
-              <span className="px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-medium">
+              <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
                 Actif
               </span>
             }

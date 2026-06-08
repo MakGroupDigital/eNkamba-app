@@ -60,7 +60,7 @@ export default function EnkambaCard({
 
   return (
     <div 
-      className="relative w-[500px] h-[315px] rounded-2xl overflow-hidden shadow-2xl text-white font-sans shrink-0 bg-[#1a6b35]"
+      className="relative w-[500px] h-[315px] rounded-2xl overflow-hidden shadow-2xl text-white font-sans shrink-0 bg-[#32BB78]"
       style={{
         boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.2), inset 0 0 0 1px rgba(255,255,255,0.1)'
       }}
@@ -76,8 +76,8 @@ export default function EnkambaCard({
           priority
         />
         {/* Green gradient overlays to match the card's specific lighting */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#125c26]/80 via-[#1a8b40]/40 to-[#0d4019]/90 mix-blend-overlay" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0a3815] via-transparent to-[#1a6b35]/50" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#32BB78]/80 via-[#32BB78]/40 to-[#32BB78]/90 mix-blend-overlay" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#32BB78] via-transparent to-[#32BB78]/50" />
       </div>
 
       {/* Content Container (z-10 to stay above background) */}

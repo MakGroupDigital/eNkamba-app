@@ -165,7 +165,7 @@ export default function FlightsPage() {
             <div className="space-y-2">
               <div className="h-2 bg-muted rounded-full overflow-hidden">
                 <div 
-                  className="h-full bg-gradient-to-r from-primary to-green-600 transition-all duration-300 ease-out rounded-full"
+                  className="h-full bg-gradient-to-r from-primary to-primary transition-all duration-300 ease-out rounded-full"
                   style={{ width: `${searchProgress}%` }}
                 >
                   <div className="h-full w-full bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
@@ -208,7 +208,7 @@ export default function FlightsPage() {
             </Link>
           </Button>
           <div className="flex-1">
-            <h1 className="font-headline text-2xl font-bold bg-gradient-to-r from-[#32BB78] to-[#2a9d63] bg-clip-text text-transparent">
+            <h1 className="font-headline text-2xl font-bold bg-gradient-to-r from-[#32BB78] to-[#32BB78] bg-clip-text text-transparent">
               Réservation de vols
             </h1>
             <p className="text-sm text-muted-foreground">Trouvez et réservez votre vol</p>
@@ -414,7 +414,7 @@ export default function FlightsPage() {
 
             {/* Récapitulatif */}
             {searchParams.from && searchParams.to && searchParams.departDate && (
-              <div className="p-4 rounded-lg bg-gradient-to-r from-primary/10 to-green-800/10 space-y-2">
+              <div className="p-4 rounded-lg bg-gradient-to-r from-primary/10 to-primary/10 space-y-2">
                 <h4 className="font-semibold text-sm">Récapitulatif de votre recherche</h4>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>
@@ -443,7 +443,7 @@ export default function FlightsPage() {
 
             {/* Bouton de recherche */}
             <Button 
-              className="w-full h-12 text-lg bg-gradient-to-r from-primary to-green-800"
+              className="w-full h-12 text-lg bg-gradient-to-r from-primary to-primary"
               onClick={handleSearch}
               disabled={isSearching}
             >

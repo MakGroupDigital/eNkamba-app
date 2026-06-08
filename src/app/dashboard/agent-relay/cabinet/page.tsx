@@ -287,18 +287,18 @@ export default function CabinetPage() {
                   </div>
                 </div>
                 
-                <div className="p-4 rounded-xl bg-green-50 border border-green-200">
+                <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
                   <h4 className="font-semibold mb-2">Scénario optimiste</h4>
                   <p className="text-sm text-muted-foreground mb-2">
                     150 transactions/jour × 2,500 FCFA commission moyenne
                   </p>
                   <div className="flex justify-between">
                     <span className="text-sm">Revenus mensuels</span>
-                    <span className="font-semibold text-green-600">1,125,000 FCFA</span>
+                    <span className="font-semibold text-primary">1,125,000 FCFA</span>
                   </div>
                   <div className="flex justify-between mt-1">
                     <span className="text-sm">ROI</span>
-                    <span className="font-semibold text-green-600">1 mois</span>
+                    <span className="font-semibold text-primary">1 mois</span>
                   </div>
                 </div>
               </div>

@@ -115,7 +115,7 @@ export function TransferByIdentifier({ onCancel, onTransferComplete }: TransferB
       toast({
         title: 'Utilisateur trouvé ✅',
         description: `${foundUser.fullName} (trouvé via ${resolvedUser.foundBy})`,
-        className: 'bg-green-600 text-white border-none',
+        className: 'bg-primary text-white border-none',
       });
     } catch (error) {
       console.error('Erreur recherche utilisateur:', error);
@@ -162,7 +162,7 @@ export function TransferByIdentifier({ onCancel, onTransferComplete }: TransferB
                       variant={identifierType === option.value ? 'default' : 'outline'}
                       className={`h-auto py-3 flex flex-col items-center gap-2 ${
                         identifierType === option.value 
-                          ? 'bg-[#32BB78] hover:bg-[#2a9d63]' 
+                          ? 'bg-[#32BB78] hover:bg-[#32BB78]' 
                           : ''
                       }`}
                       onClick={() => {
@@ -199,7 +199,7 @@ export function TransferByIdentifier({ onCancel, onTransferComplete }: TransferB
                 <Button
                   onClick={handleSearch}
                   disabled={isSearching || !identifierValue.trim()}
-                  className="bg-[#32BB78] hover:bg-[#2a9d63]"
+                  className="bg-[#32BB78] hover:bg-[#32BB78]"
                 >
                   {isSearching ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -323,7 +323,7 @@ export function TransferByIdentifier({ onCancel, onTransferComplete }: TransferB
 
           {/* Boutons d'action */}
           <Button
-            className="w-full bg-gradient-to-r from-[#32BB78] to-green-800 hover:from-[#2a9d63] hover:to-green-700 h-12 text-base font-bold"
+            className="w-full bg-gradient-to-r from-[#32BB78] to-primary hover:from-[#32BB78] hover:to-primary h-12 text-base font-bold"
             onClick={handleContinue}
             disabled={!amount || parseFloat(amount) <= 0}
           >

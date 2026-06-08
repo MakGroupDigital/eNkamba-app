@@ -61,7 +61,7 @@ export default function AgentOpsTransferPage() {
       toast({
         title: 'Transfert effectué',
         description: 'Opération enregistrée avec succès.',
-        className: 'bg-green-600 text-white border-none',
+        className: 'bg-primary text-white border-none',
       });
       setStep('find');
       setRecipient(null);
@@ -134,7 +134,7 @@ export default function AgentOpsTransferPage() {
               <Button
                 onClick={startPin}
                 disabled={isProcessing}
-                className="w-full h-12 rounded-xl bg-[#32BB78] hover:bg-[#2BA86A] text-white"
+                className="w-full h-12 rounded-xl bg-[#32BB78] hover:bg-[#32BB78] text-white"
               >
                 Confirmer et envoyer
                 <ArrowRight className="ml-2 h-4 w-4" />

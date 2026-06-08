@@ -365,7 +365,7 @@ export default function CreateStoryPage() {
               onClick={() => { setShowMediaOptions(false); startCamera(); }}
               className="w-full p-6 rounded-3xl bg-white/10 backdrop-blur border-2 border-white/20 hover:bg-white/20 transition-all flex items-center gap-4"
             >
-              <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center">
+              <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
                 <Camera size={32} className="text-white" />
               </div>
               <div className="flex-1 text-left">
@@ -404,7 +404,7 @@ export default function CreateStoryPage() {
               onClick={() => startCamera()}
               className="w-full p-6 rounded-3xl bg-white/10 backdrop-blur border-2 border-white/20 hover:bg-white/20 transition-all flex items-center gap-4"
             >
-              <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center">
+              <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
                 <Camera size={32} className="text-white" />
               </div>
               <div className="flex-1 text-left">

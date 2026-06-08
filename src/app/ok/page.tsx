@@ -122,7 +122,7 @@ function PaymentSuccessContent() {
               <p className="text-sm text-muted-foreground text-center">{error}</p>
               <Button
                 onClick={handleGoHome}
-                className="mt-4 bg-[#32BB78] hover:bg-[#2a9d63]"
+                className="mt-4 bg-[#32BB78] hover:bg-[#32BB78]"
               >
                 <Home className="w-4 h-4 mr-2" />
                 Retour à l'accueil
@@ -161,7 +161,7 @@ function PaymentSuccessContent() {
 
               <Button
                 onClick={handleGoHome}
-                className="mt-4 w-full bg-[#32BB78] hover:bg-[#2a9d63]"
+                className="mt-4 w-full bg-[#32BB78] hover:bg-[#32BB78]"
               >
                 <Home className="w-4 h-4 mr-2" />
                 Retour à l'accueil

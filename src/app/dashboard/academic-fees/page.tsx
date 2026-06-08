@@ -243,7 +243,7 @@ export default function AcademicFeesPage() {
             </Link>
           </Button>
           <div className="flex-1">
-            <h1 className="font-headline text-2xl font-bold bg-gradient-to-r from-[#32BB78] to-[#2a9d63] bg-clip-text text-transparent">
+            <h1 className="font-headline text-2xl font-bold bg-gradient-to-r from-[#32BB78] to-[#32BB78] bg-clip-text text-transparent">
               Paiement Frais Académiques
             </h1>
             <p className="text-sm text-muted-foreground">Payez vos frais universitaires en toute sécurité</p>
@@ -268,13 +268,13 @@ export default function AcademicFeesPage() {
                 <div key={s.key} className="flex items-center gap-2">
                   <div className={`flex flex-col items-center gap-1 ${isActive ? 'opacity-100' : isCompleted ? 'opacity-70' : 'opacity-40'}`}>
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                      isActive ? 'bg-primary text-white' : isCompleted ? 'bg-green-600 text-white' : 'bg-muted'
+                      isActive ? 'bg-primary text-white' : isCompleted ? 'bg-primary text-white' : 'bg-muted'
                     }`}>
                       {isCompleted ? <CheckCircle2 className="w-5 h-5" /> : <Icon className="w-5 h-5" />}
                     </div>
                     <span className="text-xs font-medium">{s.label}</span>
                   </div>
-                  {idx < 2 && <div className={`h-0.5 w-8 ${isCompleted ? 'bg-green-600' : 'bg-muted'}`} />}
+                  {idx < 2 && <div className={`h-0.5 w-8 ${isCompleted ? 'bg-primary' : 'bg-muted'}`} />}
                 </div>
               );
             })}
@@ -475,7 +475,7 @@ export default function AcademicFeesPage() {
                   <ArrowLeft className="mr-2 w-4 h-4" /> Retour
                 </Button>
                 <Button 
-                  className="flex-1 bg-gradient-to-r from-primary to-green-800" 
+                  className="flex-1 bg-gradient-to-r from-primary to-primary" 
                   onClick={handlePayment}
                   disabled={!student.fullName || !student.studentNumber || !student.faculty || !student.level || student.amount <= 0}
                 >
@@ -505,7 +505,7 @@ export default function AcademicFeesPage() {
             {/* Reçu moderne eNkambaPay */}
             <div ref={receiptRef} className="bg-white rounded-2xl shadow-2xl overflow-hidden">
               {/* Header avec dégradé */}
-              <div className="bg-gradient-to-r from-[#32BB78] to-[#2a9d63] p-6 text-white">
+              <div className="bg-gradient-to-r from-[#32BB78] to-[#32BB78] p-6 text-white">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">

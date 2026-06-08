@@ -379,7 +379,7 @@ function FlightBookingContent() {
                   </div>
 
                   <Button 
-                    className="w-full h-12 bg-gradient-to-r from-primary to-green-800"
+                    className="w-full h-12 bg-gradient-to-r from-primary to-primary"
                     onClick={handlePayment}
                   >
                     Confirmer et payer

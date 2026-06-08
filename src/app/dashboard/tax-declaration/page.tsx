@@ -528,7 +528,7 @@ export default function TaxDeclarationPage() {
                 </div>
                 <div className="border-t pt-2 flex justify-between text-lg">
                   <span>Impôt à payer:</span>
-                  <span className="font-bold text-green-600">{calculatedTax.toLocaleString()} FC</span>
+                  <span className="font-bold text-primary">{calculatedTax.toLocaleString()} FC</span>
                 </div>
               </div>
             </CardContent>
@@ -567,9 +567,9 @@ export default function TaxDeclarationPage() {
                   <h3 className="font-semibold mb-2">NIF</h3>
                   <p className="text-gray-600">{contributorData.nif}</p>
                 </div>
-                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                <div className="bg-primary/5 p-4 rounded-lg border border-primary/20">
                   <h3 className="font-semibold mb-2">Montant à payer</h3>
-                  <p className="text-2xl font-bold text-green-600">{calculatedTax.toLocaleString()} FC</p>
+                  <p className="text-2xl font-bold text-primary">{calculatedTax.toLocaleString()} FC</p>
                 </div>
               </div>
             </CardContent>
@@ -610,20 +610,20 @@ export default function TaxDeclarationPage() {
         return (
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-green-600">
+              <CardTitle className="flex items-center gap-2 text-primary">
                 <CheckCheck className="w-6 h-6" />
                 Succès
               </CardTitle>
               <CardDescription>Votre déclaration fiscale a été soumise avec succès</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="bg-green-50 p-6 rounded-lg border border-green-200 text-center">
-                <CheckCircle2 className="w-12 h-12 text-green-600 mx-auto mb-4" />
+              <div className="bg-primary/5 p-6 rounded-lg border border-primary/20 text-center">
+                <CheckCircle2 className="w-12 h-12 text-primary mx-auto mb-4" />
                 <h3 className="text-lg font-semibold mb-2">Déclaration acceptée</h3>
                 <p className="text-gray-600 mb-4">
                   Votre déclaration fiscale a été enregistrée avec succès. Un reçu de confirmation a été envoyé à votre email.
                 </p>
-                <div className="bg-white p-4 rounded border border-green-200 text-left">
+                <div className="bg-white p-4 rounded border border-primary/20 text-left">
                   <p className="text-sm"><span className="font-semibold">Numéro de référence:</span> TAX-2024-001</p>
                   <p className="text-sm"><span className="font-semibold">Date:</span> {new Date().toLocaleDateString('fr-FR')}</p>
                   <p className="text-sm"><span className="font-semibold">Montant payé:</span> {calculatedTax.toLocaleString()} FC</p>
@@ -704,7 +704,7 @@ export default function TaxDeclarationPage() {
           {currentStep === 11 && (
             <Button
               onClick={handlePayment}
-              className="flex-1 flex items-center gap-2 bg-green-600 hover:bg-green-700"
+              className="flex-1 flex items-center gap-2 bg-primary hover:bg-primary"
             >
               Confirmer le paiement
               <CheckCircle2 className="w-4 h-4" />

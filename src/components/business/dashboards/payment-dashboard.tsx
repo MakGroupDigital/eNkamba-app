@@ -40,8 +40,8 @@ export function PaymentDashboard({ businessUser }: PaymentDashboardProps) {
   ];
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(50,187,120,0.14),transparent_34%),linear-gradient(180deg,#f7fbf8_0%,#eef8f1_54%,#f8faf8_100%)] pb-24 text-[#122116]">
-      <div className="sticky top-0 z-30 rounded-b-[32px] bg-gradient-to-r from-[#32BB78] via-[#22945d] to-[#0E5A59] px-4 pb-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] text-white shadow-lg shadow-[#0E5A59]/20">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(50,187,120,0.14),transparent_34%),linear-gradient(180deg,rgba(50,187,120,0.05)_0%,rgba(50,187,120,0.08)_54%,rgba(50,187,120,0.04)_100%)] pb-24 text-foreground">
+      <div className="sticky top-0 z-30 rounded-b-[32px] bg-gradient-to-r from-[#32BB78] via-[#32BB78] to-[#32BB78] px-4 pb-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] text-white shadow-lg shadow-[#32BB78]/20">
         <div className="mx-auto max-w-5xl">
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
@@ -85,7 +85,7 @@ export function PaymentDashboard({ businessUser }: PaymentDashboardProps) {
 
       <div className="mx-auto max-w-5xl space-y-5 px-4 py-5">
         <section className="overflow-hidden rounded-3xl border border-white bg-white shadow-sm">
-          <div className="relative bg-gradient-to-br from-[#32BB78] via-[#22945d] to-[#0E5A59] p-5 text-white">
+          <div className="relative bg-gradient-to-br from-[#32BB78] via-[#32BB78] to-[#32BB78] p-5 text-white">
             <div className="pointer-events-none absolute -right-8 -top-10 h-32 w-32 rounded-full bg-white/15 blur-2xl" />
             <div className="relative flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
               <div>
@@ -110,7 +110,7 @@ export function PaymentDashboard({ businessUser }: PaymentDashboardProps) {
           <PaymentOverview isIntegrator={isIntegrator} />
         </section>
 
-        <section className="overflow-hidden rounded-3xl border border-[#dbe8df] bg-white shadow-sm">
+        <section className="overflow-hidden rounded-3xl border border-[#32BB78] bg-white shadow-sm">
           <div className="flex gap-2 overflow-x-auto p-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {tabs.map(({ id, label, icon: Icon }) => (
               <button
@@ -119,7 +119,7 @@ export function PaymentDashboard({ businessUser }: PaymentDashboardProps) {
                 className={`flex min-w-fit items-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold transition ${
                   activeTab === id
                     ? 'bg-[#32BB78] text-white shadow-md shadow-[#32BB78]/20'
-                    : 'bg-[#f4faf6] text-[#52635a] hover:bg-[#e8f4ec] hover:text-[#22945d]'
+                    : 'bg-primary/5 text-muted-foreground hover:bg-primary/10 hover:text-[#32BB78]'
                 }`}
               >
                 <Icon size={22} />
@@ -177,9 +177,9 @@ function PaymentAPI() {
             ['Webhooks', 'Non configurés'],
             ['Dernier appel', 'Aucun'],
           ].map(([label, value]) => (
-            <div key={label} className="flex items-center justify-between rounded-2xl bg-[#f6faf7] px-4 py-3">
-              <span className="text-sm font-semibold text-[#52635a]">{label}</span>
-              <span className="text-sm font-black text-[#122116]">{value}</span>
+            <div key={label} className="flex items-center justify-between rounded-2xl bg-[#32BB78] px-4 py-3">
+              <span className="text-sm font-semibold text-muted-foreground">{label}</span>
+              <span className="text-sm font-black text-foreground">{value}</span>
             </div>
           ))}
         </div>
@@ -197,11 +197,11 @@ function PaymentTokens() {
           { title: 'Token wallet', scope: 'Solde & mouvements', status: 'À générer' },
           { title: 'Token reporting', scope: 'Rapports & exports', status: 'À générer' },
         ].map((token) => (
-          <div key={token.title} className="rounded-3xl border border-[#dbe8df] bg-[#f6faf7] p-4">
+          <div key={token.title} className="rounded-3xl border border-[#32BB78] bg-[#32BB78] p-4">
             <SecurityIcon size={34} />
-            <p className="mt-3 font-black text-[#122116]">{token.title}</p>
-            <p className="mt-1 text-sm text-[#52635a]">{token.scope}</p>
-            <span className="mt-4 inline-flex rounded-full bg-white px-3 py-1 text-xs font-bold text-[#22945d]">
+            <p className="mt-3 font-black text-foreground">{token.title}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{token.scope}</p>
+            <span className="mt-4 inline-flex rounded-full bg-white px-3 py-1 text-xs font-bold text-[#32BB78]">
               {token.status}
             </span>
           </div>
@@ -220,12 +220,12 @@ function PaymentGeneration() {
 
   return (
     <Panel title="Génération" subtitle="Génération locale de prévisualisation. La clé réelle doit être créée côté serveur sécurisé.">
-      <div className="rounded-3xl bg-[#0E5A59] p-5 text-white">
+      <div className="rounded-3xl bg-[#32BB78] p-5 text-white">
         <p className="text-xs font-bold uppercase tracking-[0.16em] text-white/60">Nouvelle clé test</p>
         <code className="mt-3 block overflow-x-auto rounded-2xl bg-white/10 p-4 text-sm font-bold text-white">{generatedKey}</code>
         <div className="mt-4 grid gap-2 sm:grid-cols-3">
           <button onClick={generateKey} className="rounded-2xl bg-[#32BB78] px-4 py-3 text-sm font-bold text-white">Générer</button>
-          <button className="rounded-2xl bg-white px-4 py-3 text-sm font-bold text-[#0E5A59]">Copier</button>
+          <button className="rounded-2xl bg-white px-4 py-3 text-sm font-bold text-[#32BB78]">Copier</button>
           <button className="rounded-2xl bg-[#FF8C00] px-4 py-3 text-sm font-bold text-white">Révoquer</button>
         </div>
       </div>
@@ -243,10 +243,10 @@ function PaymentIntegration() {
           ['Wallet business', 'Solde, commissions et mouvements.'],
           ['Webhooks', 'Notifications paiement réussi, échoué, remboursé.'],
         ].map(([title, text]) => (
-          <div key={title} className="rounded-3xl border border-[#dbe8df] bg-white p-4">
+          <div key={title} className="rounded-3xl border border-[#32BB78] bg-white p-4">
             <LinkAccountIcon size={34} />
-            <p className="mt-3 font-black text-[#122116]">{title}</p>
-            <p className="mt-1 text-sm leading-6 text-[#52635a]">{text}</p>
+            <p className="mt-3 font-black text-foreground">{title}</p>
+            <p className="mt-1 text-sm leading-6 text-muted-foreground">{text}</p>
           </div>
         ))}
       </div>
@@ -264,10 +264,10 @@ function PaymentDocumentation() {
           ['Webhooks', 'Signature, retry, idempotence et événements.'],
           ['Sécurité', 'Rotation des secrets, scopes, tokens courts et logs.'],
         ].map(([title, text]) => (
-          <button key={title} className="flex w-full items-center justify-between gap-4 rounded-2xl bg-[#f6faf7] px-4 py-4 text-left">
+          <button key={title} className="flex w-full items-center justify-between gap-4 rounded-2xl bg-[#32BB78] px-4 py-4 text-left">
             <span>
-              <span className="block font-black text-[#122116]">{title}</span>
-              <span className="mt-1 block text-sm text-[#52635a]">{text}</span>
+              <span className="block font-black text-foreground">{title}</span>
+              <span className="mt-1 block text-sm text-muted-foreground">{text}</span>
             </span>
             <ReportNavIcon size={28} />
           </button>
@@ -289,7 +289,7 @@ function AgentBalance() {
   return (
     <div className="space-y-5">
       <div className="grid gap-3 md:grid-cols-2">
-        <div className="rounded-3xl bg-gradient-to-br from-[#32BB78] to-[#0E5A59] p-6 text-white">
+        <div className="rounded-3xl bg-gradient-to-br from-[#32BB78] to-[#32BB78] p-6 text-white">
           <p className="text-sm font-bold text-white/70">Solde total</p>
           <p className="mt-2 text-4xl font-black">0 FC</p>
         </div>
@@ -300,9 +300,9 @@ function AgentBalance() {
       </div>
       <Panel title="Relevé du jour" subtitle="Synthèse des dépôts, retraits et net business.">
         {['Dépôts', 'Retraits', 'Net du jour'].map((item) => (
-          <div key={item} className="mb-3 flex items-center justify-between rounded-2xl bg-[#f6faf7] px-4 py-3">
-            <span className="text-sm font-bold text-[#52635a]">{item}</span>
-            <span className="font-black text-[#122116]">0 FC</span>
+          <div key={item} className="mb-3 flex items-center justify-between rounded-2xl bg-[#32BB78] px-4 py-3">
+            <span className="text-sm font-bold text-muted-foreground">{item}</span>
+            <span className="font-black text-foreground">0 FC</span>
           </div>
         ))}
       </Panel>
@@ -322,14 +322,14 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-3xl border border-[#dbe8df] bg-white p-5 shadow-sm">
+    <section className="rounded-3xl border border-[#32BB78] bg-white p-5 shadow-sm">
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-black text-[#122116]">{title}</h2>
-          <p className="text-sm text-[#52635a]">{subtitle}</p>
+          <h2 className="text-xl font-black text-foreground">{title}</h2>
+          <p className="text-sm text-muted-foreground">{subtitle}</p>
         </div>
         {action && (
-          <button className="rounded-2xl bg-[#32BB78] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#2a9d63]">
+          <button className="rounded-2xl bg-[#32BB78] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#32BB78]">
             {action}
           </button>
         )}
@@ -341,13 +341,13 @@ function Panel({
 
 function ApiCredential({ label, value, sensitive = false }: { label: string; value: string; sensitive?: boolean }) {
   return (
-    <div className="mb-3 rounded-2xl border border-[#dbe8df] bg-[#f6faf7] p-4">
-      <p className="mb-2 text-xs font-bold uppercase tracking-[0.14em] text-[#52635a]">{label}</p>
+    <div className="mb-3 rounded-2xl border border-[#32BB78] bg-[#32BB78] p-4">
+      <p className="mb-2 text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-        <code className="min-w-0 flex-1 overflow-x-auto rounded-xl bg-white p-3 text-sm font-bold text-[#122116]">
+        <code className="min-w-0 flex-1 overflow-x-auto rounded-xl bg-white p-3 text-sm font-bold text-foreground">
           {sensitive ? value.replace(/x/g, '•') : value}
         </code>
-        <button className="rounded-xl bg-white px-4 py-3 text-sm font-bold text-[#22945d] ring-1 ring-[#dbe8df]">Copier</button>
+        <button className="rounded-xl bg-white px-4 py-3 text-sm font-bold text-[#32BB78] ring-1 ring-[#32BB78]">Copier</button>
       </div>
     </div>
   );
@@ -356,7 +356,7 @@ function ApiCredential({ label, value, sensitive = false }: { label: string; val
 function PaymentMetricCard({ stat }: { stat: { label: string; value: string; icon: React.ComponentType<any>; color: string } }) {
   const Icon = stat.icon;
   const colorClasses = {
-    green: 'bg-[#ecfdf3] text-[#0E5A59] border-[#b8efd2]',
+    green: 'bg-[#32BB78] text-[#32BB78] border-[#32BB78]',
     blue: 'bg-[#eff6ff] text-[#1d4ed8] border-[#bfdbfe]',
     emerald: 'bg-[#f0fdfa] text-[#0f766e] border-[#99f6e4]',
     orange: 'bg-[#fff7ed] text-[#9a4a00] border-[#fed7aa]',
@@ -389,11 +389,11 @@ function PaymentPill({ label, value }: { label: string; value: string }) {
 
 function EmptyPaymentState({ icon: Icon, text }: { icon: React.ComponentType<any>; text: string }) {
   return (
-    <div className="rounded-3xl border border-dashed border-[#dbe8df] bg-[#f6faf7] px-5 py-12 text-center">
+    <div className="rounded-3xl border border-dashed border-[#32BB78] bg-[#32BB78] px-5 py-12 text-center">
       <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-3xl bg-white shadow-sm">
         <Icon className="h-12 w-12 text-[#32BB78]" size={48} />
       </div>
-      <p className="font-black text-[#122116]">{text}</p>
+      <p className="font-black text-foreground">{text}</p>
     </div>
   );
 }

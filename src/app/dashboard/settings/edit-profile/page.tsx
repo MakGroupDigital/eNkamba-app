@@ -137,7 +137,7 @@ export default function EditProfilePage() {
       toast({
         title: 'Succès',
         description: 'Profil mis à jour avec succès',
-        className: 'bg-green-600 text-white border-none',
+        className: 'bg-primary text-white border-none',
       });
 
       // Attendre un peu pour que le hook useUserProfile recharge les données
@@ -188,7 +188,7 @@ export default function EditProfilePage() {
           <div className="flex items-center gap-6">
             <Avatar className="h-24 w-24 border-4 border-primary/20">
               <AvatarImage src={profileImage || undefined} />
-              <AvatarFallback className="bg-gradient-to-br from-primary to-green-800 text-white text-lg font-bold">
+              <AvatarFallback className="bg-gradient-to-br from-primary to-primary text-white text-lg font-bold">
                 {formData.fullName
                   .split(' ')
                   .map(n => n[0])

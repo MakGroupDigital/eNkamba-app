@@ -85,7 +85,7 @@ export function MoneyTransferMessage({
   const getStatusColor = () => {
     switch (transferStatus) {
       case 'completed':
-        return 'from-green-50 to-emerald-50 border-green-200';
+        return 'from-primary to-primary border-primary/20';
       case 'failed':
         return 'from-red-50 to-pink-50 border-red-200';
       default:
@@ -96,7 +96,7 @@ export function MoneyTransferMessage({
   const getStatusIcon = () => {
     switch (transferStatus) {
       case 'completed':
-        return <Check className="h-5 w-5 text-green-600" />;
+        return <Check className="h-5 w-5 text-primary" />;
       case 'failed':
         return <X className="h-5 w-5 text-red-600" />;
       default:
@@ -118,7 +118,7 @@ export function MoneyTransferMessage({
   return (
     <Card className={`w-full max-w-sm overflow-hidden bg-gradient-to-br ${getStatusColor()} border-2`}>
       {/* En-tête */}
-      <div className="bg-gradient-to-r from-primary via-primary to-green-700 text-white p-3 flex items-center gap-2">
+      <div className="bg-gradient-to-r from-primary via-primary to-primary text-white p-3 flex items-center gap-2">
         {getStatusIcon()}
         <div className="flex-1">
           <p className="font-semibold text-sm">Transfert d'argent</p>
@@ -170,7 +170,7 @@ export function MoneyTransferMessage({
             </Button>
             <Button
               size="sm"
-              className="flex-1 gap-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
+              className="flex-1 gap-2 bg-gradient-to-r from-primary to-primary hover:from-primary hover:to-primary text-white"
               onClick={handleAccept}
               disabled={isProcessing}
             >
@@ -186,9 +186,9 @@ export function MoneyTransferMessage({
 
         {/* Statut complété */}
         {transferStatus === 'completed' && (
-          <div className="bg-green-50 rounded-lg p-3 border border-green-200 text-center">
-            <p className="text-sm font-semibold text-green-900">✅ Transfert réussi</p>
-            <p className="text-xs text-green-700 mt-1">L'argent a été crédité</p>
+          <div className="bg-primary/5 rounded-lg p-3 border border-primary/20 text-center">
+            <p className="text-sm font-semibold text-primary">✅ Transfert réussi</p>
+            <p className="text-xs text-primary mt-1">L'argent a été crédité</p>
           </div>
         )}
 

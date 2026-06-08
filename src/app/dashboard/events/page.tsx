@@ -350,7 +350,7 @@ export default function EventsPage() {
             </Link>
           </Button>
           <div className="flex-1">
-            <h1 className="font-headline text-2xl font-bold bg-gradient-to-r from-[#32BB78] to-[#2a9d63] bg-clip-text text-transparent">
+            <h1 className="font-headline text-2xl font-bold bg-gradient-to-r from-[#32BB78] to-[#32BB78] bg-clip-text text-transparent">
               Billeterie Événements
             </h1>
             <p className="text-sm text-muted-foreground">
@@ -611,7 +611,7 @@ export default function EventsPage() {
                     className="object-cover group-hover:scale-110 transition-transform duration-300"
                   />
                   {event.featured && (
-                    <Badge className="absolute top-2 right-2 bg-gradient-to-r from-[#32BB78] to-[#2a9d63]">
+                    <Badge className="absolute top-2 right-2 bg-gradient-to-r from-[#32BB78] to-[#32BB78]">
                       Vedette
                     </Badge>
                   )}

@@ -74,7 +74,7 @@ export function FileMessage({
     if (isPDF) return 'text-red-600';
     if (isText) return 'text-gray-600';
     if (isVideo) return 'text-purple-600';
-    if (isAudio) return 'text-green-600';
+    if (isAudio) return 'text-primary';
     return 'text-gray-600';
   };
 
@@ -82,7 +82,7 @@ export function FileMessage({
     <>
       <Card className="w-full max-w-sm overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 border-primary/20">
         {/* En-tête */}
-        <div className="bg-gradient-to-r from-primary via-primary to-green-700 text-white p-3 flex items-center gap-2">
+        <div className="bg-gradient-to-r from-primary via-primary to-primary text-white p-3 flex items-center gap-2">
           <FileIcon className="h-5 w-5" />
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-sm truncate">Fichier partagé</p>
@@ -172,7 +172,7 @@ export function FileMessage({
             )}
             <Button
               size="sm"
-              className="flex-1 gap-2 bg-gradient-to-r from-primary to-green-700 hover:from-primary/90 hover:to-green-700/90 text-white"
+              className="flex-1 gap-2 bg-gradient-to-r from-primary to-primary hover:from-primary/90 hover:to-primary/90 text-white"
               onClick={handleDownload}
             >
               <Download className="h-4 w-4" />

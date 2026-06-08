@@ -332,7 +332,7 @@ export default function InsurancePage() {
             </Link>
           </Button>
           <div className="flex-1">
-            <h1 className="font-headline text-2xl font-bold bg-gradient-to-r from-[#32BB78] to-[#2a9d63] bg-clip-text text-transparent">
+            <h1 className="font-headline text-2xl font-bold bg-gradient-to-r from-[#32BB78] to-[#32BB78] bg-clip-text text-transparent">
               Assurance
             </h1>
             <p className="text-sm text-muted-foreground">Souscrivez à une assurance en quelques clics</p>
@@ -492,13 +492,13 @@ export default function InsurancePage() {
                   placeholder="Ex: 1-XXXX-NXXXXX-XX"
                 />
               </div>
-              <div className="p-4 rounded-lg bg-gradient-to-r from-primary/10 to-green-800/10">
+              <div className="p-4 rounded-lg bg-gradient-to-r from-primary/10 to-primary/10">
                 <div className="flex justify-between items-center">
                   <span className="font-semibold">Montant à payer:</span>
                   <span className="text-2xl font-bold text-primary">{selectedOffer.price} {selectedOffer.currency}</span>
                 </div>
               </div>
-              <Button className="w-full h-12 bg-gradient-to-r from-primary to-green-800" onClick={handlePayment}>
+              <Button className="w-full h-12 bg-gradient-to-r from-primary to-primary" onClick={handlePayment}>
                 Payer maintenant
               </Button>
             </CardContent>
@@ -520,7 +520,7 @@ export default function InsurancePage() {
         {step === 'receipt' && receipt && (
           <div className="space-y-6">
             <div ref={receiptRef} className="bg-white rounded-2xl shadow-2xl overflow-hidden">
-              <div className="bg-gradient-to-r from-[#32BB78] to-[#2a9d63] p-6 text-white">
+              <div className="bg-gradient-to-r from-[#32BB78] to-[#32BB78] p-6 text-white">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">

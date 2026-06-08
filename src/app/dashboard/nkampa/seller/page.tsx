@@ -187,7 +187,7 @@ export default function BecomeSellerPage() {
       toast({
         title: 'Succès',
         description: 'Votre produit a été ajouté avec succès',
-        className: 'bg-green-600 text-white border-none',
+        className: 'bg-primary text-white border-none',
       });
 
       // Rediriger vers la page principale
@@ -206,9 +206,9 @@ export default function BecomeSellerPage() {
 
   if (step === 'intro') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-green-800/5">
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-primary/5">
         {/* Header simple sans navigation */}
-        <div className="bg-gradient-to-r from-primary to-green-800 p-4">
+        <div className="bg-gradient-to-r from-primary to-primary p-4">
           <div className="container mx-auto max-w-4xl flex items-center gap-4">
             <Button
               variant="ghost"
@@ -343,9 +343,9 @@ export default function BecomeSellerPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-green-800/5">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-primary/5">
       {/* Header simple sans navigation */}
-      <div className="bg-gradient-to-r from-primary to-green-800 p-4">
+      <div className="bg-gradient-to-r from-primary to-primary p-4">
         <div className="container mx-auto max-w-2xl flex items-center gap-4">
           <Button
             variant="ghost"

@@ -86,8 +86,8 @@ export default function EStreamPage() {
             <Card className="border-primary/20 hover:border-primary/50 transition-colors">
               <CardContent className="p-6 space-y-3">
                 <div className="flex items-start gap-4">
-                  <div className="bg-green-500/20 rounded-lg p-3 flex-shrink-0">
-                    <TrendingUp className="w-6 h-6 text-green-500" />
+                  <div className="bg-primary/20 rounded-lg p-3 flex-shrink-0">
+                    <TrendingUp className="w-6 h-6 text-primary" />
                   </div>
                   <div className="flex-1 space-y-1">
                     <h4 className="font-semibold text-foreground">Monétisation pour Créateurs</h4>

@@ -484,7 +484,7 @@ export default function UgaviTrackingPage() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'delivered':
-        return <CheckCircle className="h-6 w-6 text-green-600" />;
+        return <CheckCircle className="h-6 w-6 text-primary" />;
       case 'in_transit':
         return <Clock className="h-6 w-6 text-blue-600" />;
       case 'failed':
@@ -619,8 +619,8 @@ export default function UgaviTrackingPage() {
               <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-slate-950">
                 <video ref={videoRef} className="h-full w-full object-cover" playsInline muted />
                 <canvas ref={canvasRef} className="hidden" />
-                <div className="pointer-events-none absolute inset-10 rounded-2xl border-2 border-emerald-400 shadow-[0_0_0_999px_rgba(15,23,42,0.35)]" />
-                <div className="pointer-events-none absolute left-12 right-12 top-1/2 h-0.5 bg-emerald-300 shadow-[0_0_18px_rgba(52,211,153,0.95)]" />
+                <div className="pointer-events-none absolute inset-10 rounded-2xl border-2 border-primary shadow-[0_0_0_999px_rgba(15,23,42,0.35)]" />
+                <div className="pointer-events-none absolute left-12 right-12 top-1/2 h-0.5 bg-primary/30 shadow-[0_0_18px_rgba(52,211,153,0.95)]" />
                 {!isScannerReady && !scannerError && (
                   <div className="absolute inset-0 flex items-center justify-center bg-slate-950/60 text-sm font-semibold text-white">
                     Ouverture de la camera...

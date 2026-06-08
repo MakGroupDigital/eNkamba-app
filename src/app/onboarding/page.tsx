@@ -185,7 +185,7 @@ export default function OnboardingPage() {
       <div
         className="min-h-screen flex items-center justify-center"
         style={{
-          background: "linear-gradient(to bottom right, #32BB78, #28a86a, #1e9f5e)",
+          background: "linear-gradient(to bottom right, #32BB78, #32BB78, #32BB78)",
         }}
       >
         <Loader2 className="w-8 h-8 animate-spin text-white" />
@@ -219,7 +219,7 @@ export default function OnboardingPage() {
     <div
       className="min-h-screen overflow-hidden relative"
       style={{
-        background: "linear-gradient(to bottom right, #32BB78, #28a86a, #1e9f5e)",
+        background: "linear-gradient(to bottom right, #32BB78, #32BB78, #32BB78)",
       }}
     >
       {/* Floating decorative circles */}

@@ -21,7 +21,7 @@ export default function RequestsPage() {
       toast({
         title: 'Succès',
         description: 'Demande acceptée',
-        className: 'bg-green-600 text-white border-none',
+        className: 'bg-primary text-white border-none',
       });
     } catch (error: any) {
       toast({
@@ -41,7 +41,7 @@ export default function RequestsPage() {
       toast({
         title: 'Succès',
         description: 'Demande refusée',
-        className: 'bg-green-600 text-white border-none',
+        className: 'bg-primary text-white border-none',
       });
     } catch (error: any) {
       toast({
@@ -59,7 +59,7 @@ export default function RequestsPage() {
       case 'pending':
         return <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 text-xs font-semibold"><Clock className="w-3 h-3" /> En attente</span>;
       case 'accepted':
-        return <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-green-100 text-green-800 text-xs font-semibold"><CheckCircle2 className="w-3 h-3" /> Acceptée</span>;
+        return <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold"><CheckCircle2 className="w-3 h-3" /> Acceptée</span>;
       case 'rejected':
         return <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-red-100 text-red-800 text-xs font-semibold"><XCircle className="w-3 h-3" /> Refusée</span>;
       default:
@@ -78,7 +78,7 @@ export default function RequestsPage() {
             </Link>
           </Button>
           <div>
-            <h1 className="font-headline text-3xl font-bold bg-gradient-to-r from-[#32BB78] to-[#2a9d63] bg-clip-text text-transparent">
+            <h1 className="font-headline text-3xl font-bold bg-gradient-to-r from-[#32BB78] to-[#32BB78] bg-clip-text text-transparent">
               Demandes de paiement
             </h1>
             <p className="text-sm text-muted-foreground">Gérez vos demandes et paiements</p>
@@ -149,7 +149,7 @@ export default function RequestsPage() {
                           <Button
                             onClick={() => handleAccept(request.id)}
                             disabled={processingId === request.id}
-                            className="flex-1 bg-[#32BB78] hover:bg-[#2a9d63]"
+                            className="flex-1 bg-[#32BB78] hover:bg-[#32BB78]"
                           >
                             {processingId === request.id ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
@@ -167,7 +167,7 @@ export default function RequestsPage() {
                         <div className="pt-4 border-t">
                           <Button
                             asChild
-                            className="w-full bg-[#32BB78] hover:bg-[#2a9d63]"
+                            className="w-full bg-[#32BB78] hover:bg-[#32BB78]"
                           >
                             <Link href="/dashboard/send">
                               Envoyer le paiement
@@ -223,12 +223,12 @@ export default function RequestsPage() {
 
                       {request.status === 'accepted' && (
                         <div className="pt-4 border-t">
-                          <p className="text-sm text-green-600 mb-3">
+                          <p className="text-sm text-primary mb-3">
                             ✓ Demande acceptée. Vous pouvez maintenant envoyer le paiement.
                           </p>
                           <Button
                             asChild
-                            className="w-full bg-[#32BB78] hover:bg-[#2a9d63]"
+                            className="w-full bg-[#32BB78] hover:bg-[#32BB78]"
                           >
                             <Link href="/dashboard/send">
                               Envoyer le paiement

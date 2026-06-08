@@ -222,7 +222,7 @@ export default function NkampaCreateStorePage() {
           profileType === 'business'
             ? 'Votre boutique est en attente d’approbation.'
             : `Lien: /shop/${created.slug}`,
-        className: profileType === 'business' ? '' : 'bg-green-600 text-white border-none',
+        className: profileType === 'business' ? '' : 'bg-primary text-white border-none',
       });
       router.push('/dashboard/nkampa/store/dashboard');
     } catch (e: any) {
@@ -235,7 +235,7 @@ export default function NkampaCreateStorePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="sticky top-0 z-10 bg-gradient-to-r from-primary to-green-800 text-white p-4 shadow-lg">
+      <div className="sticky top-0 z-10 bg-gradient-to-r from-primary to-primary text-white p-4 shadow-lg">
         <div className="flex items-center gap-3">
           <Button size="icon" variant="ghost" className="text-white hover:bg-white/15" onClick={() => (step === 'details' ? setStep('choose') : router.back())}>
             <ArrowLeft className="h-6 w-6" />

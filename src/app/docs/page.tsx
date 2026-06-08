@@ -83,7 +83,7 @@ export default function DocsPage() {
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-3">
-                       <Badge variant="secondary" className="bg-green-100 text-green-800">POST</Badge>
+                       <Badge variant="secondary" className="bg-primary/10 text-primary">POST</Badge>
                        <span>/v1/pay</span>
                     </CardTitle>
                     <CardDescription>

@@ -10,6 +10,7 @@ import {
 import {
   getOrCreateSupabaseUser,
   createSupabaseTransaction,
+  updateSupabaseTransaction,
   updateUserBalance,
   checkSupabaseConnection,
   type SupabaseTransaction
@@ -101,8 +102,6 @@ export async function POST(request: NextRequest) {
         };
 
         // Créer d'abord une transaction pending
-        const transactionId = `SUP-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        
         const pendingTransaction: Omit<SupabaseTransaction, 'id' | 'created_at' | 'updated_at'> = {
           user_id: userId,
           type: 'deposit',
@@ -118,10 +117,7 @@ export async function POST(request: NextRequest) {
           provider_reference: refTransa
         };
 
-        const createdTransaction = await createSupabaseTransaction({
-          ...pendingTransaction,
-          id: transactionId
-        });
+        const createdTransaction = await createSupabaseTransaction(pendingTransaction);
 
         if (!createdTransaction) {
           return NextResponse.json(
@@ -195,8 +191,6 @@ export async function POST(request: NextRequest) {
 
     // Autres méthodes de paiement (simulation)
     const newBalance = currentBalance + amount;
-    const transactionId = `SUP-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-
     const transactionData: Omit<SupabaseTransaction, 'id' | 'created_at' | 'updated_at'> = {
       user_id: userId,
       type: 'deposit',
@@ -211,10 +205,7 @@ export async function POST(request: NextRequest) {
     };
 
     // Créer la transaction
-    const createdTransaction = await createSupabaseTransaction({
-      ...transactionData,
-      id: transactionId
-    });
+    const createdTransaction = await createSupabaseTransaction(transactionData);
 
     if (!createdTransaction) {
       return NextResponse.json(

@@ -283,7 +283,7 @@ function FlightResultsContent() {
                 <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t">
                   <Badge variant="outline">{cabinClassLabels[flight.cabinClass]}</Badge>
                   {flight.stops === 0 && (
-                    <Badge className="bg-green-600">Vol direct</Badge>
+                    <Badge className="bg-primary">Vol direct</Badge>
                   )}
                   {flight.seatsAvailable < 10 && (
                     <Badge variant="destructive">Places limitées</Badge>

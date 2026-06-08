@@ -132,7 +132,7 @@ export default function AgentOpsReferralPage() {
             </div>
 
             {referralLink && (
-              <Card className="rounded-2xl border border-[#32BB78]/20 bg-gradient-to-br from-[#32BB78]/10 to-[#2BA86A]/5">
+              <Card className="rounded-2xl border border-[#32BB78]/20 bg-gradient-to-br from-[#32BB78]/10 to-[#32BB78]/5">
                 <CardHeader>
                   <CardTitle>Votre lien de parrainage</CardTitle>
                 </CardHeader>
@@ -152,7 +152,7 @@ export default function AgentOpsReferralPage() {
                     </Button>
                     <Button
                       onClick={shareLink}
-                      className="h-12 rounded-xl bg-[#32BB78] hover:bg-[#2BA86A] text-white"
+                      className="h-12 rounded-xl bg-[#32BB78] hover:bg-[#32BB78] text-white"
                     >
                       <Share2 className="w-4 h-4 mr-2" />
                       Partager
@@ -168,14 +168,14 @@ export default function AgentOpsReferralPage() {
                   <CardTitle>Votre code</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="bg-gradient-to-r from-[#32BB78] to-[#2BA86A] p-8 rounded-2xl text-center">
+                  <div className="bg-gradient-to-r from-[#32BB78] to-[#32BB78] p-8 rounded-2xl text-center">
                     <div className="text-white/90 text-sm mb-2">Code</div>
                     <div className="text-white text-4xl font-bold font-mono tracking-widest">{referralCode}</div>
                   </div>
 
                   <Button
                     onClick={() => copyToClipboard(referralCode)}
-                    className="w-full h-12 rounded-xl bg-[#32BB78] hover:bg-[#2BA86A] text-white"
+                    className="w-full h-12 rounded-xl bg-[#32BB78] hover:bg-[#32BB78] text-white"
                   >
                     <Copy className="w-4 h-4 mr-2" />
                     Copier le code
@@ -192,7 +192,7 @@ export default function AgentOpsReferralPage() {
                   </div>
                   <Button
                     onClick={() => void loadReferralData()}
-                    className="mt-4 h-12 rounded-xl bg-[#32BB78] hover:bg-[#2BA86A] text-white"
+                    className="mt-4 h-12 rounded-xl bg-[#32BB78] hover:bg-[#32BB78] text-white"
                   >
                     Recharger
                   </Button>

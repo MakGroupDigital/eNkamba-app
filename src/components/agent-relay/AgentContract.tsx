@@ -236,7 +236,7 @@ export function AgentContract({ agentType, onAccept, onClose }: AgentContractPro
               disabled={!hasScrolledToBottom}
               className={`flex-1 h-12 rounded-xl ${
                 hasScrolledToBottom
-                  ? 'bg-[#32BB78] hover:bg-[#2BA86A]'
+                  ? 'bg-[#32BB78] hover:bg-[#32BB78]'
                   : 'bg-gray-300 cursor-not-allowed'
               }`}
             >

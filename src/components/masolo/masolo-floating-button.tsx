@@ -59,7 +59,7 @@ export default function MasoloFloatingButton({ onOpenChange }: MasoloFloatingBut
         <motion.div
           className={cn(
             "absolute inset-1 rounded-full",
-            "bg-gradient-to-br from-[#32BB78] via-[#28a86a] to-[#1e9f5e]",
+            "bg-gradient-to-br from-[#32BB78] via-[#32BB78] to-[#32BB78]",
             "flex items-center justify-center",
             "shadow-2xl shadow-[#32BB78]/50",
             "border-2 border-[#32BB78]/30"
@@ -115,7 +115,7 @@ export default function MasoloFloatingButton({ onOpenChange }: MasoloFloatingBut
           className={cn(
             "absolute -bottom-1 -right-1",
             "h-6 w-6 rounded-full",
-            "bg-gradient-to-br from-[#32BB78] to-[#1e9f5e]",
+            "bg-gradient-to-br from-[#32BB78] to-[#32BB78]",
             "flex items-center justify-center",
             "border-2 border-background",
             "shadow-lg"

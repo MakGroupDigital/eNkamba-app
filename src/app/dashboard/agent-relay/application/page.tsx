@@ -56,7 +56,7 @@ const agentTypes = {
   'agent-relais': {
     title: 'Agent Relais',
     description: 'Services financiers de base',
-    color: 'from-primary to-green-800'
+    color: 'from-primary to-primary'
   },
   'cabinet': {
     title: 'Cabiniste',
@@ -343,7 +343,7 @@ export default function AgentApplicationPage() {
                     className="flex-1"
                   />
                   {formData.documents.idCard && (
-                    <CheckCircle2 size={20} className="text-green-600" />
+                    <CheckCircle2 size={20} className="text-primary" />
                   )}
                 </div>
               </div>
@@ -365,7 +365,7 @@ export default function AgentApplicationPage() {
                     className="flex-1"
                   />
                   {formData.documents.businessLicense && (
-                    <CheckCircle2 size={20} className="text-green-600" />
+                    <CheckCircle2 size={20} className="text-primary" />
                   )}
                 </div>
               </div>
@@ -387,7 +387,7 @@ export default function AgentApplicationPage() {
                     className="flex-1"
                   />
                   {formData.documents.proofOfAddress && (
-                    <CheckCircle2 size={20} className="text-green-600" />
+                    <CheckCircle2 size={20} className="text-primary" />
                   )}
                 </div>
               </div>
@@ -473,7 +473,7 @@ export default function AgentApplicationPage() {
               <div className="space-y-2 text-sm">
                 <div className="flex items-center gap-2">
                   {formData.documents.idCard ? (
-                    <CheckCircle2 size={16} className="text-green-600" />
+                    <CheckCircle2 size={16} className="text-primary" />
                   ) : (
                     <AlertCircle size={16} className="text-red-600" />
                   )}
@@ -481,7 +481,7 @@ export default function AgentApplicationPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   {formData.documents.proofOfAddress ? (
-                    <CheckCircle2 size={16} className="text-green-600" />
+                    <CheckCircle2 size={16} className="text-primary" />
                   ) : (
                     <AlertCircle size={16} className="text-red-600" />
                   )}
@@ -489,7 +489,7 @@ export default function AgentApplicationPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   {formData.documents.businessPhotos.length > 0 ? (
-                    <CheckCircle2 size={16} className="text-green-600" />
+                    <CheckCircle2 size={16} className="text-primary" />
                   ) : (
                     <AlertCircle size={16} className="text-red-600" />
                   )}
@@ -559,7 +559,7 @@ export default function AgentApplicationPage() {
           <Button 
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="gap-2 bg-gradient-to-r from-primary to-green-800"
+            className="gap-2 bg-gradient-to-r from-primary to-primary"
           >
             {isSubmitting ? 'Envoi en cours...' : 'Soumettre ma candidature'}
             {!isSubmitting && <CheckCircle2 size={16} />}

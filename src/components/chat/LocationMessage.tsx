@@ -103,9 +103,9 @@ export function LocationMessage({
   }
 
   return (
-    <Card className="w-full max-w-sm overflow-hidden bg-gradient-to-br from-green-50 to-emerald-50 border-primary/30">
+    <Card className="w-full max-w-sm overflow-hidden bg-gradient-to-br from-primary to-primary border-primary/30">
       {/* En-tête */}
-      <div className="bg-gradient-to-r from-primary via-primary to-green-700 text-white p-3 flex items-center gap-2">
+      <div className="bg-gradient-to-r from-primary via-primary to-primary text-white p-3 flex items-center gap-2">
         <MapPin className="h-5 w-5" />
         <div className="flex-1">
           <p className="font-semibold text-sm">Localisation partagée</p>
@@ -192,7 +192,7 @@ export function LocationMessage({
           </Button>
           <Button
             size="sm"
-            className="gap-2 bg-gradient-to-r from-primary to-green-700 hover:from-primary/90 hover:to-green-700/90 text-white"
+            className="gap-2 bg-gradient-to-r from-primary to-primary hover:from-primary/90 hover:to-primary/90 text-white"
             onClick={handleGetDirections}
             disabled={!receiverLatitude || !receiverLongitude}
           >

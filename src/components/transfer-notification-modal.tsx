@@ -44,11 +44,11 @@ export function TransferNotificationModal() {
 
   return (
     <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
-      <AlertDialogContent className="max-w-md border-2 border-green-500/30 bg-gradient-to-br from-green-50 to-background">
+      <AlertDialogContent className="max-w-md border-2 border-primary/30 bg-gradient-to-br from-primary to-background">
         <AlertDialogHeader>
           <div className="flex items-center justify-center mb-4">
-            <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center animate-pulse">
-              <CheckCircle2 className="w-8 h-8 text-green-600" />
+            <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center animate-pulse">
+              <CheckCircle2 className="w-8 h-8 text-primary" />
             </div>
           </div>
           <AlertDialogTitle className="text-center text-xl">
@@ -57,7 +57,7 @@ export function TransferNotificationModal() {
         </AlertDialogHeader>
 
         <div className="space-y-4">
-          <Card className="bg-green-50/50 border-green-200 p-4 space-y-3">
+          <Card className="bg-primary/5/50 border-primary/20 p-4 space-y-3">
             {/* Montant */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-muted-foreground">
@@ -65,7 +65,7 @@ export function TransferNotificationModal() {
                 <span className="text-sm">Montant reçu</span>
               </div>
               <div className="text-right">
-                <p className="text-2xl font-bold text-green-600">
+                <p className="text-2xl font-bold text-primary">
                   {currentNotification.amount?.toLocaleString('fr-FR') || '0'}
                 </p>
                 <p className="text-xs text-muted-foreground">
@@ -76,7 +76,7 @@ export function TransferNotificationModal() {
 
             {/* Expéditeur */}
             {currentNotification.senderName && (
-              <div className="flex items-center justify-between pt-2 border-t border-green-200">
+              <div className="flex items-center justify-between pt-2 border-t border-primary/20">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <User className="w-4 h-4" />
                   <span className="text-sm">De</span>
@@ -88,7 +88,7 @@ export function TransferNotificationModal() {
             )}
 
             {/* Message */}
-            <div className="pt-2 border-t border-green-200">
+            <div className="pt-2 border-t border-primary/20">
               <p className="text-sm text-foreground">
                 {currentNotification.message}
               </p>
@@ -112,7 +112,7 @@ export function TransferNotificationModal() {
           </Button>
           <AlertDialogAction
             onClick={handleAcknowledge}
-            className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+            className="flex-1 bg-primary hover:bg-primary text-white"
           >
             OK, Confirmé
           </AlertDialogAction>

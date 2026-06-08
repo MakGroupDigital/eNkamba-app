@@ -19,7 +19,7 @@ export default function AgentRelaySuccessPage() {
     <div className="container mx-auto max-w-4xl p-4 space-y-6">
       {/* Success Message */}
       <Card className="overflow-hidden">
-        <div className="bg-gradient-to-r from-green-500 via-green-600 to-green-700 p-8 text-white text-center">
+        <div className="bg-gradient-to-r from-primary via-primary to-primary p-8 text-white text-center">
           <div className="h-20 w-20 mx-auto mb-4 rounded-full bg-white/20 backdrop-blur flex items-center justify-center">
             <CheckCircle2 size={40} />
           </div>
@@ -82,7 +82,7 @@ export default function AgentRelaySuccessPage() {
               <div key={index} className="flex items-start gap-4 p-4 rounded-xl bg-muted/30">
                 <div className={`h-12 w-12 rounded-full flex items-center justify-center font-semibold ${
                   step.status === 'completed' 
-                    ? 'bg-green-500 text-white' 
+                    ? 'bg-primary text-white' 
                     : step.status === 'in-progress'
                     ? 'bg-primary text-white'
                     : 'bg-muted text-muted-foreground'
@@ -97,7 +97,7 @@ export default function AgentRelaySuccessPage() {
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className="font-semibold">{step.title}</h3>
                     {step.status === 'completed' && (
-                      <Badge variant="secondary" className="bg-green-100 text-green-700">
+                      <Badge variant="secondary" className="bg-primary/10 text-primary">
                         Terminé
                       </Badge>
                     )}
@@ -146,9 +146,9 @@ export default function AgentRelaySuccessPage() {
                 </p>
               </div>
               
-              <div className="p-4 rounded-xl bg-green-50 border border-green-200">
-                <h4 className="font-semibold text-green-800 mb-2">Formation obligatoire</h4>
-                <p className="text-sm text-green-700">
+              <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
+                <h4 className="font-semibold text-primary mb-2">Formation obligatoire</h4>
+                <p className="text-sm text-primary">
                   Une fois approuvé, vous devrez suivre une formation de 1-2 jours 
                   avant l'activation de votre compte.
                 </p>
@@ -203,7 +203,7 @@ export default function AgentRelaySuccessPage() {
         </Button>
         
         <Button 
-          className="flex-1 gap-2 bg-gradient-to-r from-primary to-green-800"
+          className="flex-1 gap-2 bg-gradient-to-r from-primary to-primary"
           asChild
         >
           <Link href="/dashboard/agent-relay">

@@ -45,7 +45,7 @@ export function useReceiptDownload() {
       toast({
         title: 'Succès',
         description: 'Reçu téléchargé avec succès',
-        className: 'bg-green-600 text-white border-none',
+        className: 'bg-primary text-white border-none',
       });
     } catch (error: any) {
       console.error('Erreur téléchargement reçu:', error);

@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useFirestoreConversations } from '@/hooks/useFirestoreConversations';
 import { useAuth } from '@/hooks/useAuth';
 import { useChatSettings } from '@/hooks/useChatSettings';
@@ -22,6 +21,7 @@ import { uploadToCloudinary } from '@/lib/cloudinary-upload';
 import { Ban, Bell, BellOff, ChevronLeft, Image as ImageIcon, Send, Loader2, Mail, Phone, Mic, Video, MapPin, DollarSign, Paperclip, Plus, X, Check, Square, Settings, ShieldAlert, UserMinus, Users, Trash2, Edit2, MoreVertical, Languages } from 'lucide-react';
 import Link from 'next/link';
 import { GroupSettingsDialog } from '@/components/group-settings-dialog';
+import { CHAT_WALLPAPERS, getChatWallpaper } from '@/lib/chat-wallpapers';
 
 type IncomingCallDoc = {
     id: string;
@@ -39,6 +39,13 @@ type TranslationResult = {
     service: string;
 };
 
+type InlineTranslation = {
+    translatedText: string;
+    sourceLanguageName?: string;
+    targetLanguageName?: string;
+    error?: string;
+};
+
 const TRANSLATION_LANGUAGES = [
     { code: 'fr', label: 'Francais' },
     { code: 'en', label: 'Anglais' },
@@ -54,6 +61,8 @@ const TRANSLATION_LANGUAGES = [
 ];
 
 const LANGUAGE_STORAGE_KEY = 'enkamba-dashboard-language';
+const TRANSLATION_CACHE_PREFIX = 'enkamba-chat-inline-translations';
+const CONVERSATION_WALLPAPER_PREFIX = 'enkamba-chat-conversation-wallpaper';
 
 export default function ConversationClient() {
     const params = useParams();
@@ -74,6 +83,7 @@ export default function ConversationClient() {
     const [contact, setContact] = useState<any>(null);
     const [showContactDetails, setShowContactDetails] = useState(false);
     const [isConversationMuted, setIsConversationMuted] = useState(false);
+    const [conversationWallpaper, setConversationWallpaper] = useState<string | null>(null);
     const [relationshipControl, setRelationshipControl] = useState({
         restricted: false,
         blocked: false,
@@ -102,11 +112,9 @@ export default function ConversationClient() {
     const [senderAvatars, setSenderAvatars] = useState<Record<string, string>>({});
     const [myAvatar, setMyAvatar] = useState<string>('');
     const [incomingCall, setIncomingCall] = useState<{ id: string; callType: 'audio' | 'video'; fromUid: string } | null>(null);
-    const [translationMessage, setTranslationMessage] = useState<any>(null);
     const [targetLanguage, setTargetLanguage] = useState('fr');
-    const [translation, setTranslation] = useState<TranslationResult | null>(null);
-    const [translationError, setTranslationError] = useState('');
-    const [isTranslating, setIsTranslating] = useState(false);
+    const [inlineTranslations, setInlineTranslations] = useState<Record<string, InlineTranslation>>({});
+    const [translatingMessageIds, setTranslatingMessageIds] = useState<Record<string, boolean>>({});
     const [translationAction, setTranslationAction] = useState<{ message: any; x: number; y: number } | null>(null);
     const seenIncomingCallIdsRef = useRef<Set<string>>(new Set());
     const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -120,6 +128,75 @@ export default function ConversationClient() {
     const audioContextRef = useRef<AudioContext | null>(null);
     const analyserRef = useRef<AnalyserNode | null>(null);
     const animationFrameRef = useRef<number | null>(null);
+    const activeWallpaper = getChatWallpaper(conversationWallpaper || chatSettings.wallpaper);
+    const conversationWallpaperKey = currentUser?.uid && conversationId
+        ? `${CONVERSATION_WALLPAPER_PREFIX}:${currentUser.uid}:${conversationId}`
+        : '';
+
+    useEffect(() => {
+        if (!conversationWallpaperKey) {
+            setConversationWallpaper(null);
+            return;
+        }
+
+        let cancelled = false;
+        const cachedWallpaper = window.localStorage.getItem(conversationWallpaperKey);
+        setConversationWallpaper(cachedWallpaper);
+
+        const loadConversationWallpaper = async () => {
+            if (!currentUser?.uid || !conversationId) return;
+
+            try {
+                const settingsRef = doc(db, 'users', currentUser.uid, 'chatConversationSettings', conversationId);
+                const settingsSnap = await getDoc(settingsRef);
+                const wallpaper = settingsSnap.exists() ? String(settingsSnap.data()?.wallpaper || '') : '';
+
+                if (!cancelled) {
+                    setConversationWallpaper(wallpaper || null);
+                    if (wallpaper) {
+                        window.localStorage.setItem(conversationWallpaperKey, wallpaper);
+                    } else {
+                        window.localStorage.removeItem(conversationWallpaperKey);
+                    }
+                }
+            } catch (error) {
+                console.error('Erreur chargement fond discussion:', error);
+            }
+        };
+
+        void loadConversationWallpaper();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [conversationId, conversationWallpaperKey, currentUser?.uid]);
+
+    const updateConversationWallpaper = useCallback(async (wallpaperId: string | null) => {
+        if (!conversationWallpaperKey) return;
+
+        if (wallpaperId) {
+            window.localStorage.setItem(conversationWallpaperKey, wallpaperId);
+        } else {
+            window.localStorage.removeItem(conversationWallpaperKey);
+        }
+
+        setConversationWallpaper(wallpaperId);
+
+        if (!currentUser?.uid || !conversationId) return;
+
+        try {
+            await setDoc(
+                doc(db, 'users', currentUser.uid, 'chatConversationSettings', conversationId),
+                {
+                    wallpaper: wallpaperId || '',
+                    updatedAt: serverTimestamp(),
+                },
+                { merge: true }
+            );
+        } catch (error) {
+            console.error('Erreur sauvegarde fond discussion:', error);
+        }
+    }, [conversationId, conversationWallpaperKey, currentUser?.uid]);
 
     // Listener appels entrants (quand l'utilisateur est déjà dans la conversation)
     useEffect(() => {
@@ -409,15 +486,49 @@ export default function ConversationClient() {
         return () => window.removeEventListener('enkamba-dashboard-language-change', handleLanguageChange);
     }, []);
 
+    useEffect(() => {
+        if (!conversationId) return;
+
+        const storedTranslations = window.localStorage.getItem(`${TRANSLATION_CACHE_PREFIX}:${conversationId}`);
+        if (!storedTranslations) return;
+
+        try {
+            setInlineTranslations(JSON.parse(storedTranslations) as Record<string, InlineTranslation>);
+        } catch {
+            window.localStorage.removeItem(`${TRANSLATION_CACHE_PREFIX}:${conversationId}`);
+        }
+    }, [conversationId]);
+
+    useEffect(() => {
+        if (!conversationId) return;
+
+        const cacheKey = `${TRANSLATION_CACHE_PREFIX}:${conversationId}`;
+        if (Object.keys(inlineTranslations).length === 0) {
+            window.localStorage.removeItem(cacheKey);
+            return;
+        }
+
+        window.localStorage.setItem(cacheKey, JSON.stringify(inlineTranslations));
+    }, [conversationId, inlineTranslations]);
+
     const isGroupConversation = useMemo(() => Boolean(isGroup), [isGroup]);
 
-    const translateText = useCallback(async (text: string, language: string) => {
-        const cleanText = text.trim();
-        if (!cleanText) return;
+    const canTranslateMessage = useCallback((message: any) => {
+        return (
+            !message?.isDeleted &&
+            (!message?.messageType || message.messageType === 'text') &&
+            typeof message?.text === 'string' &&
+            message.text.trim().length > 0
+        );
+    }, []);
 
-        setIsTranslating(true);
-        setTranslationError('');
-        setTranslation(null);
+    const translateMessageInline = useCallback(async (message: any, language = targetLanguage) => {
+        if (!canTranslateMessage(message)) return;
+        const messageId = message.id;
+        const cleanText = message.text.trim();
+
+        setTranslationAction(null);
+        setTranslatingMessageIds((current) => ({ ...current, [messageId]: true }));
 
         try {
             const response = await fetch('/api/chat/translate', {
@@ -434,36 +545,38 @@ export default function ConversationClient() {
                 throw new Error(data?.error || 'Impossible de traduire le message');
             }
 
-            setTranslation(data as TranslationResult);
+            const result = data as TranslationResult;
+            setInlineTranslations((current) => ({
+                ...current,
+                [messageId]: {
+                    translatedText: result.translatedText,
+                    sourceLanguageName: result.sourceLanguageName,
+                    targetLanguageName: result.targetLanguageName,
+                },
+            }));
         } catch (error) {
-            setTranslationError(error instanceof Error ? error.message : 'Impossible de traduire le message');
+            setInlineTranslations((current) => ({
+                ...current,
+                [messageId]: {
+                    translatedText: '',
+                    error: error instanceof Error ? error.message : 'Impossible de traduire le message',
+                },
+            }));
         } finally {
-            setIsTranslating(false);
+            setTranslatingMessageIds((current) => {
+                const next = { ...current };
+                delete next[messageId];
+                return next;
+            });
         }
-    }, []);
+    }, [canTranslateMessage, targetLanguage]);
 
-    const canTranslateMessage = useCallback((message: any) => {
-        return (
-            !message?.isDeleted &&
-            (!message?.messageType || message.messageType === 'text') &&
-            typeof message?.text === 'string' &&
-            message.text.trim().length > 0
-        );
-    }, []);
-
-    const openTranslationModal = useCallback((message: any, language = targetLanguage) => {
-        if (!canTranslateMessage(message)) return;
-        setTranslationAction(null);
-        setTranslationMessage(message);
-        void translateText(message.text, language);
-    }, [canTranslateMessage, targetLanguage, translateText]);
-
-    const closeTranslationModal = useCallback((open: boolean) => {
-        if (open) return;
-        setTranslationMessage(null);
-        setTranslation(null);
-        setTranslationError('');
-        setIsTranslating(false);
+    const hideInlineTranslation = useCallback((messageId: string) => {
+        setInlineTranslations((current) => {
+            const next = { ...current };
+            delete next[messageId];
+            return next;
+        });
     }, []);
 
     const showTranslationAction = useCallback((message: any, point: { x: number; y: number }) => {
@@ -528,13 +641,6 @@ export default function ConversationClient() {
             clearMessageLongPress();
         }
     }, [clearMessageLongPress]);
-
-    const handleTargetLanguageChange = useCallback((language: string) => {
-        setTargetLanguage(language);
-        if (translationMessage?.text) {
-            void translateText(translationMessage.text, language);
-        }
-    }, [translateText, translationMessage]);
 
     // Charger les avatars des expéditeurs (groupe + fallback 1-1)
     useEffect(() => {
@@ -1094,7 +1200,7 @@ export default function ConversationClient() {
     return (
         <div className="flex h-full flex-col bg-background overflow-hidden">
             {/* Header */}
-            <header className="sticky top-0 z-10 flex h-auto flex-col bg-gradient-to-r from-primary via-primary to-green-800 px-4 py-3 shadow-lg flex-shrink-0">
+            <header className="sticky top-0 z-10 flex h-auto flex-col bg-gradient-to-r from-primary via-primary to-primary px-4 py-3 shadow-lg flex-shrink-0">
                 <div className="flex items-center gap-4 mb-3">
                     <Link href="/dashboard/miyiki-chat">
                         <Button size="icon" variant="ghost" className="text-white hover:bg-white/20">
@@ -1185,7 +1291,7 @@ export default function ConversationClient() {
 
             {/* Incoming call banner */}
             {incomingCall && !isGroup && (
-                <div className="flex items-center justify-between gap-3 px-4 py-3 bg-gradient-to-r from-emerald-700 via-primary to-orange-600 text-white shadow-md flex-shrink-0">
+                <div className="flex items-center justify-between gap-3 px-4 py-3 bg-gradient-to-r from-primary via-primary to-orange-600 text-white shadow-md flex-shrink-0">
                     <div className="flex items-center gap-3 min-w-0">
                         <Avatar className="h-9 w-9 border border-white/30">
                             {contact?.avatar ? (
@@ -1227,7 +1333,10 @@ export default function ConversationClient() {
             )}
 
             {/* Messages Container */}
-            <main className="flex-1 overflow-y-auto px-3 py-2 space-y-0.5 flex-shrink min-h-0 sm:px-4">
+            <main
+                className="relative flex-1 overflow-y-auto bg-cover bg-center bg-no-repeat px-3 py-2 space-y-0.5 flex-shrink min-h-0 sm:px-4"
+                style={{ backgroundImage: activeWallpaper.backgroundImage }}
+            >
                 {isLoading ? (
                     <div className="flex items-center justify-center h-full">
                         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -1254,6 +1363,8 @@ export default function ConversationClient() {
                         const audioUrl = message.metadata?.mediaUrl || (message.metadata?.audio ? `data:audio/wav;base64,${message.metadata.audio}` : null);
                         const videoUrl = message.metadata?.mediaUrl || (message.metadata?.video ? `data:video/webm;base64,${message.metadata.video}` : null);
                         const isPlaying = playingMessageId === message.id;
+                        const inlineTranslation = inlineTranslations[message.id];
+                        const isMessageTranslating = Boolean(translatingMessageIds[message.id]);
 
                         return (
                             <div
@@ -1584,6 +1695,52 @@ export default function ConversationClient() {
                                     ) : (
                                         <p className="text-sm leading-5 whitespace-pre-wrap break-words">{message.text}</p>
                                     )}
+                                    {(isMessageTranslating || inlineTranslation) && (
+                                        <div
+                                            className={`mt-1.5 rounded-xl border px-2.5 py-2 text-xs leading-5 ${
+                                                isOwn
+                                                    ? 'border-white/15 bg-white/12 text-white'
+                                                    : 'border-primary/10 bg-background/80 text-foreground'
+                                            }`}
+                                        >
+                                            <div className="mb-1 flex items-center justify-between gap-2">
+                                                <span className={`text-[10px] font-semibold ${
+                                                    isOwn ? 'text-white/70' : 'text-muted-foreground'
+                                                }`}>
+                                                    {inlineTranslation?.sourceLanguageName && inlineTranslation?.targetLanguageName
+                                                        ? `${inlineTranslation.sourceLanguageName} vers ${inlineTranslation.targetLanguageName}`
+                                                        : 'Traduction'}
+                                                </span>
+                                                {inlineTranslation && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={(event) => {
+                                                            event.stopPropagation();
+                                                            hideInlineTranslation(message.id);
+                                                        }}
+                                                        className={`rounded-full p-0.5 transition ${
+                                                            isOwn ? 'text-white/55 hover:bg-white/15 hover:text-white' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                                                        }`}
+                                                        aria-label="Masquer la traduction"
+                                                    >
+                                                        <X className="h-3 w-3" />
+                                                    </button>
+                                                )}
+                                            </div>
+                                            {isMessageTranslating ? (
+                                                <span className={`inline-flex items-center gap-1.5 ${
+                                                    isOwn ? 'text-white/75' : 'text-muted-foreground'
+                                                }`}>
+                                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                                    Traduction...
+                                                </span>
+                                            ) : inlineTranslation?.error ? (
+                                                <p className={isOwn ? 'text-red-100' : 'text-red-600'}>{inlineTranslation.error}</p>
+                                            ) : (
+                                                <p className="whitespace-pre-wrap break-words">{inlineTranslation?.translatedText}</p>
+                                            )}
+                                        </div>
+                                    )}
                                     <p
                                         className={`text-[10px] mt-0 leading-3 ${
                                             isOwn
@@ -1670,9 +1827,9 @@ export default function ConversationClient() {
                 >
                     <div className="mb-2 flex items-center justify-between gap-2">
                         <div className="flex min-w-0 items-center gap-2">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
+                            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
                                 <Languages className="h-4 w-4" />
-                            </div>
+                            </span>
                             <div className="min-w-0">
                                 <p className="truncate text-xs font-bold text-foreground">Message sélectionné</p>
                                 <p className="truncate text-[11px] text-muted-foreground">Choisir une action</p>
@@ -1693,8 +1850,9 @@ export default function ConversationClient() {
                             type="button"
                             size="sm"
                             className="h-8 rounded-xl text-xs"
-                            onClick={() => openTranslationModal(translationAction.message)}
+                            onClick={() => void translateMessageInline(translationAction.message)}
                         >
+                            <Languages className="mr-1.5 h-3.5 w-3.5" />
                             Traduire
                         </Button>
                         <Button
@@ -2041,95 +2199,9 @@ export default function ConversationClient() {
                 </div>
             </footer>
 
-            <Dialog open={Boolean(translationMessage)} onOpenChange={closeTranslationModal}>
-                <DialogContent className="max-w-md rounded-3xl border-primary/10 p-0 shadow-2xl">
-                    <div className="rounded-t-3xl bg-gradient-to-r from-primary via-emerald-700 to-orange-500 px-5 py-4 text-white">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/18">
-                                <Languages className="h-5 w-5" />
-                            </span>
-                            Traduction du message
-                        </DialogTitle>
-                        <DialogDescription className="text-white/75">
-                            Langue source detectee automatiquement, puis traduction dans la langue choisie.
-                        </DialogDescription>
-                    </DialogHeader>
-                    </div>
-
-                    <div className="space-y-4 p-5">
-                        <div className="rounded-2xl border bg-muted/40 p-3">
-                            <p className="mb-1 text-xs font-medium text-muted-foreground">Message original</p>
-                            <p className="whitespace-pre-wrap break-words text-sm leading-6">
-                                {translationMessage?.text}
-                            </p>
-                        </div>
-
-                        <div className="space-y-2">
-                            <p className="text-xs font-medium text-muted-foreground">Traduire en</p>
-                            <Select value={targetLanguage} onValueChange={handleTargetLanguageChange}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Choisir une langue" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {TRANSLATION_LANGUAGES.map((language) => (
-                                        <SelectItem key={language.code} value={language.code}>
-                                            {language.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        <div className="rounded-2xl border border-primary/10 bg-primary/5 p-3">
-                            <div className="mb-2 flex items-center justify-between gap-2">
-                                <p className="text-xs font-bold text-primary">
-                                    {translation
-                                        ? `${translation.sourceLanguageName} vers ${translation.targetLanguageName}`
-                                        : 'Traduction'}
-                                </p>
-                                {isTranslating && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
-                            </div>
-
-                            {translationError ? (
-                                <p className="text-sm text-red-600">{translationError}</p>
-                            ) : translation ? (
-                                <p className="whitespace-pre-wrap break-words text-sm leading-6">
-                                    {translation.translatedText}
-                                </p>
-                            ) : (
-                                <p className="text-sm text-muted-foreground">Traduction en cours...</p>
-                            )}
-                        </div>
-
-                        <div className="flex justify-end gap-2">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => translationMessage && void translateText(translationMessage.text, targetLanguage)}
-                                disabled={isTranslating || !translationMessage?.text}
-                            >
-                                {isTranslating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Languages className="mr-2 h-4 w-4" />}
-                                Retraduire
-                            </Button>
-                            <Button
-                                type="button"
-                                onClick={() => {
-                                    setReplyingTo(translationMessage);
-                                    closeTranslationModal(false);
-                                }}
-                                disabled={!translationMessage}
-                            >
-                                Repondre
-                            </Button>
-                        </div>
-                    </div>
-                </DialogContent>
-            </Dialog>
-
             <Dialog open={showContactDetails} onOpenChange={setShowContactDetails}>
                 <DialogContent className="max-w-md rounded-3xl p-0">
-                    <div className="rounded-t-3xl bg-gradient-to-r from-primary via-emerald-700 to-orange-500 px-5 py-5 text-white">
+                    <div className="rounded-t-3xl bg-gradient-to-r from-primary via-primary to-orange-500 px-5 py-5 text-white">
                         <DialogHeader>
                             <DialogTitle className="sr-only">Détails de la conversation</DialogTitle>
                         </DialogHeader>
@@ -2214,6 +2286,51 @@ export default function ConversationClient() {
                             ) : (
                                 <p className="text-sm text-muted-foreground">Aucun média partagé.</p>
                             )}
+                        </div>
+
+                        <div className="rounded-2xl border p-4">
+                            <div className="mb-3 flex items-center justify-between gap-3">
+                                <div>
+                                    <p className="text-sm font-bold">Fond de discussion</p>
+                                    <p className="text-xs text-muted-foreground">
+                                        {conversationWallpaper ? 'Personnalisé pour cette discussion' : 'Utilise le fond global du chat'}
+                                    </p>
+                                </div>
+                                {conversationWallpaper && (
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="ghost"
+                                        className="h-8 rounded-full text-xs"
+                                        onClick={() => updateConversationWallpaper(null)}
+                                    >
+                                        Réinitialiser
+                                    </Button>
+                                )}
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                                {CHAT_WALLPAPERS.map((wallpaper) => {
+                                    const isSelected = activeWallpaper.id === wallpaper.id;
+                                    const isConversationChoice = conversationWallpaper === wallpaper.id;
+
+                                    return (
+                                        <button
+                                            key={wallpaper.id}
+                                            type="button"
+                                            onClick={() => updateConversationWallpaper(wallpaper.id)}
+                                            className={`overflow-hidden rounded-2xl border text-left transition-all ${
+                                                isSelected ? 'border-primary ring-2 ring-primary/25' : 'border-border hover:border-primary/50'
+                                            }`}
+                                        >
+                                            <span className={`block h-16 ${wallpaper.previewClass}`} />
+                                            <span className="flex items-center justify-between px-3 py-2 text-xs font-semibold">
+                                                {wallpaper.label}
+                                                {isConversationChoice ? <span className="text-primary">Choisi</span> : null}
+                                            </span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         </div>
 
                         <div className="rounded-2xl border p-4">

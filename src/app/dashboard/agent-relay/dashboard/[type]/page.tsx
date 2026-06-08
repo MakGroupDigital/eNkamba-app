@@ -68,24 +68,24 @@ const typeThemes: Record<
   }
 > = {
   'agent-relais': {
-    gradient: 'from-[#0E5A59] via-[#32BB78] to-[#0E5A59]',
-    accent: '#0E5A59',
+    gradient: 'from-[#32BB78] via-[#32BB78] to-[#32BB78]',
+    accent: '#32BB78',
     accentSoft: 'bg-[#32BB78]/10',
-    accentText: 'text-[#0E5A59]',
+    accentText: 'text-[#32BB78]',
     heroIcon: AgentIcon,
   },
   cabinet: {
-    gradient: 'from-[#0E5A59] via-[#32BB78] to-[#0E5A59]',
-    accent: '#0E5A59',
+    gradient: 'from-[#32BB78] via-[#32BB78] to-[#32BB78]',
+    accent: '#32BB78',
     accentSoft: 'bg-[#32BB78]/10',
-    accentText: 'text-[#0E5A59]',
+    accentText: 'text-[#32BB78]',
     heroIcon: AgentIcon,
   },
   'point-service': {
-    gradient: 'from-[#0E5A59] via-[#32BB78] to-[#0E5A59]',
-    accent: '#0E5A59',
+    gradient: 'from-[#32BB78] via-[#32BB78] to-[#32BB78]',
+    accent: '#32BB78',
     accentSoft: 'bg-[#32BB78]/10',
-    accentText: 'text-[#0E5A59]',
+    accentText: 'text-[#32BB78]',
     heroIcon: LogisticsNavIcon,
   },
 };
@@ -354,7 +354,7 @@ export default function AgentRelayTypeDashboardPage() {
                     <p className="font-semibold text-gray-900 truncate">
                       {application.fullName || 'Agent'}
                     </p>
-                    <Badge className="rounded-full bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
+                    <Badge className="rounded-full bg-primary/10 text-primary hover:bg-primary/10">
                       <span className="mr-1 grid h-4 w-4 place-items-center">
                         <VerifiedIcon size={16} />
                       </span>

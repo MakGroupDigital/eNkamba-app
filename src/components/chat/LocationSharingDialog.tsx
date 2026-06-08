@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { MapPin, Loader2, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { getDashboardLocationOrDefault } from '@/lib/dashboard-location';
 
 interface LocationSharingDialogProps {
   open: boolean;
@@ -28,49 +29,17 @@ export function LocationSharingDialog({ open, onOpenChange, onShareLocation }: L
     setError(null);
 
     try {
-      if (!navigator.geolocation) {
-        throw new Error('La géolocalisation n\'est pas supportée par votre navigateur');
-      }
-
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0,
-        });
-      });
-
+      const storedLocation = getDashboardLocationOrDefault();
       const location = {
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
+        latitude: storedLocation.latitude,
+        longitude: storedLocation.longitude,
+        address: storedLocation.label,
       };
 
       setCurrentLocation(location);
-
-      // Obtenir l'adresse via reverse geocoding (optionnel)
-      try {
-        const response = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${location.latitude}&lon=${location.longitude}`
-        );
-        const data = await response.json();
-        
-        return {
-          ...location,
-          address: data.display_name,
-        };
-      } catch {
-        return location;
-      }
+      return location;
     } catch (err: any) {
-      if (err.code === 1) {
-        setError('Permission de localisation refusée. Veuillez autoriser l\'accès à votre position.');
-      } else if (err.code === 2) {
-        setError('Position indisponible. Vérifiez votre connexion GPS.');
-      } else if (err.code === 3) {
-        setError('Délai d\'attente dépassé. Réessayez.');
-      } else {
-        setError(err.message || 'Erreur lors de la récupération de la position');
-      }
+      setError(err.message || 'Erreur lors de la récupération de la position');
       return null;
     } finally {
       setLoading(false);

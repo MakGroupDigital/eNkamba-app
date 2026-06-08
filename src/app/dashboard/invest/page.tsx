@@ -63,7 +63,7 @@ export default function InvestPage() {
             </Link>
           </Button>
           <div>
-            <h1 className="font-headline text-3xl font-bold bg-gradient-to-r from-[#32BB78] to-[#2a9d63] bg-clip-text text-transparent">
+            <h1 className="font-headline text-3xl font-bold bg-gradient-to-r from-[#32BB78] to-[#32BB78] bg-clip-text text-transparent">
               Investir
             </h1>
             <p className="text-sm text-muted-foreground">Opportunités d'investissement</p>
@@ -77,7 +77,7 @@ export default function InvestPage() {
               {/* Icône principale avec effet glow */}
               <div className="relative">
                 <div className="absolute inset-0 bg-[#32BB78]/30 rounded-full blur-3xl animate-pulse"></div>
-                <div className="relative bg-gradient-to-br from-[#32BB78] to-[#2a9d63] p-8 rounded-3xl shadow-2xl transform hover:scale-105 transition-transform duration-300">
+                <div className="relative bg-gradient-to-br from-[#32BB78] to-[#32BB78] p-8 rounded-3xl shadow-2xl transform hover:scale-105 transition-transform duration-300">
                   <div className="w-16 h-16 text-white">
                     <InvestIcon />
                   </div>
@@ -150,13 +150,13 @@ export default function InvestPage() {
           </Card>
 
           {/* Rentabilité */}
-          <Card className="bg-gradient-to-br from-green-500/10 to-green-600/5 border-green-500/20 hover:shadow-lg transition-all duration-300 hover:scale-105 group">
+          <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 hover:shadow-lg transition-all duration-300 hover:scale-105 group">
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 text-green-600 group-hover:scale-110 transition-transform">
+                <div className="w-10 h-10 text-primary group-hover:scale-110 transition-transform">
                   <ProfitIcon />
                 </div>
-                <CardTitle className="text-sm font-semibold text-green-700 dark:text-green-400">
+                <CardTitle className="text-sm font-semibold text-primary dark:text-primary">
                   Rentabilité
                 </CardTitle>
               </div>
@@ -189,7 +189,7 @@ export default function InvestPage() {
         </div>
 
         {/* CTA moderne */}
-        <Card className="bg-gradient-to-r from-[#32BB78] to-[#2a9d63] text-white shadow-xl slide-up" style={{ animationDelay: '0.4s' }}>
+        <Card className="bg-gradient-to-r from-[#32BB78] to-[#32BB78] text-white shadow-xl slide-up" style={{ animationDelay: '0.4s' }}>
           <CardContent className="p-6">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="text-center sm:text-left">

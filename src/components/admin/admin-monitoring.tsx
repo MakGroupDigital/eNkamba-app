@@ -210,7 +210,7 @@ async function shareText(text: string, title: string) {
 
 export function AdminPageHeader({ title, description }: { title: string; description: string }) {
   return (
-    <header className="flex flex-col gap-3 rounded-[8px] border border-emerald-900/10 bg-white p-4 shadow-sm md:flex-row md:items-center md:justify-between">
+    <header className="flex flex-col gap-3 rounded-[8px] border border-primary/10 bg-white p-4 shadow-sm md:flex-row md:items-center md:justify-between">
       <div>
         <Button asChild variant="outline" size="sm" className="mb-3 w-fit">
           <Link href="/admin">Retour admin</Link>
@@ -235,8 +235,8 @@ export function AdminInfrastructureView() {
   const usedMemoryMb = memory?.usedJSHeapSize ? Math.round(memory.usedJSHeapSize / 1024 / 1024) : null;
 
   const cards = [
-    { label: 'Etat systeme', value: `${health}%`, detail: criticalErrors ? `${criticalErrors} critique(s)` : 'Stable', icon: Server, tone: health > 90 ? 'text-emerald-700 bg-emerald-50' : 'text-orange-700 bg-orange-50' },
-    { label: 'Sessions live', value: `${activeUsers.length}`, detail: 'utilisateurs actifs', icon: Wifi, tone: 'text-teal-700 bg-teal-50' },
+    { label: 'Etat systeme', value: `${health}%`, detail: criticalErrors ? `${criticalErrors} critique(s)` : 'Stable', icon: Server, tone: health > 90 ? 'text-primary bg-primary/5' : 'text-orange-700 bg-orange-50' },
+    { label: 'Sessions live', value: `${activeUsers.length}`, detail: 'utilisateurs actifs', icon: Wifi, tone: 'text-primary bg-primary/5' },
     { label: 'Logs erreurs', value: `${errorLogs.length}`, detail: telemetryStatus.errors === 'connecte' ? 'flux connecte' : telemetryStatus.errors || 'en attente', icon: Bug, tone: 'text-red-700 bg-red-50' },
     { label: 'Memoire client', value: usedMemoryMb ? `${usedMemoryMb}MB` : 'N/A', detail: 'mesure navigateur', icon: Cpu, tone: 'text-violet-700 bg-violet-50' },
     { label: 'IP admin', value: formatIp(clientContext?.ip), detail: formatLocation(clientContext), icon: Globe2, tone: 'text-slate-700 bg-slate-100' },
@@ -249,7 +249,7 @@ export function AdminInfrastructureView() {
         {cards.map((item) => {
           const Icon = item.icon;
           return (
-            <Card key={item.label} className="rounded-[8px] border-emerald-900/10">
+            <Card key={item.label} className="rounded-[8px] border-primary/10">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className={cn('flex h-10 w-10 items-center justify-center rounded-[8px]', item.tone)}>
@@ -289,7 +289,7 @@ export function AdminInfrastructureView() {
 export function AdminLogsView() {
   const { errorLogs, telemetryStatus } = useAdminMonitoring();
   return (
-    <section className="rounded-[8px] border border-emerald-900/10 bg-white p-4 shadow-sm">
+    <section className="rounded-[8px] border border-primary/10 bg-white p-4 shadow-sm">
       <div className="flex items-center justify-between gap-3">
         <h2 className="font-headline text-xl font-bold">Logs erreurs applicatives</h2>
         <Badge variant="outline">{telemetryStatus.errors === 'connecte' ? 'Flux connecte' : 'Flux en attente'}</Badge>
@@ -330,7 +330,7 @@ export function AdminCyberView() {
   const clientContext = useClientContext();
   return (
     <div className="space-y-4">
-      <section className="rounded-[8px] border border-emerald-900/10 bg-white p-4 shadow-sm">
+      <section className="rounded-[8px] border border-primary/10 bg-white p-4 shadow-sm">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
             <h2 className="flex items-center gap-2 font-headline text-xl font-bold"><Fingerprint className="h-5 w-5 text-[#32BB78]" />Cyber intelligence</h2>
@@ -372,7 +372,7 @@ export function AdminCyberView() {
 export function AdminAttacksView() {
   const { attacks, securityEvents } = useAdminMonitoring();
   return (
-    <section className="rounded-[8px] border border-emerald-900/10 bg-slate-950 p-4 text-white shadow-sm">
+    <section className="rounded-[8px] border border-primary/10 bg-slate-950 p-4 text-white shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="font-headline text-xl font-bold">Centre autonome d'attaques</h2>

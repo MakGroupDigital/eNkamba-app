@@ -95,7 +95,7 @@ export default function NotFound() {
               <div className="absolute inset-0 rounded-full bg-[#32BB78]/20 pulse-ring" style={{ animationDelay: '1s' }}></div>
               
               {/* Icône principale */}
-              <div className="relative bg-gradient-to-br from-[#32BB78] to-[#2a9d63] rounded-full p-8 float-animation">
+              <div className="relative bg-gradient-to-br from-[#32BB78] to-[#32BB78] rounded-full p-8 float-animation">
                 <AlertCircle className="w-16 h-16 sm:w-20 sm:h-20 text-white" />
               </div>
             </div>
@@ -103,7 +103,7 @@ export default function NotFound() {
 
           {/* Titre */}
           <div className="text-center mb-6">
-            <h1 className="font-headline text-6xl sm:text-8xl font-bold bg-gradient-to-r from-[#32BB78] to-[#2a9d63] bg-clip-text text-transparent mb-4">
+            <h1 className="font-headline text-6xl sm:text-8xl font-bold bg-gradient-to-r from-[#32BB78] to-[#32BB78] bg-clip-text text-transparent mb-4">
               404
             </h1>
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
@@ -149,7 +149,7 @@ export default function NotFound() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
             <Button
               onClick={() => router.push('/dashboard')}
-              className="w-full bg-gradient-to-r from-[#32BB78] to-[#2a9d63] hover:from-[#2a9d63] hover:to-[#1f7a4a] text-white gap-2"
+              className="w-full bg-gradient-to-r from-[#32BB78] to-[#32BB78] hover:from-[#32BB78] hover:to-[#32BB78] text-white gap-2"
             >
               <Home className="w-4 h-4" />
               Tableau de bord

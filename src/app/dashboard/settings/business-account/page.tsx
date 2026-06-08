@@ -427,7 +427,7 @@ function StatusBadge({ status }: { status: string }) {
   switch (status) {
     case 'VERIFIED':
       return (
-        <div className="flex items-center gap-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
+        <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-full text-sm">
           <CheckCircle2 size={16} />
           Vérifié
         </div>
@@ -641,7 +641,7 @@ export default function BusinessAccountPage() {
         }
         if (formData.type === 'LOGISTICS' && formData.subCategory === 'NATIONAL_AGENCY') {
           const national = formData.nationalAgencyCompliance;
-          if (!national.coveredCities?.trim() || !national.depotsAndBranches?.trim() || national.transportModes.length === 0) {
+          if (!national.coveredCities?.trim() || !national.depotsAndBranches?.trim() || (national.transportModes ?? []).length === 0) {
             toast({
               variant: 'destructive',
               title: 'Fiabilité agence nationale',
@@ -866,20 +866,20 @@ export default function BusinessAccountPage() {
                   </Select>
                 </div>
                 {logisticsRolePreset && (
-                  <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4">
+                  <div className="rounded-2xl border border-primary/20 bg-primary/5/70 p-4">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
-                        <p className="text-sm font-semibold text-emerald-700">{logisticsRolePreset.badge}</p>
+                        <p className="text-sm font-semibold text-primary">{logisticsRolePreset.badge}</p>
                         <p className="text-lg font-bold text-slate-900">{logisticsRolePreset.title}</p>
                         <p className="mt-1 text-sm text-slate-600">{logisticsRolePreset.dashboard}</p>
                       </div>
-                      <div className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
+                      <div className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-primary ring-1 ring-primary/20">
                         Dashboard dédié après approbation
                       </div>
                     </div>
                     <div className="mt-4 grid gap-2 md:grid-cols-2">
                       {logisticsRolePreset.capabilities.map((capability) => (
-                        <div key={capability} className="rounded-xl bg-white px-3 py-2 text-sm text-slate-700 ring-1 ring-emerald-100">
+                        <div key={capability} className="rounded-xl bg-white px-3 py-2 text-sm text-slate-700 ring-1 ring-primary/20">
                           {capability}
                         </div>
                       ))}
@@ -887,9 +887,9 @@ export default function BusinessAccountPage() {
                   </div>
                 )}
                 {formData.subCategory === 'NATIONAL_AGENCY' && (
-                  <div className="space-y-4 rounded-2xl border border-emerald-200 bg-white p-4 shadow-sm">
+                  <div className="space-y-4 rounded-2xl border border-primary/20 bg-white p-4 shadow-sm">
                     <div>
-                      <p className="text-sm font-semibold text-emerald-700">Vérification Agence Nationale</p>
+                      <p className="text-sm font-semibold text-primary">Vérification Agence Nationale</p>
                       <h4 className="text-lg font-bold text-slate-900">Fiabilité, contrat et tracking obligatoire</h4>
                       <p className="mt-1 text-sm text-slate-600">
                         Une agence nationale ne sera pas visible tant que les documents, l’adresse, l’assurance et le contrat ne sont pas validés par eNKAMBA.
@@ -965,7 +965,7 @@ export default function BusinessAccountPage() {
                         {['Véhicule', 'Bus', 'Camion', 'Train', 'Bateau', 'Avion national'].map((mode) => (
                           <label key={mode} className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm">
                             <Checkbox
-                              checked={formData.nationalAgencyCompliance.transportModes.includes(mode)}
+                              checked={(formData.nationalAgencyCompliance.transportModes ?? []).includes(mode)}
                               onCheckedChange={() => toggleNationalAgencyArrayValue('transportModes', mode)}
                               disabled={isSubmitting}
                             />
@@ -1001,8 +1001,8 @@ export default function BusinessAccountPage() {
                       </div>
                     </div>
 
-                    <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
-                      <p className="mb-2 text-sm font-semibold text-emerald-900">Tracking national obligatoire</p>
+                    <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+                      <p className="mb-2 text-sm font-semibold text-primary">Tracking national obligatoire</p>
                       <div className="grid gap-2 md:grid-cols-3">
                         {NATIONAL_AGENCY_TRACKING_STEPS.map((step) => (
                           <div key={step} className="rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-700">
@@ -1042,7 +1042,7 @@ export default function BusinessAccountPage() {
                     <div className="grid gap-3 md:grid-cols-2">
                       <div className="rounded-xl border border-slate-200 p-4">
                         <p className="text-sm font-semibold text-slate-900">Score fiabilité initial</p>
-                        <p className="mt-1 text-3xl font-black text-emerald-700">0/100</p>
+                        <p className="mt-1 text-3xl font-black text-primary">0/100</p>
                         <p className="text-sm text-slate-600">Calculé après vérification documents, adresse, assurance, tracking et premières expéditions.</p>
                       </div>
                       <div className="rounded-xl border border-slate-200 p-4">
@@ -1470,8 +1470,8 @@ function DocumentUpload({ label, docType, file, onChange, disabled }: DocumentUp
       <p className="text-xs text-muted-foreground">KYC amélioré : selfie + pièce + preuve de point de service.</p>
       <div className="mt-2">
         {file ? (
-          <div className="flex items-center justify-between rounded-lg bg-green-50 p-3">
-            <span className="text-sm text-green-700">{file.name}</span>
+          <div className="flex items-center justify-between rounded-lg bg-primary/5 p-3">
+            <span className="text-sm text-primary">{file.name}</span>
             <Button variant="ghost" size="sm" onClick={() => onChange(null)} disabled={disabled}>
               ✕
             </Button>

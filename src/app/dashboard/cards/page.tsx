@@ -42,7 +42,7 @@ export default function CardsPage() {
             </Link>
           </Button>
           <div>
-            <h1 className="font-headline text-3xl font-bold bg-gradient-to-r from-[#32BB78] to-[#2a9d63] bg-clip-text text-transparent">
+            <h1 className="font-headline text-3xl font-bold bg-gradient-to-r from-[#32BB78] to-[#32BB78] bg-clip-text text-transparent">
               Mes Cartes
             </h1>
             <p className="text-sm text-muted-foreground">Gérez vos cartes bancaires</p>
@@ -55,7 +55,7 @@ export default function CardsPage() {
             <CardTitle className="font-headline text-xl">Cartes Enregistrées</CardTitle>
             <Button
               onClick={() => setIsDialogOpen(true)}
-              className="bg-[#32BB78] hover:bg-[#2a9d63] gap-2"
+              className="bg-[#32BB78] hover:bg-[#32BB78] gap-2"
               size="sm"
             >
               <Plus className="w-4 h-4" />
@@ -67,13 +67,7 @@ export default function CardsPage() {
             {cards.length === 0 ? (
               <div className="text-center py-12">
                 <CreditCard className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-                <p className="text-muted-foreground mb-4">Aucune carte enregistrée</p>
-                <Button
-                  onClick={() => setIsDialogOpen(true)}
-                  className="bg-[#32BB78] hover:bg-[#2a9d63]"
-                >
-                  Ajouter votre première carte
-                </Button>
+                <p className="text-muted-foreground">Aucune carte enregistrée</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -145,7 +139,7 @@ export default function CardsPage() {
         </Card>
 
         {/* Order Physical Card */}
-        <Card className="border-0 bg-gradient-to-br from-[#32BB78]/10 to-[#2a9d63]/5 shadow-md">
+        <Card className="border-0 bg-gradient-to-br from-[#32BB78]/10 to-[#32BB78]/5 shadow-md">
           <CardHeader>
             <CardTitle className="font-headline text-xl flex items-center gap-2">
               <ShoppingCart className="w-5 h-5 text-[#32BB78]" />

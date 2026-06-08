@@ -317,7 +317,7 @@ export default function AgentOpsCollectPage() {
                     <Download className="h-4 w-4 mr-2" />
                     Télécharger
                   </Button>
-                  <Button onClick={shareQr} className="h-12 rounded-xl bg-[#32BB78] hover:bg-[#2BA86A] text-white">
+                  <Button onClick={shareQr} className="h-12 rounded-xl bg-[#32BB78] hover:bg-[#32BB78] text-white">
                     <Share2 className="h-4 w-4 mr-2" />
                     Partager
                   </Button>
@@ -336,7 +336,7 @@ export default function AgentOpsCollectPage() {
                 {!isScanning && !scanned && (
                   <Button
                     onClick={startScan}
-                    className="w-full h-12 rounded-xl bg-[#32BB78] hover:bg-[#2BA86A] text-white"
+                    className="w-full h-12 rounded-xl bg-[#32BB78] hover:bg-[#32BB78] text-white"
                   >
                     <Camera className="h-4 w-4 mr-2" />
                     Démarrer le scan
@@ -385,7 +385,7 @@ export default function AgentOpsCollectPage() {
                     <Button
                       onClick={confirmPay}
                       disabled={isProcessing}
-                      className="w-full h-12 rounded-xl bg-[#32BB78] hover:bg-[#2BA86A] text-white"
+                      className="w-full h-12 rounded-xl bg-[#32BB78] hover:bg-[#32BB78] text-white"
                     >
                       <Send className="h-4 w-4 mr-2" />
                       Payer

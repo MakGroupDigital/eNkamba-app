@@ -410,28 +410,28 @@ export function ContactQRScanner({ open, onOpenChange, onContactFound }: Contact
               {matchedUser.found ? (
                 <>
                   {/* Contact trouvé */}
-                  <div className="flex flex-col items-center gap-4 p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border border-green-200">
-                    <Avatar className="h-20 w-20 border-4 border-green-500">
+                  <div className="flex flex-col items-center gap-4 p-6 bg-gradient-to-br from-primary to-primary rounded-lg border border-primary/20">
+                    <Avatar className="h-20 w-20 border-4 border-primary">
                       <AvatarImage src={matchedUser.profileImage} />
-                      <AvatarFallback className="bg-green-500 text-white text-xl font-bold">
+                      <AvatarFallback className="bg-primary text-white text-xl font-bold">
                         {matchedUser.displayName?.charAt(0) || 'U'}
                       </AvatarFallback>
                     </Avatar>
                     
                     <div className="text-center">
-                      <p className="text-lg font-bold text-green-900">
+                      <p className="text-lg font-bold text-primary">
                         {matchedUser.displayName}
                       </p>
                       {matchedUser.email && (
-                        <p className="text-sm text-green-700">{matchedUser.email}</p>
+                        <p className="text-sm text-primary">{matchedUser.email}</p>
                       )}
                       {matchedUser.phone && (
-                        <p className="text-sm text-green-700">{matchedUser.phone}</p>
+                        <p className="text-sm text-primary">{matchedUser.phone}</p>
                       )}
                     </div>
 
-                    <div className="flex items-center gap-2 text-green-600">
-                      <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                    <div className="flex items-center gap-2 text-primary">
+                      <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
                       <span className="text-sm font-medium">Sur eNkamba</span>
                     </div>
                   </div>

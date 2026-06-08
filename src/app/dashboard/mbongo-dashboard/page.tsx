@@ -2,13 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Sparkles, QrCode, ArrowLeftRight, TrendingUp, Wallet } from "lucide-react";
+import { QrCode, ArrowLeftRight, TrendingUp, Wallet, Eye, EyeOff, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import DashboardHeader from "@/components/dashboard/dashboard-header";
 import { SavingsIcon, CreditIcon, TontineIcon, ConversionIcon, ReferralIcon, AgentIcon, LinkAccountIcon, BonusIcon, TaxIcon, WaterIcon, TvIcon, AcademicIcon, SchoolIcon, EventIcon, PhoneCreditIcon, InsuranceIcon, ESimIcon, HealthIcon, FiveGoIcon, MobilityIcon } from "@/components/icons/service-icons";
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useWalletTransactions } from '@/hooks/useWalletTransactions';
+import EnkambaCard from '@/components/EnkambaCard';
+import { useSecureBalanceVisibility } from '@/hooks/useSecureBalanceVisibility';
+import { PinVerification } from '@/components/payment/PinVerification';
 
 type DashboardCopy = Record<string, string>;
 
@@ -110,11 +113,82 @@ const bills = [
   { icon: InsuranceIcon, labelKey: 'insurance', href: '/dashboard/insurance' },
 ];
 
+const FALLBACK_DAILY_RATES = {
+  USD: 0.00035,
+  EUR: 0.00032,
+  CNY: 0.0027,
+};
+
 export default function MbongoDashboard() {
   const { profile } = useUserProfile();
+  const { balance: walletBalance } = useWalletTransactions();
   const [copy, setCopy] = useState<DashboardCopy>(DEFAULT_COPY);
   const [language, setLanguage] = useState('fr');
   const [isTranslating, setIsTranslating] = useState(false);
+  const [dailyRates, setDailyRates] = useState(FALLBACK_DAILY_RATES);
+  const {
+    isBalanceVisible,
+    isBiometricChecking,
+    isPinOpen,
+    setIsPinOpen,
+    requestUnlock,
+    lockBalance,
+    handlePinSuccess,
+  } = useSecureBalanceVisibility();
+  const [cardData, setCardData] = useState({
+    cardNumber: '',
+    cardHolderName: '',
+    accountNumber: '',
+    balance: '0',
+    currency: 'CDF',
+    photoUrl: '',
+  });
+
+  useEffect(() => {
+    if (!profile?.uid) return;
+
+    const hash = profile.uid.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const accountNum = `ENK${String(hash).padStart(12, '0')}`;
+    const cardNum = `${String(hash % 10000).padStart(4, '0')} ${String((hash * 7) % 10000).padStart(4, '0')} ${String((hash * 13) % 10000).padStart(4, '0')} ${String((hash * 19) % 10000).padStart(4, '0')}`;
+
+    setCardData({
+      cardNumber: cardNum,
+      cardHolderName: (profile.fullName || profile.name || 'eNkamba User').toUpperCase(),
+      accountNumber: accountNum,
+      balance: isBalanceVisible ? walletBalance.toLocaleString('fr-FR') : '••••••',
+      currency: 'CDF',
+      photoUrl: profile.photoURL || profile.profileImage || '',
+    });
+  }, [isBalanceVisible, profile?.uid, profile?.fullName, profile?.name, profile?.photoURL, profile?.profileImage, walletBalance]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadDailyRates = async () => {
+      try {
+        const response = await fetch('https://api.exchangerate-api.com/v4/latest/CDF');
+        if (!response.ok) throw new Error('Taux indisponibles');
+        const data = await response.json();
+
+        if (!cancelled && data?.rates) {
+          setDailyRates({
+            USD: data.rates.USD || FALLBACK_DAILY_RATES.USD,
+            EUR: data.rates.EUR || FALLBACK_DAILY_RATES.EUR,
+            CNY: data.rates.CNY || FALLBACK_DAILY_RATES.CNY,
+          });
+        }
+      } catch (error) {
+        console.error('Erreur taux du jour paiement:', error);
+        if (!cancelled) setDailyRates(FALLBACK_DAILY_RATES);
+      }
+    };
+
+    void loadDailyRates();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const storedLanguage = window.localStorage.getItem('enkamba-dashboard-language') || 'fr';
@@ -176,7 +250,7 @@ export default function MbongoDashboard() {
   return (
     <>
       <DashboardHeader />
-      <div className="container mx-auto max-w-4xl p-4 space-y-6 animate-in fade-in duration-500 pt-20">
+      <div className="container mx-auto max-w-4xl p-4 space-y-6 animate-in fade-in duration-500 pt-24">
         {/* Quick Actions - 4 Circles */}
         <div className="grid grid-cols-4 gap-4">
           {quickActions.map((action) => {
@@ -185,7 +259,7 @@ export default function MbongoDashboard() {
             return (
               <Link key={action.labelKey} href={action.href} className="flex flex-col items-center gap-2 group">
                 {/* Icon Circle - Green background */}
-                <div className="flex items-center justify-center w-16 h-16 rounded-full bg-[#32BB78] hover:bg-[#2a9d63] transition-all duration-300 hover:scale-110 flex-shrink-0 shadow-md text-white">
+                <div className="flex items-center justify-center w-16 h-16 rounded-full bg-[#32BB78] hover:bg-[#32BB78] transition-all duration-300 hover:scale-110 flex-shrink-0 shadow-md text-white">
                   <IconComponent size={32} className="text-white" />
                 </div>
                 {/* Label */}
@@ -195,21 +269,46 @@ export default function MbongoDashboard() {
           })}
         </div>
 
-        {/* Section QR Code Personnel - REMOVED */}
-        {/* Assistant Financier IA */}
-        <Card className="bg-gradient-to-r from-primary to-green-800 text-primary-foreground shadow-lg overflow-hidden relative">
-          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iNCIvPjwvZz48L2c+PC9zdmc+')] opacity-50" />
-          <CardHeader className="relative">
-            <CardTitle className="font-headline flex items-center gap-2">
-              <Sparkles className="text-accent" />
-              {copy.aiAssistant}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="relative">
-            <p className="mb-4 text-sm">{copy.aiAssistantText}</p>
-            <Button variant="secondary" asChild><Link href="/dashboard/report">{copy.generateReport}</Link></Button>
-          </CardContent>
-        </Card>
+        <section className="space-y-3">
+          <div className="mx-auto flex max-w-[500px] items-center justify-end">
+            <button
+              type="button"
+              onClick={isBalanceVisible ? lockBalance : requestUnlock}
+              disabled={isBiometricChecking}
+              className="inline-flex h-9 items-center gap-2 rounded-full border border-primary/20 bg-white px-3 text-xs font-bold text-primary shadow-sm transition hover:bg-primary/10 disabled:opacity-60"
+            >
+              {isBiometricChecking ? <Loader2 className="h-4 w-4 animate-spin" /> : isBalanceVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              {isBalanceVisible ? 'Masquer' : 'Afficher le solde'}
+            </button>
+          </div>
+          <Link href="/dashboard/wallet" className="mx-auto block w-full max-w-[500px] transition-transform duration-300 hover:-translate-y-0.5">
+            <div className="relative mx-auto h-[198px] w-[315px] sm:h-[252px] sm:w-[400px] md:h-[315px] md:w-[500px]">
+              <div className="absolute left-1/2 top-0 origin-top -translate-x-1/2 scale-[0.63] sm:scale-[0.8] md:scale-100">
+                <EnkambaCard {...cardData} brand="visa" />
+              </div>
+            </div>
+          </Link>
+
+          <div className="mx-auto max-w-[500px]">
+            <p className="mb-2 text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Conversion au taux du jour
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { code: 'USD', value: walletBalance * dailyRates.USD },
+                { code: 'EUR', value: walletBalance * dailyRates.EUR },
+                { code: 'RMB', value: walletBalance * dailyRates.CNY },
+              ].map((item) => (
+                <div key={item.code} className="rounded-xl border border-border/70 bg-background/70 px-2.5 py-2 text-center shadow-sm backdrop-blur">
+                  <p className="text-[10px] font-black tracking-[0.14em] text-muted-foreground">{item.code}</p>
+                  <p className="mt-1 truncate text-sm font-black text-foreground">
+                    {isBalanceVisible ? item.value.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) : '••••'}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
         <Card className="overflow-hidden">
           <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent">
             <CardTitle className="font-headline flex items-center gap-2">
@@ -257,6 +356,17 @@ export default function MbongoDashboard() {
             </div>
           </CardContent>
         </Card>
+        <PinVerification
+          isOpen={isPinOpen}
+          onClose={() => setIsPinOpen(false)}
+          onSuccess={handlePinSuccess}
+          purpose="balance"
+          paymentDetails={{
+            recipient: 'Affichage du solde',
+            amount: 'Confidentiel',
+            currency: 'CDF',
+          }}
+        />
       </div>
     </>
   );

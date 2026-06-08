@@ -170,7 +170,7 @@ export default function WithdrawPage() {
       toast({
         title: 'Succès',
         description: `Retrait de ${amountToWithdraw.toLocaleString('fr-FR')} ${withdrawalMethod === 'mobile_money' && currency === 'USD' ? 'USD' : 'CDF'} initié avec succès`,
-        className: 'bg-green-600 text-white border-none',
+        className: 'bg-primary text-white border-none',
       });
 
       router.push('/dashboard/wallet');
@@ -198,7 +198,7 @@ export default function WithdrawPage() {
             </Link>
           </Button>
           <div>
-            <h1 className="font-headline text-3xl font-bold bg-gradient-to-r from-[#32BB78] to-[#2a9d63] bg-clip-text text-transparent">
+            <h1 className="font-headline text-3xl font-bold bg-gradient-to-r from-[#32BB78] to-[#32BB78] bg-clip-text text-transparent">
               Retirer des fonds
             </h1>
             <p className="text-sm text-muted-foreground">Solde disponible: {balance.toLocaleString('fr-FR')} CDF</p>
@@ -251,7 +251,7 @@ export default function WithdrawPage() {
             >
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center gap-4 text-center">
-                  <div className="p-4 rounded-full bg-gradient-to-br from-[#32BB78] to-[#2a9d63]">
+                  <div className="p-4 rounded-full bg-gradient-to-br from-[#32BB78] to-[#32BB78]">
                     <Building2 className="w-8 h-8 text-white" />
                   </div>
                   <div>
@@ -534,7 +534,7 @@ export default function WithdrawPage() {
                 </Button>
                 <Button
                   onClick={handleDetailsSubmit}
-                  className="flex-1 bg-[#32BB78] hover:bg-[#2a9d63]"
+                  className="flex-1 bg-[#32BB78] hover:bg-[#32BB78]"
                 >
                   Continuer
                 </Button>
@@ -632,7 +632,7 @@ export default function WithdrawPage() {
                 </Button>
                 <Button
                   onClick={handleConfirm}
-                  className="flex-1 bg-[#32BB78] hover:bg-[#2a9d63]"
+                  className="flex-1 bg-[#32BB78] hover:bg-[#32BB78]"
                   disabled={isLoading}
                 >
                   {isLoading ? (

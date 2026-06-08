@@ -416,7 +416,7 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
     : pin.length === 4 && attempts < MAX_ATTEMPTS;
 
   return (
-    <main className="min-h-screen bg-[#32BB78] px-4 py-8 text-[#122116]">
+    <main className="min-h-screen bg-[#32BB78] px-4 py-8 text-foreground">
       <section className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-md items-center justify-center">
         <div className="w-full rounded-3xl bg-white p-6 shadow-xl sm:p-8">
           <div className="flex flex-col items-center text-center">
@@ -436,12 +436,12 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
               Ouverture protégée
             </div>
 
-            <h2 className="text-2xl font-bold tracking-normal text-[#122116]">
+            <h2 className="text-2xl font-bold tracking-normal text-foreground">
               {isCreateMode
                 ? "Créez votre PIN eNkamba"
                 : "Confirmez votre identité"}
             </h2>
-            <p className="mt-3 text-sm leading-6 text-[#52635a]">
+            <p className="mt-3 text-sm leading-6 text-muted-foreground">
               {isCreateMode
                 ? "Ce PIN sera utilisé pour ouvrir l’application et confirmer les paiements."
                 : `Compte détecté : ${userLabel}. Utilisez votre biométrie ou votre PIN de paiement.`}
@@ -449,7 +449,7 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
           </div>
 
           {mode === "loading" ? (
-            <div className="mt-8 flex items-center gap-3 rounded-2xl border border-[#dbe8df] bg-[#f4faf6] p-4 text-[#52635a]">
+            <div className="mt-8 flex items-center gap-3 rounded-2xl border border-[#32BB78] bg-primary/5 p-4 text-muted-foreground">
               <Loader2 className="h-5 w-5 animate-spin text-[#32BB78]" />
               Vérification de la sécurité du compte...
             </div>
@@ -462,7 +462,7 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
                     type="button"
                     onClick={() => void handleBiometricUnlock()}
                     disabled={isBiometricBusy}
-                    className="mt-8 h-14 w-full rounded-2xl bg-[#122116] text-white hover:bg-[#24372a]"
+                    className="mt-8 h-14 w-full rounded-2xl bg-primary text-white hover:bg-primary/90"
                   >
                     {isBiometricBusy ? (
                       <Loader2 className="mr-2 h-5 w-5 animate-spin" />
@@ -475,7 +475,7 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
 
               <form onSubmit={submit} className="mt-6 space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="app-pin" className="text-[#122116]">
+                  <Label htmlFor="app-pin" className="text-foreground">
                     {isCreateMode ? "Nouveau code PIN" : "Code PIN"}
                   </Label>
                   <div className="relative">
@@ -487,13 +487,13 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
                       maxLength={4}
                       onChange={(event) => handlePinInput(event.target.value)}
                       placeholder="••••"
-                      className="h-14 rounded-2xl border-[#d7e3db] bg-[#f4faf6] pr-12 text-center text-3xl font-bold tracking-[0.45em] text-[#122116] placeholder:text-[#9aaba1] focus-visible:ring-[#32BB78]"
+                      className="h-14 rounded-2xl border-primary/20 bg-primary/5 pr-12 text-center text-3xl font-bold tracking-[0.45em] text-foreground placeholder:text-[#9aaba1] focus-visible:ring-[#32BB78]"
                       autoFocus
                     />
                     <button
                       type="button"
                       onClick={() => setShowPin((value) => !value)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-2 text-[#52635a] transition hover:bg-[#e8f4ec] hover:text-[#122116]"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-2 text-muted-foreground transition hover:bg-primary/10 hover:text-foreground"
                       aria-label={
                         showPin ? "Masquer le PIN" : "Afficher le PIN"
                       }
@@ -509,7 +509,7 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
 
                 {isCreateMode && (
                   <div className="space-y-2">
-                    <Label htmlFor="app-pin-confirm" className="text-[#122116]">
+                    <Label htmlFor="app-pin-confirm" className="text-foreground">
                       Confirmer le PIN
                     </Label>
                     <Input
@@ -522,12 +522,12 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
                         handleConfirmPinInput(event.target.value)
                       }
                       placeholder="••••"
-                      className="h-14 rounded-2xl border-[#d7e3db] bg-[#f4faf6] text-center text-3xl font-bold tracking-[0.45em] text-[#122116] placeholder:text-[#9aaba1] focus-visible:ring-[#32BB78]"
+                      className="h-14 rounded-2xl border-primary/20 bg-primary/5 text-center text-3xl font-bold tracking-[0.45em] text-foreground placeholder:text-[#9aaba1] focus-visible:ring-[#32BB78]"
                     />
                     {pin.length === 4 &&
                       confirmPin.length === 4 &&
                       pin === confirmPin && (
-                        <p className="flex items-center gap-2 text-sm text-[#22945d]">
+                        <p className="flex items-center gap-2 text-sm text-[#32BB78]">
                           <CheckCircle2 className="h-4 w-4" />
                           Les codes PIN correspondent.
                         </p>
@@ -545,7 +545,7 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
                 <Button
                   type="submit"
                   disabled={!canSubmit || isSubmitting}
-                  className="h-14 w-full rounded-2xl bg-[#32BB78] text-base font-semibold text-white hover:bg-[#2a9d63]"
+                  className="h-14 w-full rounded-2xl bg-[#32BB78] text-base font-semibold text-white hover:bg-[#32BB78]"
                 >
                   {isSubmitting ? (
                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
@@ -563,7 +563,7 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
                     type="button"
                     onClick={() => void handleRegisterBiometric()}
                     disabled={isBiometricBusy}
-                    className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl border border-[#d7e3db] bg-white px-4 py-4 text-sm font-medium text-[#122116] transition hover:bg-[#f4faf6]"
+                    className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl border border-primary/20 bg-white px-4 py-4 text-sm font-medium text-foreground transition hover:bg-primary/5"
                   >
                     {isBiometricBusy ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -574,7 +574,7 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
                   </button>
                 )}
 
-              <p className="mt-6 text-center text-xs leading-5 text-[#52635a]">
+              <p className="mt-6 text-center text-xs leading-5 text-muted-foreground">
                 Les données biométriques restent dans l’appareil. eNkamba ne
                 reçoit que la validation sécurisée du téléphone.
               </p>

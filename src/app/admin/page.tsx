@@ -145,7 +145,7 @@ const modules: ModuleItem[] = [
     description: 'Expedition, tracking colis, flotte, relais et paiements logistiques.',
     href: '/dashboard/ugavi',
     icon: Truck,
-    color: '#0E5A59',
+    color: '#32BB78',
     health: 91,
     users: '4.8k',
     submodules: ['Tracking', 'Expeditions', 'Fleet', 'Agent relais', 'Scan colis', 'Livraisons'],
@@ -197,8 +197,8 @@ const modules: ModuleItem[] = [
 ];
 
 const accessPolicies = [
-  { label: 'Super admin', value: 'Controle total', icon: ShieldCheck, color: 'text-emerald-600' },
-  { label: 'Operations', value: 'Modules + support', icon: SlidersHorizontal, color: 'text-teal-700' },
+  { label: 'Super admin', value: 'Controle total', icon: ShieldCheck, color: 'text-primary' },
+  { label: 'Operations', value: 'Modules + support', icon: SlidersHorizontal, color: 'text-primary' },
   { label: 'Finance', value: 'Wallet + conformité', icon: Landmark, color: 'text-orange-600' },
   { label: 'Support', value: 'Lecture + assistance', icon: UserCog, color: 'text-violet-600' },
 ];
@@ -336,7 +336,7 @@ export default function AdminDashboardPage() {
         value: formatCount(counts.users),
         trend: 'Base globale',
         icon: Users,
-        tone: 'bg-emerald-500/10 text-emerald-700',
+        tone: 'bg-primary/10 text-primary',
       },
       {
         label: 'Demandes business',
@@ -350,7 +350,7 @@ export default function AdminDashboardPage() {
         value: formatCount(counts.businessApproved),
         trend: 'Business approuves',
         icon: BadgeCheck,
-        tone: 'bg-teal-500/10 text-teal-700',
+        tone: 'bg-primary/10 text-primary',
       },
       {
         label: 'Modules',
@@ -366,13 +366,13 @@ export default function AdminDashboardPage() {
   return (
     <main className="min-h-screen bg-[#F7FAF8] text-slate-950">
       <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-5 sm:px-6 lg:px-8">
-        <section className="relative overflow-hidden rounded-[8px] border border-emerald-900/10 bg-slate-950 text-white shadow-sm">
+        <section className="relative overflow-hidden rounded-[8px] border border-primary/10 bg-slate-950 text-white shadow-sm">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(50,187,120,0.32),transparent_32%),radial-gradient(circle_at_82%_18%,rgba(255,140,0,0.2),transparent_28%),linear-gradient(135deg,rgba(14,90,89,0.42),rgba(2,6,23,0.94))]" />
           <div className="relative grid gap-5 p-4 lg:grid-cols-[1fr_310px] lg:p-5">
             <div className="min-w-0">
               <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <Badge className="bg-[#32BB78]/15 text-[#7EE7AF] hover:bg-[#32BB78]/15">
+                  <Badge className="bg-[#32BB78]/15 text-[#32BB78] hover:bg-[#32BB78]/15">
                     Centre de controle mondial
                   </Badge>
                   <h1 className="mt-3 font-headline text-2xl font-bold md:text-4xl">
@@ -385,7 +385,7 @@ export default function AdminDashboardPage() {
 
                 <div className="grid grid-cols-3 gap-2 text-center">
                   <div className="rounded-[8px] border border-white/10 bg-white/5 px-3 py-2">
-                    <p className="text-lg font-bold text-[#7EE7AF]">99.8%</p>
+                    <p className="text-lg font-bold text-[#32BB78]">99.8%</p>
                     <p className="text-[11px] text-white/55">Uptime</p>
                   </div>
                   <div className="rounded-[8px] border border-white/10 bg-white/5 px-3 py-2">
@@ -444,7 +444,7 @@ export default function AdminDashboardPage() {
               <div className="rounded-[8px] border border-white/10 bg-white/[0.07] p-4 backdrop-blur">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#7EE7AF]">Point selectionne</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#32BB78]">Point selectionne</p>
                     <h2 className="mt-2 text-2xl font-bold">{selectedPoint.city}</h2>
                     <p className="text-sm text-white/60">{selectedPoint.country} - {selectedPoint.continent}</p>
                   </div>
@@ -514,7 +514,7 @@ export default function AdminDashboardPage() {
           </div>
         </section>
 
-        <header className="flex flex-col gap-4 rounded-[8px] border border-emerald-900/10 bg-white px-4 py-4 shadow-sm md:flex-row md:items-center md:justify-between">
+        <header className="flex flex-col gap-4 rounded-[8px] border border-primary/10 bg-white px-4 py-4 shadow-sm md:flex-row md:items-center md:justify-between">
           <div>
             <div className="flex items-center gap-2 text-sm font-semibold text-[#32BB78]">
               <ShieldCheck className="h-4 w-4" />
@@ -535,7 +535,7 @@ export default function AdminDashboardPage() {
                 Numeros comptes
               </Link>
             </Button>
-            <Button asChild className="gap-2 bg-[#32BB78] hover:bg-[#2A9D63]">
+            <Button asChild className="gap-2 bg-[#32BB78] hover:bg-[#32BB78]">
               <Link href="/admin/business-requests">
                 <FileCheck2 className="h-4 w-4" />
                 Demandes business
@@ -548,7 +548,7 @@ export default function AdminDashboardPage() {
           {stats.map((stat) => {
             const Icon = stat.icon;
             return (
-              <Card key={stat.label} className="rounded-[8px] border-emerald-900/10 shadow-sm">
+              <Card key={stat.label} className="rounded-[8px] border-primary/10 shadow-sm">
                 <CardContent className="flex items-center justify-between p-5">
                   <div>
                     <p className="text-sm text-slate-500">{stat.label}</p>
@@ -564,7 +564,7 @@ export default function AdminDashboardPage() {
           })}
         </section>
 
-        <section className="rounded-[8px] border border-emerald-900/10 bg-white p-4 shadow-sm">
+        <section className="rounded-[8px] border border-primary/10 bg-white p-4 shadow-sm">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
               <h2 className="font-headline text-xl font-bold">Centres de supervision</h2>
@@ -577,7 +577,7 @@ export default function AdminDashboardPage() {
 
           <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             {[
-              { title: 'Infrastructure', text: 'Carte mondiale, serveurs modules, pare-feu, agents et points GPS.', href: '/admin/infrastructure', icon: Server, tone: 'bg-emerald-50 text-emerald-700' },
+              { title: 'Infrastructure', text: 'Carte mondiale, serveurs modules, pare-feu, agents et points GPS.', href: '/admin/infrastructure', icon: Server, tone: 'bg-primary/5 text-primary' },
               { title: 'Logs erreurs', text: 'Erreur exacte, module, page, utilisateur, copie et partage.', href: '/admin/logs', icon: Bug, tone: 'bg-red-50 text-red-700' },
               { title: 'Cyber intelligence', text: 'Actions utilisateurs, temps passe, IP, localisation et pages.', href: '/admin/cyber', icon: Fingerprint, tone: 'bg-sky-50 text-sky-700' },
               { title: 'Attaques', text: 'Signaux suspects, faille probable, methode et contre-mesure.', href: '/admin/attacks', icon: ShieldAlert, tone: 'bg-orange-50 text-orange-700' },
@@ -602,7 +602,7 @@ export default function AdminDashboardPage() {
 
         <section className="grid gap-6 xl:grid-cols-3">
           <div className="grid gap-4">
-            <Card className="rounded-[8px] border-emerald-900/10 shadow-sm">
+            <Card className="rounded-[8px] border-primary/10 shadow-sm">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-lg">
                   <KeyRound className="h-5 w-5 text-[#32BB78]" />
@@ -628,7 +628,7 @@ export default function AdminDashboardPage() {
               </CardContent>
             </Card>
 
-            <Card className="rounded-[8px] border-emerald-900/10 shadow-sm">
+            <Card className="rounded-[8px] border-primary/10 shadow-sm">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-lg">
                   <Users className="h-5 w-5 text-[#32BB78]" />
@@ -655,7 +655,7 @@ export default function AdminDashboardPage() {
             </Card>
           </div>
 
-          <Card className="rounded-[8px] border-emerald-900/10 shadow-sm xl:col-span-2">
+          <Card className="rounded-[8px] border-primary/10 shadow-sm xl:col-span-2">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-lg">
                 <LockKeyhole className="h-5 w-5 text-[#32BB78]" />
@@ -666,11 +666,11 @@ export default function AdminDashboardPage() {
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="rounded-[8px] border border-emerald-900/10 bg-emerald-50 p-4">
+              <div className="rounded-[8px] border border-primary/10 bg-primary/5 p-4">
                 <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                   <div>
-                    <p className="text-sm font-semibold text-emerald-900">Version active</p>
-                    <p className="mt-1 font-mono text-xs text-emerald-700">{accessVersion || 'Fallback environnement'}</p>
+                    <p className="text-sm font-semibold text-primary">Version active</p>
+                    <p className="mt-1 font-mono text-xs text-primary">{accessVersion || 'Fallback environnement'}</p>
                   </div>
                   <Badge className="w-fit bg-[#32BB78] hover:bg-[#32BB78]">Propagation globale</Badge>
                 </div>
@@ -695,7 +695,7 @@ export default function AdminDashboardPage() {
                   </button>
                 </div>
                 <Button
-                  className="gap-2 bg-[#32BB78] hover:bg-[#2A9D63]"
+                  className="gap-2 bg-[#32BB78] hover:bg-[#32BB78]"
                   onClick={handleSaveAccessCode}
                   disabled={isSavingAccessCode}
                 >
@@ -730,7 +730,7 @@ export default function AdminDashboardPage() {
 
         <section className="grid gap-6 xl:grid-cols-[0.72fr_1.28fr]">
           <div className="space-y-4">
-            <div className="rounded-[8px] border border-emerald-900/10 bg-white p-4 shadow-sm">
+            <div className="rounded-[8px] border border-primary/10 bg-white p-4 shadow-sm">
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <h2 className="font-headline text-xl font-bold">Gestion utilisateurs</h2>
@@ -753,7 +753,7 @@ export default function AdminDashboardPage() {
                 ].map((user) => (
                   <div key={user.name} className="flex items-center justify-between rounded-[8px] border border-slate-200 p-3">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#32BB78]/10 text-[#237E55]">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#32BB78]/10 text-[#32BB78]">
                         <Users className="h-5 w-5" />
                       </div>
                       <div>
@@ -767,7 +767,7 @@ export default function AdminDashboardPage() {
               </div>
             </div>
 
-            <div className="rounded-[8px] border border-emerald-900/10 bg-white p-4 shadow-sm">
+            <div className="rounded-[8px] border border-primary/10 bg-white p-4 shadow-sm">
               <h2 className="font-headline text-xl font-bold">Operations sensibles</h2>
               <div className="mt-4 grid gap-3">
                 <Button asChild variant="outline" className="justify-between">
@@ -790,7 +790,7 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
-          <div className="rounded-[8px] border border-emerald-900/10 bg-white p-4 shadow-sm">
+          <div className="rounded-[8px] border border-primary/10 bg-white p-4 shadow-sm">
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div>
                 <h2 className="font-headline text-xl font-bold">Modules et sous-modules</h2>
@@ -829,7 +829,7 @@ export default function AdminDashboardPage() {
                     <p className="mt-3 text-sm leading-6 text-slate-600">{module.description}</p>
                     <div className="mt-4 flex items-center justify-between text-xs">
                       <span className="font-medium text-slate-500">{module.users} utilisateurs</span>
-                      <span className="flex items-center gap-1 font-semibold text-emerald-700">
+                      <span className="flex items-center gap-1 font-semibold text-primary">
                         <CheckCircle2 className="h-3.5 w-3.5" />
                         {module.health}%
                       </span>
@@ -862,7 +862,7 @@ export default function AdminDashboardPage() {
           ].map((item) => {
             const Icon = item.icon;
             return (
-              <div key={item.title} className="rounded-[8px] border border-emerald-900/10 bg-white p-4 shadow-sm">
+              <div key={item.title} className="rounded-[8px] border border-primary/10 bg-white p-4 shadow-sm">
                 <Icon className="h-5 w-5 text-[#32BB78]" />
                 <h3 className="mt-3 font-bold">{item.title}</h3>
                 <p className="mt-1 text-sm leading-6 text-slate-500">{item.text}</p>

@@ -125,7 +125,7 @@ const PRODUCER_SUBCATEGORIES: SubcategoryOption[] = [
 const NKAMPA_IMAGE_PLACEHOLDER =
   'data:image/svg+xml;charset=utf-8,' +
   encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#32BB78"/><stop offset="1" stop-color="#0E5A59"/></linearGradient></defs><rect width="900" height="420" fill="url(#g)"/><circle cx="720" cy="70" r="180" fill="#fff" opacity=".12"/><circle cx="120" cy="360" r="150" fill="#FF8C00" opacity=".22"/></svg>`
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#32BB78"/><stop offset="1" stop-color="#32BB78"/></linearGradient></defs><rect width="900" height="420" fill="url(#g)"/><circle cx="720" cy="70" r="180" fill="#fff" opacity=".12"/><circle cx="120" cy="360" r="150" fill="#FF8C00" opacity=".22"/></svg>`
   );
 
 function optimizeMarketplaceImage(src?: string, width = 420, height = 420) {
@@ -145,6 +145,13 @@ function optimizeMarketplaceImage(src?: string, width = 420, height = 420) {
       const seedMatch = url.pathname.match(/^\/seed\/([^/]+)/);
       if (seedMatch?.[1]) {
         return `https://picsum.photos/seed/${seedMatch[1]}/${width}/${height}`;
+      }
+      return `https://picsum.photos/${width}/${height}`;
+    }
+
+    return src;
+  } catch {
+    return src;
   }
 }
 
@@ -226,12 +233,6 @@ function computeImageSignatureFromFile(file: File) {
     reader.onerror = () => resolve(null);
     reader.readAsDataURL(file);
   });
-}
-  } catch {
-    return src;
-  }
-
-  return src;
 }
 
 const SupplierCard = memo(function SupplierCard({ supplier }: { supplier: any }) {
@@ -405,7 +406,7 @@ export default function NkampaPage() {
       toast({
         title: '🎤 Écoute en cours...',
         description: 'Parlez maintenant',
-        className: 'bg-green-600 text-white border-none',
+        className: 'bg-primary text-white border-none',
       });
     };
 
@@ -435,7 +436,7 @@ export default function NkampaPage() {
         toast({
           title: '✅ Recherche effectuée',
           description: `"${transcript}" - ${results.length} résultat(s) trouvé(s)`,
-          className: 'bg-green-600 text-white border-none',
+          className: 'bg-primary text-white border-none',
         });
       }, 300);
     };
@@ -549,7 +550,7 @@ export default function NkampaPage() {
         description: matches.length
           ? `${matches.length} article(s) proche(s) de la photo.`
           : 'Essayez une photo plus claire ou un autre angle du produit.',
-        className: matches.length ? 'bg-green-600 text-white border-none' : undefined,
+        className: matches.length ? 'bg-primary text-white border-none' : undefined,
         variant: matches.length ? undefined : 'destructive',
       });
     } catch (error) {
@@ -788,9 +789,9 @@ export default function NkampaPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(34,197,94,0.12),transparent_35%),linear-gradient(180deg,#f7fbf8_0%,#eef8f1_52%,#f8faf8_100%)]">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(50,187,120,0.12),transparent_35%),linear-gradient(180deg,rgba(50,187,120,0.05)_0%,rgba(50,187,120,0.08)_52%,rgba(50,187,120,0.04)_100%)]">
       {/* Header avec fond vert et bordures arrondies en haut */}
-      <header className="sticky top-0 z-50 bg-gradient-to-r from-green-600 via-green-700 to-green-600 backdrop-blur-xl shadow-lg shadow-green-900/20 rounded-b-[32px] overflow-hidden">
+      <header className="sticky top-0 z-50 bg-gradient-to-r from-primary via-primary to-primary backdrop-blur-xl shadow-lg shadow-primary/20 rounded-b-[32px] overflow-hidden">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <input
             ref={photoSearchInputRef}
@@ -818,7 +819,7 @@ export default function NkampaPage() {
                   <h1 className="text-lg font-black text-white leading-none">
                     eNkamba Shop
                   </h1>
-                  <p className="text-[10px] font-semibold text-green-100 uppercase tracking-wider">
+                  <p className="text-[10px] font-semibold text-primary uppercase tracking-wider">
                     Commerce vivant
                   </p>
                 </div>
@@ -843,7 +844,7 @@ export default function NkampaPage() {
                   disabled={isPhotoSearching}
                   className={`relative rounded-lg p-1.5 transition-all ${
                     photoSearchPreview
-                      ? 'bg-white text-green-700'
+                      ? 'bg-white text-primary'
                       : 'text-white hover:bg-white/20'
                   } disabled:cursor-not-allowed disabled:opacity-70`}
                   aria-label="Rechercher par photo"
@@ -871,7 +872,7 @@ export default function NkampaPage() {
               {/* Cart Button */}
               <button
                 onClick={() => setIsOpen(true)}
-                className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-white text-green-700 transition-all hover:bg-white/90 hover:scale-105 active:scale-95 shadow-lg"
+                className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-white text-primary transition-all hover:bg-white/90 hover:scale-105 active:scale-95 shadow-lg"
               >
                 <ShoppingCart className="h-5 w-5" />
                 {itemCount > 0 && (
@@ -903,7 +904,7 @@ export default function NkampaPage() {
                 >
                   <div className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold whitespace-nowrap transition-all ${
                     isActive
-                      ? 'bg-white text-green-700 shadow-md'
+                      ? 'bg-white text-primary shadow-md'
                       : 'text-white hover:bg-white/20 border border-transparent hover:border-white/30'
                   }`}>
                     <Icon className="h-4 w-4" />
@@ -934,7 +935,7 @@ export default function NkampaPage() {
                 disabled={isPhotoSearching}
                 className={`relative rounded-lg p-1.5 transition-all ${
                   photoSearchPreview
-                    ? 'bg-white text-green-700'
+                    ? 'bg-white text-primary'
                     : 'text-white hover:bg-white/20'
                 } disabled:cursor-not-allowed disabled:opacity-70`}
                 aria-label="Rechercher par photo"
@@ -1149,14 +1150,14 @@ export default function NkampaPage() {
               
               {/* Effet de lumière futuriste */}
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(16,185,129,0.3),transparent_50%)]" />
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(34,197,94,0.2),transparent_50%)]" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(50,187,120,0.2),transparent_50%)]" />
               
               {/* Contenu */}
               <div className="absolute inset-0 flex flex-col justify-between p-6">
                 {/* Badge en haut */}
                 <div className="flex items-start justify-between">
                   <div className="relative">
-                    <div className="absolute -inset-1 bg-gradient-to-r from-primary to-emerald-400 rounded-full blur opacity-75" />
+                    <div className="absolute -inset-1 bg-gradient-to-r from-primary to-primary rounded-full blur opacity-75" />
                     <Badge className="relative bg-white/95 text-primary border-0 font-bold shadow-lg backdrop-blur-sm">
                       🌟 Tendance
                     </Badge>
@@ -1288,7 +1289,7 @@ export default function NkampaPage() {
               </div>
 
               {/* Solde du portefeuille */}
-              <div className="bg-gradient-to-r from-primary/10 to-green-800/10 p-4 rounded-lg border border-primary/20">
+              <div className="bg-gradient-to-r from-primary/10 to-primary/10 p-4 rounded-lg border border-primary/20">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs text-gray-600 mb-1">Solde disponible</p>
@@ -1304,7 +1305,7 @@ export default function NkampaPage() {
                     <p className="text-xs text-gray-600 mb-1">Après achat</p>
                     <p className={`text-lg font-semibold ${
                       balance >= (selectedProduct.price * quantity) 
-                        ? 'text-green-600' 
+                        ? 'text-primary' 
                         : 'text-red-600'
                     }`}>
                       {(balance - (selectedProduct.price * quantity)).toLocaleString()} CDF

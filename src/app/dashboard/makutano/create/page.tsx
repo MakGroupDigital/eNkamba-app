@@ -444,15 +444,15 @@ export default function MakutanoCreatePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-white to-orange-50 p-4 pt-24">
+    <div className="min-h-screen bg-gradient-to-b from-primary via-white to-orange-50 p-4 pt-24">
       <div className="mx-auto max-w-3xl space-y-4">
         <div className="flex items-center gap-3">
           <Button variant="outline" size="icon" onClick={() => router.push('/dashboard/makutano')}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-xl font-bold text-emerald-900">Nouveau Post Makutano</h1>
-            <p className="text-xs text-emerald-700/80">Page complète de création: image, vidéo, audio</p>
+            <h1 className="text-xl font-bold text-primary">Nouveau Post Makutano</h1>
+            <p className="text-xs text-primary/80">Page complète de création: image, vidéo, audio</p>
           </div>
         </div>
 
@@ -470,7 +470,7 @@ export default function MakutanoCreatePage() {
             Supprimer brouillon
           </Button>
         </div>
-        <p className="text-xs text-emerald-700/80">
+        <p className="text-xs text-primary/80">
           Auto-sauvegarde active (toutes les 5s)
           {lastAutoSavedAt ? ` · Dernière sauvegarde: ${new Date(lastAutoSavedAt).toLocaleTimeString('fr-FR')}` : ''}
         </p>
@@ -573,12 +573,12 @@ export default function MakutanoCreatePage() {
             )}
 
             {(audioStream || isAudioRecording) && (
-              <div className="space-y-3 rounded-xl border bg-emerald-900/90 p-4">
+              <div className="space-y-3 rounded-xl border bg-primary/90 p-4">
                 <div className="flex h-20 items-end gap-1 rounded-md bg-black/25 px-2">
                   {audioLevelData.map((level, idx) => (
                     <span
                       key={idx}
-                      className="w-1 rounded-full bg-emerald-200 transition-all"
+                      className="w-1 rounded-full bg-primary/20 transition-all"
                       style={{ height: `${level}px` }}
                     />
                   ))}
@@ -598,8 +598,8 @@ export default function MakutanoCreatePage() {
             )}
 
             {previewUrl && (
-              <div className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-white to-emerald-50 p-3 shadow-lg">
-                <p className="mb-2 text-xs font-semibold text-emerald-800">Aperçu</p>
+              <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-white to-primary p-3 shadow-lg">
+                <p className="mb-2 text-xs font-semibold text-primary">Aperçu</p>
                 {mediaType === 'video' ? (
                   <div className="relative overflow-hidden rounded-xl bg-black">
                     <video
@@ -614,7 +614,7 @@ export default function MakutanoCreatePage() {
                       <button
                         type="button"
                         onClick={togglePreviewPlay}
-                        className="absolute left-1/2 top-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-emerald-700 shadow-xl transition-transform hover:scale-105"
+                        className="absolute left-1/2 top-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-primary shadow-xl transition-transform hover:scale-105"
                       >
                         <Play className="h-6 w-6" />
                       </button>
@@ -631,7 +631,7 @@ export default function MakutanoCreatePage() {
                           step={0.1}
                           value={Math.min(previewCurrentTime, previewDuration || 0)}
                           onChange={(e) => handlePreviewSeek(Number(e.target.value))}
-                          className="h-1 w-full accent-emerald-400"
+                          className="h-1 w-full accent-primary"
                         />
                         <button type="button" onClick={togglePreviewMute} className="text-white">
                           {isPreviewMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
@@ -643,7 +643,7 @@ export default function MakutanoCreatePage() {
                     </div>
                   </div>
                 ) : mediaType === 'audio' ? (
-                  <div className="space-y-2 rounded-xl bg-emerald-900/95 p-3">
+                  <div className="space-y-2 rounded-xl bg-primary/95 p-3">
                     <audio
                       ref={(node) => {
                         previewMediaRef.current = node;
@@ -655,7 +655,7 @@ export default function MakutanoCreatePage() {
                       {Array.from({ length: 24 }).map((_, idx) => (
                         <span
                           key={idx}
-                          className="w-1 rounded-full bg-emerald-200/90"
+                          className="w-1 rounded-full bg-primary/20/90"
                           style={{ height: `${8 + ((idx * 7) % 22)}px` }}
                         />
                       ))}
@@ -664,7 +664,7 @@ export default function MakutanoCreatePage() {
                       <button
                         type="button"
                         onClick={togglePreviewPlay}
-                        className="rounded-full bg-white p-2 text-emerald-700"
+                        className="rounded-full bg-white p-2 text-primary"
                       >
                         {isPreviewPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                       </button>
@@ -675,9 +675,9 @@ export default function MakutanoCreatePage() {
                         step={0.1}
                         value={Math.min(previewCurrentTime, previewDuration || 0)}
                         onChange={(e) => handlePreviewSeek(Number(e.target.value))}
-                        className="h-1 w-full accent-emerald-300"
+                        className="h-1 w-full accent-primary"
                       />
-                      <span className="text-[10px] font-medium text-emerald-100">
+                      <span className="text-[10px] font-medium text-primary">
                         {formatTime(previewCurrentTime)} / {formatTime(previewDuration)}
                       </span>
                     </div>
@@ -694,7 +694,7 @@ export default function MakutanoCreatePage() {
           <Button variant="outline" onClick={() => router.push('/dashboard/makutano')}>
             Annuler
           </Button>
-          <Button onClick={publishPost} disabled={isPublishing} className="gap-2 bg-gradient-to-r from-primary to-green-800">
+          <Button onClick={publishPost} disabled={isPublishing} className="gap-2 bg-gradient-to-r from-primary to-primary">
             {isPublishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
             {isPublishing ? 'Publication...' : 'Publier maintenant'}
           </Button>

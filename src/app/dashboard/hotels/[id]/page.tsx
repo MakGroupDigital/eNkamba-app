@@ -354,7 +354,7 @@ export default function HotelDetailPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {hotel.roomTypes.map(room => (
                   <Card key={room.id} className="overflow-hidden">
-                    <CardHeader className="bg-gradient-to-r from-primary/10 to-green-800/10">
+                    <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/10">
                       <CardTitle className="text-lg">{room.name}</CardTitle>
                     </CardHeader>
                     <CardContent className="p-4 space-y-3">
@@ -460,7 +460,7 @@ export default function HotelDetailPage() {
               </div>
 
               {calculateNights() > 0 && (
-                <div className="p-4 rounded-lg bg-gradient-to-r from-primary/10 to-green-800/10 space-y-2">
+                <div className="p-4 rounded-lg bg-gradient-to-r from-primary/10 to-primary/10 space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">Nombre de nuits:</span>
                     <span className="font-semibold">{calculateNights()}</span>
@@ -476,7 +476,7 @@ export default function HotelDetailPage() {
                 </div>
               )}
 
-              <Button className="w-full h-12 bg-gradient-to-r from-primary to-green-800" onClick={handlePayment}>
+              <Button className="w-full h-12 bg-gradient-to-r from-primary to-primary" onClick={handlePayment}>
                 Confirmer et payer
               </Button>
             </CardContent>
@@ -498,7 +498,7 @@ export default function HotelDetailPage() {
         {step === 'receipt' && receipt && (
           <div className="space-y-6">
             <div ref={receiptRef} className="bg-white rounded-2xl shadow-2xl overflow-hidden">
-              <div className="bg-gradient-to-r from-[#32BB78] to-[#2a9d63] p-6 text-white">
+              <div className="bg-gradient-to-r from-[#32BB78] to-[#32BB78] p-6 text-white">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">

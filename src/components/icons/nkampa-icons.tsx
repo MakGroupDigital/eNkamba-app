@@ -11,7 +11,7 @@ export const TruckDeliveryIcon = ({ className = "w-6 h-6" }: { className?: strin
     <defs>
       <linearGradient id="truckGradient" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="#32BB78" />
-        <stop offset="100%" stopColor="#2a9d63" />
+        <stop offset="100%" stopColor="#32BB78" />
       </linearGradient>
     </defs>
     {/* Camion */}
@@ -74,7 +74,7 @@ export const WalletPayIcon = ({ className = "w-6 h-6" }: { className?: string })
     <defs>
       <linearGradient id="walletGradient" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="#32BB78" />
-        <stop offset="100%" stopColor="#2a9d63" />
+        <stop offset="100%" stopColor="#32BB78" />
       </linearGradient>
     </defs>
     {/* Portefeuille */}
@@ -135,8 +135,8 @@ export const CashOnDeliveryIcon = ({ className = "w-6 h-6" }: { className?: stri
   <svg viewBox="0 0 24 24" fill="none" className={className}>
     <defs>
       <linearGradient id="cashGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#10b981" />
-        <stop offset="100%" stopColor="#059669" />
+        <stop offset="0%" stopColor="#32BB78" />
+        <stop offset="100%" stopColor="#32BB78" />
       </linearGradient>
     </defs>
     {/* Boîte de livraison */}
@@ -155,8 +155,8 @@ export const VerifiedBadgeIcon = ({ className = "w-4 h-4" }: { className?: strin
   <svg viewBox="0 0 24 24" fill="none" className={className}>
     <defs>
       <linearGradient id="verifiedGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#10b981" />
-        <stop offset="100%" stopColor="#059669" />
+        <stop offset="0%" stopColor="#32BB78" />
+        <stop offset="100%" stopColor="#32BB78" />
       </linearGradient>
     </defs>
     <circle cx="12" cy="12" r="10" fill="url(#verifiedGradient)" />

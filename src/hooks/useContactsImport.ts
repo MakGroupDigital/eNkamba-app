@@ -224,7 +224,7 @@ export function useContactsImport() {
       toast({
         title: 'Import réussi',
         description: `${imported} contacts importés, ${matched} sur eNkamba`,
-        className: 'bg-green-600 text-white border-none',
+        className: 'bg-primary text-white border-none',
       });
 
       return { imported, matched, notMatched, errors };

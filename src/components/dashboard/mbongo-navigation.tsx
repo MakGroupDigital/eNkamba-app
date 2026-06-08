@@ -16,7 +16,7 @@ const mbongoNavItems = [
     name: 'Accueil', 
     icon: HomeNavIcon, 
     href: '/dashboard/mbongo-dashboard',
-    gradient: 'from-emerald-500 to-teal-600'
+    gradient: 'from-primary to-primary'
   },
   { 
     name: 'Wallet', 

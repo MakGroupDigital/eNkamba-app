@@ -220,7 +220,7 @@ export function useMoneyTransferDirect() {
       toast({
         title: 'Succès',
         description: `Envoi de ${data.amount.toLocaleString('fr-FR')} ${data.senderCurrency} effectué avec succès`,
-        className: 'bg-green-600 text-white border-none',
+        className: 'bg-primary text-white border-none',
       });
 
       console.log('Transfert terminé avec succès');

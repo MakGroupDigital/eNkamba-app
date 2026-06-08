@@ -190,7 +190,7 @@ export default function AddFundsPage() {
           ? 'Votre portefeuille a été crédité.'
           : result.providerResponse?.ResponseDesc || result.providerResponse?.ResponseData || 'Confirmez le paiement sur votre téléphone. Le dépôt sera finalisé après confirmation.',
       className: result.transactionStatus === 'completed'
-        ? 'bg-green-600 text-white border-none'
+        ? 'bg-primary text-white border-none'
         : 'bg-amber-600 text-white border-none',
     });
 
@@ -233,7 +233,7 @@ export default function AddFundsPage() {
             : 'Votre dépôt a été ajouté au portefeuille.'),
         className: result.transactionStatus === 'pending'
           ? 'bg-amber-600 text-white border-none'
-          : 'bg-green-600 text-white border-none',
+          : 'bg-primary text-white border-none',
       });
 
       router.push('/dashboard/wallet');
@@ -442,7 +442,7 @@ export default function AddFundsPage() {
                 <Button variant="outline" onClick={() => setStep('method')} className="flex-1">
                   Retour
                 </Button>
-                <Button onClick={handleDetailsSubmit} className="flex-1 bg-[#32BB78] hover:bg-[#2a9d63]">
+                <Button onClick={handleDetailsSubmit} className="flex-1 bg-[#32BB78] hover:bg-[#32BB78]">
                   Continuer
                 </Button>
               </div>
@@ -501,7 +501,7 @@ export default function AddFundsPage() {
                 <Button variant="outline" onClick={() => setStep('details')} className="flex-1" disabled={busy}>
                   Retour
                 </Button>
-                <Button onClick={handleConfirm} className="flex-1 bg-[#32BB78] hover:bg-[#2a9d63]" disabled={busy}>
+                <Button onClick={handleConfirm} className="flex-1 bg-[#32BB78] hover:bg-[#32BB78]" disabled={busy}>
                   {busy ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />

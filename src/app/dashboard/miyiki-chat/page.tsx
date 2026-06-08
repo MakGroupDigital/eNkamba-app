@@ -26,6 +26,7 @@ import { StoriesOnboarding } from '@/components/stories/StoriesOnboarding';
 import { StoryViewer } from '@/components/stories/StoryViewer';
 import { LocationSharingDialog } from '@/components/chat/LocationSharingDialog';
 import { ContactQRCode } from '@/components/settings/ContactQRCode';
+import { CHAT_WALLPAPERS } from '@/lib/chat-wallpapers';
 import {
   NewChatIcon,
   SearchIcon,
@@ -284,7 +285,7 @@ export default function MiyikiChatPage() {
                       </div>
                     )}
                     {convo.otherOnlineStatusVisible && convo.otherIsOnline && (
-                      <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-green-500 border-2 border-background"></div>
+                      <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-primary border-2 border-background"></div>
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -308,7 +309,7 @@ export default function MiyikiChatPage() {
                         const sentByMe = Boolean(currentUid && convo.lastMessageSenderId === currentUid);
                         if (!sentByMe) return null;
                         return convo.lastMessageReadByOther ? (
-                          <div className="flex items-center gap-1 text-xs text-green-600">
+                          <div className="flex items-center gap-1 text-xs text-primary">
                             <ChatReadIcon size={15} />
                             <span className="font-medium">Lu</span>
                           </div>
@@ -609,6 +610,34 @@ export default function MiyikiChatPage() {
             </Button>
           </div>
         </Card>
+
+        <Card className="p-4 rounded-2xl">
+          <h3 className="font-bold text-lg mb-2">Fond de discussion</h3>
+          <p className="mb-4 text-xs text-muted-foreground">Appliqué à toutes vos conversations, sauf si une discussion possède son propre fond.</p>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {CHAT_WALLPAPERS.map((wallpaper) => {
+              const isSelected = settings.wallpaper === wallpaper.id;
+
+              return (
+                <button
+                  key={wallpaper.id}
+                  type="button"
+                  onClick={() => updateSetting('wallpaper', wallpaper.id)}
+                  disabled={settingsLoading}
+                  className={`overflow-hidden rounded-2xl border text-left transition-all ${
+                    isSelected ? 'border-primary ring-2 ring-primary/25' : 'border-border hover:border-primary/50'
+                  }`}
+                >
+                  <span className={`block h-20 ${wallpaper.previewClass}`} />
+                  <span className="flex items-center justify-between px-3 py-2 text-xs font-semibold">
+                    {wallpaper.label}
+                    {isSelected && <span className="text-primary">Actif</span>}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </Card>
         
         <Card className="p-4 rounded-2xl">
           <h3 className="font-bold text-lg mb-4">Confidentialité</h3>
@@ -617,7 +646,7 @@ export default function MiyikiChatPage() {
             <div className="flex items-center justify-between p-3 rounded-xl hover:bg-muted/50 transition-colors">
               <div className="flex items-center gap-3">
                 <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                  settings.onlineStatus ? 'bg-green-100 text-green-600' : 'bg-muted text-muted-foreground'
+                  settings.onlineStatus ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
                 }`}>
                   {settings.onlineStatus ? <ChatEyeIcon size={22} /> : <ChatEyeOffIcon size={22} />}
                 </div>
@@ -735,6 +764,68 @@ export default function MiyikiChatPage() {
     );
   };
 
+  const renderChatTabs = () => (
+    <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto scrollbar-hide">
+      <button
+        onClick={() => setActiveTab('discussions')}
+        className={`flex items-center gap-2 rounded-full px-3 py-2 text-xs font-medium transition-all whitespace-nowrap ${
+          activeTab === 'discussions'
+            ? 'bg-white text-primary shadow-lg'
+            : 'bg-white/12 text-white/80 hover:bg-white/20'
+        }`}
+      >
+        <ChatDiscussionsIcon size={18} />
+        <span>Discussions</span>
+        {conversations.filter(c => c.unread && c.unread > 0).length > 0 && (
+          <Badge className="bg-red-500 text-white rounded-full h-5 min-w-[20px] px-1.5 text-xs">
+            {conversations.filter(c => c.unread && c.unread > 0).length}
+          </Badge>
+        )}
+      </button>
+
+      <button
+        onClick={() => setActiveTab('stories')}
+        className={`flex items-center gap-2 rounded-full px-3 py-2 text-xs font-medium transition-all whitespace-nowrap ${
+          activeTab === 'stories'
+            ? 'bg-white text-purple-600 shadow-lg'
+            : 'bg-white/12 text-white/80 hover:bg-white/20'
+        }`}
+      >
+        <ChatStoriesIcon size={18} />
+        <span>Stories</span>
+      </button>
+
+      <button
+        onClick={() => setActiveTab('notifications')}
+        className={`flex items-center gap-2 rounded-full px-3 py-2 text-xs font-medium transition-all whitespace-nowrap ${
+          activeTab === 'notifications'
+            ? 'bg-white text-primary shadow-lg'
+            : 'bg-white/12 text-white/80 hover:bg-white/20'
+        }`}
+      >
+        <ChatNotificationIcon size={19} />
+        <span>Notifications</span>
+        {unreadCount > 0 && (
+          <Badge className="bg-red-500 text-white rounded-full h-5 min-w-[20px] px-1.5 text-xs">
+            {unreadCount > 9 ? '9+' : unreadCount}
+          </Badge>
+        )}
+      </button>
+
+      <button
+        onClick={() => setActiveTab('settings')}
+        className={`flex items-center gap-2 rounded-full px-3 py-2 text-xs font-medium transition-all whitespace-nowrap ${
+          activeTab === 'settings'
+            ? 'bg-white text-slate-900 shadow-lg'
+            : 'bg-white/12 text-white/80 hover:bg-white/20'
+        }`}
+      >
+        <ChatSettingsIcon size={18} />
+        <span>Paramètres</span>
+      </button>
+    </div>
+  );
+
   return (
     <div className="flex h-screen flex-col bg-background text-foreground animate-in fade-in duration-500">
       <style jsx global>{`
@@ -748,9 +839,9 @@ export default function MiyikiChatPage() {
       `}</style>
       
       {/* Header */}
-      <header className="sticky top-0 z-10 flex h-16 items-center justify-between bg-gradient-to-r from-primary via-primary to-green-800 px-4 shadow-lg">
-        <div />
-        <div className="flex items-center gap-2">
+      <header className="sticky top-0 z-50 flex h-16 items-center gap-3 bg-gradient-to-r from-primary via-primary to-primary px-3 shadow-lg">
+        {renderChatTabs()}
+        <div className="flex shrink-0 items-center gap-2">
           <button
             type="button"
             onClick={() => {
@@ -769,76 +860,13 @@ export default function MiyikiChatPage() {
               </AvatarFallback>
             </Avatar>
             {/* Indicateur de connexion */}
-            <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-green-500 border-2 border-white"></div>
+            <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-primary border-2 border-white"></div>
           </button>
         </div>
       </header>
 
       <main className="flex-1 overflow-y-auto pb-32">
         <div className="container mx-auto max-w-4xl p-4 space-y-4">
-          {/* Chat Navigation Tabs - Modern Design */}
-          <div className="sticky top-0 z-40 -mx-4 px-4 pt-2 pb-3 bg-background/95 backdrop-blur-lg border-b border-border/50">
-            <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
-              <button
-                onClick={() => setActiveTab('discussions')}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-full font-medium text-sm transition-all whitespace-nowrap ${
-                  activeTab === 'discussions'
-                    ? 'bg-primary text-white shadow-lg shadow-primary/30'
-                    : 'bg-muted/50 text-muted-foreground hover:bg-muted'
-                }`}
-              >
-                <ChatDiscussionsIcon size={20} />
-                <span>Discussions</span>
-                {conversations.filter(c => c.unread && c.unread > 0).length > 0 && (
-                  <Badge className="bg-red-500 text-white rounded-full h-5 min-w-[20px] px-1.5 text-xs">
-                    {conversations.filter(c => c.unread && c.unread > 0).length}
-                  </Badge>
-                )}
-              </button>
-              
-              <button
-                onClick={() => setActiveTab('stories')}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-full font-medium text-sm transition-all whitespace-nowrap ${
-                  activeTab === 'stories'
-                    ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/30'
-                    : 'bg-muted/50 text-muted-foreground hover:bg-muted'
-                }`}
-              >
-                <ChatStoriesIcon size={20} />
-                <span>Stories</span>
-              </button>
-              
-              <button
-                onClick={() => setActiveTab('notifications')}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-full font-medium text-sm transition-all whitespace-nowrap ${
-                  activeTab === 'notifications'
-                    ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg shadow-green-600/30'
-                    : 'bg-muted/50 text-muted-foreground hover:bg-muted'
-                }`}
-              >
-                <ChatNotificationIcon size={22} />
-                <span>Notifications</span>
-                {unreadCount > 0 && (
-                  <Badge className="bg-white/20 text-white rounded-full h-5 min-w-[20px] px-1.5 text-xs">
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </Badge>
-                )}
-              </button>
-              
-              <button
-                onClick={() => setActiveTab('settings')}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-full font-medium text-sm transition-all whitespace-nowrap ${
-                  activeTab === 'settings'
-                    ? 'bg-gradient-to-r from-slate-700 to-slate-900 text-white shadow-lg shadow-slate-700/30'
-                    : 'bg-muted/50 text-muted-foreground hover:bg-muted'
-                }`}
-              >
-                <ChatSettingsIcon size={20} />
-                <span>Paramètres</span>
-              </button>
-            </div>
-          </div>
-
           {activeTab === 'discussions' && (
             <div className="grid grid-cols-2 items-center overflow-hidden rounded-xl border border-border/40 bg-muted/20 text-sm font-medium text-muted-foreground">
               {([
@@ -1010,9 +1038,9 @@ export default function MiyikiChatPage() {
                   setShowActionsMenu(false);
                   handleStartChat();
                 }}
-                className="flex flex-1 items-center gap-4 rounded-2xl border-2 border-transparent p-4 transition-all hover:border-green-500/20 hover:bg-green-500/5"
+                className="flex flex-1 items-center gap-4 rounded-2xl border-2 border-transparent p-4 transition-all hover:border-primary/20 hover:bg-primary/5"
               >
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-green-600 shadow-lg">
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary shadow-lg">
                   <NewChatIcon size={24} className="text-white" />
                 </div>
                 <div className="flex-1 text-left">
@@ -1027,7 +1055,7 @@ export default function MiyikiChatPage() {
                   setShowContactQRCode(true);
                 }}
                 disabled={!contactQRCodeUserData}
-                className="flex w-20 flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-green-500/25 bg-green-500/5 text-green-700 transition-all hover:border-green-500/45 hover:bg-green-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex w-20 flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-primary/25 bg-primary/5 text-primary transition-all hover:border-primary/45 hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-50"
                 aria-label="Afficher mon QR contact"
               >
                 <QrCode className="h-6 w-6" />

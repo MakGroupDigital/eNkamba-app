@@ -15,6 +15,7 @@ interface PinVerificationProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  purpose?: 'payment' | 'balance';
   paymentDetails?: {
     recipient: string;
     amount: string;
@@ -22,7 +23,7 @@ interface PinVerificationProps {
   };
 }
 
-export function PinVerification({ isOpen, onClose, onSuccess, paymentDetails }: PinVerificationProps) {
+export function PinVerification({ isOpen, onClose, onSuccess, purpose = 'payment', paymentDetails }: PinVerificationProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   
@@ -117,7 +118,7 @@ export function PinVerification({ isOpen, onClose, onSuccess, paymentDetails }: 
       toast({
         title: 'Code PIN créé ! ✅',
         description: 'Votre code PIN a été enregistré avec succès',
-        className: 'bg-green-600 text-white border-none',
+        className: 'bg-primary text-white border-none',
       });
 
       setHasPin(true);
@@ -172,8 +173,8 @@ export function PinVerification({ isOpen, onClose, onSuccess, paymentDetails }: 
       if (hashedPin === storedPin) {
         toast({
           title: 'Code PIN vérifié ! ✅',
-          description: 'Confirmation du paiement...',
-          className: 'bg-green-600 text-white border-none',
+          description: purpose === 'balance' ? 'Affichage du solde autorisé.' : 'Confirmation du paiement...',
+          className: 'bg-primary text-white border-none',
         });
         
         setPin('');
@@ -190,7 +191,7 @@ export function PinVerification({ isOpen, onClose, onSuccess, paymentDetails }: 
           toast({
             variant: 'destructive',
             title: 'Trop de tentatives',
-            description: 'Paiement annulé pour des raisons de sécurité',
+            description: purpose === 'balance' ? 'Affichage du solde refusé pour des raisons de sécurité' : 'Paiement annulé pour des raisons de sécurité',
           });
           setPin('');
           setAttempts(0);
@@ -238,8 +239,8 @@ export function PinVerification({ isOpen, onClose, onSuccess, paymentDetails }: 
           </DialogTitle>
           <DialogDescription>
             {hasPin === false 
-              ? 'Créez un code PIN à 4 chiffres pour sécuriser vos paiements'
-              : 'Entrez votre code PIN pour confirmer le paiement'
+              ? 'Créez un code PIN à 4 chiffres pour sécuriser vos opérations'
+              : purpose === 'balance' ? 'Entrez votre code PIN pour afficher votre solde' : 'Entrez votre code PIN pour confirmer le paiement'
             }
           </DialogDescription>
         </DialogHeader>
@@ -247,7 +248,9 @@ export function PinVerification({ isOpen, onClose, onSuccess, paymentDetails }: 
         <div className="space-y-4 py-4">
           {paymentDetails && hasPin !== false && (
             <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-              <p className="text-sm font-semibold text-center mb-3">Récapitulatif du paiement</p>
+              <p className="text-sm font-semibold text-center mb-3">
+                {purpose === 'balance' ? 'Vérification sécurisée' : 'Récapitulatif du paiement'}
+              </p>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Destinataire :</span>
                 <span className="font-semibold">{paymentDetails.recipient}</span>
@@ -272,7 +275,7 @@ export function PinVerification({ isOpen, onClose, onSuccess, paymentDetails }: 
                   <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="font-semibold mb-1">Sécurisez vos paiements</p>
-                    <p className="text-xs">Créez un code PIN à 4 chiffres. Vous devrez le saisir avant chaque paiement.</p>
+                    <p className="text-xs">Créez un code PIN à 4 chiffres. Vous devrez le saisir pour les opérations sensibles.</p>
                   </div>
                 </div>
               </div>
@@ -330,7 +333,7 @@ export function PinVerification({ isOpen, onClose, onSuccess, paymentDetails }: 
               </div>
 
               {pin.length === 4 && confirmPin.length === 4 && pin === confirmPin && (
-                <div className="flex items-center gap-2 text-green-600 text-sm">
+                <div className="flex items-center gap-2 text-primary text-sm">
                   <CheckCircle2 className="w-4 h-4" />
                   <span>Les codes PIN correspondent</span>
                 </div>
@@ -396,7 +399,7 @@ export function PinVerification({ isOpen, onClose, onSuccess, paymentDetails }: 
             <Button
               onClick={createPin}
               disabled={isCreatingPin || pin.length !== 4 || confirmPin.length !== 4 || pin !== confirmPin}
-              className="bg-[#32BB78] hover:bg-[#2a9d63]"
+              className="bg-[#32BB78] hover:bg-[#32BB78]"
             >
               {isCreatingPin ? 'Création...' : 'Créer le code PIN'}
             </Button>
@@ -404,9 +407,9 @@ export function PinVerification({ isOpen, onClose, onSuccess, paymentDetails }: 
             <Button
               onClick={verifyPin}
               disabled={isVerifying || pin.length !== 4}
-              className="bg-[#32BB78] hover:bg-[#2a9d63]"
+              className="bg-[#32BB78] hover:bg-[#32BB78]"
             >
-              {isVerifying ? 'Vérification...' : 'Confirmer le paiement'}
+              {isVerifying ? 'Vérification...' : purpose === 'balance' ? 'Afficher le solde' : 'Confirmer le paiement'}
             </Button>
           )}
         </DialogFooter>

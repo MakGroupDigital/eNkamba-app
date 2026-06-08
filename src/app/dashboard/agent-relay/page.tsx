@@ -23,7 +23,7 @@ export default function AgentRelayMainPage() {
       id: 'agent-relais',
       title: 'Agent Relais',
       icon: Handshake,
-      color: 'bg-[#32BB78] hover:bg-[#2BA86A]',
+      color: 'bg-[#32BB78] hover:bg-[#32BB78]',
       description: 'Effectuez des transactions pour vos clients'
     },
     {
@@ -49,7 +49,7 @@ export default function AgentRelayMainPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#32BB78] via-[#2BA86A] to-[#32BB78]">
+    <div className="min-h-screen bg-gradient-to-b from-[#32BB78] via-[#32BB78] to-[#32BB78]">
       {/* Header avec logo */}
       <div className="pt-12 pb-6 px-6">
         <div className="flex items-center justify-between">
@@ -175,7 +175,7 @@ export default function AgentRelayMainPage() {
             onClick={handleContinue}
             className={`w-full h-14 rounded-xl text-lg font-semibold shadow-lg transition-all ${
               selectedType
-                ? 'bg-[#32BB78] hover:bg-[#2BA86A] text-white'
+                ? 'bg-[#32BB78] hover:bg-[#32BB78] text-white'
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
             }`}
           >

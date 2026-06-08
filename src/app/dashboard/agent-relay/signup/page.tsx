@@ -803,7 +803,7 @@ export default function AgentSignupPage() {
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
                     {signupData.selfieUrl ? (
-                      <CheckCircle2 size={20} className="text-green-600" />
+                      <CheckCircle2 size={20} className="text-primary" />
                     ) : (
                       <div className="h-5 w-5 rounded-full border-2 border-gray-300" />
                     )}
@@ -812,7 +812,7 @@ export default function AgentSignupPage() {
                   
                   <div className="flex items-center gap-3">
                     {signupData.videoUrl ? (
-                      <CheckCircle2 size={20} className="text-green-600" />
+                      <CheckCircle2 size={20} className="text-primary" />
                     ) : (
                       <div className="h-5 w-5 rounded-full border-2 border-gray-300" />
                     )}
@@ -919,7 +919,7 @@ export default function AgentSignupPage() {
       ) : (
         <>
           {/* Header - Avec couleurs Enkamba */}
-          <div className="bg-gradient-to-r from-[#32BB78] via-[#2BA86A] to-[#32BB78] px-4 py-6">
+          <div className="bg-gradient-to-r from-[#32BB78] via-[#32BB78] to-[#32BB78] px-4 py-6">
             <div className="flex items-center justify-between">
               <Button 
                 variant="ghost" 
@@ -963,7 +963,7 @@ export default function AgentSignupPage() {
             <Button 
               onClick={nextStep} 
               disabled={isLoading}
-              className="w-full h-12 bg-[#32BB78] hover:bg-[#2BA86A] text-white rounded-lg font-medium disabled:opacity-50"
+              className="w-full h-12 bg-[#32BB78] hover:bg-[#32BB78] text-white rounded-lg font-medium disabled:opacity-50"
             >
               {isLoading ? 'Vérification...' : currentStep === 1 ? 'Continuer' : 'Suivant'}
             </Button>

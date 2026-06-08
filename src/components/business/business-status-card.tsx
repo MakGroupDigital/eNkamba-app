@@ -36,11 +36,11 @@ export function BusinessStatusCard({
           icon: BusinessDashboardIcons.CheckCircle,
           title: 'Compte approuvé',
           description: 'Félicitations, vous êtes désormais un partenaire certifié Enkamba.',
-          bgColor: 'bg-green-50',
-          borderColor: 'border-green-200',
-          textColor: 'text-green-700',
-          badgeColor: 'bg-green-100 text-green-800',
-          dotColor: 'bg-green-500',
+          bgColor: 'bg-primary/5',
+          borderColor: 'border-primary/20',
+          textColor: 'text-primary',
+          badgeColor: 'bg-primary/10 text-primary',
+          dotColor: 'bg-primary',
         };
       case 'REJECTED':
         return {
@@ -113,7 +113,7 @@ export function BusinessStatusCard({
           {status === 'APPROVED' && (
             <a href="/dashboard/business-pro">
               <button
-                className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                className="bg-primary hover:bg-primary text-white font-semibold py-2 px-4 rounded-lg transition-colors"
               >
                 Accéder à mon Espace Pro
               </button>

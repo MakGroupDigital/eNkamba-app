@@ -70,7 +70,7 @@ function PaymentReturnContent() {
                   : 'Le paiement a été annulé, refusé ou reste non confirmé.'}
             </p>
           </div>
-          <Button className="w-full bg-[#32BB78] hover:bg-[#2a9d63]" onClick={() => router.push('/dashboard/wallet')}>
+          <Button className="w-full bg-[#32BB78] hover:bg-[#32BB78]" onClick={() => router.push('/dashboard/wallet')}>
             Retour au portefeuille
           </Button>
         </CardContent>

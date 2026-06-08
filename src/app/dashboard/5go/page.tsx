@@ -27,7 +27,7 @@ const fiveGoServices = [
 
 export default function FiveGoPage() {
   return (
-    <div className="min-h-screen bg-[#f6faf7]">
+    <div className="min-h-screen bg-[#32BB78]">
       <div className="mx-auto max-w-4xl space-y-5 p-4">
         <header className="relative overflow-hidden rounded-[1.75rem] bg-[#32BB78] p-5 text-white shadow-lg shadow-[#32BB78]/20">
           <div className="absolute -right-8 -top-10 h-28 w-28 rounded-full bg-white/20 blur-2xl" />
@@ -42,9 +42,9 @@ export default function FiveGoPage() {
           </div>
         </header>
 
-        <Card className="overflow-hidden rounded-2xl border-[#dbe8df]">
+        <Card className="overflow-hidden rounded-2xl border-[#32BB78]">
           <CardHeader className="bg-gradient-to-r from-[#32BB78]/10 to-transparent">
-            <CardTitle className="font-headline flex items-center gap-2 text-[#122116]">
+            <CardTitle className="font-headline flex items-center gap-2 text-foreground">
               <span className="h-2 w-2 rounded-full bg-[#32BB78]" />
               Services 5go
             </CardTitle>

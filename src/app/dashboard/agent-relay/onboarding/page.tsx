@@ -89,7 +89,7 @@ export default function AgentRelayOnboardingPage() {
       case 'welcome':
         return (
           <div className="text-center space-y-6">
-            <div className="h-24 w-24 mx-auto rounded-full bg-gradient-to-br from-primary to-green-800 flex items-center justify-center">
+            <div className="h-24 w-24 mx-auto rounded-full bg-gradient-to-br from-primary to-primary flex items-center justify-center">
               <Handshake size={48} className="text-white" />
             </div>
             <div>
@@ -198,7 +198,7 @@ export default function AgentRelayOnboardingPage() {
                   description: 'Services de base dans votre commerce',
                   commission: '5-10%',
                   investment: 'Minimal',
-                  color: 'from-primary to-green-800'
+                  color: 'from-primary to-primary'
                 },
                 {
                   type: 'Cabiniste',
@@ -280,7 +280,7 @@ export default function AgentRelayOnboardingPage() {
       case 'application':
         return (
           <div className="text-center space-y-6">
-            <div className="h-24 w-24 mx-auto rounded-full bg-gradient-to-br from-primary to-green-800 flex items-center justify-center">
+            <div className="h-24 w-24 mx-auto rounded-full bg-gradient-to-br from-primary to-primary flex items-center justify-center">
               <Shield size={48} className="text-white" />
             </div>
             <div>
@@ -390,7 +390,7 @@ export default function AgentRelayOnboardingPage() {
         
         {currentStep === steps.length - 1 ? (
           <Button 
-            className="gap-2 bg-gradient-to-r from-primary to-green-800"
+            className="gap-2 bg-gradient-to-r from-primary to-primary"
             asChild
           >
             <Link href="/dashboard/agent-relay/application">

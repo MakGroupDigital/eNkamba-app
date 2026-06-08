@@ -32,7 +32,7 @@ type TransactionTypeFilter = 'all' | 'transfer_sent' | 'transfer_received' | 'de
 
 const getStatusBadge = (status: Transaction['status']) => {
   const variants: Record<typeof status, { label: string; className: string }> = {
-    completed: { label: 'Terminé', className: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' },
+    completed: { label: 'Terminé', className: 'bg-primary/10 text-primary dark:bg-primary dark:text-primary' },
     pending: { label: 'En attente', className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' },
     failed: { label: 'Échoué', className: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300' },
     cancelled: { label: 'Annulée', className: 'bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300' },
@@ -120,7 +120,7 @@ export default function HistoryPage() {
         toast({
           title: 'Succès',
           description: `Transaction annulée. ${data.refundAmount.toLocaleString('fr-FR')} CDF remboursés.`,
-          className: 'bg-green-600 text-white border-none',
+          className: 'bg-primary text-white border-none',
         });
         setSelectedTransaction(null);
         // Rafraîchir la page
@@ -165,7 +165,7 @@ export default function HistoryPage() {
           </Button>
           <div className="flex items-center gap-2">
             <HistoryIcon className="h-6 w-6 text-[#32BB78]" />
-            <h1 className="font-headline text-2xl font-bold bg-gradient-to-r from-[#32BB78] to-[#2a9d63] bg-clip-text text-transparent">
+            <h1 className="font-headline text-2xl font-bold bg-gradient-to-r from-[#32BB78] to-[#32BB78] bg-clip-text text-transparent">
               Historique des Transactions
             </h1>
           </div>
@@ -315,7 +315,7 @@ export default function HistoryPage() {
                 <span className="text-muted-foreground">Montant</span>
                 <span className={cn(
                   "text-lg font-bold",
-                  (selectedTransaction.type === 'deposit' || selectedTransaction.type === 'transfer_received' || selectedTransaction.type === 'money_request_received') ? 'text-green-600' : 'text-foreground'
+                  (selectedTransaction.type === 'deposit' || selectedTransaction.type === 'transfer_received' || selectedTransaction.type === 'money_request_received') ? 'text-primary' : 'text-foreground'
                 )}>
                   {(selectedTransaction.type === 'deposit' || selectedTransaction.type === 'transfer_received' || selectedTransaction.type === 'money_request_received') ? '+' : '-'} {selectedTransaction.amount.toLocaleString('fr-FR')} {selectedTransaction.currency || 'CDF'}
                 </span>
@@ -439,7 +439,7 @@ export default function HistoryPage() {
               <Button
                 onClick={handleDownloadReceipt}
                 disabled={isDownloading}
-                className="flex-1 bg-[#32BB78] hover:bg-[#2a9d63] text-white gap-2"
+                className="flex-1 bg-[#32BB78] hover:bg-[#32BB78] text-white gap-2"
               >
                 {isDownloading ? (
                   <>

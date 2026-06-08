@@ -442,7 +442,7 @@ export default function PayReceivePage() {
           <div className="flex gap-2">
             <Button 
               size="icon" 
-              className="bg-[#32BB78] hover:bg-[#2a9d63] text-white"
+              className="bg-[#32BB78] hover:bg-[#32BB78] text-white"
               onClick={() => {
                 setPreviousMode('receive');
                 setMode('scanner');
@@ -502,7 +502,7 @@ export default function PayReceivePage() {
                 </div>
 
                 <Button 
-                  className="w-full bg-gradient-to-r from-primary to-green-800 hover:from-primary/90 hover:to-green-800/90 h-12 text-base font-bold"
+                  className="w-full bg-gradient-to-r from-primary to-primary hover:from-primary/90 hover:to-primary/90 h-12 text-base font-bold"
                   onClick={() => {
                     setPreviousMode('receive');
                     setMode('scanner');
@@ -566,7 +566,7 @@ export default function PayReceivePage() {
                   )}
                   {isScanning && (
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="w-3/4 h-3/4 border-4 border-dashed border-green-500/70 rounded-2xl animate-pulse" />
+                      <div className="w-3/4 h-3/4 border-4 border-dashed border-primary/70 rounded-2xl animate-pulse" />
                     </div>
                   )}
                   {isScanning && (
@@ -716,7 +716,7 @@ export default function PayReceivePage() {
               </div>
 
               <Button 
-                className="w-full bg-gradient-to-r from-primary to-green-800 hover:from-primary/90 hover:to-green-800/90 h-12 text-base font-bold"
+                className="w-full bg-gradient-to-r from-primary to-primary hover:from-primary/90 hover:to-primary/90 h-12 text-base font-bold"
                 onClick={handlePayment}
                 disabled={isPaying || !paymentAmount}
               >
@@ -910,7 +910,7 @@ export default function PayReceivePage() {
                         toast({
                           title: 'Tous les paiements réussis ! ✅',
                           description: `${successCount} paiement(s) effectué(s) avec succès`,
-                          className: 'bg-green-600 text-white border-none',
+                          className: 'bg-primary text-white border-none',
                         });
                         setMultiPayRecipients([]);
                         setMultiPayTotalAmount(0);

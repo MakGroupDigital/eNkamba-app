@@ -4,22 +4,27 @@ import { useState, useEffect } from 'react';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/useAuth';
+import { DEFAULT_CHAT_WALLPAPER_ID } from '@/lib/chat-wallpapers';
 
 export interface ChatSettings {
   onlineStatus: boolean;
   readReceipts: boolean;
   locationSharing: boolean;
   lastSeen: boolean;
+  wallpaper: string;
 }
+
+const DEFAULT_CHAT_SETTINGS: ChatSettings = {
+  onlineStatus: true,
+  readReceipts: true,
+  locationSharing: false,
+  lastSeen: true,
+  wallpaper: DEFAULT_CHAT_WALLPAPER_ID,
+};
 
 export function useChatSettings() {
   const { user } = useAuth();
-  const [settings, setSettings] = useState<ChatSettings>({
-    onlineStatus: true,
-    readReceipts: true,
-    locationSharing: false,
-    lastSeen: true,
-  });
+  const [settings, setSettings] = useState<ChatSettings>(DEFAULT_CHAT_SETTINGS);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -34,10 +39,10 @@ export function useChatSettings() {
         const settingsDoc = await getDoc(settingsRef);
 
         if (settingsDoc.exists()) {
-          setSettings({ ...settings, ...settingsDoc.data() } as ChatSettings);
+          setSettings({ ...DEFAULT_CHAT_SETTINGS, ...settingsDoc.data() } as ChatSettings);
         } else {
           // Créer les paramètres par défaut
-          await setDoc(settingsRef, settings);
+          await setDoc(settingsRef, DEFAULT_CHAT_SETTINGS);
         }
       } catch (error) {
         console.error('Error loading chat settings:', error);
@@ -119,7 +124,7 @@ export function useChatSettings() {
     };
   }, [settings.lastSeen, settings.onlineStatus, user?.uid]);
 
-  const updateSetting = async (key: keyof ChatSettings, value: boolean) => {
+  const updateSetting = async <K extends keyof ChatSettings>(key: K, value: ChatSettings[K]) => {
     if (!user?.uid) return;
 
     try {

@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
+import { DASHBOARD_LOCATION_EVENT, getDashboardLocationOrDefault } from '@/lib/dashboard-location';
 
 export interface LocationData {
   latitude: number;
@@ -13,73 +14,46 @@ export function useLocationTracking(isActive: boolean = false) {
   const [error, setError] = useState<string | null>(null);
   const [isTracking, setIsTracking] = useState(false);
 
-  const getAddress = async (lat: number, lng: number): Promise<string> => {
-    try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
-      );
-      const data = await response.json();
-      return data.display_name || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-    } catch {
-      return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-    }
-  };
-
-  const updateLocation = useCallback(async (position: GeolocationPosition) => {
-    const { latitude, longitude, accuracy } = position.coords;
-    const address = await getAddress(latitude, longitude);
-    
-    setLocation({
-      latitude,
-      longitude,
-      accuracy,
-      timestamp: Date.now(),
-      address,
-    });
-  }, []);
-
-  const handleError = useCallback((err: GeolocationPositionError) => {
-    setError(err.message);
-    setIsTracking(false);
-  }, []);
-
   useEffect(() => {
     if (!isActive) {
       setIsTracking(false);
       return;
     }
 
-    if (!navigator.geolocation) {
-      setError('Géolocalisation non supportée');
-      return;
-    }
-
-    setIsTracking(true);
-    setError(null);
-
-    // Position initiale
-    navigator.geolocation.getCurrentPosition(updateLocation, handleError, {
-      enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 0,
+    const storedLocation = getDashboardLocationOrDefault();
+    setLocation({
+      latitude: storedLocation.latitude,
+      longitude: storedLocation.longitude,
+      accuracy: storedLocation.accuracy || 0,
+      timestamp: storedLocation.updatedAt || Date.now(),
+      address: storedLocation.label,
     });
+    setError(null);
+    setIsTracking(false);
+  }, [isActive]);
 
-    // Suivi en temps réel
-    const watchId = navigator.geolocation.watchPosition(
-      updateLocation,
-      handleError,
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 5000,
-      }
-    );
+  useEffect(() => {
+    const syncStoredLocation = () => {
+      const storedLocation = getDashboardLocationOrDefault();
+
+      setLocation({
+        latitude: storedLocation.latitude,
+        longitude: storedLocation.longitude,
+        accuracy: storedLocation.accuracy || 0,
+        timestamp: storedLocation.updatedAt || Date.now(),
+        address: storedLocation.label,
+      });
+      setError(null);
+    };
+
+    window.addEventListener(DASHBOARD_LOCATION_EVENT, syncStoredLocation);
+    window.addEventListener('storage', syncStoredLocation);
 
     return () => {
-      navigator.geolocation.clearWatch(watchId);
-      setIsTracking(false);
+      window.removeEventListener(DASHBOARD_LOCATION_EVENT, syncStoredLocation);
+      window.removeEventListener('storage', syncStoredLocation);
     };
-  }, [isActive, updateLocation, handleError]);
+  }, []);
 
   return { location, error, isTracking };
 }

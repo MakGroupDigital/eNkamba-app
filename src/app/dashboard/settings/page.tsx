@@ -53,11 +53,11 @@ const DocumentIcon = ({ size = 24 }: { size?: number }) => (
     <defs>
       <linearGradient id="docGrad" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="#32BB78" />
-        <stop offset="100%" stopColor="#0E5A59" />
+        <stop offset="100%" stopColor="#32BB78" />
       </linearGradient>
     </defs>
     <path d="M12 4H28L36 12V44H12V4Z" fill="url(#docGrad)" />
-    <path d="M28 4V12H36" fill="#0E5A59" />
+    <path d="M28 4V12H36" fill="#32BB78" />
     <rect x="16" y="18" width="16" height="2" rx="1" fill="#fff" fillOpacity="0.5" />
     <rect x="16" y="24" width="12" height="2" rx="1" fill="#fff" fillOpacity="0.5" />
     <rect x="16" y="30" width="14" height="2" rx="1" fill="#fff" fillOpacity="0.5" />
@@ -228,7 +228,7 @@ export default function SettingsPage() {
     <div className="container mx-auto max-w-4xl p-4 space-y-6 animate-in fade-in duration-500">
       {/* Header Card */}
       <Card className="overflow-hidden border-0 shadow-xl">
-        <div className="bg-gradient-to-r from-primary via-primary to-green-800 p-6">
+        <div className="bg-gradient-to-r from-primary via-primary to-primary p-6">
           <CardTitle className="flex items-center gap-3 font-headline text-white">
             <div className="h-12 w-12 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
               <SettingsPageIcon size={32} />
@@ -262,7 +262,7 @@ export default function SettingsPage() {
                 <div className="relative">
                   <Avatar className="h-20 w-20 border-4 border-primary/20">
                     <AvatarImage src={profile?.profileImage || profile?.photoURL || undefined} alt={userData.name} />
-                    <AvatarFallback className="bg-gradient-to-br from-primary to-green-800 text-white text-lg font-bold">
+                    <AvatarFallback className="bg-gradient-to-br from-primary to-primary text-white text-lg font-bold">
                       {userData.name
                         .split(' ')
                         .map(n => n[0])
@@ -271,7 +271,7 @@ export default function SettingsPage() {
                         .slice(0, 2)}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-green-500 border-2 border-white" />
+                  <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-primary border-2 border-white" />
                 </div>
                 <div className="flex-1">
                   <p className="text-xl font-bold font-headline">{userData.name}</p>
@@ -280,7 +280,7 @@ export default function SettingsPage() {
                     <p className="text-sm text-muted-foreground mt-1">{userData.phone}</p>
                   )}
                   {isKycCompleted && (
-                    <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                    <p className="text-xs text-primary mt-1 flex items-center gap-1">
                       <CheckCircle2 size={14} />
                       Profil vérifié
                     </p>
@@ -337,7 +337,7 @@ export default function SettingsPage() {
                         <p className="text-sm font-semibold text-muted-foreground">Statut KYC</p>
                         <p className="text-base font-medium capitalize">
                           {profile.kycStatus === 'verified' ? (
-                            <span className="text-green-600 flex items-center gap-1">
+                            <span className="text-primary flex items-center gap-1">
                               <CheckCircle2 size={16} />
                               Vérifié
                             </span>

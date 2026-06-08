@@ -277,7 +277,7 @@ function PayBillContent() {
             <Button variant="outline" onClick={() => setShowConfirm(false)} disabled={isPaying}>
               Annuler
             </Button>
-            <Button onClick={handleConfirmPayment} disabled={isPaying} className="bg-gradient-to-r from-primary to-green-800">
+            <Button onClick={handleConfirmPayment} disabled={isPaying} className="bg-gradient-to-r from-primary to-primary">
               {isPaying ? "Paiement en cours..." : "Confirmer le paiement"}
             </Button>
           </DialogFooter>

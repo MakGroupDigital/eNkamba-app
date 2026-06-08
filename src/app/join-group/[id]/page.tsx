@@ -103,7 +103,7 @@ export default function JoinGroupPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#32BB78]/10 to-[#2a9d63]/5">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#32BB78]/10 to-[#32BB78]/5">
         <div className="text-center">
           <Loader2 className="h-12 w-12 animate-spin text-[#32BB78] mx-auto mb-4" />
           <p className="text-muted-foreground">Chargement du groupe...</p>
@@ -124,7 +124,7 @@ export default function JoinGroupPage() {
             <p className="text-muted-foreground">{error}</p>
           </div>
           <Link href="/dashboard/miyiki-chat">
-            <Button className="w-full gap-2 bg-[#32BB78] hover:bg-[#2a9d63]">
+            <Button className="w-full gap-2 bg-[#32BB78] hover:bg-[#32BB78]">
               <ArrowLeft className="h-4 w-4" />
               Retour aux conversations
             </Button>
@@ -136,7 +136,7 @@ export default function JoinGroupPage() {
 
   if (alreadyMember) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#32BB78]/10 to-[#2a9d63]/5 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#32BB78]/10 to-[#32BB78]/5 p-4">
         <Card className="max-w-md w-full p-8 text-center space-y-6">
           <div className="w-16 h-16 bg-[#32BB78]/20 rounded-full flex items-center justify-center mx-auto">
             <Check className="h-8 w-8 text-[#32BB78]" />
@@ -148,7 +148,7 @@ export default function JoinGroupPage() {
             </p>
           </div>
           <Link href={`/dashboard/miyiki-chat/${groupId}`}>
-            <Button className="w-full gap-2 bg-[#32BB78] hover:bg-[#2a9d63]">
+            <Button className="w-full gap-2 bg-[#32BB78] hover:bg-[#32BB78]">
               Ouvrir la conversation
             </Button>
           </Link>
@@ -158,7 +158,7 @@ export default function JoinGroupPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#32BB78]/10 to-[#2a9d63]/5 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#32BB78]/10 to-[#32BB78]/5 p-4">
       <Card className="max-w-md w-full p-8 space-y-6">
         {/* Header */}
         <div className="text-center space-y-4">
@@ -196,7 +196,7 @@ export default function JoinGroupPage() {
           <Button
             onClick={handleJoinGroup}
             disabled={isJoining}
-            className="w-full gap-2 bg-[#32BB78] hover:bg-[#2a9d63]"
+            className="w-full gap-2 bg-[#32BB78] hover:bg-[#32BB78]"
           >
             {isJoining ? (
               <>

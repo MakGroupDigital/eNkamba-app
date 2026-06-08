@@ -46,10 +46,10 @@ export function PermissionRequest({
 
   if (isGranted && showStatus) {
     return (
-      <Alert className="border-green-500/30 bg-green-500/10">
-        <CheckCircle2 className="h-4 w-4 text-green-600" />
-        <AlertTitle className="text-green-800">Permission accordée</AlertTitle>
-        <AlertDescription className="text-green-700">
+      <Alert className="border-primary/30 bg-primary/10">
+        <CheckCircle2 className="h-4 w-4 text-primary" />
+        <AlertTitle className="text-primary">Permission accordée</AlertTitle>
+        <AlertDescription className="text-primary">
           {title} est autorisé. Vous ne serez pas redemandé.
         </AlertDescription>
       </Alert>

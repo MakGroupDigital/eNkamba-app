@@ -38,7 +38,7 @@ export function OrderReceipt({ order, onClose, primaryActionLabel, onPrimaryActi
       toast({
         title: 'Reçu téléchargé',
         description: 'Le reçu a été téléchargé avec succès',
-        className: 'bg-green-600 text-white border-none',
+        className: 'bg-primary text-white border-none',
       });
     } catch (error) {
       console.error('Erreur téléchargement reçu:', error);
@@ -86,7 +86,7 @@ export function OrderReceipt({ order, onClose, primaryActionLabel, onPrimaryActi
         {/* Reçu */}
         <div ref={receiptRef} className="bg-white rounded-2xl overflow-hidden">
           {/* Header vert */}
-          <div className="bg-gradient-to-r from-green-600 to-emerald-600 p-6 text-white">
+          <div className="bg-gradient-to-r from-primary to-primary p-6 text-white">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="h-12 w-12 rounded-xl bg-white flex items-center justify-center">
@@ -114,7 +114,7 @@ export function OrderReceipt({ order, onClose, primaryActionLabel, onPrimaryActi
           {/* Montant principal */}
           <div className="p-6 text-center border-b">
             <p className="text-sm text-muted-foreground mb-2">Montant payé</p>
-            <p className="text-4xl font-black text-green-600">
+            <p className="text-4xl font-black text-primary">
               {order.totalAmount.toLocaleString()} CDF
             </p>
             <p className="text-sm text-muted-foreground mt-2">
@@ -210,10 +210,10 @@ export function OrderReceipt({ order, onClose, primaryActionLabel, onPrimaryActi
             <h3 className="font-bold text-lg mb-3">Statut de la commande</h3>
             <div className="flex items-center gap-2">
               <div className={`px-4 py-2 rounded-full font-semibold text-sm ${
-                order.status === 'paid' ? 'bg-green-100 text-green-700' :
+                order.status === 'paid' ? 'bg-primary/10 text-primary' :
                 order.status === 'processing' ? 'bg-blue-100 text-blue-700' :
                 order.status === 'shipped' ? 'bg-purple-100 text-purple-700' :
-                order.status === 'delivered' ? 'bg-green-100 text-green-700' :
+                order.status === 'delivered' ? 'bg-primary/10 text-primary' :
                 'bg-gray-100 text-gray-700'
               }`}>
                 {order.status === 'paid' ? 'Payée' :
@@ -265,7 +265,7 @@ export function OrderReceipt({ order, onClose, primaryActionLabel, onPrimaryActi
           {onClose && (
             <Button
               onClick={onClose}
-              className="flex-1 bg-green-600 hover:bg-green-700"
+              className="flex-1 bg-primary hover:bg-primary"
             >
               Fermer
             </Button>

@@ -955,7 +955,7 @@ export default function KycPage() {
               >
                 {mobileMoneyLinked ? (
                   <>
-                    <CheckCircle className="h-6 w-6 text-green-500" />
+                    <CheckCircle className="h-6 w-6 text-primary" />
                     <span className="font-semibold">Mobile Money Lié</span>
                     <span className="text-xs text-muted-foreground">
                       {MOBILE_OPERATORS.find(op => op.value === mobileMoneyData.operator)?.label}
@@ -975,7 +975,7 @@ export default function KycPage() {
               >
                 {bankLinked ? (
                   <>
-                    <CheckCircle className="h-6 w-6 text-green-500" />
+                    <CheckCircle className="h-6 w-6 text-primary" />
                     <span className="font-semibold">Compte Bancaire Lié</span>
                     <span className="text-xs text-muted-foreground">{bankData.bankName}</span>
                   </>
@@ -988,10 +988,10 @@ export default function KycPage() {
               </Button>
             </div>
             {(mobileMoneyLinked || bankLinked) && (
-              <Alert className="bg-green-50 border-green-200">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                <AlertTitle className="text-green-800">Compte(s) lié(s)</AlertTitle>
-                <AlertDescription className="text-green-700">
+              <Alert className="bg-primary/5 border-primary/20">
+                <CheckCircle className="h-4 w-4 text-primary" />
+                <AlertTitle className="text-primary">Compte(s) lié(s)</AlertTitle>
+                <AlertDescription className="text-primary">
                   {mobileMoneyLinked && bankLinked 
                     ? 'Mobile Money et Compte Bancaire sont liés.'
                     : mobileMoneyLinked 
@@ -1006,7 +1006,7 @@ export default function KycPage() {
       case 'completed':
         return (
           <div className="text-center py-8">
-            <UserCheck className="mx-auto h-16 w-16 text-green-500" />
+            <UserCheck className="mx-auto h-16 w-16 text-primary" />
             <h2 className="mt-4 text-2xl font-bold">Vérification Réussie !</h2>
             <p className="text-muted-foreground mt-2">
               Vous allez être redirigé vers votre tableau de bord.
@@ -1064,7 +1064,7 @@ export default function KycPage() {
         {progress.completedSteps.length > 0 && step !== 'completed' && (
           <CardContent className="pt-0">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <CheckCircle className="h-4 w-4 text-green-500" />
+              <CheckCircle className="h-4 w-4 text-primary" />
               <span>
                 {progress.completedSteps.length} étape{progress.completedSteps.length > 1 ? 's' : ''} complétée{progress.completedSteps.length > 1 ? 's' : ''}
               </span>
@@ -1119,7 +1119,7 @@ export default function KycPage() {
                   </Select>
                   {mobileMoneyData.operator && (
                     <p className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Check className="h-3 w-3 text-green-500" />
+                      <Check className="h-3 w-3 text-primary" />
                       {MOBILE_OPERATORS.find(op => op.value === mobileMoneyData.operator)?.label} sélectionné
                     </p>
                   )}
@@ -1219,7 +1219,7 @@ export default function KycPage() {
 
           {mobileMoneyCompleted.length > 0 && (
             <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2 border-t">
-              <CheckCircle className="h-3 w-3 text-green-500" />
+              <CheckCircle className="h-3 w-3 text-primary" />
               {mobileMoneyCompleted.length} étape(s) validée(s)
             </div>
           )}
@@ -1455,7 +1455,7 @@ export default function KycPage() {
 
           {bankCompleted.length > 0 && (
             <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2 border-t">
-              <CheckCircle className="h-3 w-3 text-green-500" />
+              <CheckCircle className="h-3 w-3 text-primary" />
               {bankCompleted.length} étape(s) validée(s)
             </div>
           )}

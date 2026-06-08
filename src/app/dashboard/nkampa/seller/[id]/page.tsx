@@ -161,7 +161,7 @@ export default function SellerPortalPage({ params }: { params: Promise<{ id: str
       </div>
 
       {/* Banner - Shopify Style */}
-      <div className="relative h-80 bg-gradient-to-r from-primary via-green-700 to-emerald-800 overflow-hidden">
+      <div className="relative h-80 bg-gradient-to-r from-primary via-primary to-primary overflow-hidden">
         {/* Background Image with Overlay */}
         <Image
           src={seller.banner}
@@ -170,7 +170,7 @@ export default function SellerPortalPage({ params }: { params: Promise<{ id: str
           className="object-cover opacity-40"
         />
         {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/90 via-green-700/85 to-emerald-800/90" />
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/90 via-primary/85 to-primary/90" />
         
         {/* Decorative Elements */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -mr-48 -mt-48" />
@@ -220,7 +220,7 @@ export default function SellerPortalPage({ params }: { params: Promise<{ id: str
                   <div>
                     <h1 className="text-3xl font-bold mb-2">{seller.name}</h1>
                     <div className="flex items-center gap-2 mb-3">
-                      <Badge className="bg-green-600 text-white">{getSellerTypeLabel()}</Badge>
+                      <Badge className="bg-primary text-white">{getSellerTypeLabel()}</Badge>
                       {seller.verified && (
                         <Badge className="bg-blue-600 text-white">✓ {seller.badge}</Badge>
                       )}
@@ -285,7 +285,7 @@ export default function SellerPortalPage({ params }: { params: Promise<{ id: str
                 <div className="flex gap-3">
                   <Button
                     onClick={handleContactSeller}
-                    className="gap-2 bg-gradient-to-r from-primary to-green-800 text-white"
+                    className="gap-2 bg-gradient-to-r from-primary to-primary text-white"
                   >
                     <MessageCircle className="w-4 h-4" />
                     Contacter
@@ -297,7 +297,7 @@ export default function SellerPortalPage({ params }: { params: Promise<{ id: str
                 </div>
 
                 {/* Store Link - Share Section */}
-                <div className="mt-4 p-3 bg-gradient-to-r from-primary/5 to-green-800/5 rounded-lg border border-primary/20">
+                <div className="mt-4 p-3 bg-gradient-to-r from-primary/5 to-primary/5 rounded-lg border border-primary/20">
                   <p className="text-xs text-gray-600 mb-2">Cliquer ici pour partager cet établissement ou le recommander:</p>
                   <div className="flex items-center gap-2">
                     <code className="flex-1 text-sm font-mono bg-white px-3 py-2 rounded border border-gray-200 text-primary font-bold">
@@ -458,7 +458,7 @@ export default function SellerPortalPage({ params }: { params: Promise<{ id: str
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-r from-primary/10 to-green-800/10 p-4 rounded-lg">
+                <div className="bg-gradient-to-r from-primary/10 to-primary/10 p-4 rounded-lg">
                   <h3 className="font-bold mb-2">Nos valeurs</h3>
                   <ul className="space-y-2 text-sm">
                     <li>✓ Qualité garantie</li>

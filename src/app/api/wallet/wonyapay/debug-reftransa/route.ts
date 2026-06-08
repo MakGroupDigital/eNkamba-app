@@ -10,7 +10,7 @@ export async function GET() {
     // Générer plusieurs RefTransa
     const refTransas = [];
     for (let i = 0; i < 5; i++) {
-      const refTransa = generateRefTransa('DBG', `debug-user-${i}`);
+      const refTransa = generateRefTransa('DBG');
       refTransas.push({
         index: i + 1,
         refTransa,
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     const config = getWonyaPayConfig();
     
     // Utiliser une RefTransa fournie ou en générer une nouvelle
-    const refTransa = testRefTransa || generateRefTransa('TST', 'debug-user');
+    const refTransa = testRefTransa || generateRefTransa('TST');
     
     // Préparer la requête WonyaPay minimale
     const wonyaPayload = {

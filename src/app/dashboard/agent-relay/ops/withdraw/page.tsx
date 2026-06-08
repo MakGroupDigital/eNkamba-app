@@ -179,7 +179,7 @@ export default function AgentOpsWithdrawPage() {
                       <Button
                         key={op}
                         variant={operator === op ? 'default' : 'outline'}
-                        className={operator === op ? 'bg-[#32BB78] hover:bg-[#2BA86A]' : ''}
+                        className={operator === op ? 'bg-[#32BB78] hover:bg-[#32BB78]' : ''}
                         onClick={() => setOperator(op)}
                         type="button"
                       >
@@ -287,7 +287,7 @@ export default function AgentOpsWithdrawPage() {
             {step === 'details' ? (
               <Button
                 onClick={goConfirm}
-                className="w-full h-12 rounded-xl bg-[#32BB78] hover:bg-[#2BA86A] text-white"
+                className="w-full h-12 rounded-xl bg-[#32BB78] hover:bg-[#32BB78] text-white"
               >
                 Continuer
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -308,7 +308,7 @@ export default function AgentOpsWithdrawPage() {
                   <Button
                     onClick={startPin}
                     disabled={isLoading}
-                    className="h-12 rounded-xl bg-[#32BB78] hover:bg-[#2BA86A] text-white"
+                    className="h-12 rounded-xl bg-[#32BB78] hover:bg-[#32BB78] text-white"
                   >
                     {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Confirmer'}
                   </Button>

@@ -81,7 +81,7 @@ export default function GenerateAccountsPage() {
               onClick={handleGenerate}
               disabled={isGenerating}
               size="lg"
-              className="bg-[#32BB78] hover:bg-[#2a9d63] gap-2"
+              className="bg-[#32BB78] hover:bg-[#32BB78] gap-2"
             >
               {isGenerating ? (
                 <>
@@ -125,7 +125,7 @@ export default function GenerateAccountsPage() {
                 </Card>
                 <Card>
                   <CardContent className="p-4 text-center">
-                    <p className="text-3xl font-bold text-green-600">{results.updated}</p>
+                    <p className="text-3xl font-bold text-primary">{results.updated}</p>
                     <p className="text-sm text-muted-foreground">Mis à jour</p>
                   </CardContent>
                 </Card>
@@ -139,14 +139,14 @@ export default function GenerateAccountsPage() {
 
               {/* Message de succès */}
               {results.errors === 0 && results.updated > 0 && (
-                <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                <div className="bg-primary/5 dark:bg-primary/20 border border-primary/20 dark:border-primary rounded-lg p-4">
                   <div className="flex gap-3">
-                    <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                    <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                     <div>
-                      <h3 className="font-semibold text-green-900 dark:text-green-100 mb-1">
+                      <h3 className="font-semibold text-primary dark:text-primary mb-1">
                         Génération réussie !
                       </h3>
-                      <p className="text-sm text-green-800 dark:text-green-200">
+                      <p className="text-sm text-primary dark:text-primary">
                         {results.updated} numéro(s) de compte ont été générés avec succès.
                       </p>
                     </div>
@@ -166,7 +166,7 @@ export default function GenerateAccountsPage() {
                         key={index}
                         className={`flex items-center justify-between p-3 rounded-lg ${
                           result.status === 'updated'
-                            ? 'bg-green-50 dark:bg-green-950/20'
+                            ? 'bg-primary/5 dark:bg-primary/20'
                             : result.status === 'error'
                             ? 'bg-red-50 dark:bg-red-950/20'
                             : 'bg-gray-50 dark:bg-gray-900'
@@ -174,7 +174,7 @@ export default function GenerateAccountsPage() {
                       >
                         <div className="flex items-center gap-3 flex-1 min-w-0">
                           {result.status === 'updated' ? (
-                            <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+                            <CheckCircle className="w-4 h-4 text-primary flex-shrink-0" />
                           ) : result.status === 'error' ? (
                             <XCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
                           ) : (
@@ -188,7 +188,7 @@ export default function GenerateAccountsPage() {
                         <span
                           className={`text-xs px-2 py-1 rounded ${
                             result.status === 'updated'
-                              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100'
+                              ? 'bg-primary/10 text-primary dark:bg-primary dark:text-primary'
                               : result.status === 'error'
                               ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100'
                               : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100'

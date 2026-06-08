@@ -270,7 +270,7 @@ export default function SavingsPage() {
       </header>
 
       {/* Total Savings Card */}
-      <Card className="bg-gradient-to-br from-primary via-green-800 to-green-900 text-primary-foreground shadow-xl">
+      <Card className="bg-gradient-to-br from-primary via-primary to-primary text-primary-foreground shadow-xl">
         <CardHeader>
           <CardTitle className="font-headline text-lg flex items-center gap-2">
             <PiggyBank className="h-6 w-6" />
@@ -321,7 +321,7 @@ export default function SavingsPage() {
             const isCompleted = goal.status === 'completed';
 
             return (
-              <Card key={goal.id} className={`hover:shadow-md transition-shadow ${isCompleted ? 'border-green-200 bg-green-50/50' : ''}`}>
+              <Card key={goal.id} className={`hover:shadow-md transition-shadow ${isCompleted ? 'border-primary/20 bg-primary/5/50' : ''}`}>
                 <CardContent className="p-4">
                   <div className="space-y-4">
                     {/* Header */}
@@ -332,7 +332,7 @@ export default function SavingsPage() {
                           <div className="flex items-center gap-2 mb-1">
                             <h3 className="font-headline font-semibold">{goal.name}</h3>
                             {isCompleted && (
-                              <CheckCircle2 className="h-5 w-5 text-green-600" />
+                              <CheckCircle2 className="h-5 w-5 text-primary" />
                             )}
                             {goal.status === 'paused' && (
                               <Pause className="h-5 w-5 text-yellow-600" />
@@ -367,10 +367,10 @@ export default function SavingsPage() {
 
                     {/* Status Alert */}
                     {isCompleted && (
-                      <Alert className="border-green-200 bg-green-50">
-                        <CheckCircle2 className="h-4 w-4 text-green-600" />
-                        <AlertTitle className="text-green-900">Objectif atteint!</AlertTitle>
-                        <AlertDescription className="text-green-800">
+                      <Alert className="border-primary/20 bg-primary/5">
+                        <CheckCircle2 className="h-4 w-4 text-primary" />
+                        <AlertTitle className="text-primary">Objectif atteint!</AlertTitle>
+                        <AlertDescription className="text-primary">
                           Vous pouvez maintenant retirer vos fonds.
                         </AlertDescription>
                       </Alert>
@@ -642,10 +642,10 @@ export default function SavingsPage() {
           </DialogHeader>
 
           <div className="space-y-4 py-4">
-            <Alert className="border-green-200 bg-green-50">
-              <CheckCircle2 className="h-4 w-4 text-green-600" />
-              <AlertTitle className="text-green-900">Objectif atteint!</AlertTitle>
-              <AlertDescription className="text-green-800">
+            <Alert className="border-primary/20 bg-primary/5">
+              <CheckCircle2 className="h-4 w-4 text-primary" />
+              <AlertTitle className="text-primary">Objectif atteint!</AlertTitle>
+              <AlertDescription className="text-primary">
                 Vous pouvez retirer jusqu'à {formatCurrency(selectedGoal?.currentAmount || 0, selectedGoal?.currency || 'CDF')}
               </AlertDescription>
             </Alert>

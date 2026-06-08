@@ -400,7 +400,7 @@ export default function SendPage() {
 
                 <Button
                   onClick={() => { setScannedUser(null); setIsScanning(true); setViewMode('scanning'); }}
-                  className="w-full bg-[#32BB78] hover:bg-[#2a9d63]"
+                  className="w-full bg-[#32BB78] hover:bg-[#32BB78]"
                   disabled={!amount || parseFloat(amount) <= 0}
                 >
                   <Camera className="w-4 h-4 mr-2" />
@@ -519,7 +519,7 @@ export default function SendPage() {
                   </Button>
                   <Button
                     onClick={sendDemandMessage}
-                    className="flex-1 bg-[#32BB78] hover:bg-[#2a9d63]"
+                    className="flex-1 bg-[#32BB78] hover:bg-[#32BB78]"
                     disabled={isProcessing}
                   >
                     {isProcessing ? (
@@ -551,7 +551,7 @@ export default function SendPage() {
 
             <Button
               onClick={() => { setMode(null); setViewMode('menu'); setAmount(''); setScannedUser(null); setConfirmationMessage(''); }}
-              className="w-full bg-[#32BB78] hover:bg-[#2a9d63]"
+              className="w-full bg-[#32BB78] hover:bg-[#32BB78]"
             >
               Terminer
             </Button>
@@ -610,7 +610,7 @@ export default function SendPage() {
 
                 <Button
                   onClick={generateCollectionLink}
-                  className="w-full bg-[#32BB78] hover:bg-[#2a9d63]"
+                  className="w-full bg-[#32BB78] hover:bg-[#32BB78]"
                   disabled={isLoading || !amount || parseFloat(amount) <= 0}
                 >
                   {isLoading ? (
@@ -658,7 +658,7 @@ export default function SendPage() {
                       </Button>
                       <Button
                         onClick={shareCollectionLink}
-                        className="flex-1 bg-[#32BB78] hover:bg-[#2a9d63]"
+                        className="flex-1 bg-[#32BB78] hover:bg-[#32BB78]"
                       >
                         <Share2 className="w-4 h-4 mr-2" />
                         Partager

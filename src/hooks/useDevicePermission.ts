@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { permissionsManager, type PermissionType } from '@/lib/permissions-manager';
+import { getDashboardLocationOrDefault } from '@/lib/dashboard-location';
 
 interface UseDevicePermissionResult {
   isGranted: boolean;
@@ -152,23 +153,7 @@ async function requestMicrophonePermission(): Promise<boolean> {
  * Demander la permission localisation
  */
 async function requestLocationPermission(): Promise<boolean> {
-  return new Promise((resolve) => {
-    if (!navigator.geolocation) {
-      resolve(false);
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      () => resolve(true),
-      (error) => {
-        if (error.code === error.PERMISSION_DENIED) {
-          resolve(false);
-        } else {
-          resolve(false);
-        }
-      }
-    );
-  });
+  return Boolean(getDashboardLocationOrDefault());
 }
 
 /**

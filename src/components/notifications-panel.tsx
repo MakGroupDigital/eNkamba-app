@@ -15,13 +15,13 @@ export function NotificationsPanel() {
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'transfer_received':
-        return <CheckCircle2 className="w-5 h-5 text-green-600" />;
+        return <CheckCircle2 className="w-5 h-5 text-primary" />;
       case 'transfer_sent':
         return <AlertCircle className="w-5 h-5 text-blue-600" />;
       case 'payment_request':
         return <Info className="w-5 h-5 text-orange-600" />;
       case 'BUSINESS_APPROVED':
-        return <CheckCircle2 className="w-5 h-5 text-green-600" />;
+        return <CheckCircle2 className="w-5 h-5 text-primary" />;
       case 'BUSINESS_REJECTED':
         return <AlertCircle className="w-5 h-5 text-red-600" />;
       default:
@@ -32,13 +32,13 @@ export function NotificationsPanel() {
   const getNotificationColor = (type: string) => {
     switch (type) {
       case 'transfer_received':
-        return 'bg-green-50 border-green-200';
+        return 'bg-primary/5 border-primary/20';
       case 'transfer_sent':
         return 'bg-blue-50 border-blue-200';
       case 'payment_request':
         return 'bg-orange-50 border-orange-200';
       case 'BUSINESS_APPROVED':
-        return 'bg-green-50 border-green-200';
+        return 'bg-primary/5 border-primary/20';
       case 'BUSINESS_REJECTED':
         return 'bg-red-50 border-red-200';
       default:
@@ -101,14 +101,14 @@ export function NotificationsPanel() {
                         {notif.message}
                       </p>
                       {notif.amount && (
-                        <p className="text-sm font-bold text-green-600 mt-2">
+                        <p className="text-sm font-bold text-primary mt-2">
                           {notif.amount.toLocaleString('fr-FR')} {notif.currency}
                         </p>
                       )}
                       {notif.type === 'transfer_received' && !notif.acknowledged && (
                         <Button
                           size="sm"
-                          className="mt-2 w-full bg-green-600 hover:bg-green-700 text-white h-7"
+                          className="mt-2 w-full bg-primary hover:bg-primary text-white h-7"
                           onClick={(e) => {
                             e.stopPropagation();
                             acknowledgeNotification(notif.id);

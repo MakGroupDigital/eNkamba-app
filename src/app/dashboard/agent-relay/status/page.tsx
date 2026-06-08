@@ -41,7 +41,7 @@ export default function AgentRelayStatusPage() {
     return (
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
-        <div className="bg-gradient-to-r from-[#32BB78] via-[#2BA86A] to-[#32BB78] px-4 py-6">
+        <div className="bg-gradient-to-r from-[#32BB78] via-[#32BB78] to-[#32BB78] px-4 py-6">
           <div className="flex items-center justify-between">
             <Button 
               variant="ghost" 
@@ -83,7 +83,7 @@ export default function AgentRelayStatusPage() {
             </p>
             <Button
               onClick={() => router.push('/dashboard/agent-relay')}
-              className="bg-[#32BB78] hover:bg-[#2BA86A] text-white"
+              className="bg-[#32BB78] hover:bg-[#32BB78] text-white"
             >
               Commencer une demande
             </Button>
@@ -145,7 +145,7 @@ export default function AgentRelayStatusPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#32BB78] via-[#2BA86A] to-[#32BB78] px-4 py-6">
+      <div className="bg-gradient-to-r from-[#32BB78] via-[#32BB78] to-[#32BB78] px-4 py-6">
         <div className="flex items-center justify-between">
           <Button 
             variant="ghost" 
@@ -258,7 +258,7 @@ export default function AgentRelayStatusPage() {
           {status === 'in_progress' && (
             <Button
               onClick={() => router.push(`/dashboard/agent-relay/signup?type=${application.agentType}`)}
-              className="w-full h-12 bg-[#32BB78] hover:bg-[#2BA86A] text-white rounded-xl"
+              className="w-full h-12 bg-[#32BB78] hover:bg-[#32BB78] text-white rounded-xl"
             >
               Continuer l'inscription
             </Button>
@@ -267,7 +267,7 @@ export default function AgentRelayStatusPage() {
           {status === 'rejected' && (
             <Button
               onClick={() => router.push('/dashboard/agent-relay')}
-              className="w-full h-12 bg-[#32BB78] hover:bg-[#2BA86A] text-white rounded-xl"
+              className="w-full h-12 bg-[#32BB78] hover:bg-[#32BB78] text-white rounded-xl"
             >
               Soumettre une nouvelle demande
             </Button>
