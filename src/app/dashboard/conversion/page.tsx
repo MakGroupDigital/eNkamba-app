@@ -5,45 +5,95 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CandlestickChart, ArrowRightLeft, Info } from "lucide-react";
+import { ArrowRightLeft, Info, RefreshCw, ShieldCheck, TrendingUp } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
-const exchangeRates: { [key: string]: { [key: string]: number } } = {
-  USD: { EUR: 0.93, CDF: 2850.50 },
-  EUR: { USD: 1.08, CDF: 3075.20 },
-  CDF: { USD: 0.00035, EUR: 0.00032 },
-};
+const currencies = ['CDF', 'USD', 'EUR'] as const;
+type Currency = typeof currencies[number];
+
+const ConversionFlowIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
+  <svg viewBox="0 0 48 48" fill="none" className={className} aria-hidden="true">
+    <rect x="8" y="10" width="32" height="28" rx="8" fill="#32BB78" />
+    <path d="M17 20h14l-4-4M31 28H17l4 4" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+    <circle cx="35" cy="13" r="4" fill="#FFB545" />
+    <circle cx="13" cy="35" r="4" fill="#173f2b" />
+  </svg>
+);
+
+const MarketRateIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
+  <svg viewBox="0 0 48 48" fill="none" className={className} aria-hidden="true">
+    <rect x="9" y="12" width="30" height="26" rx="8" fill="#173f2b" />
+    <path d="M16 30l6-7 5 4 6-9" stroke="#32BB78" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+    <circle cx="16" cy="30" r="2.5" fill="white" />
+    <circle cx="33" cy="18" r="3" fill="#FFB545" />
+  </svg>
+);
 
 export default function ConversionPage() {
   const { toast } = useToast();
-  const [fromAmount, setFromAmount] = useState('100000');
+  const [fromAmount, setFromAmount] = useState('');
   const [toAmount, setToAmount] = useState('');
-  const [fromCurrency, setFromCurrency] = useState('CDF');
-  const [toCurrency, setToCurrency] = useState('USD');
+  const [fromCurrency, setFromCurrency] = useState<Currency>('CDF');
+  const [toCurrency, setToCurrency] = useState<Currency>('USD');
   const [rate, setRate] = useState<number | null>(null);
+  const [baseRates, setBaseRates] = useState<Record<Currency, number> | null>(null);
+  const [isLoadingRates, setIsLoadingRates] = useState(true);
+  const [ratesError, setRatesError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
 
+  const fetchLiveRates = async () => {
+    setIsLoadingRates(true);
+    setRatesError(null);
+    try {
+      const response = await fetch('https://api.exchangerate-api.com/v4/latest/CDF');
+      if (!response.ok) throw new Error('Taux indisponibles');
+      const data = await response.json();
+      if (!data?.rates?.USD || !data?.rates?.EUR) {
+        throw new Error('Taux incomplets');
+      }
+
+      setBaseRates({
+        CDF: 1,
+        USD: Number(data.rates.USD),
+        EUR: Number(data.rates.EUR),
+      });
+      setLastUpdated(new Date().toLocaleString('fr-FR'));
+    } catch (error) {
+      console.error('Erreur récupération taux conversion:', error);
+      setBaseRates(null);
+      setRatesError("Les taux réels sont indisponibles pour le moment.");
+    } finally {
+      setIsLoadingRates(false);
+    }
+  };
+
+  useEffect(() => {
+    void fetchLiveRates();
+  }, []);
+
   useEffect(() => {
     const calculateConversion = () => {
-      const rate = exchangeRates[fromCurrency]?.[toCurrency];
-      if (rate !== undefined) {
-        setRate(rate);
-        const amount = parseFloat(fromAmount);
-        if (!isNaN(amount)) {
-          setToAmount((amount * rate).toFixed(2));
-        } else {
-          setToAmount('');
-        }
-      } else {
+      if (!baseRates || fromCurrency === toCurrency) {
         setRate(null);
+        setToAmount('');
+        return;
+      }
+
+      const liveRate = baseRates[toCurrency] / baseRates[fromCurrency];
+      setRate(liveRate);
+      const amount = parseFloat(fromAmount);
+      if (!isNaN(amount)) {
+        setToAmount((amount * liveRate).toFixed(2));
+      } else {
         setToAmount('');
       }
     };
     calculateConversion();
-  }, [fromAmount, fromCurrency, toCurrency]);
+  }, [baseRates, fromAmount, fromCurrency, toCurrency]);
 
   const handleSwapCurrencies = () => {
     const tempCurrency = fromCurrency;
@@ -59,86 +109,122 @@ export default function ConversionPage() {
   }
 
   return (
-    <div className="container mx-auto max-w-2xl p-4 space-y-6 animate-in fade-in duration-500">
-      <header className="flex items-center gap-2">
-        <CandlestickChart className="h-6 w-6 text-primary" />
-        <h1 className="font-headline text-xl font-bold text-primary">
-          Conversion de Devise
-        </h1>
+    <div className="min-h-screen bg-[#f7faf8]">
+    <div className="container mx-auto max-w-3xl p-3 space-y-4 animate-in fade-in duration-500 sm:p-4">
+      <header className="overflow-hidden rounded-2xl bg-gradient-to-br from-[#32BB78] to-[#21945e] p-4 text-white shadow-lg shadow-[#32BB78]/20">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/16 ring-1 ring-white/25">
+              <ConversionFlowIcon className="h-8 w-8" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/70">Marché des devises</p>
+              <h1 className="font-headline text-xl font-black text-white sm:text-2xl">
+                Conversion de Devise
+              </h1>
+              <p className="mt-1 max-w-xl text-xs leading-5 text-white/78 sm:text-sm">
+                Calculez vos conversions avec des taux réels chargés en direct.
+              </p>
+            </div>
+          </div>
+          <Button
+            type="button"
+            onClick={() => void fetchLiveRates()}
+            disabled={isLoadingRates}
+            className="h-10 shrink-0 rounded-xl bg-white px-3 text-xs font-bold text-[#173f2b] hover:bg-white/90 sm:text-sm"
+          >
+            <RefreshCw className={`mr-1.5 h-4 w-4 ${isLoadingRates ? 'animate-spin' : ''}`} />
+            Actualiser
+          </Button>
+        </div>
       </header>
       
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-headline">Convertisseur</CardTitle>
-          <CardDescription>Effectuez vos conversions en un clin d'œil au taux du marché.</CardDescription>
+      <Card className="overflow-hidden border-[#32BB78]/10 bg-white shadow-sm">
+        <CardHeader className="border-b border-[#32BB78]/10 px-4 py-3">
+          <CardTitle className="font-headline flex items-center gap-2 text-lg text-[#173f2b]">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#32BB78]/10">
+              <MarketRateIcon className="h-6 w-6" />
+            </span>
+            Convertisseur
+          </CardTitle>
+          <CardDescription>Effectuez vos conversions avec le dernier taux réel chargé.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 p-4">
+          {ratesError && (
+            <Alert variant="destructive" className="rounded-2xl">
+              <Info className="h-4 w-4"/>
+              <AlertTitle>Taux indisponibles</AlertTitle>
+              <AlertDescription>{ratesError}</AlertDescription>
+            </Alert>
+          )}
           
           <div className="flex flex-col gap-2">
-             <label className="text-sm font-medium">Vous envoyez</label>
+             <label className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Vous envoyez</label>
             <div className="flex gap-2">
               <Input
                 type="text"
                 value={fromAmount}
                 onChange={handleAmountChange}
-                className="h-14 text-2xl font-bold flex-1"
+                className="h-14 flex-1 rounded-xl border-[#32BB78]/20 bg-[#f7faf8] text-2xl font-black focus-visible:ring-[#32BB78]"
                 placeholder="0.00"
               />
               <Select value={fromCurrency} onValueChange={setFromCurrency}>
-                <SelectTrigger className="w-[120px] h-14 font-semibold">
+                <SelectTrigger className="h-14 w-[120px] rounded-xl border-[#32BB78]/20 font-semibold">
                   <SelectValue placeholder="Devise" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="CDF">CDF</SelectItem>
-                  <SelectItem value="USD">USD</SelectItem>
-                  <SelectItem value="EUR">EUR</SelectItem>
+                  {currencies.map((currency) => (
+                    <SelectItem key={currency} value={currency}>{currency}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
 
           <div className="flex items-center justify-center my-4">
-             <div className="flex-1 border-t"></div>
-             <Button variant="ghost" size="icon" onClick={handleSwapCurrencies} className="mx-2 rounded-full border">
-                <ArrowRightLeft className="h-5 w-5 text-primary"/>
+             <div className="flex-1 border-t border-[#32BB78]/15"></div>
+             <Button variant="ghost" size="icon" onClick={handleSwapCurrencies} className="mx-2 rounded-full border border-[#32BB78]/20 bg-white text-[#32BB78] shadow-sm hover:bg-[#32BB78]/5">
+                <ArrowRightLeft className="h-5 w-5"/>
              </Button>
-             <div className="flex-1 border-t"></div>
+             <div className="flex-1 border-t border-[#32BB78]/15"></div>
           </div>
 
            <div className="flex flex-col gap-2">
-             <label className="text-sm font-medium">Le bénéficiaire reçoit</label>
+             <label className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Le bénéficiaire reçoit</label>
             <div className="flex gap-2">
               <Input
                 type="text"
                 value={toAmount}
                 readOnly
-                className="h-14 text-2xl font-bold flex-1 bg-muted"
+                className="h-14 flex-1 rounded-xl border-[#32BB78]/20 bg-[#32BB78]/5 text-2xl font-black text-[#173f2b]"
                 placeholder="0.00"
               />
               <Select value={toCurrency} onValueChange={setToCurrency}>
-                <SelectTrigger className="w-[120px] h-14 font-semibold">
+                <SelectTrigger className="h-14 w-[120px] rounded-xl border-[#32BB78]/20 font-semibold">
                   <SelectValue placeholder="Devise" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="CDF">CDF</SelectItem>
-                  <SelectItem value="USD">USD</SelectItem>
-                  <SelectItem value="EUR">EUR</SelectItem>
+                  {currencies.map((currency) => (
+                    <SelectItem key={currency} value={currency}>{currency}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
 
             {rate !== null && (
-                <div className="text-center text-sm font-medium text-muted-foreground pt-4">
-                    Taux de change : 1 {fromCurrency} = {rate.toFixed(4)} {toCurrency}
+                <div className="rounded-2xl border border-[#32BB78]/10 bg-[#f7faf8] p-3 text-center text-sm font-medium text-[#173f2b]">
+                    <TrendingUp className="mx-auto mb-1 h-4 w-4 text-[#32BB78]" />
+                    Taux réel chargé : 1 {fromCurrency} = {rate.toFixed(6)} {toCurrency}
+                    {lastUpdated && <p className="mt-1 text-[11px] text-muted-foreground">Actualisé le {lastUpdated}</p>}
                 </div>
             )}
 
         </CardContent>
-        <CardFooter className="flex-col gap-4">
+        <CardFooter className="flex-col gap-4 border-t border-[#32BB78]/10 px-4 py-3">
             <Button 
               size="lg" 
-              className="w-full"
+              className="h-11 w-full rounded-xl bg-[#32BB78] font-bold hover:bg-[#299c63]"
               onClick={() => {
                 if (!fromAmount || isNaN(parseFloat(fromAmount)) || parseFloat(fromAmount) <= 0) {
                   toast({
@@ -158,15 +244,15 @@ export default function ConversionPage() {
                 }
                 setShowConfirmDialog(true);
               }}
-              disabled={!fromAmount || !toAmount || fromCurrency === toCurrency}
+              disabled={!fromAmount || !toAmount || fromCurrency === toCurrency || !baseRates || isLoadingRates}
             >
-                Convertir
+                Prévisualiser la conversion
             </Button>
-            <Alert variant="default" className="text-xs">
-                <Info className="h-4 w-4"/>
-                <AlertTitle className="text-xs font-semibold">Information</AlertTitle>
+            <Alert variant="default" className="rounded-2xl border-[#32BB78]/20 bg-[#32BB78]/5 text-xs">
+                <ShieldCheck className="h-4 w-4 text-[#32BB78]"/>
+                <AlertTitle className="text-xs font-semibold text-[#173f2b]">Information</AlertTitle>
                 <AlertDescription>
-                    Les taux de change sont fournis à titre indicatif et peuvent varier. Des frais de service de 1% seront appliqués.
+                    Seuls les taux réels chargés depuis le service de change sont affichés. Les frais de service de 1% sont présentés séparément.
                 </AlertDescription>
             </Alert>
         </CardFooter>
@@ -174,27 +260,27 @@ export default function ConversionPage() {
 
       {/* Confirmation Dialog */}
       <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-        <DialogContent>
+        <DialogContent className="rounded-2xl">
           <DialogHeader>
-            <DialogTitle>Confirmer la conversion</DialogTitle>
+            <DialogTitle className="text-[#173f2b]">Prévisualisation de la conversion</DialogTitle>
             <DialogDescription>
-              Vérifiez les détails de votre conversion avant de confirmer.
+              Vérifiez les détails calculés avec le taux réel actuellement chargé.
             </DialogDescription>
           </DialogHeader>
           {rate !== null && (
             <div className="space-y-4 py-4">
-              <div className="p-4 rounded-lg bg-muted space-y-2">
+              <div className="space-y-2 rounded-2xl bg-[#f7faf8] p-4">
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Vous convertissez :</span>
                   <span className="font-bold text-lg">{fromAmount} {fromCurrency}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Vous recevrez :</span>
-                  <span className="font-bold text-lg text-primary">{toAmount} {toCurrency}</span>
+                  <span className="font-bold text-lg text-[#32BB78]">{toAmount} {toCurrency}</span>
                 </div>
                 <div className="flex justify-between items-center pt-2 border-t">
                   <span className="text-sm text-muted-foreground">Taux de change :</span>
-                  <span className="text-sm font-semibold">1 {fromCurrency} = {rate.toFixed(4)} {toCurrency}</span>
+                  <span className="text-sm font-semibold">1 {fromCurrency} = {rate.toFixed(6)} {toCurrency}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Frais de service (1%) :</span>
@@ -208,28 +294,25 @@ export default function ConversionPage() {
               Annuler
             </Button>
             <Button 
+              className="bg-[#32BB78] hover:bg-[#299c63]"
               onClick={async () => {
                 setIsConverting(true);
-                await new Promise(resolve => setTimeout(resolve, 2000));
                 setIsConverting(false);
                 setShowConfirmDialog(false);
                 
                 toast({
-                  title: "Conversion réussie !",
-                  description: `Vous avez converti ${fromAmount} ${fromCurrency} en ${toAmount} ${toCurrency}.`,
+                  title: "Conversion prévisualisée",
+                  description: `Montant calculé: ${fromAmount} ${fromCurrency} ≈ ${toAmount} ${toCurrency}.`,
                 });
-
-                // Reset
-                setFromAmount('100000');
-                setToAmount('');
               }}
               disabled={isConverting}
             >
-              {isConverting ? "Conversion en cours..." : "Confirmer la conversion"}
+              Fermer la prévisualisation
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
     </div>
   );
 }

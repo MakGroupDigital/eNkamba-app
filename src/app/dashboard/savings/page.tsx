@@ -8,13 +8,41 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { PiggyBank, Plus, Target, Calendar, TrendingUp, Trash2, Pause, Play, Lock, AlertCircle, CheckCircle2, ArrowRight, Zap } from "lucide-react";
+import { PiggyBank, Plus, Target, Trash2, Pause, Play, AlertCircle, CheckCircle2, ArrowRight, Zap, ShieldCheck, WalletCards } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useSavingsGoals, SavingsFrequency, SavingsStatus } from "@/hooks/useSavingsGoals";
 import { useAuth } from "@/hooks/useAuth";
 
 const GOAL_ICONS = ['🎯', '🚗', '✈️', '🏠', '💍', '📚', '🎮', '🏖️', '💻', '🎸'];
+
+const SavingsVaultIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
+  <svg viewBox="0 0 48 48" fill="none" className={className} aria-hidden="true">
+    <rect x="8" y="14" width="32" height="25" rx="8" fill="#32BB78" />
+    <path d="M14 20h20" stroke="white" strokeWidth="3" strokeLinecap="round" opacity="0.85" />
+    <circle cx="24" cy="28" r="6" fill="#173f2b" opacity="0.9" />
+    <circle cx="24" cy="28" r="2" fill="#FFB545" />
+    <path d="M17 14v-2a7 7 0 0 1 14 0v2" stroke="#173f2b" strokeWidth="3" strokeLinecap="round" opacity="0.4" />
+  </svg>
+);
+
+const GoalSeedIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
+  <svg viewBox="0 0 48 48" fill="none" className={className} aria-hidden="true">
+    <path d="M24 39V22" stroke="#173f2b" strokeWidth="3" strokeLinecap="round" />
+    <path d="M24 24c-8 0-13-5-13-12 8 0 13 5 13 12Z" fill="#32BB78" />
+    <path d="M24 27c8 0 13-5 13-12-8 0-13 5-13 12Z" fill="#FFB545" />
+    <rect x="13" y="37" width="22" height="4" rx="2" fill="#32BB78" opacity="0.35" />
+  </svg>
+);
+
+const AutoSaveIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
+  <svg viewBox="0 0 48 48" fill="none" className={className} aria-hidden="true">
+    <rect x="9" y="10" width="30" height="28" rx="8" fill="#173f2b" />
+    <path d="M16 25h13" stroke="white" strokeWidth="3" strokeLinecap="round" />
+    <path d="M26 18l7 7-7 7" stroke="#32BB78" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+    <circle cx="17" cy="18" r="3" fill="#FFB545" />
+  </svg>
+);
 
 export default function SavingsPage() {
   const { toast } = useToast();
@@ -244,67 +272,107 @@ export default function SavingsPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto max-w-4xl p-4 space-y-6">
+      <div className="min-h-screen bg-[#f7faf8]">
+      <div className="container mx-auto max-w-4xl p-4 space-y-4">
         <div className="animate-pulse space-y-4">
-          <div className="h-32 bg-muted rounded-lg"></div>
-          <div className="h-64 bg-muted rounded-lg"></div>
+          <div className="h-32 rounded-2xl bg-muted"></div>
+          <div className="h-64 rounded-2xl bg-muted"></div>
         </div>
+      </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto max-w-4xl p-4 space-y-6 animate-in fade-in duration-500">
+    <div className="min-h-screen bg-[#f7faf8]">
+    <div className="container mx-auto max-w-4xl p-3 space-y-4 animate-in fade-in duration-500 sm:p-4">
       {/* Header */}
-      <header className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <PiggyBank className="h-6 w-6 text-primary" />
-          <h1 className="font-headline text-xl font-bold text-primary">
-            Mon Épargne
-          </h1>
+      <header className="overflow-hidden rounded-2xl bg-gradient-to-br from-[#32BB78] to-[#21945e] p-4 text-white shadow-lg shadow-[#32BB78]/20">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/16 ring-1 ring-white/25">
+              <SavingsVaultIcon className="h-8 w-8" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/70">Épargne intelligente</p>
+              <h1 className="font-headline text-xl font-black text-white sm:text-2xl">
+                Mon Épargne
+              </h1>
+              <p className="mt-1 max-w-xl text-xs leading-5 text-white/78 sm:text-sm">
+                Créez des objectifs, alimentez-les depuis votre portefeuille et suivez votre progression.
+              </p>
+            </div>
+          </div>
+          <Button onClick={() => setShowCreateDialog(true)} className="h-10 shrink-0 rounded-xl bg-white px-3 text-xs font-bold text-[#173f2b] hover:bg-white/90 sm:text-sm">
+            <Plus className="mr-1.5 h-4 w-4" />
+            Nouvel Objectif
+          </Button>
         </div>
-        <Button onClick={() => setShowCreateDialog(true)} className="bg-primary hover:bg-primary/90">
-          <Plus className="mr-2 h-4 w-4" />
-          Nouvel Objectif
-        </Button>
       </header>
 
       {/* Total Savings Card */}
-      <Card className="bg-gradient-to-br from-primary via-primary to-primary text-primary-foreground shadow-xl">
-        <CardHeader>
-          <CardTitle className="font-headline text-lg flex items-center gap-2">
-            <PiggyBank className="h-6 w-6" />
+      <Card className="overflow-hidden border-0 bg-white shadow-sm">
+        <CardHeader className="border-b border-[#32BB78]/10 px-4 py-3">
+          <CardTitle className="font-headline flex items-center gap-2 text-lg text-[#173f2b]">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#32BB78]/10">
+              <PiggyBank className="h-5 w-5 text-[#32BB78]" />
+            </span>
             Épargne Totale
           </CardTitle>
-          <CardDescription className="text-primary-foreground/80">
+          <CardDescription>
             Somme de tous vos objectifs d'épargne
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <p className="text-4xl font-bold tracking-tight">{formatCurrency(totalSavings, 'CDF')}</p>
-          <div className="flex items-center gap-4 mt-4 text-sm text-primary-foreground/80">
-            <div className="flex items-center gap-1">
-              <Target className="h-4 w-4" />
-              <span>{goals.length} objectif{goals.length !== 1 ? 's' : ''}</span>
+        <CardContent className="grid gap-3 p-4 sm:grid-cols-[1.2fr_0.8fr]">
+          <div className="rounded-2xl bg-[#32BB78] p-4 text-white shadow-sm shadow-[#32BB78]/20">
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-white/70">Total sécurisé</p>
+            <p className="mt-2 text-3xl font-black tracking-tight">{formatCurrency(totalSavings, 'CDF')}</p>
+            <div className="mt-4 flex items-center gap-4 text-sm text-white/80">
+              <span className="flex items-center gap-1">
+                <Target className="h-4 w-4" />
+                {goals.length} objectif{goals.length !== 1 ? 's' : ''}
+              </span>
+              <span className="flex items-center gap-1">
+                <CheckCircle2 className="h-4 w-4" />
+                {goals.filter(g => g.status === 'completed').length} complété{goals.filter(g => g.status === 'completed').length !== 1 ? 's' : ''}
+              </span>
             </div>
-            <div className="flex items-center gap-1">
-              <CheckCircle2 className="h-4 w-4" />
-              <span>{goals.filter(g => g.status === 'completed').length} complété{goals.filter(g => g.status === 'completed').length !== 1 ? 's' : ''}</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-1">
+            <div className="rounded-2xl border border-[#32BB78]/10 bg-[#f7faf8] p-3">
+              <WalletCards className="mb-2 h-5 w-5 text-[#32BB78]" />
+              <p className="text-xs font-bold text-[#173f2b]">Portefeuille lié</p>
+              <p className="mt-1 text-sm font-black text-[#173f2b]">{formatCurrency(walletBalance, 'CDF')}</p>
+            </div>
+            <div className="rounded-2xl border border-[#32BB78]/10 bg-[#f7faf8] p-3">
+              <ShieldCheck className="mb-2 h-5 w-5 text-[#FFB545]" />
+              <p className="text-xs font-bold text-[#173f2b]">Débits planifiés</p>
+              <p className="mt-1 text-[11px] leading-4 text-muted-foreground">Selon vos fréquences.</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
+      {error && (
+        <Alert variant="destructive" className="rounded-2xl">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Erreur</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
       {/* No Goals State */}
       {goals.length === 0 && (
-        <Card className="border-dashed border-2 border-primary/30">
-          <CardContent className="p-12 text-center space-y-4">
-            <PiggyBank className="h-16 w-16 text-muted-foreground mx-auto opacity-50" />
-            <div>
-              <h3 className="font-headline font-semibold text-lg mb-2">Aucun objectif d'épargne</h3>
-              <p className="text-muted-foreground mb-4">Créez votre premier objectif d'épargne pour commencer à économiser.</p>
+        <Card className="border-2 border-dashed border-[#32BB78]/30 bg-white">
+          <CardContent className="space-y-4 p-10 text-center">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#32BB78]/10">
+              <GoalSeedIcon className="h-10 w-10" />
             </div>
-            <Button onClick={() => setShowCreateDialog(true)} className="bg-primary hover:bg-primary/90">
+            <div>
+              <h3 className="font-headline mb-2 text-lg font-bold text-[#173f2b]">Aucun objectif d'épargne</h3>
+              <p className="mb-4 text-sm text-muted-foreground">Créez votre premier objectif d'épargne pour commencer à économiser.</p>
+            </div>
+            <Button onClick={() => setShowCreateDialog(true)} className="rounded-xl bg-[#32BB78] font-bold hover:bg-[#299c63]">
               <Plus className="mr-2 h-4 w-4" />
               Créer un Objectif
             </Button>
@@ -314,51 +382,56 @@ export default function SavingsPage() {
 
       {/* Goals List */}
       {goals.length > 0 && (
-        <div className="space-y-4">
-          <h2 className="font-headline font-semibold text-lg">Mes Objectifs</h2>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="font-headline text-lg font-bold text-[#173f2b]">Mes Objectifs</h2>
+            <div className="rounded-full bg-[#32BB78]/10 px-3 py-1 text-xs font-bold text-[#32BB78]">
+              <span>{goals.length} objectif{goals.length !== 1 ? 's' : ''}</span>
+            </div>
+          </div>
           {goals.map((goal) => {
             const progress = getGoalProgress(goal.id);
             const isCompleted = goal.status === 'completed';
 
             return (
-              <Card key={goal.id} className={`hover:shadow-md transition-shadow ${isCompleted ? 'border-primary/20 bg-primary/5/50' : ''}`}>
+              <Card key={goal.id} className={`overflow-hidden border-[#32BB78]/10 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${isCompleted ? 'border-[#32BB78]/30 bg-[#32BB78]/5' : ''}`}>
                 <CardContent className="p-4">
                   <div className="space-y-4">
                     {/* Header */}
                     <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-4 flex-1">
-                        <div className="text-3xl bg-muted p-3 rounded-lg">{goal.icon}</div>
-                        <div className="flex-1">
+                      <div className="flex flex-1 items-start gap-3">
+                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#32BB78]/10 text-3xl ring-1 ring-[#32BB78]/10">{goal.icon}</div>
+                        <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-headline font-semibold">{goal.name}</h3>
+                            <h3 className="font-headline truncate font-bold text-[#173f2b]">{goal.name}</h3>
                             {isCompleted && (
-                              <CheckCircle2 className="h-5 w-5 text-primary" />
+                              <CheckCircle2 className="h-5 w-5 shrink-0 text-[#32BB78]" />
                             )}
                             {goal.status === 'paused' && (
-                              <Pause className="h-5 w-5 text-yellow-600" />
+                              <Pause className="h-5 w-5 shrink-0 text-yellow-600" />
                             )}
                           </div>
                           {goal.description && (
                             <p className="text-sm text-muted-foreground mb-2">{goal.description}</p>
                           )}
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                            <span className="flex items-center gap-1">
-                              <Zap className="h-4 w-4" />
+                          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1 rounded-full bg-[#32BB78]/10 px-2 py-1 font-semibold text-[#32BB78]">
+                              <Zap className="h-3.5 w-3.5" />
                               {goal.frequency === 'daily' ? 'Quotidien' : goal.frequency === 'weekly' ? 'Hebdomadaire' : 'Mensuel'}
                             </span>
-                            <span>{formatCurrency(goal.frequencyAmount, goal.currency)}</span>
+                            <span className="rounded-full bg-[#f7faf8] px-2 py-1 font-semibold text-[#173f2b]">{formatCurrency(goal.frequencyAmount, goal.currency)}</span>
                           </div>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-2xl font-bold text-primary">{progress.toFixed(0)}%</p>
+                        <p className="text-2xl font-black text-[#32BB78]">{progress.toFixed(0)}%</p>
                         <p className="text-xs text-muted-foreground">Atteint</p>
                       </div>
                     </div>
 
                     {/* Progress Bar */}
                     <div className="space-y-2">
-                      <Progress value={progress} className="h-3" />
+                      <Progress value={progress} className="h-3 rounded-full bg-[#32BB78]/10" />
                       <div className="flex justify-between text-xs text-muted-foreground">
                         <span>{formatCurrency(goal.currentAmount, goal.currency)}</span>
                         <span>{formatCurrency(goal.targetAmount, goal.currency)}</span>
@@ -367,17 +440,17 @@ export default function SavingsPage() {
 
                     {/* Status Alert */}
                     {isCompleted && (
-                      <Alert className="border-primary/20 bg-primary/5">
-                        <CheckCircle2 className="h-4 w-4 text-primary" />
-                        <AlertTitle className="text-primary">Objectif atteint!</AlertTitle>
-                        <AlertDescription className="text-primary">
+                      <Alert className="rounded-2xl border-[#32BB78]/20 bg-[#32BB78]/5">
+                        <CheckCircle2 className="h-4 w-4 text-[#32BB78]" />
+                        <AlertTitle className="text-[#173f2b]">Objectif atteint!</AlertTitle>
+                        <AlertDescription className="text-[#23563c]">
                           Vous pouvez maintenant retirer vos fonds.
                         </AlertDescription>
                       </Alert>
                     )}
 
                     {goal.status === 'paused' && (
-                      <Alert className="border-yellow-200 bg-yellow-50">
+                      <Alert className="rounded-2xl border-yellow-200 bg-yellow-50">
                         <AlertCircle className="h-4 w-4 text-yellow-600" />
                         <AlertTitle className="text-yellow-900">Objectif en pause</AlertTitle>
                         <AlertDescription className="text-yellow-800">
@@ -395,7 +468,7 @@ export default function SavingsPage() {
                           setSelectedGoalId(goal.id);
                           setShowAddFundsDialog(true);
                         }}
-                        className="flex-1"
+                        className="h-9 flex-1 rounded-xl border-[#32BB78]/20 text-[#173f2b] hover:bg-[#32BB78]/5"
                       >
                         <Plus className="h-4 w-4 mr-1" />
                         Ajouter
@@ -409,7 +482,7 @@ export default function SavingsPage() {
                             setSelectedGoalId(goal.id);
                             setShowWithdrawDialog(true);
                           }}
-                          className="flex-1"
+                          className="h-9 flex-1 rounded-xl border-[#32BB78]/20 text-[#173f2b] hover:bg-[#32BB78]/5"
                         >
                           <ArrowRight className="h-4 w-4 mr-1" />
                           Retirer
@@ -420,7 +493,7 @@ export default function SavingsPage() {
                         variant="outline"
                         size="sm"
                         onClick={() => handleToggleStatus(goal.id, goal.status)}
-                        className="flex-1"
+                        className="h-9 flex-1 rounded-xl border-[#32BB78]/20 text-[#173f2b] hover:bg-[#32BB78]/5"
                       >
                         {goal.status === 'active' ? (
                           <>
@@ -439,7 +512,7 @@ export default function SavingsPage() {
                         variant="outline"
                         size="sm"
                         onClick={() => handleDeleteGoal(goal.id)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        className="h-9 rounded-xl text-red-600 hover:bg-red-50 hover:text-red-700"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -454,9 +527,14 @@ export default function SavingsPage() {
 
       {/* Create Goal Dialog */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md rounded-2xl">
           <DialogHeader>
-            <DialogTitle>Créer un nouvel objectif d'épargne</DialogTitle>
+            <DialogTitle className="flex items-center gap-2 text-[#173f2b]">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#32BB78]/10">
+                <GoalSeedIcon className="h-6 w-6" />
+              </span>
+              Créer un nouvel objectif d'épargne
+            </DialogTitle>
             <DialogDescription>
               Définissez votre objectif d'épargne et configurez les contributions automatiques.
             </DialogDescription>
@@ -465,27 +543,28 @@ export default function SavingsPage() {
           <div className="space-y-4 py-4">
             {/* Name */}
             <div className="space-y-2">
-              <Label htmlFor="goal-name">Nom de l'objectif</Label>
+              <Label htmlFor="goal-name" className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Nom de l'objectif</Label>
               <Input
                 id="goal-name"
                 placeholder="Ex: Voyage à Dubaï"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="rounded-xl border-[#32BB78]/20 focus-visible:ring-[#32BB78]"
               />
             </div>
 
             {/* Icon */}
             <div className="space-y-2">
-              <Label>Icône</Label>
+              <Label className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Icône</Label>
               <div className="grid grid-cols-5 gap-2">
                 {GOAL_ICONS.map((icon) => (
                   <button
                     key={icon}
                     onClick={() => setFormData({ ...formData, icon })}
-                    className={`p-2 text-2xl rounded-lg border-2 transition-all ${
+                    className={`rounded-xl border-2 p-2 text-2xl transition-all ${
                       formData.icon === icon
-                        ? 'border-primary bg-primary/10'
-                        : 'border-muted hover:border-primary/50'
+                        ? 'border-[#32BB78] bg-[#32BB78]/10'
+                        : 'border-muted hover:border-[#32BB78]/50'
                     }`}
                   >
                     {icon}
@@ -496,31 +575,33 @@ export default function SavingsPage() {
 
             {/* Description */}
             <div className="space-y-2">
-              <Label htmlFor="goal-description">Description (optionnel)</Label>
+              <Label htmlFor="goal-description" className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Description (optionnel)</Label>
               <Input
                 id="goal-description"
                 placeholder="Détails sur votre objectif"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                className="rounded-xl border-[#32BB78]/20 focus-visible:ring-[#32BB78]"
               />
             </div>
 
             {/* Target Amount */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="target-amount">Montant cible</Label>
+                <Label htmlFor="target-amount" className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Montant cible</Label>
                 <Input
                   id="target-amount"
                   type="number"
                   placeholder="0"
                   value={formData.targetAmount}
                   onChange={(e) => setFormData({ ...formData, targetAmount: e.target.value })}
+                  className="rounded-xl border-[#32BB78]/20 focus-visible:ring-[#32BB78]"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="currency">Devise</Label>
+                <Label htmlFor="currency" className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Devise</Label>
                 <Select value={formData.currency} onValueChange={(value: any) => setFormData({ ...formData, currency: value })}>
-                  <SelectTrigger>
+                  <SelectTrigger className="rounded-xl border-[#32BB78]/20">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -535,9 +616,9 @@ export default function SavingsPage() {
             {/* Frequency */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="frequency">Fréquence</Label>
+                <Label htmlFor="frequency" className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Fréquence</Label>
                 <Select value={formData.frequency} onValueChange={(value: any) => setFormData({ ...formData, frequency: value })}>
-                  <SelectTrigger>
+                  <SelectTrigger className="rounded-xl border-[#32BB78]/20">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -548,20 +629,21 @@ export default function SavingsPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="frequency-amount">Montant par période</Label>
+                <Label htmlFor="frequency-amount" className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Montant par période</Label>
                 <Input
                   id="frequency-amount"
                   type="number"
                   placeholder="0"
                   value={formData.frequencyAmount}
                   onChange={(e) => setFormData({ ...formData, frequencyAmount: e.target.value })}
+                  className="rounded-xl border-[#32BB78]/20 focus-visible:ring-[#32BB78]"
                 />
               </div>
             </div>
 
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Contributions automatiques</AlertTitle>
+            <Alert className="rounded-2xl border-[#32BB78]/20 bg-[#32BB78]/5">
+              <AutoSaveIcon className="h-4 w-4" />
+              <AlertTitle className="text-[#173f2b]">Contributions automatiques</AlertTitle>
               <AlertDescription>
                 Le montant sera automatiquement débité de votre portefeuille selon la fréquence choisie.
               </AlertDescription>
@@ -572,7 +654,7 @@ export default function SavingsPage() {
             <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
               Annuler
             </Button>
-            <Button onClick={handleCreateGoal} disabled={isProcessing}>
+            <Button onClick={handleCreateGoal} disabled={isProcessing} className="bg-[#32BB78] hover:bg-[#299c63]">
               {isProcessing ? "Création..." : "Créer"}
             </Button>
           </DialogFooter>
@@ -581,35 +663,40 @@ export default function SavingsPage() {
 
       {/* Add Funds Dialog */}
       <Dialog open={showAddFundsDialog} onOpenChange={setShowAddFundsDialog}>
-        <DialogContent>
+        <DialogContent className="rounded-2xl">
           <DialogHeader>
-            <DialogTitle>Ajouter des fonds</DialogTitle>
+            <DialogTitle className="flex items-center gap-2 text-[#173f2b]">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#32BB78]/10">
+                <Plus className="h-5 w-5 text-[#32BB78]" />
+              </span>
+              Ajouter des fonds
+            </DialogTitle>
             <DialogDescription>
               Ajoutez de l'argent à "{selectedGoal?.name}"
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
-            <div className="p-4 rounded-lg bg-muted space-y-2">
+            <div className="space-y-2 rounded-2xl bg-[#f7faf8] p-4">
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">Solde portefeuille:</span>
-                <span className="font-semibold">{formatCurrency(walletBalance, 'CDF')}</span>
+                <span className="font-bold text-[#173f2b]">{formatCurrency(walletBalance, 'CDF')}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">Solde objectif:</span>
-                <span className="font-semibold">{formatCurrency(selectedGoal?.currentAmount || 0, selectedGoal?.currency || 'CDF')}</span>
+                <span className="font-bold text-[#32BB78]">{formatCurrency(selectedGoal?.currentAmount || 0, selectedGoal?.currency || 'CDF')}</span>
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="add-amount">Montant à ajouter</Label>
+              <Label htmlFor="add-amount" className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Montant à ajouter</Label>
               <Input
                 id="add-amount"
                 type="number"
                 placeholder="0"
                 value={addAmount}
                 onChange={(e) => setAddAmount(e.target.value)}
-                className="text-lg"
+                className="rounded-xl border-[#32BB78]/20 text-lg font-bold focus-visible:ring-[#32BB78]"
               />
               <p className="text-xs text-muted-foreground">
                 Devise: {selectedGoal?.currency}
@@ -624,7 +711,7 @@ export default function SavingsPage() {
             }}>
               Annuler
             </Button>
-            <Button onClick={handleAddFunds} disabled={isProcessing}>
+            <Button onClick={handleAddFunds} disabled={isProcessing} className="bg-[#32BB78] hover:bg-[#299c63]">
               {isProcessing ? "Traitement..." : "Ajouter"}
             </Button>
           </DialogFooter>
@@ -633,32 +720,37 @@ export default function SavingsPage() {
 
       {/* Withdraw Dialog */}
       <Dialog open={showWithdrawDialog} onOpenChange={setShowWithdrawDialog}>
-        <DialogContent>
+        <DialogContent className="rounded-2xl">
           <DialogHeader>
-            <DialogTitle>Retirer des fonds</DialogTitle>
+            <DialogTitle className="flex items-center gap-2 text-[#173f2b]">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#32BB78]/10">
+                <ArrowRight className="h-5 w-5 text-[#32BB78]" />
+              </span>
+              Retirer des fonds
+            </DialogTitle>
             <DialogDescription>
               Retirez de l'argent de "{selectedGoal?.name}"
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
-            <Alert className="border-primary/20 bg-primary/5">
-              <CheckCircle2 className="h-4 w-4 text-primary" />
-              <AlertTitle className="text-primary">Objectif atteint!</AlertTitle>
-              <AlertDescription className="text-primary">
+            <Alert className="rounded-2xl border-[#32BB78]/20 bg-[#32BB78]/5">
+              <CheckCircle2 className="h-4 w-4 text-[#32BB78]" />
+              <AlertTitle className="text-[#173f2b]">Objectif atteint!</AlertTitle>
+              <AlertDescription className="text-[#23563c]">
                 Vous pouvez retirer jusqu'à {formatCurrency(selectedGoal?.currentAmount || 0, selectedGoal?.currency || 'CDF')}
               </AlertDescription>
             </Alert>
 
             <div className="space-y-2">
-              <Label htmlFor="withdraw-amount">Montant à retirer</Label>
+              <Label htmlFor="withdraw-amount" className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Montant à retirer</Label>
               <Input
                 id="withdraw-amount"
                 type="number"
                 placeholder="0"
                 value={withdrawAmount}
                 onChange={(e) => setWithdrawAmount(e.target.value)}
-                className="text-lg"
+                className="rounded-xl border-[#32BB78]/20 text-lg font-bold focus-visible:ring-[#32BB78]"
               />
               <p className="text-xs text-muted-foreground">
                 Devise: {selectedGoal?.currency}
@@ -673,12 +765,13 @@ export default function SavingsPage() {
             }}>
               Annuler
             </Button>
-            <Button onClick={handleWithdraw} disabled={isProcessing}>
+            <Button onClick={handleWithdraw} disabled={isProcessing} className="bg-[#32BB78] hover:bg-[#299c63]">
               {isProcessing ? "Traitement..." : "Retirer"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
     </div>
   );
 }
