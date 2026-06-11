@@ -1418,11 +1418,11 @@ export default function ConversationClient() {
                                             </Avatar>
                                         )}
                                         <Card
-                                            className={`px-3 py-1 rounded-2xl cursor-pointer hover:shadow-md transition-shadow w-fit max-w-full ${
+                                            className={`relative px-3 py-1 rounded-2xl cursor-pointer hover:shadow-md transition-shadow w-fit max-w-full ${
                                                 isOwn
                                                     ? 'bg-primary text-white rounded-br-none'
                                                     : 'bg-muted text-foreground rounded-bl-none'
-                                            } ${message.isDeleted ? 'opacity-60 italic' : ''}`}
+                                            } ${!isOwn && canTranslateMessage(message) ? 'pr-10' : ''} ${message.isDeleted ? 'opacity-60 italic' : ''}`}
                                             onPointerDown={(e) => {
                                                 if (e.pointerType === 'mouse') return;
                                                 startMessageLongPress(message, { x: e.clientX, y: e.clientY });
@@ -1446,6 +1446,25 @@ export default function ConversationClient() {
                                                 }
                                             }}
                                         >
+                                        {!isOwn && canTranslateMessage(message) && (
+                                            <button
+                                                type="button"
+                                                onClick={(event) => {
+                                                    event.stopPropagation();
+                                                    void translateMessageInline(message);
+                                                }}
+                                                disabled={isMessageTranslating}
+                                                className="absolute right-1.5 top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full border border-primary/20 bg-white text-primary shadow-sm transition hover:bg-primary hover:text-white disabled:cursor-wait disabled:opacity-70"
+                                                aria-label="Traduire ce message"
+                                                title="Traduire"
+                                            >
+                                                {isMessageTranslating ? (
+                                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                                ) : (
+                                                    <Languages className="h-3.5 w-3.5" />
+                                                )}
+                                            </button>
+                                        )}
                                         {(isAudioMessage || isLegacyAudioMessage) && audioUrl ? (
                                             <div className="space-y-2 w-full">
                                                 <div className="flex items-center gap-2">
@@ -1755,7 +1774,7 @@ export default function ConversationClient() {
                                         {message.isEdited && <span className="ml-2">(modifié)</span>}
                                     </p>
                                     </Card>
-                                    
+
                                     {/* Message Actions Menu */}
                                     {isOwn && !message.isDeleted && (
                                         <div className="absolute -left-8 top-1 flex-shrink-0">

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import EnkambaCard from '@/components/EnkambaCard';
 import {
   Card,
@@ -9,7 +10,6 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import {
-  type CarouselApi,
   Carousel,
   CarouselContent,
   CarouselItem,
@@ -17,7 +17,6 @@ import {
 import {
   ArrowLeft,
   Shield,
-  Sparkles,
   TrendingUp,
   CreditCard,
   Eye,
@@ -75,7 +74,6 @@ const walletActions = [
 export default function WalletPage() {
   const { profile } = useUserProfile();
   const { balance: walletBalance, transactions: walletTransactions } = useWalletTransactions();
-  const [cardsCarouselApi, setCardsCarouselApi] = useState<CarouselApi | null>(null);
   const {
     isBalanceVisible,
     isBiometricChecking,
@@ -141,15 +139,6 @@ export default function WalletPage() {
     }
   }, [isBalanceVisible, profile?.uid, profile?.fullName, profile?.name, profile?.photoURL, profile?.profileImage, walletBalance]);
 
-  useEffect(() => {
-    if (!cardsCarouselApi) return;
-    const id = window.setInterval(() => {
-      cardsCarouselApi.scrollNext();
-    }, 4500);
-
-    return () => window.clearInterval(id);
-  }, [cardsCarouselApi]);
-
   const getTransactionStatusUI = (status: string) => {
     if (status === 'failed') {
       return {
@@ -175,7 +164,7 @@ export default function WalletPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-[#32BB78]/5 to-background">
+    <div className="min-h-screen bg-[#f7faf8]">
       <style>{`
         @keyframes slide-up {
           from { opacity: 0; transform: translateY(20px); }
@@ -186,44 +175,44 @@ export default function WalletPage() {
         }
       `}</style>
 
-      <div className="container mx-auto max-w-4xl p-4 space-y-12 animate-in fade-in duration-500">
+      <div className="container mx-auto max-w-4xl p-3 sm:p-4 space-y-3 animate-in fade-in duration-500">
         {/* Header */}
-        <header className="flex items-center gap-4 pt-4 slide-up">
+        <header className="flex items-center gap-3 pt-1 slide-up">
           <Button variant="ghost" size="icon" asChild>
             <Link href="/dashboard/mbongo-dashboard">
               <ArrowLeft />
             </Link>
           </Button>
           <div>
-            <h1 className="font-headline text-3xl font-bold bg-gradient-to-r from-[#32BB78] to-[#32BB78] bg-clip-text text-transparent">
+            <h1 className="font-headline text-xl font-bold text-[#173f2b] sm:text-2xl">
               Mon Portefeuille
             </h1>
-            <p className="text-sm text-muted-foreground">La vie simplifiée et meilleure</p>
+            <p className="text-xs text-muted-foreground">La vie simplifiée et meilleure</p>
           </div>
         </header>
 
         {/* Hero Section - Card Centered */}
-        <div className="flex flex-col items-center gap-8 slide-up" style={{ animationDelay: '0.1s' }}>
+        <div className="-mt-1 flex flex-col items-center gap-1 slide-up sm:-mt-2" style={{ animationDelay: '0.1s' }}>
           {/* EnkambaCard Component */}
-          <div className="flex w-full max-w-[500px] justify-end px-4">
+          <div className="flex w-full max-w-[500px] justify-end px-1">
             <button
               type="button"
               onClick={isBalanceVisible ? lockBalance : requestUnlock}
               disabled={isBiometricChecking}
-              className="inline-flex h-9 items-center gap-2 rounded-full border border-primary/20 bg-white px-3 text-xs font-bold text-primary shadow-sm transition hover:bg-primary/10 disabled:opacity-60"
+              aria-label={isBalanceVisible ? 'Masquer le solde' : 'Afficher le solde'}
+              title={isBalanceVisible ? 'Masquer le solde' : 'Afficher le solde'}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#32BB78]/20 bg-white text-[#173f2b] shadow-sm transition hover:border-[#32BB78]/40 hover:bg-[#32BB78]/5 disabled:opacity-60"
             >
               {isBiometricChecking ? <Loader2 className="h-4 w-4 animate-spin" /> : isBalanceVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              {isBalanceVisible ? 'Masquer' : 'Afficher le solde'}
             </button>
           </div>
-          <div className="w-full flex justify-center overflow-x-auto px-4">
-            <div className="transform scale-75 sm:scale-100 origin-center">
+          <div className="flex h-[208px] w-full justify-center overflow-hidden px-1 sm:h-[258px] md:h-[280px]">
+            <div className="origin-top scale-[0.66] sm:scale-[0.82] md:scale-90">
               <Carousel
                 className="w-[500px] shrink-0"
                 opts={{ align: 'center', loop: true }}
-                setApi={(api) => setCardsCarouselApi(api)}
               >
-                <CarouselContent>
+                <CarouselContent className="-ml-2">
                   <CarouselItem className="flex justify-center">
                     <EnkambaCard {...cardData} brand="visa" />
                   </CarouselItem>
@@ -237,31 +226,24 @@ export default function WalletPage() {
 
           {/* Actions Wallet - Below Card */}
           <div className="w-full slide-up" style={{ animationDelay: '0.2s' }}>
-            <div className="flex justify-between items-center gap-2 px-2 max-w-sm mx-auto">
+            <div className="mx-auto flex max-w-sm items-center justify-between gap-2 rounded-2xl border border-[#32BB78]/10 bg-white px-3 py-2 shadow-sm">
               {walletActions.map((action) => {
                 const Icon = action.icon;
                 return (
                   <Link key={action.label} href={action.href} className="flex-1">
-                    <div className="group relative flex flex-col items-center gap-2 cursor-pointer">
-                      <div className="absolute -inset-4 bg-gradient-to-br from-[#32BB78]/20 to-[#32BB78]/5 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
-                      <div className="absolute -inset-6 rounded-full border border-[#32BB78]/10 opacity-0 group-hover:opacity-60 transition-all duration-500"></div>
-                      
+                    <div className="group relative flex cursor-pointer flex-col items-center gap-1.5">
                       <div className="relative">
-                        <div className="absolute inset-0 -m-2 rounded-full bg-[#32BB78]/15 opacity-0 group-hover:opacity-100 transition-all duration-300 blur-lg"></div>
-                        
-                        <div className="relative bg-gradient-to-br from-[#32BB78] via-[#32BB78] to-[#32BB78] rounded-full p-3 sm:p-5 shadow-lg hover:shadow-2xl transition-all duration-300 transform group-hover:scale-110 sm:group-hover:scale-125 border border-[#32BB78]/60 group-hover:border-[#32BB78]/100 group-hover:-rotate-12">
+                        <div className="relative rounded-xl border border-[#32BB78]/20 bg-[#32BB78]/10 p-2.5 text-[#32BB78] transition duration-200 group-hover:-translate-y-0.5 group-hover:bg-[#32BB78] group-hover:text-white sm:p-3">
                           <div className="absolute inset-2 rounded-full border border-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                          <div className="relative text-white drop-shadow-lg">
+                          <div className="relative">
                             <Icon />
                           </div>
                         </div>
                       </div>
                       
-                      <span className="text-[0.65rem] sm:text-sm font-semibold text-foreground group-hover:text-[#32BB78] transition-colors duration-300 text-center leading-tight">
+                      <span className="text-[0.65rem] sm:text-xs font-semibold text-foreground group-hover:text-[#32BB78] transition-colors duration-300 text-center leading-tight">
                         {action.label}
                       </span>
-                      
-                      <div className="h-1 w-6 bg-gradient-to-r from-[#32BB78]/0 via-[#32BB78] to-[#32BB78]/0 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300"></div>
                     </div>
                   </Link>
                 );
@@ -270,115 +252,120 @@ export default function WalletPage() {
           </div>
         </div>
 
-        <Card className="slide-up relative overflow-hidden border-0 bg-gradient-to-br from-[#32BB78] via-[#32BB78] to-[#32BB78] text-white shadow-xl" style={{ animationDelay: '0.25s' }}>
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_16%_18%,rgba(255,255,255,0.24),transparent_28%),radial-gradient(circle_at_86%_20%,rgba(255,140,0,0.22),transparent_26%)]" />
-          <CardContent className="relative flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-start gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/14 ring-1 ring-white/20">
-                <Sparkles className="h-5 w-5 text-[#FFB545]" />
+        <Card className="slide-up overflow-hidden border border-[#32BB78]/10 bg-white shadow-sm" style={{ animationDelay: '0.25s' }}>
+          <CardContent className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[#32BB78]/15 bg-[#32BB78]/10">
+                <Image
+                  src="/enkamba-logo.png"
+                  alt="eNkamba AI"
+                  width={30}
+                  height={30}
+                  className="h-7 w-7 rounded-lg object-cover"
+                />
               </div>
-              <div>
-                <p className="text-[11px] font-black uppercase tracking-[0.18em] text-white/65">Assistant financier IA</p>
-                <h2 className="mt-1 text-xl font-black">Analyse intelligente du portefeuille</h2>
-                <p className="mt-1 max-w-xl text-sm leading-6 text-white/75">
+              <div className="min-w-0">
+                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#32BB78]">Assistant financier IA</p>
+                <h2 className="mt-0.5 text-base font-black text-[#173f2b] sm:text-lg">Analyse intelligente du portefeuille</h2>
+                <p className="mt-0.5 max-w-xl text-xs leading-5 text-muted-foreground sm:text-sm">
                   Analysez votre historique, repérez les anomalies et générez des recommandations financières.
                 </p>
               </div>
             </div>
-            <Button variant="secondary" className="shrink-0 rounded-2xl font-bold" asChild>
+            <Button className="h-8 shrink-0 rounded-xl bg-[#173f2b] px-3 text-xs font-bold text-white hover:bg-[#23563c] sm:h-9" asChild>
               <Link href="/dashboard/report">Générer un rapport</Link>
             </Button>
           </CardContent>
         </Card>
 
         {/* Stats Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 slide-up" style={{ animationDelay: '0.3s' }}>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3 slide-up" style={{ animationDelay: '0.3s' }}>
           {/* Balance Overview */}
-          <Card className="border-0 bg-white shadow-md hover:shadow-lg transition-shadow">
-            <CardContent className="pt-6">
-              <div className="flex items-start justify-between mb-4">
+          <Card className="border-0 bg-[#32BB78] text-white shadow-sm transition-shadow hover:shadow-md">
+            <CardContent className="p-3 sm:p-4">
+              <div className="mb-2 flex items-start justify-between">
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-muted-foreground mb-2">Solde Total</p>
-                  <p className="text-3xl font-bold text-[#32BB78]">
+                  <p className="mb-1 text-xs font-medium text-white/75">Solde principal</p>
+                  <p className="text-2xl font-bold text-white">
                     {isBalanceVisible ? walletBalance.toLocaleString('fr-FR') : '••••••'}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">FC</p>
+                  <p className="mt-0.5 text-xs text-white/70">FC</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2 text-sm text-[#32BB78] font-medium mb-4">
+              <div className="mb-2 flex items-center gap-2 text-xs font-medium text-white/85">
                 <TrendingUp className="w-4 h-4" />
                 <span>+12.5% ce mois</span>
               </div>
               
               {/* Currency Bubbles */}
-              <div className="flex justify-between gap-1 mt-4">
+              <div className="mt-2 flex justify-between gap-1">
                 {/* FC Bubble */}
                 <div className="group relative flex flex-col items-center gap-1 cursor-pointer flex-1">
-                  <div className="relative bg-gradient-to-br from-[#32BB78] via-[#32BB78] to-[#32BB78] rounded-full w-12 h-12 flex flex-col items-center justify-center shadow-md hover:shadow-xl transition-all duration-300 transform group-hover:scale-125 border border-[#32BB78]/60 group-hover:border-[#32BB78]/100">
+                  <div className="relative flex h-10 w-10 flex-col items-center justify-center rounded-full border border-white/30 bg-white/15 shadow-sm transition duration-200 group-hover:scale-105 group-hover:bg-white/20">
                     <div className="relative text-white text-[0.4rem] font-bold leading-tight">FC</div>
                     <div className="relative text-white text-[0.35rem] font-medium leading-tight px-1 text-center overflow-hidden">
                       {isBalanceVisible ? formatAmount(walletBalance, 'FC') : '••••'}
                     </div>
                   </div>
-                  <span className="text-[0.45rem] font-medium text-muted-foreground text-center">Franc</span>
+                  <span className="text-[0.45rem] font-medium text-white/70 text-center">Franc</span>
                 </div>
 
                 {/* USD Bubble */}
                 <div className="group relative flex flex-col items-center gap-1 cursor-pointer flex-1">
-                  <div className="relative bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 rounded-full w-12 h-12 flex flex-col items-center justify-center shadow-md hover:shadow-xl transition-all duration-300 transform group-hover:scale-125 border border-blue-500/60 group-hover:border-blue-500/100">
+                  <div className="relative flex h-10 w-10 flex-col items-center justify-center rounded-full border border-blue-500/60 bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 shadow-sm transition duration-200 group-hover:scale-105 group-hover:shadow-md">
                     <div className="relative text-white text-[0.4rem] font-bold leading-tight">USD</div>
                     <div className="relative text-white text-[0.35rem] font-medium leading-tight px-1 text-center overflow-hidden">
                       {isBalanceVisible ? formatAmount(convertedAmounts.USD, 'USD') : '••••'}
                     </div>
                   </div>
-                  <span className="text-[0.45rem] font-medium text-muted-foreground text-center">Dollar</span>
+                  <span className="text-[0.45rem] font-medium text-white/70 text-center">Dollar</span>
                 </div>
 
                 {/* EUR Bubble */}
                 <div className="group relative flex flex-col items-center gap-1 cursor-pointer flex-1">
-                  <div className="relative bg-gradient-to-br from-purple-500 via-purple-600 to-purple-700 rounded-full w-12 h-12 flex flex-col items-center justify-center shadow-md hover:shadow-xl transition-all duration-300 transform group-hover:scale-125 border border-purple-500/60 group-hover:border-purple-500/100">
+                  <div className="relative flex h-10 w-10 flex-col items-center justify-center rounded-full border border-purple-500/60 bg-gradient-to-br from-purple-500 via-purple-600 to-purple-700 shadow-sm transition duration-200 group-hover:scale-105 group-hover:shadow-md">
                     <div className="relative text-white text-[0.4rem] font-bold leading-tight">EUR</div>
                     <div className="relative text-white text-[0.35rem] font-medium leading-tight px-1 text-center overflow-hidden">
                       {isBalanceVisible ? formatAmount(convertedAmounts.EUR, 'EUR') : '••••'}
                     </div>
                   </div>
-                  <span className="text-[0.45rem] font-medium text-muted-foreground text-center">Euro</span>
+                  <span className="text-[0.45rem] font-medium text-white/70 text-center">Euro</span>
                 </div>
 
                 {/* GBP Bubble */}
                 <div className="group relative flex flex-col items-center gap-1 cursor-pointer flex-1">
-                  <div className="relative bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700 rounded-full w-12 h-12 flex flex-col items-center justify-center shadow-md hover:shadow-xl transition-all duration-300 transform group-hover:scale-125 border border-orange-500/60 group-hover:border-orange-500/100">
+                  <div className="relative flex h-10 w-10 flex-col items-center justify-center rounded-full border border-orange-500/60 bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700 shadow-sm transition duration-200 group-hover:scale-105 group-hover:shadow-md">
                     <div className="relative text-white text-[0.4rem] font-bold leading-tight">GBP</div>
                     <div className="relative text-white text-[0.35rem] font-medium leading-tight px-1 text-center overflow-hidden">
                       {isBalanceVisible ? formatAmount(convertedAmounts.GBP, 'GBP') : '••••'}
                     </div>
                   </div>
-                  <span className="text-[0.45rem] font-medium text-muted-foreground text-center">Livre</span>
+                  <span className="text-[0.45rem] font-medium text-white/70 text-center">Livre</span>
                 </div>
 
                 {/* CNY Bubble */}
                 <div className="group relative flex flex-col items-center gap-1 cursor-pointer flex-1">
-                  <div className="relative bg-gradient-to-br from-red-500 via-red-600 to-red-700 rounded-full w-12 h-12 flex flex-col items-center justify-center shadow-md hover:shadow-xl transition-all duration-300 transform group-hover:scale-125 border border-red-500/60 group-hover:border-red-500/100">
+                  <div className="relative flex h-10 w-10 flex-col items-center justify-center rounded-full border border-red-500/60 bg-gradient-to-br from-red-500 via-red-600 to-red-700 shadow-sm transition duration-200 group-hover:scale-105 group-hover:shadow-md">
                     <div className="relative text-white text-[0.4rem] font-bold leading-tight">CNY</div>
                     <div className="relative text-white text-[0.35rem] font-medium leading-tight px-1 text-center overflow-hidden">
                       {isBalanceVisible ? formatAmount(convertedAmounts.CNY, 'CNY') : '••••'}
                     </div>
                   </div>
-                  <span className="text-[0.45rem] font-medium text-muted-foreground text-center">Yuan</span>
+                  <span className="text-[0.45rem] font-medium text-white/70 text-center">Yuan</span>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           {/* Account Status */}
-          <Card className="border-0 bg-white shadow-md hover:shadow-lg transition-shadow">
-            <CardContent className="pt-6">
-              <div className="flex items-start justify-between mb-4">
+          <Card className="border border-[#32BB78]/10 bg-white shadow-sm transition-shadow hover:shadow-md">
+            <CardContent className="p-3 sm:p-4">
+              <div className="mb-2 flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-2">Compte</p>
-                  <p className="text-lg font-mono font-bold text-foreground">{cardData.accountNumber}</p>
+                  <p className="mb-1 text-xs font-medium text-muted-foreground">Compte</p>
+                  <p className="text-base font-mono font-bold text-foreground sm:text-lg">{cardData.accountNumber}</p>
                 </div>
-                <div className="p-3 rounded-lg bg-[#FFA500]/10">
+                <div className="rounded-xl bg-[#FFA500]/10 p-2.5">
                   <CreditCard className="w-6 h-6 text-[#FFA500]" />
                 </div>
               </div>
@@ -390,14 +377,14 @@ export default function WalletPage() {
           </Card>
 
           {/* Security */}
-          <Card className="border-0 bg-white shadow-md hover:shadow-lg transition-shadow">
-            <CardContent className="pt-6">
-              <div className="flex items-start justify-between mb-4">
+          <Card className="border border-[#32BB78]/10 bg-white shadow-sm transition-shadow hover:shadow-md">
+            <CardContent className="p-3 sm:p-4">
+              <div className="mb-2 flex items-start justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-2">Sécurité</p>
+                  <p className="mb-1 text-xs font-medium text-muted-foreground">Sécurité</p>
                   <p className="text-lg font-bold text-foreground">Protégé</p>
                 </div>
-                <div className="p-3 rounded-lg bg-blue-500/10">
+                <div className="rounded-xl bg-blue-500/10 p-2.5">
                   <Shield className="w-6 h-6 text-blue-500" />
                 </div>
               </div>
@@ -411,12 +398,12 @@ export default function WalletPage() {
 
         {/* Transactions Timeline */}
         <div className="slide-up" style={{ animationDelay: '0.4s' }}>
-          <Card className="border-[#32BB78]/20">
-            <CardHeader>
-              <CardTitle className="font-headline text-xl">Transactions Récentes</CardTitle>
+          <Card className="border-[#32BB78]/20 shadow-sm">
+            <CardHeader className="px-4 py-2.5">
+              <CardTitle className="font-headline text-base">Transactions Récentes</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
+            <CardContent className="px-3 pb-3">
+              <div className="max-h-[360px] space-y-1.5 overflow-y-auto pr-1">
                 {walletTransactions.length > 0 ? (
                   walletTransactions.map((tx) => {
                     const isIncoming = tx.type === 'deposit' || tx.type === 'transfer_received' || tx.type === 'money_request_received';
@@ -428,11 +415,11 @@ export default function WalletPage() {
                       : 'Date inconnue';
                     
                     return (
-                      <div key={tx.id} className="flex items-center gap-4 p-4 rounded-xl hover:bg-muted/50 transition-colors group cursor-pointer">
-                        <div className={`p-3 rounded-full ${iconConfig.bgColor}`}>
+                      <div key={tx.id} className="group flex cursor-pointer items-center gap-3 rounded-xl p-2.5 transition-colors hover:bg-muted/50">
+                        <div className={`rounded-full p-2.5 ${iconConfig.bgColor}`}>
                           <Icon className={`w-5 h-5 ${iconConfig.iconColor}`} size={20} />
                         </div>
-                        <div className="flex-1">
+                        <div className="min-w-0 flex-1">
                           <p className="font-semibold text-sm">{tx.description}</p>
                           <div className="mt-1 flex items-center gap-2">
                             <p className="text-xs text-muted-foreground">{formattedDate}</p>
@@ -441,7 +428,7 @@ export default function WalletPage() {
                             </span>
                           </div>
                         </div>
-                        <p className={`font-bold text-sm ${tx.status === 'failed' || tx.status === 'pending' ? statusUI.amountClassName : isIncoming ? 'text-[#32BB78]' : 'text-foreground'}`}>
+                        <p className={`shrink-0 text-right text-sm font-bold ${tx.status === 'failed' || tx.status === 'pending' ? statusUI.amountClassName : isIncoming ? 'text-[#32BB78]' : 'text-foreground'}`}>
                           {isIncoming ? '+' : '-'} {tx.amount.toLocaleString('fr-FR')} CDF
                         </p>
                       </div>
