@@ -1,9 +1,16 @@
 import type { Metadata } from "next";
 
-import { ServerMaintenancePage } from "@/components/server-maintenance-page";
+import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 import "leaflet/dist/leaflet.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import { PendingPaymentWatcher } from "@/components/wallet/pending-payment-watcher";
+import { AccessCodeGate } from "@/components/access-code/AccessCodeGate";
+import { GlobalCallOverlay } from "@/components/chat/global-call-overlay";
+import { CurrencyInitializer } from "@/components/currency/CurrencyInitializer";
+import { GlobalAutoTranslator } from "@/components/translation/GlobalAutoTranslator";
+import { UserPinAccessGate } from "@/components/security/UserPinAccessGate";
+import { AdminTelemetryAgent } from "@/components/admin/admin-telemetry-agent";
 
 export const metadata: Metadata = {
   title: "eNkamba - La vie simplifiée et meilleure",
@@ -52,7 +59,17 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <ServerMaintenancePage />
+          <CurrencyInitializer />
+          <UserPinAccessGate>
+            <AccessCodeGate>
+              <GlobalAutoTranslator />
+              <AdminTelemetryAgent />
+              {children}
+              <GlobalCallOverlay />
+              <PendingPaymentWatcher />
+            </AccessCodeGate>
+          </UserPinAccessGate>
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>
