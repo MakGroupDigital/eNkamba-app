@@ -797,29 +797,28 @@ export default function NkampaPage() {
             ref={photoSearchInputRef}
             type="file"
             accept="image/*"
-            capture="environment"
             className="hidden"
             onChange={(event) => void handlePhotoSearch(event.target.files?.[0] || null)}
           />
-          {/* Top Bar */}
-          <div className="flex items-center justify-between h-16 pt-2">
+          {/* Top Bar - Compact */}
+          <div className="flex items-center justify-between h-12 pt-1">
             {/* Left: Logo */}
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2.5">
-                <div className="relative h-10 w-10 rounded-xl bg-white shadow-lg overflow-hidden ring-2 ring-white/30">
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2">
+                <div className="relative h-8 w-8 rounded-lg bg-white shadow-md overflow-hidden ring-2 ring-white/30">
                   <Image
                     src="/enkamba-logo.png"
                     alt="eNkamba"
-                    width={40}
-                    height={40}
+                    width={32}
+                    height={32}
                     className="object-cover"
                   />
                 </div>
                 <div className="hidden sm:block">
-                  <h1 className="text-lg font-black text-white leading-none">
+                  <h1 className="text-base font-black text-white leading-none">
                     eNkamba Shop
                   </h1>
-                  <p className="text-[10px] font-semibold text-primary uppercase tracking-wider">
+                  <p className="text-[9px] font-semibold text-primary uppercase tracking-wider">
                     Commerce vivant
                   </p>
                 </div>
@@ -827,9 +826,9 @@ export default function NkampaPage() {
             </div>
 
             {/* Right: Search + Cart */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               {/* Search Bar - Desktop */}
-              <div className="hidden md:flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2.5 min-w-[280px] transition-all focus-within:bg-white/30 focus-within:ring-2 focus-within:ring-white/50 focus-within:shadow-lg border border-white/30">
+              <div className="hidden md:flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-xl px-3 py-2 min-w-[280px] transition-all focus-within:bg-white/30 focus-within:ring-2 focus-within:ring-white/50 focus-within:shadow-lg border border-white/30">
                 <Search className="h-4 w-4 text-white" />
                 <input
                   type="text"
@@ -872,9 +871,9 @@ export default function NkampaPage() {
               {/* Cart Button */}
               <button
                 onClick={() => setIsOpen(true)}
-                className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-white text-primary transition-all hover:bg-white/90 hover:scale-105 active:scale-95 shadow-lg"
+                className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-white text-primary transition-all hover:bg-white/90 hover:scale-105 active:scale-95 shadow-lg"
               >
-                <ShoppingCart className="h-5 w-5" />
+                <ShoppingCart className="h-4 w-4" />
                 {itemCount > 0 && (
                   <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-black text-white shadow-lg animate-bounce ring-2 ring-white">
                     {itemCount > 99 ? '99+' : itemCount}
@@ -884,8 +883,8 @@ export default function NkampaPage() {
             </div>
           </div>
 
-          {/* Navigation Bar */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-3 scrollbar-hide">
+          {/* Navigation Bar - Compact */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
             {[
               { href: '/dashboard/nkampa', label: 'Boutique', icon: NkampaNavShopIcon },
               { href: '/dashboard/nkampa/orders', label: 'Commandes', icon: NkampaNavOrdersIcon },
@@ -902,25 +901,25 @@ export default function NkampaPage() {
                   href={item.href}
                   className="relative group"
                 >
-                  <div className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold whitespace-nowrap transition-all ${
+                  <div className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition-all ${
                     isActive
                       ? 'bg-white text-primary shadow-md'
                       : 'text-white hover:bg-white/20 border border-transparent hover:border-white/30'
                   }`}>
-                    <Icon className="h-4 w-4" />
+                    <Icon className="h-3.5 w-3.5" />
                     <span>{item.label}</span>
                   </div>
                   {isActive && (
-                    <div className="absolute -bottom-3 left-1/2 h-1 w-8 -translate-x-1/2 rounded-full bg-white shadow-lg shadow-white/50" />
+                    <div className="absolute -bottom-2 left-1/2 h-0.5 w-6 -translate-x-1/2 rounded-full bg-white shadow-lg shadow-white/50" />
                   )}
                 </Link>
               );
             })}
           </div>
 
-          {/* Search Bar - Mobile */}
-          <div className="md:hidden pb-3">
-            <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2.5 transition-all focus-within:bg-white/30 focus-within:ring-2 focus-within:ring-white/50 focus-within:shadow-lg border border-white/30">
+          {/* Search Bar - Mobile Compact */}
+          <div className="md:hidden pb-2">
+            <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-xl px-3 py-2 transition-all focus-within:bg-white/30 focus-within:ring-2 focus-within:ring-white/50 focus-within:shadow-lg border border-white/30">
               <Search className="h-4 w-4 text-white" />
               <input
                 type="text"
@@ -983,21 +982,21 @@ export default function NkampaPage() {
       </header>
 
       {/* Contenu principal */}
-      <div className="space-y-6 pb-8">
-        {/* Catégories principales */}
+      <div className="space-y-4 pb-8">
+        {/* Catégories principales - Compact */}
         <div className="px-4">
-          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
             {MAIN_CATEGORIES.map((cat) => {
               const IconComponent = cat.icon;
               const isActive = selectedMainCategory === cat.id;
               const content = cat.href ? (
-                <div className="flex-shrink-0 flex flex-col items-center gap-2 transition-all">
+                <div className="flex-shrink-0 flex flex-col items-center gap-1 transition-all">
                   <div
-                    className={`w-16 h-16 rounded-full flex items-center justify-center transition-all shadow-md bg-white text-primary hover:shadow-lg hover:scale-105`}
+                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-md bg-white text-primary hover:shadow-lg hover:scale-105`}
                   >
-                    <IconComponent className="text-primary" size={32} />
+                    <IconComponent className="text-primary" size={24} />
                   </div>
-                  <span className="text-xs font-semibold text-gray-700 text-center max-w-[70px]">
+                  <span className="text-[10px] font-semibold text-gray-700 text-center max-w-[60px] leading-tight">
                     {cat.label}
                   </span>
                 </div>
@@ -1012,18 +1011,18 @@ export default function NkampaPage() {
                       setSelectedSubcategory(null);
                     }
                   }}
-                  className="flex-shrink-0 flex flex-col items-center gap-2 transition-all"
+                  className="flex-shrink-0 flex flex-col items-center gap-1 transition-all"
                 >
                   <div
-                    className={`w-16 h-16 rounded-full flex items-center justify-center transition-all shadow-md ${
+                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-md ${
                       isActive || (cat.id === 'all' && !selectedMainCategory)
                         ? 'bg-primary text-white shadow-lg scale-110'
                         : 'bg-white text-primary hover:shadow-lg hover:scale-105'
                     }`}
                   >
-                    <IconComponent className={`${isActive || (cat.id === 'all' && !selectedMainCategory) ? 'text-white' : 'text-primary'}`} size={32} />
+                    <IconComponent className={`${isActive || (cat.id === 'all' && !selectedMainCategory) ? 'text-white' : 'text-primary'}`} size={24} />
                   </div>
-                  <span className="text-xs font-semibold text-gray-700 text-center max-w-[70px]">
+                  <span className="text-[10px] font-semibold text-gray-700 text-center max-w-[60px] leading-tight">
                     {cat.label}
                   </span>
                 </button>
@@ -1129,8 +1128,8 @@ export default function NkampaPage() {
         {/* Section par défaut - Tous les produits */}
         {!selectedMainCategory && (
           <>
-            {/* Bannière promotionnelle moderne et immersive */}
-            <div className="relative h-56 mx-4 mt-4 rounded-3xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.25)]">
+            {/* Bannière promotionnelle moderne et immersive - compacte */}
+            <div className="relative h-40 mx-4 mt-2 rounded-2xl overflow-hidden shadow-lg">
               {/* Image de fond avec overlay subtil */}
               <div className="absolute inset-0">
                 {bannerProducts.length > 0 && (
@@ -1153,42 +1152,42 @@ export default function NkampaPage() {
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(50,187,120,0.2),transparent_50%)]" />
               
               {/* Contenu */}
-              <div className="absolute inset-0 flex flex-col justify-between p-6">
+              <div className="absolute inset-0 flex flex-col justify-between p-4">
                 {/* Badge en haut */}
                 <div className="flex items-start justify-between">
                   <div className="relative">
                     <div className="absolute -inset-1 bg-gradient-to-r from-primary to-primary rounded-full blur opacity-75" />
-                    <Badge className="relative bg-white/95 text-primary border-0 font-bold shadow-lg backdrop-blur-sm">
+                    <Badge className="relative bg-white/95 text-primary border-0 font-bold shadow-lg backdrop-blur-sm text-xs px-2 py-0.5">
                       🌟 Tendance
                     </Badge>
                   </div>
                 </div>
                 
                 {/* Informations produit en bas */}
-                <div className="space-y-2">
+                <div className="space-y-1">
                   {bannerProducts.length > 0 ? (
                     <>
-                      <div className="inline-block px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20">
-                        <p className="text-xs font-semibold text-white/90">Produit vedette</p>
+                      <div className="inline-block px-2 py-0.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20">
+                        <p className="text-[10px] font-semibold text-white/90">Produit vedette</p>
                       </div>
-                      <h2 className="text-white font-black text-2xl drop-shadow-lg line-clamp-2">
+                      <h2 className="text-white font-black text-lg drop-shadow-lg line-clamp-1">
                         {activeBannerProduct?.name}
                       </h2>
-                      <div className="flex items-baseline gap-2">
-                        <p className="text-white font-black text-3xl drop-shadow-lg">
+                      <div className="flex items-baseline gap-1.5">
+                        <p className="text-white font-black text-2xl drop-shadow-lg">
                           {Number(activeBannerProduct?.price || 0).toLocaleString()}
                         </p>
-                        <p className="text-white/90 font-semibold text-lg drop-shadow">
+                        <p className="text-white/90 font-semibold text-base drop-shadow">
                           {activeBannerProduct?.currency || 'CDF'}
                         </p>
                       </div>
                     </>
                   ) : (
                     <>
-                      <h2 className="text-white font-black text-2xl drop-shadow-lg">
+                      <h2 className="text-white font-black text-lg drop-shadow-lg">
                         Découvrez Nkampa
                       </h2>
-                      <p className="text-white/90 text-sm drop-shadow">
+                      <p className="text-white/90 text-xs drop-shadow">
                         Votre marketplace de confiance
                       </p>
                     </>
@@ -1198,15 +1197,15 @@ export default function NkampaPage() {
               
               {/* Indicateurs de bannière modernes */}
               {bannerProducts.length > 1 && (
-                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
                   {bannerProducts.map((_, idx) => (
                     <button
                       key={idx}
                       onClick={() => setBannerIndex(idx)}
-                      className={`h-1.5 rounded-full transition-all ${
+                      className={`h-1 rounded-full transition-all ${
                         idx === bannerIndex 
-                          ? 'w-8 bg-white shadow-[0_0_12px_rgba(255,255,255,0.8)]' 
-                          : 'w-1.5 bg-white/40 hover:bg-white/60'
+                          ? 'w-6 bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]' 
+                          : 'w-1 bg-white/40 hover:bg-white/60'
                       }`}
                       aria-label={`Aller à la bannière ${idx + 1}`}
                     />
