@@ -171,14 +171,14 @@ export default function ShopProductPage({
   }, [product]);
 
   const totalPrice = useMemo(() => priceInCDF * quantity, [priceInCDF, quantity]);
-  const productRating = Number(product.rating || product.averageRating || storeDoc.rating || 4.8);
-  const productReviewCount = Number(product.reviewsCount || product.reviewCount || product.commentsCount || 0);
-  const productSalesCount = Number(product.salesCount || product.ordersCount || product.soldCount || 0);
-  const productStock = product.stock ?? product.availableStock ?? product.quantityAvailable ?? product.quantity ?? null;
-  const deliveryDelay = product.deliveryDelay || (product.shippingDays ? `${product.shippingDays} jour(s)` : product.fastDelivery ? '24h - 48h' : 'Selon la zone');
-  const isSellerVerified = Boolean(storeDoc.verified || storeDoc.isVerified || storeDoc.status === 'active' || storeDoc.status === 'approved');
-  const sellerTrustLevel = storeDoc.trustLevel || storeDoc.sellerLevel || (isSellerVerified ? 'Premium' : 'Standard');
-  const deliverySuccessRate = Number(storeDoc.deliverySuccessRate || storeDoc.successRate || 96);
+  const productRating = Number(product?.rating || product?.averageRating || storeDoc?.rating || 4.8);
+  const productReviewCount = Number(product?.reviewsCount || product?.reviewCount || product?.commentsCount || 0);
+  const productSalesCount = Number(product?.salesCount || product?.ordersCount || product?.soldCount || 0);
+  const productStock = product?.stock ?? product?.availableStock ?? product?.quantityAvailable ?? product?.quantity ?? null;
+  const deliveryDelay = product?.deliveryDelay || (product?.shippingDays ? `${product.shippingDays} jour(s)` : product?.fastDelivery ? '24h - 48h' : 'Selon la zone');
+  const isSellerVerified = Boolean(storeDoc?.verified || storeDoc?.isVerified || storeDoc?.status === 'active' || storeDoc?.status === 'approved');
+  const sellerTrustLevel = storeDoc?.trustLevel || storeDoc?.sellerLevel || (isSellerVerified ? 'Premium' : 'Standard');
+  const deliverySuccessRate = Number(storeDoc?.deliverySuccessRate || storeDoc?.successRate || 96);
 
   const resolveCurrentLocation = async () => {
     const storedLocation = getDashboardLocationOrDefault();
