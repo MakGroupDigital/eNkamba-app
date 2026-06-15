@@ -29,16 +29,16 @@ const typeThemes: Record<
     accentText: 'text-[#32BB78]',
   },
   cabinet: {
-    gradient: 'from-[#FF6B35] via-[#FF5722] to-[#FF6B35]',
-    accent: '#FF6B35',
-    accentSoft: 'bg-[#FF6B35]/10',
-    accentText: 'text-[#FF6B35]',
+    gradient: 'from-[#32BB78] via-[#32BB78] to-[#32BB78]',
+    accent: '#32BB78',
+    accentSoft: 'bg-[#32BB78]/10',
+    accentText: 'text-[#32BB78]',
   },
   'point-service': {
-    gradient: 'from-[#FF6B35] via-[#FF5722] to-[#FF6B35]',
-    accent: '#FF6B35',
-    accentSoft: 'bg-[#FF6B35]/10',
-    accentText: 'text-[#FF6B35]',
+    gradient: 'from-[#32BB78] via-[#32BB78] to-[#32BB78]',
+    accent: '#32BB78',
+    accentSoft: 'bg-[#32BB78]/10',
+    accentText: 'text-[#32BB78]',
   },
 };
 

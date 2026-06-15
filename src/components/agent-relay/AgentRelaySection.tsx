@@ -128,10 +128,10 @@ export function AgentRelaySection() {
     const isSubmitted = status === 'submitted';
     
     return (
-      <Card className="overflow-hidden border-2 border-orange-500/30 bg-orange-50/50">
-        <CardHeader className="bg-gradient-to-r from-orange-500/10 to-transparent">
+      <Card className="overflow-hidden border-2 border-[#32BB78]/30 bg-[#32BB78]/5">
+        <CardHeader className="bg-gradient-to-r from-[#32BB78]/10 to-transparent">
           <CardTitle className="font-headline text-lg flex items-center gap-2">
-            <Clock size={20} className="text-orange-600" />
+            <Clock size={20} className="text-[#32BB78]" />
             Demande Agent Relais
           </CardTitle>
         </CardHeader>

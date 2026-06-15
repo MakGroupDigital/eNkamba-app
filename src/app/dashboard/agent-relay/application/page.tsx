@@ -61,12 +61,12 @@ const agentTypes = {
   'cabinet': {
     title: 'Cabiniste',
     description: 'Cabinet de services complets',
-    color: 'from-orange-500 to-orange-700'
+    color: 'from-[#32BB78] to-[#2BA169]'
   },
   'point-service': {
     title: 'Point de Service',
     description: 'Services intégrés à votre activité',
-    color: 'from-orange-500 to-orange-700'
+    color: 'from-[#32BB78] to-[#2BA169]'
   }
 };
 

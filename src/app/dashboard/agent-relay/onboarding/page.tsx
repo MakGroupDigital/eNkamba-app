@@ -205,14 +205,14 @@ export default function AgentRelayOnboardingPage() {
                   description: 'Cabinet de services financiers complet',
                   commission: '10-15%',
                   investment: 'Moyen',
-                  color: 'from-orange-500 to-orange-700'
+                  color: 'from-[#32BB78] to-[#2BA169]'
                 },
                 {
                   type: 'Point de Service',
                   description: 'Services intégrés à votre activité',
                   commission: '3-8%',
                   investment: 'Aucun',
-                  color: 'from-orange-500 to-orange-700'
+                  color: 'from-[#32BB78] to-[#2BA169]'
                 }
               ].map((option, index) => (
                 <div key={index} className="p-4 rounded-xl border border-border hover:border-primary/30 transition-colors cursor-pointer">

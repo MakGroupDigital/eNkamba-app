@@ -971,7 +971,7 @@ export default function AgentSignupPage() {
             <Button 
               onClick={handleSubmit}
               disabled={isLoading}
-              className="w-full h-12 bg-[#FF6B35] hover:bg-[#FF5722] text-white rounded-lg font-medium disabled:opacity-50"
+              className="w-full h-12 bg-[#32BB78] hover:bg-[#2BA169] text-white rounded-lg font-medium disabled:opacity-50"
             >
               {isLoading ? 'Envoi...' : 'Soumettre'}
             </Button>

@@ -389,34 +389,6 @@ export function LogisticsDashboard({ businessUser }: LogisticsDashboardProps) {
       </div>
 
       <div className="mx-auto max-w-5xl space-y-5 px-4 py-5">
-        <section className="overflow-hidden rounded-3xl border border-white bg-white shadow-sm">
-          <div className="relative bg-gradient-to-br from-[#32BB78] via-[#32BB78] to-[#32BB78] p-5 text-white">
-            <div className="pointer-events-none absolute -right-8 -top-10 h-32 w-32 rounded-full bg-white/15 blur-2xl" />
-            <div className="relative flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <div className="inline-flex items-center gap-2 rounded-full bg-white/14 px-3 py-1 text-xs font-bold text-white/80">
-                  <span className="h-2 w-2 rounded-full bg-[#FF8C00]" />
-                  Operations logistiques
-                </div>
-                <h2 className="mt-4 max-w-2xl text-2xl font-black leading-tight sm:text-3xl">
-                  Pilotez colis, scans, relais et ressources depuis un seul espace.
-                </h2>
-                <p className="mt-2 max-w-xl text-sm text-white/75">{roleConfig.summary}</p>
-              </div>
-              <div className="grid grid-cols-3 gap-2 sm:min-w-72">
-                <MetricPill label="Colis" value={String(shipments.length)} />
-                <MetricPill label="Actifs" value={liveStats[0].value} />
-                <MetricPill label="SLA" value={liveStats[2].value} />
-              </div>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-4">
-            {liveStats.map((stat) => (
-              <BusinessMetricCard key={stat.label} stat={stat} />
-            ))}
-          </div>
-        </section>
-
         <section className="overflow-hidden rounded-3xl border border-[#32BB78] bg-white shadow-sm">
           <div className="flex gap-2 overflow-x-auto p-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {tabs.map((tab) => {

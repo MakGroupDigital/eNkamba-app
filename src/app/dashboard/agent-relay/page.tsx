@@ -30,14 +30,14 @@ export default function AgentRelayMainPage() {
       id: 'cabinet',
       title: 'Cabiniste',
       icon: Store,
-      color: 'bg-[#FF6B35] hover:bg-[#FF5722]',
+      color: 'bg-[#32BB78] hover:bg-[#2BA169]',
       description: 'Gérez un point de vente fixe'
     },
     {
       id: 'point-service',
       title: 'Point de Service',
       icon: MapPin,
-      color: 'bg-[#FF6B35] hover:bg-[#FF5722]',
+      color: 'bg-[#32BB78] hover:bg-[#2BA169]',
       description: 'Offrez des services eNkamba dans votre commerce'
     }
   ];
@@ -162,8 +162,8 @@ export default function AgentRelayMainPage() {
         {/* Vagues décoratives */}
         <div className="relative h-24 mb-8">
           <svg className="absolute bottom-0 w-full" viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M0 0C240 40 480 40 720 20C960 0 1200 0 1440 20V120H0V0Z" fill="#FF6B35" fillOpacity="0.3"/>
-            <path d="M0 20C240 60 480 60 720 40C960 20 1200 20 1440 40V120H0V20Z" fill="#FF6B35" fillOpacity="0.2"/>
+            <path d="M0 0C240 40 480 40 720 20C960 0 1200 0 1440 20V120H0V0Z" fill="#32BB78" fillOpacity="0.3"/>
+            <path d="M0 20C240 60 480 60 720 40C960 20 1200 20 1440 40V120H0V20Z" fill="#32BB78" fillOpacity="0.2"/>
           </svg>
         </div>
 
