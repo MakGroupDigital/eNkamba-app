@@ -4,14 +4,11 @@ import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import {
-  AlertCircle,
   CheckCircle2,
   Eye,
   EyeOff,
   Fingerprint,
-  KeyRound,
   Loader2,
-  LockKeyhole,
 } from "lucide-react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -19,7 +16,6 @@ import { usePathname } from "next/navigation";
 import { auth, db } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
 const SESSION_PREFIX = "enkamba-user-pin-unlocked";
 const BIOMETRIC_PREFIX = "enkamba-user-biometric";
@@ -225,7 +221,7 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
       setPin("");
       setConfirmPin("");
       setMode("verify-pin");
-      setMessage("Code PIN créé. Confirmez-le pour ouvrir l’application.");
+      setMessage("Code PIN créé. Confirmez-le pour ouvrir l'application.");
     } catch (error) {
       console.error("Erreur création PIN accès app:", error);
       setMessage("Impossible de créer le code PIN pour le moment.");
@@ -297,7 +293,7 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
       })) as PublicKeyCredential | null;
 
       if (!credential) {
-        setMessage("L’activation biométrique a été annulée.");
+        setMessage("L'activation biométrique a été annulée.");
         return;
       }
 
@@ -321,11 +317,11 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
       );
 
       setMessage(
-        "Biométrie activée. À la prochaine ouverture, l’appareil demandera Face ID, empreinte ou code téléphone.",
+        "Biométrie activée avec succès.",
       );
     } catch (error) {
       console.error("Erreur activation biométrie:", error);
-      setMessage("L’appareil n’a pas validé l’activation biométrique.");
+      setMessage("L'appareil n'a pas validé l'activation biométrique.");
     } finally {
       setIsBiometricBusy(false);
     }
@@ -416,68 +412,73 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
     : pin.length === 4 && attempts < MAX_ATTEMPTS;
 
   return (
-    <main className="min-h-screen bg-[#32BB78] px-4 py-8 text-foreground">
+    <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-primary/5 px-4 py-8 text-foreground">
       <section className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-md items-center justify-center">
-        <div className="w-full rounded-3xl bg-white p-6 shadow-xl sm:p-8">
-          <div className="flex flex-col items-center text-center">
-            <div className="mb-5 flex h-36 w-36 items-center justify-center overflow-hidden rounded-[32px] bg-white">
-              <Image
-                src="/enkamba-logo.png"
-                alt="eNkamba"
-                width={144}
-                height={144}
-                className="h-full w-full object-cover"
-                priority
-              />
+        <div className="w-full space-y-8">
+          {/* Logo avec effet flottant */}
+          <div className="flex justify-center">
+            <div className="relative animate-float">
+              <div className="absolute inset-0 rounded-full bg-primary/20 blur-2xl"></div>
+              <div className="relative h-28 w-28 overflow-hidden rounded-full bg-white shadow-2xl ring-4 ring-white/50">
+                <Image
+                  src="/enkamba-logo.png"
+                  alt="eNkamba"
+                  width={112}
+                  height={112}
+                  className="h-full w-full object-cover"
+                  priority
+                />
+              </div>
             </div>
+          </div>
 
-            <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-[#32BB78] px-4 py-2 text-sm font-semibold text-white">
-              <LockKeyhole className="h-4 w-4" />
-              Ouverture protégée
-            </div>
-
-            <h2 className="text-2xl font-bold tracking-normal text-foreground">
-              {isCreateMode
-                ? "Créez votre PIN eNkamba"
-                : "Confirmez votre identité"}
+          {/* Titre minimaliste */}
+          <div className="text-center space-y-2">
+            <h2 className="text-2xl font-bold text-gray-900">
+              {isCreateMode ? "Créer un PIN" : "Bienvenue"}
             </h2>
-            <p className="mt-3 text-sm leading-6 text-muted-foreground">
+            <p className="text-sm text-gray-500 max-w-xs mx-auto">
               {isCreateMode
-                ? "Ce PIN sera utilisé pour ouvrir l’application et confirmer les paiements."
-                : `Compte détecté : ${userLabel}. Utilisez votre biométrie ou votre PIN de paiement.`}
+                ? "Sécurisez votre compte avec un code à 4 chiffres"
+                : "Confirmez votre identité pour continuer"}
             </p>
           </div>
 
           {mode === "loading" ? (
-            <div className="mt-8 flex items-center gap-3 rounded-2xl border border-[#32BB78] bg-primary/5 p-4 text-muted-foreground">
-              <Loader2 className="h-5 w-5 animate-spin text-[#32BB78]" />
-              Vérification de la sécurité du compte...
+            <div className="flex flex-col items-center gap-3 py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <p className="text-sm text-gray-500">Vérification...</p>
             </div>
           ) : (
-            <>
+            <div className="space-y-4">
+              {/* Bouton biométrique minimaliste */}
               {!isCreateMode &&
                 biometricRegistration &&
                 isBiometricAvailable && (
-                  <Button
+                  <button
                     type="button"
                     onClick={() => void handleBiometricUnlock()}
                     disabled={isBiometricBusy}
-                    className="mt-8 h-14 w-full rounded-2xl bg-primary text-white hover:bg-primary/90"
+                    className="group relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-primary to-primary/90 p-6 text-white shadow-lg transition-all hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
                   >
-                    {isBiometricBusy ? (
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    ) : (
-                      <Fingerprint className="mr-2 h-5 w-5" />
-                    )}
-                    Déverrouiller avec l’appareil
-                  </Button>
+                    <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div className="relative flex flex-col items-center gap-2">
+                      {isBiometricBusy ? (
+                        <Loader2 className="h-6 w-6 animate-spin" />
+                      ) : (
+                        <Fingerprint className="h-6 w-6" />
+                      )}
+                      <span className="text-sm font-medium">
+                        Déverrouiller
+                      </span>
+                    </div>
+                  </button>
                 )}
 
-              <form onSubmit={submit} className="mt-6 space-y-5">
-                <div className="space-y-2">
-                  <Label htmlFor="app-pin" className="text-foreground">
-                    {isCreateMode ? "Nouveau code PIN" : "Code PIN"}
-                  </Label>
+              {/* Formulaire PIN minimaliste */}
+              <form onSubmit={submit} className="space-y-4">
+                {/* Champ PIN avec design épuré */}
+                <div className="space-y-3">
                   <div className="relative">
                     <Input
                       id="app-pin"
@@ -487,13 +488,13 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
                       maxLength={4}
                       onChange={(event) => handlePinInput(event.target.value)}
                       placeholder="••••"
-                      className="h-14 rounded-2xl border-primary/20 bg-primary/5 pr-12 text-center text-3xl font-bold tracking-[0.45em] text-foreground placeholder:text-[#9aaba1] focus-visible:ring-[#32BB78]"
+                      className="h-16 rounded-2xl border-2 border-gray-200 bg-white text-center text-3xl font-bold tracking-[0.5em] text-gray-900 placeholder:text-gray-300 focus:border-primary focus:ring-0 focus-visible:ring-0 transition-colors"
                       autoFocus
                     />
                     <button
                       type="button"
                       onClick={() => setShowPin((value) => !value)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-2 text-muted-foreground transition hover:bg-primary/10 hover:text-foreground"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600"
                       aria-label={
                         showPin ? "Masquer le PIN" : "Afficher le PIN"
                       }
@@ -505,57 +506,61 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
                       )}
                     </button>
                   </div>
+                  <p className="text-xs text-center text-gray-400">
+                    {isCreateMode ? "Entrez 4 chiffres" : "Entrez votre PIN"}
+                  </p>
                 </div>
 
+                {/* Confirmation PIN */}
                 {isCreateMode && (
-                  <div className="space-y-2">
-                    <Label htmlFor="app-pin-confirm" className="text-foreground">
-                      Confirmer le PIN
-                    </Label>
-                    <Input
-                      id="app-pin-confirm"
-                      type={showPin ? "text" : "password"}
-                      value={confirmPin}
-                      inputMode="numeric"
-                      maxLength={4}
-                      onChange={(event) =>
-                        handleConfirmPinInput(event.target.value)
-                      }
-                      placeholder="••••"
-                      className="h-14 rounded-2xl border-primary/20 bg-primary/5 text-center text-3xl font-bold tracking-[0.45em] text-foreground placeholder:text-[#9aaba1] focus-visible:ring-[#32BB78]"
-                    />
+                  <div className="space-y-3">
+                    <div className="relative">
+                      <Input
+                        id="app-pin-confirm"
+                        type={showPin ? "text" : "password"}
+                        value={confirmPin}
+                        inputMode="numeric"
+                        maxLength={4}
+                        onChange={(event) =>
+                          handleConfirmPinInput(event.target.value)
+                        }
+                        placeholder="••••"
+                        className="h-16 rounded-2xl border-2 border-gray-200 bg-white text-center text-3xl font-bold tracking-[0.5em] text-gray-900 placeholder:text-gray-300 focus:border-primary focus:ring-0 focus-visible:ring-0 transition-colors"
+                      />
+                    </div>
                     {pin.length === 4 &&
                       confirmPin.length === 4 &&
                       pin === confirmPin && (
-                        <p className="flex items-center gap-2 text-sm text-[#32BB78]">
+                        <div className="flex items-center justify-center gap-2 text-sm text-primary">
                           <CheckCircle2 className="h-4 w-4" />
-                          Les codes PIN correspondent.
-                        </p>
+                          <span>Correspondance validée</span>
+                        </div>
                       )}
                   </div>
                 )}
 
+                {/* Message d'erreur minimaliste */}
                 {message && (
-                  <div className="flex gap-3 rounded-2xl border border-[#f2c94c] bg-[#fff8df] p-4 text-sm leading-5 text-[#6f5600]">
-                    <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
-                    <p>{message}</p>
+                  <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 text-center">
+                    <p className="text-sm text-amber-800">{message}</p>
                   </div>
                 )}
 
+                {/* Bouton de validation minimaliste */}
                 <Button
                   type="submit"
                   disabled={!canSubmit || isSubmitting}
-                  className="h-14 w-full rounded-2xl bg-[#32BB78] text-base font-semibold text-white hover:bg-[#32BB78]"
+                  className="h-14 w-full rounded-2xl bg-gray-900 text-white font-medium hover:bg-gray-800 transition-all shadow-lg hover:shadow-xl active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? (
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    <Loader2 className="h-5 w-5 animate-spin" />
                   ) : (
-                    <KeyRound className="mr-2 h-5 w-5" />
+                    <span>{isCreateMode ? "Créer" : "Continuer"}</span>
                   )}
-                  {isCreateMode ? "Créer le PIN" : "Accéder"}
                 </Button>
               </form>
 
+              {/* Bouton activer biométrie - design minimaliste */}
               {!isCreateMode &&
                 isBiometricAvailable &&
                 !biometricRegistration && (
@@ -563,25 +568,39 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
                     type="button"
                     onClick={() => void handleRegisterBiometric()}
                     disabled={isBiometricBusy}
-                    className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl border border-primary/20 bg-white px-4 py-4 text-sm font-medium text-foreground transition hover:bg-primary/5"
+                    className="w-full flex items-center justify-center gap-2 rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50 hover:border-gray-300 active:scale-[0.98] disabled:opacity-50"
                   >
                     {isBiometricBusy ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                       <Fingerprint className="h-4 w-4" />
                     )}
-                    Activer Face ID, empreinte ou code téléphone
+                    Activer la biométrie
                   </button>
                 )}
 
-              <p className="mt-6 text-center text-xs leading-5 text-muted-foreground">
-                Les données biométriques restent dans l’appareil. eNkamba ne
-                reçoit que la validation sécurisée du téléphone.
+              {/* Note de sécurité minimaliste */}
+              <p className="text-center text-xs text-gray-400 max-w-xs mx-auto">
+                Vos données biométriques restent sécurisées sur cet appareil
               </p>
-            </>
+            </div>
           )}
         </div>
       </section>
+
+      <style jsx global>{`
+        @keyframes float {
+          0%, 100% {
+            transform: translateY(0px);
+          }
+          50% {
+            transform: translateY(-10px);
+          }
+        }
+        .animate-float {
+          animation: float 3s ease-in-out infinite;
+        }
+      `}</style>
     </main>
   );
 }

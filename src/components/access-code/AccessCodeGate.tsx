@@ -1,95 +1,152 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { useAccessCode } from '@/hooks/useAccessCode';
-import { Lock, AlertCircle } from 'lucide-react';
+import { Loader2, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 
 export function AccessCodeGate({ children }: { children: React.ReactNode }) {
   const { isVerified, isLoading, error, verifyCode } = useAccessCode();
   const [code, setCode] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showCode, setShowCode] = useState(false);
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800">
-        <div className="text-white">Chargement...</div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-primary/5">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-gray-500">Vérification...</p>
+        </div>
       </div>
     );
   }
 
   if (!isVerified) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800 p-4">
-        <div className="w-full max-w-md">
-          <div className="bg-white rounded-lg shadow-2xl p-8">
-            {/* Header */}
-            <div className="flex justify-center mb-6">
-              <div className="bg-blue-100 p-4 rounded-full">
-                <Lock className="w-8 h-8 text-blue-600" />
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-primary/5 px-4 py-8 flex items-center justify-center">
+        <div className="w-full max-w-md space-y-8">
+          {/* Logo avec effet flottant */}
+          <div className="flex justify-center">
+            <div className="relative animate-float">
+              <div className="absolute inset-0 rounded-full bg-primary/20 blur-2xl"></div>
+              <div className="relative h-28 w-28 overflow-hidden rounded-full bg-white shadow-2xl ring-4 ring-white/50">
+                <Image
+                  src="/enkamba-logo.png"
+                  alt="eNkamba"
+                  width={112}
+                  height={112}
+                  className="h-full w-full object-cover"
+                  priority
+                />
               </div>
             </div>
+          </div>
 
-            <h1 className="text-2xl font-bold text-center text-gray-900 mb-2">
-              eNkamba
+          {/* Titre minimaliste */}
+          <div className="text-center space-y-2">
+            <h1 className="text-2xl font-bold text-gray-900">
+              Accès sécurisé
             </h1>
-            <p className="text-center text-gray-600 mb-8">
-              Application en développement
+            <p className="text-sm text-gray-500 max-w-xs mx-auto">
+              Entrez le code d'accès pour continuer
             </p>
+          </div>
 
-            {/* Form */}
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault();
-                setIsSubmitting(true);
-                const success = await verifyCode(code);
-                if (!success) {
-                  setCode('');
-                }
-                setIsSubmitting(false);
-              }}
-              className="space-y-4"
-            >
-              <div>
-                <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-2">
-                  Code d'accès
-                </label>
+          {/* Formulaire */}
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              setIsSubmitting(true);
+              const success = await verifyCode(code);
+              if (!success) {
+                setCode('');
+              }
+              setIsSubmitting(false);
+            }}
+            className="space-y-4"
+          >
+            {/* Champ de code avec design épuré */}
+            <div className="space-y-3">
+              <div className="relative">
                 <input
                   id="code"
-                  type="password"
+                  type={showCode ? "text" : "password"}
                   value={code}
                   onChange={(e) => setCode(e.target.value)}
-                  placeholder="Entrez le code d'accès"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                  placeholder="••••••••"
+                  className="w-full h-14 px-6 pr-12 rounded-2xl border-2 border-gray-200 bg-white text-center text-lg font-semibold tracking-wider text-gray-900 placeholder:text-gray-300 focus:border-primary focus:ring-0 outline-none transition-colors"
                   disabled={isSubmitting}
                   autoFocus
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowCode((value) => !value)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600"
+                  aria-label={showCode ? "Masquer le code" : "Afficher le code"}
+                >
+                  {showCode ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
               </div>
-
-              {error && (
-                <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-                  <p className="text-sm text-red-700">{error}</p>
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={isSubmitting || !code.trim()}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-lg transition duration-200"
-              >
-                {isSubmitting ? 'Vérification...' : 'Accéder'}
-              </button>
-            </form>
-
-            {/* Info Message */}
-            <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-blue-800">
-                <span className="font-semibold">ℹ️ Information:</span> Cette application est actuellement en phase de développement et restreinte à l'équipe interne. Pour obtenir le code d'accès, veuillez contacter{' '}
-                <span className="font-semibold">eNkamba</span>.
+              <p className="text-xs text-center text-gray-400">
+                Code d'accès administrateur
               </p>
             </div>
+
+            {/* Message d'erreur minimaliste */}
+            {error && (
+              <div className="rounded-xl bg-red-50 border border-red-200 p-3 text-center">
+                <p className="text-sm text-red-800">{error}</p>
+              </div>
+            )}
+
+            {/* Bouton de validation minimaliste */}
+            <button
+              type="submit"
+              disabled={isSubmitting || !code.trim()}
+              className="w-full h-14 rounded-2xl bg-gray-900 text-white font-medium hover:bg-gray-800 transition-all shadow-lg hover:shadow-xl active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSubmitting ? (
+                <Loader2 className="h-5 w-5 animate-spin mx-auto" />
+              ) : (
+                <span>Accéder</span>
+              )}
+            </button>
+          </form>
+
+          {/* Badge de sécurité minimaliste */}
+          <div className="flex items-center justify-center gap-2 text-gray-400">
+            <ShieldCheck className="h-4 w-4" />
+            <p className="text-xs">Application en développement</p>
+          </div>
+
+          {/* Note d'information minimaliste */}
+          <div className="rounded-xl bg-blue-50 border border-blue-200 p-4 text-center">
+            <p className="text-xs text-blue-800 leading-relaxed">
+              Cette application est restreinte à l'équipe interne. 
+              <br />
+              Contactez <span className="font-semibold">eNkamba</span> pour obtenir l'accès.
+            </p>
           </div>
         </div>
+
+        <style jsx global>{`
+          @keyframes float {
+            0%, 100% {
+              transform: translateY(0px);
+            }
+            50% {
+              transform: translateY(-10px);
+            }
+          }
+          .animate-float {
+            animation: float 3s ease-in-out infinite;
+          }
+        `}</style>
       </div>
     );
   }
