@@ -39,7 +39,6 @@ import {
   ShieldCheck,
   ShoppingBag,
   SlidersHorizontal,
-  Sparkles,
   Store,
   Truck,
   UserCog,
@@ -797,7 +796,6 @@ export default function AdminDashboardPage() {
                 <p className="mt-1 text-sm text-slate-500">Vue de controle par domaine fonctionnel.</p>
               </div>
               <Badge className="w-fit bg-[#32BB78] hover:bg-[#32BB78]">
-                <Sparkles className="mr-1 h-3.5 w-3.5" />
                 Architecture unifiee
               </Badge>
             </div>

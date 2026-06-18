@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, MessageSquare, Settings, User, Sparkles, Bell, LogOut, Clock, Trash2, ShieldCheck, Zap, Volume2 } from 'lucide-react';
+import { Send, MessageSquare, Settings, User, Bell, LogOut, Clock, Trash2, ShieldCheck, Zap, Volume2 } from 'lucide-react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { useFirestoreAiChat } from '@/hooks/useFirestoreAiChat';
@@ -179,7 +179,7 @@ const ChatInterface = ({ chatId }: { chatId: string }) => {
       <header className="h-20 flex items-center justify-between px-8 border-b border-white/5 bg-[#1A3D2A]/80 backdrop-blur-md z-10">
         <div className="flex items-center gap-4">
           <div className="w-10 h-10 rounded-full bg-[#32BB78]/10 flex items-center justify-center border border-[#32BB78]/20">
-            <Sparkles size={18} className="text-[#32BB78]" />
+            <MessageSquare size={18} className="text-[#32BB78]" />
           </div>
           <div>
             <h1 className="font-brand font-bold text-lg">Assistant eNkamba</h1>
@@ -198,7 +198,7 @@ const ChatInterface = ({ chatId }: { chatId: string }) => {
       <main className="flex-1 overflow-y-auto p-6 space-y-6 relative z-0">
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center">
-            <Sparkles size={48} className="text-[#32BB78] mb-4 opacity-50" />
+            <MessageSquare size={48} className="text-[#32BB78] mb-4 opacity-50" />
             <p className="text-gray-400">Commencez une conversation</p>
           </div>
         )}

@@ -18,7 +18,6 @@ import {
   Zap,
   ChevronRight,
   Bot,
-  Sparkles,
   TrendingUp,
   Loader2,
 } from "lucide-react";
@@ -127,7 +126,6 @@ const slides = [
     icon: Bot,
     isLogo: false,
     decorations: [
-      { icon: Sparkles },
       { icon: TrendingUp },
       { icon: Shield },
     ],

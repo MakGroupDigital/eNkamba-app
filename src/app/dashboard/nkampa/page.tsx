@@ -2,7 +2,19 @@
 
 import { memo, useState, useEffect, useRef, useMemo } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { Search, Mic, X, Loader2, ArrowLeft, ShoppingCart, Camera } from 'lucide-react';
+import {
+  BadgeCheck,
+  Camera,
+  Loader2,
+  Mic,
+  PackageCheck,
+  Percent,
+  Search,
+  ShieldCheck,
+  ShoppingCart,
+  Truck,
+  X,
+} from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -167,6 +179,82 @@ function colorDistance(left: ImageSignature, right: ImageSignature) {
   );
 }
 
+type MarketplaceFilter = 'all' | 'verified' | 'delivery' | 'top' | 'bulk' | 'deals';
+
+const MARKETPLACE_FILTERS: Array<{ id: MarketplaceFilter; label: string }> = [
+  { id: 'all', label: 'Tout' },
+  { id: 'verified', label: 'Vendeurs vérifiés' },
+  { id: 'delivery', label: 'Livraison eNKAMBA' },
+  { id: 'top', label: 'Top ventes' },
+  { id: 'bulk', label: 'Prix en gros' },
+  { id: 'deals', label: 'Promotions' },
+];
+
+function getProductRating(product: any) {
+  return Number(product?.rating || 0);
+}
+
+function getProductReviewCount(product: any) {
+  return Number(product?.reviews || product?.reviewCount || 0);
+}
+
+function getProductSoldCount(product: any) {
+  return Number(product?.sold || product?.soldCount || product?.salesCount || 0);
+}
+
+function getProductStockCount(product: any) {
+  const value = product?.stock ?? product?.quantityAvailable ?? product?.availableStock;
+  const count = Number(value);
+  return Number.isFinite(count) ? count : null;
+}
+
+function hasProductDeal(product: any) {
+  return Boolean(
+    product?.promoEnabled ||
+    product?.promotion ||
+    product?.discount ||
+    product?.discountPercent ||
+    product?.oldPrice ||
+    product?.salePrice
+  );
+}
+
+function hasBulkSignal(product: any) {
+  const category = String(product?.category || '').toUpperCase();
+  return Boolean(product?.moq || category === 'B2B' || product?.wholesalePrice || product?.bulkPrice);
+}
+
+function hasDeliverySignal(product: any) {
+  return Boolean(
+    product?.deliveryAvailable !== false &&
+    (product?.location || product?.deliveryOptions || product?.shippingOptions || product?.logisticsEnabled)
+  );
+}
+
+function getDeliveryLabel(product: any) {
+  return product?.deliveryTime || product?.deliveryDelay || product?.estimatedDelivery || 'Livraison eNKAMBA';
+}
+
+function isProductFromVerifiedStore(product: any, verifiedStoreKeys: Set<string>) {
+  return [
+    product?.storeId,
+    product?.storeSlug,
+    product?.sellerId,
+  ]
+    .filter(Boolean)
+    .some((key) => verifiedStoreKeys.has(String(key)));
+}
+
+function matchesMarketplaceFilter(product: any, filter: MarketplaceFilter, verifiedStoreKeys: Set<string>) {
+  if (filter === 'all') return true;
+  if (filter === 'verified') return isProductFromVerifiedStore(product, verifiedStoreKeys);
+  if (filter === 'delivery') return hasDeliverySignal(product);
+  if (filter === 'top') return getProductRating(product) >= 4.5 || getProductSoldCount(product) > 0 || getProductReviewCount(product) > 0;
+  if (filter === 'bulk') return hasBulkSignal(product);
+  if (filter === 'deals') return hasProductDeal(product);
+  return true;
+}
+
 function computeImageSignatureFromSource(src: string): Promise<ImageSignature | null> {
   return new Promise((resolve) => {
     if (!src) {
@@ -231,6 +319,7 @@ function computeImageSignatureFromFile(file: File) {
 
 const SupplierCard = memo(function SupplierCard({ supplier }: { supplier: any }) {
   const imageUrl = optimizeMarketplaceImage(supplier.logoUrl || supplier.coverUrl || 'https://picsum.photos/seed/store/300/300');
+  const isVerified = supplier.status === 'active' || supplier.status === 'approved';
 
   return (
     <Link href={`/shop/${supplier.slug || ''}`} className={!supplier.slug ? 'pointer-events-none opacity-60' : ''}>
@@ -248,6 +337,12 @@ const SupplierCard = memo(function SupplierCard({ supplier }: { supplier: any })
           <h3 className="font-semibold text-sm text-gray-900 line-clamp-2">
             {supplier.storeName || 'Boutique'}
           </h3>
+          {isVerified && (
+            <div className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-[10px] font-black text-primary">
+              <BadgeCheck className="h-3 w-3" />
+              Vérifié
+            </div>
+          )}
           <div className="flex items-center gap-1 text-xs text-gray-600">
             <LocationIcon className="w-3 h-3" />
             <span>{supplier.location || '—'}</span>
@@ -258,11 +353,14 @@ const SupplierCard = memo(function SupplierCard({ supplier }: { supplier: any })
   );
 });
 
-const ProductCard = memo(function ProductCard({ product }: { product: any }) {
+const ProductCard = memo(function ProductCard({ product, isVerified = false }: { product: any; isVerified?: boolean }) {
   const priceInCDF = Math.round(
     convertToCDFSync(Number(product.price || 0), product.currency || 'CDF')
   );
   const imageUrl = optimizeMarketplaceImage(product.image || product.images?.[0] || 'https://picsum.photos/seed/product/300/300');
+  const soldCount = getProductSoldCount(product);
+  const stockCount = getProductStockCount(product);
+  const hasDeal = hasProductDeal(product);
 
   return (
     <Link href={product?.storeSlug ? `/shop/${product.storeSlug}/product/${product.id}` : `/dashboard/nkampa`} className={!product?.storeSlug ? 'pointer-events-none opacity-60' : ''}>
@@ -275,6 +373,20 @@ const ProductCard = memo(function ProductCard({ product }: { product: any }) {
             className="object-cover"
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 180px"
           />
+          <div className="absolute left-2 top-2 flex flex-wrap gap-1">
+            {isVerified && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-white/95 px-2 py-1 text-[10px] font-black text-primary shadow-sm">
+                <BadgeCheck className="h-3 w-3" />
+                Vérifié
+              </span>
+            )}
+            {hasDeal && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-red-500 px-2 py-1 text-[10px] font-black text-white shadow-sm">
+                <Percent className="h-3 w-3" />
+                Promo
+              </span>
+            )}
+          </div>
         </div>
         <CardContent className="p-3 space-y-2">
           <h3 className="font-semibold text-sm text-gray-900 line-clamp-2">
@@ -298,9 +410,23 @@ const ProductCard = memo(function ProductCard({ product }: { product: any }) {
               <span>MOQ: {product.moq}</span>
             </div>
           )}
+          <div className="flex flex-wrap gap-1.5">
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-[10px] font-black text-primary">
+              <Truck className="h-3 w-3" />
+              {getDeliveryLabel(product)}
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-1 text-[10px] font-bold text-gray-700">
+              <ShieldCheck className="h-3 w-3" />
+              Paiement sécurisé
+            </span>
+          </div>
           <div className="flex items-center gap-1 text-xs text-gray-600">
             <LocationIcon className="w-3 h-3" />
             <span>{product.location || '—'}</span>
+          </div>
+          <div className="flex flex-wrap gap-x-2 gap-y-1 text-[11px] font-semibold text-gray-600">
+            {soldCount > 0 && <span>{soldCount.toLocaleString()} vente{soldCount > 1 ? 's' : ''}</span>}
+            {stockCount !== null && <span>Stock: {stockCount > 0 ? stockCount.toLocaleString() : 'épuisé'}</span>}
           </div>
           {product.rating && (
             <div className="flex items-center gap-1 text-xs">
@@ -348,6 +474,7 @@ export default function NkampaPage() {
   const [bannerIndex, setBannerIndex] = useState(0);
   const [selectedMainCategory, setSelectedMainCategory] = useState<string | null>(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
+  const [selectedMarketplaceFilter, setSelectedMarketplaceFilter] = useState<MarketplaceFilter>('all');
   const [isListening, setIsListening] = useState(false);
   const bannerTimerRef = useRef<NodeJS.Timeout | null>(null);
   const photoSearchInputRef = useRef<HTMLInputElement | null>(null);
@@ -643,6 +770,17 @@ export default function NkampaPage() {
     };
   }, [bannerProducts.length]);
 
+  const verifiedStoreKeys = useMemo(() => {
+    const keys = new Set<string>();
+    (publicStores || []).forEach((store: any) => {
+      if (store?.status !== 'active' && store?.status !== 'approved') return;
+      [store.id, store.slug, store.ownerId].filter(Boolean).forEach((key) => keys.add(String(key)));
+    });
+    return keys;
+  }, [publicStores]);
+
+  const isVerifiedProduct = (product: any) => isProductFromVerifiedStore(product, verifiedStoreKeys);
+
   // Filtrer les produits selon la catégorie et sous-catégorie
   const filteredProducts = useMemo(() => {
     let filtered: any[] = sortedProducts as any[];
@@ -678,6 +816,8 @@ export default function NkampaPage() {
       );
     }
 
+    filtered = filtered.filter((p) => matchesMarketplaceFilter(p, selectedMarketplaceFilter, verifiedStoreKeys));
+
     if (photoSearchPreview) {
       const visualMatches = new Set(photoSearchResultIds);
       filtered = filtered.filter((p) => visualMatches.has(String(p?.id || '')));
@@ -685,7 +825,7 @@ export default function NkampaPage() {
     }
 
     return filtered;
-  }, [sortedProducts, activeMainCategory?.type, activeMainCategory?.id, isSupplierView, selectedSubcategory, searchQuery, photoSearchResultIds, photoSearchPreview]);
+  }, [sortedProducts, activeMainCategory?.type, activeMainCategory?.id, isSupplierView, selectedSubcategory, searchQuery, selectedMarketplaceFilter, verifiedStoreKeys, photoSearchResultIds, photoSearchPreview]);
 
   // Filtrer les fournisseurs selon la catégorie
   const filteredSuppliers = useMemo(() => {
@@ -711,12 +851,43 @@ export default function NkampaPage() {
   // Déterminer si on affiche les fournisseurs ou les produits
   const categoryLabel = MAIN_CATEGORIES.find((c) => c.id === selectedMainCategory)?.label || 'Tous les produits';
   const hasActiveProductSearch = Boolean(searchQuery || photoSearchPreview);
-  const visibleDefaultProducts = hasActiveProductSearch ? filteredProducts : sortedProducts;
+  const defaultProducts = useMemo(
+    () => sortedProducts.filter((product) => matchesMarketplaceFilter(product, selectedMarketplaceFilter, verifiedStoreKeys)),
+    [sortedProducts, selectedMarketplaceFilter, verifiedStoreKeys]
+  );
+  const visibleDefaultProducts = hasActiveProductSearch ? filteredProducts : defaultProducts;
+  const activeMarketplaceFilterLabel = MARKETPLACE_FILTERS.find((filter) => filter.id === selectedMarketplaceFilter)?.label || 'Tout';
   const productResultsTitle = photoSearchPreview
     ? 'Résultats par photo'
     : searchQuery
       ? `Résultats pour "${searchQuery}"`
-      : 'Tous les produits';
+      : selectedMarketplaceFilter !== 'all'
+        ? activeMarketplaceFilterLabel
+        : 'Tous les produits';
+  const verifiedSuppliers = useMemo(
+    () => (publicStores || []).filter((store: any) => store.status === 'active' || store.status === 'approved').slice(0, 8),
+    [publicStores]
+  );
+  const dealProducts = useMemo(() => {
+    const deals = sortedProducts.filter(hasProductDeal);
+    return (deals.length ? deals : sortedProducts).slice(0, 6);
+  }, [sortedProducts]);
+  const trendingProducts = useMemo(
+    () => sortedProducts.filter((product) => getProductRating(product) >= 4.5 || getProductSoldCount(product) > 0 || getProductReviewCount(product) > 0).slice(0, 6),
+    [sortedProducts]
+  );
+  const marketplaceStats = useMemo(() => {
+    const cities = new Set(
+      sortedProducts
+        .map((product: any) => String(product?.location || '').trim())
+        .filter(Boolean)
+    );
+    return {
+      products: sortedProducts.length,
+      verifiedSuppliers: verifiedSuppliers.length,
+      cities: cities.size,
+    };
+  }, [sortedProducts, verifiedSuppliers.length]);
 
   const handleCheckoutFromCart = () => {
     if (cart.length === 0) {
@@ -785,8 +956,8 @@ export default function NkampaPage() {
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(50,187,120,0.12),transparent_35%),linear-gradient(180deg,rgba(50,187,120,0.05)_0%,rgba(50,187,120,0.08)_52%,rgba(50,187,120,0.04)_100%)]">
       {/* Recherche marche */}
-      <header className="sticky top-0 z-50 bg-background/85 py-3 backdrop-blur-xl">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+      <header className="sticky top-0 z-50 px-4 py-3">
+        <div className="mx-auto max-w-5xl">
           <input
             ref={photoSearchInputRef}
             type="file"
@@ -796,7 +967,7 @@ export default function NkampaPage() {
             onChange={(event) => void handlePhotoSearch(event.target.files?.[0] || null)}
           />
           <div className="flex items-center gap-3">
-            <div className="flex min-w-0 flex-1 items-center gap-2 rounded-2xl border border-primary/10 bg-white px-4 py-2.5 shadow-sm shadow-primary/10 transition-all focus-within:border-primary/30 focus-within:ring-2 focus-within:ring-primary/15">
+            <div className="flex min-w-0 flex-1 items-center gap-2 rounded-full border border-primary/10 bg-white/90 px-4 py-2.5 shadow-[0_18px_45px_rgba(16,94,61,0.16)] backdrop-blur-2xl transition-all focus-within:border-primary/30 focus-within:bg-white focus-within:ring-4 focus-within:ring-primary/10">
               <Search className="h-4 w-4 text-primary" />
               <input
                 type="text"
@@ -809,7 +980,7 @@ export default function NkampaPage() {
                 type="button"
                 onClick={() => photoSearchInputRef.current?.click()}
                 disabled={isPhotoSearching}
-                className={`relative rounded-lg p-1.5 transition-all ${
+                className={`relative rounded-full p-1.5 transition-all ${
                   photoSearchPreview
                     ? 'bg-primary text-white'
                     : 'text-primary hover:bg-primary/10'
@@ -822,7 +993,7 @@ export default function NkampaPage() {
               <button
                 type="button"
                 onClick={handleVoiceSearch}
-                className={`rounded-lg p-1.5 transition-all ${
+                className={`rounded-full p-1.5 transition-all ${
                   isListening
                     ? 'bg-red-500 text-white'
                     : 'text-primary hover:bg-primary/10'
@@ -838,7 +1009,7 @@ export default function NkampaPage() {
 
             <button
               onClick={() => setIsOpen(true)}
-              className="relative flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-primary shadow-sm transition-all hover:bg-white/95 hover:scale-105 active:scale-95"
+              className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-white shadow-[0_18px_38px_rgba(16,94,61,0.22)] transition-all hover:scale-105 hover:bg-primary/95 active:scale-95"
             >
               <ShoppingCart className="h-5 w-5" />
               {itemCount > 0 && (
@@ -961,6 +1132,62 @@ export default function NkampaPage() {
           </div>
         </div>
 
+        {!isSupplierView && (
+          <div className="space-y-3 px-4">
+            <div className="grid grid-cols-3 gap-2">
+              <div className="rounded-2xl border border-primary/10 bg-white/85 p-3 shadow-sm">
+                <p className="text-lg font-black text-foreground">{marketplaceStats.products.toLocaleString()}</p>
+                <p className="text-[10px] font-bold uppercase text-muted-foreground">Articles</p>
+              </div>
+              <div className="rounded-2xl border border-primary/10 bg-white/85 p-3 shadow-sm">
+                <p className="text-lg font-black text-foreground">{marketplaceStats.verifiedSuppliers.toLocaleString()}</p>
+                <p className="text-[10px] font-bold uppercase text-muted-foreground">Vérifiés</p>
+              </div>
+              <div className="rounded-2xl border border-primary/10 bg-white/85 p-3 shadow-sm">
+                <p className="text-lg font-black text-foreground">{marketplaceStats.cities.toLocaleString()}</p>
+                <p className="text-[10px] font-bold uppercase text-muted-foreground">Zones</p>
+              </div>
+            </div>
+
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+              {[
+                { label: 'Paiement sécurisé', icon: ShieldCheck },
+                { label: 'Livraison suivie', icon: Truck },
+                { label: 'Vendeurs contrôlés', icon: BadgeCheck },
+                { label: 'Protection acheteur', icon: PackageCheck },
+              ].map((item) => {
+                const Icon = item.icon;
+                return (
+                  <div key={item.label} className="flex shrink-0 items-center gap-2 rounded-full border border-primary/10 bg-white/90 px-3 py-2 text-xs font-black text-foreground shadow-sm">
+                    <Icon className="h-4 w-4 text-primary" />
+                    {item.label}
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+              {MARKETPLACE_FILTERS.map((filter) => {
+                const isActive = selectedMarketplaceFilter === filter.id;
+                return (
+                  <button
+                    key={filter.id}
+                    type="button"
+                    onClick={() => setSelectedMarketplaceFilter(filter.id)}
+                    className={`shrink-0 rounded-full px-3 py-2 text-xs font-black transition-all ${
+                      isActive
+                        ? 'bg-primary text-white shadow-sm shadow-primary/20'
+                        : 'bg-white/90 text-muted-foreground hover:bg-primary/10 hover:text-primary'
+                    }`}
+                  >
+                    {filter.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Filtres par sous-catégories */}
         {selectedMainCategory && activeSubcategories.length > 0 && (
           <div className="px-4">
@@ -1035,7 +1262,7 @@ export default function NkampaPage() {
             {filteredProducts.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                 {filteredProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                  <ProductCard key={product.id} product={product} isVerified={isVerifiedProduct(product)} />
                 ))}
               </div>
             ) : (
@@ -1079,7 +1306,7 @@ export default function NkampaPage() {
                   <div className="relative">
                     <div className="absolute -inset-1 bg-gradient-to-r from-primary to-primary rounded-full blur opacity-75" />
                     <Badge className="relative bg-white/95 text-primary border-0 font-bold shadow-lg backdrop-blur-sm">
-                      🌟 Tendance
+                      Tendance
                     </Badge>
                   </div>
                 </div>
@@ -1135,6 +1362,77 @@ export default function NkampaPage() {
               )}
             </div>
 
+            {!hasActiveProductSearch && selectedMarketplaceFilter === 'all' && (
+              <div className="space-y-6">
+                {verifiedSuppliers.length > 0 && (
+                  <section className="px-4">
+                    <div className="mb-3 flex items-end justify-between">
+                      <div>
+                        <h2 className="text-lg font-black text-foreground">Fournisseurs vérifiés</h2>
+                        <p className="text-xs font-semibold text-muted-foreground">Boutiques actives et approuvées</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedMainCategory('suppliers');
+                          setSelectedSubcategory(null);
+                        }}
+                        className="text-xs font-black text-primary"
+                      >
+                        Voir
+                      </button>
+                    </div>
+                    <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
+                      {verifiedSuppliers.map((supplier) => (
+                        <div key={supplier.id} className="w-36 shrink-0">
+                          <SupplierCard supplier={supplier} />
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {dealProducts.length > 0 && (
+                  <section className="px-4">
+                    <div className="mb-3 flex items-end justify-between">
+                      <div>
+                        <h2 className="text-lg font-black text-foreground">Sélection du moment</h2>
+                        <p className="text-xs font-semibold text-muted-foreground">Produits mis en avant et offres disponibles</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
+                      {dealProducts.map((product) => (
+                        <div key={product.id} className="w-44 shrink-0">
+                          <ProductCard product={product} isVerified={isVerifiedProduct(product)} />
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {trendingProducts.length > 0 && (
+                  <section className="px-4">
+                    <div className="mb-3 flex items-end justify-between">
+                      <div>
+                        <h2 className="text-lg font-black text-foreground">Tendances du marché</h2>
+                        <p className="text-xs font-semibold text-muted-foreground">Articles avec ventes, avis ou forte notation</p>
+                      </div>
+                      <Badge className="bg-primary/10 text-primary hover:bg-primary/10">
+                        Populaire
+                      </Badge>
+                    </div>
+                    <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
+                      {trendingProducts.map((product) => (
+                        <div key={product.id} className="w-44 shrink-0">
+                          <ProductCard product={product} isVerified={isVerifiedProduct(product)} />
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
+              </div>
+            )}
+
             {/* Affichage de tous les produits */}
             <div className="px-4" data-results-section>
               <div className="flex items-center justify-between mb-4">
@@ -1166,7 +1464,7 @@ export default function NkampaPage() {
               ) : visibleDefaultProducts.length > 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                   {visibleDefaultProducts.map((product) => (
-                    <ProductCard key={product.id} product={product} />
+                    <ProductCard key={product.id} product={product} isVerified={isVerifiedProduct(product)} />
                   ))}
                 </div>
               ) : (

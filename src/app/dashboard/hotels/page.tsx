@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { ArrowLeft, Search, Filter, MapPin, Star, Wifi, Coffee, Car, Utensils, ChevronRight, Sparkles } from "lucide-react";
+import { ArrowLeft, Search, Filter, MapPin, Star, Wifi, Coffee, Car, Utensils, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import Image from 'next/image';
@@ -352,7 +352,6 @@ export default function HotelsPage() {
                 <div className="relative h-full flex items-center justify-between p-6 text-white">
                   <div className="flex-1 space-y-2">
                     <div className="flex items-center gap-2">
-                      <Sparkles className="w-5 h-5 text-yellow-300" />
                       <Badge className="bg-yellow-400 text-yellow-900 hover:bg-yellow-400">
                         Offre Vedette
                       </Badge>

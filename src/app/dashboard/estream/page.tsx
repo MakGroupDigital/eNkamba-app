@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft, Zap, Video, Users, TrendingUp, Sparkles } from 'lucide-react';
+import { ArrowLeft, Zap, Video, Users, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -43,7 +43,6 @@ export default function EStreamPage() {
         {/* Innovations Section */}
         <div className="space-y-4">
           <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-primary" />
             Innovations eStream
           </h3>
 

@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { generateFinancialReport, type FinancialReportOutput } from "@/ai/flows/ai-report-generation";
-import { Sparkles, FileText, AlertTriangle, Lightbulb, Loader2, Download, Share2, QrCode } from "lucide-react";
+import { FileText, AlertTriangle, Lightbulb, Loader2, Download, Share2, QrCode } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from '@/components/ui/skeleton';
 import { jsPDF } from "jspdf";
@@ -145,7 +145,7 @@ export default function ReportPage() {
       <Card className="animate-in fade-in duration-500">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 font-headline">
-            <Sparkles className="h-6 w-6 text-primary" />
+            <FileText className="h-6 w-6 text-primary" />
             Assistant Financier IA
           </CardTitle>
           <CardDescription>

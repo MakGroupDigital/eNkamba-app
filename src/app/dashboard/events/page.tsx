@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { ArrowLeft, Search, Filter, MapPin, Calendar, Clock, Users, ChevronRight, Ticket, Sparkles } from "lucide-react";
+import { ArrowLeft, Search, Filter, MapPin, Calendar, Clock, Users, ChevronRight, Ticket } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import Image from 'next/image';
