@@ -39,7 +39,15 @@ export function useChatSettings() {
         const settingsDoc = await getDoc(settingsRef);
 
         if (settingsDoc.exists()) {
-          setSettings({ ...DEFAULT_CHAT_SETTINGS, ...settingsDoc.data() } as ChatSettings);
+          const data = settingsDoc.data() as Partial<ChatSettings>;
+          const nextSettings = { ...DEFAULT_CHAT_SETTINGS, ...data } as ChatSettings;
+
+          if (!data.wallpaper || data.wallpaper === 'fondchat') {
+            nextSettings.wallpaper = DEFAULT_CHAT_WALLPAPER_ID;
+            await setDoc(settingsRef, { wallpaper: DEFAULT_CHAT_WALLPAPER_ID }, { merge: true });
+          }
+
+          setSettings(nextSettings);
         } else {
           // Créer les paramètres par défaut
           await setDoc(settingsRef, DEFAULT_CHAT_SETTINGS);

@@ -70,19 +70,18 @@ export function LocationMapView({
 
   return (
     <div className="fixed inset-0 bg-background z-50 flex flex-col">
-      {/* Header */}
-      <div className="sticky top-0 z-10 flex items-center gap-4 bg-gradient-to-r from-primary via-primary to-primary px-4 py-3 shadow-lg">
+      <div className="sticky top-0 z-10 flex items-center gap-2.5 bg-primary px-2.5 py-1.5 shadow-sm">
         <Button
           size="icon"
           variant="ghost"
-          className="text-white hover:bg-white/20"
+          className="h-8 w-8 text-white hover:bg-white/20"
           onClick={onBack}
         >
-          <ChevronLeft className="h-6 w-6" />
+          <ChevronLeft className="h-4 w-4" />
         </Button>
         <div className="flex-1">
-          <h1 className="font-headline text-lg font-bold text-white">Localisation</h1>
-          <p className="text-xs text-white/70">
+          <h1 className="text-sm font-black text-white">Localisation</h1>
+          <p className="text-[10px] text-white/75">
             {distance ? `Distance: ${distance} km` : 'Chargement...'}
           </p>
         </div>
@@ -102,55 +101,53 @@ export function LocationMapView({
         />
       </div>
 
-      {/* Actions Footer */}
-      <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 space-y-3">
-        <div className="flex gap-2">
+      <div className="sticky bottom-0 space-y-1.5 border-t border-gray-200 bg-white p-2">
+        <div className="flex gap-1.5">
           <Button
             variant="outline"
-            className="flex-1 gap-2 border-primary text-primary hover:bg-primary/10"
+            className="h-8 flex-1 gap-1 border-primary text-[11px] text-primary hover:bg-primary/10"
             onClick={() => window.location.reload()}
           >
-            <RotateCcw className="h-4 w-4" />
+            <RotateCcw className="h-3 w-3" />
             Réinitialiser
           </Button>
           <Button
-            className="flex-1 gap-2 bg-gradient-to-r from-primary to-primary hover:from-primary/90 hover:to-primary/90 text-white"
+            className="h-8 flex-1 gap-1 bg-primary text-[11px] text-white hover:bg-primary/90"
             onClick={onGetDirections}
           >
-            <Navigation className="h-4 w-4" />
+            <Navigation className="h-3 w-3" />
             Itinéraire
           </Button>
         </div>
 
-        {/* Info Cards */}
-        <div className="grid grid-cols-2 gap-2">
-          <Card className="p-3 bg-gradient-to-br from-primary/10 to-primary border-primary/20">
-            <div className="flex items-center gap-2 mb-2">
-              <Avatar className="h-8 w-8">
+        <div className="grid grid-cols-2 gap-1.5">
+          <Card className="border-primary/15 bg-primary/5 p-1.5">
+            <div className="flex items-center gap-1.5">
+              <Avatar className="h-6 w-6">
                 <AvatarImage src={senderPhoto} />
-                <AvatarFallback className="bg-primary text-white text-xs">
+                <AvatarFallback className="bg-primary text-[10px] text-white">
                   {senderName.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-gray-800 truncate">{senderName}</p>
-                <p className="text-xs text-gray-600">Expéditeur</p>
+                <p className="truncate text-[11px] font-semibold text-gray-800">{senderName}</p>
+                <p className="text-[9px] text-gray-600">Départ</p>
               </div>
             </div>
           </Card>
 
           {receiverName && (
-            <Card className="p-3 bg-gradient-to-br from-primary/10 to-primary border-primary/20">
-              <div className="flex items-center gap-2 mb-2">
-                <Avatar className="h-8 w-8">
+            <Card className="border-primary/15 bg-primary/5 p-1.5">
+              <div className="flex items-center gap-1.5">
+                <Avatar className="h-6 w-6">
                   <AvatarImage src={receiverPhoto} />
-                  <AvatarFallback className="bg-primary text-white text-xs">
+                  <AvatarFallback className="bg-primary text-[10px] text-white">
                     {receiverName.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-gray-800 truncate">{receiverName}</p>
-                  <p className="text-xs text-gray-600">Destinataire</p>
+                  <p className="truncate text-[11px] font-semibold text-gray-800">{receiverName}</p>
+                  <p className="text-[9px] text-gray-600">Arrivée</p>
                 </div>
               </div>
             </Card>

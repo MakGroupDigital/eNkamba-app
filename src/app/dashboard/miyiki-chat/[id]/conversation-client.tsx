@@ -21,7 +21,7 @@ import { uploadToCloudinary } from '@/lib/cloudinary-upload';
 import { Ban, Bell, BellOff, ChevronLeft, Image as ImageIcon, Send, Loader2, Mail, Phone, Mic, Video, MapPin, DollarSign, Paperclip, Plus, X, Check, Square, Settings, ShieldAlert, UserMinus, Users, Trash2, Edit2, MoreVertical, Languages } from 'lucide-react';
 import Link from 'next/link';
 import { GroupSettingsDialog } from '@/components/group-settings-dialog';
-import { CHAT_WALLPAPERS, getChatWallpaper } from '@/lib/chat-wallpapers';
+import { CHAT_WALLPAPERS, createCustomChatWallpaperId, getChatWallpaper, isCustomChatWallpaper } from '@/lib/chat-wallpapers';
 
 type IncomingCallDoc = {
     id: string;
@@ -42,6 +42,7 @@ type TranslationResult = {
 type InlineTranslation = {
     translatedText: string;
     sourceLanguageName?: string;
+    targetLanguage?: string;
     targetLanguageName?: string;
     error?: string;
 };
@@ -84,6 +85,7 @@ export default function ConversationClient() {
     const [showContactDetails, setShowContactDetails] = useState(false);
     const [isConversationMuted, setIsConversationMuted] = useState(false);
     const [conversationWallpaper, setConversationWallpaper] = useState<string | null>(null);
+    const [isUploadingConversationWallpaper, setIsUploadingConversationWallpaper] = useState(false);
     const [relationshipControl, setRelationshipControl] = useState({
         restricted: false,
         blocked: false,
@@ -113,6 +115,7 @@ export default function ConversationClient() {
     const [myAvatar, setMyAvatar] = useState<string>('');
     const [incomingCall, setIncomingCall] = useState<{ id: string; callType: 'audio' | 'video'; fromUid: string } | null>(null);
     const [targetLanguage, setTargetLanguage] = useState('fr');
+    const [messageTargetLanguages, setMessageTargetLanguages] = useState<Record<string, string>>({});
     const [inlineTranslations, setInlineTranslations] = useState<Record<string, InlineTranslation>>({});
     const [translatingMessageIds, setTranslatingMessageIds] = useState<Record<string, boolean>>({});
     const [translationAction, setTranslationAction] = useState<{ message: any; x: number; y: number } | null>(null);
@@ -121,6 +124,7 @@ export default function ConversationClient() {
     const longPressPointRef = useRef<{ x: number; y: number } | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const textAreaRef = useRef<HTMLTextAreaElement | null>(null);
+    const conversationWallpaperInputRef = useRef<HTMLInputElement | null>(null);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const streamRef = useRef<MediaStream | null>(null);
     const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -129,6 +133,9 @@ export default function ConversationClient() {
     const analyserRef = useRef<AnalyserNode | null>(null);
     const animationFrameRef = useRef<number | null>(null);
     const activeWallpaper = getChatWallpaper(conversationWallpaper || chatSettings.wallpaper);
+    const customConversationWallpaper = isCustomChatWallpaper(conversationWallpaper)
+        ? getChatWallpaper(conversationWallpaper)
+        : null;
     const conversationWallpaperKey = currentUser?.uid && conversationId
         ? `${CONVERSATION_WALLPAPER_PREFIX}:${currentUser.uid}:${conversationId}`
         : '';
@@ -197,6 +204,30 @@ export default function ConversationClient() {
             console.error('Erreur sauvegarde fond discussion:', error);
         }
     }, [conversationId, conversationWallpaperKey, currentUser?.uid]);
+
+    const handleImportConversationWallpaper = useCallback(async (file: File | null) => {
+        if (!file) return;
+
+        if (!file.type.startsWith('image/')) {
+            alert('Veuillez choisir une image depuis votre galerie ou vos fichiers.');
+            return;
+        }
+
+        setIsUploadingConversationWallpaper(true);
+        try {
+            const uploadResult = await uploadToCloudinary(file, 'image');
+            const imageUrl = uploadResult.secureUrl || uploadResult.url;
+            await updateConversationWallpaper(createCustomChatWallpaperId(imageUrl));
+        } catch (error) {
+            console.error('Erreur import fond discussion:', error);
+            alert(error instanceof Error ? error.message : 'Impossible d’importer cette image.');
+        } finally {
+            setIsUploadingConversationWallpaper(false);
+            if (conversationWallpaperInputRef.current) {
+                conversationWallpaperInputRef.current.value = '';
+            }
+        }
+    }, [updateConversationWallpaper]);
 
     // Listener appels entrants (quand l'utilisateur est déjà dans la conversation)
     useEffect(() => {
@@ -551,6 +582,7 @@ export default function ConversationClient() {
                 [messageId]: {
                     translatedText: result.translatedText,
                     sourceLanguageName: result.sourceLanguageName,
+                    targetLanguage: result.targetLanguage || language,
                     targetLanguageName: result.targetLanguageName,
                 },
             }));
@@ -570,6 +602,18 @@ export default function ConversationClient() {
             });
         }
     }, [canTranslateMessage, targetLanguage]);
+
+    const translateMessageToLanguage = useCallback((message: any, language: string) => {
+        if (!TRANSLATION_LANGUAGES.some((item) => item.code === language)) return;
+
+        setMessageTargetLanguages((current) => ({
+            ...current,
+            [message.id]: language,
+        }));
+        setTargetLanguage(language);
+        window.localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
+        void translateMessageInline(message, language);
+    }, [translateMessageInline]);
 
     const hideInlineTranslation = useCallback((messageId: string) => {
         setInlineTranslations((current) => {
@@ -1365,6 +1409,7 @@ export default function ConversationClient() {
                         const isPlaying = playingMessageId === message.id;
                         const inlineTranslation = inlineTranslations[message.id];
                         const isMessageTranslating = Boolean(translatingMessageIds[message.id]);
+                        const selectedTranslationLanguage = messageTargetLanguages[message.id] || inlineTranslation?.targetLanguage || targetLanguage;
 
                         return (
                             <div
@@ -1422,7 +1467,7 @@ export default function ConversationClient() {
                                                 isOwn
                                                     ? 'bg-primary text-white rounded-br-none'
                                                     : 'bg-muted text-foreground rounded-bl-none'
-                                            } ${!isOwn && canTranslateMessage(message) ? 'pr-10' : ''} ${message.isDeleted ? 'opacity-60 italic' : ''}`}
+                                            } ${!isOwn && canTranslateMessage(message) ? 'pr-12' : ''} ${message.isDeleted ? 'opacity-60 italic' : ''}`}
                                             onPointerDown={(e) => {
                                                 if (e.pointerType === 'mouse') return;
                                                 startMessageLongPress(message, { x: e.clientX, y: e.clientY });
@@ -1447,23 +1492,52 @@ export default function ConversationClient() {
                                             }}
                                         >
                                         {!isOwn && canTranslateMessage(message) && (
-                                            <button
-                                                type="button"
-                                                onClick={(event) => {
-                                                    event.stopPropagation();
-                                                    void translateMessageInline(message);
-                                                }}
-                                                disabled={isMessageTranslating}
-                                                className="absolute right-1.5 top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full border border-primary/20 bg-white text-primary shadow-sm transition hover:bg-primary hover:text-white disabled:cursor-wait disabled:opacity-70"
-                                                aria-label="Traduire ce message"
-                                                title="Traduire"
-                                            >
-                                                {isMessageTranslating ? (
-                                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                                ) : (
-                                                    <Languages className="h-3.5 w-3.5" />
-                                                )}
-                                            </button>
+                                            <div className="absolute right-1 top-1/2 z-10 flex -translate-y-1/2 flex-col items-center gap-0.5">
+                                                <button
+                                                    type="button"
+                                                    onClick={(event) => {
+                                                        event.stopPropagation();
+                                                        void translateMessageInline(message, selectedTranslationLanguage);
+                                                    }}
+                                                    disabled={isMessageTranslating}
+                                                    className="flex h-6 w-6 items-center justify-center rounded-full border border-primary/20 bg-white text-primary shadow-sm transition hover:bg-primary hover:text-white disabled:cursor-wait disabled:opacity-70"
+                                                    aria-label="Traduire ce message"
+                                                    title="Traduire"
+                                                >
+                                                    {isMessageTranslating ? (
+                                                        <Loader2 className="h-3 w-3 animate-spin" />
+                                                    ) : (
+                                                        <Languages className="h-3 w-3" />
+                                                    )}
+                                                </button>
+                                                <label
+                                                    className="relative h-4 w-7 overflow-hidden rounded-full border border-primary/15 bg-white text-primary shadow-sm"
+                                                    title="Choisir la langue de traduction"
+                                                >
+                                                    <span className="pointer-events-none flex h-full w-full items-center justify-center text-[8px] font-black uppercase leading-none">
+                                                        {selectedTranslationLanguage}
+                                                    </span>
+                                                    <select
+                                                        value={selectedTranslationLanguage}
+                                                        disabled={isMessageTranslating}
+                                                        aria-label="Langue de traduction"
+                                                        className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-wait"
+                                                        onPointerDown={(event) => event.stopPropagation()}
+                                                        onTouchStart={(event) => event.stopPropagation()}
+                                                        onClick={(event) => event.stopPropagation()}
+                                                        onChange={(event) => {
+                                                            event.stopPropagation();
+                                                            translateMessageToLanguage(message, event.target.value);
+                                                        }}
+                                                    >
+                                                        {TRANSLATION_LANGUAGES.map((language) => (
+                                                            <option key={language.code} value={language.code}>
+                                                                {language.label}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </label>
+                                            </div>
                                         )}
                                         {(isAudioMessage || isLegacyAudioMessage) && audioUrl ? (
                                             <div className="space-y-2 w-full">
@@ -1636,81 +1710,41 @@ export default function ConversationClient() {
                                             }}
                                         />
                                     ) : message.messageType === 'call' && message.metadata?.callType ? (
-                                        <div className={`rounded-xl border px-3 py-2 ${
-                                            isOwn ? 'border-white/20 bg-white/10' : 'border-border bg-background'
-                                        }`}>
-                                            <div className="flex items-center gap-2.5">
-                                                <div className={`h-9 w-9 rounded-full flex items-center justify-center ${
-                                                    isOwn ? 'bg-white/15 text-white' : 'bg-primary/10 text-primary'
+                                        (() => {
+                                            const callTitle = message.metadata.callType === 'video' ? 'Appel vidéo' : 'Appel audio';
+                                            const callStatus = message.metadata.status === 'no_answer'
+                                                ? 'Sans réponse'
+                                                : message.metadata.status === 'missed'
+                                                    ? 'Manqué'
+                                                    : message.metadata.durationSec
+                                                        ? formatCallDuration(message.metadata.durationSec)
+                                                        : 'Terminé';
+                                            const callTime = formatCallTime(
+                                                message.metadata.endedAtMs ||
+                                                message.metadata.acceptedAtMs ||
+                                                message.metadata.receivedAtMs ||
+                                                message.metadata.createdAtMs
+                                            );
+
+                                            return (
+                                                <div className={`inline-flex max-w-full items-center gap-1.5 rounded-full border px-2.5 py-1.5 ${
+                                                    isOwn ? 'border-white/20 bg-white/10 text-white' : 'border-border bg-background text-foreground'
                                                 }`}>
-                                                    {message.metadata.callType === 'video' ? <Video className="h-5 w-5" /> : <Phone className="h-5 w-5" />}
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className={`text-sm font-semibold ${isOwn ? 'text-white' : 'text-foreground'}`}>
-                                                        {message.metadata.callType === 'video' ? 'Appel vidéo' : 'Appel audio'}
-                                                    </p>
-                                                    <p className={`text-xs ${isOwn ? 'text-white/75' : 'text-muted-foreground'}`}>
-                                                        {message.metadata.status === 'no_answer'
-                                                            ? 'Sans réponse'
-                                                            : message.metadata.status === 'missed'
-                                                                ? 'Appel manqué'
-                                                                : message.metadata.durationSec
-                                                                    ? `Durée: ${formatCallDuration(message.metadata.durationSec)}`
-                                                                    : 'Appel terminé'}
-                                                    </p>
-                                                    <div className={`mt-1.5 grid grid-cols-2 gap-x-3 gap-y-0.5 text-[11px] ${
-                                                        isOwn ? 'text-white/70' : 'text-muted-foreground'
+                                                    <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
+                                                        isOwn ? 'bg-white/15 text-white' : 'bg-primary/10 text-primary'
                                                     }`}>
-                                                        {(() => {
-                                                            const received = formatCallTime(message.metadata.receivedAtMs);
-                                                            const accepted = formatCallTime(message.metadata.acceptedAtMs);
-                                                            const ended = formatCallTime(message.metadata.endedAtMs);
-                                                            const created = formatCallTime(message.metadata.createdAtMs);
-                                                            const ringSec =
-                                                                message.metadata.acceptedAtMs && message.metadata.receivedAtMs
-                                                                    ? Math.max(0, Math.round((message.metadata.acceptedAtMs - message.metadata.receivedAtMs) / 1000))
-                                                                    : message.metadata.endedAtMs && message.metadata.createdAtMs
-                                                                        ? Math.max(0, Math.round((message.metadata.endedAtMs - message.metadata.createdAtMs) / 1000))
-                                                                        : null;
-                                                            return (
-                                                                <>
-                                                                    {created && (
-                                                                        <div className="flex items-center justify-between">
-                                                                            <span className="opacity-80">Début</span>
-                                                                            <span className="font-medium">{created}</span>
-                                                                        </div>
-                                                                    )}
-                                                                    {received && (
-                                                                        <div className="flex items-center justify-between">
-                                                                            <span className="opacity-80">Reçu</span>
-                                                                            <span className="font-medium">{received}</span>
-                                                                        </div>
-                                                                    )}
-                                                                    {accepted && (
-                                                                        <div className="flex items-center justify-between">
-                                                                            <span className="opacity-80">Répondu</span>
-                                                                            <span className="font-medium">{accepted}</span>
-                                                                        </div>
-                                                                    )}
-                                                                    {ended && (
-                                                                        <div className="flex items-center justify-between">
-                                                                            <span className="opacity-80">Fin</span>
-                                                                            <span className="font-medium">{ended}</span>
-                                                                        </div>
-                                                                    )}
-                                                                    {ringSec !== null && (
-                                                                        <div className="flex items-center justify-between col-span-2">
-                                                                            <span className="opacity-80">Sonnerie</span>
-                                                                            <span className="font-medium">{ringSec}s</span>
-                                                                        </div>
-                                                                    )}
-                                                                </>
-                                                            );
-                                                        })()}
-                                                    </div>
+                                                        {message.metadata.callType === 'video' ? <Video className="h-3.5 w-3.5" /> : <Phone className="h-3.5 w-3.5" />}
+                                                    </span>
+                                                    <span className="min-w-0 truncate text-[11px] leading-none">
+                                                        <span className="font-bold">{callTitle}</span>
+                                                        <span className={isOwn ? 'text-white/75' : 'text-muted-foreground'}> · {callStatus}</span>
+                                                        {callTime ? (
+                                                            <span className={isOwn ? 'text-white/60' : 'text-muted-foreground'}> · {callTime}</span>
+                                                        ) : null}
+                                                    </span>
                                                 </div>
-                                            </div>
-                                        </div>
+                                            );
+                                        })()
                                     ) : (
                                         <p className="text-sm leading-5 whitespace-pre-wrap break-words">{message.text}</p>
                                     )}
@@ -2219,77 +2253,77 @@ export default function ConversationClient() {
             </footer>
 
             <Dialog open={showContactDetails} onOpenChange={setShowContactDetails}>
-                <DialogContent className="max-w-md rounded-3xl p-0">
-                    <div className="rounded-t-3xl bg-gradient-to-r from-primary via-primary to-orange-500 px-5 py-5 text-white">
+                <DialogContent className="max-w-[330px] rounded-2xl p-0">
+                    <div className="rounded-t-2xl bg-primary px-3 py-2.5 text-white">
                         <DialogHeader>
                             <DialogTitle className="sr-only">Détails de la conversation</DialogTitle>
                         </DialogHeader>
-                        <div className="flex items-center gap-4">
-                            <Avatar className="h-16 w-16 border-2 border-white/30">
+                        <div className="flex items-center gap-3">
+                            <Avatar className="h-10 w-10 border-2 border-white/30">
                                 {contact?.avatar ? (
                                     <AvatarImage src={contact.avatar} alt={contact?.name || 'Contact'} className="object-cover" />
                                 ) : null}
-                                <AvatarFallback className="bg-white/20 text-xl font-bold text-white">
+                                <AvatarFallback className="bg-white/20 text-sm font-bold text-white">
                                     {(contact?.name || 'U').charAt(0).toUpperCase()}
                                 </AvatarFallback>
                             </Avatar>
                             <div className="min-w-0 flex-1">
-                                <p className="truncate text-xl font-black">{contact?.name || 'Contact'}</p>
-                                <p className="text-sm text-white/75">{contactStatusText}</p>
+                                <p className="truncate text-base font-black leading-tight">{contact?.name || 'Contact'}</p>
+                                <p className="text-[11px] text-white/75">{contactStatusText}</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="max-h-[70vh] space-y-4 overflow-y-auto p-5">
+                    <div className="max-h-[58vh] space-y-2 overflow-y-auto p-2.5">
                         <div className="grid grid-cols-3 gap-2">
                             <button
                                 type="button"
                                 onClick={toggleConversationNotifications}
-                                className="rounded-2xl border bg-muted/30 p-3 text-center transition-colors hover:bg-muted"
+                                className="rounded-xl border bg-muted/30 p-1.5 text-center transition-colors hover:bg-muted"
                             >
-                                {isConversationMuted ? <BellOff className="mx-auto mb-1 h-5 w-5 text-primary" /> : <Bell className="mx-auto mb-1 h-5 w-5 text-primary" />}
-                                <span className="text-xs font-semibold">{isConversationMuted ? 'Réactiver' : 'Notifs'}</span>
+                                {isConversationMuted ? <BellOff className="mx-auto h-3.5 w-3.5 text-primary" /> : <Bell className="mx-auto h-3.5 w-3.5 text-primary" />}
+                                <span className="text-[10px] font-semibold">{isConversationMuted ? 'Réactiver' : 'Notifs'}</span>
                             </button>
                             <button
                                 type="button"
                                 onClick={() => contact?.id && router.push(`/dashboard/makutano/profile/${contact.id}`)}
-                                className="rounded-2xl border bg-muted/30 p-3 text-center transition-colors hover:bg-muted"
+                                className="rounded-xl border bg-muted/30 p-1.5 text-center transition-colors hover:bg-muted"
                             >
-                                <Users className="mx-auto mb-1 h-5 w-5 text-primary" />
-                                <span className="text-xs font-semibold">Profil</span>
+                                <Users className="mx-auto h-3.5 w-3.5 text-primary" />
+                                <span className="text-[10px] font-semibold">Profil</span>
                             </button>
                             <button
                                 type="button"
                                 onClick={hideConversationForMe}
-                                className="rounded-2xl border bg-muted/30 p-3 text-center transition-colors hover:bg-muted"
+                                className="rounded-xl border bg-muted/30 p-1.5 text-center transition-colors hover:bg-muted"
                             >
-                                <UserMinus className="mx-auto mb-1 h-5 w-5 text-primary" />
-                                <span className="text-xs font-semibold">Retirer</span>
+                                <UserMinus className="mx-auto h-3.5 w-3.5 text-primary" />
+                                <span className="text-[10px] font-semibold">Retirer</span>
                             </button>
                         </div>
 
-                        <div className="rounded-2xl border p-4">
-                            <p className="mb-3 text-sm font-bold">Informations</p>
-                            <div className="space-y-2 text-sm">
+                        <div className="rounded-xl border p-2.5">
+                            <p className="mb-1.5 text-[11px] font-bold uppercase text-muted-foreground">Informations</p>
+                            <div className="space-y-1 text-[11px]">
                                 <div className="flex items-center gap-2 text-muted-foreground">
-                                    <Phone className="h-4 w-4" />
+                                    <Phone className="h-3.5 w-3.5" />
                                     <span>{contact?.phoneNumber || 'Numéro non renseigné'}</span>
                                 </div>
                                 <div className="flex items-center gap-2 text-muted-foreground">
-                                    <Mail className="h-4 w-4" />
+                                    <Mail className="h-3.5 w-3.5" />
                                     <span className="break-all">{contact?.email || 'Email non renseigné'}</span>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="rounded-2xl border p-4">
-                            <div className="mb-3 flex items-center justify-between">
-                                <p className="text-sm font-bold">Médias de la conversation</p>
-                                <span className="text-xs font-semibold text-muted-foreground">{mediaMessages.length}</span>
+                        <div className="rounded-xl border p-2.5">
+                            <div className="mb-1.5 flex items-center justify-between">
+                                <p className="text-[11px] font-bold uppercase text-muted-foreground">Médias</p>
+                                <span className="text-[11px] font-semibold text-muted-foreground">{mediaMessages.length}</span>
                             </div>
                             {mediaMessages.length ? (
                                 <div className="grid grid-cols-4 gap-2">
-                                    {mediaMessages.slice(0, 8).map((message) => {
+                                    {mediaMessages.slice(0, 4).map((message) => {
                                         const mediaUrl = message.metadata?.thumbnailUrl || message.metadata?.mediaUrl;
                                         return (
                                             <div key={message.id} className="flex aspect-square items-center justify-center overflow-hidden rounded-xl bg-muted">
@@ -2303,31 +2337,72 @@ export default function ConversationClient() {
                                     })}
                                 </div>
                             ) : (
-                                <p className="text-sm text-muted-foreground">Aucun média partagé.</p>
+                                <p className="text-[11px] text-muted-foreground">Aucun média partagé.</p>
                             )}
                         </div>
 
-                        <div className="rounded-2xl border p-4">
-                            <div className="mb-3 flex items-center justify-between gap-3">
-                                <div>
-                                    <p className="text-sm font-bold">Fond de discussion</p>
-                                    <p className="text-xs text-muted-foreground">
+                        <details className="rounded-xl border p-2.5">
+                            <summary className="cursor-pointer list-none">
+                                <div className="flex items-center justify-between gap-3">
+                                    <div>
+                                        <p className="text-[11px] font-bold uppercase text-muted-foreground">Fond</p>
+                                        <p className="text-[11px] text-muted-foreground">
                                         {conversationWallpaper ? 'Personnalisé pour cette discussion' : 'Utilise le fond global du chat'}
-                                    </p>
+                                        </p>
+                                    </div>
+                                    <span className="text-[11px] font-bold text-primary">Modifier</span>
                                 </div>
+                            </summary>
+                            <input
+                                ref={conversationWallpaperInputRef}
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(event) => void handleImportConversationWallpaper(event.target.files?.[0] || null)}
+                            />
+                            <div className="mt-2 flex flex-wrap items-center gap-2">
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-7 rounded-full text-[11px]"
+                                    disabled={isUploadingConversationWallpaper}
+                                    onClick={() => conversationWallpaperInputRef.current?.click()}
+                                >
+                                    {isUploadingConversationWallpaper ? 'Importation...' : 'Importer une photo'}
+                                </Button>
                                 {conversationWallpaper && (
                                     <Button
                                         type="button"
                                         size="sm"
                                         variant="ghost"
-                                        className="h-8 rounded-full text-xs"
+                                        className="h-7 rounded-full text-[11px]"
                                         onClick={() => updateConversationWallpaper(null)}
                                     >
                                         Réinitialiser
                                     </Button>
                                 )}
+                                {customConversationWallpaper && (
+                                    <span className="text-[11px] font-semibold text-primary">Photo choisie</span>
+                                )}
                             </div>
-                            <div className="grid grid-cols-2 gap-2">
+                            <div className="mt-2 grid grid-cols-2 gap-2">
+                                {customConversationWallpaper && (
+                                    <button
+                                        type="button"
+                                        onClick={() => updateConversationWallpaper(customConversationWallpaper.id)}
+                                        className="overflow-hidden rounded-2xl border border-primary text-left ring-2 ring-primary/25 transition-all"
+                                    >
+                                        <span
+                                            className={`block h-12 ${customConversationWallpaper.previewClass}`}
+                                            style={customConversationWallpaper.previewStyle}
+                                        />
+                                        <span className="flex items-center justify-between px-2 py-1.5 text-[11px] font-semibold">
+                                            {customConversationWallpaper.label}
+                                            <span className="text-primary">Choisi</span>
+                                        </span>
+                                    </button>
+                                )}
                                 {CHAT_WALLPAPERS.map((wallpaper) => {
                                     const isSelected = activeWallpaper.id === wallpaper.id;
                                     const isConversationChoice = conversationWallpaper === wallpaper.id;
@@ -2341,8 +2416,8 @@ export default function ConversationClient() {
                                                 isSelected ? 'border-primary ring-2 ring-primary/25' : 'border-border hover:border-primary/50'
                                             }`}
                                         >
-                                            <span className={`block h-16 ${wallpaper.previewClass}`} />
-                                            <span className="flex items-center justify-between px-3 py-2 text-xs font-semibold">
+                                            <span className={`block h-12 ${wallpaper.previewClass}`} style={wallpaper.previewStyle} />
+                                            <span className="flex items-center justify-between px-2 py-1.5 text-[11px] font-semibold">
                                                 {wallpaper.label}
                                                 {isConversationChoice ? <span className="text-primary">Choisi</span> : null}
                                             </span>
@@ -2350,29 +2425,29 @@ export default function ConversationClient() {
                                     );
                                 })}
                             </div>
-                        </div>
+                        </details>
 
-                        <div className="rounded-2xl border p-4">
-                            <p className="mb-3 text-sm font-bold">Contrôle</p>
-                            <div className="space-y-2">
+                        <div className="rounded-xl border p-2.5">
+                            <p className="mb-1.5 text-[11px] font-bold uppercase text-muted-foreground">Contrôle</p>
+                            <div className="space-y-1">
                                 <Button
                                     type="button"
                                     variant="outline"
-                                    className="w-full justify-start rounded-xl"
+                                    className="h-8 w-full justify-start rounded-xl text-xs"
                                     disabled={!contact?.id || relationshipControl.blocked || relationshipControl.isLoading}
                                     onClick={() => updateContactRelationship({ restricted: !relationshipControl.restricted })}
                                 >
-                                    <ShieldAlert className="mr-2 h-4 w-4" />
+                                    <ShieldAlert className="mr-2 h-3.5 w-3.5" />
                                     {relationshipControl.restricted ? 'Retirer la restriction' : 'Restreindre'}
                                 </Button>
                                 <Button
                                     type="button"
                                     variant={relationshipControl.blocked ? 'outline' : 'destructive'}
-                                    className="w-full justify-start rounded-xl"
+                                    className="h-8 w-full justify-start rounded-xl text-xs"
                                     disabled={!contact?.id || relationshipControl.isLoading}
                                     onClick={() => updateContactRelationship({ blocked: !relationshipControl.blocked })}
                                 >
-                                    <Ban className="mr-2 h-4 w-4" />
+                                    <Ban className="mr-2 h-3.5 w-3.5" />
                                     {relationshipControl.blocked ? 'Débloquer' : 'Bloquer'}
                                 </Button>
                             </div>

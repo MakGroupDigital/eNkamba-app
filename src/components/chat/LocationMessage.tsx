@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MapPin, Navigation, Copy, Check } from 'lucide-react';
@@ -103,107 +103,98 @@ export function LocationMessage({
   }
 
   return (
-    <Card className="w-full max-w-sm overflow-hidden bg-gradient-to-br from-primary to-primary border-primary/30">
-      {/* En-tête */}
-      <div className="bg-gradient-to-r from-primary via-primary to-primary text-white p-3 flex items-center gap-2">
-        <MapPin className="h-5 w-5" />
+    <Card className="w-full max-w-[240px] overflow-hidden rounded-2xl border-primary/15 bg-white shadow-sm">
+      <div className="flex items-center gap-2 bg-primary px-2.5 py-1.5 text-white">
+        <MapPin className="h-3.5 w-3.5" />
         <div className="flex-1">
-          <p className="font-semibold text-sm">Localisation partagée</p>
-          {senderName && <p className="text-xs opacity-90">par {senderName}</p>}
+          <p className="text-[11px] font-black">Localisation</p>
+          {senderName && <p className="text-[10px] opacity-90">par {senderName}</p>}
         </div>
       </div>
 
-      {/* Contenu */}
-      <div className="p-4 space-y-3">
-        {/* Profils */}
+      <div className="space-y-1.5 p-2">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 flex-1">
-            <Avatar className="h-8 w-8 border-2 border-primary">
+            <Avatar className="h-5 w-5 border border-primary/30">
               <AvatarImage src={senderPhoto} />
-              <AvatarFallback className="bg-primary text-white text-xs">
+              <AvatarFallback className="bg-primary text-[10px] text-white">
                 {senderName?.charAt(0).toUpperCase() || 'U'}
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0">
-              <p className="text-xs font-semibold text-gray-800 truncate">{senderName}</p>
-              <p className="text-xs text-gray-600">Expéditeur</p>
+              <p className="truncate text-[10px] font-bold text-gray-800">{senderName || 'Expéditeur'}</p>
+              <p className="text-[9px] text-gray-600">Départ</p>
             </div>
           </div>
 
           {receiverName && (
             <>
-              <div className="text-gray-400">→</div>
+              <div className="text-[10px] text-gray-400">→</div>
               <div className="flex items-center gap-2 flex-1">
-                <Avatar className="h-8 w-8 border-2 border-primary">
+                <Avatar className="h-5 w-5 border border-primary/30">
                   <AvatarImage src={receiverPhoto} />
-                  <AvatarFallback className="bg-primary text-white text-xs">
+                  <AvatarFallback className="bg-primary text-[10px] text-white">
                     {receiverName.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold text-gray-800 truncate">{receiverName}</p>
-                  <p className="text-xs text-gray-600">Destinataire</p>
+                  <p className="truncate text-[10px] font-bold text-gray-800">{receiverName}</p>
+                  <p className="text-[9px] text-gray-600">Arrivée</p>
                 </div>
               </div>
             </>
           )}
         </div>
 
-        {/* Coordonnées */}
-        <div className="bg-white rounded-lg p-3 space-y-2 border border-primary/20">
-          <p className="text-xs text-gray-600 font-semibold">Coordonnées GPS</p>
-          <div className="flex items-center justify-between gap-2">
-            <code className="text-xs bg-gray-100 px-2 py-1 rounded flex-1 font-mono text-gray-800">
+        <div className="rounded-xl border border-primary/15 bg-primary/5 p-1.5">
+          <div className="flex items-center justify-between gap-1.5">
+            <code className="min-w-0 flex-1 truncate rounded bg-white px-1.5 py-1 font-mono text-[9px] text-gray-800">
               {latitude.toFixed(6)}, {longitude.toFixed(6)}
             </code>
             <Button
               size="sm"
               variant="ghost"
-              className="h-8 w-8 p-0 hover:bg-primary/10"
+              className="h-6 w-6 p-0 hover:bg-primary/10"
               onClick={handleCopyCoordinates}
             >
               {copied ? (
-                <Check className="h-4 w-4 text-primary" />
+                <Check className="h-3 w-3 text-primary" />
               ) : (
-                <Copy className="h-4 w-4 text-gray-600" />
+                <Copy className="h-3 w-3 text-gray-600" />
               )}
             </Button>
           </div>
         </div>
 
-        {/* Adresse si disponible */}
         {address && (
-          <div className="bg-white rounded-lg p-3 border border-primary/20">
-            <p className="text-xs text-gray-600 font-semibold mb-1">Adresse</p>
-            <p className="text-sm text-gray-800">{address}</p>
+          <div className="rounded-xl border border-primary/15 bg-white p-1.5">
+            <p className="line-clamp-2 text-[11px] text-gray-700">{address}</p>
           </div>
         )}
 
-        {/* Boutons d'action */}
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-1.5">
           <Button
             size="sm"
             variant="outline"
-            className="gap-2 border-primary text-primary hover:bg-primary/10"
+            className="h-7 gap-1 border-primary text-[11px] text-primary hover:bg-primary/10"
             onClick={handleOpenMap}
           >
-            <MapPin className="h-4 w-4" />
-            Voir la carte
+            <MapPin className="h-3 w-3" />
+            Carte
           </Button>
           <Button
             size="sm"
-            className="gap-2 bg-gradient-to-r from-primary to-primary hover:from-primary/90 hover:to-primary/90 text-white"
+            className="h-7 gap-1 bg-primary text-[11px] text-white hover:bg-primary/90"
             onClick={handleGetDirections}
             disabled={!receiverLatitude || !receiverLongitude}
           >
-            <Navigation className="h-4 w-4" />
+            <Navigation className="h-3 w-3" />
             Itinéraire
           </Button>
         </div>
 
-        {/* Timestamp */}
         {timestamp && (
-          <p className="text-xs text-gray-500 text-center">
+          <p className="text-center text-[9px] text-gray-500">
             {new Date(timestamp).toLocaleTimeString('fr-FR', {
               hour: '2-digit',
               minute: '2-digit',

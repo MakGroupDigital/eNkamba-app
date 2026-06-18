@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -26,7 +26,8 @@ import { StoriesOnboarding } from '@/components/stories/StoriesOnboarding';
 import { StoryViewer } from '@/components/stories/StoryViewer';
 import { LocationSharingDialog } from '@/components/chat/LocationSharingDialog';
 import { ContactQRCode } from '@/components/settings/ContactQRCode';
-import { CHAT_WALLPAPERS } from '@/lib/chat-wallpapers';
+import { CHAT_WALLPAPERS, createCustomChatWallpaperId, getChatWallpaper, isCustomChatWallpaper } from '@/lib/chat-wallpapers';
+import { uploadToCloudinary } from '@/lib/cloudinary-upload';
 import {
   NewChatIcon,
   SearchIcon,
@@ -127,6 +128,8 @@ export default function MiyikiChatPage() {
   const [showActionsMenu, setShowActionsMenu] = useState(false);
   const [showLocationDialog, setShowLocationDialog] = useState(false);
   const [showContactQRCode, setShowContactQRCode] = useState(false);
+  const [isUploadingWallpaper, setIsUploadingWallpaper] = useState(false);
+  const globalWallpaperInputRef = useRef<HTMLInputElement | null>(null);
 
   // Vérifier si c'est la première visite aux stories
   useEffect(() => {
@@ -146,6 +149,9 @@ export default function MiyikiChatPage() {
         uid: profile.uid,
       }
     : null;
+  const customGlobalWallpaper = isCustomChatWallpaper(settings.wallpaper)
+    ? getChatWallpaper(settings.wallpaper)
+    : null;
 
   useEffect(() => {
     const hasSeenOnboarding = localStorage.getItem('stories_onboarding_seen');
@@ -163,6 +169,30 @@ export default function MiyikiChatPage() {
   // Ouvrir le dialog de création de groupe
   const handleCreateGroup = () => {
     setShowCreateGroupDialog(true);
+  };
+
+  const handleImportGlobalWallpaper = async (file: File | null) => {
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Veuillez choisir une image depuis votre galerie ou vos fichiers.');
+      return;
+    }
+
+    setIsUploadingWallpaper(true);
+    try {
+      const uploadResult = await uploadToCloudinary(file, 'image');
+      const imageUrl = uploadResult.secureUrl || uploadResult.url;
+      await updateSetting('wallpaper', createCustomChatWallpaperId(imageUrl));
+    } catch (error) {
+      console.error('Erreur import fond chat:', error);
+      alert(error instanceof Error ? error.message : 'Impossible d’importer cette image.');
+    } finally {
+      setIsUploadingWallpaper(false);
+      if (globalWallpaperInputRef.current) {
+        globalWallpaperInputRef.current.value = '';
+      }
+    }
   };
 
   // Helper pour trouver le nom du contact à partir du numéro de téléphone
@@ -614,7 +644,42 @@ export default function MiyikiChatPage() {
         <Card className="p-4 rounded-2xl">
           <h3 className="font-bold text-lg mb-2">Fond de discussion</h3>
           <p className="mb-4 text-xs text-muted-foreground">Appliqué à toutes vos conversations, sauf si une discussion possède son propre fond.</p>
+          <input
+            ref={globalWallpaperInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(event) => void handleImportGlobalWallpaper(event.target.files?.[0] || null)}
+          />
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              className="rounded-full"
+              disabled={settingsLoading || isUploadingWallpaper}
+              onClick={() => globalWallpaperInputRef.current?.click()}
+            >
+              {isUploadingWallpaper ? 'Importation...' : 'Importer une photo'}
+            </Button>
+            {customGlobalWallpaper && (
+              <span className="text-xs font-semibold text-primary">Photo personnelle active</span>
+            )}
+          </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {customGlobalWallpaper && (
+              <button
+                type="button"
+                onClick={() => updateSetting('wallpaper', customGlobalWallpaper.id)}
+                disabled={settingsLoading}
+                className="overflow-hidden rounded-2xl border border-primary text-left ring-2 ring-primary/25 transition-all"
+              >
+                <span className={`block h-20 ${customGlobalWallpaper.previewClass}`} style={customGlobalWallpaper.previewStyle} />
+                <span className="flex items-center justify-between px-3 py-2 text-xs font-semibold">
+                  {customGlobalWallpaper.label}
+                  <span className="text-primary">Actif</span>
+                </span>
+              </button>
+            )}
             {CHAT_WALLPAPERS.map((wallpaper) => {
               const isSelected = settings.wallpaper === wallpaper.id;
 
@@ -628,7 +693,7 @@ export default function MiyikiChatPage() {
                     isSelected ? 'border-primary ring-2 ring-primary/25' : 'border-border hover:border-primary/50'
                   }`}
                 >
-                  <span className={`block h-20 ${wallpaper.previewClass}`} />
+                  <span className={`block h-20 ${wallpaper.previewClass}`} style={wallpaper.previewStyle} />
                   <span className="flex items-center justify-between px-3 py-2 text-xs font-semibold">
                     {wallpaper.label}
                     {isSelected && <span className="text-primary">Actif</span>}

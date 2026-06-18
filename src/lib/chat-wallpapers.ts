@@ -1,18 +1,46 @@
+import type { CSSProperties } from 'react';
+
 export type ChatWallpaper = {
   id: string;
   label: string;
   previewClass: string;
+  previewStyle?: CSSProperties;
   backgroundImage: string;
 };
 
-export const DEFAULT_CHAT_WALLPAPER_ID = 'fondchat';
+export const CUSTOM_CHAT_WALLPAPER_PREFIX = 'custom:';
+export const DEFAULT_CHAT_WALLPAPER_ID = 'chatfond1';
+
+export function createCustomChatWallpaperId(imageUrl: string) {
+  return `${CUSTOM_CHAT_WALLPAPER_PREFIX}${imageUrl}`;
+}
+
+export function isCustomChatWallpaper(wallpaperId?: string | null) {
+  return Boolean(wallpaperId?.startsWith(CUSTOM_CHAT_WALLPAPER_PREFIX));
+}
+
+function getCustomWallpaperUrl(wallpaperId?: string | null) {
+  if (!isCustomChatWallpaper(wallpaperId)) return '';
+  return String(wallpaperId).slice(CUSTOM_CHAT_WALLPAPER_PREFIX.length);
+}
+
+function imageBackground(url: string, overlayOpacity = 0.66) {
+  const cssUrl = `url(${JSON.stringify(url)})`;
+  return `linear-gradient(rgba(255,255,255,${overlayOpacity}), rgba(255,255,255,${overlayOpacity})), ${cssUrl}`;
+}
 
 export const CHAT_WALLPAPERS: ChatWallpaper[] = [
+  {
+    id: 'chatfond1',
+    label: 'Chat eNkamba',
+    previewClass: 'bg-[url("/chatfond1.jpeg")] bg-cover bg-center',
+    backgroundImage: imageBackground('/chatfond1.jpeg', 0.66),
+  },
   {
     id: 'fondchat',
     label: 'eNkamba',
     previewClass: 'bg-[url("/fondchat.jpeg")] bg-cover bg-center',
-    backgroundImage: "linear-gradient(rgba(255,255,255,0.72), rgba(255,255,255,0.72)), url('/fondchat.jpeg')",
+    backgroundImage: imageBackground('/fondchat.jpeg', 0.72),
   },
   {
     id: 'clean',
@@ -35,5 +63,20 @@ export const CHAT_WALLPAPERS: ChatWallpaper[] = [
 ];
 
 export function getChatWallpaper(wallpaperId?: string | null) {
+  const customUrl = getCustomWallpaperUrl(wallpaperId);
+  if (customUrl) {
+    return {
+      id: wallpaperId || 'custom',
+      label: 'Photo importée',
+      previewClass: 'bg-cover bg-center',
+      previewStyle: {
+        backgroundImage: `url(${JSON.stringify(customUrl)})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      },
+      backgroundImage: imageBackground(customUrl, 0.66),
+    };
+  }
+
   return CHAT_WALLPAPERS.find((wallpaper) => wallpaper.id === wallpaperId) || CHAT_WALLPAPERS[0];
 }
