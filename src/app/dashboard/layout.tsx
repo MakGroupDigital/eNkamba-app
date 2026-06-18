@@ -25,7 +25,7 @@ export default function DashboardLayout({
 
   useEffect(() => {
     if (pathname.includes('/miyiki-chat')) setActiveTab('Chat');
-    else if (pathname.includes('/nkampa')) setActiveTab('E-comm');
+    else if (pathname.includes('/nkampa')) setActiveTab('Marché');
     else if (pathname.includes('/ugavi')) setActiveTab('Logistique');
     else if (pathname.includes('/mbongo-dashboard')) setActiveTab('Paiement');
     else if (pathname.endsWith('/dashboard')) setActiveTab('Chat');
@@ -37,7 +37,7 @@ export default function DashboardLayout({
       // Détection du type de business via le paramètre module dans l'URL
       const searchParams = new URLSearchParams(window.location.search);
       const module = searchParams.get('module');
-      if (module === 'COMMERCE') setActiveTab('E-comm');
+      if (module === 'COMMERCE') setActiveTab('Marché');
       else if (module === 'LOGISTICS') setActiveTab('Logistique');
       else if (module === 'PAYMENT') setActiveTab('Paiement');
       else setActiveTab('Paiement'); // Par défaut

@@ -33,12 +33,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useNkampaCart } from '@/hooks/useNkampaCart';
 import { useWalletBalance } from '@/hooks/useWalletBalance';
 import { FloatingCart } from '@/components/nkampa/FloatingCart';
-import {
-  NkampaNavFavoritesIcon,
-  NkampaNavOrdersIcon,
-  NkampaNavSellerIcon,
-  NkampaNavShopIcon,
-} from '@/components/icons/nkampa-nav-icons';
 import { useNkampaStore } from '@/hooks/useNkampaStore';
 import { useNkampaStores } from '@/hooks/useNkampaStores';
 
@@ -790,8 +784,8 @@ export default function NkampaPage() {
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(50,187,120,0.12),transparent_35%),linear-gradient(180deg,rgba(50,187,120,0.05)_0%,rgba(50,187,120,0.08)_52%,rgba(50,187,120,0.04)_100%)]">
-      {/* Header avec fond vert et bordures arrondies en haut */}
-      <header className="sticky top-0 z-50 bg-gradient-to-r from-primary via-primary to-primary backdrop-blur-xl shadow-lg shadow-primary/20 rounded-b-[32px] overflow-hidden">
+      {/* Recherche marche */}
+      <header className="sticky top-0 z-50 bg-background/85 py-3 backdrop-blur-xl">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <input
             ref={photoSearchInputRef}
@@ -801,133 +795,15 @@ export default function NkampaPage() {
             className="hidden"
             onChange={(event) => void handlePhotoSearch(event.target.files?.[0] || null)}
           />
-          {/* Top Bar */}
-          <div className="flex items-center justify-between h-16 pt-2">
-            {/* Left: Logo */}
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2.5">
-                <div className="relative h-10 w-10 rounded-xl bg-white shadow-lg overflow-hidden ring-2 ring-white/30">
-                  <Image
-                    src="/enkamba-logo.png"
-                    alt="eNkamba"
-                    width={40}
-                    height={40}
-                    className="object-cover"
-                  />
-                </div>
-                <div className="hidden sm:block">
-                  <h1 className="text-lg font-black text-white leading-none">
-                    eNkamba Shop
-                  </h1>
-                  <p className="text-[10px] font-semibold text-primary uppercase tracking-wider">
-                    Commerce vivant
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Right: Search + Cart */}
-            <div className="flex items-center gap-3">
-              {/* Search Bar - Desktop */}
-              <div className="hidden md:flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2.5 min-w-[280px] transition-all focus-within:bg-white/30 focus-within:ring-2 focus-within:ring-white/50 focus-within:shadow-lg border border-white/30">
-                <Search className="h-4 w-4 text-white" />
-                <input
-                  type="text"
-                  placeholder="Rechercher..."
-                  value={searchQuery}
-                  onChange={(e) => handleTextSearchChange(e.target.value)}
-                  className="flex-1 bg-transparent text-sm text-white placeholder:text-white/70 outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={() => photoSearchInputRef.current?.click()}
-                  disabled={isPhotoSearching}
-                  className={`relative rounded-lg p-1.5 transition-all ${
-                    photoSearchPreview
-                      ? 'bg-white text-primary'
-                      : 'text-white hover:bg-white/20'
-                  } disabled:cursor-not-allowed disabled:opacity-70`}
-                  aria-label="Rechercher par photo"
-                  title="Rechercher par photo"
-                >
-                  {isPhotoSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleVoiceSearch}
-                  className={`rounded-lg p-1.5 transition-all ${
-                    isListening
-                      ? 'bg-red-500 text-white'
-                      : 'text-white hover:bg-white/20'
-                  }`}
-                  aria-label="Recherche vocale"
-                >
-                  <Mic className="h-4 w-4" />
-                  {isListening && (
-                    <span className="absolute -right-0.5 -top-0.5 h-2 w-2 animate-ping rounded-full bg-red-400" />
-                  )}
-                </button>
-              </div>
-
-              {/* Cart Button */}
-              <button
-                onClick={() => setIsOpen(true)}
-                className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-white text-primary transition-all hover:bg-white/90 hover:scale-105 active:scale-95 shadow-lg"
-              >
-                <ShoppingCart className="h-5 w-5" />
-                {itemCount > 0 && (
-                  <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-black text-white shadow-lg animate-bounce ring-2 ring-white">
-                    {itemCount > 99 ? '99+' : itemCount}
-                  </span>
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Navigation Bar */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-3 scrollbar-hide">
-            {[
-              { href: '/dashboard/nkampa', label: 'Boutique', icon: NkampaNavShopIcon },
-              { href: '/dashboard/nkampa/orders', label: 'Commandes', icon: NkampaNavOrdersIcon },
-              { href: '/dashboard/nkampa/favorites', label: 'Favoris', icon: NkampaNavFavoritesIcon },
-              hasStoreChecked && myStore
-                ? { href: '/dashboard/nkampa/store/dashboard', label: 'Ma boutique', icon: NkampaNavSellerIcon }
-                : { href: '/dashboard/nkampa/store', label: 'Créer boutique', icon: NkampaNavSellerIcon },
-            ].map((item) => {
-              const Icon = item.icon;
-              const isActive = pathname === item.href;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="relative group"
-                >
-                  <div className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold whitespace-nowrap transition-all ${
-                    isActive
-                      ? 'bg-white text-primary shadow-md'
-                      : 'text-white hover:bg-white/20 border border-transparent hover:border-white/30'
-                  }`}>
-                    <Icon className="h-4 w-4" />
-                    <span>{item.label}</span>
-                  </div>
-                  {isActive && (
-                    <div className="absolute -bottom-3 left-1/2 h-1 w-8 -translate-x-1/2 rounded-full bg-white shadow-lg shadow-white/50" />
-                  )}
-                </Link>
-              );
-            })}
-          </div>
-
-          {/* Search Bar - Mobile */}
-          <div className="md:hidden pb-3">
-            <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2.5 transition-all focus-within:bg-white/30 focus-within:ring-2 focus-within:ring-white/50 focus-within:shadow-lg border border-white/30">
-              <Search className="h-4 w-4 text-white" />
+          <div className="flex items-center gap-3">
+            <div className="flex min-w-0 flex-1 items-center gap-2 rounded-2xl border border-primary/10 bg-white px-4 py-2.5 shadow-sm shadow-primary/10 transition-all focus-within:border-primary/30 focus-within:ring-2 focus-within:ring-primary/15">
+              <Search className="h-4 w-4 text-primary" />
               <input
                 type="text"
                 placeholder="Rechercher..."
                 value={searchQuery}
                 onChange={(e) => handleTextSearchChange(e.target.value)}
-                className="flex-1 bg-transparent text-sm text-white placeholder:text-white/70 outline-none"
+                className="flex-1 bg-transparent text-sm font-semibold text-foreground placeholder:text-muted-foreground outline-none"
               />
               <button
                 type="button"
@@ -935,8 +811,8 @@ export default function NkampaPage() {
                 disabled={isPhotoSearching}
                 className={`relative rounded-lg p-1.5 transition-all ${
                   photoSearchPreview
-                    ? 'bg-white text-primary'
-                    : 'text-white hover:bg-white/20'
+                    ? 'bg-primary text-white'
+                    : 'text-primary hover:bg-primary/10'
                 } disabled:cursor-not-allowed disabled:opacity-70`}
                 aria-label="Rechercher par photo"
                 title="Rechercher par photo"
@@ -946,10 +822,10 @@ export default function NkampaPage() {
               <button
                 type="button"
                 onClick={handleVoiceSearch}
-                className={`relative rounded-lg p-1.5 transition-all ${
+                className={`rounded-lg p-1.5 transition-all ${
                   isListening
                     ? 'bg-red-500 text-white'
-                    : 'text-white hover:bg-white/20'
+                    : 'text-primary hover:bg-primary/10'
                 }`}
                 aria-label="Recherche vocale"
               >
@@ -959,28 +835,72 @@ export default function NkampaPage() {
                 )}
               </button>
             </div>
-            {photoSearchPreview && (
-              <div className="mt-2 flex items-center gap-2 rounded-xl bg-white/20 p-2 text-xs font-semibold text-white">
-                <span
-                  role="img"
-                  aria-label="Recherche photo"
-                  className="h-8 w-8 rounded-lg bg-cover bg-center ring-1 ring-white/40"
-                  style={{ backgroundImage: `url(${photoSearchPreview})` }}
-                />
-                <span className="min-w-0 flex-1 truncate">{photoSearchLabel || 'Recherche par photo'}</span>
-                <button
-                  type="button"
-                  onClick={clearPhotoSearch}
-                  className="rounded-lg p-1 text-white/80 hover:bg-white/20 hover:text-white"
-                  aria-label="Effacer la recherche photo"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            )}
+
+            <button
+              onClick={() => setIsOpen(true)}
+              className="relative flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-primary shadow-sm transition-all hover:bg-white/95 hover:scale-105 active:scale-95"
+            >
+              <ShoppingCart className="h-5 w-5" />
+              {itemCount > 0 && (
+                <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-black text-white shadow-lg animate-bounce ring-2 ring-white">
+                  {itemCount > 99 ? '99+' : itemCount}
+                </span>
+              )}
+            </button>
           </div>
+
+          {photoSearchPreview && (
+            <div className="mt-2 flex items-center gap-2 rounded-xl border border-primary/10 bg-white p-2 text-xs font-semibold text-foreground shadow-sm shadow-primary/10">
+              <span
+                role="img"
+                aria-label="Recherche photo"
+                className="h-8 w-8 rounded-lg bg-cover bg-center ring-1 ring-primary/20"
+                style={{ backgroundImage: `url(${photoSearchPreview})` }}
+              />
+              <span className="min-w-0 flex-1 truncate">{photoSearchLabel || 'Recherche par photo'}</span>
+              <button
+                type="button"
+                onClick={clearPhotoSearch}
+                className="rounded-lg p-1 text-muted-foreground hover:bg-primary/10 hover:text-primary"
+                aria-label="Effacer la recherche photo"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          )}
         </div>
       </header>
+
+      {/* Navigation marche */}
+      <div className="relative z-40 px-4 pt-1">
+        <div className="mx-auto grid max-w-7xl grid-cols-3 items-center border-b border-primary/10">
+          {[
+            { href: '/dashboard/nkampa/orders', label: 'Commandes' },
+            { href: '/dashboard/nkampa/favorites', label: 'Favoris' },
+            hasStoreChecked && myStore
+              ? { href: '/dashboard/nkampa/store/dashboard', label: 'Ma boutique' }
+              : { href: '/dashboard/nkampa/store', label: 'Créer boutique' },
+          ].map((item, index) => {
+            const isActive = pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`relative min-w-0 px-0.5 pb-2 pt-1 text-sm font-black whitespace-nowrap transition-colors ${
+                  isActive
+                    ? 'text-primary'
+                    : 'text-muted-foreground hover:text-foreground'
+                } ${index === 0 ? 'justify-self-start' : index === 1 ? 'justify-self-center' : 'justify-self-end'}`}
+              >
+                <span>{item.label}</span>
+                {isActive && (
+                  <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-primary" />
+                )}
+              </Link>
+            );
+          })}
+        </div>
+      </div>
 
       {/* Contenu principal */}
       <div className="space-y-6 pb-8">

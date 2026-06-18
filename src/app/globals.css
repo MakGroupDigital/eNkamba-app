@@ -5,17 +5,17 @@
 @layer base {
   :root {
     --background: 0 0% 100%; /* #FFFFFF */
-    --foreground: 0 0% 0%;
+    --foreground: 150 18% 9%;
     --card: 0 0% 100%; /* #FFFFFF */
-    --card-foreground: 0 0% 0%;
+    --card-foreground: 150 18% 9%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 0%;
+    --popover-foreground: 150 18% 9%;
     --primary: 148 59% 52%; /* #32BB78 */
     --primary-foreground: 0 0% 100%;
     --secondary: 0 0% 100%;
-    --secondary-foreground: 0 0% 0%;
+    --secondary-foreground: 150 18% 9%;
     --muted: 0 0% 90%;
-    --muted-foreground: 0 0% 45.1%;
+    --muted-foreground: 154 12% 28%;
     --accent: 148 59% 52%; /* #32BB78 */
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
@@ -30,7 +30,7 @@
     --chart-5: 148 59% 52%;
     --radius: 0.75rem;
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 0 0% 0%;
+    --sidebar-foreground: 150 18% 9%;
     --sidebar-primary: 148 59% 52%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 148 59% 52%;
@@ -51,7 +51,7 @@
     --secondary: 240 4% 16%;
     --secondary-foreground: 0 0% 98%;
     --muted: 240 4% 16%;
-    --muted-foreground: 0 0% 63.9%;
+    --muted-foreground: 150 10% 78%;
     --accent: 148 59% 52%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 62.8% 30.6%;
@@ -93,11 +93,73 @@
     position: relative;
     min-height: 100dvh;
     -webkit-tap-highlight-color: transparent;
+    color: hsl(var(--foreground));
+    font-weight: 450;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  strong,
+  b,
+  label {
+    color: hsl(var(--foreground));
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: hsl(var(--muted-foreground) / 0.82);
+    opacity: 1;
   }
 
   body > div,
   main {
     max-width: 100%;
+  }
+}
+
+@layer utilities {
+  .text-muted-foreground {
+    color: hsl(var(--muted-foreground)) !important;
+  }
+
+  .text-gray-400,
+  .text-gray-500,
+  .text-slate-400,
+  .text-slate-500,
+  .text-zinc-400,
+  .text-zinc-500,
+  .text-neutral-400,
+  .text-neutral-500 {
+    color: hsl(154 12% 28%) !important;
+  }
+
+  .text-gray-600,
+  .text-slate-600,
+  .text-zinc-600,
+  .text-neutral-600 {
+    color: hsl(150 18% 16%) !important;
+  }
+
+  .dark .text-gray-400,
+  .dark .text-gray-500,
+  .dark .text-gray-600,
+  .dark .text-slate-400,
+  .dark .text-slate-500,
+  .dark .text-slate-600,
+  .dark .text-zinc-400,
+  .dark .text-zinc-500,
+  .dark .text-zinc-600,
+  .dark .text-neutral-400,
+  .dark .text-neutral-500,
+  .dark .text-neutral-600 {
+    color: hsl(150 10% 84%) !important;
   }
 }
 
