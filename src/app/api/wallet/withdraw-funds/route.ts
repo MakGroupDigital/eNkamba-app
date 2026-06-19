@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { initializeApp, getApps, getApp } from 'firebase/app';
+import { initializeApp, getApps } from 'firebase/app';
 import { getFirestore, collection, doc, getDoc, updateDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import {
   generateRefTransa,
@@ -26,8 +26,11 @@ function getFirebaseApp() {
 
     const existingApp = getApps().find(app => app.name === 'wallet-withdraw-funds');
     if (existingApp) return existingApp;
-    
-    return getApps().length > 0 ? getApp() : initializeApp(config, 'wallet-withdraw-funds');
+
+    const apps = getApps();
+    if (apps.length > 0) return apps[0];
+
+    return initializeApp(config, 'wallet-withdraw-funds');
   } catch (error) {
     console.error('Erreur initialisation Firebase withdraw-funds:', error);
     throw new Error('Initialisation Firebase impossible pour withdraw-funds');

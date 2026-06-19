@@ -13,6 +13,10 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 const currencies = ['CDF', 'USD', 'EUR'] as const;
 type Currency = typeof currencies[number];
 
+function isCurrency(value: string): value is Currency {
+  return currencies.includes(value as Currency);
+}
+
 const ConversionFlowIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
   <svg viewBox="0 0 48 48" fill="none" className={className} aria-hidden="true">
     <rect x="8" y="10" width="32" height="28" rx="8" fill="#32BB78" />
@@ -108,6 +112,14 @@ export default function ConversionPage() {
     }
   }
 
+  const handleFromCurrencyChange = (value: string) => {
+    if (isCurrency(value)) setFromCurrency(value);
+  };
+
+  const handleToCurrencyChange = (value: string) => {
+    if (isCurrency(value)) setToCurrency(value);
+  };
+
   return (
     <div className="min-h-screen bg-[#f7faf8]">
     <div className="container mx-auto max-w-3xl p-3 space-y-4 animate-in fade-in duration-500 sm:p-4">
@@ -168,7 +180,7 @@ export default function ConversionPage() {
                 className="h-14 flex-1 rounded-xl border-[#32BB78]/20 bg-[#f7faf8] text-2xl font-black focus-visible:ring-[#32BB78]"
                 placeholder="0.00"
               />
-              <Select value={fromCurrency} onValueChange={setFromCurrency}>
+              <Select value={fromCurrency} onValueChange={handleFromCurrencyChange}>
                 <SelectTrigger className="h-14 w-[120px] rounded-xl border-[#32BB78]/20 font-semibold">
                   <SelectValue placeholder="Devise" />
                 </SelectTrigger>
@@ -199,7 +211,7 @@ export default function ConversionPage() {
                 className="h-14 flex-1 rounded-xl border-[#32BB78]/20 bg-[#32BB78]/5 text-2xl font-black text-[#173f2b]"
                 placeholder="0.00"
               />
-              <Select value={toCurrency} onValueChange={setToCurrency}>
+              <Select value={toCurrency} onValueChange={handleToCurrencyChange}>
                 <SelectTrigger className="h-14 w-[120px] rounded-xl border-[#32BB78]/20 font-semibold">
                   <SelectValue placeholder="Devise" />
                 </SelectTrigger>

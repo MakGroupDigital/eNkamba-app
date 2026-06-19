@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getApp, getApps, initializeApp } from 'firebase/app';
+import { getApps, initializeApp } from 'firebase/app';
 import {
   collection,
   doc,
@@ -32,8 +32,11 @@ function getFirebaseApp() {
 
     const existingApp = getApps().find((candidate) => candidate.name === 'wallet-wonyapay-reconcile');
     if (existingApp) return existingApp;
-    
-    return getApps().length > 0 ? getApp() : initializeApp(config, 'wallet-wonyapay-reconcile');
+
+    const apps = getApps();
+    if (apps.length > 0) return apps[0];
+
+    return initializeApp(config, 'wallet-wonyapay-reconcile');
   } catch (error) {
     console.error('Erreur initialisation Firebase wonyapay reconcile:', error);
     throw new Error('Initialisation Firebase impossible pour wonyapay reconcile');
