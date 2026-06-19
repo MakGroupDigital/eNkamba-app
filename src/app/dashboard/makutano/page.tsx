@@ -11,13 +11,11 @@ import { useAuth } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useStories } from '@/hooks/useStories';
 import { useNkampaEcommerce } from '@/hooks/useNkampaEcommerce';
-import { useFirestoreContacts } from '@/hooks/useFirestoreContacts';
 import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, increment, limit, onSnapshot, orderBy, query, serverTimestamp, setDoc, updateDoc, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import { StoryViewer } from '@/components/stories/StoryViewer';
 import {
-  MakutanoIcon,
   MakutanoAudioIcon,
   MakutanoBookIcon,
   MakutanoCommentIcon,
@@ -25,7 +23,6 @@ import {
   MakutanoIdeaIcon,
   MakutanoLikeIcon,
   MakutanoMoreIcon,
-  MakutanoMusicIcon,
   MakutanoPauseIcon,
   MakutanoPlayIcon,
   MakutanoShareIcon,
@@ -385,7 +382,6 @@ export default function MakutanoPage() {
   const { profile } = useUserProfile();
   const { stories, myStories, loading: storiesLoading, markAsViewed, replyToStory } = useStories();
   const { products: ecommerceProducts, isLoading: ecommerceProductsLoading } = useNkampaEcommerce();
-  const { contacts } = useFirestoreContacts();
   const [activeTab, setActiveTab] = useState('Accueil');
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoadingPosts, setIsLoadingPosts] = useState(true);
@@ -436,14 +432,6 @@ export default function MakutanoPage() {
       .sort((left, right) => right.popularityScore - left.popularityScore || getPostTimestamp(right.createdAt) - getPostTimestamp(left.createdAt))
       .slice(0, 24);
   }, [ecommerceProducts]);
-
-  const myMakutanoStats = useMemo(() => {
-    const myPosts = posts.filter((post) => post.authorId === user?.uid);
-    return {
-      posts: myPosts.length,
-      friends: contacts.filter((contact) => contact.isOnEnkamba).length,
-    };
-  }, [contacts, posts, user?.uid]);
 
   const rotatingStoryOffers = useMemo<StoryOffer[]>(() => {
     if (!storyOffers.length) return [];
@@ -940,99 +928,22 @@ export default function MakutanoPage() {
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-gradient-to-b from-primary via-white to-orange-50">
-      {/* Header avec catégories */}
-      <header className="sticky top-0 z-50 w-full bg-transparent px-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] text-white">
-        <div className="relative mx-auto max-w-xl overflow-hidden rounded-[2rem] border border-white/45 bg-[#32BB78]/95 shadow-[0_18px_45px_rgba(50,187,120,0.28)] backdrop-blur-xl">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/70" />
-          <div className="pointer-events-none absolute -right-10 -top-14 h-28 w-28 rounded-full bg-white/25 blur-2xl" />
-          <div className="pointer-events-none absolute -bottom-12 left-8 h-24 w-24 rounded-full bg-[#32BB78]/35 blur-2xl" />
-
-          <div className="relative px-4 pb-3 pt-4">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl border border-white/30 bg-white/15 shadow-inner backdrop-blur">
-                  <MakutanoIcon size={28} />
-                </div>
-                <div className="min-w-0">
-                  <h1 className="font-headline text-[1.35rem] font-bold leading-tight tracking-normal">Réseau social</h1>
-                  <p className="mt-0.5 text-xs font-medium text-white/75">Communauté eNkamba</p>
-                </div>
-              </div>
-
-              <div className="flex flex-shrink-0 items-center gap-2">
-                {user?.uid && (
-                  <button
-                    type="button"
-                    onClick={() => router.push(`/dashboard/makutano/profile/${user.uid}`)}
-                    className="hidden items-center gap-2 rounded-2xl border border-white/30 bg-white/15 px-3 py-2 text-left text-white shadow-inner backdrop-blur transition hover:bg-white/22 sm:flex"
-                    aria-label="Ouvrir mon profil"
-                  >
-                    <Avatar className="h-8 w-8 border border-white/50">
-                      <AvatarImage src={profile?.photoURL || profile?.profileImage} />
-                      <AvatarFallback className="bg-white text-xs font-black text-[#32BB78]">
-                        {profile?.displayName?.charAt(0) || profile?.fullName?.charAt(0) || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="min-w-0">
-                      <span className="block text-xs font-black leading-none">Mon profil</span>
-                      <span className="mt-1 block text-[10px] font-semibold text-white/75">
-                        {myMakutanoStats.posts} posts · {myMakutanoStats.friends} amis
-                      </span>
-                    </span>
-                  </button>
-                )}
-
-                <Button
-                  size="icon"
-                  className="relative h-12 w-12 flex-shrink-0 rounded-2xl border border-white/45 bg-white text-[#32BB78] shadow-[0_12px_28px_rgba(20,120,72,0.24)] transition-transform hover:scale-105 hover:bg-white/95"
-                  onClick={() => router.push('/dashboard/makutano/create')}
-                >
-                  <span className="pointer-events-none absolute inset-1 rounded-[1.15rem] border border-white/20" />
-                  <div className="relative z-10 flex items-center gap-0.5">
-                    <MakutanoCreateIcon size={24} />
-                    <MakutanoMusicIcon size={17} />
-                  </div>
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {/* Navigation des catégories */}
-          {user?.uid && (
-            <button
-              type="button"
-              onClick={() => router.push(`/dashboard/makutano/profile/${user.uid}`)}
-              className="relative mx-4 mb-3 flex w-[calc(100%-2rem)] items-center justify-between rounded-2xl border border-white/25 bg-white/12 px-3 py-2 text-left text-white backdrop-blur transition hover:bg-white/20 sm:hidden"
-            >
-              <span className="flex min-w-0 items-center gap-2">
-                <Avatar className="h-8 w-8 border border-white/50">
-                  <AvatarImage src={profile?.photoURL || profile?.profileImage} />
-                  <AvatarFallback className="bg-white text-xs font-black text-[#32BB78]">
-                    {profile?.displayName?.charAt(0) || profile?.fullName?.charAt(0) || 'U'}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="min-w-0">
-                  <span className="block truncate text-xs font-black">Mon profil</span>
-                  <span className="block text-[10px] font-semibold text-white/75">
-                    {myMakutanoStats.posts} posts · {myMakutanoStats.friends} amis
-                  </span>
-                </span>
-              </span>
-              <span className="rounded-full bg-white px-2 py-1 text-[10px] font-black text-[#32BB78]">Voir</span>
-            </button>
-          )}
-
-          <div className="relative flex gap-2 overflow-x-auto px-4 pb-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <header className="sticky top-0 z-50 w-full bg-transparent px-3 pt-[calc(env(safe-area-inset-top)+0.65rem)]">
+        <div className="mx-auto flex max-w-xl items-center gap-2 rounded-full border border-white/70 bg-white/90 px-2 py-2 shadow-[0_14px_38px_rgba(28,96,64,0.18)] backdrop-blur-xl">
+          <nav
+            className="flex min-w-0 flex-1 gap-1.5 overflow-x-auto pr-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+            aria-label="Navigation Makutano"
+          >
             {navItems.map(item => {
               const IconComponent = item.icon;
 
-              // Si l'item a un lien, c'est un lien externe (vers IA)
               if (item.link) {
                 return (
                   <button
                     key={item.name}
+                    type="button"
                     onClick={() => router.push(item.link)}
-                    className="flex items-center gap-2 whitespace-nowrap rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-all hover:bg-white/18"
+                    className="flex h-10 items-center gap-2 whitespace-nowrap rounded-full px-3 text-xs font-bold text-[#1f3d2e] transition hover:bg-[#32BB78]/10 hover:text-[#32BB78]"
                   >
                     <IconComponent size={16} />
                     <span>{item.name}</span>
@@ -1040,19 +951,19 @@ export default function MakutanoPage() {
                 );
               }
 
-              // Sinon, c'est un onglet de catégorie
               return (
                 <button
                   key={item.name}
+                  type="button"
                   onClick={() => {
                     setActiveTab(item.name);
                     recordCategoryPreference(item.name as Post['category']);
                   }}
                   className={cn(
-                    'flex items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2 text-xs font-semibold transition-all',
+                    'flex h-10 items-center gap-2 whitespace-nowrap rounded-full px-3 text-xs font-bold transition',
                     activeTab === item.name
-                      ? 'border-white bg-white text-[#32BB78] shadow-[0_8px_20px_rgba(255,255,255,0.22)]'
-                      : 'border-white/15 bg-white/10 text-white hover:bg-white/18'
+                      ? 'bg-[#32BB78] text-white shadow-[0_8px_18px_rgba(50,187,120,0.24)]'
+                      : 'text-[#1f3d2e] hover:bg-[#32BB78]/10 hover:text-[#32BB78]'
                   )}
                 >
                   <IconComponent size={16} />
@@ -1060,7 +971,23 @@ export default function MakutanoPage() {
                 </button>
               );
             })}
-          </div>
+          </nav>
+
+          {user?.uid && (
+            <button
+              type="button"
+              onClick={() => router.push(`/dashboard/makutano/profile/${user.uid}`)}
+              className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border border-[#32BB78]/20 bg-[#32BB78]/10 shadow-inner transition hover:bg-[#32BB78]/15"
+              aria-label="Ouvrir mon profil"
+            >
+              <Avatar className="h-9 w-9 border border-white">
+                <AvatarImage src={profile?.photoURL || profile?.profileImage} />
+                <AvatarFallback className="bg-white text-xs font-black text-[#32BB78]">
+                  {profile?.displayName?.charAt(0) || profile?.fullName?.charAt(0) || 'U'}
+                </AvatarFallback>
+              </Avatar>
+            </button>
+          )}
         </div>
       </header>
 
@@ -1347,6 +1274,16 @@ export default function MakutanoPage() {
           </div>
         )}
       </main>
+
+      <Button
+        type="button"
+        size="icon"
+        onClick={() => router.push('/dashboard/makutano/create')}
+        className="fixed bottom-24 right-4 z-[55] h-14 w-14 rounded-full border border-white/70 bg-[#32BB78] text-white shadow-[0_18px_38px_rgba(20,120,72,0.35)] transition hover:scale-105 hover:bg-[#32BB78] sm:right-[calc(50%-17rem)]"
+        aria-label="Créer une publication"
+      >
+        <MakutanoCreateIcon size={25} />
+      </Button>
 
       {fullscreenMedia && (
         <div className="fixed inset-0 z-[80] flex flex-col bg-black text-white">

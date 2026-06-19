@@ -102,6 +102,22 @@ type AddressSuggestion = GeoPoint & {
   source: 'local' | 'photon';
 };
 
+type NkampaPickupOrder = {
+  id: string;
+  orderId: string;
+  productName: string;
+  storeName: string;
+  storeLocationLabel: string;
+  buyerLocationLabel: string;
+  shippingPhone: string;
+  trackingNumber?: string;
+  amountLabel: string;
+  paymentLabel: string;
+  statusLabel: string;
+  storePoint: GeoPoint;
+  buyerPoint: GeoPoint;
+};
+
 const AGENCIES: Agency[] = [
   {
     id: 'relay-gombe-centre',
@@ -558,6 +574,26 @@ function buildAgencySuggestions(scope: AgencyScope, field: AddressField, query: 
   return suggestions.slice(0, 6);
 }
 
+function buildFallbackNkampaStorePoint(label: string, buyerPoint: GeoPoint) {
+  const normalizedLabel = label.trim().toLowerCase();
+  const matchedAgency = AGENCIES.find((agency) => {
+    const haystack = [agency.name, agency.zone, agency.city, agency.address, agency.province]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+    return normalizedLabel && haystack.includes(normalizedLabel);
+  });
+
+  if (matchedAgency) {
+    return { lat: matchedAgency.lat, lon: matchedAgency.lon };
+  }
+
+  return {
+    lat: buyerPoint.lat + 0.012,
+    lon: buyerPoint.lon + 0.014,
+  };
+}
+
 export default function UgaviPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -603,6 +639,8 @@ export default function UgaviPage() {
   const [mapRadius, setMapRadius] = useState(0.06);
   const [hasUserMovedMap, setHasUserMovedMap] = useState(false);
   const [clientSearchQuery, setClientSearchQuery] = useState('');
+  const [nkampaPickupOrder, setNkampaPickupOrder] = useState<NkampaPickupOrder | null>(null);
+  const [isLoadingNkampaPickupOrder, setIsLoadingNkampaPickupOrder] = useState(false);
   const [recentShipments, setRecentShipments] = useState<Array<{
     id: string;
     trackingNumber: string;
@@ -672,6 +710,110 @@ export default function UgaviPage() {
       setIsClientPanelOpen(true);
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    const source = searchParams?.get('source');
+    const orderId = searchParams?.get('orderId');
+
+    if (source !== 'nkampa' || !orderId) {
+      setNkampaPickupOrder(null);
+      return;
+    }
+
+    let isCancelled = false;
+
+    const loadNkampaPickupOrder = async () => {
+      setIsLoadingNkampaPickupOrder(true);
+      try {
+        const orderSnap = await getDoc(doc(db, 'nkampa_orders', orderId));
+
+        if (!orderSnap.exists()) {
+          throw new Error('Commande introuvable');
+        }
+
+        const data = orderSnap.data() as any;
+        const pickupRoute = data.pickupRoute || {};
+
+        if (!pickupRoute.enabled) {
+          throw new Error('Cette commande ne contient pas d’itinéraire boutique.');
+        }
+
+        const buyerPoint =
+          typeof pickupRoute.buyerLatitude === 'number' && typeof pickupRoute.buyerLongitude === 'number'
+            ? { lat: pickupRoute.buyerLatitude, lon: pickupRoute.buyerLongitude }
+            : userPosition;
+        const destinationQuery = pickupRoute.destinationQuery || pickupRoute.storeLocationLabel || data.storeName || data.sellerName || 'Boutique Nkampa';
+        let storePoint = buildFallbackNkampaStorePoint(destinationQuery, buyerPoint);
+
+        try {
+          const response = await fetch(`/api/geo/kinshasa/search?q=${encodeURIComponent(destinationQuery)}`);
+          if (response.ok) {
+            const payload = await response.json();
+            const firstSuggestion = Array.isArray(payload.items) ? payload.items[0] : null;
+            if (typeof firstSuggestion?.lat === 'number' && typeof firstSuggestion?.lon === 'number') {
+              storePoint = { lat: firstSuggestion.lat, lon: firstSuggestion.lon };
+            }
+          }
+        } catch (error) {
+          console.warn('Adresse boutique Nkampa non resolue, point approximatif utilise:', error);
+        }
+
+        const amount = Number(data.totalAmount || data.totalPrice || 0);
+        const pickupOrder: NkampaPickupOrder = {
+          id: orderSnap.id,
+          orderId: data.orderId || orderSnap.id,
+          productName: data.productName || data.items?.[0]?.name || 'Commande Marché',
+          storeName: data.storeName || data.sellerName || 'Boutique Marché',
+          storeLocationLabel: pickupRoute.storeLocationLabel || data.storeName || data.sellerName || 'Boutique Marché',
+          buyerLocationLabel: pickupRoute.buyerLocationLabel || data.shippingAddress || 'Votre position',
+          shippingPhone: data.shippingPhone || '',
+          trackingNumber: data.trackingNumber || '',
+          amountLabel: amount > 0 ? `${amount.toLocaleString('fr-FR')} ${data.currency || 'CDF'}` : 'Montant confirme',
+          paymentLabel: ['completed', 'paid'].includes(String(data.paymentStatus || '').toLowerCase()) ? 'Payé' : 'En attente',
+          statusLabel: data.status === 'paid' ? 'Commande payee' : data.status || 'Commande',
+          storePoint,
+          buyerPoint,
+        };
+
+        if (isCancelled) return;
+
+        setNkampaPickupOrder(pickupOrder);
+        setMode('express');
+        setPickupLocation(pickupOrder.buyerLocationLabel);
+        setDropoffLocation(pickupOrder.storeLocationLabel);
+        setPickupPoint(pickupOrder.buyerPoint);
+        setDropoffPoint(pickupOrder.storePoint);
+        setIsRouteReady(true);
+        setTripStatus('idle');
+        setDeliveryStep('route');
+        setIsClientPanelOpen(false);
+        setHasUserMovedMap(true);
+        setMapViewCenter({
+          lat: (pickupOrder.buyerPoint.lat + pickupOrder.storePoint.lat) / 2,
+          lon: (pickupOrder.buyerPoint.lon + pickupOrder.storePoint.lon) / 2,
+        });
+        setMapRadius(Math.max(0.025, Math.min(0.12, distanceKm(pickupOrder.buyerPoint, pickupOrder.storePoint) / 70 || 0.05)));
+      } catch (error) {
+        console.error('Erreur chargement itineraire Nkampa:', error);
+        if (!isCancelled) {
+          setNkampaPickupOrder(null);
+          toast({
+            variant: 'destructive',
+            title: 'Itinéraire indisponible',
+            description: error instanceof Error ? error.message : "Impossible d'ouvrir l'itinéraire de cette commande.",
+          });
+        }
+      } finally {
+        if (!isCancelled) setIsLoadingNkampaPickupOrder(false);
+      }
+    };
+
+    void loadNkampaPickupOrder();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [searchParams, toast, userPosition]);
 
   useEffect(() => {
     if (!activeAddressField) return;
@@ -958,7 +1100,21 @@ export default function UgaviPage() {
 
   const selectedAgency = availableAgencies.find((agency) => agency.id === selectedAgencyId) || null;
   const selectedCourier = COURIERS.find((courier) => courier.id === selectedCourierId) || null;
-  const activeRouteTarget = mode === 'express' ? selectedCourier : selectedAgency;
+  const nkampaPickupTarget = useMemo(
+    () =>
+      nkampaPickupOrder
+        ? {
+            id: 'nkampa-pickup-store',
+            name: nkampaPickupOrder.storeName,
+            zone: nkampaPickupOrder.storeLocationLabel,
+            eta: 'Retrait boutique',
+            lat: nkampaPickupOrder.storePoint.lat,
+            lon: nkampaPickupOrder.storePoint.lon,
+          }
+        : null,
+    [nkampaPickupOrder]
+  );
+  const activeRouteTarget = nkampaPickupTarget || (mode === 'express' ? selectedCourier : selectedAgency);
   const routeStartPoint = tripStatus === 'running' ? userPosition : pickupPoint || userPosition;
   const activeDistance = activeRouteTarget ? distanceKm(routeStartPoint, activeRouteTarget) : null;
   const activeEtaMinutes = activeDistance ? Math.max(4, Math.round((activeDistance / (transportMode === 'walk' ? 4 : transportMode === 'bike' ? 12 : 24)) * 60)) : null;
@@ -1591,6 +1747,7 @@ export default function UgaviPage() {
   };
 
   const resetContextForMode = (nextMode: UgaviMode) => {
+    setNkampaPickupOrder(null);
     setMode(nextMode);
     setTripStatus('idle');
     setIsRouteReady(false);
@@ -1761,7 +1918,7 @@ export default function UgaviPage() {
           style={markerPosition(dropoffPoint, mapCenter, mapRadius)}
         >
           <MapPinIcon size={16} />
-          Destination
+          {nkampaPickupOrder ? 'Boutique' : 'Destination'}
         </button>
       )}
 
@@ -1906,7 +2063,85 @@ export default function UgaviPage() {
       <section className="absolute bottom-24 left-3 right-3 z-30 mx-auto grid max-w-md gap-2 lg:left-4 lg:right-auto lg:mx-0 lg:w-[380px]">
         <div className="space-y-2">
 
-          {mode === 'track' ? (
+          {isLoadingNkampaPickupOrder ? (
+            <FloatingBadge tone="slate">
+              <div className="space-y-2">
+                <p className="text-sm font-black text-slate-900">Chargement de l'itinéraire Marché...</p>
+                <p className="text-xs font-semibold text-slate-500">Ugavi prépare la carte interne de votre retrait boutique.</p>
+              </div>
+            </FloatingBadge>
+          ) : nkampaPickupOrder ? (
+            <FloatingBadge tone="emerald">
+              <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-primary text-white shadow-lg shadow-primary/20">
+                    <SendPackageIcon size={22} />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary">Retrait boutique Marché</p>
+                    <h2 className="truncate text-base font-black text-slate-950">{nkampaPickupOrder.productName}</h2>
+                    <p className="mt-0.5 truncate text-xs font-semibold text-slate-600">{nkampaPickupOrder.storeName}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-[11px] font-semibold text-slate-700">
+                  <div className="rounded-xl bg-white/80 px-3 py-2">
+                    <p className="text-slate-500">Départ</p>
+                    <p className="mt-0.5 line-clamp-2 text-slate-900">{nkampaPickupOrder.buyerLocationLabel}</p>
+                  </div>
+                  <div className="rounded-xl bg-white/80 px-3 py-2">
+                    <p className="text-slate-500">Boutique</p>
+                    <p className="mt-0.5 line-clamp-2 text-slate-900">{nkampaPickupOrder.storeLocationLabel}</p>
+                  </div>
+                  <div className="rounded-xl bg-white/80 px-3 py-2">
+                    <p className="text-slate-500">Distance</p>
+                    <p className="mt-0.5 text-slate-900">{activeDistance ? `${activeDistance.toFixed(1)} km` : 'Calcul Ugavi'}</p>
+                  </div>
+                  <div className="rounded-xl bg-white/80 px-3 py-2">
+                    <p className="text-slate-500">Paiement</p>
+                    <p className="mt-0.5 text-slate-900">{nkampaPickupOrder.paymentLabel} · {nkampaPickupOrder.amountLabel}</p>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-primary/15 bg-white/76 px-3 py-2 text-xs text-slate-600">
+                  <p className="font-bold text-slate-900">Commande {nkampaPickupOrder.orderId}</p>
+                  {nkampaPickupOrder.trackingNumber && (
+                    <p className="mt-1 font-mono text-[11px] text-primary">Suivi: {nkampaPickupOrder.trackingNumber}</p>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-3 gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={startTrip}
+                    disabled={tripStatus === 'running'}
+                    className="h-9 rounded-xl bg-primary hover:bg-primary"
+                  >
+                    Démarrer
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => void shareRoute()}
+                    className="h-9 rounded-xl bg-white/80"
+                  >
+                    Partager
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => router.push('/dashboard/nkampa/orders')}
+                    className="h-9 rounded-xl bg-white/80"
+                  >
+                    Commandes
+                  </Button>
+                </div>
+              </div>
+            </FloatingBadge>
+          ) : mode === 'track' ? (
             <FloatingBadge tone="slate">
               <div className="space-y-2">
               <div className="relative">

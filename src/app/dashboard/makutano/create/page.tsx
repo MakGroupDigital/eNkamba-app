@@ -3,25 +3,59 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Camera, Upload, Mic, Square, Play, Pause, Video, Loader2, Save, RotateCcw, Trash2, Volume2, VolumeX } from 'lucide-react';
+import {
+  ArrowLeft,
+  Camera,
+  Check,
+  ChevronRight,
+  FileAudio,
+  Image as ImageIcon,
+  Loader2,
+  Mic,
+  Pause,
+  Play,
+  RotateCcw,
+  Save,
+  Send,
+  Square,
+  Trash2,
+  Upload,
+  Video,
+  Volume2,
+  VolumeX,
+  X,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useDashboardLocation } from '@/hooks/useDashboardLocation';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { uploadToCloudinary } from '@/lib/cloudinary-upload';
+import {
+  EStreamPostIcon,
+  MakutanoAudioIcon,
+  MakutanoCreateIcon,
+  MakutanoPauseIcon,
+  MakutanoPlayIcon,
+  MapPinIcon,
+} from '@/components/icons/service-icons';
 
 type MakutanoCategory = 'Accueil' | 'Savoir' | 'Entrepreneur' | 'Projets' | 'Local';
 type MediaType = 'image' | 'video' | 'audio';
+type CreateStep = 'media' | 'details' | 'publish';
+type CameraMode = 'photo' | 'video' | null;
 
 const categories: MakutanoCategory[] = ['Savoir', 'Entrepreneur', 'Projets', 'Local', 'Accueil'];
 const DRAFT_KEY = 'makutano_create_draft_v1';
+const stepItems: Array<{ id: CreateStep; label: string }> = [
+  { id: 'media', label: 'Média' },
+  { id: 'details', label: 'Texte' },
+  { id: 'publish', label: 'Lieu' },
+];
 
 function detectMediaTypeFromName(name: string): MediaType {
   const n = name.toLowerCase();
@@ -35,12 +69,15 @@ export default function MakutanoCreatePage() {
   const { toast } = useToast();
   const { user } = useAuth();
   const { profile } = useUserProfile();
+  const { location, hasStoredLocation, isLocating, error: locationError, detectLocation } = useDashboardLocation();
 
+  const [activeStep, setActiveStep] = useState<CreateStep>('media');
   const [text, setText] = useState('');
   const [category, setCategory] = useState<MakutanoCategory | ''>('');
   const [mediaType, setMediaType] = useState<MediaType>('image');
   const [externalMediaUrl, setExternalMediaUrl] = useState('');
   const [pickedFile, setPickedFile] = useState<File | null>(null);
+  const [fileInputAccept, setFileInputAccept] = useState('image/*,video/*,audio/*');
   const [previewUrl, setPreviewUrl] = useState('');
   const [isPublishing, setIsPublishing] = useState(false);
   const [hasDraft, setHasDraft] = useState(false);
@@ -51,6 +88,7 @@ export default function MakutanoCreatePage() {
   const [previewDuration, setPreviewDuration] = useState(0);
 
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  const [cameraMode, setCameraMode] = useState<CameraMode>(null);
   const [audioStream, setAudioStream] = useState<MediaStream | null>(null);
   const [isVideoRecording, setIsVideoRecording] = useState(false);
   const [isAudioRecording, setIsAudioRecording] = useState(false);
@@ -69,6 +107,11 @@ export default function MakutanoCreatePage() {
   const lastAutoSavedSignatureRef = useRef('');
 
   const hasAnyMedia = useMemo(() => Boolean(pickedFile || externalMediaUrl.trim()), [pickedFile, externalMediaUrl]);
+  const activeStepIndex = stepItems.findIndex((item) => item.id === activeStep);
+  const canGoToDetails = hasAnyMedia;
+  const canGoToPublish = hasAnyMedia && Boolean(text.trim()) && Boolean(category);
+  const mediaLabel = mediaType === 'image' ? 'Photo' : mediaType === 'video' ? 'Vidéo' : 'Audio';
+  const locationDetail = [location.quartier, location.ville, location.pays].filter(Boolean).join(' · ');
 
   const buildDraft = useCallback(() => ({
     text,
@@ -110,6 +153,7 @@ export default function MakutanoCreatePage() {
       setExternalMediaUrl(draft.externalMediaUrl || '');
       setPickedFile(null);
       setPreviewUrl(draft.externalMediaUrl || '');
+      setActiveStep(draft.externalMediaUrl ? 'details' : 'media');
       toast({ title: 'Brouillon restauré', description: 'Contenu rechargé.' });
     } catch {
       toast({ variant: 'destructive', title: 'Brouillon invalide', description: 'Impossible de charger ce brouillon.' });
@@ -248,7 +292,10 @@ export default function MakutanoCreatePage() {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const openFilePicker = () => {
+  const openFilePicker = (accept = 'image/*,video/*,audio/*', nextMediaType?: MediaType) => {
+    setFileInputAccept(accept);
+    if (nextMediaType) setMediaType(nextMediaType);
+    fileInputRef.current?.setAttribute('accept', accept);
     fileInputRef.current?.click();
   };
 
@@ -259,6 +306,20 @@ export default function MakutanoCreatePage() {
     setExternalMediaUrl('');
     setMediaType(detectMediaTypeFromName(file.name));
     setPreviewUrl(URL.createObjectURL(file));
+    setActiveStep('details');
+  };
+
+  const startPhotoCapture = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 1280 } },
+      });
+      setCameraStream(stream);
+      setCameraMode('photo');
+      setMediaType('image');
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Caméra indisponible', description: 'Impossible de démarrer la caméra.' });
+    }
   };
 
   const startVideoCapture = async () => {
@@ -268,10 +329,41 @@ export default function MakutanoCreatePage() {
         audio: true,
       });
       setCameraStream(stream);
+      setCameraMode('video');
       setMediaType('video');
     } catch (error) {
       toast({ variant: 'destructive', title: 'Caméra indisponible', description: 'Impossible de démarrer la caméra.' });
     }
+  };
+
+  const closeCamera = () => {
+    cameraStream?.getTracks().forEach((track) => track.stop());
+    setCameraStream(null);
+    setCameraMode(null);
+    setIsVideoRecording(false);
+  };
+
+  const capturePhoto = () => {
+    const videoNode = cameraVideoRef.current;
+    if (!videoNode) return;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = videoNode.videoWidth || 1080;
+    canvas.height = videoNode.videoHeight || 1080;
+    const context = canvas.getContext('2d');
+    if (!context) return;
+
+    context.drawImage(videoNode, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      const file = new File([blob], `makutano-photo-${Date.now()}.jpg`, { type: 'image/jpeg' });
+      setPickedFile(file);
+      setExternalMediaUrl('');
+      setMediaType('image');
+      setPreviewUrl(URL.createObjectURL(blob));
+      closeCamera();
+      setActiveStep('details');
+    }, 'image/jpeg', 0.92);
   };
 
   const startVideoRecording = () => {
@@ -290,6 +382,8 @@ export default function MakutanoCreatePage() {
       setIsVideoRecording(false);
       cameraStream.getTracks().forEach((t) => t.stop());
       setCameraStream(null);
+      setCameraMode(null);
+      setActiveStep('details');
     };
     recorder.start();
     videoRecorderRef.current = recorder;
@@ -352,6 +446,7 @@ export default function MakutanoCreatePage() {
       setIsAudioRecording(false);
       stream.getTracks().forEach((t) => t.stop());
       setAudioStream(null);
+      setActiveStep('details');
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       const ctx = audioCtxRef.current;
       if (ctx && ctx.state !== 'closed') {
@@ -396,20 +491,42 @@ export default function MakutanoCreatePage() {
   const publishPost = async () => {
     if (!text.trim()) {
       toast({ variant: 'destructive', title: 'Texte requis', description: 'Ajoutez une description du post.' });
+      setActiveStep('details');
       return;
     }
     if (!category) {
       toast({ variant: 'destructive', title: 'Catégorie requise', description: 'Sélectionnez la catégorie du post.' });
+      setActiveStep('details');
       return;
     }
     if (!hasAnyMedia) {
       toast({ variant: 'destructive', title: 'Média requis', description: 'Importez, filmez ou enregistrez un média.' });
+      setActiveStep('media');
+      return;
+    }
+    if (!hasStoredLocation) {
+      setActiveStep('publish');
+      detectLocation();
+      toast({
+        title: 'Localisation requise',
+        description: 'Autorisez la localisation pour publier avec le lieu de votre publication.',
+      });
       return;
     }
 
     setIsPublishing(true);
     try {
       const mediaUrl = await uploadToStorage();
+      const postLocation = {
+        label: location.label,
+        quartier: location.quartier || '',
+        ville: location.ville || '',
+        pays: location.pays || '',
+        latitude: location.latitude,
+        longitude: location.longitude,
+        accuracy: location.accuracy || null,
+        source: location.source || 'stored',
+      };
       await addDoc(collection(db, 'makutano_posts'), {
         text: text.trim(),
         mediaUrl,
@@ -419,9 +536,11 @@ export default function MakutanoCreatePage() {
         comments: 0,
         author: {
           name: profile?.fullName || profile?.name || user?.displayName || 'Utilisateur eNkamba',
-          location: profile?.country || 'RDC',
+          location: postLocation.label,
           avatar: profile?.profileImage || user?.photoURL || '',
         },
+        authorLocation: postLocation.label,
+        location: postLocation,
         authorId: user?.uid || null,
         createdAt: serverTimestamp(),
       });
@@ -443,262 +562,468 @@ export default function MakutanoCreatePage() {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-primary via-white to-orange-50 p-4 pt-24">
-      <div className="mx-auto max-w-3xl space-y-4">
-        <div className="flex items-center gap-3">
-          <Button variant="outline" size="icon" onClick={() => router.push('/dashboard/makutano')}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h1 className="text-xl font-bold text-primary">Nouveau Post Makutano</h1>
-            <p className="text-xs text-primary/80">Page complète de création: image, vidéo, audio</p>
+  const clearSelectedMedia = () => {
+    if (previewUrl.startsWith('blob:')) URL.revokeObjectURL(previewUrl);
+    setPickedFile(null);
+    setExternalMediaUrl('');
+    setPreviewUrl('');
+    setPreviewCurrentTime(0);
+    setPreviewDuration(0);
+    setIsPreviewPlaying(false);
+    setActiveStep('media');
+  };
+
+  const goToDetails = () => {
+    if (!canGoToDetails) {
+      toast({ variant: 'destructive', title: 'Média requis', description: 'Ajoutez une photo, une vidéo ou un audio.' });
+      return;
+    }
+    setActiveStep('details');
+  };
+
+  const goToPublish = () => {
+    if (!text.trim()) {
+      toast({ variant: 'destructive', title: 'Description requise', description: 'Décrivez votre publication avant de continuer.' });
+      return;
+    }
+    if (!category) {
+      toast({ variant: 'destructive', title: 'Catégorie requise', description: 'Choisissez où classer votre publication.' });
+      return;
+    }
+    setActiveStep('publish');
+  };
+
+  const renderMediaPreview = (compact = false) => {
+    if (!previewUrl) return null;
+
+    const previewHeight = compact ? 'h-40' : 'h-[21rem]';
+
+    if (mediaType === 'video') {
+      return (
+        <div className={cn('relative overflow-hidden rounded-[1.65rem] bg-slate-950 shadow-inner', previewHeight)}>
+          <video
+            ref={(node) => {
+              previewMediaRef.current = node;
+            }}
+            src={previewUrl}
+            className="h-full w-full object-cover"
+            playsInline
+            muted={isPreviewMuted}
+          />
+          {!isPreviewPlaying && (
+            <button
+              type="button"
+              onClick={togglePreviewPlay}
+              className="absolute left-1/2 top-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-[#32BB78] shadow-xl"
+              aria-label="Lire la vidéo"
+            >
+              <MakutanoPlayIcon size={30} />
+            </button>
+          )}
+          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent px-3 pb-3 pt-8">
+            <div className="flex items-center gap-2 text-white">
+              <button type="button" onClick={togglePreviewPlay} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 backdrop-blur" aria-label={isPreviewPlaying ? 'Pause' : 'Lecture'}>
+                {isPreviewPlaying ? <MakutanoPauseIcon size={21} /> : <MakutanoPlayIcon size={21} />}
+              </button>
+              <input
+                type="range"
+                min={0}
+                max={Math.max(previewDuration, 0)}
+                step={0.1}
+                value={Math.min(previewCurrentTime, previewDuration || 0)}
+                onChange={(event) => handlePreviewSeek(Number(event.target.value))}
+                className="h-1 min-w-0 flex-1 accent-[#32BB78]"
+                aria-label="Progression vidéo"
+              />
+              <button type="button" onClick={togglePreviewMute} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 backdrop-blur" aria-label="Son">
+                {isPreviewMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+              </button>
+              {!compact && (
+                <span className="w-20 text-right text-[10px] font-bold">
+                  {formatTime(previewCurrentTime)} / {formatTime(previewDuration)}
+                </span>
+              )}
+            </div>
           </div>
         </div>
+      );
+    }
 
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" className="gap-2" onClick={saveDraft}>
-            <Save className="h-4 w-4" />
-            Sauver brouillon
-          </Button>
-          <Button variant="outline" className="gap-2" onClick={loadDraft} disabled={!hasDraft}>
-            <RotateCcw className="h-4 w-4" />
-            Reprendre brouillon
-          </Button>
-          <Button variant="outline" className="gap-2" onClick={clearDraft} disabled={!hasDraft}>
-            <Trash2 className="h-4 w-4" />
-            Supprimer brouillon
-          </Button>
+    if (mediaType === 'audio') {
+      return (
+        <div className={cn('overflow-hidden rounded-[1.65rem] bg-[#163525] p-4 text-white shadow-inner', compact ? 'min-h-36' : 'min-h-[18rem]')}>
+          <audio
+            ref={(node) => {
+              previewMediaRef.current = node;
+            }}
+            src={previewUrl}
+            className="hidden"
+          />
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold uppercase text-white/60">Vocal Makutano</p>
+              <p className="mt-1 text-base font-black">Aperçu audio</p>
+            </div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-[#32BB78]">
+              <MakutanoAudioIcon size={28} />
+            </div>
+          </div>
+          <div className={cn('mt-5 flex items-end justify-center gap-1 rounded-2xl bg-white/10 px-3', compact ? 'h-14' : 'h-28')}>
+            {Array.from({ length: compact ? 26 : 42 }).map((_, index) => (
+              <span
+                key={index}
+                className="w-1.5 rounded-full bg-[#32BB78]"
+                style={{ height: `${10 + ((index * 9) % (compact ? 34 : 70))}px` }}
+              />
+            ))}
+          </div>
+          <div className="mt-4 flex items-center gap-3">
+            <button
+              type="button"
+              onClick={togglePreviewPlay}
+              className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-[#32BB78]"
+              aria-label={isPreviewPlaying ? 'Mettre en pause' : 'Lire'}
+            >
+              {isPreviewPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
+            </button>
+            <input
+              type="range"
+              min={0}
+              max={Math.max(previewDuration, 0)}
+              step={0.1}
+              value={Math.min(previewCurrentTime, previewDuration || 0)}
+              onChange={(event) => handlePreviewSeek(Number(event.target.value))}
+              className="h-1 min-w-0 flex-1 accent-[#32BB78]"
+              aria-label="Progression audio"
+            />
+            <span className="text-[10px] font-bold text-white/70">{formatTime(previewCurrentTime)}</span>
+          </div>
         </div>
-        <p className="text-xs text-primary/80">
-          Auto-sauvegarde active (toutes les 5s)
-          {lastAutoSavedAt ? ` · Dernière sauvegarde: ${new Date(lastAutoSavedAt).toLocaleTimeString('fr-FR')}` : ''}
-        </p>
+      );
+    }
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Contenu du post</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>Texte *</Label>
-              <Textarea
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                placeholder="Décrivez votre publication..."
-                className="min-h-[110px]"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Catégorie *</Label>
-              <Select value={category} onValueChange={(value) => setCategory(value as MakutanoCategory)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Choisissez une catégorie" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((item) => (
-                    <SelectItem key={item} value={item}>
-                      {item}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Type média</Label>
-              <Select value={mediaType} onValueChange={(value) => setMediaType(value as MediaType)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="image">Image</SelectItem>
-                  <SelectItem value="video">Vidéo</SelectItem>
-                  <SelectItem value="audio">Audio</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
+    return (
+      <div className={cn('overflow-hidden rounded-[1.65rem] bg-[#e8f6ef] shadow-inner', previewHeight)}>
+        <img src={previewUrl} alt="Aperçu média" className="h-full w-full object-cover" />
+      </div>
+    );
+  };
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Ajouter un média</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-2 sm:grid-cols-3">
-              <Button variant="outline" className="justify-start gap-2" onClick={openFilePicker}>
-                <Upload className="h-4 w-4" />
-                Importer un fichier
-              </Button>
-              <Button variant="outline" className="justify-start gap-2" onClick={startVideoCapture}>
-                <Camera className="h-4 w-4" />
-                Filmer en direct
-              </Button>
-              <Button variant="outline" className="justify-start gap-2" onClick={startAudioCapture}>
-                <Mic className="h-4 w-4" />
-                Enregistrer audio
-              </Button>
-            </div>
+  return (
+    <div className="min-h-full bg-[#f5fbf8] px-3 py-3 text-[#173324]">
+      <div className="mx-auto flex min-h-[calc(100dvh-10.5rem)] max-w-xl flex-col overflow-hidden rounded-[2rem] border border-[#dcefe5] bg-white shadow-[0_18px_50px_rgba(20,90,56,0.12)]">
+        <header className="flex flex-shrink-0 items-center gap-3 border-b border-[#e8f4ed] px-3 py-3">
+          <button
+            type="button"
+            onClick={() => router.push('/dashboard/makutano')}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-[#eef8f2] text-[#32BB78] transition hover:bg-[#32BB78] hover:text-white"
+            aria-label="Retour"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] font-black uppercase text-[#32BB78]">Makutano</p>
+            <h1 className="truncate text-base font-black">Créer une publication</h1>
+          </div>
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#32BB78]/10">
+            <MakutanoCreateIcon size={28} />
+          </div>
+        </header>
 
-            <input ref={fileInputRef} type="file" accept="image/*,video/*,audio/*" className="hidden" onChange={onFilePicked} />
-
-            <div className="space-y-2">
-              <Label>Ou URL média Firebase</Label>
-              <Input
-                placeholder="https://... (Storage URL)"
-                value={externalMediaUrl}
-                onChange={(e) => {
-                  setExternalMediaUrl(e.target.value);
-                  setPickedFile(null);
-                  setPreviewUrl(e.target.value);
+        <div className="flex flex-shrink-0 items-center gap-2 px-4 py-3">
+          {stepItems.map((step, index) => {
+            const isActive = activeStep === step.id;
+            const isDone = index < activeStepIndex || (step.id === 'media' && hasAnyMedia) || (step.id === 'details' && canGoToPublish);
+            return (
+              <button
+                key={step.id}
+                type="button"
+                onClick={() => {
+                  if (step.id === 'media') setActiveStep('media');
+                  if (step.id === 'details' && canGoToDetails) setActiveStep('details');
+                  if (step.id === 'publish' && canGoToPublish) setActiveStep('publish');
                 }}
-              />
-            </div>
-
-            {cameraStream && (
-              <div className="space-y-3 rounded-xl border bg-black p-3">
-                <video ref={cameraVideoRef} autoPlay muted playsInline className="h-64 w-full rounded-lg object-cover" />
-                {!isVideoRecording ? (
-                  <Button onClick={startVideoRecording} className="gap-2">
-                    <Video className="h-4 w-4" />
-                    Démarrer l'enregistrement vidéo
-                  </Button>
-                ) : (
-                  <Button onClick={stopVideoRecording} variant="destructive" className="gap-2">
-                    <Square className="h-4 w-4" />
-                    Arrêter la vidéo
-                  </Button>
+                className={cn(
+                  'flex h-9 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full text-[11px] font-black transition',
+                  isActive
+                    ? 'bg-[#32BB78] text-white shadow-[0_8px_18px_rgba(50,187,120,0.24)]'
+                    : isDone
+                      ? 'bg-[#e5f7ed] text-[#32BB78]'
+                      : 'bg-[#f3f6f4] text-[#6c7d72]'
                 )}
-              </div>
-            )}
+              >
+                {isDone ? <Check className="h-3.5 w-3.5" /> : <span className="h-1.5 w-1.5 rounded-full bg-current" />}
+                <span className="truncate">{step.label}</span>
+              </button>
+            );
+          })}
+        </div>
 
-            {(audioStream || isAudioRecording) && (
-              <div className="space-y-3 rounded-xl border bg-primary/90 p-4">
-                <div className="flex h-20 items-end gap-1 rounded-md bg-black/25 px-2">
-                  {audioLevelData.map((level, idx) => (
-                    <span
-                      key={idx}
-                      className="w-1 rounded-full bg-primary/20 transition-all"
-                      style={{ height: `${level}px` }}
-                    />
+        <main className="min-h-0 flex-1 overflow-y-auto px-4 pb-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          {activeStep === 'media' && (
+            <section className="space-y-4">
+              <div className="rounded-[1.7rem] bg-[#173324] p-4 text-white">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-[#32BB78]">
+                    <EStreamPostIcon size={30} />
+                  </div>
+                  <div className="min-w-0">
+                    <h2 className="text-lg font-black">Choisir le média</h2>
+                    <p className="mt-0.5 text-xs font-semibold text-white/65">Capture directe ou import depuis l’appareil.</p>
+                  </div>
+                </div>
+              </div>
+
+              {!previewUrl && !cameraStream && !audioStream && (
+                <div className="grid gap-3">
+                  <div className="grid grid-cols-[1fr_auto] overflow-hidden rounded-[1.45rem] border border-[#dcefe5] bg-[#f8fcfa]">
+                    <button type="button" onClick={startVideoCapture} className="flex items-center gap-3 px-4 py-3 text-left transition hover:bg-[#eef8f2]">
+                      <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#32BB78]/10 text-[#32BB78]">
+                        <Video className="h-5 w-5" />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block text-sm font-black">Enregistrer une vidéo</span>
+                        <span className="block text-xs font-semibold text-[#6d7c73]">Caméra native du téléphone</span>
+                      </span>
+                    </button>
+                    <button type="button" onClick={() => openFilePicker('video/*', 'video')} className="flex w-24 items-center justify-center border-l border-[#dcefe5] text-[#32BB78] transition hover:bg-[#eef8f2]" aria-label="Importer une vidéo">
+                      <Upload className="h-5 w-5" />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-[1fr_auto] overflow-hidden rounded-[1.45rem] border border-[#dcefe5] bg-[#f8fcfa]">
+                    <button type="button" onClick={startAudioCapture} className="flex items-center gap-3 px-4 py-3 text-left transition hover:bg-[#eef8f2]">
+                      <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#32BB78]/10 text-[#32BB78]">
+                        <MakutanoAudioIcon size={25} />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block text-sm font-black">Enregistrer un vocal</span>
+                        <span className="block text-xs font-semibold text-[#6d7c73]">Micro, note vocale ou message audio</span>
+                      </span>
+                    </button>
+                    <button type="button" onClick={() => openFilePicker('audio/*', 'audio')} className="flex w-24 items-center justify-center border-l border-[#dcefe5] text-[#32BB78] transition hover:bg-[#eef8f2]" aria-label="Importer un audio">
+                      <FileAudio className="h-5 w-5" />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-[1fr_auto] overflow-hidden rounded-[1.45rem] border border-[#dcefe5] bg-[#f8fcfa]">
+                    <button type="button" onClick={startPhotoCapture} className="flex items-center gap-3 px-4 py-3 text-left transition hover:bg-[#eef8f2]">
+                      <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#32BB78]/10 text-[#32BB78]">
+                        <Camera className="h-5 w-5" />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block text-sm font-black">Capturer une photo</span>
+                        <span className="block text-xs font-semibold text-[#6d7c73]">Prise instantanée ou image de galerie</span>
+                      </span>
+                    </button>
+                    <button type="button" onClick={() => openFilePicker('image/*', 'image')} className="flex w-24 items-center justify-center border-l border-[#dcefe5] text-[#32BB78] transition hover:bg-[#eef8f2]" aria-label="Importer une photo">
+                      <ImageIcon className="h-5 w-5" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <input ref={fileInputRef} type="file" accept={fileInputAccept} className="hidden" onChange={onFilePicked} />
+
+              {cameraStream && (
+                <div className="space-y-3 rounded-[1.7rem] bg-slate-950 p-3 text-white">
+                  <div className="relative overflow-hidden rounded-[1.25rem]">
+                    <video ref={cameraVideoRef} autoPlay muted playsInline className="h-[22rem] w-full bg-black object-cover" />
+                    <button type="button" onClick={closeCamera} className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/45 backdrop-blur" aria-label="Fermer la caméra">
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                  {cameraMode === 'photo' ? (
+                    <Button onClick={capturePhoto} className="h-12 w-full rounded-full bg-[#32BB78] font-black hover:bg-[#32BB78]">
+                      <Camera className="mr-2 h-5 w-5" />
+                      Capturer la photo
+                    </Button>
+                  ) : !isVideoRecording ? (
+                    <Button onClick={startVideoRecording} className="h-12 w-full rounded-full bg-[#32BB78] font-black hover:bg-[#32BB78]">
+                      <Video className="mr-2 h-5 w-5" />
+                      Démarrer la vidéo
+                    </Button>
+                  ) : (
+                    <Button onClick={stopVideoRecording} className="h-12 w-full rounded-full bg-red-600 font-black text-white hover:bg-red-600">
+                      <Square className="mr-2 h-5 w-5" />
+                      Arrêter l’enregistrement
+                    </Button>
+                  )}
+                </div>
+              )}
+
+              {(audioStream || isAudioRecording) && (
+                <div className="space-y-4 rounded-[1.7rem] bg-[#173324] p-4 text-white">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-bold uppercase text-white/55">Micro actif</p>
+                      <h3 className="text-base font-black">Enregistrement vocal</h3>
+                    </div>
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-[#32BB78]">
+                      <Mic className="h-5 w-5" />
+                    </div>
+                  </div>
+                  <div className="flex h-24 items-end gap-1 rounded-2xl bg-white/10 px-3">
+                    {audioLevelData.map((level, index) => (
+                      <span key={index} className="w-1.5 rounded-full bg-[#32BB78] transition-all" style={{ height: `${level}px` }} />
+                    ))}
+                  </div>
+                  {!isAudioRecording ? (
+                    <Button onClick={startAudioRecording} className="h-12 w-full rounded-full bg-[#32BB78] font-black hover:bg-[#32BB78]">
+                      <Mic className="mr-2 h-5 w-5" />
+                      Démarrer le vocal
+                    </Button>
+                  ) : (
+                    <Button onClick={stopAudioRecording} className="h-12 w-full rounded-full bg-red-600 font-black text-white hover:bg-red-600">
+                      <Square className="mr-2 h-5 w-5" />
+                      Terminer le vocal
+                    </Button>
+                  )}
+                </div>
+              )}
+
+              {previewUrl && (
+                <div className="space-y-3">
+                  {renderMediaPreview()}
+                  <div className="flex gap-2">
+                    <Button type="button" variant="outline" onClick={clearSelectedMedia} className="h-11 flex-1 rounded-full border-[#dcefe5] font-black text-[#173324]">
+                      Changer
+                    </Button>
+                    <Button type="button" onClick={goToDetails} className="h-11 flex-1 rounded-full bg-[#32BB78] font-black hover:bg-[#32BB78]">
+                      Continuer
+                      <ChevronRight className="ml-1 h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </section>
+          )}
+
+          {activeStep === 'details' && (
+            <section className="space-y-4">
+              <div className="grid grid-cols-[6.5rem_1fr] gap-3 rounded-[1.5rem] border border-[#dcefe5] bg-[#f8fcfa] p-2">
+                {renderMediaPreview(true)}
+                <div className="min-w-0 py-2 pr-2">
+                  <p className="text-[11px] font-black uppercase text-[#32BB78]">{mediaLabel}</p>
+                  <h2 className="mt-1 text-base font-black">Décrire la publication</h2>
+                  <p className="mt-1 text-xs font-semibold text-[#6d7c73]">Ajoutez une légende claire avant publication.</p>
+                </div>
+              </div>
+
+              <div className="rounded-[1.5rem] border border-[#dcefe5] bg-white p-3">
+                <Textarea
+                  value={text}
+                  onChange={(event) => setText(event.target.value)}
+                  placeholder="Exprimez votre idée, votre annonce ou votre moment..."
+                  className="min-h-[9rem] resize-none border-0 bg-transparent p-1 text-base font-semibold leading-7 text-[#173324] shadow-none placeholder:text-[#8da195] focus-visible:ring-0"
+                />
+                <div className="mt-2 flex items-center justify-between border-t border-[#edf5f0] pt-2 text-[11px] font-bold text-[#7a8a80]">
+                  <span>{text.trim().length} caractères</span>
+                  <span>Auto-sauvegarde</span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-xs font-black uppercase text-[#32BB78]">Catégorie</p>
+                <div className="flex flex-wrap gap-2">
+                  {categories.map((item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      onClick={() => setCategory(item)}
+                      className={cn(
+                        'h-10 rounded-full px-4 text-xs font-black transition',
+                        category === item
+                          ? 'bg-[#32BB78] text-white shadow-[0_8px_18px_rgba(50,187,120,0.22)]'
+                          : 'bg-[#eef8f2] text-[#173324] hover:bg-[#dff3e8]'
+                      )}
+                    >
+                      {item}
+                    </button>
                   ))}
                 </div>
-                {!isAudioRecording ? (
-                  <Button onClick={startAudioRecording} className="gap-2">
-                    <Mic className="h-4 w-4" />
-                    Démarrer l'enregistrement audio
-                  </Button>
-                ) : (
-                  <Button onClick={stopAudioRecording} variant="destructive" className="gap-2">
-                    <Square className="h-4 w-4" />
-                    Stop audio
+              </div>
+
+              <div className="flex flex-wrap gap-2 rounded-[1.35rem] bg-[#f6faf7] p-2">
+                <Button variant="ghost" size="sm" className="h-9 rounded-full px-3 text-xs font-black text-[#173324]" onClick={saveDraft}>
+                  <Save className="mr-1.5 h-3.5 w-3.5" />
+                  Brouillon
+                </Button>
+                <Button variant="ghost" size="sm" className="h-9 rounded-full px-3 text-xs font-black text-[#173324]" onClick={loadDraft} disabled={!hasDraft}>
+                  <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+                  Reprendre
+                </Button>
+                <Button variant="ghost" size="sm" className="h-9 rounded-full px-3 text-xs font-black text-red-600" onClick={clearDraft} disabled={!hasDraft}>
+                  <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                  Effacer
+                </Button>
+                {lastAutoSavedAt && (
+                  <span className="flex h-9 items-center px-2 text-[11px] font-bold text-[#7a8a80]">
+                    {new Date(lastAutoSavedAt).toLocaleTimeString('fr-FR')}
+                  </span>
+                )}
+              </div>
+
+              <div className="flex gap-2">
+                <Button type="button" variant="outline" onClick={() => setActiveStep('media')} className="h-11 flex-1 rounded-full border-[#dcefe5] font-black text-[#173324]">
+                  Retour
+                </Button>
+                <Button type="button" onClick={goToPublish} className="h-11 flex-1 rounded-full bg-[#32BB78] font-black hover:bg-[#32BB78]">
+                  Suivant
+                  <ChevronRight className="ml-1 h-4 w-4" />
+                </Button>
+              </div>
+            </section>
+          )}
+
+          {activeStep === 'publish' && (
+            <section className="space-y-4">
+              <div className="rounded-[1.5rem] border border-[#dcefe5] bg-[#f8fcfa] p-2">
+                {renderMediaPreview(true)}
+                <div className="mt-3 px-2 pb-2">
+                  <p className="line-clamp-3 text-sm font-bold leading-6 text-[#173324]">{text}</p>
+                  <div className="mt-3 flex items-center gap-2">
+                    <span className="rounded-full bg-[#32BB78]/10 px-3 py-1 text-[11px] font-black text-[#32BB78]">{category}</span>
+                    <span className="rounded-full bg-[#173324]/5 px-3 py-1 text-[11px] font-black text-[#173324]">{mediaLabel}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-[1.5rem] border border-[#dcefe5] bg-white p-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-[#32BB78]/10">
+                    <MapPinIcon size={28} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-black uppercase text-[#32BB78]">Localisation</p>
+                    <h2 className="mt-1 truncate text-base font-black">{hasStoredLocation ? location.label : 'Autorisation nécessaire'}</h2>
+                    <p className="mt-1 text-xs font-semibold text-[#6d7c73]">
+                      {hasStoredLocation ? locationDetail || 'Position enregistrée dans l’app' : 'La publication utilisera la localisation globale de l’application.'}
+                    </p>
+                    {locationError && <p className="mt-2 text-xs font-bold text-red-600">{locationError}</p>}
+                  </div>
+                </div>
+
+                {!hasStoredLocation && (
+                  <Button type="button" onClick={detectLocation} disabled={isLocating} className="mt-4 h-11 w-full rounded-full bg-[#173324] font-black hover:bg-[#173324]">
+                    {isLocating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MapPinIcon size={20} />}
+                    {isLocating ? 'Localisation...' : 'Autoriser la localisation'}
                   </Button>
                 )}
               </div>
-            )}
 
-            {previewUrl && (
-              <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-white to-primary p-3 shadow-lg">
-                <p className="mb-2 text-xs font-semibold text-primary">Aperçu</p>
-                {mediaType === 'video' ? (
-                  <div className="relative overflow-hidden rounded-xl bg-black">
-                    <video
-                      ref={(node) => {
-                        previewMediaRef.current = node;
-                      }}
-                      src={previewUrl}
-                      className="h-64 w-full object-cover"
-                      playsInline
-                    />
-                    {!isPreviewPlaying && (
-                      <button
-                        type="button"
-                        onClick={togglePreviewPlay}
-                        className="absolute left-1/2 top-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-primary shadow-xl transition-transform hover:scale-105"
-                      >
-                        <Play className="h-6 w-6" />
-                      </button>
-                    )}
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent p-3">
-                      <div className="flex items-center gap-2">
-                        <button type="button" onClick={togglePreviewPlay} className="text-white">
-                          {isPreviewPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                        </button>
-                        <input
-                          type="range"
-                          min={0}
-                          max={Math.max(previewDuration, 0)}
-                          step={0.1}
-                          value={Math.min(previewCurrentTime, previewDuration || 0)}
-                          onChange={(e) => handlePreviewSeek(Number(e.target.value))}
-                          className="h-1 w-full accent-primary"
-                        />
-                        <button type="button" onClick={togglePreviewMute} className="text-white">
-                          {isPreviewMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-                        </button>
-                        <span className="text-[10px] font-medium text-white">
-                          {formatTime(previewCurrentTime)} / {formatTime(previewDuration)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ) : mediaType === 'audio' ? (
-                  <div className="space-y-2 rounded-xl bg-primary/95 p-3">
-                    <audio
-                      ref={(node) => {
-                        previewMediaRef.current = node;
-                      }}
-                      src={previewUrl}
-                      className="hidden"
-                    />
-                    <div className="flex h-12 items-end gap-1 rounded-md bg-black/25 px-2">
-                      {Array.from({ length: 24 }).map((_, idx) => (
-                        <span
-                          key={idx}
-                          className="w-1 rounded-full bg-primary/20/90"
-                          style={{ height: `${8 + ((idx * 7) % 22)}px` }}
-                        />
-                      ))}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={togglePreviewPlay}
-                        className="rounded-full bg-white p-2 text-primary"
-                      >
-                        {isPreviewPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                      </button>
-                      <input
-                        type="range"
-                        min={0}
-                        max={Math.max(previewDuration, 0)}
-                        step={0.1}
-                        value={Math.min(previewCurrentTime, previewDuration || 0)}
-                        onChange={(e) => handlePreviewSeek(Number(e.target.value))}
-                        className="h-1 w-full accent-primary"
-                      />
-                      <span className="text-[10px] font-medium text-primary">
-                        {formatTime(previewCurrentTime)} / {formatTime(previewDuration)}
-                      </span>
-                    </div>
-                  </div>
-                ) : (
-                  <img src={previewUrl} alt="Aperçu média" className="h-64 w-full rounded-lg object-cover" />
-                )}
+              <div className="flex gap-2">
+                <Button type="button" variant="outline" onClick={() => setActiveStep('details')} className="h-12 flex-1 rounded-full border-[#dcefe5] font-black text-[#173324]">
+                  Modifier
+                </Button>
+                <Button type="button" onClick={publishPost} disabled={isPublishing || isLocating} className="h-12 flex-[1.35] rounded-full bg-[#32BB78] font-black hover:bg-[#32BB78]">
+                  {isPublishing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                  {isPublishing ? 'Publication...' : 'Publier'}
+                </Button>
               </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <div className="flex justify-end gap-2 pb-6">
-          <Button variant="outline" onClick={() => router.push('/dashboard/makutano')}>
-            Annuler
-          </Button>
-          <Button onClick={publishPost} disabled={isPublishing} className="gap-2 bg-gradient-to-r from-primary to-primary">
-            {isPublishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
-            {isPublishing ? 'Publication...' : 'Publier maintenant'}
-          </Button>
-        </div>
+            </section>
+          )}
+        </main>
       </div>
     </div>
   );
