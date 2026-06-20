@@ -293,6 +293,32 @@ const NATIONAL_AGENCY_TRACKING_STEPS = [
   'Colis livré au destinataire',
 ];
 
+const COMMERCE_REQUIRED_DOCUMENTS = [
+  'Pièce d’identité du responsable',
+  'RCCM ou document d’existence légale',
+  'Document fiscal / NIF',
+  'Contrat vendeur ou fournisseur eNkamba',
+  'Traçabilité produit ou fiche fournisseur',
+  'Déclaration douanière si import/export',
+];
+
+const COMMERCE_OPERATION_CONTROLS = [
+  'Facture automatique',
+  'Stock contrôlé',
+  'Paiement traçable',
+  'Remboursement contrôlé',
+  'Audit commande',
+  'Contrôle douane si nécessaire',
+];
+
+const COMMERCE_CUSTOMS_SUBCATEGORIES = new Set([
+  'WHOLESALE',
+  'EQUIPMENT_PRODUCER',
+  'PRODUCT_PRODUCER',
+  'FOOD_SUPPLY',
+  'BIO_PRODUCTS',
+]);
+
 const LOGISTICS_ROLE_PRESETS: Record<string, { title: string; badge: string; dashboard: string; capabilities: string[] }> = {
   RELAY: {
     title: 'Point relais Ugavi',
@@ -495,6 +521,15 @@ export default function BusinessAccountPage() {
     primaryMarket: '',
     expectedVolume: '',
     apiCallbackUrl: '',
+    commerceCompliance: {
+      verifiedSellerRequested: true,
+      supplierProfile: 'seller',
+      requiredDocuments: COMMERCE_REQUIRED_DOCUMENTS,
+      contractAccepted: false,
+      fiscalRulesAccepted: false,
+      customsRulesAccepted: false,
+      operationControls: COMMERCE_OPERATION_CONTROLS,
+    },
     nationalAgencyCompliance: {
       coveredCities: '',
       transportModes: [],
@@ -577,6 +612,19 @@ export default function BusinessAccountPage() {
     }));
   };
 
+  const handleCommerceComplianceChange = (
+    field: keyof BusinessFormState['commerceCompliance'],
+    value: any
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      commerceCompliance: {
+        ...prev.commerceCompliance,
+        [field]: value,
+      },
+    }));
+  };
+
   const toggleNationalAgencyArrayValue = (
     field: 'transportModes' | 'verificationMethods',
     value: string
@@ -638,6 +686,20 @@ export default function BusinessAccountPage() {
         if (formData.type === 'LOGISTICS' && !formData.logisticsOperationMode) {
           toast({ variant: 'destructive', title: 'Mode d’exploitation', description: 'Indiquez si vous travaillez en fixe, mobile ou mixte.' });
           return false;
+        }
+        if (formData.type === 'COMMERCE') {
+          const commerce = formData.commerceCompliance;
+          const needsCustoms = COMMERCE_CUSTOMS_SUBCATEGORIES.has(formData.subCategory);
+          if (!commerce.contractAccepted || !commerce.fiscalRulesAccepted || (needsCustoms && !commerce.customsRulesAccepted)) {
+            toast({
+              variant: 'destructive',
+              title: 'Conformité Marché',
+              description: needsCustoms
+                ? 'Acceptez le contrat, la facturation fiscale et le contrôle douane/traçabilité.'
+                : 'Acceptez le contrat vendeur et les règles fiscales.',
+            });
+            return false;
+          }
         }
         if (formData.type === 'LOGISTICS' && formData.subCategory === 'NATIONAL_AGENCY') {
           const national = formData.nationalAgencyCompliance;
@@ -833,15 +895,85 @@ export default function BusinessAccountPage() {
               </div>
             </div>
             {formData.type === 'COMMERCE' && (
-              <div>
-                <Label htmlFor="commerceFocus">Focus produit/service</Label>
-                <Input
-                  id="commerceFocus"
-                  value={formData.commerceFocus}
-                  onChange={(e) => handleInputChange('commerceFocus', e.target.value)}
-                  placeholder="Ex : produits alimentaires bio, équipements logistiques..."
-                  disabled={isSubmitting}
-                />
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="commerceFocus">Focus produit/service</Label>
+                  <Input
+                    id="commerceFocus"
+                    value={formData.commerceFocus}
+                    onChange={(e) => handleInputChange('commerceFocus', e.target.value)}
+                    placeholder="Ex : produits alimentaires bio, équipements logistiques..."
+                    disabled={isSubmitting}
+                  />
+                </div>
+
+                <div className="rounded-2xl border border-primary/20 bg-white p-4 shadow-sm">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-primary">Conformité Marché</p>
+                      <h4 className="text-lg font-bold text-slate-900">Vendeur, fournisseur et opérations contrôlées</h4>
+                      <p className="mt-1 text-sm text-slate-600">
+                        Les commandes Marché conservent facture, stock, paiement traçable, remboursement et contrôle fiscal/douane si nécessaire.
+                      </p>
+                    </div>
+                    <label className="flex items-center gap-2 rounded-full bg-primary/5 px-3 py-1 text-xs font-semibold text-primary">
+                      <Checkbox
+                        checked={formData.commerceCompliance.verifiedSellerRequested}
+                        onCheckedChange={(checked) => handleCommerceComplianceChange('verifiedSellerRequested', Boolean(checked))}
+                        disabled={isSubmitting}
+                      />
+                      Demander badge vérifié
+                    </label>
+                  </div>
+
+                  <div className="mt-4 grid gap-4 md:grid-cols-2">
+                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                      <p className="mb-2 text-sm font-semibold text-slate-900">Documents attendus</p>
+                      <ul className="list-disc space-y-1 pl-5 text-sm text-slate-600">
+                        {COMMERCE_REQUIRED_DOCUMENTS.map((document) => (
+                          <li key={document}>{document}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                      <p className="mb-2 text-sm font-semibold text-slate-900">Contrôle des opérations</p>
+                      <div className="flex flex-wrap gap-2">
+                        {COMMERCE_OPERATION_CONTROLS.map((control) => (
+                          <span key={control} className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">
+                            {control}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 grid gap-3 md:grid-cols-3">
+                    <label className="flex items-start gap-2 rounded-xl border border-slate-200 p-3 text-sm">
+                      <Checkbox
+                        checked={formData.commerceCompliance.contractAccepted}
+                        onCheckedChange={(checked) => handleCommerceComplianceChange('contractAccepted', Boolean(checked))}
+                        disabled={isSubmitting}
+                      />
+                      <span>Contrat vendeur/fournisseur requis avant validation</span>
+                    </label>
+                    <label className="flex items-start gap-2 rounded-xl border border-slate-200 p-3 text-sm">
+                      <Checkbox
+                        checked={formData.commerceCompliance.fiscalRulesAccepted}
+                        onCheckedChange={(checked) => handleCommerceComplianceChange('fiscalRulesAccepted', Boolean(checked))}
+                        disabled={isSubmitting}
+                      />
+                      <span>Facturation et fiscalité enregistrées pour chaque vente</span>
+                    </label>
+                    <label className="flex items-start gap-2 rounded-xl border border-slate-200 p-3 text-sm">
+                      <Checkbox
+                        checked={formData.commerceCompliance.customsRulesAccepted}
+                        onCheckedChange={(checked) => handleCommerceComplianceChange('customsRulesAccepted', Boolean(checked))}
+                        disabled={isSubmitting}
+                      />
+                      <span>Traçabilité et douane pour gros, import/export ou fournisseur</span>
+                    </label>
+                  </div>
+                </div>
               </div>
             )}
             {formData.type === 'LOGISTICS' && (

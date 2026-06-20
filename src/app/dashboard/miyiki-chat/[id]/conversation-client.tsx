@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef, useCallback, type PointerEvent, type TouchEvent } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { collection, deleteDoc, doc, documentId, getDoc, getDocs, onSnapshot, query, serverTimestamp, setDoc, updateDoc, where } from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, documentId, getDoc, getDocs, onSnapshot, query, serverTimestamp, setDoc, updateDoc, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -18,7 +18,7 @@ import { MoneyTransferMessage } from '@/components/chat/MoneyTransferMessage';
 import { useLocationSharing } from '@/hooks/useLocationSharing';
 import { useChatMoneyTransfer } from '@/hooks/useChatMoneyTransfer';
 import { uploadToCloudinary } from '@/lib/cloudinary-upload';
-import { Ban, Bell, BellOff, ChevronLeft, Image as ImageIcon, Send, Loader2, Mail, Phone, Mic, Video, MapPin, DollarSign, Paperclip, Plus, X, Check, Square, Settings, ShieldAlert, UserMinus, Users, Trash2, Edit2, MoreVertical, Languages } from 'lucide-react';
+import { Ban, Bell, BellOff, ChevronLeft, Flag, Image as ImageIcon, Send, Loader2, Mail, Phone, Mic, Video, MapPin, DollarSign, Paperclip, Plus, X, Check, Square, Settings, ShieldAlert, UserMinus, Users, Trash2, Edit2, MoreVertical, Languages } from 'lucide-react';
 import Link from 'next/link';
 import { GroupSettingsDialog } from '@/components/group-settings-dialog';
 import { CHAT_WALLPAPERS, createCustomChatWallpaperId, getChatWallpaper, isCustomChatWallpaper } from '@/lib/chat-wallpapers';
@@ -1122,6 +1122,29 @@ export default function ConversationClient() {
         } catch (error) {
             console.error('Erreur retrait conversation:', error);
             alert('Impossible de retirer cette discussion.');
+        }
+    };
+
+    const reportConversation = async () => {
+        if (!currentUser?.uid || !conversationId) return;
+        const confirmed = window.confirm('Signaler cette discussion à l’équipe eNkamba ?');
+        if (!confirmed) return;
+
+        try {
+            await addDoc(collection(db, 'chat_reports'), {
+                conversationId,
+                reporterId: currentUser.uid,
+                contactId: contact?.id || '',
+                contactName: contact?.name || 'Contact',
+                isGroup,
+                reason: 'Signalement conversation',
+                status: 'open',
+                createdAt: serverTimestamp(),
+            });
+            alert('Signalement envoyé.');
+        } catch (error) {
+            console.error('Erreur signalement conversation:', error);
+            alert('Impossible d’envoyer le signalement.');
         }
     };
 
@@ -2449,6 +2472,15 @@ export default function ConversationClient() {
                                 >
                                     <Ban className="mr-2 h-3.5 w-3.5" />
                                     {relationshipControl.blocked ? 'Débloquer' : 'Bloquer'}
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    className="h-8 w-full justify-start rounded-xl text-xs"
+                                    onClick={reportConversation}
+                                >
+                                    <Flag className="mr-2 h-3.5 w-3.5" />
+                                    Signaler
                                 </Button>
                             </div>
                             {relationshipControl.blocked && (

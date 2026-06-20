@@ -105,6 +105,10 @@ export function useBusinessAccount() {
         paymentRole: formData.paymentRole || null,
         primaryMarket: formData.primaryMarket || null,
         expectedVolume: formData.expectedVolume || null,
+        commerceCompliance:
+          formData.type === 'COMMERCE'
+            ? formData.commerceCompliance
+            : null,
         nationalAgencyCompliance:
           formData.type === 'LOGISTICS' && formData.subCategory === 'NATIONAL_AGENCY'
             ? formData.nationalAgencyCompliance

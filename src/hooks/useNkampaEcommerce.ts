@@ -1,7 +1,8 @@
 import { useState, useCallback, useEffect } from 'react';
-import { collection, addDoc, query, where, onSnapshot, doc, getDoc, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { collection, addDoc, query, where, onSnapshot, doc, getDoc, setDoc, serverTimestamp, updateDoc, runTransaction, increment } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { useFirestoreConversations } from './useFirestoreConversations';
+import { getMarketplaceComplianceRequirements } from '@/lib/compliance-rules';
 
 export interface EcommerceProduct {
   id: string;
@@ -24,6 +25,11 @@ export interface EcommerceProduct {
   storeSubcategory?: string;
   listingType?: 'product' | 'service';
   description?: string;
+  stock?: number;
+  quantityAvailable?: number;
+  availableStock?: number;
+  sold?: number;
+  sellerVerified?: boolean;
   createdAt: any;
 }
 
@@ -184,6 +190,7 @@ export function useNkampaEcommerce() {
       }
     ) => {
       if (!currentUser) throw new Error('Utilisateur non authentifié');
+      let createdOrderId: string | null = null;
 
       try {
         // Convertir le prix en CDF
@@ -203,8 +210,20 @@ export function useNkampaEcommerce() {
         const buyerName = buyerData?.displayName || buyerData?.name || 'Acheteur';
         const buyerEmail = buyerData?.email || currentUser.email || '';
 
+        const storeSnap = product.storeId ? await getDoc(doc(db, 'nkampa_stores', product.storeId)) : null;
+        const storeData = storeSnap?.exists() ? storeSnap.data() : null;
+        const sellerVerified =
+          Boolean(product.sellerVerified) ||
+          ['active', 'approved'].includes(String(storeData?.status || '').toLowerCase());
+        const storeRoles = Array.isArray(storeData?.businessRoles) ? storeData.businessRoles : [];
+        const complianceRequirements = getMarketplaceComplianceRequirements({
+          category: product.category,
+          roles: storeRoles,
+          sellerVerified,
+        });
+
         // Créer la commande avec le nouveau système
-        const { createOrder, notifySeller, notifyBuyer } = await import('@/lib/nkampa-orders');
+        const { createOrder, notifySeller, notifyBuyer, buildNkampaOrderCompliance } = await import('@/lib/nkampa-orders');
         
         const order = await createOrder({
           buyerId: currentUser.uid,
@@ -230,43 +249,22 @@ export function useNkampaEcommerce() {
           status: 'pending',
           paymentMethod: 'wallet',
           paymentStatus: 'pending',
+          compliance: buildNkampaOrderCompliance({
+            buyerId: currentUser.uid,
+            sellerVerified: complianceRequirements.sellerVerified,
+            sellerVerificationStatus: complianceRequirements.sellerVerificationStatus,
+            customsRequired: complianceRequirements.customsRequired,
+            contractRequired: complianceRequirements.contractRequired,
+            requiredDocuments: complianceRequirements.requiredDocuments,
+          }),
         });
+        createdOrderId = order.id || null;
 
-        // Effectuer le paiement
+        // Effectuer le paiement, la réservation stock et la trace financière ensemble.
         const sellerUserRef = doc(db, 'users', product.sellerId);
-        const sellerUserSnap = await getDoc(sellerUserRef);
-
-        const currentBalance = buyerUserSnap.data()?.walletBalance || 0;
-
-        if (currentBalance < totalPriceInCDF) {
-          throw new Error('Solde insuffisant');
-        }
-
-        // Mettre à jour les soldes
-        await updateDoc(buyerUserRef, {
-          walletBalance: currentBalance - totalPriceInCDF,
-          updatedAt: serverTimestamp(),
-        });
-
-        if (sellerUserSnap.exists()) {
-          const sellerBalance = sellerUserSnap.data()?.walletBalance || 0;
-          await updateDoc(sellerUserRef, {
-            walletBalance: sellerBalance + totalPriceInCDF,
-            updatedAt: serverTimestamp(),
-          });
-        } else {
-          await setDoc(sellerUserRef, {
-            uid: product.sellerId,
-            walletBalance: totalPriceInCDF,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-          });
-        }
-
-        // Générer un ID de transaction
+        const productRef = doc(db, 'nkampa_products', product.id);
+        const orderRef = doc(db, 'nkampa_orders', order.id!);
         const transactionId = `TXN_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
-        // Enregistrer les transactions
         const buyerTransactionRef = doc(
           db,
           'users',
@@ -274,27 +272,6 @@ export function useNkampaEcommerce() {
           'transactions',
           transactionId
         );
-
-        await setDoc(buyerTransactionRef, {
-          type: 'nkampa_purchase',
-          amount: -totalPriceInCDF,
-          status: 'completed',
-          description: `Achat Nkampa - ${product.name}`,
-          previousBalance: currentBalance,
-          newBalance: currentBalance - totalPriceInCDF,
-          timestamp: serverTimestamp(),
-          createdAt: new Date().toISOString(),
-          metadata: {
-            orderId: order.id,
-            orderNumber: order.orderId,
-            productId: product.id,
-            productName: product.name,
-            quantity,
-            originalPrice: product.price,
-            originalCurrency: product.currency,
-            priceInCDF,
-          },
-        });
 
         const sellerTransactionRef = doc(
           db,
@@ -304,33 +281,128 @@ export function useNkampaEcommerce() {
           transactionId
         );
 
-        const sellerBalance = sellerUserSnap.exists() ? (sellerUserSnap.data()?.walletBalance || 0) : 0;
+        const settlement = await runTransaction(db, async (tx) => {
+          const [freshProductSnap, freshBuyerSnap, freshSellerSnap] = await Promise.all([
+            tx.get(productRef),
+            tx.get(buyerUserRef),
+            tx.get(sellerUserRef),
+          ]);
 
-        await setDoc(sellerTransactionRef, {
-          type: 'nkampa_sale',
-          amount: totalPriceInCDF,
-          status: 'completed',
-          description: `Vente Nkampa - ${product.name}`,
-          previousBalance: sellerBalance,
-          newBalance: sellerBalance + totalPriceInCDF,
-          timestamp: serverTimestamp(),
-          createdAt: new Date().toISOString(),
-          metadata: {
-            orderId: order.id,
-            orderNumber: order.orderId,
-            buyerId: currentUser.uid,
-            buyerName,
-            productId: product.id,
-            productName: product.name,
-            quantity,
-          },
-        });
+          const freshProduct = freshProductSnap.exists() ? freshProductSnap.data() as any : product;
+          const stockValue = freshProduct.stock ?? freshProduct.quantityAvailable ?? freshProduct.availableStock;
+          const stockBefore = Number.isFinite(Number(stockValue)) ? Number(stockValue) : null;
+          const stockAfter = stockBefore === null ? null : stockBefore - quantity;
 
-        // Mettre à jour la commande avec le statut de paiement
-        const { updateOrderStatus } = await import('@/lib/nkampa-orders');
-        await updateOrderStatus(order.id!, 'paid', {
-          transactionId,
-          paymentStatus: 'completed',
+          if (product.listingType !== 'service' && stockBefore !== null && stockBefore < quantity) {
+            throw new Error(`Stock insuffisant. Disponible: ${stockBefore}`);
+          }
+
+          const buyerBalance = Number(freshBuyerSnap.data()?.walletBalance || 0);
+          if (buyerBalance < totalPriceInCDF) {
+            throw new Error('Solde insuffisant');
+          }
+
+          const sellerBalance = freshSellerSnap.exists() ? Number(freshSellerSnap.data()?.walletBalance || 0) : 0;
+
+          tx.update(buyerUserRef, {
+            walletBalance: buyerBalance - totalPriceInCDF,
+            updatedAt: serverTimestamp(),
+          });
+
+          if (freshSellerSnap.exists()) {
+            tx.update(sellerUserRef, {
+              walletBalance: sellerBalance + totalPriceInCDF,
+              updatedAt: serverTimestamp(),
+            });
+          } else {
+            tx.set(sellerUserRef, {
+              uid: product.sellerId,
+              walletBalance: totalPriceInCDF,
+              createdAt: serverTimestamp(),
+              updatedAt: serverTimestamp(),
+            });
+          }
+
+          if (freshProductSnap.exists()) {
+            const productUpdate: any = {
+              sold: increment(quantity),
+              updatedAt: serverTimestamp(),
+              lastStockMovement: {
+                type: 'sale',
+                orderId: order.id,
+                quantity,
+                at: new Date().toISOString(),
+              },
+            };
+            if (stockBefore !== null) {
+              productUpdate.stock = stockAfter;
+              productUpdate.quantityAvailable = stockAfter;
+              productUpdate.availableStock = stockAfter;
+            }
+            tx.update(productRef, productUpdate);
+          }
+
+          tx.set(buyerTransactionRef, {
+            type: 'nkampa_purchase',
+            amount: -totalPriceInCDF,
+            status: 'completed',
+            description: `Achat Nkampa - ${product.name}`,
+            previousBalance: buyerBalance,
+            newBalance: buyerBalance - totalPriceInCDF,
+            timestamp: serverTimestamp(),
+            createdAt: new Date().toISOString(),
+            metadata: {
+              orderId: order.id,
+              orderNumber: order.orderId,
+              productId: product.id,
+              productName: product.name,
+              quantity,
+              originalPrice: product.price,
+              originalCurrency: product.currency,
+              priceInCDF,
+              invoiceNumber: order.invoiceNumber,
+            },
+          });
+
+          tx.set(sellerTransactionRef, {
+            type: 'nkampa_sale',
+            amount: totalPriceInCDF,
+            status: 'completed',
+            description: `Vente Nkampa - ${product.name}`,
+            previousBalance: sellerBalance,
+            newBalance: sellerBalance + totalPriceInCDF,
+            timestamp: serverTimestamp(),
+            createdAt: new Date().toISOString(),
+            metadata: {
+              orderId: order.id,
+              orderNumber: order.orderId,
+              buyerId: currentUser.uid,
+              buyerName,
+              productId: product.id,
+              productName: product.name,
+              quantity,
+              invoiceNumber: order.invoiceNumber,
+            },
+          });
+
+          const stockSnapshot = {
+            before: stockBefore,
+            after: stockAfter,
+            reserved: quantity,
+          };
+
+          tx.update(orderRef, {
+            status: 'paid',
+            transactionId,
+            paymentStatus: 'completed',
+            paidAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+            stockSnapshot,
+            settlementStatus: 'released',
+            refundStatus: 'none',
+          });
+
+          return { stockSnapshot };
         });
 
         // Envoyer les notifications
@@ -355,6 +427,7 @@ export function useNkampaEcommerce() {
             productId: product.id,
             quantity,
             totalPrice: totalPriceInCDF,
+            invoiceNumber: order.invoiceNumber,
           }
         );
 
@@ -370,9 +443,23 @@ export function useNkampaEcommerce() {
             paymentStatus: 'completed',
             transactionId,
             paidAt: new Date(),
+            stockSnapshot: settlement.stockSnapshot,
           },
         };
       } catch (err: any) {
+        if (createdOrderId) {
+          try {
+            await updateDoc(doc(db, 'nkampa_orders', createdOrderId), {
+              status: 'cancelled',
+              paymentStatus: 'failed',
+              cancelledAt: serverTimestamp(),
+              updatedAt: serverTimestamp(),
+              notes: err?.message || 'Commande annulée avant confirmation.',
+            });
+          } catch {
+            // La commande restera en attente si Firestore refuse la mise à jour.
+          }
+        }
         console.error('Erreur achat produit:', err);
         throw err;
       }

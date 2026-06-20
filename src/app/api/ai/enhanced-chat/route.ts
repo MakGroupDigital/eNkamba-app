@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { remote_web_search } from '@/lib/web-search';
+import { buildAiPlatformContext } from '@/lib/ai-service-context';
 
 interface RequestBody {
   message: string;
@@ -47,8 +48,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const platformContext = buildAiPlatformContext(message);
+
     // Construire le prompt avec les options
-    let systemPrompt = 'Tu es eNkamba AI, un assistant IA intelligent développé par Global Solution and Services SARL. Tu es un modèle LLM avancé conçu pour aider les utilisateurs avec leurs questions et tâches. Réponds toujours en français de manière professionnelle et utile.';
+    let systemPrompt = `Tu es eNkamba AI, un assistant IA intelligent développé par Global Solution and Services SARL. Tu aides les utilisateurs en tenant compte des services réellement disponibles dans la plateforme. Réponds toujours en français de manière professionnelle et utile.\n\n${platformContext}`;
     
     if (options.reflection) {
       systemPrompt += ' Réfléchis profondément à la question avant de répondre.';
@@ -66,9 +69,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Construire le message final
-    let finalMessage = message;
+    let finalMessage = `${message}\n\n${platformContext}`;
     if (searchContext) {
-      finalMessage = `${message}${searchContext}`;
+      finalMessage = `${message}\n\n${platformContext}${searchContext}`;
     }
 
     // Appeler Groq API

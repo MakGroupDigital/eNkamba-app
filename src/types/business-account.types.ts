@@ -64,6 +64,7 @@ export interface BusinessRequestData {
   paymentRole?: PaymentRole;
   primaryMarket?: string;
   expectedVolume?: string;
+  commerceCompliance?: CommerceCompliance | null;
   nationalAgencyCompliance?: NationalAgencyCompliance;
 
   // Document references
@@ -99,6 +100,16 @@ export interface NationalAgencyCompliance {
   suspensionRulesAccepted: boolean;
 }
 
+export interface CommerceCompliance {
+  verifiedSellerRequested: boolean;
+  supplierProfile?: 'seller' | 'supplier' | 'wholesaler' | 'producer' | 'retailer';
+  requiredDocuments: string[];
+  contractAccepted: boolean;
+  fiscalRulesAccepted: boolean;
+  customsRulesAccepted: boolean;
+  operationControls: string[];
+}
+
 export interface BusinessProfile extends BusinessRequestData {
   businessId: string;
   isActive: boolean;
@@ -123,6 +134,7 @@ export interface BusinessFormState {
   primaryMarket?: string;
   expectedVolume?: string;
   apiCallbackUrl?: string;
+  commerceCompliance: CommerceCompliance;
   nationalAgencyCompliance: NationalAgencyCompliance;
   documents: {
     idCard: File | null;

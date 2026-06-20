@@ -187,6 +187,7 @@ export default function NkampaStoreDashboardPage() {
   const [editName, setEditName] = useState('');
   const [editPrice, setEditPrice] = useState('');
   const [editCurrency, setEditCurrency] = useState('CDF');
+  const [editStock, setEditStock] = useState('');
   const [editLocation, setEditLocation] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [editSubcategory, setEditSubcategory] = useState('');
@@ -295,6 +296,7 @@ export default function NkampaStoreDashboardPage() {
     setEditName(p.name || '');
     setEditPrice(String(p.price ?? ''));
     setEditCurrency(p.currency || 'CDF');
+    setEditStock(String(p.stock ?? p.quantityAvailable ?? p.availableStock ?? ''));
     setEditLocation(p.location || '');
     setEditDescription(p.description || '');
     setEditSubcategory(p.storeSubcategory || '');
@@ -354,6 +356,9 @@ export default function NkampaStoreDashboardPage() {
         name: editName.trim(),
         price: Number(editPrice || 0),
         currency: editCurrency,
+        stock: editStock === '' ? null : Math.max(0, Math.floor(Number(editStock || 0))),
+        quantityAvailable: editStock === '' ? null : Math.max(0, Math.floor(Number(editStock || 0))),
+        availableStock: editStock === '' ? null : Math.max(0, Math.floor(Number(editStock || 0))),
         location: editLocation.trim(),
         description: editDescription.trim(),
         images: mergedImages,
@@ -868,6 +873,14 @@ export default function NkampaStoreDashboardPage() {
                         <p className="mt-1 text-sm font-black text-[#32BB78]">
                           {(p.price || 0).toLocaleString()} {p.currency || 'CDF'}
                         </p>
+                        {store?.sellType === 'product' ? (
+                          <p className={[
+                            'mt-1 text-[11px] font-bold',
+                            Number(p.stock ?? p.quantityAvailable ?? p.availableStock ?? 0) > 0 ? 'text-slate-500' : 'text-red-600',
+                          ].join(' ')}>
+                            Stock: {Number(p.stock ?? p.quantityAvailable ?? p.availableStock ?? 0).toLocaleString()}
+                          </p>
+                        ) : null}
                         <div className="flex items-center gap-2 mt-2">
                           <Button variant="outline" size="sm" className="h-8 flex-1 rounded-xl text-xs" onClick={() => openEdit(p)}>
                             <Pencil className="mr-1 h-4 w-4" />
@@ -1278,6 +1291,12 @@ export default function NkampaStoreDashboardPage() {
                   <option value="USD">USD</option>
                 </select>
               </div>
+              {store?.sellType === 'product' && (
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-gray-700">Stock disponible</p>
+                  <Input value={editStock} onChange={(e) => setEditStock(e.target.value)} type="number" min="0" />
+                </div>
+              )}
             </div>
 
             {store?.category ? (

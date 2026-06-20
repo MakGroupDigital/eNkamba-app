@@ -13,6 +13,39 @@ import {
   increment,
 } from 'firebase/firestore';
 
+export type NkampaRefundStatus = 'none' | 'requested' | 'approved' | 'rejected' | 'refunded';
+
+export interface NkampaOrderInvoice {
+  invoiceNumber: string;
+  issuedAt: string;
+  subtotal: number;
+  taxRate: number;
+  taxAmount: number;
+  platformFee: number;
+  logisticsFee: number;
+  totalAmount: number;
+  currency: string;
+  fiscalNote: string;
+}
+
+export interface NkampaOrderCompliance {
+  sellerVerified: boolean;
+  sellerVerificationStatus: 'verified' | 'pending' | 'unverified';
+  contractRequired?: boolean;
+  requiredDocuments?: string[];
+  productControlStatus: 'passed' | 'review_required';
+  taxRecorded: boolean;
+  customsRequired: boolean;
+  customsStatus: 'not_required' | 'pending_documents' | 'ready';
+  auditTrail: Array<{
+    action: string;
+    actorId: string;
+    role: 'buyer' | 'seller' | 'system' | 'admin';
+    at: string;
+    note?: string;
+  }>;
+}
+
 export interface NkampaOrder {
   id?: string;
   orderId: string;
@@ -49,6 +82,24 @@ export interface NkampaOrder {
   paymentMethod: 'wallet';
   paymentStatus: 'pending' | 'completed' | 'failed' | 'refunded';
   transactionId?: string;
+  invoiceNumber?: string;
+  invoice?: NkampaOrderInvoice;
+  refundStatus?: NkampaRefundStatus;
+  refundRequest?: {
+    requestedBy: string;
+    reason: string;
+    amount: number;
+    status: NkampaRefundStatus;
+    requestedAt: string;
+    reviewedAt?: string;
+    reviewedBy?: string;
+  };
+  stockSnapshot?: {
+    before: number | null;
+    after: number | null;
+    reserved: number;
+  };
+  compliance?: NkampaOrderCompliance;
   createdAt: any;
   updatedAt: any;
   paidAt?: any;
@@ -58,6 +109,64 @@ export interface NkampaOrder {
   notes?: string;
 }
 
+export function buildNkampaInvoice(input: {
+  orderId: string;
+  totalAmount: number;
+  currency?: string;
+  logisticsFee?: number;
+}) {
+  const totalAmount = Math.max(0, Math.round(Number(input.totalAmount || 0)));
+  const logisticsFee = Math.max(0, Math.round(Number(input.logisticsFee || 0)));
+  const taxRate = 0.16;
+  const taxAmount = Math.round((totalAmount * taxRate) / (1 + taxRate));
+  const subtotal = Math.max(0, totalAmount - taxAmount);
+
+  return {
+    invoiceNumber: `FAC-${input.orderId}`,
+    issuedAt: new Date().toISOString(),
+    subtotal,
+    taxRate,
+    taxAmount,
+    platformFee: 0,
+    logisticsFee,
+    totalAmount,
+    currency: input.currency || 'CDF',
+    fiscalNote: 'Montant TTC enregistré pour contrôle fiscal eNkamba.',
+  } satisfies NkampaOrderInvoice;
+}
+
+export function buildNkampaOrderCompliance(input: {
+  buyerId: string;
+  sellerVerified?: boolean;
+  sellerVerificationStatus?: 'verified' | 'pending' | 'unverified';
+  customsRequired?: boolean;
+  contractRequired?: boolean;
+  requiredDocuments?: string[];
+}) {
+  const sellerVerified = Boolean(input.sellerVerified);
+  const customsRequired = Boolean(input.customsRequired);
+
+  return {
+    sellerVerified,
+    sellerVerificationStatus: input.sellerVerificationStatus || (sellerVerified ? 'verified' : 'pending'),
+    contractRequired: Boolean(input.contractRequired),
+    requiredDocuments: input.requiredDocuments || [],
+    productControlStatus: 'passed',
+    taxRecorded: true,
+    customsRequired,
+    customsStatus: customsRequired ? 'pending_documents' : 'not_required',
+    auditTrail: [
+      {
+        action: 'order_created',
+        actorId: input.buyerId,
+        role: 'buyer',
+        at: new Date().toISOString(),
+        note: 'Commande créée depuis Marché.',
+      },
+    ],
+  } satisfies NkampaOrderCompliance;
+}
+
 /**
  * Crée une nouvelle commande
  */
@@ -65,11 +174,23 @@ export async function createOrder(orderData: Omit<NkampaOrder, 'id' | 'orderId' 
   try {
     const orderId = `ENK-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
     const trackingNumber = orderData.trackingNumber || `TRK-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+    const invoice = orderData.invoice || buildNkampaInvoice({
+      orderId,
+      totalAmount: orderData.totalAmount,
+      currency: 'CDF',
+    });
     
     const order: Omit<NkampaOrder, 'id'> = {
       ...orderData,
       orderId,
       trackingNumber,
+      invoiceNumber: orderData.invoiceNumber || invoice.invoiceNumber,
+      invoice,
+      refundStatus: orderData.refundStatus || 'none',
+      compliance: orderData.compliance || buildNkampaOrderCompliance({
+        buyerId: orderData.buyerId,
+        sellerVerified: false,
+      }),
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
@@ -85,6 +206,58 @@ export async function createOrder(orderData: Omit<NkampaOrder, 'id' | 'orderId' 
   } catch (error) {
     console.error('Erreur création commande:', error);
     throw new Error('Impossible de créer la commande');
+  }
+}
+
+export async function requestOrderRefund(orderDocId: string, input: {
+  requestedBy: string;
+  reason: string;
+  amount: number;
+}) {
+  try {
+    const orderRef = doc(db, 'nkampa_orders', orderDocId);
+    await updateDoc(orderRef, {
+      refundStatus: 'requested',
+      refundRequest: {
+        requestedBy: input.requestedBy,
+        reason: input.reason,
+        amount: Math.max(0, Math.round(Number(input.amount || 0))),
+        status: 'requested',
+        requestedAt: new Date().toISOString(),
+      },
+      updatedAt: serverTimestamp(),
+    });
+  } catch (error) {
+    console.error('Erreur demande remboursement:', error);
+    throw new Error('Impossible de créer la demande de remboursement');
+  }
+}
+
+export async function appendOrderAudit(orderDocId: string, input: {
+  action: string;
+  actorId: string;
+  role: 'buyer' | 'seller' | 'system' | 'admin';
+  note?: string;
+}) {
+  try {
+    const order = await getOrderById(orderDocId);
+    const currentTrail = order?.compliance?.auditTrail || [];
+    const orderRef = doc(db, 'nkampa_orders', orderDocId);
+    await updateDoc(orderRef, {
+      'compliance.auditTrail': [
+        ...currentTrail.slice(-30),
+        {
+          action: input.action,
+          actorId: input.actorId,
+          role: input.role,
+          at: new Date().toISOString(),
+          note: input.note || '',
+        },
+      ],
+      updatedAt: serverTimestamp(),
+    });
+  } catch (error) {
+    console.error('Erreur audit commande:', error);
   }
 }
 

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Package, Truck, CheckCircle, XCircle, Download, MapPin, Phone, Calendar, DollarSign, Route } from 'lucide-react';
+import { ArrowLeft, Package, Truck, CheckCircle, XCircle, Download, MapPin, Phone, Calendar, DollarSign, Route, FileText, RotateCcw, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,6 +11,7 @@ import { useNkampaEcommerce } from '@/hooks/useNkampaEcommerce';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useReceiptDownload } from '@/hooks/useReceiptDownload';
+import { requestOrderRefund } from '@/lib/nkampa-orders';
 
 const STATUS_CONFIG = {
   pending: { label: 'En attente', color: 'bg-yellow-100 text-yellow-800', icon: Package },
@@ -29,6 +30,7 @@ export default function OrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [isDownloading, setIsDownloading] = useState(false);
+  const [refundBusy, setRefundBusy] = useState(false);
 
   const filteredOrders = filterStatus === 'all' 
     ? orders 
@@ -213,6 +215,42 @@ export default function OrdersPage() {
 
   const openPickupRoute = (order: any) => {
     router.push(`/dashboard/ugavi?orderId=${order.id}&source=nkampa`);
+  };
+
+  const handleRefundRequest = async (order: any) => {
+    if (!user || !order?.id) return;
+    setRefundBusy(true);
+    try {
+      await requestOrderRefund(order.id, {
+        requestedBy: user.uid,
+        reason: 'Demande client depuis Marché',
+        amount: Number(order.totalPrice || order.totalAmount || 0),
+      });
+      setSelectedOrder({
+        ...order,
+        refundStatus: 'requested',
+        refundRequest: {
+          requestedBy: user.uid,
+          reason: 'Demande client depuis Marché',
+          amount: Number(order.totalPrice || order.totalAmount || 0),
+          status: 'requested',
+          requestedAt: new Date().toISOString(),
+        },
+      });
+      toast({
+        title: 'Demande envoyée',
+        description: 'La demande de remboursement est enregistrée pour contrôle.',
+        className: 'bg-primary text-white border-none',
+      });
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: error?.message || 'Impossible de demander le remboursement.',
+      });
+    } finally {
+      setRefundBusy(false);
+    }
   };
 
   if (!user) {
@@ -466,6 +504,100 @@ export default function OrdersPage() {
                   {selectedOrder.transactionId && (
                     <p className="text-xs text-gray-500 mt-2">
                       Transaction: {selectedOrder.transactionId}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Facture */}
+              <div>
+                <p className="mb-2 flex items-center gap-2 text-sm font-semibold text-gray-600">
+                  <FileText className="h-4 w-4" />
+                  Facture
+                </p>
+                <div className="rounded-lg border border-primary/15 bg-white p-4 text-sm">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-gray-500">Numéro</span>
+                    <span className="font-mono font-bold">{selectedOrder.invoiceNumber || selectedOrder.invoice?.invoiceNumber || 'En préparation'}</span>
+                  </div>
+                  {selectedOrder.invoice && (
+                    <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
+                      <div className="rounded-lg bg-gray-50 p-2">
+                        <p className="text-gray-500">Sous-total</p>
+                        <p className="font-bold">{Number(selectedOrder.invoice.subtotal || 0).toLocaleString()} {selectedOrder.invoice.currency || 'CDF'}</p>
+                      </div>
+                      <div className="rounded-lg bg-gray-50 p-2">
+                        <p className="text-gray-500">Taxe incluse</p>
+                        <p className="font-bold">{Number(selectedOrder.invoice.taxAmount || 0).toLocaleString()} {selectedOrder.invoice.currency || 'CDF'}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Contrôle */}
+              <div>
+                <p className="mb-2 flex items-center gap-2 text-sm font-semibold text-gray-600">
+                  <ShieldCheck className="h-4 w-4" />
+                  Contrôle
+                </p>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="rounded-lg bg-primary/5 p-3">
+                    <p className="text-gray-500">Vendeur</p>
+                    <p className="font-bold text-primary">
+                      {selectedOrder.compliance?.sellerVerified ? 'Vérifié' : 'À contrôler'}
+                    </p>
+                  </div>
+                  <div className="rounded-lg bg-primary/5 p-3">
+                    <p className="text-gray-500">Douane</p>
+                    <p className="font-bold text-primary">
+                      {selectedOrder.compliance?.customsRequired ? 'Documents requis' : 'Non requis'}
+                    </p>
+                  </div>
+                  {selectedOrder.stockSnapshot && (
+                    <div className="col-span-2 rounded-lg bg-gray-50 p-3">
+                      <p className="text-gray-500">Stock réservé</p>
+                      <p className="font-bold">
+                        {selectedOrder.stockSnapshot.reserved} unité(s)
+                        {selectedOrder.stockSnapshot.after !== null && selectedOrder.stockSnapshot.after !== undefined
+                          ? ` • reste ${selectedOrder.stockSnapshot.after}`
+                          : ''}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Remboursement */}
+              <div>
+                <p className="mb-2 flex items-center gap-2 text-sm font-semibold text-gray-600">
+                  <RotateCcw className="h-4 w-4" />
+                  Remboursement
+                </p>
+                <div className="rounded-lg border border-gray-200 bg-white p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-sm text-gray-600">Statut</span>
+                    <Badge variant="outline">
+                      {selectedOrder.refundStatus === 'requested'
+                        ? 'Demandé'
+                        : selectedOrder.refundStatus === 'refunded'
+                          ? 'Remboursé'
+                          : 'Aucune demande'}
+                    </Badge>
+                  </div>
+                  {!selectedOrder.refundStatus || selectedOrder.refundStatus === 'none' ? (
+                    <Button
+                      variant="outline"
+                      className="mt-3 w-full gap-2"
+                      onClick={() => handleRefundRequest(selectedOrder)}
+                      disabled={refundBusy || selectedOrder.status === 'cancelled'}
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                      {refundBusy ? 'Envoi...' : 'Demander un remboursement'}
+                    </Button>
+                  ) : (
+                    <p className="mt-2 text-xs text-gray-500">
+                      La demande est enregistrée et sera contrôlée avant action financière.
                     </p>
                   )}
                 </div>

@@ -92,6 +92,7 @@ export default function BecomeSellerPage() {
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
   const [moq, setMoq] = useState('');
+  const [stock, setStock] = useState('');
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
@@ -149,6 +150,15 @@ export default function BecomeSellerPage() {
       return;
     }
 
+    if (store.sellType === 'product' && (!stock || Number(stock) < 0)) {
+      toast({
+        variant: 'destructive',
+        title: 'Stock requis',
+        description: 'Indiquez le stock disponible pour ce produit.',
+      });
+      return;
+    }
+
     if (store.sellType === 'product' && subcategoryOptions.length > 0 && !subcategory) {
       toast({ variant: 'destructive', title: 'Sous-catégorie requise', description: 'Choisissez une sous-catégorie.' });
       return;
@@ -175,6 +185,10 @@ export default function BecomeSellerPage() {
         location: location || store.location || '',
         category,
         description: description || undefined,
+        stock: store.sellType === 'product' ? Math.max(0, Math.floor(Number(stock || 0))) : undefined,
+        quantityAvailable: store.sellType === 'product' ? Math.max(0, Math.floor(Number(stock || 0))) : undefined,
+        availableStock: store.sellType === 'product' ? Math.max(0, Math.floor(Number(stock || 0))) : undefined,
+        sold: 0,
         sellerName: store.storeName || user.displayName || user.email || 'Vendeur',
         sellerEmail: user.email || undefined,
         storeId: store.id,
@@ -448,6 +462,24 @@ export default function BecomeSellerPage() {
                 </select>
               </div>
             </div>
+
+            {store?.sellType === 'product' && (
+              <div>
+                <label className="block text-sm font-semibold mb-2">
+                  Stock disponible *
+                </label>
+                <Input
+                  type="number"
+                  min="0"
+                  placeholder="Ex: 50"
+                  value={stock}
+                  onChange={(e) => setStock(e.target.value)}
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  Ce stock sera diminué automatiquement à chaque commande confirmée.
+                </p>
+              </div>
+            )}
 
             {/* Catégorie boutique (fixe) + Sous-catégorie */}
             {store ? (

@@ -14,8 +14,8 @@ interface StoryViewerProps {
   stories: Story[];
   initialIndex?: number;
   onClose: () => void;
-  onReply: (storyId: string, message: string) => void;
-  onMarkViewed: (storyId: string) => void;
+  onReply: (storyId: string, message: string) => void | Promise<void>;
+  onMarkViewed: (storyId: string) => void | Promise<void>;
 }
 
 export function StoryViewer({ 
@@ -44,8 +44,10 @@ export function StoryViewer({
   useEffect(() => {
     if (!currentStory) return;
 
-    // Marquer comme vue
-    onMarkViewed(currentStory.id);
+    // Marquer comme vue sans laisser une erreur réseau casser la story.
+    void Promise.resolve(onMarkViewed(currentStory.id)).catch((error) => {
+      console.warn('Impossible de marquer la story comme vue:', error);
+    });
 
     // Progress bar
     const duration = currentStory.duration * 1000;
@@ -74,8 +76,11 @@ export function StoryViewer({
 
   const handleReply = () => {
     if (replyText.trim()) {
-      onReply(currentStory.id, replyText);
+      const message = replyText.trim();
       setReplyText('');
+      void Promise.resolve(onReply(currentStory.id, message)).catch((error) => {
+        console.warn('Impossible de répondre à la story:', error);
+      });
     }
   };
 

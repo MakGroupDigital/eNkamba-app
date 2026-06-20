@@ -132,6 +132,8 @@ export default function BusinessRequestsPage() {
         businessName: requestData.businessName,
         businessType: requestData.type,
         subCategory: requestData.subCategory,
+        commerceCompliance: requestData.commerceCompliance || null,
+        nationalAgencyCompliance: requestData.nationalAgencyCompliance || null,
         approvedAt: new Date(),
       });
 
@@ -142,6 +144,8 @@ export default function BusinessRequestsPage() {
         businessName: requestData.businessName,
         businessType: requestData.type,
         subCategory: requestData.subCategory,
+        commerceCompliance: requestData.commerceCompliance || null,
+        nationalAgencyCompliance: requestData.nationalAgencyCompliance || null,
         status: 'APPROVED',
         isBusiness: true,
         approvedAt: Date.now(),
@@ -444,6 +448,37 @@ export default function BusinessRequestsPage() {
                     <div className="text-sm">
                       <p className="text-muted-foreground">URL de callback</p>
                       <p className="font-medium break-all">{selectedRequest.apiCallbackUrl}</p>
+                    </div>
+                  </div>
+                )}
+
+                {selectedRequest.type === 'COMMERCE' && selectedRequest.commerceCompliance && (
+                  <div className="space-y-3">
+                    <h3 className="font-semibold">Conformité Marché</h3>
+                    <div className="grid gap-3 text-sm md:grid-cols-2">
+                      <div className="rounded-xl border p-3">
+                        <p className="text-muted-foreground">Validation demandée</p>
+                        <p className="font-medium">
+                          {selectedRequest.commerceCompliance.verifiedSellerRequested ? 'Vendeur/fournisseur vérifié' : 'Activation standard'}
+                        </p>
+                      </div>
+                      <div className="rounded-xl border p-3">
+                        <p className="text-muted-foreground">Engagements</p>
+                        <p className="font-medium">
+                          Contrat {selectedRequest.commerceCompliance.contractAccepted ? 'accepté' : 'non accepté'} • Fiscalité {selectedRequest.commerceCompliance.fiscalRulesAccepted ? 'acceptée' : 'non acceptée'} • Douane {selectedRequest.commerceCompliance.customsRulesAccepted ? 'acceptée' : 'non acceptée'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="rounded-xl border p-3">
+                      <p className="mb-2 text-sm font-medium">Documents et contrôles</p>
+                      <div className="flex flex-wrap gap-2">
+                        {(selectedRequest.commerceCompliance.requiredDocuments || []).map((document) => (
+                          <Badge key={document} variant="secondary">{document}</Badge>
+                        ))}
+                        {(selectedRequest.commerceCompliance.operationControls || []).map((control) => (
+                          <Badge key={control} variant="outline">{control}</Badge>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 )}
