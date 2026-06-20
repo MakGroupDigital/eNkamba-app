@@ -17,6 +17,7 @@ export type UgaviLogisticsStatus =
   | 'blocked';
 
 export type UgaviTrackingStatus = 'pending' | 'in_transit' | 'delivered' | 'failed';
+export type UgaviScanMode = 'reception' | 'departure' | 'delivery';
 
 export type UgaviStatusHistoryEntry = {
   code: UgaviLogisticsStatus | 'payment_confirmed';
@@ -24,6 +25,7 @@ export type UgaviStatusHistoryEntry = {
   location: string;
   actor: string;
   createdAtIso: string;
+  scanMode?: UgaviScanMode;
 };
 
 export const UGAVI_STATUS_LABELS: Record<UgaviLogisticsStatus, string> = {
@@ -63,11 +65,57 @@ export const UGAVI_PRIMARY_FLOW: UgaviLogisticsStatus[] = [
   'delivered',
 ];
 
+export const UGAVI_SCAN_STATUS_MAP: Record<UgaviScanMode, UgaviLogisticsStatus> = {
+  reception: 'arrived_depot',
+  departure: 'in_transit',
+  delivery: 'delivered',
+};
+
+export const UGAVI_SCAN_LABELS: Record<UgaviScanMode, string> = {
+  reception: 'Reception agence / depot',
+  departure: 'Depart agence / transit',
+  delivery: 'Remise finale',
+};
+
+export function extractUgaviTrackingCode(rawValue: string) {
+  const value = rawValue.trim();
+  if (!value) return '';
+
+  try {
+    const parsed = JSON.parse(value);
+    const tracking =
+      parsed?.trackingNumber ||
+      parsed?.packageNumber ||
+      parsed?.parcelNumber ||
+      parsed?.code ||
+      parsed?.tracking;
+    if (typeof tracking === 'string' && tracking.trim()) return tracking.trim();
+  } catch {
+    // Raw barcode or URL.
+  }
+
+  try {
+    const url = new URL(value);
+    const tracking =
+      url.searchParams.get('tracking') ||
+      url.searchParams.get('trackingNumber') ||
+      url.searchParams.get('packageNumber') ||
+      url.searchParams.get('code');
+    if (tracking?.trim()) return tracking.trim();
+  } catch {
+    // Not a URL.
+  }
+
+  const embeddedCode = value.match(/\b(?:UGV|ENK)[A-Z0-9-]{6,}\b/i)?.[0];
+  return (embeddedCode || value).trim();
+}
+
 export function buildUgaviStatusEntry(
   code: UgaviStatusHistoryEntry['code'],
   actor: string,
   location: string,
-  label?: string
+  label?: string,
+  scanMode?: UgaviScanMode
 ): UgaviStatusHistoryEntry {
   return {
     code,
@@ -75,6 +123,7 @@ export function buildUgaviStatusEntry(
     location,
     actor,
     createdAtIso: new Date().toISOString(),
+    ...(scanMode ? { scanMode } : {}),
   };
 }
 

@@ -11,12 +11,16 @@ import {
   UgaviPlayIcon,
   UgaviShareIcon,
 } from '@/components/icons/service-icons';
-import { addDoc, collection, doc, onSnapshot, query, serverTimestamp, setDoc, updateDoc, where } from 'firebase/firestore';
+import { addDoc, arrayUnion, collection, doc, getDocs, limit, onSnapshot, query, serverTimestamp, setDoc, updateDoc, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { uploadToCloudinary } from '@/lib/cloudinary-upload';
 import {
   UGAVI_STATUS_LABELS,
+  UGAVI_SCAN_LABELS,
+  UGAVI_SCAN_STATUS_MAP,
   buildUgaviStatusEntry,
+  extractUgaviTrackingCode,
+  type UgaviScanMode,
   type UgaviLogisticsStatus,
 } from '@/lib/ugavi-requests';
 
@@ -70,6 +74,14 @@ type AgencyShipment = {
   description: string;
   logisticsStatus: UgaviLogisticsStatus;
   statusHistory: any[];
+  deliveryProof?: {
+    receiverName?: string;
+    otp?: string;
+    note?: string;
+    actor?: string;
+    confirmedAtIso?: string;
+  };
+  lastScanMode?: UgaviScanMode;
   updatedAtMs: number;
 };
 
@@ -147,7 +159,7 @@ const ROLE_CONFIGS: Record<string, LogisticsRoleConfig> = {
   LOCAL_AGENCY: {
     title: 'Dashboard Ugavi — Agence locale',
     summary: 'Livraison urbaine, dispatch local, flotte et SLA.',
-    tabs: [OVERVIEW_TAB, FLEET_TAB, SHIPMENTS_TAB],
+    tabs: [OVERVIEW_TAB, FLEET_TAB, SHIPMENTS_TAB, RELAY_TAB],
     stats: [...BASE_STATS, { label: 'Livreurs disponibles', value: '0', icon: BusinessDashboardIcons.Truck, color: 'purple' }],
     capabilities: ['Gestion livreurs', 'Affectation missions', 'Tarification locale', 'Suivi urbain'],
     fleetTitle: 'Livreurs & véhicules locaux',
@@ -160,7 +172,7 @@ const ROLE_CONFIGS: Record<string, LogisticsRoleConfig> = {
   TRANSPORT_COMPANY: {
     title: 'Dashboard Ugavi — Entreprise de transport',
     summary: 'Flotte multi-véhicules, hubs et itinéraires réguliers.',
-    tabs: [OVERVIEW_TAB, FLEET_TAB, SHIPMENTS_TAB],
+    tabs: [OVERVIEW_TAB, FLEET_TAB, SHIPMENTS_TAB, RELAY_TAB],
     stats: [...BASE_STATS, { label: 'Véhicules actifs', value: '0', icon: BusinessDashboardIcons.Truck, color: 'purple' }],
     capabilities: ['Flotte', 'Chauffeurs', 'Lignes régulières', 'Hubs et dépôts'],
     fleetTitle: 'Parc logistique',
@@ -173,7 +185,7 @@ const ROLE_CONFIGS: Record<string, LogisticsRoleConfig> = {
   NATIONAL_AGENCY: {
     title: 'Dashboard Ugavi — Agence nationale',
     summary: 'Transport inter-ville avec dépôts, hubs et relais de réception.',
-    tabs: [OVERVIEW_TAB, FLEET_TAB, SHIPMENTS_TAB],
+    tabs: [OVERVIEW_TAB, FLEET_TAB, SHIPMENTS_TAB, RELAY_TAB],
     stats: [...BASE_STATS, { label: 'Dépôts actifs', value: '0', icon: BusinessDashboardIcons.AlertCircle, color: 'yellow' }],
     capabilities: ['Trajets inter-ville', 'Dépôts', 'Relais réception', 'Transport train / bateau / camion'],
     fleetTitle: 'Réseau national',
@@ -186,7 +198,7 @@ const ROLE_CONFIGS: Record<string, LogisticsRoleConfig> = {
   INTERNATIONAL_AGENCY: {
     title: 'Dashboard Ugavi — Agence internationale',
     summary: 'Cross-border, douane, partenaires et suivi multi-pays.',
-    tabs: [OVERVIEW_TAB, FLEET_TAB, SHIPMENTS_TAB],
+    tabs: [OVERVIEW_TAB, FLEET_TAB, SHIPMENTS_TAB, RELAY_TAB],
     stats: [...BASE_STATS, { label: 'Corridors actifs', value: '0', icon: BusinessDashboardIcons.AlertCircle, color: 'yellow' }],
     capabilities: ['Douane', 'Partenaires', 'Multi-pays', 'Cargo premium'],
     fleetTitle: 'Partenaires & moyens internationaux',
@@ -212,7 +224,7 @@ const ROLE_CONFIGS: Record<string, LogisticsRoleConfig> = {
   LAST_MILE: {
     title: 'Dashboard Ugavi — Coordination last-mile',
     summary: 'Pilotage des agents proches et de la livraison finale.',
-    tabs: [OVERVIEW_TAB, FLEET_TAB, SHIPMENTS_TAB],
+    tabs: [OVERVIEW_TAB, FLEET_TAB, SHIPMENTS_TAB, RELAY_TAB],
     stats: [...BASE_STATS, { label: 'Agents disponibles', value: '0', icon: BusinessDashboardIcons.Truck, color: 'purple' }],
     capabilities: ['Dispatch rapide', 'ETA', 'Zone GPS', 'Suivi livraison finale'],
     fleetTitle: 'Agents last-mile',
@@ -230,7 +242,7 @@ function getCourierConfig(): LogisticsRoleConfig {
   return {
     title: 'Dashboard Ugavi — Livreur',
     summary: 'Missions, disponibilité, transport et navigation terrain.',
-    tabs: [OVERVIEW_TAB, FLEET_TAB, SHIPMENTS_TAB],
+    tabs: [OVERVIEW_TAB, FLEET_TAB, SHIPMENTS_TAB, RELAY_TAB],
     stats: [...BASE_STATS, { label: 'Disponibilité', value: 'Actif', icon: BusinessDashboardIcons.AlertCircle, color: 'yellow' }],
     capabilities: ['Accepter missions', 'Navigation GPS', 'Disponibilité live', 'Preuve de remise'],
     fleetTitle: 'Moyen de déplacement',
@@ -300,6 +312,8 @@ export function LogisticsDashboard({ businessUser }: LogisticsDashboardProps) {
             description: data.description || '',
             logisticsStatus: (data.logisticsStatus || 'registered') as UgaviLogisticsStatus,
             statusHistory: Array.isArray(data.statusHistory) ? data.statusHistory : [],
+            deliveryProof: data.deliveryProof || undefined,
+            lastScanMode: data.lastScanMode || undefined,
             updatedAtMs,
           };
         });
@@ -414,7 +428,7 @@ export function LogisticsDashboard({ businessUser }: LogisticsDashboardProps) {
         {activeTab === 'overview' && <LogisticsOverview stats={liveStats} capabilities={roleConfig.capabilities} shipments={shipments} setActiveTab={setActiveTab} />}
         {activeTab === 'fleet' && <LogisticsFleet title={roleConfig.fleetTitle} emptyState={roleConfig.fleetEmptyState} businessUser={businessUser} />}
         {activeTab === 'shipments' && <LogisticsShipments title={roleConfig.shipmentsTitle} emptyState={roleConfig.shipmentsEmptyState} businessUser={businessUser} shipments={shipments} isLoading={isShipmentsLoading} />}
-        {activeTab === 'relay' && <RelayScanner title={roleConfig.relayTitle} description={roleConfig.relayDescription} />}
+        {activeTab === 'relay' && <RelayScanner title={roleConfig.relayTitle} description={roleConfig.relayDescription} businessUser={businessUser} />}
         {activeTab === 'register' && <AgencyPackageRegistration businessUser={businessUser} />}
       </div>
     </div>
@@ -1717,10 +1731,7 @@ function LogisticsShipments({
       await updateDoc(doc(db, 'ugaviRequests', shipment.id), {
         logisticsStatus: nextStatus,
         status: nextStatus,
-        statusHistory: [
-          ...shipment.statusHistory,
-          buildUgaviStatusEntry(nextStatus, businessUser.businessName, shipment.origin),
-        ],
+        statusHistory: arrayUnion(buildUgaviStatusEntry(nextStatus, businessUser.businessName, shipment.origin)),
         updatedAt: serverTimestamp(),
         ...(nextStatus === 'delivered' ? { deliveredAt: serverTimestamp() } : {}),
       });
@@ -1779,6 +1790,11 @@ function LogisticsShipments({
                   <p className="mt-1 text-xs text-slate-500">
                     {shipment.weight || 0} kg {shipment.description ? `· ${shipment.description}` : ''}
                   </p>
+                  {shipment.deliveryProof && (
+                    <p className="mt-2 rounded-xl bg-primary/5 px-3 py-2 text-xs font-semibold text-primary">
+                      Preuve: {shipment.deliveryProof.receiverName || 'Destinataire confirme'} · {shipment.deliveryProof.otp || 'Scan valide'}
+                    </p>
+                  )}
                 </div>
                 <div className="grid gap-2 sm:grid-cols-[1fr_auto] lg:min-w-80">
                   <select
@@ -1827,7 +1843,236 @@ function LogisticsShipments({
   );
 }
 
-function RelayScanner({ title, description }: { title: string; description: string }) {
+function RelayScanner({ title, description, businessUser }: { title: string; description: string; businessUser: BusinessUser }) {
+  const videoRef = React.useRef<HTMLVideoElement | null>(null);
+  const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
+  const scannerStreamRef = React.useRef<MediaStream | null>(null);
+  const scannerFrameRef = React.useRef<number | null>(null);
+  const [scanMode, setScanMode] = useState<UgaviScanMode>('reception');
+  const [manualCode, setManualCode] = useState('');
+  const [scanMessage, setScanMessage] = useState('');
+  const [scanError, setScanError] = useState('');
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [isScannerReady, setIsScannerReady] = useState(false);
+  const [isProcessingScan, setIsProcessingScan] = useState(false);
+  const [lastShipment, setLastShipment] = useState<AgencyShipment | null>(null);
+  const [receiverName, setReceiverName] = useState('');
+  const [deliveryOtp, setDeliveryOtp] = useState('');
+  const [deliveryNote, setDeliveryNote] = useState('');
+
+  const stopScanner = React.useCallback(() => {
+    if (scannerFrameRef.current !== null) {
+      cancelAnimationFrame(scannerFrameRef.current);
+      scannerFrameRef.current = null;
+    }
+    scannerStreamRef.current?.getTracks().forEach((track) => track.stop());
+    scannerStreamRef.current = null;
+    setIsScannerReady(false);
+  }, []);
+
+  const findShipmentByTrackingCode = React.useCallback(async (trackingCode: string) => {
+    const primaryQuery = query(collection(db, 'ugaviRequests'), where('trackingNumber', '==', trackingCode), limit(1));
+    const primarySnapshot = await getDocs(primaryQuery);
+    if (!primarySnapshot.empty) return primarySnapshot.docs[0];
+
+    const packageQuery = query(collection(db, 'ugaviRequests'), where('packageNumber', '==', trackingCode), limit(1));
+    const packageSnapshot = await getDocs(packageQuery);
+    return packageSnapshot.empty ? null : packageSnapshot.docs[0];
+  }, []);
+
+  const processScannedCode = React.useCallback(async (rawCode: string) => {
+    const trackingCode = extractUgaviTrackingCode(rawCode);
+    setScanError('');
+    setScanMessage('');
+
+    if (!trackingCode) {
+      setScanError('Code colis invalide.');
+      return;
+    }
+
+    if (scanMode === 'delivery' && !receiverName.trim()) {
+      setScanError('Ajoutez le nom de la personne qui reçoit le colis avant la remise.');
+      return;
+    }
+
+    setManualCode(trackingCode);
+    setIsProcessingScan(true);
+
+    try {
+      const shipmentDoc = await findShipmentByTrackingCode(trackingCode);
+      if (!shipmentDoc) {
+        setScanError(`Aucun colis trouve pour ${trackingCode}.`);
+        return;
+      }
+
+      const data = shipmentDoc.data() as any;
+      const nextStatus = UGAVI_SCAN_STATUS_MAP[scanMode];
+      const actor = businessUser.businessName || businessUser.uid;
+      const location = businessUser.businessName || data.receiverAddress || data.senderAddress || 'Agence Ugavi';
+      const proof =
+        scanMode === 'delivery'
+          ? {
+              type: 'delivery_scan',
+              receiverName: receiverName.trim(),
+              otp: deliveryOtp.trim(),
+              note: deliveryNote.trim(),
+              actor,
+              agencyId: businessUser.businessId || businessUser.uid,
+              confirmedAtIso: new Date().toISOString(),
+            }
+          : null;
+
+      const scanEvent = {
+        mode: scanMode,
+        modeLabel: UGAVI_SCAN_LABELS[scanMode],
+        status: nextStatus,
+        trackingNumber: trackingCode,
+        actor,
+        agencyId: businessUser.businessId || businessUser.uid,
+        agencyUserId: businessUser.uid,
+        location,
+        createdAtIso: new Date().toISOString(),
+      };
+
+      await updateDoc(doc(db, 'ugaviRequests', shipmentDoc.id), {
+        logisticsStatus: nextStatus,
+        status: nextStatus,
+        currentLocation: location,
+        lastScanMode: scanMode,
+        lastScanAt: serverTimestamp(),
+        lastScanBy: actor,
+        scanEvents: arrayUnion(scanEvent),
+        statusHistory: arrayUnion(
+          buildUgaviStatusEntry(nextStatus, actor, location, UGAVI_SCAN_LABELS[scanMode], scanMode),
+        ),
+        updatedAt: serverTimestamp(),
+        ...(scanMode === 'delivery'
+          ? {
+              deliveredAt: serverTimestamp(),
+              proofOfDelivery: true,
+              deliveryProof: proof,
+            }
+          : {}),
+      });
+
+      const nextShipment: AgencyShipment = {
+        id: shipmentDoc.id,
+        trackingNumber: data.trackingNumber || data.packageNumber || trackingCode,
+        senderName: data.senderName || 'Expediteur',
+        receiverName: data.receiverName || receiverName || 'Destinataire',
+        origin: data.senderAddress || 'Origine',
+        destination: data.receiverAddress || 'Destination',
+        weight: Number(data.packageWeight || 0),
+        description: data.description || data.parcelName || '',
+        logisticsStatus: nextStatus,
+        statusHistory: Array.isArray(data.statusHistory) ? data.statusHistory : [],
+        deliveryProof: proof || data.deliveryProof || undefined,
+        lastScanMode: scanMode,
+        updatedAtMs: Date.now(),
+      };
+
+      setLastShipment(nextShipment);
+      setScanMessage(`${UGAVI_SCAN_LABELS[scanMode]} confirmee pour ${trackingCode}.`);
+      if (scanMode === 'delivery') {
+        setReceiverName('');
+        setDeliveryOtp('');
+        setDeliveryNote('');
+      }
+    } catch (error) {
+      console.error('Erreur scan colis Ugavi:', error);
+      setScanError('Impossible de valider ce scan. Verifiez la connexion ou les droits Firestore.');
+    } finally {
+      setIsProcessingScan(false);
+    }
+  }, [businessUser.businessId, businessUser.businessName, businessUser.uid, deliveryNote, deliveryOtp, findShipmentByTrackingCode, receiverName, scanMode]);
+
+  const startScanner = React.useCallback(async () => {
+    setScanError('');
+    setIsScannerReady(false);
+
+    try {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error('Camera indisponible sur cet appareil.');
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' } },
+        audio: false,
+      });
+      scannerStreamRef.current = stream;
+
+      const video = videoRef.current;
+      if (!video) return;
+
+      video.srcObject = stream;
+      await video.play();
+      setIsScannerReady(true);
+
+      const scanFrame = async () => {
+        const currentVideo = videoRef.current;
+        const canvas = canvasRef.current;
+        if (!currentVideo || !canvas || currentVideo.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
+          scannerFrameRef.current = requestAnimationFrame(scanFrame);
+          return;
+        }
+
+        canvas.width = currentVideo.videoWidth;
+        canvas.height = currentVideo.videoHeight;
+        const context = canvas.getContext('2d', { willReadFrequently: true });
+        if (!context) {
+          scannerFrameRef.current = requestAnimationFrame(scanFrame);
+          return;
+        }
+
+        context.drawImage(currentVideo, 0, 0, canvas.width, canvas.height);
+
+        try {
+          const BarcodeDetectorCtor = (window as any).BarcodeDetector;
+          if (BarcodeDetectorCtor) {
+            const detector = new BarcodeDetectorCtor({ formats: ['qr_code', 'code_128', 'code_39', 'ean_13', 'ean_8', 'upc_a', 'upc_e'] });
+            const codes = await detector.detect(canvas);
+            const rawValue = codes?.[0]?.rawValue;
+            if (rawValue) {
+              stopScanner();
+              setIsScannerOpen(false);
+              void processScannedCode(rawValue);
+              return;
+            }
+          } else {
+            const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+            const jsQR = (await import('jsqr')).default;
+            const result = jsQR(imageData.data, imageData.width, imageData.height);
+            if (result?.data) {
+              stopScanner();
+              setIsScannerOpen(false);
+              void processScannedCode(result.data);
+              return;
+            }
+          }
+        } catch (error) {
+          console.error('Erreur lecture scanner Ugavi:', error);
+        }
+
+        scannerFrameRef.current = requestAnimationFrame(scanFrame);
+      };
+
+      scannerFrameRef.current = requestAnimationFrame(scanFrame);
+    } catch (error: any) {
+      setScanError(error?.message || 'Impossible d ouvrir la camera.');
+      stopScanner();
+    }
+  }, [processScannedCode, stopScanner]);
+
+  useEffect(() => {
+    if (!isScannerOpen) {
+      stopScanner();
+      return;
+    }
+
+    void startScanner();
+    return () => stopScanner();
+  }, [isScannerOpen, startScanner, stopScanner]);
+
   return (
     <div className="grid gap-5 lg:grid-cols-[0.85fr_1.15fr]">
       <div className="rounded-2xl bg-gradient-to-br from-primary to-orange-500 p-6 text-white shadow-sm">
@@ -1836,22 +2081,159 @@ function RelayScanner({ title, description }: { title: string; description: stri
         </div>
         <h2 className="mt-6 text-2xl font-black">{title}</h2>
         <p className="mt-2 text-sm text-slate-300">{description}</p>
-        <button className="mt-6 w-full rounded-xl bg-white px-4 py-3 font-bold text-primary transition hover:bg-primary/5">
-          Ouvrir le scanner
+        <button
+          type="button"
+          onClick={() => setIsScannerOpen(true)}
+          disabled={isProcessingScan}
+          className="mt-6 w-full rounded-xl bg-white px-4 py-3 font-bold text-primary transition hover:bg-primary/5 disabled:opacity-60"
+        >
+          {isProcessingScan ? 'Validation...' : 'Ouvrir le scanner'}
         </button>
+        <div className="mt-4 rounded-2xl border border-white/15 bg-white/10 p-3 text-xs leading-5 text-white/80">
+          Le scan met a jour le tracking, ajoute un journal d'action et cree une preuve si le mode remise finale est choisi.
+        </div>
       </div>
       <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
         <p className="text-sm font-bold text-primary">Modes de scan</p>
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          {['Reception', 'Depart', 'Remise'].map((mode) => (
-            <button key={mode} className="rounded-2xl bg-slate-50 p-4 text-left">
+          {([
+            { key: 'reception', label: 'Reception', helper: 'Colis entre en agence' },
+            { key: 'departure', label: 'Depart', helper: 'Colis sort en transit' },
+            { key: 'delivery', label: 'Remise', helper: 'Preuve de livraison' },
+          ] as Array<{ key: UgaviScanMode; label: string; helper: string }>).map((mode) => (
+            <button
+              key={mode.key}
+              type="button"
+              onClick={() => setScanMode(mode.key)}
+              className={`rounded-2xl p-4 text-left transition ${
+                scanMode === mode.key ? 'bg-primary text-white shadow-sm' : 'bg-slate-50 text-primary hover:bg-primary/5'
+              }`}
+            >
               <UgaviShareIcon className="mb-4" size={32} />
-              <p className="font-bold text-primary">{mode}</p>
-              <p className="text-sm text-slate-500">Scanner et valider</p>
+              <p className="font-bold">{mode.label}</p>
+              <p className={`text-sm ${scanMode === mode.key ? 'text-white/75' : 'text-slate-500'}`}>{mode.helper}</p>
             </button>
           ))}
         </div>
+
+        <div className="mt-5 grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <label className="space-y-1.5">
+            <span className="text-sm font-bold text-primary">Numero ou contenu QR</span>
+            <input
+              value={manualCode}
+              onChange={(event) => setManualCode(event.target.value)}
+              placeholder="UGV-2026-KIN-LUB-12345 ou payload QR"
+              className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+            />
+          </label>
+
+          {scanMode === 'delivery' && (
+            <div className="grid gap-3 md:grid-cols-3">
+              <label className="space-y-1.5">
+                <span className="text-xs font-bold text-slate-600">Recu par *</span>
+                <input
+                  value={receiverName}
+                  onChange={(event) => setReceiverName(event.target.value)}
+                  placeholder="Nom destinataire"
+                  className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-primary"
+                />
+              </label>
+              <label className="space-y-1.5">
+                <span className="text-xs font-bold text-slate-600">OTP / reference</span>
+                <input
+                  value={deliveryOtp}
+                  onChange={(event) => setDeliveryOtp(event.target.value)}
+                  placeholder="Code OTP"
+                  className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-primary"
+                />
+              </label>
+              <label className="space-y-1.5">
+                <span className="text-xs font-bold text-slate-600">Observation</span>
+                <input
+                  value={deliveryNote}
+                  onChange={(event) => setDeliveryNote(event.target.value)}
+                  placeholder="Signature, etat colis..."
+                  className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-primary"
+                />
+              </label>
+            </div>
+          )}
+
+          <div className="grid gap-2 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={() => setIsScannerOpen(true)}
+              className="h-11 rounded-xl bg-white px-4 text-sm font-bold text-primary ring-1 ring-primary/20"
+            >
+              Scanner camera
+            </button>
+            <button
+              type="button"
+              onClick={() => void processScannedCode(manualCode)}
+              disabled={isProcessingScan || !manualCode.trim()}
+              className="h-11 rounded-xl bg-primary px-4 text-sm font-bold text-white disabled:bg-slate-300"
+            >
+              Valider le scan
+            </button>
+          </div>
+
+          {scanError && <p className="rounded-xl bg-red-50 px-3 py-2 text-sm font-bold text-red-700">{scanError}</p>}
+          {scanMessage && <p className="rounded-xl bg-primary/5 px-3 py-2 text-sm font-bold text-primary">{scanMessage}</p>}
+        </div>
+
+        {lastShipment && (
+          <div className="mt-5 rounded-2xl border border-primary/20 bg-primary/5 p-4">
+            <p className="text-xs font-black uppercase tracking-[0.14em] text-primary">Dernier scan</p>
+            <p className="mt-2 font-mono text-sm font-black text-primary">{lastShipment.trackingNumber}</p>
+            <p className="mt-1 text-sm font-bold text-slate-900">{lastShipment.senderName} vers {lastShipment.receiverName}</p>
+            <p className="mt-1 text-xs text-slate-500">{UGAVI_STATUS_LABELS[lastShipment.logisticsStatus]} · {lastShipment.destination}</p>
+            {lastShipment.deliveryProof && (
+              <p className="mt-3 rounded-xl bg-white px-3 py-2 text-xs font-semibold text-primary">
+                Preuve: {lastShipment.deliveryProof.receiverName} · {lastShipment.deliveryProof.otp || 'scan confirme'}
+              </p>
+            )}
+          </div>
+        )}
       </div>
+
+      {isScannerOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/70 p-3 sm:items-center">
+          <div className="w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+              <div>
+                <p className="text-sm font-bold text-slate-900">Scanner Ugavi</p>
+                <p className="text-xs text-slate-500">{UGAVI_SCAN_LABELS[scanMode]}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  stopScanner();
+                  setIsScannerOpen(false);
+                }}
+                className="rounded-full bg-slate-100 px-3 py-1.5 text-sm font-bold text-slate-600"
+              >
+                Fermer
+              </button>
+            </div>
+            <div className="space-y-3 p-4">
+              <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-slate-950">
+                <video ref={videoRef} className="h-full w-full object-cover" playsInline muted />
+                <canvas ref={canvasRef} className="hidden" />
+                <div className="pointer-events-none absolute inset-10 rounded-2xl border-2 border-primary shadow-[0_0_0_999px_rgba(15,23,42,0.35)]" />
+                <div className="pointer-events-none absolute left-12 right-12 top-1/2 h-0.5 bg-primary/40 shadow-[0_0_18px_rgba(52,211,153,0.95)]" />
+                {!isScannerReady && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-slate-950/60 text-sm font-semibold text-white">
+                    Ouverture de la camera...
+                  </div>
+                )}
+              </div>
+              <p className="text-xs leading-5 text-slate-500">
+                Scannez le QR code ou le code-barres imprime sur le colis. Le numero est extrait automatiquement meme si le QR contient une fiche complete.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

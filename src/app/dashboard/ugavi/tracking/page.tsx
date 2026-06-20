@@ -11,7 +11,7 @@ import { useSearchParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/hooks/useAuth';
-import { appendUgaviStatus, UGAVI_PRIMARY_FLOW, UGAVI_STATUS_LABELS, UGAVI_TRACKING_STATUS_MAP, type UgaviLogisticsStatus } from '@/lib/ugavi-requests';
+import { appendUgaviStatus, extractUgaviTrackingCode, UGAVI_PRIMARY_FLOW, UGAVI_STATUS_LABELS, UGAVI_TRACKING_STATUS_MAP, type UgaviLogisticsStatus } from '@/lib/ugavi-requests';
 
 interface TrackingInfo {
   trackingNumber: string;
@@ -35,6 +35,13 @@ interface TrackingInfo {
   recipientPhone?: string;
   paymentLabel?: string;
   proofLabel?: string;
+  proofDetails?: {
+    receiverName?: string;
+    otp?: string;
+    note?: string;
+    actor?: string;
+    confirmedAtIso?: string;
+  };
   requestId?: string;
   logisticsStatus?: UgaviLogisticsStatus;
   events: Array<{
@@ -203,6 +210,7 @@ export default function UgaviTrackingPage() {
           recipientPhone: ugaviData.receiverPhone || '',
           paymentLabel: ugaviData.paymentStatus === 'completed' ? 'Payé' : ugaviData.paymentStatus === 'cash_on_delivery' ? 'A la livraison' : 'En attente',
           proofLabel: ugaviData.deliveryProof?.type || ugaviData.proofOfDelivery ? 'Preuve de livraison disponible' : 'Preuve attendue a la livraison',
+          proofDetails: ugaviData.deliveryProof || undefined,
           requestId: ugaviDoc.id,
           logisticsStatus,
           events,
@@ -346,7 +354,7 @@ export default function UgaviTrackingPage() {
   }, []);
 
   const handleScannedCode = useCallback((code: string) => {
-    const scannedCode = code.trim();
+    const scannedCode = extractUgaviTrackingCode(code);
     if (!scannedCode) return;
     stopScanner();
     setIsScannerOpen(false);
@@ -737,6 +745,19 @@ export default function UgaviTrackingPage() {
                 <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
                   <p className="mb-1 text-xs text-gray-600">Transaction</p>
                   <p className="font-mono text-sm font-semibold text-slate-900">{trackingInfo.transactionId}</p>
+                </div>
+              )}
+
+              {trackingInfo.proofDetails && (
+                <div className="rounded-xl border border-primary/20 bg-primary/5 p-3">
+                  <p className="mb-2 text-xs font-bold uppercase tracking-[0.12em] text-primary">Preuve de remise</p>
+                  <div className="grid gap-2 text-sm text-slate-700 sm:grid-cols-2">
+                    <p><span className="font-semibold">Recu par:</span> {trackingInfo.proofDetails.receiverName || 'Non renseigne'}</p>
+                    <p><span className="font-semibold">OTP / reference:</span> {trackingInfo.proofDetails.otp || 'Non renseigne'}</p>
+                    <p><span className="font-semibold">Agent:</span> {trackingInfo.proofDetails.actor || 'Ugavi'}</p>
+                    <p><span className="font-semibold">Date:</span> {trackingInfo.proofDetails.confirmedAtIso ? new Date(trackingInfo.proofDetails.confirmedAtIso).toLocaleString('fr-FR') : 'Temps reel'}</p>
+                    {trackingInfo.proofDetails.note && <p className="sm:col-span-2"><span className="font-semibold">Observation:</span> {trackingInfo.proofDetails.note}</p>}
+                  </div>
                 </div>
               )}
 

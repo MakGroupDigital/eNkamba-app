@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { extractUgaviTrackingCode, UGAVI_TRACKING_STATUS_MAP, type UgaviLogisticsStatus } from '@/lib/ugavi-requests';
 
 interface TrackingInfo {
   trackingNumber: string;
@@ -20,11 +21,16 @@ interface TrackingInfo {
   destination: string;
   estimatedDelivery: string;
   lastUpdate: string;
+  source?: 'ugavi' | 'nkampa';
+  serviceLabel?: string;
+  paymentLabel?: string;
+  proofLabel?: string;
   events: Array<{
     date: string;
     time: string;
     status: string;
     location: string;
+    actor?: string;
   }>;
 }
 
@@ -38,7 +44,7 @@ export default function PackageTrackingPage() {
   const hasAutoSearched = useRef(false);
 
   const handleSearch = useCallback(async (numberOverride?: string) => {
-    const numberToSearch = (numberOverride ?? trackingNumber).trim();
+    const numberToSearch = extractUgaviTrackingCode(numberOverride ?? trackingNumber);
     if (!numberToSearch) {
       setSearchError('Veuillez entrer un numéro de suivi');
       return;
@@ -50,8 +56,65 @@ export default function PackageTrackingPage() {
     try {
       // Rechercher la commande par numéro de suivi
       const { db } = await import('@/lib/firebase');
-      const { collection, query, where, getDocs } = await import('firebase/firestore');
-      
+      const { collection, query, where, getDocs, doc: docRef, getDoc } = await import('firebase/firestore');
+
+      const ugaviRequestsRef = collection(db, 'ugaviRequests');
+      const ugaviQuery = query(ugaviRequestsRef, where('trackingNumber', '==', numberToSearch));
+      const ugaviSnapshot = await getDocs(ugaviQuery);
+
+      if (!ugaviSnapshot.empty) {
+        const ugaviDoc = ugaviSnapshot.docs[0];
+        const ugaviData = ugaviDoc.data();
+        const requestUserDoc = ugaviData.userId ? await getDoc(docRef(db, 'users', ugaviData.userId)) : null;
+        const requestUserData = requestUserDoc?.exists() ? requestUserDoc.data() : null;
+        const history = Array.isArray(ugaviData.statusHistory) ? ugaviData.statusHistory : [];
+        const events =
+          history.length > 0
+            ? history
+                .map((entry: any) => {
+                  const eventDate = entry.createdAtIso ? new Date(entry.createdAtIso) : new Date();
+                  return {
+                    date: eventDate.toLocaleDateString('fr-FR'),
+                    time: eventDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+                    status: entry.label || 'Mise a jour Ugavi',
+                    location: entry.location || 'Ugavi',
+                    actor: entry.actor || undefined,
+                  };
+                })
+                .reverse()
+            : [
+                {
+                  date: new Date().toLocaleDateString('fr-FR'),
+                  time: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+                  status: 'Colis enregistre',
+                  location: ugaviData.senderAddress || 'Point de depart',
+                  actor: ugaviData.senderName || undefined,
+                },
+              ];
+        const logisticsStatus = (ugaviData.logisticsStatus || ugaviData.status || 'registered') as UgaviLogisticsStatus;
+
+        setTrackingInfo({
+          trackingNumber: numberToSearch,
+          status: UGAVI_TRACKING_STATUS_MAP[logisticsStatus] || 'pending',
+          sender: requestUserData?.fullName || requestUserData?.displayName || ugaviData.senderName || 'Expediteur',
+          recipient: ugaviData.receiverName || 'Destinataire',
+          origin: ugaviData.senderAddress || ugaviData.origin || 'Origine Ugavi',
+          destination: ugaviData.receiverAddress || ugaviData.destination || 'Destination Ugavi',
+          estimatedDelivery: ugaviData.eta || 'Selon trajet',
+          lastUpdate: (ugaviData.updatedAt?.toDate?.() || new Date()).toLocaleString('fr-FR'),
+          source: 'ugavi',
+          serviceLabel: ugaviData.transportCategoryLabel || ugaviData.serviceMode || 'Ugavi',
+          paymentLabel: ugaviData.paymentStatus === 'completed' ? 'Payé' : ugaviData.paymentStatus === 'cash_on_delivery' ? 'A la livraison' : 'Selon dossier',
+          proofLabel: ugaviData.deliveryProof || ugaviData.proofOfDelivery ? 'Preuve de remise disponible' : 'Preuve attendue',
+          events,
+        });
+        toast({
+          title: 'Colis Ugavi trouvé',
+          description: `Numéro de suivi: ${numberToSearch}`,
+        });
+        return;
+      }
+
       const ordersRef = collection(db, 'nkampa_orders');
       const q = query(ordersRef, where('trackingNumber', '==', numberToSearch));
       const querySnapshot = await getDocs(q);
@@ -69,8 +132,6 @@ export default function PackageTrackingPage() {
       const orderDoc = querySnapshot.docs[0];
       const orderData = orderDoc.data();
 
-      // Récupérer les infos du vendeur
-      const { doc: docRef, getDoc } = await import('firebase/firestore');
       const sellerDoc = await getDoc(docRef(db, 'users', orderData.sellerId));
       const sellerData = sellerDoc.exists() ? sellerDoc.data() : null;
 
@@ -150,6 +211,10 @@ export default function PackageTrackingPage() {
         destination: orderData.shippingAddress || 'Destination',
         estimatedDelivery: estimatedDelivery.toLocaleDateString('fr-FR'),
         lastUpdate: (orderData.updatedAt?.toDate?.() || new Date()).toLocaleString('fr-FR'),
+        source: 'nkampa',
+        serviceLabel: orderData.pickupRoute?.enabled ? 'Retrait boutique' : 'Livraison Nkampa',
+        paymentLabel: orderData.paymentStatus === 'paid' || orderData.status === 'paid' ? 'Payé' : 'Selon commande',
+        proofLabel: orderData.status === 'delivered' ? 'Livraison confirmée' : 'Preuve attendue',
         events: events.reverse(), // Plus récent en premier
       };
 
@@ -314,6 +379,20 @@ export default function PackageTrackingPage() {
               <p className="text-xs text-gray-600">
                 Numéro de suivi: <span className="font-mono font-semibold">{trackingInfo.trackingNumber}</span>
               </p>
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                <div className="rounded-xl bg-white/80 p-3">
+                  <p className="text-xs text-gray-600">Source</p>
+                  <p className="mt-1 text-sm font-bold text-slate-900">{trackingInfo.source === 'ugavi' ? 'Ugavi Logistique' : 'Marché'}</p>
+                </div>
+                <div className="rounded-xl bg-white/80 p-3">
+                  <p className="text-xs text-gray-600">Service</p>
+                  <p className="mt-1 text-sm font-bold text-slate-900">{trackingInfo.serviceLabel || 'Livraison'}</p>
+                </div>
+                <div className="rounded-xl bg-white/80 p-3">
+                  <p className="text-xs text-gray-600">Preuve</p>
+                  <p className="mt-1 text-sm font-bold text-slate-900">{trackingInfo.proofLabel || 'A confirmer'}</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
@@ -360,6 +439,11 @@ export default function PackageTrackingPage() {
                   <p className="font-semibold text-gray-900">{trackingInfo.lastUpdate}</p>
                 </div>
               </div>
+
+              <div className="rounded-xl border border-primary/10 bg-primary/5 p-3">
+                <p className="text-xs text-gray-600 mb-1">Paiement</p>
+                <p className="font-semibold text-gray-900">{trackingInfo.paymentLabel || 'Selon dossier'}</p>
+              </div>
             </CardContent>
           </Card>
 
@@ -386,6 +470,7 @@ export default function PackageTrackingPage() {
                         <MapPin className="w-4 h-4" />
                         {event.location}
                       </div>
+                      {event.actor && <p className="mt-1 text-xs font-semibold text-gray-500">Agent: {event.actor}</p>}
                     </div>
                   </div>
                 ))}
@@ -411,7 +496,7 @@ export default function PackageTrackingPage() {
               asChild
             >
               <Link href="/dashboard/nkampa">
-                Retour à Nkampa
+                Retour
               </Link>
             </Button>
           </div>
