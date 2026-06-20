@@ -12,6 +12,7 @@ const MODULE_BY_PATH: Array<[string, string]> = [
   ['/admin/logs', 'Admin Logs'],
   ['/admin/cyber', 'Admin Cyber'],
   ['/admin/attacks', 'Admin Attacks'],
+  ['/admin/reports', 'Admin Reports'],
   ['/admin', 'Admin'],
   ['/dashboard/miyiki-chat', 'Masolo'],
   ['/dashboard/nkampa', 'Nkampa'],

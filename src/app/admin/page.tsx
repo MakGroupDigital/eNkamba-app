@@ -23,6 +23,7 @@ import {
   EyeOff,
   Fingerprint,
   FileCheck2,
+  FileText,
   KeyRound,
   Landmark,
   Layers3,
@@ -574,12 +575,13 @@ export default function AdminDashboardPage() {
             <Badge className="w-fit bg-[#32BB78] hover:bg-[#32BB78]">Pages dediees</Badge>
           </div>
 
-          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
             {[
               { title: 'Infrastructure', text: 'Carte mondiale, serveurs modules, pare-feu, agents et points GPS.', href: '/admin/infrastructure', icon: Server, tone: 'bg-primary/5 text-primary' },
               { title: 'Logs erreurs', text: 'Erreur exacte, module, page, utilisateur, copie et partage.', href: '/admin/logs', icon: Bug, tone: 'bg-red-50 text-red-700' },
               { title: 'Cyber intelligence', text: 'Actions utilisateurs, temps passe, IP, localisation et pages.', href: '/admin/cyber', icon: Fingerprint, tone: 'bg-sky-50 text-sky-700' },
               { title: 'Attaques', text: 'Signaux suspects, faille probable, methode et contre-mesure.', href: '/admin/attacks', icon: ShieldAlert, tone: 'bg-orange-50 text-orange-700' },
+              { title: 'Rapports', text: 'Exports CSV, rapport operationnel, audit et donnees de supervision.', href: '/admin/reports', icon: FileText, tone: 'bg-slate-100 text-slate-800' },
             ].map((item) => {
               const Icon = item.icon;
               return (

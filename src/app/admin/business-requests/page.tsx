@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { httpsCallable } from 'firebase/functions';
 import { collection, query, where, getDocs, doc, updateDoc, getDoc, setDoc } from 'firebase/firestore';
 import { functions, db } from '@/lib/firebase';
@@ -13,8 +13,41 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Loader2, CheckCircle2, XCircle, Clock, Eye } from 'lucide-react';
+import { Loader2, CheckCircle2, XCircle, Clock, Eye, Download, FileText, Search } from 'lucide-react';
 import { BusinessRequestData } from '@/types/business-account.types';
+import { downloadCsv, downloadTextFile } from '@/lib/admin-export';
+
+function buildBusinessRequestExport(request: BusinessRequestData & { id: string }) {
+  return {
+    id: request.id,
+    businessName: request.businessName,
+    type: request.type,
+    subCategory: request.subCategory,
+    registrationNumber: request.registrationNumber,
+    city: request.city,
+    country: request.country,
+    contactEmail: request.contactEmail,
+    contactPhone: request.contactPhone,
+    submittedAt: request.submittedAt,
+    status: request.status,
+  };
+}
+
+function buildBusinessRequestsReport(requests: Array<BusinessRequestData & { id: string }>) {
+  return [
+    'RAPPORT DEMANDES BUSINESS ENKAMBA',
+    `Genere le: ${new Date().toLocaleString('fr-FR')}`,
+    `Demandes en attente: ${requests.length}`,
+    '',
+    ...requests.map((request, index) => [
+      `${index + 1}. ${request.businessName}`,
+      `Type: ${request.type} / ${request.subCategory}`,
+      `Contact: ${request.contactEmail} - ${request.contactPhone}`,
+      `Adresse: ${request.city}, ${request.country}`,
+      `Numero: ${request.registrationNumber}`,
+    ].join('\n')),
+  ].join('\n\n');
+}
 
 export default function BusinessRequestsPage() {
   const { user } = useAuth();
@@ -24,6 +57,7 @@ export default function BusinessRequestsPage() {
   const [selectedRequest, setSelectedRequest] = useState<(BusinessRequestData & { id: string }) | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [search, setSearch] = useState('');
 
   // Charger les demandes en attente
   useEffect(() => {
@@ -54,6 +88,21 @@ export default function BusinessRequestsPage() {
 
     loadRequests();
   }, [toast]);
+
+  const filteredRequests = useMemo(() => {
+    const queryText = search.trim().toLowerCase();
+    if (!queryText) return requests;
+    return requests.filter((request) => [
+      request.businessName,
+      request.type,
+      request.subCategory,
+      request.registrationNumber,
+      request.city,
+      request.country,
+      request.contactEmail,
+      request.contactPhone,
+    ].some((value) => String(value || '').toLowerCase().includes(queryText)));
+  }, [requests, search]);
 
   const handleApprove = async (requestId: string) => {
     setIsProcessing(true);
@@ -234,20 +283,53 @@ export default function BusinessRequestsPage() {
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold">Demandes de Compte Entreprise</h1>
-          <p className="text-muted-foreground">Gérez les demandes en attente de vérification</p>
+        <div className="mb-6 rounded-[8px] border border-primary/10 bg-white p-4 shadow-sm">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h1 className="text-3xl font-bold">Demandes de Compte Entreprise</h1>
+              <p className="text-muted-foreground">Gerez les demandes en attente de verification, exportez le rapport et ouvrez chaque dossier.</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="outline" className="h-9 px-3">
+                {filteredRequests.length} / {requests.length} demande(s)
+              </Badge>
+              <Button
+                variant="outline"
+                className="gap-2"
+                onClick={() => downloadTextFile('enkamba-business-requests-report.txt', buildBusinessRequestsReport(filteredRequests))}
+              >
+                <FileText size={16} />
+                Rapport
+              </Button>
+              <Button
+                className="gap-2 bg-[#32BB78] hover:bg-[#32BB78]"
+                onClick={() => downloadCsv('enkamba-business-requests.csv', filteredRequests.map(buildBusinessRequestExport))}
+              >
+                <Download size={16} />
+                CSV
+              </Button>
+            </div>
+          </div>
+          <div className="relative mt-4">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Rechercher entreprise, type, ville, email, telephone..."
+              className="pl-9"
+            />
+          </div>
         </div>
 
-        {requests.length === 0 ? (
+        {filteredRequests.length === 0 ? (
           <Card>
             <CardContent className="flex items-center justify-center py-12">
-              <p className="text-muted-foreground">Aucune demande en attente</p>
+              <p className="text-muted-foreground">Aucune demande ne correspond au filtre actuel</p>
             </CardContent>
           </Card>
         ) : (
           <div className="grid gap-4">
-            {requests.map(request => (
+            {filteredRequests.map(request => (
               <Card key={request.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <div className="flex items-center justify-between">
