@@ -46,6 +46,27 @@ export interface NkampaOrderCompliance {
   }>;
 }
 
+export interface NkampaDigitalDeliveryFile {
+  name: string;
+  size: number;
+  type: string;
+  url: string;
+  publicId?: string;
+  resourceType?: 'image' | 'video' | 'raw';
+  format?: string;
+}
+
+export interface NkampaDigitalDelivery {
+  provider: 'cloudinary';
+  accessMode: 'download_after_purchase';
+  productType?: string;
+  license?: string;
+  instructions?: string;
+  files: NkampaDigitalDeliveryFile[];
+  status?: 'pending' | 'available';
+  unlockedAt?: string;
+}
+
 export interface NkampaOrder {
   id?: string;
   orderId: string;
@@ -78,6 +99,7 @@ export interface NkampaOrder {
     destinationQuery: string;
     suggestedTransportMode?: 'foot' | 'car' | 'train';
   };
+  digitalDelivery?: NkampaDigitalDelivery;
   status: 'pending' | 'paid' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   paymentMethod: 'wallet';
   paymentStatus: 'pending' | 'completed' | 'failed' | 'refunded';
@@ -167,6 +189,20 @@ export function buildNkampaOrderCompliance(input: {
   } satisfies NkampaOrderCompliance;
 }
 
+function stripUndefined<T>(value: T): T {
+  if (Array.isArray(value)) {
+    return value.map((item) => stripUndefined(item)).filter((item) => item !== undefined) as T;
+  }
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>)
+        .filter(([, entryValue]) => entryValue !== undefined)
+        .map(([key, entryValue]) => [key, stripUndefined(entryValue)])
+    ) as T;
+  }
+  return value;
+}
+
 /**
  * Crée une nouvelle commande
  */
@@ -195,7 +231,7 @@ export async function createOrder(orderData: Omit<NkampaOrder, 'id' | 'orderId' 
       updatedAt: serverTimestamp(),
     };
 
-    const docRef = await addDoc(collection(db, 'nkampa_orders'), order);
+    const docRef = await addDoc(collection(db, 'nkampa_orders'), stripUndefined(order));
 
     return {
       ...order,

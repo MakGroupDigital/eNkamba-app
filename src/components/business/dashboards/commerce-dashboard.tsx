@@ -1,8 +1,15 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
+import { BarChart3, Share2 } from 'lucide-react';
 import { BusinessUser } from '@/types/business-dashboard.types';
+import { db } from '@/lib/firebase';
+import { useToast } from '@/hooks/use-toast';
 import { BusinessDashboardIcons } from '@/components/icons/business-dashboard-icons';
+import { CommerceProductBuilder } from '@/components/business/dashboards/commerce-product-builder';
 import {
   NkampaIcon,
   ShopNavIcon,
@@ -20,7 +27,37 @@ interface CommerceDashboardProps {
 }
 
 export function CommerceDashboard({ businessUser }: CommerceDashboardProps) {
-  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'orders' | 'marketing'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'orders' | 'marketing' | 'newProduct'>('overview');
+  const [commerceProducts, setCommerceProducts] = useState<any[]>([]);
+  const [isProductsLoading, setIsProductsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!businessUser.uid) return;
+    setIsProductsLoading(true);
+    const q = query(collection(db, 'nkampa_products'), where('sellerId', '==', businessUser.uid));
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const products = snapshot.docs
+          .map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }))
+          .filter((product: any) => (
+            product.businessProductType === 'commerce-pro' ||
+            product.marketplaceSource === 'business-commerce' ||
+            (businessUser.businessId && product.businessId === businessUser.businessId)
+          ));
+        setCommerceProducts(products);
+        setIsProductsLoading(false);
+      },
+      (error) => {
+        console.error('Erreur chargement produits commerce pro:', error);
+        setCommerceProducts([]);
+        setIsProductsLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [businessUser.businessId, businessUser.uid]);
+
   const tabs = [
     { id: 'overview', label: 'Vue d’ensemble', icon: NkampaIcon },
     { id: 'products', label: 'Catalogue', icon: ProductIcon },
@@ -96,22 +133,35 @@ export function CommerceDashboard({ businessUser }: CommerceDashboardProps) {
           </div>
         </section>
 
-        {activeTab === 'overview' && <CommerceOverview />}
-        {activeTab === 'products' && <CommerceProducts />}
+        {activeTab === 'overview' && <CommerceOverview productCount={commerceProducts.length} />}
+        {activeTab === 'products' && (
+          <CommerceProducts
+            products={commerceProducts}
+            isLoading={isProductsLoading}
+            onAdd={() => setActiveTab('newProduct')}
+          />
+        )}
         {activeTab === 'orders' && <CommerceOrders />}
         {activeTab === 'marketing' && <CommerceMarketing />}
+        {activeTab === 'newProduct' && (
+          <CommerceProductBuilder
+            businessUser={businessUser}
+            onBack={() => setActiveTab('products')}
+            onCreated={() => setActiveTab('products')}
+          />
+        )}
       </div>
     </div>
   );
 }
 
-function CommerceOverview() {
+function CommerceOverview({ productCount }: { productCount: number }) {
   return (
     <div className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-4">
       {[
         { label: 'Chiffre d\'affaires', value: '0 FC', icon: PriceIcon, color: 'blue' },
         { label: 'Commandes en attente', value: '0', icon: TrackPackageIcon, color: 'yellow' },
-        { label: 'Produits', value: '0', icon: ProductIcon, color: 'green' },
+        { label: 'Produits', value: String(productCount), icon: ProductIcon, color: 'green' },
         { label: 'Ruptures de stock', value: '0', icon: BusinessDashboardIcons.AlertCircle, color: 'red' },
       ].map((stat, idx) => {
         const Icon = stat.icon;
@@ -139,19 +189,130 @@ function CommerceOverview() {
   );
 }
 
-function CommerceProducts() {
+function CommerceProducts({
+  products,
+  isLoading,
+  onAdd,
+}: {
+  products: any[];
+  isLoading: boolean;
+  onAdd: () => void;
+}) {
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const shareProduct = async (product: any) => {
+    const storeSlug = product.storeSlug || 'boutique';
+    const url = `${window.location.origin}/shop/${storeSlug}/product/${product.id}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: product.name || 'Produit eNkamba', url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast({ title: 'Lien copié', description: 'Lien du produit copié.', className: 'bg-primary text-white border-none' });
+      }
+    } catch {
+      try {
+        await navigator.clipboard.writeText(url);
+        toast({ title: 'Lien copié', description: 'Lien du produit copié.', className: 'bg-primary text-white border-none' });
+      } catch {
+        toast({ variant: 'destructive', title: 'Partage impossible', description: 'Impossible de partager ce produit.' });
+      }
+    }
+  };
+
   return (
     <div className="rounded-3xl border border-[#32BB78] bg-white p-5 shadow-sm">
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-xl font-black text-foreground">Gestion du Catalogue</h2>
-          <p className="text-sm text-muted-foreground">Ajoutez vos produits, services et offres B2B/B2C.</p>
+          <p className="text-sm text-muted-foreground">Catalogue e-commerce entreprise synchronisé avec le marché.</p>
         </div>
-        <button className="rounded-2xl bg-[#32BB78] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#32BB78]">
+        <button
+          type="button"
+          onClick={onAdd}
+          className="rounded-2xl bg-[#32BB78] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#0A4747]"
+        >
           + Ajouter un produit
         </button>
       </div>
-      <EmptyCommerceState icon={B2BProductIcon} title="Aucun produit pour le moment" text="Votre catalogue apparaîtra ici dès que vous publiez vos premiers articles." />
+      {isLoading ? (
+        <div className="rounded-3xl border border-dashed border-[#32BB78]/30 bg-[#32BB78]/5 px-5 py-12 text-center text-sm font-bold text-muted-foreground">
+          Chargement du catalogue...
+        </div>
+      ) : products.length === 0 ? (
+        <EmptyCommerceState icon={B2BProductIcon} title="Aucun produit pour le moment" text="Votre catalogue commerce pro apparaîtra ici dès que vous publiez vos premiers articles." />
+      ) : (
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
+          {products.map((product) => (
+            <div
+              key={product.id}
+              role="button"
+              tabIndex={0}
+              onClick={() => router.push(`/dashboard/business-pro/commerce/product/${product.id}`)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  router.push(`/dashboard/business-pro/commerce/product/${product.id}`);
+                }
+              }}
+              className="overflow-hidden rounded-[24px] border border-slate-200 bg-white text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[#32BB78]/40 hover:shadow-md"
+            >
+              <div className="relative aspect-square bg-slate-100">
+                <Image
+                  src={product.image || product.images?.[0] || 'https://picsum.photos/seed/business-commerce/500/500'}
+                  alt={product.name || 'Produit'}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 50vw, 240px"
+                />
+                <span className="absolute left-2 top-2 rounded-full bg-white/95 px-2 py-1 text-[10px] font-black text-[#32BB78] shadow">
+                  {product.businessAudience || product.category || 'COMMERCE'}
+                </span>
+              </div>
+              <div className="space-y-1.5 p-3">
+                <p className="line-clamp-2 text-sm font-black text-slate-950">{product.name}</p>
+                <p className="text-sm font-black text-[#32BB78]">
+                  {Number(product.price || 0).toLocaleString('fr-FR')} {product.currency || 'CDF'}
+                </p>
+                <p className="line-clamp-1 text-[11px] font-semibold text-slate-500">
+                  {product.storeCategory || 'rayon'} · {product.storeSubcategory || 'marché'}
+                </p>
+                {product.stock !== null && product.stock !== undefined ? (
+                  <p className="text-[11px] font-bold text-slate-600">Stock: {Number(product.stock || 0).toLocaleString('fr-FR')}</p>
+                ) : (
+                  <p className="text-[11px] font-bold text-slate-600">Service / digital</p>
+                )}
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  <span className="inline-flex items-center justify-center gap-1 rounded-xl bg-[#32BB78]/10 px-2 py-2 text-[11px] font-black text-[#32BB78]">
+                    <BarChart3 className="h-3.5 w-3.5" />
+                    Stats
+                  </span>
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      void shareProduct(product);
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        void shareProduct(product);
+                      }
+                    }}
+                    className="inline-flex items-center justify-center gap-1 rounded-xl bg-slate-100 px-2 py-2 text-[11px] font-black text-slate-700"
+                  >
+                    <Share2 className="h-3.5 w-3.5" />
+                    Partager
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

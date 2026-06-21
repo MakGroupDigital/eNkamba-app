@@ -3,6 +3,7 @@ import { collection, addDoc, query, where, onSnapshot, doc, getDoc, setDoc, serv
 import { db, auth } from '@/lib/firebase';
 import { useFirestoreConversations } from './useFirestoreConversations';
 import { getMarketplaceComplianceRequirements } from '@/lib/compliance-rules';
+import type { NkampaDigitalDelivery } from '@/lib/nkampa-orders';
 
 export interface EcommerceProduct {
   id: string;
@@ -23,7 +24,10 @@ export interface EcommerceProduct {
   storeSlug?: string;
   storeCategory?: string;
   storeSubcategory?: string;
-  listingType?: 'product' | 'service';
+  listingType?: 'product' | 'service' | 'digital';
+  hasDigitalDelivery?: boolean;
+  digitalDelivery?: NkampaDigitalDelivery;
+  digitalProductType?: string;
   description?: string;
   stock?: number;
   quantityAvailable?: number;
@@ -222,6 +226,17 @@ export function useNkampaEcommerce() {
           sellerVerified,
         });
 
+        const isDigitalProduct =
+          product.listingType === 'digital' ||
+          product.storeCategory === 'digital' ||
+          Boolean(product.hasDigitalDelivery || product.digitalDelivery?.files?.length);
+        const digitalDelivery = isDigitalProduct && product.digitalDelivery?.files?.length
+          ? {
+              ...product.digitalDelivery,
+              status: 'pending' as const,
+            }
+          : undefined;
+
         // Créer la commande avec le nouveau système
         const { createOrder, notifySeller, notifyBuyer, buildNkampaOrderCompliance } = await import('@/lib/nkampa-orders');
         
@@ -246,6 +261,7 @@ export function useNkampaEcommerce() {
           shippingPhone,
           deliveryOption: purchaseOptions?.deliveryOption || 'delivery',
           pickupRoute: purchaseOptions?.pickupRoute,
+          digitalDelivery,
           status: 'pending',
           paymentMethod: 'wallet',
           paymentStatus: 'pending',
@@ -293,7 +309,7 @@ export function useNkampaEcommerce() {
           const stockBefore = Number.isFinite(Number(stockValue)) ? Number(stockValue) : null;
           const stockAfter = stockBefore === null ? null : stockBefore - quantity;
 
-          if (product.listingType !== 'service' && stockBefore !== null && stockBefore < quantity) {
+          if (!isDigitalProduct && product.listingType !== 'service' && stockBefore !== null && stockBefore < quantity) {
             throw new Error(`Stock insuffisant. Disponible: ${stockBefore}`);
           }
 
@@ -334,7 +350,7 @@ export function useNkampaEcommerce() {
                 at: new Date().toISOString(),
               },
             };
-            if (stockBefore !== null) {
+            if (!isDigitalProduct && stockBefore !== null) {
               productUpdate.stock = stockAfter;
               productUpdate.quantityAvailable = stockAfter;
               productUpdate.availableStock = stockAfter;
@@ -385,13 +401,19 @@ export function useNkampaEcommerce() {
             },
           });
 
-          const stockSnapshot = {
-            before: stockBefore,
-            after: stockAfter,
-            reserved: quantity,
-          };
+          const stockSnapshot = isDigitalProduct
+            ? {
+                before: null,
+                after: null,
+                reserved: 0,
+              }
+            : {
+                before: stockBefore,
+                after: stockAfter,
+                reserved: quantity,
+              };
 
-          tx.update(orderRef, {
+          const orderUpdate: any = {
             status: 'paid',
             transactionId,
             paymentStatus: 'completed',
@@ -400,7 +422,15 @@ export function useNkampaEcommerce() {
             stockSnapshot,
             settlementStatus: 'released',
             refundStatus: 'none',
-          });
+          };
+          if (digitalDelivery) {
+            orderUpdate.digitalDelivery = {
+              ...digitalDelivery,
+              status: 'available',
+              unlockedAt: new Date().toISOString(),
+            };
+          }
+          tx.update(orderRef, orderUpdate);
 
           return { stockSnapshot };
         });
@@ -419,7 +449,13 @@ export function useNkampaEcommerce() {
         // Envoyer un message de confirmation
         await sendMessage(
           conversationId,
-          `✅ Commande confirmée!\n\n📦 ${product.name} x${quantity}\n💰 Total: ${totalPriceInCDF.toLocaleString()} CDF\n📋 Commande: ${order.orderId}\n\n${purchaseOptions?.deliveryOption === 'pickup' ? `🏪 Retrait en boutique\n📍 Boutique: ${purchaseOptions?.pickupRoute?.storeLocationLabel || shippingAddress}` : `📍 Livraison:\n${shippingAddress}\n📞 ${shippingPhone}`}\n\nLe vendeur va traiter votre commande.`,
+          `✅ Commande confirmée!\n\n📦 ${product.name} x${quantity}\n💰 Total: ${totalPriceInCDF.toLocaleString()} CDF\n📋 Commande: ${order.orderId}\n\n${
+            isDigitalProduct
+              ? `⬇️ Accès digital après paiement\n📧 ${shippingPhone}`
+              : purchaseOptions?.deliveryOption === 'pickup'
+                ? `🏪 Retrait en boutique\n📍 Boutique: ${purchaseOptions?.pickupRoute?.storeLocationLabel || shippingAddress}`
+                : `📍 Livraison:\n${shippingAddress}\n📞 ${shippingPhone}`
+          }\n\nLe vendeur va traiter votre commande.`,
           'text',
           {
             orderId: order.id,
@@ -444,6 +480,13 @@ export function useNkampaEcommerce() {
             transactionId,
             paidAt: new Date(),
             stockSnapshot: settlement.stockSnapshot,
+            digitalDelivery: digitalDelivery
+              ? {
+                  ...digitalDelivery,
+                  status: 'available',
+                  unlockedAt: new Date().toISOString(),
+                }
+              : undefined,
           },
         };
       } catch (err: any) {

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Package, Truck, CheckCircle, XCircle, Download, MapPin, Phone, Calendar, DollarSign, Route, FileText, RotateCcw, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Package, Truck, CheckCircle, XCircle, Download, MapPin, Phone, Calendar, DollarSign, Route, FileText, RotateCcw, ShieldCheck, DownloadCloud } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -370,6 +370,18 @@ export default function OrdersPage() {
                     </div>
                   )}
 
+                  {(order as any).digitalDelivery?.files?.length ? (
+                    <div className="mb-2 rounded-lg border border-primary/20 bg-primary/5 p-2">
+                      <div className="flex items-center gap-2">
+                        <DownloadCloud className="h-4 w-4 text-primary" />
+                        <div className="flex-1">
+                          <p className="text-xs font-semibold text-primary">Accès digital disponible</p>
+                          <p className="text-xs text-primary/80">Téléchargement dans les détails de la commande</p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
+
                   {order.trackingNumber && (
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 mb-2">
                       <div className="flex items-center gap-2">
@@ -630,6 +642,15 @@ export default function OrdersPage() {
                   >
                     <Route className="w-4 h-4" />
                     Voir itineraire
+                  </Button>
+                )}
+                {selectedOrder.digitalDelivery?.files?.length && (
+                  <Button
+                    className="flex-1 gap-2 bg-primary hover:bg-primary"
+                    onClick={() => router.push(`/dashboard/nkampa/orders/${selectedOrder.id}/digital`)}
+                  >
+                    <DownloadCloud className="w-4 h-4" />
+                    Télécharger
                   </Button>
                 )}
               </div>

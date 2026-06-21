@@ -107,14 +107,15 @@ export async function uploadToCloudinary(
           : undefined,
     };
   } catch (e: any) {
-    // Fallback: upload direct (unsigned preset) when API route fails (fetch failed / large payload / proxy reset).
+    // Deuxième tentative Cloudinary directe lorsque l'API interne n'est pas joignable.
     try {
       const direct = await tryDirectUnsignedUpload();
       return direct;
     } catch (fallbackError: any) {
       const msg = (e?.message || e?.toString?.() || 'fetch failed') as string;
       const fb = (fallbackError?.message || fallbackError?.toString?.() || '') as string;
-      throw new Error(`Erreur upload Cloudinary: ${msg}${fb ? ` | Fallback: ${fb}` : ''}`);
+      const details = fb && fb !== msg ? `${msg}. ${fb}` : msg;
+      throw new Error(`Erreur upload Cloudinary: ${details}. Vérifiez la configuration Cloudinary du projet.`);
     }
   }
 }

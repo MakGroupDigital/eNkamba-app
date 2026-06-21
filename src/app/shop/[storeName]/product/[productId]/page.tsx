@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ArrowLeft, Share2, Loader2, Heart, MessageCircle, ShoppingCart, Check, MapPinned, Route, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Share2, Loader2, Heart, MessageCircle, ShoppingCart, Check, MapPinned, Route, ShieldCheck, DownloadCloud } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useNkampaCart } from '@/hooks/useNkampaCart';
@@ -179,6 +179,10 @@ export default function ShopProductPage({
   const isSellerVerified = Boolean(storeDoc?.verified || storeDoc?.isVerified || storeDoc?.status === 'active' || storeDoc?.status === 'approved');
   const sellerTrustLevel = storeDoc?.trustLevel || storeDoc?.sellerLevel || (isSellerVerified ? 'Premium' : 'Standard');
   const deliverySuccessRate = Number(storeDoc?.deliverySuccessRate || storeDoc?.successRate || 96);
+  const isDigitalProduct =
+    product?.listingType === 'digital' ||
+    product?.storeCategory === 'digital' ||
+    Boolean(product?.hasDigitalDelivery || product?.digitalDelivery?.files?.length);
 
   const resolveCurrentLocation = async () => {
     const storedLocation = getDashboardLocationOrDefault();
@@ -223,6 +227,14 @@ export default function ShopProductPage({
         variant: 'destructive',
       });
       throw new Error('Utilisateur non authentifié');
+    }
+
+    if (isDigitalProduct) {
+      return {
+        shippingAddress: 'Livraison digitale - accès disponible après paiement',
+        shippingPhone: user.phoneNumber || user.email || 'Compte eNkamba',
+        deliveryOption: 'delivery',
+      };
     }
 
     if (deliveryOption === 'delivery' && (!shippingAddress.trim() || !shippingPhone.trim())) {
@@ -553,27 +565,27 @@ export default function ShopProductPage({
   }
 
   return (
-    <div className="min-h-screen bg-white pb-32">
+    <div className="min-h-screen max-w-full overflow-x-hidden bg-white pb-36">
       {/* Header vert eNkamba */}
       <header className="sticky top-0 z-40 bg-gradient-to-r from-primary to-primary text-white px-4 py-3 shadow-lg">
-        <div className="flex items-center justify-between gap-3">
-          <button onClick={() => router.back()} className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/20 hover:bg-white/30 transition-all">
+        <div className="flex min-w-0 items-center justify-between gap-3">
+          <button onClick={() => router.back()} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/20 transition-all hover:bg-white/30">
             <ArrowLeft className="h-5 w-5" />
           </button>
           
-          <div className="flex-1 flex items-center gap-2 bg-white/90 rounded-full px-3 py-2">
+          <div className="flex min-w-0 flex-1 items-center gap-2 rounded-full bg-white/90 px-3 py-2">
             <span className="text-xs text-gray-600 truncate">{product.name}</span>
           </div>
 
-          <button onClick={share} className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/20 hover:bg-white/30 transition-all">
+          <button onClick={share} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/20 transition-all hover:bg-white/30">
             <Share2 className="h-5 w-5" />
           </button>
         </div>
       </header>
 
       {/* Image principale avec badge et favoris */}
-      <div className="relative bg-gray-100">
-        <div className="relative w-full aspect-square bg-gray-200 overflow-hidden">
+      <div className="relative max-w-full overflow-hidden bg-gray-100">
+        <div className="relative aspect-square w-full max-w-full overflow-hidden bg-gray-200">
           <div className="flex transition-transform duration-300 ease-out h-full" style={{ transform: `translateX(-${currentImageIndex * 100}%)` }}>
             {images.map((src, idx) => (
               <div key={idx} className="relative min-w-full h-full flex-shrink-0">
@@ -657,7 +669,7 @@ export default function ShopProductPage({
       )}
 
       {/* Prix */}
-      <div className="mx-4 mt-4 space-y-2">
+      <div className="mx-4 mt-4 max-w-[calc(100vw-2rem)] space-y-2">
         {/* Afficher réduction seulement si disponible */}
         {product.discount && product.discount > 0 && (
           <div className="bg-primary/10 border border-primary/30 rounded-lg px-3 py-2">
@@ -669,7 +681,7 @@ export default function ShopProductPage({
 
         <div className="space-y-1">
           <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-black text-primary">{priceInCDF.toLocaleString()}</span>
+            <span className="break-words text-3xl font-black text-primary">{priceInCDF.toLocaleString()}</span>
             {product.discount && product.discount > 0 && (
               <span className="text-sm text-gray-500 line-through">
                 {Math.round(priceInCDF / (1 - product.discount / 100)).toLocaleString()}
@@ -684,10 +696,10 @@ export default function ShopProductPage({
       </div>
 
       {/* Description produit */}
-      <div className="mx-4 mt-4 space-y-3">
-        <h2 className="font-bold text-gray-900">{product.name}</h2>
+      <div className="mx-4 mt-4 max-w-[calc(100vw-2rem)] space-y-3">
+        <h2 className="break-words font-bold text-gray-900">{product.name}</h2>
         {product.description && (
-          <p className="text-sm text-gray-600">{product.description}</p>
+          <p className="break-words text-sm text-gray-600">{product.description}</p>
         )}
 
         {/* Catégorie si disponible */}
@@ -702,7 +714,7 @@ export default function ShopProductPage({
       </div>
 
       {/* Signaux marketplace essentiels */}
-      <div className="mx-4 mt-4 rounded-2xl border border-gray-100 bg-white p-3 shadow-sm">
+      <div className="mx-4 mt-4 max-w-[calc(100vw-2rem)] rounded-2xl border border-gray-100 bg-white p-3 shadow-sm">
         <div className="flex flex-wrap items-center gap-2">
           <Badge className="rounded-full bg-amber-50 px-2.5 py-1 text-amber-700 hover:bg-amber-50">
             ★ {productRating.toFixed(1)}
@@ -764,10 +776,10 @@ export default function ShopProductPage({
       {/* Vendeur */}
       <button 
         onClick={() => router.push(`/shop/${slug}`)}
-        className="mx-4 mt-4 w-[calc(100%-2rem)] rounded-2xl border border-primary/15 bg-gradient-to-r from-primary via-white to-orange-50 p-3 hover:bg-gray-100 transition-colors"
+        className="mx-4 mt-4 w-[calc(100%-2rem)] max-w-[calc(100vw-2rem)] rounded-2xl border border-primary/15 bg-gradient-to-r from-primary via-white to-orange-50 p-3 transition-colors hover:bg-gray-100"
       >
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
+        <div className="flex min-w-0 items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
             <div className="relative h-14 w-14 overflow-hidden rounded-2xl border border-primary/20 bg-white shadow-sm">
               {storeDoc.logoUrl ? (
                 <Image
@@ -782,12 +794,12 @@ export default function ShopProductPage({
                 </div>
               )}
             </div>
-            <div className="text-left">
+            <div className="min-w-0 text-left">
               <div className="flex items-center gap-2">
-                <p className="font-bold text-gray-900">Boutique officielle</p>
-                <ShieldCheck className="h-4 w-4 text-primary" />
+                <p className="truncate font-bold text-gray-900">Boutique officielle</p>
+                <ShieldCheck className="h-4 w-4 shrink-0 text-primary" />
               </div>
-              <p className="font-extrabold text-primary">{storeDoc.storeName}</p>
+              <p className="truncate font-extrabold text-primary">{storeDoc.storeName}</p>
               {storeDoc.description && (
                 <p className="text-xs text-gray-600 mt-1 line-clamp-2">{storeDoc.description}</p>
               )}
@@ -801,93 +813,114 @@ export default function ShopProductPage({
       </button>
 
       {/* Option logistique */}
-      <div className="mx-4 mt-4 space-y-2">
-        <div className="rounded-2xl border border-primary/15 bg-primary/5/70 p-3">
-          <p className="text-sm font-bold text-gray-900">Logistique / livraison</p>
-          <p className="mt-1 text-xs text-gray-600">
-            Choisissez la livraison classique ou le retrait avec itinéraire vers la boutique.
-          </p>
-          <div className="mt-3 grid gap-2 sm:grid-cols-2">
-            <button
-              type="button"
-              onClick={() => setDeliveryOption('delivery')}
-              className={`rounded-2xl border px-4 py-3 text-left transition-all ${
-                deliveryOption === 'delivery'
-                  ? 'border-primary bg-white shadow-sm'
-                  : 'border-gray-200 bg-white/80'
-              }`}
-            >
-              <p className="font-semibold text-gray-900">Livraison</p>
-              <p className="text-xs text-gray-500">Le vendeur livre à votre adresse</p>
-            </button>
-            <button
-              type="button"
-              onClick={() => setDeliveryOption('pickup')}
-              className={`rounded-2xl border px-4 py-3 text-left transition-all ${
-                deliveryOption === 'pickup'
-                  ? 'border-primary bg-white shadow-sm'
-                  : 'border-gray-200 bg-white/80'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <Route className="h-4 w-4 text-primary" />
-                <p className="font-semibold text-gray-900">Retrait en boutique</p>
+      <div className="mx-4 mt-4 max-w-[calc(100vw-2rem)] space-y-2">
+        {isDigitalProduct ? (
+          <div className="rounded-2xl border border-primary/15 bg-primary/5 p-4">
+            <div className="flex items-start gap-3">
+              <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-primary text-white">
+                <DownloadCloud className="h-5 w-5" />
               </div>
-              <p className="text-xs text-gray-500">Itinéraire disponible dans vos commandes</p>
-            </button>
-          </div>
-        </div>
-
-        {deliveryOption === 'delivery' ? (
-          <input
-            value={shippingAddress}
-            onChange={(e) => setShippingAddress(e.target.value)}
-            placeholder="📍 Adresse de livraison"
-            className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-          />
-        ) : (
-          <div className="rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-800">
-            <div className="flex items-start gap-2">
-              <MapPinned className="mt-0.5 h-4 w-4 flex-shrink-0" />
               <div>
-                <p className="font-semibold">Retrait choisi</p>
-                <p className="mt-1">
-                  Après paiement, l’itinéraire vers <span className="font-bold">{storeDoc.storeName}</span> sera enregistré et disponible à tout moment dans vos commandes.
+                <p className="text-sm font-bold text-gray-900">Accès digital après paiement</p>
+                <p className="mt-1 text-xs leading-5 text-gray-600">
+                  Aucun transport physique n’est requis. Le téléchargement sera débloqué dans vos commandes dès que le paiement est confirmé.
                 </p>
+                {product.digitalProductTypeLabel && (
+                  <p className="mt-2 text-xs font-bold text-primary">{product.digitalProductTypeLabel}</p>
+                )}
               </div>
             </div>
           </div>
+        ) : (
+          <>
+            <div className="rounded-2xl border border-primary/15 bg-primary/5/70 p-3">
+              <p className="text-sm font-bold text-gray-900">Logistique / livraison</p>
+              <p className="mt-1 text-xs text-gray-600">
+                Choisissez la livraison classique ou le retrait avec itinéraire vers la boutique.
+              </p>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => setDeliveryOption('delivery')}
+                  className={`rounded-2xl border px-4 py-3 text-left transition-all ${
+                    deliveryOption === 'delivery'
+                      ? 'border-primary bg-white shadow-sm'
+                      : 'border-gray-200 bg-white/80'
+                  }`}
+                >
+                  <p className="font-semibold text-gray-900">Livraison</p>
+                  <p className="text-xs text-gray-500">Le vendeur livre à votre adresse</p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDeliveryOption('pickup')}
+                  className={`rounded-2xl border px-4 py-3 text-left transition-all ${
+                    deliveryOption === 'pickup'
+                      ? 'border-primary bg-white shadow-sm'
+                      : 'border-gray-200 bg-white/80'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Route className="h-4 w-4 text-primary" />
+                    <p className="font-semibold text-gray-900">Retrait en boutique</p>
+                  </div>
+                  <p className="text-xs text-gray-500">Itinéraire disponible dans vos commandes</p>
+                </button>
+              </div>
+            </div>
+
+            {deliveryOption === 'delivery' ? (
+              <input
+                value={shippingAddress}
+                onChange={(e) => setShippingAddress(e.target.value)}
+                placeholder="📍 Adresse de livraison"
+                className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              />
+            ) : (
+              <div className="rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-800">
+                <div className="flex items-start gap-2">
+                  <MapPinned className="mt-0.5 h-4 w-4 flex-shrink-0" />
+                  <div>
+                    <p className="font-semibold">Retrait choisi</p>
+                    <p className="mt-1">
+                      Après paiement, l’itinéraire vers <span className="font-bold">{storeDoc.storeName}</span> sera enregistré et disponible à tout moment dans vos commandes.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+            <input
+              value={shippingPhone}
+              onChange={(e) => setShippingPhone(e.target.value)}
+              placeholder={deliveryOption === 'pickup' ? '📞 Téléphone de contact (optionnel)' : '📞 Téléphone'}
+              className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+            />
+          </>
         )}
-        <input
-          value={shippingPhone}
-          onChange={(e) => setShippingPhone(e.target.value)}
-          placeholder={deliveryOption === 'pickup' ? '📞 Téléphone de contact (optionnel)' : '📞 Téléphone'}
-          className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-        />
       </div>
 
       {/* Boutons d'action flottants */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 space-y-2">
-        <div className="flex gap-2">
+      <div className="fixed bottom-0 left-0 right-0 z-30 w-full max-w-full space-y-2 overflow-hidden border-t border-gray-200 bg-white p-3 sm:p-4">
+        <div className="grid grid-cols-2 gap-2">
           <button
             onClick={handleAddToCart}
-            className="flex-1 flex items-center justify-center gap-2 border-2 border-gray-300 rounded-lg py-3 font-bold text-gray-700 hover:bg-gray-50 transition-colors"
+            className="flex min-w-0 items-center justify-center gap-2 rounded-lg border-2 border-gray-300 px-2 py-3 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-50"
           >
-            <ShoppingCart className="h-5 w-5" />
-            Ajouter au panier
+            <ShoppingCart className="h-5 w-5 shrink-0" />
+            <span className="truncate">Ajouter au panier</span>
           </button>
           <button 
             onClick={handleChat}
-            className="flex-1 flex items-center justify-center gap-2 border-2 border-gray-300 rounded-lg py-3 font-bold text-gray-700 hover:bg-gray-50 transition-colors"
+            className="flex min-w-0 items-center justify-center gap-2 rounded-lg border-2 border-gray-300 px-2 py-3 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-50"
           >
-            <MessageCircle className="h-5 w-5" />
-            Chat
+            <MessageCircle className="h-5 w-5 shrink-0" />
+            <span className="truncate">Chat</span>
           </button>
         </div>
         <button
           onClick={handleBuyNow}
           disabled={isBuying || isPreparingRoute}
-          className="w-full bg-primary hover:bg-primary disabled:opacity-50 text-white rounded-lg py-3 font-bold transition-colors flex items-center justify-center gap-2"
+          className="flex w-full min-w-0 items-center justify-center gap-2 rounded-lg bg-primary py-3 font-bold text-white transition-colors hover:bg-primary disabled:opacity-50"
         >
           {isBuying || isPreparingRoute ? (
             <>
@@ -904,7 +937,7 @@ export default function ShopProductPage({
       </div>
 
       {/* Badges de confiance */}
-      <div className="mx-4 mb-32 mt-4 flex flex-wrap gap-2 text-xs text-gray-600">
+      <div className="mx-4 mb-32 mt-4 flex max-w-[calc(100vw-2rem)] flex-wrap gap-2 text-xs text-gray-600">
         <span>✓ Produits de qualité</span>
         <span>✓ Paiement sécurisé</span>
         {product.warranty && <span>✓ Garantie {product.warranty}</span>}
@@ -913,7 +946,7 @@ export default function ShopProductPage({
 
       {/* Reçu de paiement */}
       <Dialog open={showOrderSummary} onOpenChange={setShowOrderSummary}>
-        <DialogContent className="max-w-lg rounded-3xl border-0 p-0 overflow-hidden">
+        <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] overflow-y-auto overflow-x-hidden rounded-3xl border-0 p-0 sm:max-w-lg">
           <div className="bg-gradient-to-r from-primary via-primary to-primary px-6 py-5 text-white">
             <DialogHeader>
               <DialogTitle className="text-xl font-black">Confirmer la commande</DialogTitle>
@@ -941,7 +974,11 @@ export default function ShopProductPage({
             <div className="rounded-2xl border border-slate-200 bg-white p-4">
               <p className="text-sm font-bold text-slate-900">Mode choisi</p>
               <p className="mt-1 text-sm text-slate-600">
-                {pendingPurchase?.deliveryOption === 'pickup' ? 'Retrait en boutique avec itinéraire' : 'Livraison à domicile'}
+                {isDigitalProduct
+                  ? 'Accès digital après paiement'
+                  : pendingPurchase?.deliveryOption === 'pickup'
+                    ? 'Retrait en boutique avec itinéraire'
+                    : 'Livraison à domicile'}
               </p>
               <p className="mt-3 text-xs text-slate-500">Adresse / destination</p>
               <p className="text-sm font-semibold text-slate-900">{pendingPurchase?.shippingAddress}</p>
@@ -965,18 +1002,18 @@ export default function ShopProductPage({
             </div>
           </div>
           <DialogFooter className="border-t bg-slate-50 px-6 py-4">
-            <div className="flex w-full gap-3">
+            <div className="grid w-full grid-cols-2 gap-3">
               <Button
                 type="button"
                 variant="outline"
-                className="flex-1"
+                className="min-w-0"
                 onClick={() => setShowOrderSummary(false)}
               >
                 Modifier
               </Button>
               <Button
                 type="button"
-                className="flex-1 bg-primary hover:bg-primary"
+                className="min-w-0 bg-primary hover:bg-primary"
                 onClick={() => setShowPinDialog(true)}
                 disabled={!pendingPurchase}
               >
@@ -1006,9 +1043,17 @@ export default function ShopProductPage({
       {showReceipt && completedOrder && (
         <OrderReceipt
           order={completedOrder}
-          primaryActionLabel={completedOrder?.pickupRoute?.enabled ? 'Aller à la boutique' : undefined}
+          primaryActionLabel={
+            completedOrder?.digitalDelivery?.files?.length
+              ? 'Accéder au téléchargement'
+              : completedOrder?.pickupRoute?.enabled
+                ? 'Aller à la boutique'
+                : undefined
+          }
           onPrimaryAction={
-            completedOrder?.pickupRoute?.enabled
+            completedOrder?.digitalDelivery?.files?.length
+              ? () => router.push(`/dashboard/nkampa/orders/${completedOrder.id}/digital`)
+              : completedOrder?.pickupRoute?.enabled
               ? () => handleOpenPickupRoute(completedOrder)
               : undefined
           }
