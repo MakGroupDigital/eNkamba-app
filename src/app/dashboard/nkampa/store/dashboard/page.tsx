@@ -3,7 +3,31 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { ExternalLink, Loader2, PlusCircle, Megaphone, Image as ImageIcon, Save, Share2, Pencil, Trash2 } from 'lucide-react';
+import {
+  Bell,
+  ChevronDown,
+  ChevronRight,
+  ExternalLink,
+  Eye,
+  Grid2X2,
+  Home,
+  Image as ImageIcon,
+  Loader2,
+  MapPin,
+  Megaphone,
+  PackageCheck,
+  Pencil,
+  PlusCircle,
+  Save,
+  Share2,
+  ShieldCheck,
+  ShoppingBag,
+  Tag,
+  Trash2,
+  TrendingUp,
+  Users,
+  Wand2,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,12 +36,13 @@ import { useNkampaStore } from '@/hooks/useNkampaStore';
 import { uploadToCloudinary } from '@/lib/cloudinary-upload';
 import { updateNkampaStore } from '@/lib/nkampa-store';
 import { useToast } from '@/hooks/use-toast';
+import { useDashboardLocation } from '@/hooks/useDashboardLocation';
 import { collection, doc, onSnapshot, query, updateDoc, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Image from 'next/image';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { NkampaNavOrdersIcon, NkampaNavSellerIcon, NkampaNavShopIcon } from '@/components/icons/nkampa-nav-icons';
+import { NkampaNavSellerIcon } from '@/components/icons/nkampa-nav-icons';
 import { CustomersIcon, OrdersIcon, ProductsIcon, RatingIcon, StoreStatsIcon, VerifiedIcon } from '@/components/icons/seller-portal-icons';
 import { RequestTransactionIcon, WithdrawalTransactionIcon } from '@/components/icons/transaction-icons';
 
@@ -82,79 +107,65 @@ const SUBCATEGORIES_BY_CATEGORY: Record<string, Array<{ id: string; label: strin
   ],
 };
 
-function roleLabel(role: string) {
-  const map: Record<string, string> = {
-    individual: 'Individu',
-    retailer: 'Détaillant',
-    wholesaler: 'Grossiste',
-    producer: 'Producteur',
-    supplier: 'Fournisseur',
-  };
-  return map[role] || role;
+function formatMoney(amount: number, currency = 'CDF') {
+  return `${Number(amount || 0).toLocaleString('fr-FR')} ${currency}`;
 }
 
-function StoreMetric({
+function getOrderStatusMeta(status?: string) {
+  const normalized = String(status || 'pending').toLowerCase();
+  if (['paid', 'success', 'completed'].includes(normalized)) {
+    return { label: 'Payée', className: 'bg-[#32BB78]/12 text-[#14804a]' };
+  }
+  if (['shipped', 'expedited', 'delivered_to_carrier'].includes(normalized)) {
+    return { label: 'Expédiée', className: 'bg-sky-50 text-sky-700' };
+  }
+  if (['preparing', 'processing', 'pending'].includes(normalized)) {
+    return { label: 'En préparation', className: 'bg-amber-50 text-amber-700' };
+  }
+  if (['cancelled', 'failed', 'refunded'].includes(normalized)) {
+    return { label: 'Incident', className: 'bg-red-50 text-red-700' };
+  }
+  return { label: status || 'En cours', className: 'bg-slate-100 text-slate-600' };
+}
+
+function getProductImages(product: any) {
+  if (Array.isArray(product?.images) && product.images.length) return product.images;
+  if (product?.image) return [product.image];
+  return ['https://picsum.photos/seed/nkampa-store-product/320/240'];
+}
+
+function getStockValue(product: any) {
+  return Number(product?.stock ?? product?.quantityAvailable ?? product?.availableStock ?? 0);
+}
+
+function StoreDashboardMetric({
+  icon: Icon,
   label,
   value,
   detail,
-  icon,
-  accent = 'green',
+  tone = 'green',
 }: {
+  icon: React.ComponentType<any>;
   label: string;
   value: string | number;
   detail: string;
-  icon: ReactNode;
-  accent?: 'green' | 'blue' | 'amber' | 'ink';
+  tone?: 'green' | 'amber';
 }) {
-  const styles = {
-    green: 'border-[#32BB78]/20 bg-[#32BB78]/10 text-[#32BB78]',
-    blue: 'border-sky-200 bg-sky-50 text-sky-700',
-    amber: 'border-amber-200 bg-amber-50 text-amber-800',
-    ink: 'border-slate-200 bg-slate-50 text-slate-800',
-  };
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500">{label}</p>
-          <p className="mt-2 text-2xl font-black tracking-tight text-slate-950">{value}</p>
-          <p className="mt-1 text-xs text-slate-500">{detail}</p>
-        </div>
-        <div className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl border ${styles[accent]}`}>{icon}</div>
-      </div>
-    </div>
-  );
-}
+  const color = tone === 'amber' ? 'bg-[#fff7ed] text-[#d97706]' : 'bg-primary/10 text-primary';
 
-function StoreActionCard({
-  title,
-  desc,
-  href,
-  cta,
-  icon,
-}: {
-  title: string;
-  desc: string;
-  href: string;
-  cta: string;
-  icon: ReactNode;
-}) {
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+    <article className="min-h-[7.1rem] rounded-[1.25rem] bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.06)] ring-1 ring-slate-100">
       <div className="flex items-start gap-3">
-        <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#32BB78]/10">{icon}</div>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-black text-slate-950">{title}</p>
-          <p className="mt-1 text-xs leading-5 text-slate-500">{desc}</p>
+        <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl ${color}`}>
+          <Icon className="h-7 w-7" />
+        </span>
+        <div className="min-w-0">
+          <p className="line-clamp-2 text-xs font-bold leading-tight text-slate-700">{label}</p>
+          <p className="mt-1 text-2xl font-black leading-tight text-slate-950">{value}</p>
+          <p className={`mt-1 text-xs font-bold ${tone === 'amber' ? 'text-[#d97706]' : 'text-primary'}`}>{detail}</p>
         </div>
       </div>
-      <Button asChild className="mt-4 h-10 w-full rounded-2xl bg-[#32BB78] hover:bg-[#0A4747]">
-        <Link href={href}>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          {cta}
-        </Link>
-      </Button>
-    </div>
+    </article>
   );
 }
 
@@ -162,9 +173,10 @@ export default function NkampaStoreDashboardPage() {
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
   const { store, hasChecked } = useNkampaStore(user?.uid);
+  const { location } = useDashboardLocation();
   const didLoginRedirectRef = useRef(false);
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'media' | 'promo' | 'finance' | 'clients' | 'approval'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'orders' | 'media' | 'promo' | 'finance' | 'clients' | 'approval'>('overview');
   const [isSaving, setIsSaving] = useState(false);
 
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -255,6 +267,28 @@ export default function NkampaStoreDashboardPage() {
   }, [sellerOrders]);
 
   const pendingCount = useMemo(() => sellerOrders.filter((o) => o.status === 'pending' || o.status === 'paid').length, [sellerOrders]);
+  const primaryCurrency = sellerOrders.find((order) => order.currency)?.currency || myProducts.find((product) => product.currency)?.currency || 'CDF';
+  const activeProductsCount = useMemo(() => myProducts.filter((product) => String(product.status || 'active') !== 'inactive').length, [myProducts]);
+  const lowStockCount = useMemo(
+    () => myProducts.filter((product) => store?.sellType === 'product' && getStockValue(product) > 0 && getStockValue(product) <= 10).length,
+    [myProducts, store?.sellType]
+  );
+  const featuredProducts = useMemo(
+    () => [...myProducts]
+      .sort((left, right) => getStockValue(right) - getStockValue(left))
+      .slice(0, 3),
+    [myProducts]
+  );
+  const recentOrders = useMemo(
+    () => [...sellerOrders]
+      .sort((left, right) => {
+        const leftDate = left.createdAt?.toMillis?.() || left.createdAtMs || 0;
+        const rightDate = right.createdAt?.toMillis?.() || right.createdAtMs || 0;
+        return rightDate - leftDate;
+      })
+      .slice(0, 4),
+    [sellerOrders]
+  );
 
   const storeCustomers = useMemo(() => {
     const grouped = new Map<string, { id: string; name: string; email: string; orders: number; total: number; lastStatus: string }>();
@@ -275,6 +309,8 @@ export default function NkampaStoreDashboardPage() {
     });
     return Array.from(grouped.values()).sort((a, b) => b.total - a.total);
   }, [sellerOrders]);
+  const storeVisits = Number((store as any)?.viewCount || (store as any)?.visits || Math.max(0, sellerOrders.length * 18 + storeCustomers.length * 12));
+  const conversionRate = storeVisits > 0 ? Math.min(100, (sellerOrders.length / storeVisits) * 100) : 0;
 
   const handleFile = (file: File, kind: 'logo' | 'cover' | 'promo') => {
     const reader = new FileReader();
@@ -500,96 +536,97 @@ export default function NkampaStoreDashboardPage() {
     );
   }
 
-  const blocks: Array<{
-    key: string;
-    title: string;
-    desc: string;
-    href: string;
-    cta: string;
-  }> = [
-    {
-      key: 'listing',
-      title: store.sellType === 'product' ? 'Gérer les produits' : 'Gérer les services',
-      desc: store.sellType === 'product' ? 'Ajouter, modifier, prix, stock.' : 'Créer des offres, tarifs, disponibilité.',
-      href: '/dashboard/nkampa/seller',
-      cta: store.sellType === 'product' ? 'Ajouter un produit' : 'Ajouter une offre',
-    },
-    {
-      key: 'orders',
-      title: 'Commandes',
-      desc: 'Suivi, statuts, expédition.',
-      href: '/dashboard/nkampa/orders',
-      cta: 'Voir commandes',
-    },
-  ];
-
-  const typeCards = isBusiness
-    ? [
-        {
-          title: roles.length > 1 ? 'Dashboard Multi-rôles' : `Dashboard ${roleLabel(roles[0] || '')}`,
-          desc:
-            roles.includes('wholesaler')
-              ? 'Outils vente en gros, MOQ, lots.'
-              : roles.includes('producer')
-                ? 'Gestion production, nouveautés.'
-                : roles.includes('retailer')
-                  ? 'Ventes au détail, promotions.'
-                  : roles.includes('supplier')
-                    ? 'Catalogue fournisseur, disponibilité.'
-                    : 'Vue complète multi-rôles.',
-        },
-      ]
-    : [
-        {
-          title: 'Dashboard Boutique',
-          desc: 'Gestion simple et rapide.',
-        },
-      ];
-
   return (
-    <div className="min-h-screen bg-[#F6F8F7] text-slate-950">
-      <div className="border-b border-slate-200 bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-4">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-3">
-              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-3xl bg-[#32BB78]/10">
-                <NkampaNavSellerIcon size={32} />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[11px] font-black uppercase tracking-wide text-[#32BB78]">Gestion boutique</p>
-                <h1 className="truncate text-xl font-black tracking-tight">{store.storeName}</h1>
-                <p className="truncate text-xs text-slate-500">
-                  {sellLabel}
-                  {isBusiness && roles.length > 0 ? ` • ${roles.map(roleLabel).join(' • ')}` : ''}
-                  {store.category ? ` • Rayon ${store.category}` : ''}
-                </p>
-              </div>
-            </div>
-            {isApproved ? (
-              <Button asChild className="rounded-2xl bg-[#32BB78] hover:bg-[#0A4747]">
-                <Link href={storeUrl} target="_blank" rel="noreferrer">
-                  Vitrine <ExternalLink className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-            ) : (
-              <Badge className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-amber-800">En attente</Badge>
-            )}
+    <div className="min-h-screen bg-[#f7fbf9] pb-24 text-slate-950">
+      <div className="sticky top-0 z-30 bg-primary text-white shadow-[0_14px_34px_rgba(50,187,120,0.28)]">
+        <div className="mx-auto flex h-16 max-w-5xl items-center justify-between gap-3 px-4">
+          <button type="button" className="flex min-w-0 items-center gap-2 rounded-full bg-white/10 px-2.5 py-2 text-left ring-1 ring-white/12">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/16">
+              <MapPin className="h-4 w-4" />
+            </span>
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-black">{location?.label || store.location || 'Yuexiu, Guangzhou, Chine'}</span>
+            </span>
+            <ChevronDown className="h-4 w-4 shrink-0 text-white/85" />
+          </button>
+
+          <div className="flex shrink-0 items-center gap-3">
+            <button type="button" className="relative grid h-10 w-10 place-items-center rounded-full bg-white/12 ring-1 ring-white/15">
+              <Bell className="h-5 w-5" />
+              <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full border-2 border-primary bg-[#f59e0b]" />
+            </button>
+            <span className="grid h-11 w-11 place-items-center overflow-hidden rounded-full border-2 border-white bg-white text-base font-black text-primary shadow-sm">
+              {store.logoUrl ? (
+                <Image src={store.logoUrl} alt={store.storeName} width={44} height={44} className="h-full w-full object-cover" />
+              ) : (
+                String(store.storeName || 'B').slice(0, 1).toUpperCase()
+              )}
+            </span>
           </div>
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl space-y-5 p-4">
-        <div className="sticky top-0 z-10">
-          <div className="rounded-[26px] border border-slate-200 bg-white/90 px-2 py-2 shadow-sm backdrop-blur-xl">
+      <div className="mx-auto max-w-5xl space-y-4 px-4 py-4">
+        <section className="rounded-[1.35rem] bg-white p-4 shadow-[0_12px_28px_rgba(15,23,42,0.07)] ring-1 ring-slate-100">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="relative grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-2xl bg-primary/8">
+                {store.logoUrl ? (
+                  <Image src={store.logoUrl} alt={store.storeName} fill className="object-cover" />
+                ) : (
+                  <NkampaNavSellerIcon size={40} />
+                )}
+              </div>
+              <div className="min-w-0">
+                <p className="text-[11px] font-black uppercase tracking-[0.12em] text-primary">Gestion boutique</p>
+                <h1 className="mt-1 truncate text-2xl font-black leading-tight tracking-tight text-slate-950">{store.storeName}</h1>
+                <p className="mt-1 truncate text-sm font-semibold text-slate-500">
+                  {sellLabel}
+                  {store.category ? ` maison · ${store.category}` : ' · Boutique en ligne'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex shrink-0 items-center gap-2">
+              {isApproved ? (
+                <Button asChild className="hidden h-12 rounded-2xl bg-primary px-5 font-black text-white hover:bg-[#0A4747] sm:inline-flex">
+                  <Link href={storeUrl} target="_blank" rel="noreferrer">
+                    Voir la vitrine <ExternalLink className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              ) : (
+                <Badge className="hidden rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-amber-800 sm:inline-flex">En attente</Badge>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  if (!isApproved) return;
+                  const url = `${window.location.origin}${storeUrl}`;
+                  if (navigator.share) {
+                    void navigator.share({ title: store.storeName, url });
+                  } else {
+                    void navigator.clipboard.writeText(url);
+                    toast({ title: 'Lien copié', description: 'Lien de la vitrine copié.', className: 'bg-primary text-white border-none' });
+                  }
+                }}
+                className="grid h-12 w-12 place-items-center rounded-2xl bg-white text-slate-600 shadow-sm ring-1 ring-slate-200 transition hover:text-primary"
+                aria-label="Partager la boutique"
+              >
+                <Share2 className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <div className="sticky top-16 z-20">
+          <div className="rounded-[1.35rem] bg-white/95 px-2 py-2 shadow-[0_10px_24px_rgba(15,23,42,0.07)] ring-1 ring-slate-100 backdrop-blur-xl">
             <div className="flex items-center justify-between gap-2 overflow-x-auto scrollbar-hide">
               {[
-                { id: 'overview', label: 'Aperçu', icon: <StoreStatsIcon size={22} /> },
+                { id: 'overview', label: 'Aperçu', icon: <Home className="h-5 w-5" /> },
                 { id: 'products', label: store.sellType === 'product' ? 'Produits' : 'Services', icon: <ProductsIcon size={22} /> },
-                { id: 'media', label: 'Médias', icon: <NkampaNavShopIcon size={22} /> },
-                { id: 'promo', label: 'Promo', icon: <RatingIcon size={22} /> },
-                { id: 'finance', label: 'Finance', icon: <WithdrawalTransactionIcon size={22} /> },
-                { id: 'clients', label: 'Clients', icon: <CustomersIcon size={22} /> },
-                ...(store.profileType === 'business' ? [{ id: 'approval', label: 'Statut', icon: <VerifiedIcon size={22} /> }] : []),
+                { id: 'orders', label: 'Commandes', icon: <ShoppingBag className="h-5 w-5" /> },
+                { id: 'media', label: 'Médias', icon: <ImageIcon className="h-5 w-5" /> },
+                { id: 'promo', label: 'Promotions', icon: <Tag className="h-5 w-5" /> },
               ].map((t: any) => {
                 const active = activeTab === t.id;
                 return (
@@ -636,192 +673,138 @@ export default function NkampaStoreDashboardPage() {
         )}
 
         {activeTab === 'overview' ? (
-          <div className="grid gap-5 lg:grid-cols-[1.35fr_0.65fr]">
-            <div className="overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-sm">
-              <div className="relative h-72 bg-[#32BB78] sm:h-80">
+          <div className="space-y-4">
+            <section className="overflow-hidden rounded-[1.35rem] bg-white shadow-[0_12px_28px_rgba(15,23,42,0.07)] ring-1 ring-slate-100">
+              <div className="relative h-52 overflow-hidden bg-slate-200">
                 {store.coverUrl ? (
-                  <>
-                    <Image src={store.coverUrl} alt="Cover boutique" fill className="object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/15 to-transparent" />
-                  </>
+                  <Image src={store.coverUrl} alt="Cover boutique" fill className="object-cover" />
                 ) : (
-                  <div className="absolute inset-0 bg-[linear-gradient(135deg,#32BB78_0%,#32BB78_52%,#101827_100%)]" />
+                  <div className="absolute inset-0 bg-[linear-gradient(135deg,#d7eadf_0%,#f2efe6_52%,#9f8d74_100%)]" />
                 )}
-
-                <div className="absolute left-5 top-5 flex items-center gap-2">
-                  <Badge className="rounded-full border border-white/20 bg-white/90 text-[#32BB78]">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/72 via-black/18 to-transparent" />
+                <div className="absolute left-4 top-4 flex items-center gap-2">
+                  <Badge className="rounded-full border-0 bg-primary px-3 py-1 text-white shadow">
+                    <ShieldCheck className="mr-1 h-4 w-4" />
                     {isApproved ? 'Boutique publiée' : 'Publication bloquée'}
                   </Badge>
                   {promoEnabled ? (
-                    <Badge className="rounded-full border border-white/20 bg-[#32BB78] text-white">Promo active</Badge>
+                    <Badge className="rounded-full border-0 bg-[#f59e0b] px-3 py-1 text-white shadow">Promo active</Badge>
                   ) : null}
                 </div>
-
-                <div className="absolute bottom-5 left-5 right-5">
-                  <div className="flex items-end gap-4">
-                    <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-[28px] bg-white shadow-2xl ring-4 ring-white">
-                    {store.logoUrl ? (
-                      <Image src={store.logoUrl} alt="Logo boutique" fill className="object-cover" />
-                    ) : (
-                      <div className="h-full w-full grid place-items-center bg-primary/10">
-                        <span className="text-2xl font-black text-primary">{String(store.storeName || 'B').slice(0, 1).toUpperCase()}</span>
-                      </div>
-                    )}
-                    </div>
-                    <div className="min-w-0 pb-1 text-white">
-                      <p className="text-xs font-bold uppercase tracking-wide text-white/70">Vitrine publique</p>
-                      <h2 className="truncate text-3xl font-black tracking-tight">{store.storeName}</h2>
-                      <p className="mt-1 truncate text-sm text-white/80">
-                        {sellLabel}
-                        {store.category ? ` • ${store.category}` : ''}
-                        {isBusiness && roles.length ? ` • ${roles.map(roleLabel).join(' • ')}` : ''}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => isApproved ? window.open(storeUrl, '_blank') : setActiveTab('media')}
+                  className="absolute bottom-4 right-4 inline-flex items-center gap-2 rounded-2xl bg-black/38 px-3 py-2 text-xs font-black text-white ring-1 ring-white/30 backdrop-blur"
+                >
+                  <Eye className="h-4 w-4" />
+                  Aperçu de la vitrine
+                </button>
+                <h2 className="absolute bottom-4 left-4 max-w-[68%] truncate text-2xl font-black text-white">
+                  Vitrine publique — {store.storeName}
+                </h2>
               </div>
 
-              <div className="grid gap-4 p-5 md:grid-cols-[1fr_auto]">
-                <div>
-                  <p className="text-xs font-black uppercase tracking-wide text-slate-500">Description boutique</p>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">
-                    {store.description || 'Ajoutez une bio claire pour expliquer ce que la boutique vend et donner confiance aux clients.'}
+              <div className="space-y-4 p-4">
+                <div className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-center">
+                  <p className="text-sm font-semibold leading-6 text-slate-700">
+                    {store.description || 'Découvrez des produits de qualité, soigneusement sélectionnés pour le marché local et international.'}
                   </p>
+                  <span className="grid h-14 w-14 place-items-center rounded-2xl bg-primary/8 text-primary">
+                    <ShieldCheck className="h-8 w-8" />
+                  </span>
                 </div>
-                <div className="flex flex-col gap-2 sm:min-w-48">
+                <div className="grid gap-2 sm:grid-cols-2">
                   {isApproved ? (
-                    <Button asChild className="rounded-2xl bg-[#32BB78] hover:bg-[#0A4747]">
+                    <Button asChild className="h-12 rounded-2xl bg-primary text-base font-black hover:bg-[#0A4747]">
                       <Link href={storeUrl} target="_blank" rel="noreferrer">
                         Ouvrir la vitrine <ExternalLink className="ml-2 h-4 w-4" />
                       </Link>
                     </Button>
                   ) : (
-                    <Badge className="justify-center rounded-2xl border border-amber-200 bg-amber-50 py-3 text-amber-800">En attente</Badge>
+                    <Badge className="flex h-12 items-center justify-center rounded-2xl border border-amber-200 bg-amber-50 text-amber-800">En attente</Badge>
                   )}
-                  <Button className="rounded-2xl" variant="outline" onClick={() => setActiveTab('media')}>
-                    Personnaliser
+                  <Button className="h-12 rounded-2xl text-base font-black" variant="outline" onClick={() => setActiveTab('media')}>
+                    Personnaliser <Wand2 className="ml-2 h-4 w-4" />
                   </Button>
                 </div>
               </div>
+            </section>
+
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              <StoreDashboardMetric icon={TrendingUp} label="Ventes du mois" value={formatMoney(revenue, primaryCurrency)} detail="↗ activité boutique" tone="green" />
+              <StoreDashboardMetric icon={ShoppingBag} label="Commandes" value={sellerOrders.length} detail={`${pendingCount} à traiter`} tone="green" />
+              <StoreDashboardMetric icon={PackageCheck} label="Produits actifs" value={activeProductsCount} detail={`${myProducts.length} en catalogue`} tone="green" />
+              <StoreDashboardMetric icon={Users} label="Visites" value={storeVisits.toLocaleString('fr-FR')} detail={`${storeCustomers.length} clients`} tone="green" />
+              <StoreDashboardMetric icon={Grid2X2} label="Taux de conversion" value={`${conversionRate.toFixed(1)} %`} detail="commandes / visites" tone="green" />
+              <StoreDashboardMetric icon={ShieldCheck} label="Stock faible" value={lowStockCount} detail={lowStockCount ? 'Voir les produits' : 'Aucun risque'} tone={lowStockCount ? 'amber' : 'green'} />
             </div>
 
-            <div className="space-y-4">
-              <div className="rounded-[32px] border border-slate-200 bg-white p-5 shadow-sm">
-                <div className="flex items-center gap-3">
-                  <div className="grid h-14 w-14 place-items-center rounded-3xl bg-[#32BB78]/10">
-                    <StoreStatsIcon size={34} />
-                  </div>
-                  <div>
-                    <p className="text-xs font-black uppercase tracking-wide text-slate-500">Caisse boutique</p>
-                    <p className="text-2xl font-black text-[#32BB78]">{revenue.toLocaleString()} CDF</p>
-                  </div>
-                </div>
-                <div className="mt-5 grid grid-cols-2 gap-3">
-                  <div className="rounded-2xl bg-slate-50 p-3">
-                    <p className="text-xl font-black">{myProducts.length}</p>
-                    <p className="text-[11px] font-semibold text-slate-500">{sellLabel}</p>
-                  </div>
-                  <div className="rounded-2xl bg-slate-50 p-3">
-                    <p className="text-xl font-black">{pendingCount}</p>
-                    <p className="text-[11px] font-semibold text-slate-500">À traiter</p>
-                  </div>
-                </div>
+            <section className="overflow-hidden rounded-[1.35rem] bg-white shadow-[0_12px_28px_rgba(15,23,42,0.07)] ring-1 ring-slate-100">
+              <div className="flex items-center justify-between border-b border-slate-100 px-4 py-4">
+                <h2 className="text-base font-black text-slate-950">Commandes récentes</h2>
+                <button type="button" onClick={() => setActiveTab('orders')} className="inline-flex items-center gap-1 text-xs font-bold text-primary">
+                  Voir toutes <ChevronRight className="h-4 w-4" />
+                </button>
               </div>
-
-              <div className="rounded-[32px] border border-slate-200 bg-[#101827] p-5 text-white shadow-sm">
-                <p className="text-xs font-black uppercase tracking-wide text-white/55">Rayon prioritaire</p>
-                <p className="mt-2 text-lg font-black">{store.category || 'Catalogue principal'}</p>
-                <p className="mt-1 text-xs leading-5 text-white/65">
-                  Mettez une cover propre, 3 à 6 produits forts et une promo courte pour donner un vrai effet de boutique.
-                </p>
+              <div className="divide-y divide-slate-100">
+                {recentOrders.length ? recentOrders.map((order) => {
+                  const status = getOrderStatusMeta(order.status);
+                  return (
+                    <button key={order.id} type="button" onClick={() => setActiveTab('orders')} className="grid w-full grid-cols-[1.7rem_1fr_auto] items-center gap-3 px-4 py-3 text-left transition hover:bg-slate-50">
+                      <span className="grid h-7 w-7 place-items-center rounded-xl bg-slate-50 text-slate-500">
+                        <ShoppingBag className="h-4 w-4" />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-black text-slate-900">CMD-{String(order.id || '').slice(0, 8).toUpperCase()}</span>
+                        <span className="block truncate text-xs font-semibold text-slate-500">{order.buyerName || order.customerName || order.productName || 'Client Nkampa'}</span>
+                      </span>
+                      <span className="text-right">
+                        <span className="block text-sm font-black text-slate-950">{formatMoney(Number(order.totalPrice || 0), order.currency || primaryCurrency)}</span>
+                        <span className={`mt-1 inline-flex rounded-full px-3 py-1 text-[11px] font-black ${status.className}`}>{status.label}</span>
+                      </span>
+                    </button>
+                  );
+                }) : (
+                  <div className="px-4 py-7 text-center text-sm font-semibold text-slate-500">Aucune commande récente.</div>
+                )}
               </div>
-            </div>
-          </div>
-        ) : null}
+            </section>
 
-        {activeTab === 'overview' ? (
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
-            <StoreMetric
-              label="Catalogue"
-              value={myProducts.length}
-              detail={`${sellLabel.toLowerCase()} publiés`}
-              icon={<ProductsIcon size={28} />}
-            />
-            <StoreMetric
-              label="Commandes"
-              value={pendingCount}
-              detail="paiement ou préparation"
-              icon={<NkampaNavOrdersIcon size={28} />}
-              accent="blue"
-            />
-            <StoreMetric
-              label="Chiffre"
-              value={`${revenue.toLocaleString()}`}
-              detail="CDF encaissés"
-              icon={<WithdrawalTransactionIcon size={28} />}
-              accent="ink"
-            />
-            <StoreMetric
-              label="Clients"
-              value={storeCustomers.length}
-              detail="acheteurs uniques"
-              icon={<CustomersIcon size={28} />}
-              accent="green"
-            />
-            <StoreMetric
-              label="Statut"
-              value={isApproved ? 'Publié' : 'Pause'}
-              detail={isApproved ? 'vitrine accessible' : 'attente validation'}
-              icon={<VerifiedIcon size={28} />}
-              accent={isApproved ? 'green' : 'amber'}
-            />
-          </div>
-        ) : null}
-
-        {activeTab === 'overview' ? (
-          <Card className="rounded-[32px] border-slate-200 shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between gap-2 text-base">
-                <span>Organisation de la boutique</span>
-                <Badge className="rounded-full border border-[#32BB78]/20 bg-[#32BB78]/10 text-[#32BB78]">
-                  {isBusiness ? 'Entreprise' : 'Individu'}
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 gap-3 md:grid-cols-3">
-              {typeCards.map((t) => (
-                <div key={t.title} className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-sm font-black">{t.title}</p>
-                  <p className="mt-1 text-xs leading-5 text-slate-500">{t.desc}</p>
-                </div>
-              ))}
-              {isBusiness && roles.length > 0 ? (
-                <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-sm font-black">Rôles</p>
-                  <p className="mt-1 text-xs text-slate-500">
-                    {roles.map((r: string) => roleLabel(r)).join(' • ')}
-                  </p>
-                  {Object.keys(subroles).length > 0 ? (
-                    <div className="mt-3 space-y-1">
-                      {roles.map((r: string) => {
-                        const list = subroles[r] || [];
-                        if (!list.length) return null;
-                        return (
-                          <p key={r} className="text-[11px] text-muted-foreground">
-                            <span className="font-semibold text-foreground/80">{roleLabel(r)}:</span> {list.join(', ')}
-                          </p>
-                        );
-                      })}
+            <section className="overflow-hidden rounded-[1.35rem] bg-white shadow-[0_12px_28px_rgba(15,23,42,0.07)] ring-1 ring-slate-100">
+              <div className="flex items-center justify-between border-b border-slate-100 px-4 py-4">
+                <h2 className="text-base font-black text-slate-950">Produits en vedette</h2>
+                <button type="button" onClick={() => setActiveTab('products')} className="inline-flex items-center gap-1 text-xs font-bold text-primary">
+                  Voir tous <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="divide-y divide-slate-100">
+                {featuredProducts.length ? featuredProducts.map((product) => {
+                  const image = getProductImages(product)[0];
+                  const stock = getStockValue(product);
+                  return (
+                    <div key={product.id} className="grid grid-cols-[4rem_1fr_auto_auto] items-center gap-3 px-4 py-3">
+                      <div className="relative h-14 w-14 overflow-hidden rounded-2xl bg-slate-100">
+                        <Image src={image} alt={product.name || 'Produit'} fill className="object-cover" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-black text-slate-950">{product.name}</p>
+                        <p className="mt-0.5 text-xs font-black text-primary">{formatMoney(Number(product.price || 0), product.currency || primaryCurrency)}</p>
+                      </div>
+                      <div className="text-right text-xs">
+                        <p className="font-semibold text-slate-500">Stock</p>
+                        <p className={`text-lg font-black ${stock <= 10 && stock > 0 ? 'text-[#d97706]' : 'text-primary'}`}>{stock}</p>
+                      </div>
+                      <button type="button" onClick={() => openEdit(product)} className="grid h-9 w-9 place-items-center rounded-full text-slate-500 hover:bg-slate-50">
+                        <Pencil className="h-4 w-4" />
+                      </button>
                     </div>
-                  ) : null}
-                </div>
-              ) : null}
-              <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
-                <p className="text-sm font-black">Lien boutique</p>
-                <p className="mt-1 break-all text-xs text-slate-500">{isApproved ? storeUrl : 'Activé après approbation'}</p>
+                  );
+                }) : (
+                  <div className="px-4 py-7 text-center text-sm font-semibold text-slate-500">Aucun produit en vedette.</div>
+                )}
               </div>
-            </CardContent>
-          </Card>
+            </section>
+          </div>
         ) : null}
 
         {activeTab === 'products' ? (
@@ -894,6 +877,46 @@ export default function NkampaStoreDashboardPage() {
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        ) : null}
+
+        {activeTab === 'orders' ? (
+          <Card className="rounded-[32px] border-slate-200 shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between gap-2">
+                <span>Commandes boutique</span>
+                <Badge className="rounded-full border border-primary/20 bg-primary/10 text-primary">
+                  {sellerOrders.length} commande{sellerOrders.length > 1 ? 's' : ''}
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {sellerOrders.length === 0 ? (
+                <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
+                  <div className="mx-auto grid h-16 w-16 place-items-center rounded-3xl bg-white">
+                    <OrdersIcon size={38} />
+                  </div>
+                  <p className="mt-3 text-sm font-black">Aucune commande pour le moment</p>
+                  <p className="mt-1 text-xs text-slate-500">Les commandes passées dans votre vitrine apparaîtront ici.</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {sellerOrders.map((order) => {
+                    const status = getOrderStatusMeta(order.status);
+                    return (
+                      <div key={order.id} className="grid gap-3 rounded-3xl border border-slate-200 bg-white p-3 sm:grid-cols-[1fr_auto_auto] sm:items-center">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-black text-slate-950">CMD-{String(order.id || '').slice(0, 10).toUpperCase()}</p>
+                          <p className="mt-1 truncate text-xs font-semibold text-slate-500">{order.buyerName || order.customerName || order.productName || 'Client Nkampa'}</p>
+                        </div>
+                        <p className="text-sm font-black text-slate-950">{formatMoney(Number(order.totalPrice || 0), order.currency || primaryCurrency)}</p>
+                        <span className={`w-fit rounded-full px-3 py-1 text-[11px] font-black ${status.className}`}>{status.label}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </CardContent>
@@ -1229,35 +1252,6 @@ export default function NkampaStoreDashboardPage() {
           </Card>
         ) : null}
 
-        {activeTab === 'overview' ? (
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-            {blocks.map((b) => (
-              <StoreActionCard
-                key={b.key}
-                title={b.title}
-                desc={b.desc}
-                href={b.href}
-                cta={b.cta}
-                icon={b.key === 'orders' ? <OrdersIcon size={32} /> : <NkampaNavShopIcon size={32} />}
-              />
-            ))}
-            <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="flex items-start gap-3">
-                <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#32BB78]/10">
-                  <RatingIcon size={32} />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-black text-slate-950">Merchandising</p>
-                  <p className="mt-1 text-xs leading-5 text-slate-500">Logo, cover, bio et image promo pour donner une vraie identité à la boutique.</p>
-                </div>
-              </div>
-              <Button className="mt-4 h-10 w-full rounded-2xl bg-[#32BB78] hover:bg-[#0A4747]" onClick={() => setActiveTab('media')}>
-                <ImageIcon className="mr-2 h-4 w-4" />
-                Ouvrir médias
-              </Button>
-            </div>
-          </div>
-        ) : null}
       </div>
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>

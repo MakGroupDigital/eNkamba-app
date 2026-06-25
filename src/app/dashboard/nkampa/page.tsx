@@ -317,9 +317,37 @@ function computeImageSignatureFromFile(file: File) {
   });
 }
 
-const SupplierCard = memo(function SupplierCard({ supplier }: { supplier: any }) {
+const SupplierCard = memo(function SupplierCard({ supplier, variant = 'default' }: { supplier: any; variant?: 'default' | 'compact' }) {
   const imageUrl = optimizeMarketplaceImage(supplier.logoUrl || supplier.coverUrl || 'https://picsum.photos/seed/store/300/300');
   const isVerified = supplier.status === 'active' || supplier.status === 'approved';
+
+  if (variant === 'compact') {
+    return (
+      <Link href={`/shop/${supplier.slug || ''}`} className={!supplier.slug ? 'pointer-events-none opacity-60' : ''}>
+        <Card className="h-full overflow-hidden rounded-2xl border border-primary/10 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+          <CardContent className="flex flex-col items-center gap-2 p-2 text-center">
+            <div className="relative h-14 w-14 overflow-hidden rounded-2xl border border-primary/10 bg-primary/5">
+              <Image
+                src={imageUrl}
+                alt={supplier.storeName || 'Boutique'}
+                fill
+                className="object-cover"
+                sizes="64px"
+              />
+            </div>
+            <p className="line-clamp-1 w-full text-[11px] font-black text-slate-900">
+              {supplier.storeName || 'Boutique'}
+            </p>
+            {isVerified && (
+              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-black uppercase text-primary">
+                Vérifié
+              </span>
+            )}
+          </CardContent>
+        </Card>
+      </Link>
+    );
+  }
 
   return (
     <Link href={`/shop/${supplier.slug || ''}`} className={!supplier.slug ? 'pointer-events-none opacity-60' : ''}>
@@ -353,7 +381,15 @@ const SupplierCard = memo(function SupplierCard({ supplier }: { supplier: any })
   );
 });
 
-const ProductCard = memo(function ProductCard({ product, isVerified = false }: { product: any; isVerified?: boolean }) {
+const ProductCard = memo(function ProductCard({
+  product,
+  isVerified = false,
+  variant = 'default',
+}: {
+  product: any;
+  isVerified?: boolean;
+  variant?: 'default' | 'compact';
+}) {
   const priceInCDF = Math.round(
     convertToCDFSync(Number(product.price || 0), product.currency || 'CDF')
   );
@@ -361,6 +397,45 @@ const ProductCard = memo(function ProductCard({ product, isVerified = false }: {
   const soldCount = getProductSoldCount(product);
   const stockCount = getProductStockCount(product);
   const hasDeal = hasProductDeal(product);
+
+  if (variant === 'compact') {
+    return (
+      <Link href={product?.storeSlug ? `/shop/${product.storeSlug}/product/${product.id}` : `/dashboard/nkampa`} className={!product?.storeSlug ? 'pointer-events-none opacity-60' : ''}>
+        <Card className="h-full overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+          <div className="relative aspect-square w-full bg-slate-100">
+            <Image
+              src={imageUrl}
+              alt={product.name || 'Produit'}
+              fill
+              className="object-cover"
+              sizes="150px"
+            />
+            {hasDeal && (
+              <span className="absolute left-1.5 top-1.5 rounded-full bg-red-500 px-1.5 py-0.5 text-[9px] font-black text-white">
+                Promo
+              </span>
+            )}
+          </div>
+          <CardContent className="space-y-1.5 p-2">
+            <h3 className="line-clamp-2 min-h-[2rem] text-[11px] font-bold leading-4 text-slate-900">
+              {product.name}
+            </h3>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-black text-primary">
+                {priceInCDF.toLocaleString()} CDF
+              </p>
+              <div className="mt-0.5 flex items-center justify-between gap-1 text-[10px] font-semibold text-slate-500">
+                <span className="truncate">
+                  {soldCount > 0 ? `${soldCount.toLocaleString()} vendu${soldCount > 1 ? 's' : ''}` : product.location || 'Marché'}
+                </span>
+                {isVerified && <BadgeCheck className="h-3 w-3 shrink-0 text-primary" />}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </Link>
+    );
+  }
 
   return (
     <Link href={product?.storeSlug ? `/shop/${product.storeSlug}/product/${product.id}` : `/dashboard/nkampa`} className={!product?.storeSlug ? 'pointer-events-none opacity-60' : ''}>
@@ -876,18 +951,6 @@ export default function NkampaPage() {
     () => sortedProducts.filter((product) => getProductRating(product) >= 4.5 || getProductSoldCount(product) > 0 || getProductReviewCount(product) > 0).slice(0, 6),
     [sortedProducts]
   );
-  const marketplaceStats = useMemo(() => {
-    const cities = new Set(
-      sortedProducts
-        .map((product: any) => String(product?.location || '').trim())
-        .filter(Boolean)
-    );
-    return {
-      products: sortedProducts.length,
-      verifiedSuppliers: verifiedSuppliers.length,
-      cities: cities.size,
-    };
-  }, [sortedProducts, verifiedSuppliers.length]);
 
   const handleCheckoutFromCart = () => {
     if (cart.length === 0) {
@@ -1134,38 +1197,6 @@ export default function NkampaPage() {
 
         {!isSupplierView && (
           <div className="space-y-3 px-4">
-            <div className="grid grid-cols-3 gap-2">
-              <div className="rounded-2xl border border-primary/10 bg-white/85 p-3 shadow-sm">
-                <p className="text-lg font-black text-foreground">{marketplaceStats.products.toLocaleString()}</p>
-                <p className="text-[10px] font-bold uppercase text-muted-foreground">Articles</p>
-              </div>
-              <div className="rounded-2xl border border-primary/10 bg-white/85 p-3 shadow-sm">
-                <p className="text-lg font-black text-foreground">{marketplaceStats.verifiedSuppliers.toLocaleString()}</p>
-                <p className="text-[10px] font-bold uppercase text-muted-foreground">Vérifiés</p>
-              </div>
-              <div className="rounded-2xl border border-primary/10 bg-white/85 p-3 shadow-sm">
-                <p className="text-lg font-black text-foreground">{marketplaceStats.cities.toLocaleString()}</p>
-                <p className="text-[10px] font-bold uppercase text-muted-foreground">Zones</p>
-              </div>
-            </div>
-
-            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-              {[
-                { label: 'Paiement sécurisé', icon: ShieldCheck },
-                { label: 'Livraison suivie', icon: Truck },
-                { label: 'Vendeurs contrôlés', icon: BadgeCheck },
-                { label: 'Protection acheteur', icon: PackageCheck },
-              ].map((item) => {
-                const Icon = item.icon;
-                return (
-                  <div key={item.label} className="flex shrink-0 items-center gap-2 rounded-full border border-primary/10 bg-white/90 px-3 py-2 text-xs font-black text-foreground shadow-sm">
-                    <Icon className="h-4 w-4 text-primary" />
-                    {item.label}
-                  </div>
-                );
-              })}
-            </div>
-
             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
               {MARKETPLACE_FILTERS.map((filter) => {
                 const isActive = selectedMarketplaceFilter === filter.id;
@@ -1384,8 +1415,8 @@ export default function NkampaPage() {
                     </div>
                     <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
                       {verifiedSuppliers.map((supplier) => (
-                        <div key={supplier.id} className="w-36 shrink-0">
-                          <SupplierCard supplier={supplier} />
+                        <div key={supplier.id} className="w-[6.25rem] shrink-0">
+                          <SupplierCard supplier={supplier} variant="compact" />
                         </div>
                       ))}
                     </div>
@@ -1402,8 +1433,8 @@ export default function NkampaPage() {
                     </div>
                     <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
                       {dealProducts.map((product) => (
-                        <div key={product.id} className="w-44 shrink-0">
-                          <ProductCard product={product} isVerified={isVerifiedProduct(product)} />
+                        <div key={product.id} className="w-32 shrink-0 sm:w-36">
+                          <ProductCard product={product} isVerified={isVerifiedProduct(product)} variant="compact" />
                         </div>
                       ))}
                     </div>
@@ -1423,8 +1454,8 @@ export default function NkampaPage() {
                     </div>
                     <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
                       {trendingProducts.map((product) => (
-                        <div key={product.id} className="w-44 shrink-0">
-                          <ProductCard product={product} isVerified={isVerifiedProduct(product)} />
+                        <div key={product.id} className="w-32 shrink-0 sm:w-36">
+                          <ProductCard product={product} isVerified={isVerifiedProduct(product)} variant="compact" />
                         </div>
                       ))}
                     </div>

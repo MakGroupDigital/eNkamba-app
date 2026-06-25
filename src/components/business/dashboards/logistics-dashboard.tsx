@@ -8,12 +8,40 @@ import {
   SendPackageIcon,
   TrackPackageIcon,
   UgaviIcon,
-  UgaviPlayIcon,
   UgaviShareIcon,
 } from '@/components/icons/service-icons';
+import {
+  Bell,
+  Box,
+  Boxes,
+  Building2,
+  ChartNoAxesColumnIncreasing,
+  ChevronDown,
+  ChevronRight,
+  CircleDollarSign,
+  ClipboardCheck,
+  ClipboardList,
+  FileText,
+  KeyRound,
+  LayoutDashboard,
+  Menu,
+  PackagePlus,
+  PackageCheck,
+  PackageOpen,
+  PieChart,
+  QrCode,
+  ScanLine,
+  Settings,
+  ShieldAlert,
+  Truck,
+  UsersRound,
+  Warehouse,
+  X,
+} from 'lucide-react';
 import { addDoc, arrayUnion, collection, doc, getDocs, limit, onSnapshot, query, serverTimestamp, setDoc, updateDoc, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { uploadToCloudinary } from '@/lib/cloudinary-upload';
+import { useDashboardLocation } from '@/hooks/useDashboardLocation';
 import {
   UGAVI_STATUS_LABELS,
   UGAVI_SCAN_LABELS,
@@ -55,12 +83,16 @@ type LogisticsRoleConfig = {
   relayDescription: string;
 };
 
-type QuickAction = {
+type LogisticsSidebarItem = {
+  id: string;
   label: string;
-  description: string;
   tab: string;
   icon: React.ComponentType<any>;
-  tone: 'emerald' | 'orange' | 'blue' | 'slate';
+};
+
+type LogisticsSidebarSection = {
+  title: string;
+  items: LogisticsSidebarItem[];
 };
 
 type AgencyShipment = {
@@ -71,6 +103,8 @@ type AgencyShipment = {
   origin: string;
   destination: string;
   weight: number;
+  amountPaid: number;
+  currency: string;
   description: string;
   logisticsStatus: UgaviLogisticsStatus;
   statusHistory: any[];
@@ -120,14 +154,6 @@ const FLEET_TAB: LogisticsTab = { id: 'fleet', label: 'Ressources', icon: Busine
 const SHIPMENTS_TAB: LogisticsTab = { id: 'shipments', label: 'Colis & missions', icon: BusinessDashboardIcons.MapPin };
 const RELAY_TAB: LogisticsTab = { id: 'relay', label: 'Scanner QR', icon: BusinessDashboardIcons.QRCode };
 const REGISTER_TAB: LogisticsTab = { id: 'register', label: 'Enregistrer colis', icon: BusinessDashboardIcons.QRCode };
-
-const TAB_ICON_MAP: Record<string, React.ComponentType<any>> = {
-  overview: UgaviIcon,
-  fleet: SendPackageIcon,
-  shipments: TrackPackageIcon,
-  relay: UgaviShareIcon,
-  register: SendPackageIcon,
-};
 
 const ROLE_CONFIGS: Record<string, LogisticsRoleConfig> = {
   RELAY: {
@@ -268,11 +294,14 @@ function getLogisticsRoleConfig(subCategory?: string): LogisticsRoleConfig {
 
 export function LogisticsDashboard({ businessUser }: LogisticsDashboardProps) {
   const roleConfig = getLogisticsRoleConfig(businessUser.subCategory);
+  const { location } = useDashboardLocation();
   const canRegisterPackages = !businessUser.subCategory?.startsWith('COURIER_');
   const tabs = canRegisterPackages && !roleConfig.tabs.some((tab) => tab.id === 'register')
     ? [...roleConfig.tabs, REGISTER_TAB]
     : roleConfig.tabs;
   const [activeTab, setActiveTab] = useState(tabs[0]?.id || 'overview');
+  const [activeSidebarItem, setActiveSidebarItem] = useState('overview');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [shipments, setShipments] = useState<AgencyShipment[]>([]);
   const [isShipmentsLoading, setIsShipmentsLoading] = useState(true);
   const liveStats = useMemo(() => {
@@ -309,6 +338,8 @@ export function LogisticsDashboard({ businessUser }: LogisticsDashboardProps) {
             origin: data.senderAddress || 'Origine',
             destination: data.receiverAddress || 'Destination',
             weight: Number(data.packageWeight || 0),
+            amountPaid: Number(data.quoteTotal || data.totalAmount || data.amountPaid || data.amount || 0),
+            currency: data.currency || 'USD',
             description: data.description || '',
             logisticsStatus: (data.logisticsStatus || 'registered') as UgaviLogisticsStatus,
             statusHistory: Array.isArray(data.statusHistory) ? data.statusHistory : [],
@@ -329,105 +360,173 @@ export function LogisticsDashboard({ businessUser }: LogisticsDashboardProps) {
 
     return () => unsubscribe();
   }, [businessUser.uid]);
-  const quickActions: QuickAction[] = [
+  const locationLabel = location?.label || 'Yuexiu, Guangzhou, Chine';
+  const hubCode = businessUser.businessId || 'CN-GZ-YX-001';
+  const hubType = roleConfig.title.replace('Dashboard Ugavi — ', '') || 'Hub logistique international';
+  const scannerTab = tabs.some((tab) => tab.id === 'relay') ? 'relay' : 'shipments';
+  const inventoryTab = tabs.some((tab) => tab.id === 'fleet') ? 'fleet' : 'shipments';
+  const selectLogisticsTab = (tab: string, sidebarItem = tab) => {
+    setActiveTab(tab);
+    setActiveSidebarItem(sidebarItem);
+  };
+  const dashboardTabs = [
+    { id: 'overview', label: 'Vue d’ensemble' },
+    { id: 'shipments', label: 'Colis' },
+    { id: 'missions', label: 'Missions' },
+    { id: 'payments', label: 'Paiements' },
+    { id: 'reports', label: 'Rapports' },
+  ];
+  const visibleQuickActions = [
     {
-      label: canRegisterPackages ? 'Enregistrer colis' : 'Voir missions',
-      description: canRegisterPackages ? 'Créer un suivi et QR code' : 'Consulter les courses assignées',
+      label: 'Nouveau colis',
+      description: 'Créer un colis',
       tab: canRegisterPackages ? 'register' : 'shipments',
-      icon: canRegisterPackages ? SendPackageIcon : MapPinIcon,
-      tone: 'emerald',
+      id: 'new-package',
+      icon: PackagePlus,
+      accent: 'orange',
     },
     {
-      label: 'Scanner',
-      description: 'Pickup, depot ou remise',
-      tab: tabs.some((tab) => tab.id === 'relay') ? 'relay' : 'shipments',
-      icon: UgaviShareIcon,
-      tone: 'orange',
+      label: 'Scanner QR',
+      description: 'Scanner un code',
+      tab: scannerTab,
+      id: 'labels',
+      icon: ScanLine,
+      accent: 'green',
     },
     {
-      label: 'Ressources',
-      description: 'Livreurs, vehicules, moyens',
-      tab: tabs.some((tab) => tab.id === 'fleet') ? 'fleet' : 'overview',
-      icon: UgaviIcon,
-      tone: 'blue',
+      label: 'Missions',
+      description: 'Voir missions',
+      tab: 'missions',
+      id: 'orders',
+      icon: ClipboardCheck,
+      accent: 'slate',
     },
     {
-      label: 'Flux actifs',
-      description: 'Colis, missions et priorites',
-      tab: 'shipments',
-      icon: TrackPackageIcon,
-      tone: 'slate',
+      label: 'Inventaire',
+      description: 'Stock & produits',
+      tab: inventoryTab,
+      id: 'stock',
+      icon: Warehouse,
+      accent: 'green',
+    },
+  ];
+  const sidebarSections: LogisticsSidebarSection[] = [
+    {
+      title: 'Pilotage',
+      items: [
+        { id: 'overview', label: 'Tableau de bord', tab: 'overview', icon: LayoutDashboard },
+        { id: 'reports', label: 'Rapports', tab: 'reports', icon: ChartNoAxesColumnIncreasing },
+      ],
+    },
+    {
+      title: 'Entrepôts & stock',
+      items: [
+        { id: 'warehouses', label: 'Entrepôts', tab: inventoryTab, icon: Building2 },
+        { id: 'stock', label: 'Stock', tab: inventoryTab, icon: Boxes },
+        { id: 'inventory', label: 'Inventaires', tab: inventoryTab, icon: ClipboardList },
+        { id: 'movements', label: 'Mouvements', tab: 'shipments', icon: PackageOpen },
+      ],
+    },
+    {
+      title: 'Opérations',
+      items: [
+        { id: 'receptions', label: 'Réceptions', tab: scannerTab, icon: PackageOpen },
+        { id: 'orders', label: 'Commandes', tab: 'missions', icon: ClipboardCheck },
+        { id: 'deliveries', label: 'Livraisons', tab: 'shipments', icon: Truck },
+        { id: 'clients', label: 'Clients', tab: 'reports', icon: UsersRound },
+        { id: 'labels', label: 'Étiquettes & QR', tab: scannerTab, icon: QrCode },
+      ],
+    },
+    {
+      title: 'Administration',
+      items: [
+        { id: 'settings', label: 'Paramètres', tab: 'reports', icon: Settings },
+        { id: 'roles', label: 'Rôles & accès', tab: 'reports', icon: KeyRound },
+        { id: 'audit', label: "Journal d'audit", tab: 'reports', icon: FileText },
+      ],
     },
   ];
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(50,187,120,0.14),transparent_34%),linear-gradient(180deg,rgba(50,187,120,0.05)_0%,rgba(50,187,120,0.08)_54%,rgba(50,187,120,0.04)_100%)] pb-24 text-foreground">
-      <div className="sticky top-0 z-30 rounded-b-[32px] bg-gradient-to-r from-[#32BB78] via-[#32BB78] to-[#32BB78] px-4 pb-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] text-white shadow-lg shadow-[#32BB78]/20">
-        <div className="mx-auto max-w-5xl">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-3">
-              <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl border border-white/30 bg-white shadow-md">
-                <UgaviIcon size={38} />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[11px] font-black uppercase tracking-[0.18em] text-white/70">Ugavi Business</p>
-                <h1 className="truncate text-xl font-black leading-tight">{businessUser.businessName}</h1>
-                <p className="truncate text-xs font-medium text-white/75">{roleConfig.title.replace('Dashboard Ugavi — ', '')}</p>
-              </div>
-            </div>
-            <div className="hidden items-center gap-2 rounded-full border border-white/30 bg-white/15 px-3 py-2 text-xs font-bold backdrop-blur sm:flex">
-              <BusinessDashboardIcons.CheckCircle className="h-4 w-4" />
-              Compte actif
-            </div>
-          </div>
+    <div className="min-h-screen bg-[#f7fbf9] pb-24 text-slate-950">
+      <div className="sticky top-0 z-30 bg-primary text-white shadow-[0_14px_34px_rgba(50,187,120,0.28)]">
+        <div className="mx-auto flex h-16 max-w-5xl items-center justify-between gap-3 px-4">
+          <button type="button" className="flex min-w-0 items-center gap-2 rounded-full bg-white/10 px-2.5 py-2 text-left ring-1 ring-white/12">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/16">
+              <MapPinIcon size={18} />
+            </span>
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-black">{locationLabel}</span>
+            </span>
+            <ChevronDown className="h-4 w-4 shrink-0 text-white/85" />
+          </button>
 
-          <div className="mt-4 grid grid-cols-4 gap-3">
-            {quickActions.map((action) => {
-              const Icon = action.icon;
-              return (
-                <button
-                  key={action.label}
-                  type="button"
-                  onClick={() => setActiveTab(action.tab)}
-                  className="group flex min-w-0 flex-col items-center gap-2 rounded-2xl bg-white/12 p-2.5 text-center ring-1 ring-white/18 transition hover:bg-white/20"
-                >
-                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-md transition group-hover:scale-105">
-                    <Icon size={32} />
-                  </span>
-                  <span className="line-clamp-2 text-[11px] font-bold leading-tight text-white">{action.label}</span>
-                </button>
-              );
-            })}
+          <div className="flex shrink-0 items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setIsSidebarOpen(true)}
+              className="grid h-10 w-10 place-items-center rounded-full bg-white/12 ring-1 ring-white/15 transition hover:bg-white/18"
+              aria-label="Ouvrir le menu logistique"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+            <button type="button" className="relative grid h-10 w-10 place-items-center rounded-full bg-white/12 ring-1 ring-white/15">
+              <Bell className="h-5 w-5" />
+              <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full border-2 border-primary bg-[#f59e0b]" />
+            </button>
+            <button type="button" className="flex items-center gap-1">
+              <span className="grid h-11 w-11 place-items-center rounded-full border-2 border-white bg-white text-base font-black text-primary shadow-sm">
+                {businessUser.businessName?.slice(0, 1)?.toUpperCase() || 'U'}
+              </span>
+              <ChevronDown className="h-4 w-4 text-white/85" />
+            </button>
           </div>
         </div>
       </div>
 
-      <div className="mx-auto max-w-5xl space-y-5 px-4 py-5">
-        <section className="overflow-hidden rounded-3xl border border-[#32BB78] bg-white shadow-sm">
-          <div className="flex gap-2 overflow-x-auto p-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-            {tabs.map((tab) => {
-              const Icon = TAB_ICON_MAP[tab.id] || tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex min-w-fit items-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold transition ${
-                    activeTab === tab.id
-                      ? 'bg-[#32BB78] text-white shadow-md shadow-[#32BB78]/20'
-                      : 'bg-primary/5 text-muted-foreground hover:bg-primary/10 hover:text-[#32BB78]'
-                  }`}
-                >
-                  <Icon size={22} />
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
-        </section>
+      <LogisticsSideDrawer
+        open={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        businessName={businessUser.businessName}
+        hubType={hubType}
+        hubCode={hubCode}
+        activeItem={activeSidebarItem}
+        sections={sidebarSections}
+        onSelect={(item) => {
+          selectLogisticsTab(item.tab, item.id);
+          setIsSidebarOpen(false);
+        }}
+      />
+
+      <div className="mx-auto max-w-5xl space-y-4 px-4 py-4">
+        <LogisticsHubCard
+          businessName={businessUser.businessName}
+          hubType={hubType}
+          hubCode={hubCode}
+          onScan={() => selectLogisticsTab(scannerTab, 'labels')}
+        />
+
+        <div className="grid grid-cols-4 gap-2 sm:gap-3">
+          {visibleQuickActions.map((action) => (
+            <LogisticsActionCard
+              key={action.label}
+              label={action.label}
+              description={action.description}
+              icon={action.icon}
+              accent={action.accent}
+              onClick={() => selectLogisticsTab(action.tab, action.id)}
+            />
+          ))}
+        </div>
+
+        <LogisticsSegmentTabs tabs={dashboardTabs} activeTab={activeTab} setActiveTab={(tab) => selectLogisticsTab(tab, tab)} />
 
         {activeTab === 'overview' && <LogisticsOverview stats={liveStats} capabilities={roleConfig.capabilities} shipments={shipments} setActiveTab={setActiveTab} />}
-        {activeTab === 'fleet' && <LogisticsFleet title={roleConfig.fleetTitle} emptyState={roleConfig.fleetEmptyState} businessUser={businessUser} />}
-        {activeTab === 'shipments' && <LogisticsShipments title={roleConfig.shipmentsTitle} emptyState={roleConfig.shipmentsEmptyState} businessUser={businessUser} shipments={shipments} isLoading={isShipmentsLoading} />}
+        {activeTab === 'fleet' && <LogisticsFleet title={roleConfig.fleetTitle} emptyState={roleConfig.fleetEmptyState} businessUser={businessUser} mode={activeSidebarItem} />}
+        {activeTab === 'shipments' && <LogisticsShipments title={roleConfig.shipmentsTitle} emptyState={roleConfig.shipmentsEmptyState} businessUser={businessUser} shipments={shipments} isLoading={isShipmentsLoading} mode={activeSidebarItem} />}
+        {activeTab === 'missions' && <LogisticsShipments title="Missions actives" emptyState="Aucune mission active pour le moment" businessUser={businessUser} shipments={shipments} isLoading={isShipmentsLoading} mode={activeSidebarItem} />}
+        {activeTab === 'payments' && <LogisticsPaymentsPanel shipments={shipments} />}
+        {activeTab === 'reports' && <LogisticsReportsPanel shipments={shipments} setActiveTab={setActiveTab} mode={activeSidebarItem} />}
         {activeTab === 'relay' && <RelayScanner title={roleConfig.relayTitle} description={roleConfig.relayDescription} businessUser={businessUser} />}
         {activeTab === 'register' && <AgencyPackageRegistration businessUser={businessUser} />}
       </div>
@@ -435,36 +534,241 @@ export function LogisticsDashboard({ businessUser }: LogisticsDashboardProps) {
   );
 }
 
-function MetricPill({ label, value }: { label: string; value: string }) {
+function LogisticsSideDrawer({
+  open,
+  onClose,
+  businessName,
+  hubType,
+  hubCode,
+  activeItem,
+  sections,
+  onSelect,
+}: {
+  open: boolean;
+  onClose: () => void;
+  businessName: string;
+  hubType: string;
+  hubCode: string;
+  activeItem: string;
+  sections: LogisticsSidebarSection[];
+  onSelect: (item: LogisticsSidebarItem) => void;
+}) {
   return (
-    <div className="rounded-2xl border border-white/18 bg-white/14 p-3 text-center backdrop-blur">
-      <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-white/65">{label}</p>
-      <p className="mt-2 text-2xl font-black text-white">{value}</p>
+    <div
+      className={`fixed inset-0 z-[90] transition ${open ? 'pointer-events-auto' : 'pointer-events-none'}`}
+      aria-hidden={!open}
+    >
+      <button
+        type="button"
+        aria-label="Fermer le menu logistique"
+        onClick={onClose}
+        className={`absolute inset-0 bg-slate-950/30 backdrop-blur-[2px] transition-opacity duration-300 ${open ? 'opacity-100' : 'opacity-0'}`}
+      />
+
+      <aside
+        className={`absolute left-0 top-0 flex h-full w-[min(88vw,390px)] flex-col overflow-hidden bg-white shadow-[26px_0_70px_rgba(15,23,42,0.18)] transition-transform duration-300 ${open ? 'translate-x-0' : '-translate-x-full'}`}
+      >
+        <div className="h-1.5 bg-[linear-gradient(90deg,#0b8f54_0%,#32BB78_42%,#f59e0b_72%,#e11d48_100%)]" />
+
+        <header className="flex items-center justify-between gap-4 border-b border-slate-100 px-5 py-5">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-primary/10 shadow-sm ring-1 ring-primary/10">
+              <UgaviIcon size={38} />
+            </span>
+            <div className="min-w-0">
+              <p className="text-[11px] font-black uppercase tracking-[0.32em] text-slate-400">Logistique</p>
+              <h2 className="mt-1 truncate text-xl font-black leading-tight text-slate-950">{businessName || 'Logistique WMS'}</h2>
+              <p className="mt-1 truncate text-xs font-bold text-primary">{hubType}</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-slate-50 text-slate-500 ring-1 ring-slate-100 transition hover:bg-primary/10 hover:text-primary"
+            aria-label="Fermer"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </header>
+
+        <div className="border-b border-slate-100 px-5 py-3">
+          <div className="inline-flex max-w-full items-center gap-2 rounded-full bg-primary/8 px-3 py-1.5 text-xs font-black text-primary ring-1 ring-primary/10">
+            <span className="h-2 w-2 rounded-full bg-primary" />
+            <span className="truncate">{hubCode}</span>
+          </div>
+        </div>
+
+        <nav className="flex-1 overflow-y-auto px-4 py-5">
+          <div className="space-y-7">
+            {sections.map((section) => (
+              <section key={section.title}>
+                <p className="px-2 text-[11px] font-black uppercase tracking-[0.32em] text-slate-400">{section.title}</p>
+                <div className="mt-3 space-y-1">
+                  {section.items.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = activeItem === item.id;
+
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => onSelect(item)}
+                        className={`relative flex h-12 w-full items-center gap-4 rounded-xl px-3 text-left transition ${
+                          isActive
+                            ? 'bg-primary/8 text-primary shadow-sm ring-1 ring-primary/10'
+                            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'
+                        }`}
+                      >
+                        <Icon className={`h-5 w-5 shrink-0 ${isActive ? 'text-primary' : 'text-slate-500'}`} />
+                        <span className="truncate text-[15px] font-bold">{item.label}</span>
+                        {isActive && <span className="ml-auto h-7 w-1 rounded-full bg-primary" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+            ))}
+          </div>
+        </nav>
+      </aside>
     </div>
   );
 }
 
-function BusinessMetricCard({ stat }: { stat: LogisticsStat }) {
-  const Icon = stat.icon;
-  const colorClasses = {
-    orange: 'bg-[#fff7ed] text-[#9a4a00] border-[#fed7aa]',
-    blue: 'bg-[#eff6ff] text-[#1d4ed8] border-[#bfdbfe]',
-    green: 'bg-[#32BB78] text-[#32BB78] border-[#32BB78]',
-    yellow: 'bg-[#fffbeb] text-[#92400e] border-[#fde68a]',
-    purple: 'bg-[#f5f3ff] text-[#6d28d9] border-[#ddd6fe]',
-  };
+function LogisticsHubCard({
+  businessName,
+  hubType,
+  hubCode,
+  onScan,
+}: {
+  businessName: string;
+  hubType: string;
+  hubCode: string;
+  onScan: () => void;
+}) {
+  return (
+    <section className="relative overflow-hidden rounded-[1.6rem] bg-[linear-gradient(135deg,#007a3d_0%,#006b3a_48%,#00582f_100%)] p-5 text-white shadow-[0_18px_40px_rgba(0,122,61,0.22)] sm:p-6">
+      <div className="absolute inset-y-0 right-0 w-[58%] opacity-28">
+        <LogisticsWorldMap />
+      </div>
+      <div className="relative z-10 flex items-start justify-between gap-3">
+        <div className="flex min-w-0 gap-4">
+          <div className="grid h-[86px] w-[86px] shrink-0 place-items-center rounded-[1.35rem] bg-white shadow-[0_14px_28px_rgba(0,0,0,0.16)]">
+            <UgaviIcon size={58} />
+          </div>
+          <div className="min-w-0 pt-1">
+            <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#7cf0b6]">UGAVI BUSINESS</p>
+            <h1 className="mt-1 line-clamp-2 text-[1.55rem] font-black leading-[1.05] tracking-tight text-white sm:text-3xl">
+              {businessName || 'FIVE GOO Logistics Hub'}
+            </h1>
+            <p className="mt-2 truncate text-sm font-semibold text-white/78">{hubType || 'Hub logistique international'}</p>
+            <span className="mt-3 inline-flex rounded-xl bg-white/10 px-3 py-1 text-xs font-bold text-white/82 ring-1 ring-white/12">
+              {hubCode}
+            </span>
+          </div>
+        </div>
+        <span className="hidden shrink-0 items-center gap-2 rounded-2xl bg-white/10 px-3 py-2 text-sm font-black text-white ring-1 ring-white/12 sm:inline-flex">
+          <span className="h-2.5 w-2.5 rounded-full bg-[#55f49b]" />
+          Hub actif
+        </span>
+      </div>
+
+      <div className="relative z-10 mt-6 flex items-center justify-between gap-3">
+        <button
+          type="button"
+          onClick={onScan}
+          className="inline-flex h-14 min-w-[13rem] items-center justify-center gap-3 rounded-2xl bg-white px-5 text-sm font-black text-primary shadow-[0_14px_24px_rgba(0,0,0,0.18)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_32px_rgba(0,0,0,0.2)]"
+        >
+          <ScanLine className="h-5 w-5" />
+          Scanner QR
+        </button>
+        <span className="inline-flex items-center gap-2 rounded-2xl bg-white/10 px-3 py-2 text-xs font-bold text-white/85 ring-1 ring-white/12 sm:hidden">
+          <span className="h-2.5 w-2.5 rounded-full bg-[#55f49b]" />
+          Hub actif
+        </span>
+      </div>
+    </section>
+  );
+}
+
+function LogisticsWorldMap() {
+  return (
+    <svg className="h-full w-full" viewBox="0 0 420 240" fill="none" aria-hidden="true">
+      <path d="M42 86c24-24 64-28 96-13 18 8 27 23 49 19 34-6 58-32 93-24 32 7 52 32 80 47" stroke="white" strokeWidth="2" strokeDasharray="4 7" opacity=".72" />
+      <path d="M66 65c37-33 88-27 113 0 18 20 20 45 53 42 31-3 44-29 74-22 24 6 43 27 61 44" stroke="white" strokeWidth="1.2" opacity=".14" />
+      <path d="M76 102c14-15 40-15 56-5 22 14 30 39 64 35 44-5 66-48 112-34 27 8 45 32 62 51" stroke="white" strokeWidth="1.2" opacity=".12" />
+      <circle cx="118" cy="79" r="12" fill="white" opacity=".12" />
+      <circle cx="118" cy="79" r="5" fill="white" opacity=".68" />
+      <circle cx="324" cy="130" r="14" fill="white" opacity=".12" />
+      <circle cx="324" cy="130" r="5" fill="white" opacity=".68" />
+      <g transform="translate(206 112)">
+        <rect x="0" y="0" width="30" height="24" rx="6" fill="#f59e0b" />
+        <path d="M3 8h24M15 0v24" stroke="#fff7ed" strokeWidth="2" opacity=".75" />
+      </g>
+      <path d="M34 150c25 10 56 12 87 2 22-7 38-8 57 3 27 16 56 17 86 2 24-12 55-12 92 4" stroke="white" strokeWidth="1" opacity=".1" />
+    </svg>
+  );
+}
+
+function LogisticsActionCard({
+  label,
+  description,
+  icon: Icon,
+  accent,
+  onClick,
+}: {
+  label: string;
+  description: string;
+  icon: React.ComponentType<any>;
+  accent: string;
+  onClick: () => void;
+}) {
+  const tone = accent === 'orange'
+    ? 'bg-[#fff7ed] text-[#d97706]'
+    : accent === 'slate'
+      ? 'bg-slate-100 text-slate-700'
+      : 'bg-primary/10 text-primary';
 
   return (
-    <div className={`rounded-2xl border p-4 ${colorClasses[stat.color]}`}>
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-xs font-bold opacity-75">{stat.label}</p>
-          <p className="mt-2 text-2xl font-black">{stat.value}</p>
-        </div>
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/70">
-          <Icon className="h-6 w-6 opacity-80" size={28} />
-        </div>
-      </div>
+    <button
+      type="button"
+      onClick={onClick}
+      className="group min-h-[8.9rem] rounded-[1.35rem] bg-white p-3 text-center shadow-[0_10px_24px_rgba(15,23,42,0.07)] ring-1 ring-slate-100 transition hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(15,23,42,0.1)] sm:min-h-[9.5rem] sm:p-4"
+    >
+      <span className={`mx-auto grid h-12 w-12 place-items-center rounded-2xl ${tone} transition group-hover:scale-105 sm:h-14 sm:w-14`}>
+        <Icon className="h-7 w-7" />
+      </span>
+      <span className="mt-3 block text-[12px] font-black leading-tight text-slate-950 sm:text-sm">{label}</span>
+      <span className="mt-1 block text-[10px] font-semibold leading-tight text-slate-500 sm:text-xs">{description}</span>
+    </button>
+  );
+}
+
+function LogisticsSegmentTabs({
+  tabs,
+  activeTab,
+  setActiveTab,
+}: {
+  tabs: { id: string; label: string }[];
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+}) {
+  return (
+    <div className="grid grid-cols-5 gap-2">
+      {tabs.map((tab) => (
+        <button
+          key={tab.id}
+          type="button"
+          onClick={() => setActiveTab(tab.id)}
+          className={`h-11 rounded-full px-2 text-[11px] font-black shadow-[0_8px_18px_rgba(15,23,42,0.06)] transition sm:text-sm ${
+            activeTab === tab.id
+              ? 'bg-primary text-white'
+              : 'bg-white text-slate-500 ring-1 ring-slate-100 hover:text-primary'
+          }`}
+        >
+          <span className="block truncate">{tab.label}</span>
+        </button>
+      ))}
     </div>
   );
 }
@@ -1384,8 +1688,6 @@ function OptionToggle({
 }
 
 function LogisticsOverview({
-  stats,
-  capabilities,
   shipments,
   setActiveTab,
 }: {
@@ -1396,103 +1698,251 @@ function LogisticsOverview({
 }) {
   const registeredCount = shipments.filter((shipment) => shipment.logisticsStatus === 'registered').length;
   const inTransitCount = shipments.filter((shipment) => ['assigned', 'in_transit', 'arrived_depot', 'out_for_delivery'].includes(shipment.logisticsStatus)).length;
-  const finalCount = shipments.filter((shipment) => ['out_for_delivery'].includes(shipment.logisticsStatus)).length;
+  const stockCount = shipments.filter((shipment) => ['registered', 'arrived_depot'].includes(shipment.logisticsStatus)).length;
+  const deliveredCount = shipments.filter((shipment) => shipment.logisticsStatus === 'delivered').length;
+  const issueCount = shipments.filter((shipment) => ['returned', 'blocked'].includes(shipment.logisticsStatus)).length;
+  const successRate = shipments.length ? Math.round((deliveredCount / shipments.length) * 100) : 0;
+  const receivedAmount = shipments.reduce((total, shipment) => total + (Number.isFinite(shipment.amountPaid) ? shipment.amountPaid : 0), 0);
+  const currency = shipments.find((shipment) => shipment.currency)?.currency || 'USD';
 
   return (
-    <div className="grid gap-5 xl:grid-cols-[1fr_360px]">
-      <div className="space-y-5">
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-        {stats.map((stat, idx) => {
-          const Icon = stat.icon;
-          const colorClasses = {
-            orange: 'bg-orange-50 text-orange-700 ring-orange-100',
-            blue: 'bg-blue-50 text-blue-700 ring-blue-100',
-            green: 'bg-primary/5 text-primary ring-primary/20',
-            yellow: 'bg-amber-50 text-amber-700 ring-amber-100',
-            purple: 'bg-violet-50 text-violet-700 ring-violet-100',
-          };
-
-          return (
-            <div key={`${stat.label}-${idx}`} className={`${colorClasses[stat.color]} rounded-2xl p-4 shadow-sm ring-1`}>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.12em] opacity-75">{stat.label}</p>
-                  <p className="mt-2 text-3xl font-black">{stat.value}</p>
-                </div>
-                <Icon className="h-10 w-10 opacity-25" />
-              </div>
-            </div>
-          );
-        })}
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <LogisticsKpiCard icon={Box} label="Colis enregistrés" value={String(shipments.length || registeredCount)} note="Aujourd’hui" tone="green" />
+        <LogisticsKpiCard icon={ClipboardCheck} label="Missions actives" value={String(inTransitCount)} note="En cours" tone="orange" />
+        <LogisticsKpiCard icon={Warehouse} label="En stock" value={String(stockCount)} note="Unités" tone="green" />
+        <LogisticsKpiCard icon={ShieldAlert} label="Incidents" value={String(issueCount)} note={issueCount ? 'À traiter' : 'Aucun'} tone="orange" />
+        <LogisticsKpiCard icon={PieChart} label="Taux de livraison" value={`${successRate}%`} note="Ce mois" tone="green" />
+        <LogisticsKpiCard icon={CircleDollarSign} label="Paiements reçus" value={`${formatCompactMoney(receivedAmount)} ${currency}`} note="Ce mois" tone="green" />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        {capabilities.map((capability) => (
-          <div key={capability} className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-            <div className="flex items-start gap-3">
-              <div className="rounded-xl bg-primary p-2 text-white">
-                <BusinessDashboardIcons.CheckCircle className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="font-semibold text-primary">{capability}</p>
-                <p className="mt-1 text-sm text-slate-500">
-                  Disponible pour ce profil. Les données se rempliront au fil des opérations UGAVI.
-                </p>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-      </div>
-
-      <div className="space-y-4">
-        <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-bold text-primary">Pipeline du jour</p>
-              <p className="text-xs text-slate-500">Vue rapide des flux</p>
-            </div>
-            <BusinessDashboardIcons.TrendingUp className="h-5 w-5 text-primary" />
-          </div>
-          <div className="mt-5 space-y-4">
-            {[
-              { label: 'A enregistrer', value: registeredCount, tone: 'bg-primary' },
-              { label: 'En transit', value: inTransitCount, tone: 'bg-primary' },
-              { label: 'A remettre', value: finalCount, tone: 'bg-orange-500' },
-            ].map((item) => (
-              <button
-                key={item.label}
-                type="button"
-                onClick={() => setActiveTab(item.label === 'A enregistrer' ? 'register' : 'shipments')}
-                className="flex w-full items-center justify-between rounded-xl bg-slate-50 px-3 py-3 text-left"
-              >
-                <span className="flex items-center gap-3">
-                  <span className={`h-2.5 w-2.5 rounded-full ${item.tone}`} />
-                  <span className="text-sm font-semibold text-slate-700">{item.label}</span>
-                </span>
-                <span className="text-lg font-black text-primary">{item.value}</span>
-              </button>
-            ))}
-          </div>
+      <section className="overflow-hidden rounded-[1.35rem] bg-white shadow-[0_12px_28px_rgba(15,23,42,0.07)] ring-1 ring-slate-100">
+        <div className="flex items-center justify-between border-b border-slate-100 px-4 py-4">
+          <h2 className="text-base font-black text-slate-950">Colis récents</h2>
+          <button
+            type="button"
+            onClick={() => setActiveTab('shipments')}
+            className="inline-flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-primary"
+          >
+            Voir tout
+            <ChevronRight className="h-4 w-4" />
+          </button>
         </div>
-
-        <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-          <p className="text-sm font-bold text-primary">Activite recente</p>
-          <div className="mt-4 space-y-3">
-            {['Aucune anomalie signalee', 'Aucun colis en retard', 'Scanner pret'].map((item) => (
-              <div key={item} className="flex items-center gap-3 rounded-xl bg-slate-50 px-3 py-2">
-                <span className="h-2 w-2 rounded-full bg-primary" />
-                <span className="text-sm text-slate-600">{item}</span>
-              </div>
-            ))}
-          </div>
+        <div className="divide-y divide-slate-100">
+          {shipments.slice(0, 3).map((shipment) => (
+            <LogisticsRecentShipmentRow key={shipment.id} shipment={shipment} />
+          ))}
+          {!shipments.length && (
+            <div className="px-4 py-7 text-center text-sm font-semibold text-slate-500">
+              Aucun colis récent pour le moment.
+            </div>
+          )}
         </div>
-      </div>
+      </section>
     </div>
   );
 }
 
-function LogisticsFleet({ title, emptyState, businessUser }: { title: string; emptyState: string; businessUser: BusinessUser }) {
+function LogisticsKpiCard({
+  icon: Icon,
+  label,
+  value,
+  note,
+  tone,
+}: {
+  icon: React.ComponentType<any>;
+  label: string;
+  value: string;
+  note: string;
+  tone: 'green' | 'orange';
+}) {
+  const color = tone === 'orange' ? 'bg-[#fff7ed] text-[#d97706]' : 'bg-primary/10 text-primary';
+
+  return (
+    <article className="min-h-[7.1rem] rounded-[1.25rem] bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.06)] ring-1 ring-slate-100">
+      <div className="flex items-start gap-3">
+        <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl ${color}`}>
+          <Icon className="h-7 w-7" />
+        </span>
+        <div className="min-w-0">
+          <p className="line-clamp-2 text-xs font-bold leading-tight text-slate-700">{label}</p>
+          <p className="mt-1 text-2xl font-black leading-tight text-slate-950">{value}</p>
+          <p className={`mt-1 text-xs font-bold ${tone === 'orange' ? 'text-[#d97706]' : 'text-primary'}`}>{note}</p>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function LogisticsRecentShipmentRow({ shipment }: { shipment: AgencyShipment }) {
+  const status = getShipmentStatusMeta(shipment.logisticsStatus);
+
+  return (
+    <button
+      type="button"
+      onClick={() => window.open(`/dashboard/ugavi/tracking?tracking=${encodeURIComponent(shipment.trackingNumber)}`, '_blank')}
+      className="grid w-full grid-cols-[3rem_1fr_auto_auto] items-center gap-3 px-4 py-3 text-left transition hover:bg-slate-50"
+    >
+      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[#fff7ed] text-[#d97706]">
+        <Box className="h-7 w-7" />
+      </span>
+      <span className="min-w-0">
+        <span className="block truncate font-mono text-sm font-black text-slate-950">{shipment.trackingNumber}</span>
+        <span className="mt-0.5 block truncate text-xs font-semibold text-slate-600">{shipment.senderName}</span>
+        <span className="mt-1 flex min-w-0 items-center gap-1 text-[11px] font-semibold text-slate-500">
+          <MapPinIcon size={13} />
+          <span className="truncate">{shipment.origin} → {shipment.destination}</span>
+        </span>
+      </span>
+      <span className="hidden text-right text-xs font-bold text-slate-500 sm:block">
+        {shipment.weight || 0} kg
+      </span>
+      <span className="flex items-center justify-end gap-2">
+        <span className={`hidden items-center gap-1 rounded-xl px-2.5 py-1 text-[11px] font-bold sm:inline-flex ${status.className}`}>
+          <span className={`h-2 w-2 rounded-full ${status.dot}`} />
+          {status.label}
+        </span>
+        <ChevronRight className="h-5 w-5 text-slate-300" />
+      </span>
+    </button>
+  );
+}
+
+function formatCompactMoney(amount: number) {
+  if (!amount) return '0';
+  return new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(amount);
+}
+
+function getShipmentStatusMeta(status: UgaviLogisticsStatus) {
+  const meta: Record<string, { label: string; className: string; dot: string }> = {
+    registered: { label: 'En entrepôt', className: 'bg-primary/10 text-primary', dot: 'bg-primary' },
+    assigned: { label: 'Prêt pour expédition', className: 'bg-blue-50 text-blue-700', dot: 'bg-blue-500' },
+    in_transit: { label: 'En transit', className: 'bg-[#fff7ed] text-[#d97706]', dot: 'bg-[#f59e0b]' },
+    arrived_depot: { label: 'Arrivé dépôt', className: 'bg-primary/10 text-primary', dot: 'bg-primary' },
+    out_for_delivery: { label: 'En livraison', className: 'bg-blue-50 text-blue-700', dot: 'bg-blue-500' },
+    delivered: { label: 'Livré', className: 'bg-primary/10 text-primary', dot: 'bg-primary' },
+    returned: { label: 'Retourné', className: 'bg-red-50 text-red-700', dot: 'bg-red-500' },
+    blocked: { label: 'Incident', className: 'bg-red-50 text-red-700', dot: 'bg-red-500' },
+    draft: { label: 'Brouillon', className: 'bg-slate-100 text-slate-600', dot: 'bg-slate-400' },
+    pending_payment: { label: 'Paiement attendu', className: 'bg-[#fff7ed] text-[#d97706]', dot: 'bg-[#f59e0b]' },
+    paid: { label: 'Payé', className: 'bg-primary/10 text-primary', dot: 'bg-primary' },
+  };
+
+  return meta[status] || { label: UGAVI_STATUS_LABELS[status] || status, className: 'bg-slate-100 text-slate-600', dot: 'bg-slate-400' };
+}
+
+function LogisticsPaymentsPanel({ shipments }: { shipments: AgencyShipment[] }) {
+  const totalReceived = shipments.reduce((total, shipment) => total + (Number.isFinite(shipment.amountPaid) ? shipment.amountPaid : 0), 0);
+  const paidShipments = shipments.filter((shipment) => shipment.amountPaid > 0).length;
+  const currency = shipments.find((shipment) => shipment.currency)?.currency || 'USD';
+
+  return (
+    <section className="rounded-[1.35rem] bg-white p-5 shadow-[0_12px_28px_rgba(15,23,42,0.07)] ring-1 ring-slate-100">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-black text-slate-950">Paiements</h2>
+          <p className="text-sm font-semibold text-slate-500">Synthèse des paiements reçus par le hub.</p>
+        </div>
+        <span className="grid h-12 w-12 place-items-center rounded-2xl bg-primary/10 text-primary">
+          <CircleDollarSign className="h-7 w-7" />
+        </span>
+      </div>
+      <div className="mt-5 grid gap-3 sm:grid-cols-3">
+        <LogisticsKpiCard icon={CircleDollarSign} label="Paiements reçus" value={`${formatCompactMoney(totalReceived)} ${currency}`} note="Ce mois" tone="green" />
+        <LogisticsKpiCard icon={ClipboardCheck} label="Colis payés" value={String(paidShipments)} note="Validés" tone="green" />
+        <LogisticsKpiCard icon={ShieldAlert} label="À rapprocher" value={String(Math.max(0, shipments.length - paidShipments))} note="Contrôle" tone="orange" />
+      </div>
+    </section>
+  );
+}
+
+function LogisticsReportsPanel({ shipments, setActiveTab, mode = 'reports' }: { shipments: AgencyShipment[]; setActiveTab: (tab: string) => void; mode?: string }) {
+  const deliveredCount = shipments.filter((shipment) => shipment.logisticsStatus === 'delivered').length;
+  const issueCount = shipments.filter((shipment) => ['returned', 'blocked'].includes(shipment.logisticsStatus)).length;
+  const modeConfig: Record<string, { title: string; subtitle: string; icon: React.ComponentType<any>; items: Array<{ label: string; value: number | string; action: string }> }> = {
+    reports: {
+      title: 'Rapports',
+      subtitle: 'Lecture rapide de l’activité logistique.',
+      icon: PieChart,
+      items: [
+        { label: 'Total colis suivis', value: shipments.length, action: 'shipments' },
+        { label: 'Colis livrés', value: deliveredCount, action: 'shipments' },
+        { label: 'Incidents ouverts', value: issueCount, action: 'shipments' },
+      ],
+    },
+    clients: {
+      title: 'Clients',
+      subtitle: 'Expéditeurs et destinataires liés aux opérations du hub.',
+      icon: UsersRound,
+      items: [
+        { label: 'Expéditeurs uniques', value: new Set(shipments.map((item) => item.senderName).filter(Boolean)).size, action: 'shipments' },
+        { label: 'Destinataires uniques', value: new Set(shipments.map((item) => item.receiverName).filter(Boolean)).size, action: 'shipments' },
+        { label: 'Clients avec colis actifs', value: shipments.filter((item) => !['delivered', 'returned', 'blocked'].includes(item.logisticsStatus)).length, action: 'shipments' },
+      ],
+    },
+    settings: {
+      title: 'Paramètres',
+      subtitle: 'Configuration opérationnelle du hub logistique.',
+      icon: Settings,
+      items: [
+        { label: 'Code hub actif', value: 'Actif', action: 'overview' },
+        { label: 'Zone de service', value: 'Configurable', action: 'fleet' },
+        { label: 'Scanner colis', value: 'Disponible', action: 'relay' },
+      ],
+    },
+    roles: {
+      title: 'Rôles & accès',
+      subtitle: 'Contrôle des agents, scanners et ressources de livraison.',
+      icon: KeyRound,
+      items: [
+        { label: 'Agents / ressources', value: 'Gérer', action: 'fleet' },
+        { label: 'Scanner agence', value: 'Autorisé', action: 'relay' },
+        { label: 'Journal colis', value: shipments.length, action: 'shipments' },
+      ],
+    },
+    audit: {
+      title: "Journal d'audit",
+      subtitle: 'Dernières opérations, scans et changements de statut.',
+      icon: FileText,
+      items: [
+        { label: 'Colis avec historique', value: shipments.filter((item) => item.statusHistory?.length).length, action: 'shipments' },
+        { label: 'Derniers scans', value: shipments.filter((item) => item.lastScanMode).length, action: 'relay' },
+        { label: 'Preuves de livraison', value: shipments.filter((item) => item.deliveryProof).length, action: 'shipments' },
+      ],
+    },
+  };
+  const config = modeConfig[mode] || modeConfig.reports;
+  const HeaderIcon = config.icon;
+
+  return (
+    <section className="rounded-[1.35rem] bg-white p-5 shadow-[0_12px_28px_rgba(15,23,42,0.07)] ring-1 ring-slate-100">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-black text-slate-950">{config.title}</h2>
+          <p className="text-sm font-semibold text-slate-500">{config.subtitle}</p>
+        </div>
+        <span className="grid h-12 w-12 place-items-center rounded-2xl bg-primary/10 text-primary">
+          <HeaderIcon className="h-7 w-7" />
+        </span>
+      </div>
+      <div className="mt-5 space-y-3">
+        {config.items.map((item) => (
+          <button
+            key={item.label}
+            type="button"
+            onClick={() => setActiveTab(item.action)}
+            className="flex w-full items-center justify-between rounded-2xl bg-slate-50 px-4 py-3 text-left ring-1 ring-slate-100"
+          >
+            <span className="font-bold text-slate-700">{item.label}</span>
+            <span className="text-xl font-black text-primary">{item.value}</span>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function LogisticsFleet({ title, emptyState, businessUser, mode = 'fleet' }: { title: string; emptyState: string; businessUser: BusinessUser; mode?: string }) {
   const [resources, setResources] = useState<AgencyResource[]>([]);
   const [agencyZone, setAgencyZone] = useState<AgencyZone | null>(null);
   const [showResourceForm, setShowResourceForm] = useState(false);
@@ -1504,6 +1954,41 @@ function LogisticsFleet({ title, emptyState, businessUser }: { title: string; em
   const [zoneRadius, setZoneRadius] = useState('5');
   const [isSavingResource, setIsSavingResource] = useState(false);
   const [isSavingZone, setIsSavingZone] = useState(false);
+  const modeConfig: Record<string, { title: string; subtitle: string; actionLabel: string; defaultType: string; emptyState: string }> = {
+    warehouses: {
+      title: 'Entrepôts',
+      subtitle: 'Déclarez les dépôts, hubs et espaces colis exploités par votre agence.',
+      actionLabel: 'Ajouter un entrepôt',
+      defaultType: 'Depot',
+      emptyState: 'Aucun entrepôt ou dépôt déclaré pour le moment.',
+    },
+    stock: {
+      title: 'Stock',
+      subtitle: 'Suivez les unités, zones et capacités disponibles dans le hub.',
+      actionLabel: 'Ajouter un stock',
+      defaultType: 'Stock',
+      emptyState: 'Aucun stock logistique déclaré pour le moment.',
+    },
+    inventory: {
+      title: 'Inventaires',
+      subtitle: 'Organisez les inventaires physiques et les contrôles périodiques.',
+      actionLabel: 'Créer un inventaire',
+      defaultType: 'Inventaire',
+      emptyState: 'Aucun inventaire enregistré pour le moment.',
+    },
+    fleet: {
+      title,
+      subtitle: 'Ajoutez les moyens et agents qui exécutent les missions.',
+      actionLabel: 'Ajouter',
+      defaultType: 'Livreur',
+      emptyState,
+    },
+  };
+  const config = modeConfig[mode] || modeConfig.fleet;
+
+  useEffect(() => {
+    setResourceType(config.defaultType);
+  }, [config.defaultType]);
 
   useEffect(() => {
     const resourceQuery = query(
@@ -1588,15 +2073,15 @@ function LogisticsFleet({ title, emptyState, businessUser }: { title: string; em
       <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
         <div className="mb-5 flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-xl font-black text-primary">{title}</h2>
-            <p className="text-sm text-slate-500">Ajoutez les moyens et agents qui executent les missions.</p>
+            <h2 className="text-xl font-black text-primary">{config.title}</h2>
+            <p className="text-sm text-slate-500">{config.subtitle}</p>
           </div>
           <button
             type="button"
             onClick={() => setShowResourceForm((current) => !current)}
             className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary"
           >
-            Ajouter
+            {config.actionLabel}
           </button>
         </div>
         {showResourceForm && (
@@ -1612,7 +2097,7 @@ function LogisticsFleet({ title, emptyState, businessUser }: { title: string; em
               onChange={(event) => setResourceType(event.target.value)}
               className="h-11 rounded-xl border border-primary/15 bg-white px-3 text-sm outline-none focus:border-primary"
             >
-              {['Livreur', 'Moto', 'Voiture', 'Camion', 'Depot', 'Drone'].map((item) => (
+              {['Livreur', 'Moto', 'Voiture', 'Camion', 'Depot', 'Stock', 'Inventaire', 'Drone'].map((item) => (
                 <option key={item}>{item}</option>
               ))}
             </select>
@@ -1662,7 +2147,7 @@ function LogisticsFleet({ title, emptyState, businessUser }: { title: string; em
           </div>
         ) : (
           <div className="mt-5 rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center text-sm text-slate-500">
-            {emptyState}
+            {config.emptyState}
           </div>
         )}
       </div>
@@ -1710,16 +2195,50 @@ function LogisticsShipments({
   businessUser,
   shipments,
   isLoading,
+  mode = 'shipments',
 }: {
   title: string;
   emptyState: string;
   businessUser: BusinessUser;
   shipments: AgencyShipment[];
   isLoading: boolean;
+  mode?: string;
 }) {
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'issue'>('all');
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const modeConfig: Record<string, { title: string; subtitle: string; emptyState: string; statuses?: UgaviLogisticsStatus[] }> = {
+    movements: {
+      title: 'Mouvements',
+      subtitle: 'Colis qui entrent, sortent ou changent de statut dans le hub.',
+      emptyState: 'Aucun mouvement colis pour le moment.',
+      statuses: ['registered', 'assigned', 'in_transit', 'arrived_depot'],
+    },
+    deliveries: {
+      title: 'Livraisons',
+      subtitle: 'Colis à remettre, livrés ou prêts pour le destinataire.',
+      emptyState: 'Aucune livraison à traiter pour le moment.',
+      statuses: ['arrived_depot', 'out_for_delivery', 'delivered'],
+    },
+    orders: {
+      title: 'Commandes',
+      subtitle: 'Demandes et missions actives liées à votre agence.',
+      emptyState: 'Aucune commande active pour le moment.',
+      statuses: ['pending_payment', 'paid', 'registered', 'assigned', 'in_transit'],
+    },
+    missions: {
+      title,
+      subtitle: 'Suivez les colis, missions et statuts critiques.',
+      emptyState,
+    },
+    shipments: {
+      title,
+      subtitle: 'Suivez les colis, missions et statuts critiques.',
+      emptyState,
+    },
+  };
+  const config = modeConfig[mode] || modeConfig.shipments;
   const filteredShipments = shipments.filter((shipment) => {
+    if (config.statuses?.length && !config.statuses.includes(shipment.logisticsStatus)) return false;
     if (statusFilter === 'active') return !['delivered', 'returned', 'blocked'].includes(shipment.logisticsStatus);
     if (statusFilter === 'issue') return ['returned', 'blocked'].includes(shipment.logisticsStatus);
     return true;
@@ -1746,8 +2265,8 @@ function LogisticsShipments({
     <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-black text-primary">{title}</h2>
-          <p className="text-sm text-slate-500">Suivez les colis, missions et statuts critiques.</p>
+          <h2 className="text-xl font-black text-primary">{config.title}</h2>
+          <p className="text-sm text-slate-500">{config.subtitle}</p>
         </div>
         <div className="flex gap-2">
           {[
@@ -1836,7 +2355,7 @@ function LogisticsShipments({
         </div>
       ) : (
         <div className="mt-5 rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center text-sm text-slate-500">
-          {emptyState}
+          {config.emptyState}
         </div>
       )}
     </div>
@@ -1963,6 +2482,8 @@ function RelayScanner({ title, description, businessUser }: { title: string; des
         origin: data.senderAddress || 'Origine',
         destination: data.receiverAddress || 'Destination',
         weight: Number(data.packageWeight || 0),
+        amountPaid: Number(data.quoteTotal || data.totalAmount || data.amountPaid || data.amount || 0),
+        currency: data.currency || 'USD',
         description: data.description || data.parcelName || '',
         logisticsStatus: nextStatus,
         statusHistory: Array.isArray(data.statusHistory) ? data.statusHistory : [],

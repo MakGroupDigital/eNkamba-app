@@ -5,13 +5,14 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { collection, doc, getDoc, getDocs, increment, limit, query, updateDoc, where } from 'firebase/firestore';
+import { addDoc, collection, doc, getDoc, getDocs, increment, limit, onSnapshot, query, serverTimestamp, updateDoc, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ArrowLeft, Share2, Loader2, Heart, MessageCircle, ShoppingCart, Check, MapPinned, Route, ShieldCheck, DownloadCloud } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { ArrowLeft, Share2, Loader2, Heart, MessageCircle, ShoppingCart, Check, MapPinned, Route, ShieldCheck, DownloadCloud, Star } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useNkampaCart } from '@/hooks/useNkampaCart';
@@ -38,6 +39,16 @@ type PendingPurchase = {
   pickupRoute?: PickupRouteContext;
 };
 
+type SellerReview = {
+  id: string;
+  rating: number;
+  comment: string;
+  authorName: string;
+  authorAvatar?: string;
+  productName?: string;
+  createdAt?: any;
+};
+
 export default function ShopProductPage({
   params,
 }: {
@@ -48,7 +59,7 @@ export default function ShopProductPage({
   const { user } = useAuth();
   const { toast } = useToast();
   const { addToCart } = useNkampaCart();
-  const { buyProduct } = useNkampaEcommerce();
+  const { buyProduct, products: marketplaceProducts } = useNkampaEcommerce();
   const { balance } = useWalletBalance();
 
   const slug = useMemo(() => (storeName || '').toLowerCase(), [storeName]);
@@ -70,6 +81,10 @@ export default function ShopProductPage({
   const [showOrderSummary, setShowOrderSummary] = useState(false);
   const [showPinDialog, setShowPinDialog] = useState(false);
   const [pendingPurchase, setPendingPurchase] = useState<PendingPurchase | null>(null);
+  const [sellerReviews, setSellerReviews] = useState<SellerReview[]>([]);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
   // Vérifier si le produit est en favori
   useEffect(() => {
@@ -161,6 +176,46 @@ export default function ShopProductPage({
     void registerView();
   }, [productId]);
 
+  useEffect(() => {
+    if (!storeDoc?.id) return;
+
+    const reviewsQuery = query(
+      collection(db, 'nkampa_store_reviews'),
+      where('storeId', '==', storeDoc.id),
+      limit(12)
+    );
+
+    const unsubscribe = onSnapshot(
+      reviewsQuery,
+      (snapshot) => {
+        const nextReviews = snapshot.docs
+          .map((reviewDoc) => {
+            const data = reviewDoc.data() as any;
+            return {
+              id: reviewDoc.id,
+              rating: Number(data.rating || 0),
+              comment: data.comment || '',
+              authorName: data.authorName || 'Client eNkamba',
+              authorAvatar: data.authorAvatar || '',
+              productName: data.productName || '',
+              createdAt: data.createdAt,
+            };
+          })
+          .sort((left, right) => {
+            const leftTime = typeof left.createdAt?.toMillis === 'function' ? left.createdAt.toMillis() : Number(left.createdAt?.seconds || 0) * 1000;
+            const rightTime = typeof right.createdAt?.toMillis === 'function' ? right.createdAt.toMillis() : Number(right.createdAt?.seconds || 0) * 1000;
+            return rightTime - leftTime;
+          });
+        setSellerReviews(nextReviews);
+      },
+      (error) => {
+        console.error('Erreur chargement avis boutique:', error);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [storeDoc?.id]);
+
   const isOwner = !!user && !!storeDoc && user.uid === storeDoc.ownerId;
   const isApproved = storeDoc?.status === 'active' || storeDoc?.status === 'approved';
 
@@ -179,10 +234,59 @@ export default function ShopProductPage({
   const isSellerVerified = Boolean(storeDoc?.verified || storeDoc?.isVerified || storeDoc?.status === 'active' || storeDoc?.status === 'approved');
   const sellerTrustLevel = storeDoc?.trustLevel || storeDoc?.sellerLevel || (isSellerVerified ? 'Premium' : 'Standard');
   const deliverySuccessRate = Number(storeDoc?.deliverySuccessRate || storeDoc?.successRate || 96);
+  const sellerReviewAverage = sellerReviews.length
+    ? sellerReviews.reduce((sum, review) => sum + Number(review.rating || 0), 0) / sellerReviews.length
+    : Number(storeDoc?.rating || storeDoc?.averageRating || productRating || 0);
+  const sellerReviewCount = sellerReviews.length || Number(storeDoc?.reviewsCount || storeDoc?.reviewCount || 0);
   const isDigitalProduct =
     product?.listingType === 'digital' ||
     product?.storeCategory === 'digital' ||
     Boolean(product?.hasDigitalDelivery || product?.digitalDelivery?.files?.length);
+  const similarOffers = useMemo(() => {
+    if (!product) return [];
+    const currentWords = new Set(
+      `${product.name || ''} ${product.description || ''} ${product.storeCategory || ''} ${product.category || ''}`
+        .toLowerCase()
+        .split(/[^a-z0-9À-ÿ]+/i)
+        .map((word) => word.trim())
+        .filter((word) => word.length > 2)
+    );
+    const currentPrice = Number(product.price || 0);
+
+    return [...(marketplaceProducts || [])]
+      .filter((candidate: any) => candidate?.id && candidate.id !== product.id && (candidate.image || candidate.images?.[0]))
+      .map((candidate: any) => {
+        const candidateWords = `${candidate.name || ''} ${candidate.description || ''} ${candidate.storeCategory || ''} ${candidate.category || ''}`
+          .toLowerCase()
+          .split(/[^a-z0-9À-ÿ]+/i)
+          .map((word) => word.trim())
+          .filter((word) => word.length > 2);
+        const wordScore = candidateWords.reduce((score, word) => score + (currentWords.has(word) ? 12 : 0), 0);
+        const categoryScore =
+          String(candidate.storeCategory || candidate.category || '').toLowerCase() === String(product.storeCategory || product.category || '').toLowerCase()
+            ? 55
+            : 0;
+        const storeScore = candidate.storeId === product.storeId || candidate.storeSlug === product.storeSlug ? 20 : 0;
+        const locationScore = candidate.location && product.location && String(candidate.location).toLowerCase() === String(product.location).toLowerCase() ? 12 : 0;
+        const candidatePrice = Number(candidate.price || 0);
+        const priceScore = currentPrice > 0 && candidatePrice > 0
+          ? Math.max(0, 25 - Math.abs(candidatePrice - currentPrice) / Math.max(currentPrice, candidatePrice) * 25)
+          : 0;
+        const popularityScore =
+          Math.log1p(Number(candidate.clickCount || candidate.views || 0)) * 3 +
+          Math.log1p(Number(candidate.sold || candidate.salesCount || 0)) * 4 +
+          Number(candidate.rating || 0);
+
+        return {
+          product: candidate,
+          score: wordScore + categoryScore + storeScore + locationScore + priceScore + popularityScore,
+        };
+      })
+      .filter((item) => item.score > 0)
+      .sort((left, right) => right.score - left.score)
+      .slice(0, 10)
+      .map((item) => item.product);
+  }, [marketplaceProducts, product]);
 
   const resolveCurrentLocation = async () => {
     const storedLocation = getDashboardLocationOrDefault();
@@ -525,6 +629,71 @@ export default function ShopProductPage({
     }
   };
 
+  const submitSellerReview = async () => {
+    const comment = reviewComment.trim();
+
+    if (!user?.uid) {
+      toast({
+        title: 'Connexion requise',
+        description: 'Connectez-vous pour laisser une note.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!storeDoc?.id || !product) return;
+
+    if (reviewRating < 1 || reviewRating > 5 || comment.length < 3) {
+      toast({
+        title: 'Avis incomplet',
+        description: 'Choisissez une note et écrivez un court commentaire.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsSubmittingReview(true);
+    try {
+      await addDoc(collection(db, 'nkampa_store_reviews'), {
+        storeId: storeDoc.id,
+        storeSlug: slug,
+        storeName: storeDoc.storeName || 'Boutique eNkamba',
+        ownerId: storeDoc.ownerId || '',
+        productId: product.id,
+        productName: product.name || '',
+        rating: reviewRating,
+        comment,
+        authorId: user.uid,
+        authorName: user.displayName || user.email || 'Client eNkamba',
+        authorAvatar: user.photoURL || '',
+        createdAt: serverTimestamp(),
+      });
+
+      await updateDoc(doc(db, 'nkampa_stores', storeDoc.id), {
+        reviewsCount: increment(1),
+        ratingTotal: increment(reviewRating),
+        lastReviewAt: serverTimestamp(),
+      }).catch(() => undefined);
+
+      setReviewRating(5);
+      setReviewComment('');
+      toast({
+        title: 'Avis publié',
+        description: 'Votre note a été ajoutée à cette boutique.',
+        className: 'bg-primary text-white border-none',
+      });
+    } catch (error) {
+      console.error('Erreur publication avis boutique:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de publier votre avis pour le moment.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -812,6 +981,89 @@ export default function ShopProductPage({
         </div>
       </button>
 
+      {/* Avis boutique / fournisseur */}
+      <div className="mx-4 mt-4 max-w-[calc(100vw-2rem)] rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-sm font-black text-slate-900">Avis sur le vendeur</p>
+            <p className="mt-1 text-xs text-slate-500">
+              Notez la boutique, le fournisseur ou l’entreprise après votre expérience.
+            </p>
+          </div>
+          <div className="rounded-2xl bg-amber-50 px-3 py-2 text-right">
+            <div className="flex items-center justify-end gap-1 text-amber-600">
+              <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+              <span className="text-sm font-black">{sellerReviewAverage.toFixed(1)}</span>
+            </div>
+            <p className="mt-0.5 text-[10px] font-bold text-amber-700">
+              {sellerReviewCount.toLocaleString('fr-FR')} avis
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-4 rounded-2xl bg-slate-50 p-3">
+          <div className="mb-3 flex items-center gap-1">
+            {Array.from({ length: 5 }).map((_, index) => {
+              const value = index + 1;
+              const active = value <= reviewRating;
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setReviewRating(value)}
+                  className="rounded-full p-1 transition hover:bg-white"
+                  aria-label={`Donner ${value} étoile${value > 1 ? 's' : ''}`}
+                >
+                  <Star className={`h-6 w-6 ${active ? 'fill-amber-400 text-amber-400' : 'text-slate-300'}`} />
+                </button>
+              );
+            })}
+          </div>
+          <Textarea
+            value={reviewComment}
+            onChange={(event) => setReviewComment(event.target.value)}
+            placeholder="Votre commentaire sur la boutique, le fournisseur ou l’entreprise..."
+            className="min-h-20 resize-none rounded-2xl border-slate-200 bg-white text-sm focus-visible:ring-primary"
+          />
+          <div className="mt-3 flex justify-end">
+            <Button
+              type="button"
+              onClick={submitSellerReview}
+              disabled={isSubmittingReview}
+              className="rounded-full bg-primary px-5 text-white hover:bg-primary"
+            >
+              {isSubmittingReview ? 'Publication...' : 'Publier l’avis'}
+            </Button>
+          </div>
+        </div>
+
+        {sellerReviews.length > 0 && (
+          <div className="mt-4 space-y-2">
+            {sellerReviews.slice(0, 3).map((review) => (
+              <div key={review.id} className="rounded-2xl border border-slate-100 bg-white p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="truncate text-xs font-black text-slate-900">{review.authorName}</p>
+                  <div className="flex shrink-0 items-center gap-0.5">
+                    {Array.from({ length: 5 }).map((_, index) => (
+                      <Star
+                        key={index}
+                        className={`h-3.5 w-3.5 ${index < Math.round(review.rating) ? 'fill-amber-400 text-amber-400' : 'text-slate-300'}`}
+                      />
+                    ))}
+                  </div>
+                </div>
+                <p className="mt-1 text-xs leading-5 text-slate-600">{review.comment}</p>
+                {review.productName && (
+                  <p className="mt-2 line-clamp-1 text-[10px] font-semibold text-slate-400">
+                    Produit concerné : {review.productName}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* Option logistique */}
       <div className="mx-4 mt-4 max-w-[calc(100vw-2rem)] space-y-2">
         {isDigitalProduct ? (
@@ -898,6 +1150,53 @@ export default function ShopProductPage({
           </>
         )}
       </div>
+
+      {similarOffers.length > 0 && (
+        <section className="mx-4 mt-5 max-w-[calc(100vw-2rem)] rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+          <div className="mb-3 flex items-end justify-between gap-3">
+            <div>
+              <h2 className="text-base font-black text-slate-950">Offres similaires</h2>
+              <p className="text-xs font-semibold text-slate-500">
+                Propositions calculées selon la catégorie, le contenu, le prix et la boutique.
+              </p>
+            </div>
+            <Badge className="rounded-full bg-primary/10 text-primary hover:bg-primary/10">Recommandé</Badge>
+          </div>
+          <div className="flex gap-3 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            {similarOffers.map((offer: any) => {
+              const offerImage = offer.image || offer.images?.[0] || 'https://picsum.photos/seed/nkampa-similar/400/400';
+              const offerHref = offer.storeSlug ? `/shop/${offer.storeSlug}/product/${offer.id}` : '/dashboard/nkampa';
+              return (
+                <button
+                  key={offer.id}
+                  type="button"
+                  onClick={() => router.push(offerHref)}
+                  className="w-36 shrink-0 overflow-hidden rounded-2xl border border-slate-100 bg-white text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                >
+                  <div className="relative aspect-square w-full overflow-hidden bg-slate-100">
+                    <Image
+                      src={offerImage}
+                      alt={offer.name || 'Offre similaire'}
+                      fill
+                      sizes="150px"
+                      className="object-cover"
+                    />
+                  </div>
+                  <div className="space-y-1 p-2.5">
+                    <p className="line-clamp-2 min-h-[2rem] text-[11px] font-bold leading-4 text-slate-900">{offer.name}</p>
+                    <p className="truncate text-sm font-black text-primary">
+                      {Number(offer.price || 0).toLocaleString('fr-FR')} {offer.currency || 'CDF'}
+                    </p>
+                    <p className="line-clamp-1 text-[10px] font-semibold text-slate-500">
+                      {offer.storeName || offer.sellerName || 'Boutique eNkamba'}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* Boutons d'action flottants */}
       <div className="fixed bottom-0 left-0 right-0 z-30 w-full max-w-full space-y-2 overflow-hidden border-t border-gray-200 bg-white p-3 sm:p-4">
