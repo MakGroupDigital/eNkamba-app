@@ -19,7 +19,7 @@ const navItems = [
   { name: 'Marché', icon: ShopNavIcon, href: '/dashboard/nkampa', color: '#FF8C00' },
   { name: 'Logistique', icon: LogisticsNavIcon, href: '/dashboard/ugavi', color: '#32BB78' },
   { name: 'Paiement', icon: PaymentNavIcon, href: '/dashboard/mbongo-dashboard', color: '#32BB78' },
-  { name: 'Connexion', icon: SocialNavIcon, href: '/dashboard/makutano', color: '#9C27B0' },
+  { name: 'Réseau', icon: SocialNavIcon, href: '/dashboard/makutano', color: '#9C27B0' },
   { name: 'Paramètres', icon: SettingsNavIcon, href: '/dashboard/settings', color: '#666' },
 ];
 
