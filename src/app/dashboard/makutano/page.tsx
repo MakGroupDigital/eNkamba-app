@@ -1385,15 +1385,15 @@ export default function MakutanoPage() {
                         <p className="text-xs font-semibold text-slate-500">Profils publics Makutano</p>
                       </div>
                     </div>
-                    <div className="flex gap-3 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                    <div className="flex gap-4 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                       {suggestedUsers.map((suggestedUser) => {
                         const isFollowing = followedProfileIds.has(suggestedUser.id);
                         return (
-                          <div key={`${item.key}-${suggestedUser.id}`} className="w-[7.25rem] shrink-0 text-center">
+                          <div key={`${item.key}-${suggestedUser.id}`} className="w-32 shrink-0 text-center">
                             <button
                               type="button"
                               onClick={() => router.push(`/dashboard/makutano/profile/${suggestedUser.id}`)}
-                              className="mx-auto block"
+                              className="mx-auto block w-full rounded-2xl px-1 py-1 transition hover:bg-slate-50"
                             >
                               <Avatar className="mx-auto h-16 w-16 border-2 border-primary/15 shadow-sm">
                                 <AvatarImage src={suggestedUser.avatar} />
@@ -1401,7 +1401,9 @@ export default function MakutanoPage() {
                                   {suggestedUser.name.charAt(0)}
                                 </AvatarFallback>
                               </Avatar>
-                              <p className="mt-2 line-clamp-1 text-xs font-black text-slate-900">{suggestedUser.name}</p>
+                              <p className="mx-auto mt-2 min-h-[2rem] max-w-[7.25rem] whitespace-normal break-words text-center text-xs font-black leading-4 text-slate-900 line-clamp-2">
+                                {suggestedUser.name}
+                              </p>
                               <p className="line-clamp-1 text-[10px] font-semibold text-slate-500">{suggestedUser.location}</p>
                             </button>
                             <button
