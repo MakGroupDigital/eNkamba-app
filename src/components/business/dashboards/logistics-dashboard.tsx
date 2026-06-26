@@ -810,16 +810,203 @@ function parsePackagePayload(payload: string) {
   }
 }
 
-function downloadPackageLabel(packageData: {
+function buildMaritimeReceiptHtml(packageData: {
   trackingNumber: string;
   qrCodeUrl: string;
   barcodeUrl: string;
   payload: string;
 }) {
   const payload = parsePackagePayload(packageData.payload);
-  const html = `<!doctype html><html><head><meta charset="utf-8"><title>Facture ${packageData.trackingNumber}</title></head><body style="font-family:Arial,sans-serif;color:#0f5132;padding:24px"><section style="border:2px solid #32BB78;border-radius:18px;padding:24px;max-width:760px"><h1 style="margin:0 0 8px">eNKAMBA Logistics</h1><p style="font-family:monospace;font-size:20px;font-weight:800">${packageData.trackingNumber}</p><p><strong>Facture:</strong> ${escapeReceiptValue(payload.invoiceNumber)}</p><div style="display:grid;grid-template-columns:220px 1fr;gap:20px;align-items:center"><img src="${packageData.qrCodeUrl}" style="width:220px;height:220px"><div><img src="${packageData.barcodeUrl}" style="width:390px;max-width:100%"><p><strong>Agence:</strong> ${escapeReceiptValue(payload.agencyName)}</p><p><strong>Expediteur:</strong> ${escapeReceiptValue(payload.senderName)} - ${escapeReceiptValue(payload.senderPhone)}</p><p><strong>Destinataire:</strong> ${escapeReceiptValue(payload.receiverName)} - ${escapeReceiptValue(payload.receiverPhone)}</p><p><strong>Colis:</strong> ${escapeReceiptValue(payload.parcelName)} / ${escapeReceiptValue(payload.parcelCategory)}</p><p><strong>CBM:</strong> ${escapeReceiptValue(payload.totalVolume)} | <strong>Poids:</strong> ${escapeReceiptValue(payload.weight)} kg</p><p><strong>Total:</strong> ${escapeReceiptValue(payload.quoteTotal)} ${escapeReceiptValue(payload.currency)}</p></div></div></section></body></html>`;
+  const paidAt = new Date().toLocaleDateString('fr-FR');
+  const money = (value: unknown) => `${escapeReceiptValue(value || 0)} ${escapeReceiptValue(payload.currency || 'USD')}`;
+  const row = (label: string, value: unknown) => `
+    <tr>
+      <td>${label}</td>
+      <td>${money(value)}</td>
+    </tr>
+  `;
+  const importantMarks = [
+    payload.parcelCategory === 'Fragile' ? 'FRAGILE' : '',
+    'HAUT / BAS',
+    'NE PAS MOUILLER',
+    'À MANIPULER AVEC SOIN',
+    'À VÉRIFIER À L’ARRIVÉE',
+  ].filter(Boolean);
+
+  return `<!doctype html>
+  <html>
+    <head>
+      <meta charset="utf-8" />
+      <title>Reçu maritime ${packageData.trackingNumber}</title>
+      <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; padding: 24px; font-family: Arial, sans-serif; color: #0f172a; background: #f8fafc; }
+        .sheet { max-width: 860px; margin: 0 auto 22px; border: 1px solid #dbe7df; border-radius: 22px; background: #ffffff; overflow: hidden; }
+        .header { padding: 22px 26px; color: #ffffff; background: linear-gradient(135deg, #0f8f5f, #087447); }
+        .header h1 { margin: 0; font-size: 24px; letter-spacing: .02em; }
+        .header p { margin: 7px 0 0; font-size: 13px; opacity: .9; }
+        .content { padding: 22px 26px; }
+        .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+        .box { border: 1px solid #e2e8f0; border-radius: 16px; padding: 14px; background: #fff; }
+        .box h2 { margin: 0 0 10px; font-size: 13px; color: #0f8f5f; text-transform: uppercase; letter-spacing: .08em; }
+        .line { margin: 6px 0; font-size: 12px; line-height: 1.45; }
+        .line strong { color: #111827; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        td { padding: 9px 10px; border-bottom: 1px solid #e2e8f0; }
+        td:last-child { text-align: right; font-weight: 800; color: #0f5132; }
+        .total td { background: #f0fdf4; font-size: 13px; font-weight: 900; }
+        .signatures { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 18px; }
+        .signature { min-height: 70px; border: 1px dashed #94a3b8; border-radius: 14px; padding: 10px; font-size: 11px; color: #475569; }
+        .label-sheet { max-width: 560px; }
+        .label-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px; color: #ffffff; background: #0f8f5f; }
+        .tracking { font-family: monospace; font-size: 18px; font-weight: 900; }
+        .code-grid { display: grid; grid-template-columns: 170px 1fr; gap: 14px; align-items: center; }
+        .qr { width: 160px; height: 160px; border: 1px solid #e2e8f0; border-radius: 16px; padding: 8px; background: #fff; }
+        .barcode { width: 100%; max-height: 110px; object-fit: contain; border: 1px solid #e2e8f0; border-radius: 14px; padding: 8px; background: #fff; }
+        .marks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+        .mark { border: 1px solid #bbf7d0; border-radius: 12px; background: #f0fdf4; padding: 8px; font-size: 11px; font-weight: 800; color: #166534; }
+        .note { margin-top: 14px; border-radius: 14px; background: #f8fafc; padding: 12px; font-size: 11px; line-height: 1.5; color: #475569; }
+        @media print {
+          body { padding: 0; background: #fff; }
+          .sheet { break-inside: avoid; page-break-inside: avoid; border-radius: 0; margin: 0 auto 18px; }
+          .label-sheet { width: 10cm; min-height: 15cm; }
+        }
+      </style>
+    </head>
+    <body>
+      <section class="sheet">
+        <div class="header">
+          <h1>FACTURE / REÇU DE PAIEMENT</h1>
+          <p>Entrepôt Logistique International – Expédition Maritime</p>
+        </div>
+        <div class="content">
+          <div class="grid">
+            <div class="box">
+              <h2>Références</h2>
+              <p class="line"><strong>N° Facture / Reçu:</strong> ${escapeReceiptValue(payload.invoiceNumber)}</p>
+              <p class="line"><strong>N° Enregistrement Colis:</strong> ${escapeReceiptValue(packageData.trackingNumber)}</p>
+              <p class="line"><strong>Date de paiement:</strong> ${paidAt}</p>
+              <p class="line"><strong>Nom de l’agent:</strong> ${escapeReceiptValue(payload.agentName || payload.agencyName)}</p>
+              <p class="line"><strong>Entrepôt / Ville:</strong> ${escapeReceiptValue(payload.warehouseSite || payload.origin)}</p>
+            </div>
+            <div class="box">
+              <h2>Client</h2>
+              <p class="line"><strong>Nom complet / Société:</strong> ${escapeReceiptValue(payload.senderName)}</p>
+              <p class="line"><strong>Téléphone:</strong> ${escapeReceiptValue(payload.senderPhone)}</p>
+              <p class="line"><strong>Email:</strong> ${escapeReceiptValue(payload.senderEmail)}</p>
+              <p class="line"><strong>Pays / Ville:</strong> ${escapeReceiptValue(payload.senderCountry)} / ${escapeReceiptValue(payload.senderCity)}</p>
+            </div>
+          </div>
+
+          <div class="box" style="margin-top:14px">
+            <h2>Informations du colis</h2>
+            <div class="grid">
+              <p class="line"><strong>Nombre de colis:</strong> ${escapeReceiptValue(payload.quantity)}</p>
+              <p class="line"><strong>Type de colis:</strong> ${escapeReceiptValue(payload.packagingType || payload.parcelCategory)}</p>
+              <p class="line"><strong>Poids total:</strong> ${escapeReceiptValue(payload.weight)} kg</p>
+              <p class="line"><strong>Volume / CBM:</strong> ${escapeReceiptValue(payload.totalVolume)}</p>
+              <p class="line"><strong>Description courte:</strong> ${escapeReceiptValue(payload.description || payload.parcelName)}</p>
+              <p class="line"><strong>Destination:</strong> ${escapeReceiptValue(payload.finalDestination || payload.destination)}</p>
+              <p class="line"><strong>Port d’arrivée:</strong> ${escapeReceiptValue(payload.arrivalPort)}</p>
+            </div>
+          </div>
+
+          <div class="box" style="margin-top:14px">
+            <h2>Détails du paiement</h2>
+            <table>
+              ${row('Frais d’enregistrement', payload.registrationFee)}
+              ${row('Frais d’entreposage', payload.storageFee)}
+              ${row('Frais d’emballage / renforcement', payload.packagingFee)}
+              ${row('Frais d’expédition maritime', payload.freight)}
+              ${row('Frais de manutention', payload.handlingFee)}
+              ${row('Autres frais', payload.otherFees)}
+              <tr class="total"><td>Total à payer</td><td>${money(payload.quoteTotal)}</td></tr>
+              <tr><td>Montant payé</td><td>${money(payload.amountPaid)}</td></tr>
+              <tr><td>Solde restant</td><td>${money(payload.remainingBalance)}</td></tr>
+            </table>
+            <p class="line"><strong>Devise:</strong> ${escapeReceiptValue(payload.currency)}</p>
+            <p class="line"><strong>Mode de paiement:</strong> ${escapeReceiptValue(payload.paymentMethod)}</p>
+            <p class="line"><strong>Référence paiement:</strong> ${escapeReceiptValue(payload.paymentReference)}</p>
+          </div>
+
+          <div class="box" style="margin-top:14px">
+            <h2>Observation et déclaration</h2>
+            <p class="line">${escapeReceiptValue(payload.agentRemarks || 'Aucune observation particulière.')}</p>
+            <p class="note">Le client reconnaît avoir payé les frais mentionnés ci-dessus pour l’enregistrement, l’entreposage ou l’expédition maritime de son colis. Les frais de douane, taxes, surestaries, pénalités portuaires ou frais supplémentaires à destination restent à la charge du client, sauf accord écrit contraire.</p>
+            <div class="signatures">
+              <div class="signature">Signature client<br/><br/>${escapeReceiptValue(payload.clientSignatureName || payload.senderName)}</div>
+              <div class="signature">Signature agent<br/><br/>${escapeReceiptValue(payload.agentName || payload.agencyName)}</div>
+              <div class="signature">Cachet de l’entrepôt</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="sheet label-sheet">
+        <div class="label-header">
+          <div>
+            <h1 style="margin:0;font-size:18px">ÉTIQUETTE COLIS</h1>
+            <p style="margin:4px 0 0;font-size:12px">EXPÉDITION MARITIME</p>
+          </div>
+          <div class="tracking">${escapeReceiptValue(packageData.trackingNumber)}</div>
+        </div>
+        <div class="content">
+          <div class="grid">
+            <div class="box">
+              <h2>Expéditeur</h2>
+              <p class="line"><strong>Nom / Société:</strong> ${escapeReceiptValue(payload.senderName)}</p>
+              <p class="line"><strong>Téléphone:</strong> ${escapeReceiptValue(payload.senderPhone)}</p>
+              <p class="line"><strong>Ville / Pays:</strong> ${escapeReceiptValue(payload.senderCity)} / ${escapeReceiptValue(payload.senderCountry)}</p>
+            </div>
+            <div class="box">
+              <h2>Destinataire</h2>
+              <p class="line"><strong>Nom / Société:</strong> ${escapeReceiptValue(payload.receiverName)}</p>
+              <p class="line"><strong>Téléphone:</strong> ${escapeReceiptValue(payload.receiverPhone)}</p>
+              <p class="line"><strong>Adresse:</strong> ${escapeReceiptValue(payload.receiverAddress)}</p>
+              <p class="line"><strong>Ville / Pays:</strong> ${escapeReceiptValue(payload.receiverCity)} / ${escapeReceiptValue(payload.receiverCountry)}</p>
+            </div>
+          </div>
+          <div class="box" style="margin-top:14px">
+            <h2>Détails colis</h2>
+            <p class="line"><strong>Nombre:</strong> Colis ${escapeReceiptValue(payload.quantity)} / ${escapeReceiptValue(payload.quantity)}</p>
+            <p class="line"><strong>Poids:</strong> ${escapeReceiptValue(payload.weight)} kg | <strong>Volume:</strong> ${escapeReceiptValue(payload.totalVolume)} CBM</p>
+            <p class="line"><strong>Dimensions:</strong> L ${escapeReceiptValue(payload.lengthCm)} cm × l ${escapeReceiptValue(payload.widthCm)} cm × H ${escapeReceiptValue(payload.heightCm)} cm</p>
+            <p class="line"><strong>Type:</strong> ${escapeReceiptValue(payload.packagingType || payload.parcelCategory)}</p>
+            <p class="line"><strong>Description:</strong> ${escapeReceiptValue(payload.description || payload.parcelName)}</p>
+          </div>
+          <div class="box" style="margin-top:14px">
+            <h2>Transport</h2>
+            <p class="line"><strong>Mode:</strong> Bateau / Maritime</p>
+            <p class="line"><strong>Port de départ:</strong> ${escapeReceiptValue(payload.departurePort)}</p>
+            <p class="line"><strong>Port d’arrivée:</strong> ${escapeReceiptValue(payload.arrivalPort)}</p>
+            <p class="line"><strong>Destination finale:</strong> ${escapeReceiptValue(payload.finalDestination || payload.destination)}</p>
+            <div class="marks">${importantMarks.map((mark) => `<div class="mark">☐ ${escapeReceiptValue(mark)}</div>`).join('')}</div>
+          </div>
+          <div class="box" style="margin-top:14px">
+            <h2>Code de suivi</h2>
+            <div class="code-grid">
+              <img class="qr" src="${packageData.qrCodeUrl}" alt="QR Code" />
+              <img class="barcode" src="${packageData.barcodeUrl}" alt="Code-barres" />
+            </div>
+            <p class="line"><strong>Contact entrepôt:</strong> ${escapeReceiptValue(payload.warehouseContact || payload.warehouseSite)}</p>
+            <p class="line"><strong>Téléphone:</strong> ${escapeReceiptValue(payload.warehousePhone)}</p>
+            <p class="note">Format recommandé: A6 ou 10 cm × 15 cm. Protéger l’étiquette contre l’humidité pendant le transport maritime.</p>
+          </div>
+        </div>
+      </section>
+    </body>
+  </html>`;
+}
+
+function downloadPackageLabel(packageData: {
+  trackingNumber: string;
+  qrCodeUrl: string;
+  barcodeUrl: string;
+  payload: string;
+}) {
+  const html = buildMaritimeReceiptHtml(packageData);
   const url = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
-  downloadDataUrl(url, `${packageData.trackingNumber}-facture.html`);
+  downloadDataUrl(url, `${packageData.trackingNumber}-recu-et-etiquette.html`);
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
@@ -831,46 +1018,9 @@ function printPackageLabel(packageData: {
 }) {
   const printWindow = window.open('', '_blank', 'width=760,height=900');
   if (!printWindow) return;
-  const payload = parsePackagePayload(packageData.payload);
-
-  printWindow.document.write(`
-    <html>
-      <head>
-        <title>Facture ${packageData.trackingNumber}</title>
-        <style>
-          body { font-family: Arial, sans-serif; padding: 24px; color: #0f5132; }
-          .label { border: 2px solid #32BB78; border-radius: 18px; padding: 24px; max-width: 620px; }
-          h1 { margin: 0 0 8px; font-size: 28px; }
-          .tracking { font-family: monospace; font-size: 22px; font-weight: 800; margin-bottom: 18px; }
-          .grid { display: grid; grid-template-columns: 220px 1fr; gap: 20px; align-items: center; }
-          .row { margin: 6px 0; font-size: 13px; }
-          .total { margin-top: 12px; padding: 10px; border-radius: 10px; background: #f0fdf4; font-weight: 800; }
-          img { max-width: 100%; }
-          pre { white-space: pre-wrap; background: #f0fdf4; border-radius: 12px; padding: 12px; font-size: 11px; color: #166534; }
-        </style>
-      </head>
-      <body>
-        <div class="label">
-          <h1>eNKAMBA Logistics</h1>
-          <div class="tracking">${packageData.trackingNumber}</div>
-          <div class="row"><strong>Facture:</strong> ${escapeReceiptValue(payload.invoiceNumber)}</div>
-          <div class="grid">
-            <img src="${packageData.qrCodeUrl}" alt="QR" />
-            <div>
-              <img src="${packageData.barcodeUrl}" alt="Barcode" />
-              <div class="row"><strong>Agence:</strong> ${escapeReceiptValue(payload.agencyName)}</div>
-              <div class="row"><strong>Expediteur:</strong> ${escapeReceiptValue(payload.senderName)} - ${escapeReceiptValue(payload.senderPhone)}</div>
-              <div class="row"><strong>Destinataire:</strong> ${escapeReceiptValue(payload.receiverName)} - ${escapeReceiptValue(payload.receiverPhone)}</div>
-              <div class="row"><strong>Colis:</strong> ${escapeReceiptValue(payload.parcelName)} / ${escapeReceiptValue(payload.parcelCategory)}</div>
-              <div class="row"><strong>CBM:</strong> ${escapeReceiptValue(payload.totalVolume)} | <strong>Poids:</strong> ${escapeReceiptValue(payload.weight)} kg</div>
-              <div class="total">Total: ${escapeReceiptValue(payload.quoteTotal)} ${escapeReceiptValue(payload.currency)}</div>
-            </div>
-          </div>
-        </div>
-        <script>window.onload = () => { window.print(); };</script>
-      </body>
-    </html>
-  `);
+  printWindow.document.write(
+    buildMaritimeReceiptHtml(packageData).replace('</body>', '<script>window.onload = () => { window.print(); };</script></body>'),
+  );
   printWindow.document.close();
 }
 
@@ -893,6 +1043,33 @@ const TRANSPORT_CATEGORIES = [
 const PARCEL_CATEGORIES = ['Document', 'Aliment', 'Electronique', 'Vetement', 'Marchandise', 'Fragile'];
 const PACKAGING_TYPES = ['Carton', 'Sac', 'Palette', 'Conteneur'];
 const CURRENCIES = ['USD', 'CDF', 'RMB', 'EUR'];
+const MARITIME_SERVICE_TYPES = [
+  'Groupage maritime',
+  'Conteneur complet',
+  'Livraison jusqu’au port',
+  'Livraison jusqu’à l’entrepôt de destination',
+  'Livraison à domicile',
+  'Autre',
+];
+const PACKAGE_CONDITION_OPTIONS = [
+  'Bon état',
+  'Carton abîmé',
+  'Colis ouvert',
+  'Colis fragile',
+  'Emballage insuffisant',
+  'À renforcer avant expédition',
+  'Autre observation',
+];
+const WAREHOUSE_PAYMENT_METHODS = ['Espèces', 'Virement bancaire', 'Mobile Money', 'WeChat Pay', 'Alipay', 'Autre'];
+const SHIPPING_DOCUMENTS = [
+  'Facture commerciale',
+  'Liste de colisage',
+  'Reçu d’achat',
+  'Copie pièce d’identité',
+  'Document douanier',
+  'Aucun document',
+  'Autre',
+];
 const CONTAINER_TYPES = [
   { value: 'none', label: 'Sans conteneur', volume: 0 },
   { value: '20ft', label: '20 pieds', volume: 33 },
@@ -948,10 +1125,12 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
   const videoRef = React.useRef<HTMLVideoElement | null>(null);
   const streamRef = React.useRef<MediaStream | null>(null);
   const defaultShipmentType = businessUser.subCategory === 'INTERNATIONAL_AGENCY' ? 'international' : 'national';
+  const defaultTransportCategory = businessUser.subCategory === 'INTERNATIONAL_AGENCY' ? 'boat' : 'vehicle';
   const [shipmentType, setShipmentType] = useState(defaultShipmentType);
-  const [transportCategory, setTransportCategory] = useState('vehicle');
+  const [transportCategory, setTransportCategory] = useState(defaultTransportCategory);
   const [agencyName, setAgencyName] = useState(businessUser.businessName || '');
   const [agentName, setAgentName] = useState('');
+  const [warehouseSite, setWarehouseSite] = useState(businessUser.businessName || '');
   const [senderName, setSenderName] = useState('');
   const [senderPhone, setSenderPhone] = useState('');
   const [senderEmail, setSenderEmail] = useState('');
@@ -987,6 +1166,30 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
   const [idScanRequired, setIdScanRequired] = useState(true);
   const [trackingHistoryEnabled, setTrackingHistoryEnabled] = useState(true);
   const [description, setDescription] = useState('');
+  const [packageCondition, setPackageCondition] = useState(PACKAGE_CONDITION_OPTIONS[0]);
+  const [photosTakenAtReception, setPhotosTakenAtReception] = useState(true);
+  const [agentRemarks, setAgentRemarks] = useState('');
+  const [maritimeServiceType, setMaritimeServiceType] = useState(MARITIME_SERVICE_TYPES[0]);
+  const [departurePort, setDeparturePort] = useState('');
+  const [arrivalPort, setArrivalPort] = useState('');
+  const [finalDestination, setFinalDestination] = useState('');
+  const [registrationFee, setRegistrationFee] = useState('');
+  const [storageFee, setStorageFee] = useState('');
+  const [packagingFee, setPackagingFee] = useState('');
+  const [otherFees, setOtherFees] = useState('');
+  const [amountPaid, setAmountPaid] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState(WAREHOUSE_PAYMENT_METHODS[0]);
+  const [paymentReference, setPaymentReference] = useState('');
+  const [providedDocuments, setProvidedDocuments] = useState<string[]>([]);
+  const [otherDocument, setOtherDocument] = useState('');
+  const [clientDeclarationAccepted, setClientDeclarationAccepted] = useState(false);
+  const [clientSignatureName, setClientSignatureName] = useState('');
+  const [warehouseReceiverName, setWarehouseReceiverName] = useState('');
+  const [warehouseReceiverRole, setWarehouseReceiverRole] = useState('');
+  const [warehouseContact, setWarehouseContact] = useState('');
+  const [warehousePhone, setWarehousePhone] = useState('');
+  const [warehouseEmail, setWarehouseEmail] = useState('');
+  const [warehouseAddress, setWarehouseAddress] = useState('');
   const [packagePhoto, setPackagePhoto] = useState<File | null>(null);
   const [packagePhotoPreview, setPackagePhotoPreview] = useState('');
   const [isCameraOpen, setIsCameraOpen] = useState(false);
@@ -1025,8 +1228,12 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
     insuranceEnabled,
     homeDeliveryEnabled,
   });
+  const extraFeesTotal = roundMetric(toNumber(registrationFee) + toNumber(storageFee) + toNumber(packagingFee) + toNumber(otherFees));
+  const quoteTotal = roundMetric(quote.total + extraFeesTotal);
+  const remainingBalance = roundMetric(Math.max(quoteTotal - toNumber(amountPaid), 0));
+  const isMaritimeWarehouseForm = shipmentType === 'international' && transportCategory === 'boat';
 
-  const canSubmit = senderName && senderPhone && receiverName && receiverPhone && origin && destination && parcelName && weight && lengthCm && widthCm && heightCm && packagePhoto;
+  const canSubmit = senderName && senderPhone && receiverName && receiverPhone && origin && destination && parcelName && weight && lengthCm && widthCm && heightCm && packagePhoto && (!isMaritimeWarehouseForm || clientDeclarationAccepted);
 
   useEffect(() => {
     return () => {
@@ -1134,14 +1341,38 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
         destination,
         parcelName,
         parcelCategory,
+        packagingType,
         quantity: quantityValue,
         weight: totalWeight,
+        lengthCm: lengthValue,
+        widthCm: widthValue,
+        heightCm: heightValue,
         cbm,
         totalVolume,
         volumetricWeight,
-        quoteTotal: quote.total,
+        quoteTotal,
+        freight: quote.freight,
+        registrationFee: toNumber(registrationFee),
+        storageFee: toNumber(storageFee),
+        packagingFee: toNumber(packagingFee),
+        handlingFee: 0,
+        otherFees: toNumber(otherFees),
+        amountPaid: toNumber(amountPaid),
+        remainingBalance,
+        paymentMethod,
+        paymentReference,
         currency: billingCurrency,
         description,
+        agentName,
+        clientSignatureName,
+        agentRemarks,
+        warehouseSite,
+        warehouseContact,
+        warehousePhone,
+        maritimeServiceType: isMaritimeWarehouseForm ? maritimeServiceType : null,
+        departurePort: isMaritimeWarehouseForm ? departurePort : null,
+        arrivalPort: isMaritimeWarehouseForm ? arrivalPort : null,
+        finalDestination: isMaritimeWarehouseForm ? finalDestination || destination : destination,
         packagePhotoUrl: photoUpload.secureUrl,
         agencyName: businessUser.businessName,
         agencyId: businessUser.businessId,
@@ -1163,6 +1394,7 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
         agencySubCategory: businessUser.subCategory || null,
         registrationAgent: agentName || businessUser.businessName,
         registrationAgency: agencyName || businessUser.businessName,
+        warehouseSite: warehouseSite || agencyName || businessUser.businessName,
         userId: null,
         senderName,
         senderPhone,
@@ -1218,8 +1450,19 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
           insurance: quote.insurance,
           homeDelivery: quote.homeDelivery,
           taxes: quote.taxes,
-          total: quote.total,
+          registrationFee: toNumber(registrationFee),
+          storageFee: toNumber(storageFee),
+          packagingFee: toNumber(packagingFee),
+          otherFees: toNumber(otherFees),
+          total: quoteTotal,
           method: selectedTransport.method,
+        },
+        payment: {
+          method: paymentMethod,
+          reference: paymentReference,
+          amountPaid: toNumber(amountPaid),
+          balance: remainingBalance,
+          currency: billingCurrency,
         },
         invoice: {
           invoiceNumber,
@@ -1236,11 +1479,43 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
           trackingHistory: trackingHistoryEnabled,
         },
         description,
+        reception: {
+          condition: packageCondition,
+          photosTaken: photosTakenAtReception,
+          agentRemarks,
+        },
+        maritimeShipping: isMaritimeWarehouseForm
+          ? {
+              mode: 'Expédition maritime par bateau',
+              serviceType: maritimeServiceType,
+              departurePort,
+              arrivalPort,
+              finalDestination: finalDestination || destination,
+            }
+          : null,
+        providedDocuments,
+        otherDocument,
+        clientDeclaration: {
+          accepted: clientDeclarationAccepted,
+          clientName: clientSignatureName || senderName,
+          statement: 'Le client declare que les informations fournies sont exactes et que le colis ne contient aucun produit interdit, dangereux, illicite ou non declare.',
+        },
+        warehouseValidation: {
+          receivedBy: warehouseReceiverName,
+          role: warehouseReceiverRole,
+          contact: warehouseContact,
+          phone: warehousePhone,
+          email: warehouseEmail,
+          address: warehouseAddress,
+        },
         packagePhotoUrl: photoUpload.secureUrl,
         packagePhotoPublicId: photoUpload.publicId,
         serviceMode: businessUser.subCategory === 'INTERNATIONAL_AGENCY' ? 'international' : 'national',
         status: 'registered',
-        paymentStatus: 'agency_pending',
+        paymentStatus: remainingBalance > 0 ? 'partial' : 'paid',
+        amountPaid: toNumber(amountPaid),
+        balanceDue: remainingBalance,
+        currency: billingCurrency,
         logisticsStatus: 'registered',
         packageNumber: trackingNumber,
         trackingNumber,
@@ -1256,7 +1531,7 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
       setRegisteredPackage({
         trackingNumber,
         invoiceNumber,
-        totalLabel: `${quote.total.toFixed(2)} ${billingCurrency}`,
+        totalLabel: `${quoteTotal.toFixed(2)} ${billingCurrency}`,
         parcelLabel: parcelName,
         qrCodeUrl,
         barcodeUrl,
@@ -1264,9 +1539,10 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
         requestId: requestDoc.id,
       });
       setShipmentType(defaultShipmentType);
-      setTransportCategory('vehicle');
+      setTransportCategory(defaultTransportCategory);
       setAgencyName(businessUser.businessName || '');
       setAgentName('');
+      setWarehouseSite(businessUser.businessName || '');
       setSenderName('');
       setSenderPhone('');
       setSenderEmail('');
@@ -1302,6 +1578,30 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
       setIdScanRequired(true);
       setTrackingHistoryEnabled(true);
       setDescription('');
+      setPackageCondition(PACKAGE_CONDITION_OPTIONS[0]);
+      setPhotosTakenAtReception(true);
+      setAgentRemarks('');
+      setMaritimeServiceType(MARITIME_SERVICE_TYPES[0]);
+      setDeparturePort('');
+      setArrivalPort('');
+      setFinalDestination('');
+      setRegistrationFee('');
+      setStorageFee('');
+      setPackagingFee('');
+      setOtherFees('');
+      setAmountPaid('');
+      setPaymentMethod(WAREHOUSE_PAYMENT_METHODS[0]);
+      setPaymentReference('');
+      setProvidedDocuments([]);
+      setOtherDocument('');
+      setClientDeclarationAccepted(false);
+      setClientSignatureName('');
+      setWarehouseReceiverName('');
+      setWarehouseReceiverRole('');
+      setWarehouseContact('');
+      setWarehousePhone('');
+      setWarehouseEmail('');
+      setWarehouseAddress('');
       updatePackagePhoto(null);
     } catch (error) {
       console.error('Erreur enregistrement colis Ugavi:', error);
@@ -1314,9 +1614,9 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
     <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
       <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="mb-5">
-          <h2 className="text-2xl font-bold text-primary">Enregistrement agence</h2>
+          <h2 className="text-2xl font-bold text-primary">Formulaire d’enregistrement de colis</h2>
           <p className="mt-1 text-sm text-slate-500">
-            Formulaire POS pour creer le colis, calculer CBM / tarif, generer la facture, le QR code et le code-barres.
+            Entrepôt logistique international, expédition maritime, CBM, facture, QR code et code-barres.
           </p>
         </div>
 
@@ -1324,10 +1624,14 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
           <div className="rounded-2xl border border-primary/15 bg-primary/5/60 p-4">
             <p className="text-sm font-black text-primary">Informations generales</p>
             <div className="mt-3 grid gap-3 md:grid-cols-3">
+              <MetricCard label="Date" value="Auto" />
+              <MetricCard label="No colis" value="Auto" />
+              <MetricCard label="QR / Barcode" value="Auto" />
               <SelectField label="Type expedition" value={shipmentType} onChange={setShipmentType} options={SHIPMENT_TYPES} />
               <SelectField label="Categorie transport" value={transportCategory} onChange={setTransportCategory} options={TRANSPORT_CATEGORIES} />
               <Field label="Agent d'enregistrement" value={agentName} onChange={setAgentName} placeholder="Nom de l'agent" />
               <Field label="Agence" value={agencyName} onChange={setAgencyName} placeholder="Agence selectionnee" />
+              <Field label="Site / Entrepôt" value={warehouseSite} onChange={setWarehouseSite} placeholder="Entrepôt Guangzhou, port, dépôt..." />
               <Field label="Agence / point depart" value={origin} onChange={setOrigin} placeholder="Agence Gombe, Kinshasa" />
               <Field label="Destination" value={destination} onChange={setDestination} placeholder="Ville, quartier, point relais" />
             </div>
@@ -1337,13 +1641,13 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
             <div className="rounded-2xl border border-slate-200 bg-white p-4">
               <p className="text-sm font-black text-slate-900">Expediteur</p>
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                <Field label="Nom complet" value={senderName} onChange={setSenderName} placeholder="Nom complet" />
+                <Field label="Nom complet / Société" value={senderName} onChange={setSenderName} placeholder="Nom complet ou societe" />
                 <Field label="Telephone" value={senderPhone} onChange={setSenderPhone} placeholder="+243..." />
                 <Field label="Email" value={senderEmail} onChange={setSenderEmail} placeholder="email@exemple.com" />
                 <Field label="Pays" value={senderCountry} onChange={setSenderCountry} placeholder="RDC" />
                 <Field label="Ville" value={senderCity} onChange={setSenderCity} placeholder="Kinshasa" />
                 <label className="space-y-1.5">
-                  <span className="text-sm font-semibold text-slate-700">Piece d'identite</span>
+                  <span className="text-sm font-semibold text-slate-700">Piece / passeport / RCCM</span>
                   <input
                     type="file"
                     accept="image/*,.pdf"
@@ -1360,14 +1664,14 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
             <div className="rounded-2xl border border-slate-200 bg-white p-4">
               <p className="text-sm font-black text-slate-900">Destinataire</p>
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                <Field label="Nom complet" value={receiverName} onChange={setReceiverName} placeholder="Nom complet" />
+                <Field label="Nom complet / Société" value={receiverName} onChange={setReceiverName} placeholder="Nom complet ou societe" />
                 <Field label="Telephone" value={receiverPhone} onChange={setReceiverPhone} placeholder="+243..." />
                 <Field label="Email" value={receiverEmail} onChange={setReceiverEmail} placeholder="email@exemple.com" />
                 <Field label="Pays" value={receiverCountry} onChange={setReceiverCountry} placeholder="RDC" />
                 <Field label="Ville" value={receiverCity} onChange={setReceiverCity} placeholder="Lubumbashi" />
                 <div />
                 <div className="sm:col-span-2">
-                  <Field label="Adresse complete" value={receiverAddress} onChange={setReceiverAddress} placeholder="Adresse ou agence de retrait" />
+                  <Field label="Adresse de livraison" value={receiverAddress} onChange={setReceiverAddress} placeholder="Adresse ou agence de retrait" />
                 </div>
               </div>
             </div>
@@ -1394,6 +1698,44 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
             </div>
           </div>
 
+          {isMaritimeWarehouseForm && (
+            <div className="grid gap-5 xl:grid-cols-2">
+              <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                <p className="text-sm font-black text-slate-900">État du colis à la réception</p>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <SelectField
+                    label="État constaté"
+                    value={packageCondition}
+                    onChange={setPackageCondition}
+                    options={PACKAGE_CONDITION_OPTIONS.map((item) => ({ value: item, label: item }))}
+                  />
+                  <OptionToggle label="Photos prises" checked={photosTakenAtReception} onChange={setPhotosTakenAtReception} />
+                  <div className="sm:col-span-2">
+                    <Field label="Remarques de l’agent" value={agentRemarks} onChange={setAgentRemarks} placeholder="Observation, emballage à renforcer, réserve..." />
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-primary/15 bg-primary/5 p-4">
+                <p className="text-sm font-black text-primary">Mode d’expédition maritime</p>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <MetricCard label="Transport" value="Bateau" />
+                  <SelectField
+                    label="Type de service"
+                    value={maritimeServiceType}
+                    onChange={setMaritimeServiceType}
+                    options={MARITIME_SERVICE_TYPES.map((item) => ({ value: item, label: item }))}
+                  />
+                  <Field label="Port de départ" value={departurePort} onChange={setDeparturePort} placeholder="Guangzhou, Shenzhen..." />
+                  <Field label="Port d’arrivée" value={arrivalPort} onChange={setArrivalPort} placeholder="Matadi, Boma..." />
+                  <div className="sm:col-span-2">
+                    <Field label="Destination finale" value={finalDestination} onChange={setFinalDestination} placeholder="Ville, entrepôt, adresse finale" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="grid gap-3 md:grid-cols-4">
             <MetricCard label="CBM unitaire" value={`${cbm.toFixed(3)} CBM`} />
             <MetricCard label="Poids volumetrique" value={`${volumetricWeight.toFixed(2)} kg`} />
@@ -1405,13 +1747,15 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
             <div className="grid gap-3 md:grid-cols-3">
               <SelectField label="Devise facture" value={billingCurrency} onChange={setBillingCurrency} options={CURRENCIES.map((item) => ({ value: item, label: item }))} />
               <MetricCard label="Methode tarifaire" value={selectedTransport.method} />
-              <MetricCard label="Total estime" value={`${quote.total.toFixed(2)} ${billingCurrency}`} />
+              <MetricCard label="Total estime" value={`${quoteTotal.toFixed(2)} ${billingCurrency}`} />
             </div>
             <div className="mt-3 grid gap-2 md:grid-cols-4">
               <p className="rounded-xl bg-white px-3 py-2 text-xs font-bold text-slate-600">Transport: {quote.freight.toFixed(2)} {billingCurrency}</p>
               <p className="rounded-xl bg-white px-3 py-2 text-xs font-bold text-slate-600">Assurance: {quote.insurance.toFixed(2)} {billingCurrency}</p>
               <p className="rounded-xl bg-white px-3 py-2 text-xs font-bold text-slate-600">Domicile: {quote.homeDelivery.toFixed(2)} {billingCurrency}</p>
               <p className="rounded-xl bg-white px-3 py-2 text-xs font-bold text-slate-600">Taxes: {quote.taxes.toFixed(2)} {billingCurrency}</p>
+              <p className="rounded-xl bg-white px-3 py-2 text-xs font-bold text-slate-600 md:col-span-2">Frais entrepôt: {extraFeesTotal.toFixed(2)} {billingCurrency}</p>
+              <p className="rounded-xl bg-white px-3 py-2 text-xs font-bold text-slate-600 md:col-span-2">Solde restant: {remainingBalance.toFixed(2)} {billingCurrency}</p>
             </div>
             {selectedContainer.volume > 0 && (
               <div className="mt-3 rounded-xl bg-white p-3 text-sm text-slate-700">
@@ -1428,6 +1772,79 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
             <OptionToggle label="Scan piece identite" checked={idScanRequired} onChange={setIdScanRequired} />
             <OptionToggle label="Historique tracking" checked={trackingHistoryEnabled} onChange={setTrackingHistoryEnabled} />
           </div>
+
+          {isMaritimeWarehouseForm && (
+            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+              <p className="text-sm font-black text-slate-900">Frais, paiement et documents</p>
+              <div className="mt-3 grid gap-3 md:grid-cols-4">
+                <Field label="Frais d’enregistrement" value={registrationFee} onChange={setRegistrationFee} placeholder="0" type="number" />
+                <Field label="Frais d’entreposage" value={storageFee} onChange={setStorageFee} placeholder="0" type="number" />
+                <Field label="Frais emballage" value={packagingFee} onChange={setPackagingFee} placeholder="0" type="number" />
+                <Field label="Autres frais" value={otherFees} onChange={setOtherFees} placeholder="0" type="number" />
+                <Field label="Montant payé" value={amountPaid} onChange={setAmountPaid} placeholder="0" type="number" />
+                <MetricCard label="Solde" value={`${remainingBalance.toFixed(2)} ${billingCurrency}`} />
+                <SelectField
+                  label="Mode paiement"
+                  value={paymentMethod}
+                  onChange={setPaymentMethod}
+                  options={WAREHOUSE_PAYMENT_METHODS.map((item) => ({ value: item, label: item }))}
+                />
+                <Field label="Référence paiement" value={paymentReference} onChange={setPaymentReference} placeholder="Transaction, reçu, banque..." />
+              </div>
+              <div className="mt-4">
+                <p className="text-sm font-semibold text-slate-700">Documents fournis</p>
+                <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                  {SHIPPING_DOCUMENTS.map((documentName) => {
+                    const checked = providedDocuments.includes(documentName);
+                    return (
+                      <button
+                        key={documentName}
+                        type="button"
+                        onClick={() =>
+                          setProvidedDocuments((current) =>
+                            checked ? current.filter((item) => item !== documentName) : [...current, documentName],
+                          )
+                        }
+                        className={`rounded-xl border px-3 py-2 text-left text-xs font-black transition ${
+                          checked ? 'border-primary/25 bg-primary/5 text-primary' : 'border-slate-200 bg-white text-slate-600'
+                        }`}
+                      >
+                        {documentName}
+                      </button>
+                    );
+                  })}
+                </div>
+                {providedDocuments.includes('Autre') && (
+                  <div className="mt-3">
+                    <Field label="Autre document" value={otherDocument} onChange={setOtherDocument} placeholder="Nom du document fourni" />
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {isMaritimeWarehouseForm && (
+            <div className="rounded-2xl border border-primary/15 bg-primary/5 p-4">
+              <p className="text-sm font-black text-primary">Déclaration client et validation entrepôt</p>
+              <div className="mt-3 grid gap-3 md:grid-cols-2">
+                <OptionToggle
+                  label="Le client confirme la déclaration du contenu"
+                  checked={clientDeclarationAccepted}
+                  onChange={setClientDeclarationAccepted}
+                />
+                <Field label="Nom du client signataire" value={clientSignatureName} onChange={setClientSignatureName} placeholder="Nom du client" />
+                <Field label="Colis reçu par" value={warehouseReceiverName} onChange={setWarehouseReceiverName} placeholder="Nom agent entrepôt" />
+                <Field label="Fonction" value={warehouseReceiverRole} onChange={setWarehouseReceiverRole} placeholder="Réceptionnaire, superviseur..." />
+                <Field label="Contact entrepôt" value={warehouseContact} onChange={setWarehouseContact} placeholder="Nom ou service" />
+                <Field label="Téléphone entrepôt" value={warehousePhone} onChange={setWarehousePhone} placeholder="+86..." />
+                <Field label="Email entrepôt" value={warehouseEmail} onChange={setWarehouseEmail} placeholder="contact@entrepot.com" />
+                <Field label="Adresse entrepôt" value={warehouseAddress} onChange={setWarehouseAddress} placeholder="Adresse complète" />
+              </div>
+              <div className="mt-4 rounded-xl bg-white p-3 text-xs font-semibold leading-5 text-slate-600">
+                Conditions: déclaration correcte obligatoire, produits interdits refusés, frais de douane à destination à la charge du client sauf accord écrit, délais maritimes variables selon port, compagnie maritime et douane.
+              </div>
+            </div>
+          )}
 
           <div className="space-y-2 md:col-span-2">
             <span className="text-sm font-semibold text-slate-700">Photo du colis *</span>
