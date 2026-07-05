@@ -40,7 +40,7 @@ export function SavedCardsSection() {
           <CardTitle className="font-headline text-xl">Mes Cartes</CardTitle>
           <Button
             onClick={() => setIsDialogOpen(true)}
-            className="bg-[#479B67] hover:bg-[#479B67] gap-2"
+            className="bg-[#25543A] hover:bg-[#25543A] gap-2"
             size="sm"
           >
             <Plus className="w-4 h-4" />
@@ -55,7 +55,7 @@ export function SavedCardsSection() {
               <p className="text-muted-foreground mb-4">Aucune carte enregistrée</p>
               <Button
                 onClick={() => setIsDialogOpen(true)}
-                className="bg-[#479B67] hover:bg-[#479B67]"
+                className="bg-[#25543A] hover:bg-[#25543A]"
               >
                 Ajouter votre première carte
               </Button>

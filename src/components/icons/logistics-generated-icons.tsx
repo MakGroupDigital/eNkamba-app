@@ -18,8 +18,8 @@ const BadgeBase = ({ size = 24, className, children }: IconProps & { children: R
     xmlns="http://www.w3.org/2000/svg"
     className={cn('', className)}
   >
-    <circle cx="24" cy="24" r="22" fill="#479B67" />
-    <circle cx="24" cy="24" r="20" fill="#479B67" fillOpacity="0.78" />
+    <circle cx="24" cy="24" r="22" fill="#25543A" />
+    <circle cx="24" cy="24" r="20" fill="#25543A" fillOpacity="0.78" />
     <circle cx="24" cy="24" r="17" fill="#FFFFFF" fillOpacity="0.16" />
     {children}
   </svg>
@@ -39,8 +39,8 @@ export const LogisticsStandardIcon = ({ className, size = 24 }: IconProps) => (
   <BadgeBase className={className} size={size}>
     <rect x="9" y="17" width="25" height="13" rx="2" fill="#fff" />
     <rect x="12" y="13" width="14" height="6" rx="1.5" fill="#FF8C00" />
-    <circle cx="16" cy="33" r="3" fill="#479B67" />
-    <circle cx="29" cy="33" r="3" fill="#479B67" />
+    <circle cx="16" cy="33" r="3" fill="#25543A" />
+    <circle cx="29" cy="33" r="3" fill="#25543A" />
   </BadgeBase>
 );
 
@@ -57,9 +57,9 @@ export const LogisticsInternationalIcon = ({ className, size = 24 }: IconProps) 
 export const LogisticsTrackingIcon = ({ className, size = 24 }: IconProps) => (
   <BadgeBase className={className} size={size}>
     <rect x="12" y="10" width="24" height="30" rx="4" fill="#fff" />
-    <rect x="16" y="15" width="10" height="2" rx="1" fill="#479B67" />
-    <rect x="16" y="20" width="14" height="2" rx="1" fill="#479B67" />
-    <circle cx="24" cy="30" r="5" fill="#479B67" />
+    <rect x="16" y="15" width="10" height="2" rx="1" fill="#25543A" />
+    <rect x="16" y="20" width="14" height="2" rx="1" fill="#25543A" />
+    <circle cx="24" cy="30" r="5" fill="#25543A" />
     <path d="M22 30L24 32L27 28" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
   </BadgeBase>
 );
@@ -68,7 +68,7 @@ export const LogisticsRelayIcon = ({ className, size = 24 }: IconProps) => (
   <BadgeBase className={className} size={size}>
     <path d="M10 26L24 14L38 26" fill="#fff" />
     <rect x="14" y="24" width="20" height="12" rx="2" fill="#fff" />
-    <rect x="21" y="28" width="6" height="8" rx="1" fill="#479B67" />
+    <rect x="21" y="28" width="6" height="8" rx="1" fill="#25543A" />
   </BadgeBase>
 );
 
@@ -76,9 +76,9 @@ export const LogisticsAgencyIcon = ({ className, size = 24 }: IconProps) => (
   <BadgeBase className={className} size={size}>
     <rect x="10" y="14" width="28" height="22" rx="2" fill="#fff" />
     <rect x="12" y="10" width="24" height="5" rx="1.5" fill="#FF8C00" />
-    <rect x="15" y="20" width="4" height="12" rx="1" fill="#479B67" />
-    <rect x="22" y="20" width="4" height="12" rx="1" fill="#479B67" />
-    <rect x="29" y="20" width="4" height="12" rx="1" fill="#479B67" />
+    <rect x="15" y="20" width="4" height="12" rx="1" fill="#25543A" />
+    <rect x="22" y="20" width="4" height="12" rx="1" fill="#25543A" />
+    <rect x="29" y="20" width="4" height="12" rx="1" fill="#25543A" />
   </BadgeBase>
 );
 
@@ -129,9 +129,9 @@ export const LogisticsCarModeIcon = ({ className, size = 24 }: IconProps) => (
 export const LogisticsTrainModeIcon = ({ className, size = 24 }: IconProps) => (
   <BadgeBase className={className} size={size}>
     <rect x="13" y="11" width="22" height="24" rx="5" fill="#fff" />
-    <rect x="17" y="16" width="6" height="5" rx="1" fill="#479B67" />
-    <rect x="25" y="16" width="6" height="5" rx="1" fill="#479B67" />
-    <rect x="17" y="24" width="14" height="3" rx="1.5" fill="#479B67" />
+    <rect x="17" y="16" width="6" height="5" rx="1" fill="#25543A" />
+    <rect x="25" y="16" width="6" height="5" rx="1" fill="#25543A" />
+    <rect x="17" y="24" width="14" height="3" rx="1.5" fill="#25543A" />
     <path d="M18 35L15 39M30 35L33 39" stroke="#FF8C00" strokeWidth="2" strokeLinecap="round" />
   </BadgeBase>
 );

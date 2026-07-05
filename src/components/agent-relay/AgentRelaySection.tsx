@@ -12,8 +12,8 @@ const AgentRelayIcon = ({ size = 24 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <linearGradient id="agentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#479B67" />
-        <stop offset="100%" stopColor="#479B67" />
+        <stop offset="0%" stopColor="#25543A" />
+        <stop offset="100%" stopColor="#25543A" />
       </linearGradient>
     </defs>
     <circle cx="24" cy="24" r="20" fill="url(#agentGrad)" />
@@ -128,10 +128,10 @@ export function AgentRelaySection() {
     const isSubmitted = status === 'submitted';
     
     return (
-      <Card className="overflow-hidden border-2 border-[#479B67]/30 bg-[#479B67]/5">
-        <CardHeader className="bg-gradient-to-r from-[#479B67]/10 to-transparent">
+      <Card className="overflow-hidden border-2 border-[#25543A]/30 bg-[#25543A]/5">
+        <CardHeader className="bg-gradient-to-r from-[#25543A]/10 to-transparent">
           <CardTitle className="font-headline text-lg flex items-center gap-2">
-            <Clock size={20} className="text-[#479B67]" />
+            <Clock size={20} className="text-[#25543A]" />
             Demande Agent Relais
           </CardTitle>
         </CardHeader>

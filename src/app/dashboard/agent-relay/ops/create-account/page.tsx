@@ -21,13 +21,13 @@ export default function AgentOpsCreateAccountPage() {
                 Flux agent: création rapide + KYC minimum + génération QR / carte.
               </div>
             </div>
-            <div className="h-12 w-12 rounded-2xl bg-[#479B67]/10 flex items-center justify-center">
-              <CreditCard className="text-[#479B67]" />
+            <div className="h-12 w-12 rounded-2xl bg-[#25543A]/10 flex items-center justify-center">
+              <CreditCard className="text-[#25543A]" />
             </div>
           </div>
 
           <Button
-            className="h-12 rounded-xl bg-[#479B67] hover:bg-[#479B67] text-white"
+            className="h-12 rounded-xl bg-[#25543A] hover:bg-[#25543A] text-white"
             onClick={() =>
               toast({
                 title: 'Bientôt',

@@ -115,7 +115,7 @@ export function UnifiedReceiveFlow({
             margin: 2,
             errorCorrectionLevel: 'H',
             color: {
-              dark: '#479B67',
+              dark: '#25543A',
               light: '#ffffff',
             },
           });
@@ -235,13 +235,13 @@ export function UnifiedReceiveFlow({
       {step === 'method' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card
-            className="cursor-pointer border-2 hover:border-[#479B67] transition-colors"
+            className="cursor-pointer border-2 hover:border-[#25543A] transition-colors"
             onClick={() => handleMethodSelect('link')}
           >
             <CardContent className="pt-6">
               <div className="flex flex-col items-center gap-4 text-center">
-                <div className="p-4 rounded-full bg-[#479B67]/20">
-                  <LinkIcon className="w-8 h-8 text-[#479B67]" />
+                <div className="p-4 rounded-full bg-[#25543A]/20">
+                  <LinkIcon className="w-8 h-8 text-[#25543A]" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-lg">Lien de Paiement</h3>
@@ -252,13 +252,13 @@ export function UnifiedReceiveFlow({
           </Card>
 
           <Card
-            className="cursor-pointer border-2 hover:border-[#479B67] transition-colors"
+            className="cursor-pointer border-2 hover:border-[#25543A] transition-colors"
             onClick={() => handleMethodSelect('qr')}
           >
             <CardContent className="pt-6">
               <div className="flex flex-col items-center gap-4 text-center">
-                <div className="p-4 rounded-full bg-[#479B67]/20">
-                  <QrCode className="w-8 h-8 text-[#479B67]" />
+                <div className="p-4 rounded-full bg-[#25543A]/20">
+                  <QrCode className="w-8 h-8 text-[#25543A]" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-lg">Code QR</h3>
@@ -269,13 +269,13 @@ export function UnifiedReceiveFlow({
           </Card>
 
           <Card
-            className="cursor-pointer border-2 hover:border-[#479B67] transition-colors"
+            className="cursor-pointer border-2 hover:border-[#25543A] transition-colors"
             onClick={() => handleMethodSelect('code')}
           >
             <CardContent className="pt-6">
               <div className="flex flex-col items-center gap-4 text-center">
-                <div className="p-4 rounded-full bg-[#479B67]/20">
-                  <Zap className="w-8 h-8 text-[#479B67]" />
+                <div className="p-4 rounded-full bg-[#25543A]/20">
+                  <Zap className="w-8 h-8 text-[#25543A]" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-lg">Code Unique</h3>
@@ -286,13 +286,13 @@ export function UnifiedReceiveFlow({
           </Card>
 
           <Card
-            className="cursor-pointer border-2 hover:border-[#479B67] transition-colors"
+            className="cursor-pointer border-2 hover:border-[#25543A] transition-colors"
             onClick={() => handleMethodSelect('bluetooth')}
           >
             <CardContent className="pt-6">
               <div className="flex flex-col items-center gap-4 text-center">
-                <div className="p-4 rounded-full bg-[#479B67]/20">
-                  <Bluetooth className="w-8 h-8 text-[#479B67]" />
+                <div className="p-4 rounded-full bg-[#25543A]/20">
+                  <Bluetooth className="w-8 h-8 text-[#25543A]" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-lg">Paiement Bluetooth</h3>
@@ -309,13 +309,13 @@ export function UnifiedReceiveFlow({
           </Card>
 
           <Card
-            className="cursor-pointer border-2 hover:border-[#479B67] transition-colors"
+            className="cursor-pointer border-2 hover:border-[#25543A] transition-colors"
             onClick={() => handleMethodSelect('nfc')}
           >
             <CardContent className="pt-6">
               <div className="flex flex-col items-center gap-4 text-center">
-                <div className="p-4 rounded-full bg-[#479B67]/20">
-                  <Wifi className="w-8 h-8 text-[#479B67]" />
+                <div className="p-4 rounded-full bg-[#25543A]/20">
+                  <Wifi className="w-8 h-8 text-[#25543A]" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-lg">Paiement NFC</h3>
@@ -332,13 +332,13 @@ export function UnifiedReceiveFlow({
           </Card>
 
           <Card
-            className="cursor-pointer border-2 hover:border-[#479B67] transition-colors"
+            className="cursor-pointer border-2 hover:border-[#25543A] transition-colors"
             onClick={() => handleMethodSelect('wifi')}
           >
             <CardContent className="pt-6">
               <div className="flex flex-col items-center gap-4 text-center">
-                <div className="p-4 rounded-full bg-[#479B67]/20">
-                  <Wifi className="w-8 h-8 text-[#479B67]" />
+                <div className="p-4 rounded-full bg-[#25543A]/20">
+                  <Wifi className="w-8 h-8 text-[#25543A]" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-lg">Paiement WiFi</h3>
@@ -425,7 +425,7 @@ export function UnifiedReceiveFlow({
               <Button
                 onClick={generatePaymentLink}
                 disabled={isGenerating}
-                className="flex-1 bg-[#479B67] hover:bg-[#479B67]"
+                className="flex-1 bg-[#25543A] hover:bg-[#25543A]"
               >
                 {isGenerating ? (
                   <>
@@ -475,7 +475,7 @@ export function UnifiedReceiveFlow({
                 </div>
                 <Button
                   onClick={downloadQR}
-                  className="w-full bg-[#479B67] hover:bg-[#479B67]"
+                  className="w-full bg-[#25543A] hover:bg-[#25543A]"
                 >
                   <Download className="w-4 h-4 mr-2" />
                   Télécharger le Code QR
@@ -504,7 +504,7 @@ export function UnifiedReceiveFlow({
                   </Button>
                   <Button
                     onClick={shareLink}
-                    className="flex-1 bg-[#479B67] hover:bg-[#479B67]"
+                    className="flex-1 bg-[#25543A] hover:bg-[#25543A]"
                   >
                     <Share2 className="w-4 h-4 mr-2" />
                     Partager
@@ -520,7 +520,7 @@ export function UnifiedReceiveFlow({
                 <CardTitle>Code Unique - Valide 5 minutes</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="bg-gradient-to-r from-[#479B67] to-[#479B67] p-8 rounded-lg text-center">
+                <div className="bg-gradient-to-r from-[#25543A] to-[#25543A] p-8 rounded-lg text-center">
                   <p className="text-white text-sm mb-2">Votre code unique</p>
                   <p className="text-white text-5xl font-bold font-mono tracking-widest mb-4">
                     {paymentLink.code}
@@ -534,7 +534,7 @@ export function UnifiedReceiveFlow({
                 </div>
                 <Button
                   onClick={() => copyToClipboard(paymentLink.code)}
-                  className="w-full bg-[#479B67] hover:bg-[#479B67]"
+                  className="w-full bg-[#25543A] hover:bg-[#25543A]"
                 >
                   <Copy className="w-4 h-4 mr-2" />
                   Copier le Code

@@ -175,8 +175,8 @@ export function AgentContract({ agentType, onAccept, onClose }: AgentContractPro
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-[#479B67]/10 flex items-center justify-center">
-              <FileText size={20} className="text-[#479B67]" />
+            <div className="h-10 w-10 rounded-lg bg-[#25543A]/10 flex items-center justify-center">
+              <FileText size={20} className="text-[#25543A]" />
             </div>
             <h2 className="text-xl font-bold text-gray-800">{contract.title}</h2>
           </div>
@@ -216,8 +216,8 @@ export function AgentContract({ agentType, onAccept, onClose }: AgentContractPro
 
         {/* Footer */}
         <div className="p-6 border-t border-gray-200 space-y-3">
-          <div className="flex items-start gap-3 p-3 rounded-lg bg-[#479B67]/10">
-            <FileText size={16} className="text-[#479B67] mt-0.5 flex-shrink-0" />
+          <div className="flex items-start gap-3 p-3 rounded-lg bg-[#25543A]/10">
+            <FileText size={16} className="text-[#25543A] mt-0.5 flex-shrink-0" />
             <p className="text-xs text-gray-700">
               En acceptant ce contrat, vous confirmez avoir lu et compris l'ensemble des termes et conditions.
             </p>
@@ -236,7 +236,7 @@ export function AgentContract({ agentType, onAccept, onClose }: AgentContractPro
               disabled={!hasScrolledToBottom}
               className={`flex-1 h-12 rounded-xl ${
                 hasScrolledToBottom
-                  ? 'bg-[#479B67] hover:bg-[#479B67]'
+                  ? 'bg-[#25543A] hover:bg-[#25543A]'
                   : 'bg-gray-300 cursor-not-allowed'
               }`}
             >

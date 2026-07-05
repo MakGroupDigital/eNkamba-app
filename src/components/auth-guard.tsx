@@ -46,7 +46,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
     if (isLoading) {
         return (
-            <div className="flex h-screen w-full items-center justify-center bg-gradient-to-br from-[#479B67] via-[#479B67] to-[#479B67]">
+            <div className="flex h-screen w-full items-center justify-center bg-gradient-to-br from-[#25543A] via-[#25543A] to-[#25543A]">
                 <style>{`
                     @keyframes spin-smooth {
                         from { transform: rotate(0deg); }

@@ -1,11 +1,14 @@
 'use client';
 /* eslint-disable @next/next/no-img-element */
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import type { ComponentType } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   ArrowLeft, QrCode, Mail, Phone, CreditCard, Hash, Download, Share2,
-  AlertCircle, Loader2, User, Upload, X, ArrowRightLeft
+  AlertCircle, Loader2, User, Upload, X, ArrowRightLeft, Users, BriefcaseBusiness,
+  Gift, TrendingUp, Truck, FileSpreadsheet, CalendarClock, ShieldCheck, Plus,
+  Trash2, CheckCircle2, ClipboardList, HelpCircle, Save
 } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -33,6 +36,38 @@ interface ScannedQRData {
   isValid: boolean;
 }
 
+type MultiPayStep = 1 | 2 | 3 | 4;
+type MultiPayType = 'same' | 'different' | 'salary' | 'bonus' | 'commission' | 'suppliers' | 'excel' | 'scheduled';
+
+interface MultiPayRecipient {
+  id: string;
+  accountNumber: string;
+  fullName: string;
+  amount: string;
+  role?: string;
+  reason?: string;
+  reference?: string;
+}
+
+const MULTI_PAY_TYPES: Array<{
+  id: MultiPayType;
+  title: string;
+  subtitle: string;
+  icon: ComponentType<any>;
+  tone: string;
+}> = [
+  { id: 'same', title: 'Même montant à plusieurs', subtitle: 'Même montant pour tous les bénéficiaires', icon: Users, tone: 'bg-primary/10 text-primary' },
+  { id: 'different', title: 'Montants différents', subtitle: 'Chaque bénéficiaire reçoit un montant différent', icon: User, tone: 'bg-blue-50 text-blue-700' },
+  { id: 'salary', title: 'Salaires', subtitle: 'Paiement mensuel des employés', icon: BriefcaseBusiness, tone: 'bg-orange-50 text-orange-700' },
+  { id: 'bonus', title: 'Primes', subtitle: 'Primes, bonus et indemnités', icon: Gift, tone: 'bg-purple-50 text-purple-700' },
+  { id: 'commission', title: 'Commissions', subtitle: 'Commissions commerciales', icon: TrendingUp, tone: 'bg-amber-50 text-amber-700' },
+  { id: 'suppliers', title: 'Fournisseurs', subtitle: 'Prestataires et partenaires', icon: Truck, tone: 'bg-sky-50 text-sky-700' },
+  { id: 'excel', title: 'Importer Excel', subtitle: 'Importer un fichier CSV/Excel exporté', icon: FileSpreadsheet, tone: 'bg-primary/10 text-primary' },
+  { id: 'scheduled', title: 'Paiement programmé', subtitle: 'Planifier vos paiements récurrents', icon: CalendarClock, tone: 'bg-violet-50 text-violet-700' },
+];
+
+const MULTI_PAY_FEE_RATE = 0.005;
+
 export default function PayReceivePage() {
   const searchParams = useSearchParams();
   const { user } = useAuth();
@@ -58,16 +93,55 @@ export default function PayReceivePage() {
   const [paymentDestination, setPaymentDestination] = useState('');
   const [isPaying, setIsPaying] = useState(false);
   const [showPinDialog, setShowPinDialog] = useState(false);
+  const [pinContext, setPinContext] = useState<'single' | 'multi'>('single');
   
   // États pour paiement multiple
-  const [multiPayRecipients, setMultiPayRecipients] = useState<Array<{id: string; accountNumber: string; fullName: string; amount: string}>>([]);
-  const [multiPayTotalAmount, setMultiPayTotalAmount] = useState(0);
+  const [multiPayStep, setMultiPayStep] = useState<MultiPayStep>(1);
+  const [multiPayType, setMultiPayType] = useState<MultiPayType>('different');
+  const [multiPayRecipients, setMultiPayRecipients] = useState<MultiPayRecipient[]>([]);
   const [isProcessingMultiPay, setIsProcessingMultiPay] = useState(false);
+  const [multiPaySameAmount, setMultiPaySameAmount] = useState('');
+  const [multiPayReason, setMultiPayReason] = useState('Paiement multiple');
+  const [multiPayReference, setMultiPayReference] = useState('');
+  const [multiPayScheduleDate, setMultiPayScheduleDate] = useState('');
+  const [multiPayBusinessName, setMultiPayBusinessName] = useState('');
+  const [multiPayApprover, setMultiPayApprover] = useState('');
+  const [manualRecipientName, setManualRecipientName] = useState('');
+  const [manualRecipientIdentifier, setManualRecipientIdentifier] = useState('');
+  const [manualRecipientAmount, setManualRecipientAmount] = useState('');
+  const [manualRecipientRole, setManualRecipientRole] = useState('');
+  const [multiPayBatchReference, setMultiPayBatchReference] = useState('');
+  const [multiPayResults, setMultiPayResults] = useState<Array<{ recipient: string; amount: number; success: boolean; error?: string }>>([]);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const multiPayImportRef = useRef<HTMLInputElement>(null);
   const animationFrameRef = useRef<number | null>(null);
+
+  const multiPayTotalAmount = useMemo(
+    () => multiPayRecipients.reduce((sum, recipient) => sum + (parseFloat(recipient.amount) || 0), 0),
+    [multiPayRecipients]
+  );
+  const multiPayFees = useMemo(() => Math.round(multiPayTotalAmount * MULTI_PAY_FEE_RATE * 100) / 100, [multiPayTotalAmount]);
+  const multiPayOperatorFees = 0;
+  const multiPayDebitTotal = useMemo(
+    () => Math.round((multiPayTotalAmount + multiPayFees + multiPayOperatorFees) * 100) / 100,
+    [multiPayFees, multiPayTotalAmount]
+  );
+  const selectedMultiPayType = MULTI_PAY_TYPES.find((type) => type.id === multiPayType) || MULTI_PAY_TYPES[1];
+  const multiPayHasInvalidAmounts = multiPayRecipients.some((recipient) => !recipient.amount || parseFloat(recipient.amount) <= 0);
+  const multiPayDuplicateCount = useMemo(() => {
+    const seen = new Set<string>();
+    let duplicates = 0;
+    multiPayRecipients.forEach((recipient) => {
+      const key = recipient.accountNumber.trim().toLowerCase();
+      if (!key) return;
+      if (seen.has(key)) duplicates += 1;
+      seen.add(key);
+    });
+    return duplicates;
+  }, [multiPayRecipients]);
 
   // Lire le paramètre mode de l'URL au chargement
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -95,7 +169,7 @@ export default function PayReceivePage() {
         width: 300,
         margin: 2,
         errorCorrectionLevel: 'H',
-        color: { dark: '#479B67', light: '#ffffff' },
+        color: { dark: '#25543A', light: '#ffffff' },
       }).then(setQrCode);
     }
   }, [profile?.uid, profile?.name, profile?.fullName, profile?.email]);
@@ -196,7 +270,7 @@ export default function PayReceivePage() {
     animationFrameRef.current = requestAnimationFrame(scanQRFromVideo);
   };
 
-  const handleAddRecipientToMultiPay = (qrData: ScannedQRData) => {
+  const handleAddRecipientToMultiPay = (qrData: ScannedQRData, options?: Partial<MultiPayRecipient>) => {
     // Vérifier si le destinataire n'est pas déjà dans la liste
     const alreadyAdded = multiPayRecipients.some(r => r.accountNumber === qrData.accountNumber);
     if (alreadyAdded) {
@@ -210,10 +284,13 @@ export default function PayReceivePage() {
 
     // Ajouter le destinataire
     const newRecipient = {
-      id: Date.now().toString(),
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       accountNumber: qrData.accountNumber,
       fullName: qrData.fullName,
-      amount: '',
+      amount: options?.amount || (multiPayType === 'same' ? multiPaySameAmount : ''),
+      role: options?.role || '',
+      reason: options?.reason || multiPayReason,
+      reference: options?.reference || multiPayReference,
     };
     
     setMultiPayRecipients([...multiPayRecipients, newRecipient]);
@@ -226,6 +303,133 @@ export default function PayReceivePage() {
     setScannedData(null);
     setPaymentDestination('');
     setMode('multi-pay');
+    setMultiPayStep(2);
+  };
+
+  const handleAddManualRecipient = () => {
+    if (!manualRecipientIdentifier.trim()) {
+      toast({
+        variant: 'destructive',
+        title: 'Bénéficiaire requis',
+        description: 'Ajoutez un numéro, ID eNkamba ou numéro de compte.',
+      });
+      return;
+    }
+
+    handleAddRecipientToMultiPay(
+      {
+        accountNumber: manualRecipientIdentifier.trim(),
+        fullName: manualRecipientName.trim() || manualRecipientIdentifier.trim(),
+        isValid: true,
+      },
+      {
+        amount: manualRecipientAmount || (multiPayType === 'same' ? multiPaySameAmount : ''),
+        role: manualRecipientRole,
+        reason: multiPayReason,
+        reference: multiPayReference,
+      }
+    );
+    setManualRecipientName('');
+    setManualRecipientIdentifier('');
+    setManualRecipientAmount('');
+    setManualRecipientRole('');
+  };
+
+  const updateMultiPayRecipient = (recipientId: string, patch: Partial<MultiPayRecipient>) => {
+    setMultiPayRecipients((current) => current.map((recipient) => (recipient.id === recipientId ? { ...recipient, ...patch } : recipient)));
+  };
+
+  const removeMultiPayRecipient = (recipientId: string) => {
+    setMultiPayRecipients((current) => current.filter((recipient) => recipient.id !== recipientId));
+  };
+
+  const applySameAmountToAll = () => {
+    if (!multiPaySameAmount || parseFloat(multiPaySameAmount) <= 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Montant invalide',
+        description: 'Entrez un montant commun valide.',
+      });
+      return;
+    }
+
+    setMultiPayRecipients((current) => current.map((recipient) => ({ ...recipient, amount: multiPaySameAmount })));
+  };
+
+  const handleMultiPayImportFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const lines = text
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter(Boolean);
+
+      const importedRecipients = lines
+        .slice(lines[0]?.toLowerCase().includes('nom') || lines[0]?.toLowerCase().includes('name') ? 1 : 0)
+        .map((line) => {
+          const cells = line.split(/[;,]/).map((cell) => cell.trim());
+          const fullName = cells[0] || 'Bénéficiaire';
+          const accountNumber = cells[1] || cells[0] || '';
+          const amount = cells[2] || (multiPayType === 'same' ? multiPaySameAmount : '');
+          const role = cells[3] || '';
+          const reason = cells[4] || multiPayReason;
+          return {
+            id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+            fullName,
+            accountNumber,
+            amount,
+            role,
+            reason,
+            reference: multiPayReference,
+          } satisfies MultiPayRecipient;
+        })
+        .filter((recipient) => recipient.accountNumber);
+
+      if (!importedRecipients.length) {
+        throw new Error('Aucun bénéficiaire lisible dans le fichier.');
+      }
+
+      setMultiPayRecipients((current) => {
+        const existing = new Set(current.map((recipient) => recipient.accountNumber.toLowerCase()));
+        const fresh = importedRecipients.filter((recipient) => !existing.has(recipient.accountNumber.toLowerCase()));
+        return [...current, ...fresh];
+      });
+      setMultiPayStep(2);
+      toast({
+        title: 'Import terminé',
+        description: `${importedRecipients.length} bénéficiaire(s) importé(s).`,
+        className: 'bg-primary text-white border-none',
+      });
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Import impossible',
+        description: error?.message || 'Vérifiez le fichier CSV/Excel exporté.',
+      });
+    } finally {
+      event.target.value = '';
+    }
+  };
+
+  const resetMultiPay = () => {
+    setMultiPayStep(1);
+    setMultiPayType('different');
+    setMultiPayRecipients([]);
+    setMultiPaySameAmount('');
+    setMultiPayReason('Paiement multiple');
+    setMultiPayReference('');
+    setMultiPayScheduleDate('');
+    setMultiPayBusinessName('');
+    setMultiPayApprover('');
+    setManualRecipientName('');
+    setManualRecipientIdentifier('');
+    setManualRecipientAmount('');
+    setManualRecipientRole('');
+    setMultiPayBatchReference('');
+    setMultiPayResults([]);
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -352,6 +556,196 @@ export default function PayReceivePage() {
     }
   };
 
+  const validateMultiPayBeforePayment = () => {
+    if (!multiPayRecipients.length) {
+      toast({
+        variant: 'destructive',
+        title: 'Aucun bénéficiaire',
+        description: 'Ajoutez au moins un bénéficiaire avant de continuer.',
+      });
+      return false;
+    }
+
+    if (multiPayDuplicateCount > 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Doublons détectés',
+        description: 'Retirez les bénéficiaires en double avant de payer.',
+      });
+      return false;
+    }
+
+    if (multiPayHasInvalidAmounts || multiPayTotalAmount <= 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Montants invalides',
+        description: 'Tous les bénéficiaires doivent avoir un montant valide.',
+      });
+      return false;
+    }
+
+    if (paymentCurrency === 'CDF' && multiPayDebitTotal > balance) {
+      toast({
+        variant: 'destructive',
+        title: 'Solde insuffisant',
+        description: `Vous avez ${balance.toLocaleString('fr-FR')} CDF. Total à débiter: ${multiPayDebitTotal.toLocaleString('fr-FR')} CDF`,
+      });
+      return false;
+    }
+
+    return true;
+  };
+
+  const saveMultiPayDraft = () => {
+    try {
+      const draft = {
+        type: multiPayType,
+        reason: multiPayReason,
+        reference: multiPayReference,
+        currency: paymentCurrency,
+        recipients: multiPayRecipients,
+        savedAt: new Date().toISOString(),
+      };
+      window.localStorage.setItem(`enkamba-multi-pay-draft-${user?.uid || 'guest'}`, JSON.stringify(draft));
+      toast({
+        title: 'Brouillon enregistré',
+        description: 'Vous pourrez reprendre ce paiement multiple plus tard.',
+        className: 'bg-primary text-white border-none',
+      });
+    } catch {
+      toast({
+        variant: 'destructive',
+        title: 'Brouillon non enregistré',
+        description: 'Le stockage local est indisponible.',
+      });
+    }
+  };
+
+  const executeMultiPayBatch = async () => {
+    if (!validateMultiPayBeforePayment()) return;
+
+    setIsProcessingMultiPay(true);
+    const batchReference = `ENKMP${Date.now().toString().slice(-10)}`;
+    setMultiPayBatchReference(batchReference);
+    const results: Array<{ recipient: string; amount: number; success: boolean; error?: string }> = [];
+
+    for (let index = 0; index < multiPayRecipients.length; index += 1) {
+      const recipient = multiPayRecipients[index];
+      const amount = parseFloat(recipient.amount);
+
+      toast({
+        title: `Paiement ${index + 1}/${multiPayRecipients.length}`,
+        description: `Envoi à ${recipient.fullName}...`,
+      });
+
+      try {
+        const success = await sendMoney({
+          amount,
+          senderCurrency: paymentCurrency,
+          transferMethod: 'account',
+          recipientIdentifier: recipient.accountNumber,
+          description: `${multiPayReason || selectedMultiPayType.title} | ${recipient.reason || ''} | Réf: ${batchReference}`,
+        });
+
+        results.push({
+          recipient: recipient.fullName,
+          amount,
+          success,
+          error: success ? undefined : 'Échec du transfert',
+        });
+      } catch (error: any) {
+        results.push({
+          recipient: recipient.fullName,
+          amount,
+          success: false,
+          error: error?.message || 'Erreur inconnue',
+        });
+      }
+
+      if (index < multiPayRecipients.length - 1) {
+        await new Promise((resolve) => setTimeout(resolve, 350));
+      }
+    }
+
+    setMultiPayResults(results);
+    setIsProcessingMultiPay(false);
+    setMultiPayStep(4);
+
+    const successCount = results.filter((result) => result.success).length;
+    const failCount = results.length - successCount;
+    toast({
+      title: failCount ? 'Paiement terminé avec vérification' : 'Paiement envoyé avec succès',
+      description: `${successCount} réussi(s), ${failCount} échoué(s).`,
+      className: failCount ? undefined : 'bg-primary text-white border-none',
+      variant: failCount ? 'destructive' : undefined,
+    });
+  };
+
+  const downloadMultiPayReceipt = () => {
+    const successCount = multiPayResults.filter((result) => result.success).length;
+    const rows = multiPayResults.map((result, index) => `
+      <tr>
+        <td>${index + 1}</td>
+        <td>${result.recipient}</td>
+        <td>${result.amount.toLocaleString('fr-FR')} ${paymentCurrency}</td>
+        <td>${result.success ? 'Envoyé' : 'Échec'}</td>
+      </tr>
+    `).join('');
+
+    const html = `<!doctype html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>Reçu paiement multiple ${multiPayBatchReference}</title>
+          <style>
+            body { font-family: Arial, sans-serif; color: #0f172a; padding: 24px; background: #f8fafc; }
+            .receipt { max-width: 780px; margin: 0 auto; background: white; border: 1px solid #dbe7df; border-radius: 18px; overflow: hidden; }
+            .header { background: #25543A; color: white; padding: 22px 26px; }
+            h1 { margin: 0; font-size: 24px; }
+            .content { padding: 24px 26px; }
+            .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+            .box { border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; }
+            .label { color: #64748b; font-size: 12px; font-weight: 700; }
+            .value { margin-top: 4px; font-weight: 900; }
+            table { width: 100%; border-collapse: collapse; margin-top: 18px; font-size: 13px; }
+            th, td { padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: left; }
+            th { background: #f0f7f3; color: #25543A; }
+            .total { margin-top: 18px; border-radius: 12px; background: #f0f7f3; padding: 14px; color: #25543A; font-weight: 900; }
+          </style>
+        </head>
+        <body>
+          <section class="receipt">
+            <div class="header">
+              <h1>Reçu Paiement Multiple</h1>
+              <p>Référence: ${multiPayBatchReference || 'ENKMP'}</p>
+            </div>
+            <div class="content">
+              <div class="grid">
+                <div class="box"><div class="label">Type</div><div class="value">${selectedMultiPayType.title}</div></div>
+                <div class="box"><div class="label">Motif</div><div class="value">${multiPayReason}</div></div>
+                <div class="box"><div class="label">Bénéficiaires</div><div class="value">${successCount}/${multiPayResults.length} réussis</div></div>
+                <div class="box"><div class="label">Date</div><div class="value">${new Date().toLocaleString('fr-FR')}</div></div>
+              </div>
+              <table>
+                <thead><tr><th>#</th><th>Bénéficiaire</th><th>Montant</th><th>Statut</th></tr></thead>
+                <tbody>${rows}</tbody>
+              </table>
+              <div class="total">Total débité demandé: ${multiPayDebitTotal.toLocaleString('fr-FR')} ${paymentCurrency}</div>
+            </div>
+          </section>
+        </body>
+      </html>`;
+
+    const url = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `recu-paiement-multiple-${multiPayBatchReference || Date.now()}.html`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
   const handlePayment = async () => {
     console.log('=== handlePayment APPELÉE ===');
     console.log('paymentDestination:', paymentDestination);
@@ -370,10 +764,17 @@ export default function PayReceivePage() {
     }
 
     // Ouvrir la vérification PIN
+    setPinContext('single');
     setShowPinDialog(true);
   };
 
   const handlePinSuccess = async () => {
+    if (pinContext === 'multi') {
+      setShowPinDialog(false);
+      await executeMultiPayBatch();
+      return;
+    }
+
     // PIN vérifié, procéder au paiement
     setShowPinDialog(false);
     
@@ -435,14 +836,14 @@ export default function PayReceivePage() {
             </Link>
           </Button>
           <h1 className="font-headline text-xl font-bold text-primary">
-            {mode === 'receive' ? 'Recevoir de l\'argent' : 'Scanner QR'}
+            {mode === 'receive' ? 'Recevoir de l\'argent' : mode === 'multi-pay' ? 'Paiement Multiple' : 'Scanner QR'}
           </h1>
         </div>
         {mode === 'receive' && (
           <div className="flex gap-2">
             <Button 
               size="icon" 
-              className="bg-[#479B67] hover:bg-[#479B67] text-white"
+              className="bg-[#25543A] hover:bg-[#25543A] text-white"
               onClick={() => {
                 setPreviousMode('receive');
                 setMode('scanner');
@@ -512,10 +913,13 @@ export default function PayReceivePage() {
                 </Button>
 
                 <Button 
-                  className="w-full bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 h-12 text-base font-bold"
-                  onClick={() => setMode('multi-pay')}
+                  className="w-full bg-gradient-to-r from-primary to-primary hover:from-primary/90 hover:to-primary/90 h-12 text-base font-bold"
+                  onClick={() => {
+                    setMode('multi-pay');
+                    setMultiPayStep(1);
+                  }}
                 >
-                  <User className="w-5 h-5 mr-2" />
+                  <Users className="w-5 h-5 mr-2" />
                   Payer à plusieurs
                 </Button>
 
@@ -541,7 +945,7 @@ export default function PayReceivePage() {
                   />
                   <div className="absolute inset-0 bg-black/30">
                     <div 
-                      className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#479B67] to-transparent shadow-lg shadow-[#479B67]"
+                      className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#25543A] to-transparent shadow-lg shadow-[#25543A]"
                       style={{ top: `${importProgress}%`, transition: 'top 0.1s linear' }}
                     />
                   </div>
@@ -742,215 +1146,312 @@ export default function PayReceivePage() {
 
           {mode === 'multi-pay' && (
             <div className="w-full max-w-sm space-y-4">
-              <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20 rounded-2xl p-4">
-                <h3 className="font-bold text-lg mb-3">Paiement Multiple</h3>
-                
-                {multiPayRecipients.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <User className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">Aucun destinataire ajouté</p>
-                    <p className="text-xs mt-1">Scannez un QR code pour commencer</p>
+              <div className="rounded-[8px] border border-primary/15 bg-white p-4 shadow-sm">
+                <div className="mb-4 flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-[0.16em] text-primary">eNKAMBA Pay</p>
+                    <h3 className="mt-1 text-xl font-black text-slate-950">
+                      {multiPayType === 'salary' ? 'Paiement des Salaires' : 'Paiement Multiple'}
+                    </h3>
+                    <p className="text-xs font-semibold text-slate-500">Étape {multiPayStep} sur 4</p>
                   </div>
-                ) : (
-                  <div className="space-y-2 mb-4">
-                    {multiPayRecipients.map((recipient) => (
-                      <div key={recipient.id} className="bg-white rounded-lg p-3 flex items-center gap-3">
-                        <div className="bg-primary/10 rounded-full p-2">
-                          <User className="w-5 h-5 text-primary" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-sm truncate">{recipient.fullName}</p>
-                          <p className="text-xs text-muted-foreground truncate">{recipient.accountNumber}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Input
-                            type="number"
-                            placeholder="0"
-                            value={recipient.amount}
-                            onChange={(e) => {
-                              const newRecipients = multiPayRecipients.map(r => 
-                                r.id === recipient.id ? { ...r, amount: e.target.value } : r
-                              );
-                              setMultiPayRecipients(newRecipients);
-                              const total = newRecipients.reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
-                              setMultiPayTotalAmount(total);
-                            }}
-                            className="w-20 h-8 text-right text-sm"
-                          />
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                  <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
+                    <HelpCircle className="h-4 w-4 text-primary" />
+                  </Button>
+                </div>
+
+                <div className="mb-5 grid grid-cols-4 gap-2">
+                  {[
+                    { step: 1, label: 'Type' },
+                    { step: 2, label: 'Bénéficiaires' },
+                    { step: 3, label: 'Résumé' },
+                    { step: 4, label: 'Confirmation' },
+                  ].map((item) => (
+                    <div key={item.step} className="flex flex-col items-center gap-1">
+                      <span className={`grid h-7 w-7 place-items-center rounded-full text-xs font-black ${
+                        multiPayStep >= item.step ? 'bg-primary text-white' : 'bg-slate-100 text-slate-400'
+                      }`}>
+                        {multiPayStep > item.step ? <CheckCircle2 className="h-4 w-4" /> : item.step}
+                      </span>
+                      <span className={`text-[10px] font-bold ${multiPayStep >= item.step ? 'text-primary' : 'text-slate-400'}`}>{item.label}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {multiPayStep === 1 && (
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-black text-slate-950">Choisissez le type de paiement</h4>
+                      <p className="mt-1 text-xs font-semibold text-slate-500">Sélectionnez le mode adapté à votre opération.</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      {MULTI_PAY_TYPES.map((type) => {
+                        const Icon = type.icon;
+                        const active = multiPayType === type.id;
+                        return (
+                          <button
+                            key={type.id}
+                            type="button"
                             onClick={() => {
-                              const newRecipients = multiPayRecipients.filter(r => r.id !== recipient.id);
-                              setMultiPayRecipients(newRecipients);
-                              const total = newRecipients.reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
-                              setMultiPayTotalAmount(total);
+                              setMultiPayType(type.id);
+                              if (type.id === 'same') setMultiPayReason('Même montant pour tous');
+                              else if (type.id === 'salary') setMultiPayReason('Paiement des salaires');
+                              else if (type.id === 'bonus') setMultiPayReason('Paiement des primes');
+                              else if (type.id === 'commission') setMultiPayReason('Paiement des commissions');
+                              else if (type.id === 'suppliers') setMultiPayReason('Paiement fournisseurs');
                             }}
+                            className={`min-h-[118px] rounded-[8px] border p-3 text-left transition ${
+                              active ? 'border-primary bg-primary/5 shadow-sm ring-1 ring-primary/15' : 'border-slate-200 bg-white hover:border-primary/30'
+                            }`}
                           >
-                            <X className="w-4 h-4" />
-                          </Button>
-                        </div>
+                            <span className={`mb-3 grid h-10 w-10 place-items-center rounded-[8px] ${type.tone}`}>
+                              <Icon className="h-5 w-5" />
+                            </span>
+                            <span className="block text-sm font-black leading-tight text-slate-950">{type.title}</span>
+                            <span className="mt-1 block text-[11px] font-semibold leading-tight text-slate-500">{type.subtitle}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div className="grid gap-3 rounded-[8px] bg-slate-50 p-3">
+                      <Label>Motif du paiement</Label>
+                      <Input value={multiPayReason} onChange={(event) => setMultiPayReason(event.target.value)} placeholder="Salaire, prime, fournisseur..." />
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input value={multiPayReference} onChange={(event) => setMultiPayReference(event.target.value)} placeholder="Référence interne" />
+                        <Select value={paymentCurrency} onValueChange={(value) => setPaymentCurrency(value as Currency)}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="CDF">CDF</SelectItem>
+                            <SelectItem value="USD">USD</SelectItem>
+                            <SelectItem value="EUR">EUR</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
-                    ))}
+                      {(multiPayType === 'salary' || multiPayType === 'scheduled') && (
+                        <div className="grid gap-2">
+                          <Input value={multiPayBusinessName} onChange={(event) => setMultiPayBusinessName(event.target.value)} placeholder="Entreprise / organisation" />
+                          <Input value={multiPayApprover} onChange={(event) => setMultiPayApprover(event.target.value)} placeholder="Validateur financier" />
+                        </div>
+                      )}
+                      {multiPayType === 'scheduled' && (
+                        <Input type="date" value={multiPayScheduleDate} onChange={(event) => setMultiPayScheduleDate(event.target.value)} />
+                      )}
+                    </div>
+
+                    <Button className="h-12 w-full font-black" onClick={() => setMultiPayStep(2)}>
+                      Continuer
+                    </Button>
                   </div>
                 )}
 
-                <div className="bg-primary/5 rounded-lg p-3 mb-3">
-                  <div className="flex justify-between items-center">
-                    <span className="font-semibold">Total:</span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-2xl font-bold text-primary">
-                        {multiPayTotalAmount.toLocaleString('fr-FR')}
-                      </span>
-                      <Select value={paymentCurrency} onValueChange={(value) => setPaymentCurrency(value as Currency)}>
-                        <SelectTrigger className="w-[80px] h-8 text-sm font-semibold">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="CDF">CDF</SelectItem>
-                          <SelectItem value="USD">USD</SelectItem>
-                          <SelectItem value="EUR">EUR</SelectItem>
-                        </SelectContent>
-                      </Select>
+                {multiPayStep === 2 && (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-4 gap-2">
+                      {[
+                        { label: 'Scanner QR', icon: QrCode, action: () => { setPreviousMode('multi-pay'); setMode('scanner'); setIsScanning(true); } },
+                        { label: 'Contacts', icon: User, action: handleAddManualRecipient },
+                        { label: 'Depuis groupe', icon: Users, action: () => toast({ title: 'Groupe', description: 'Ajoutez les membres manuellement ou par import pour ce lot.' }) },
+                        { label: 'Excel', icon: FileSpreadsheet, action: () => multiPayImportRef.current?.click() },
+                      ].map((item) => {
+                        const Icon = item.icon;
+                        return (
+                          <button key={item.label} type="button" onClick={item.action} className="rounded-[8px] border border-slate-200 bg-white p-2 text-center text-[10px] font-black text-slate-700">
+                            <Icon className="mx-auto mb-1 h-5 w-5 text-primary" />
+                            {item.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <input ref={multiPayImportRef} type="file" accept=".csv,.txt,.xlsx" className="hidden" onChange={handleMultiPayImportFile} />
+
+                    {multiPayType === 'same' && (
+                      <div className="rounded-[8px] border border-primary/15 bg-primary/5 p-3">
+                        <Label>Même montant pour tous</Label>
+                        <div className="mt-2 flex gap-2">
+                          <Input type="number" value={multiPaySameAmount} onChange={(event) => setMultiPaySameAmount(event.target.value)} placeholder="Montant" />
+                          <Button type="button" variant="outline" onClick={applySameAmountToAll}>Appliquer</Button>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="rounded-[8px] border border-slate-200 p-3">
+                      <p className="mb-3 text-sm font-black text-slate-950">Ajouter un bénéficiaire</p>
+                      <div className="grid gap-2">
+                        <Input value={manualRecipientName} onChange={(event) => setManualRecipientName(event.target.value)} placeholder="Nom complet / société" />
+                        <Input value={manualRecipientIdentifier} onChange={(event) => setManualRecipientIdentifier(event.target.value)} placeholder="Numéro, ID eNkamba ou compte ENK" />
+                        <div className="grid grid-cols-2 gap-2">
+                          <Input value={manualRecipientRole} onChange={(event) => setManualRecipientRole(event.target.value)} placeholder="Rôle" />
+                          <Input type="number" value={manualRecipientAmount} onChange={(event) => setManualRecipientAmount(event.target.value)} placeholder="Montant" />
+                        </div>
+                        <Button type="button" variant="outline" className="gap-2" onClick={handleAddManualRecipient}>
+                          <Plus className="h-4 w-4" />
+                          Ajouter un bénéficiaire
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-black text-slate-950">Liste des bénéficiaires ({multiPayRecipients.length})</p>
+                        <button type="button" className="text-xs font-black text-primary" onClick={() => setMultiPayRecipients([])}>Vider</button>
+                      </div>
+                      {multiPayRecipients.length === 0 ? (
+                        <div className="rounded-[8px] border border-dashed border-slate-200 p-6 text-center text-sm font-semibold text-slate-500">
+                          Aucun bénéficiaire ajouté.
+                        </div>
+                      ) : (
+                        <div className="max-h-[310px] space-y-2 overflow-y-auto pr-1">
+                          {multiPayRecipients.map((recipient, index) => (
+                            <div key={recipient.id} className="rounded-[8px] border border-slate-200 bg-white p-3">
+                              <div className="flex items-start gap-3">
+                                <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary/10 text-xs font-black text-primary">{index + 1}</div>
+                                <div className="min-w-0 flex-1">
+                                  <Input value={recipient.fullName} onChange={(event) => updateMultiPayRecipient(recipient.id, { fullName: event.target.value })} className="h-8 border-0 bg-transparent px-0 font-black" />
+                                  <Input value={recipient.accountNumber} onChange={(event) => updateMultiPayRecipient(recipient.id, { accountNumber: event.target.value })} className="h-8 border-0 bg-transparent px-0 text-xs text-slate-500" />
+                                </div>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => removeMultiPayRecipient(recipient.id)}>
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                              <div className="mt-2 grid grid-cols-2 gap-2">
+                                <Input type="number" value={recipient.amount} onChange={(event) => updateMultiPayRecipient(recipient.id, { amount: event.target.value })} placeholder="Montant" className="h-9" />
+                                <Input value={recipient.role || ''} onChange={(event) => updateMultiPayRecipient(recipient.id, { role: event.target.value })} placeholder="Rôle / fonction" className="h-9" />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="rounded-[8px] bg-primary/5 p-3">
+                      <div className="flex justify-between text-sm"><span>Bénéficiaires</span><strong>{multiPayRecipients.length}</strong></div>
+                      <div className="mt-1 flex justify-between text-sm"><span>Total</span><strong>{multiPayTotalAmount.toLocaleString('fr-FR')} {paymentCurrency}</strong></div>
+                      <div className="mt-1 flex justify-between text-sm"><span>Frais (0,5%)</span><strong>{multiPayFees.toLocaleString('fr-FR')} {paymentCurrency}</strong></div>
+                      <div className="mt-2 flex justify-between border-t border-primary/15 pt-2 text-sm"><span>Total à débiter</span><strong className="text-primary">{multiPayDebitTotal.toLocaleString('fr-FR')} {paymentCurrency}</strong></div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button variant="outline" onClick={() => setMultiPayStep(1)}>Précédent</Button>
+                      <Button onClick={() => {
+                        if (validateMultiPayBeforePayment()) setMultiPayStep(3);
+                      }}>Continuer</Button>
                     </div>
                   </div>
-                  {multiPayTotalAmount > balance && (
-                    <p className="text-xs text-red-500 mt-2">
-                      ⚠️ Solde insuffisant (disponible: {balance.toLocaleString('fr-FR')} CDF)
-                    </p>
-                  )}
-                </div>
+                )}
 
-                <Button
-                  className="w-full mb-2"
-                  variant="outline"
-                  onClick={() => {
-                    setPreviousMode('multi-pay');
-                    setMode('scanner');
-                    setIsScanning(true);
-                  }}
-                >
-                  <QrCode className="w-4 h-4 mr-2" />
-                  Ajouter un destinataire
-                </Button>
+                {multiPayStep === 3 && (
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-black text-slate-950">Résumé du paiement</h4>
+                      <p className="mt-1 text-xs font-semibold text-slate-500">Vérifiez les informations avant validation.</p>
+                    </div>
+                    <div className="rounded-[8px] border border-slate-200 p-3 text-sm">
+                      <div className="flex justify-between py-1"><span className="text-slate-500">Type</span><strong>{selectedMultiPayType.title}</strong></div>
+                      <div className="flex justify-between py-1"><span className="text-slate-500">Motif</span><strong className="text-right">{multiPayReason}</strong></div>
+                      <div className="flex justify-between py-1"><span className="text-slate-500">Devise</span><strong>{paymentCurrency}</strong></div>
+                      <div className="flex justify-between py-1"><span className="text-slate-500">Exécution</span><strong>{multiPayScheduleDate || 'Aujourd’hui'}</strong></div>
+                    </div>
+                    <div className="rounded-[8px] border border-slate-200 p-3">
+                      <div className="mb-2 flex justify-between">
+                        <p className="text-sm font-black text-slate-950">Détail des paiements ({multiPayRecipients.length})</p>
+                        <button type="button" className="text-xs font-black text-primary" onClick={() => setMultiPayStep(2)}>Modifier</button>
+                      </div>
+                      <div className="max-h-48 space-y-2 overflow-y-auto">
+                        {multiPayRecipients.map((recipient) => (
+                          <div key={recipient.id} className="flex items-center justify-between gap-2 text-sm">
+                            <span className="min-w-0 truncate font-semibold">{recipient.fullName}</span>
+                            <strong className="shrink-0">{Number(recipient.amount || 0).toLocaleString('fr-FR')} {paymentCurrency}</strong>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="rounded-[8px] bg-slate-50 p-3 text-sm">
+                      <div className="flex justify-between py-1"><span>Total bénéficiaires</span><strong>{multiPayRecipients.length}</strong></div>
+                      <div className="flex justify-between py-1"><span>Montant total</span><strong>{multiPayTotalAmount.toLocaleString('fr-FR')} {paymentCurrency}</strong></div>
+                      <div className="flex justify-between py-1"><span>Frais eNKAMBA</span><strong>{multiPayFees.toLocaleString('fr-FR')} {paymentCurrency}</strong></div>
+                      <div className="flex justify-between py-1"><span>Frais opérateur</span><strong>{multiPayOperatorFees.toLocaleString('fr-FR')} {paymentCurrency}</strong></div>
+                      <div className="mt-2 flex justify-between border-t border-slate-200 pt-2 text-base"><span className="font-black">Total à débiter</span><strong className="text-primary">{multiPayDebitTotal.toLocaleString('fr-FR')} {paymentCurrency}</strong></div>
+                    </div>
+                    <div className="rounded-[8px] border border-primary/15 bg-primary/5 p-3 text-xs font-semibold text-primary">
+                      <ShieldCheck className="mb-2 h-5 w-5" />
+                      Les fonds sont sécurisés et la transaction sera exécutée après validation PIN.
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button variant="outline" onClick={() => setMultiPayStep(2)}>Modifier</Button>
+                      <Button disabled={isProcessingMultiPay} onClick={() => {
+                        if (!validateMultiPayBeforePayment()) return;
+                        setPinContext('multi');
+                        setShowPinDialog(true);
+                      }}>
+                        {isProcessingMultiPay ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                        Valider et payer
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button variant="ghost" className="gap-2" onClick={saveMultiPayDraft}><Save className="h-4 w-4" /> Brouillon</Button>
+                      <Button variant="ghost" className="gap-2" onClick={() => toast({ title: 'Programmation', description: 'La programmation sera conservée avec la date choisie.' })}><CalendarClock className="h-4 w-4" /> Programmer</Button>
+                    </div>
+                  </div>
+                )}
 
-                {multiPayRecipients.length > 0 && (
-                  <Button
-                    className="w-full bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 h-12 text-base font-bold"
-                    onClick={async () => {
-                      console.log('=== DÉBUT PAIEMENT MULTIPLE ===');
-                      
-                      // Validation
-                      const invalidRecipients = multiPayRecipients.filter(r => !r.amount || parseFloat(r.amount) <= 0);
-                      if (invalidRecipients.length > 0) {
-                        toast({
-                          variant: 'destructive',
-                          title: 'Erreur',
-                          description: 'Tous les destinataires doivent avoir un montant valide',
-                        });
-                        return;
-                      }
-
-                      if (multiPayTotalAmount > balance) {
-                        toast({
-                          variant: 'destructive',
-                          title: 'Solde insuffisant',
-                          description: `Vous avez ${balance.toLocaleString('fr-FR')} CDF. Total requis: ${multiPayTotalAmount.toLocaleString('fr-FR')} CDF`,
-                        });
-                        return;
-                      }
-
-                      setIsProcessingMultiPay(true);
-                      let successCount = 0;
-                      let failCount = 0;
-                      const results: Array<{recipient: string; success: boolean; error?: string}> = [];
-
-                      for (let i = 0; i < multiPayRecipients.length; i++) {
-                        const recipient = multiPayRecipients[i];
-                        console.log(`Paiement ${i + 1}/${multiPayRecipients.length} à ${recipient.fullName}`);
-                        
-                        toast({
-                          title: `Paiement ${i + 1}/${multiPayRecipients.length}`,
-                          description: `Envoi à ${recipient.fullName}...`,
-                        });
-
-                        try {
-                          const success = await sendMoney({
-                            amount: parseFloat(recipient.amount),
-                            senderCurrency: paymentCurrency,
-                            transferMethod: 'account',
-                            recipientIdentifier: recipient.accountNumber,
-                            description: `Paiement multiple de ${recipient.amount} ${paymentCurrency}`,
-                          });
-
-                          if (success) {
-                            successCount++;
-                            results.push({ recipient: recipient.fullName, success: true });
-                          } else {
-                            failCount++;
-                            results.push({ recipient: recipient.fullName, success: false, error: 'Échec du transfert' });
-                          }
-                        } catch (error: any) {
-                          failCount++;
-                          results.push({ recipient: recipient.fullName, success: false, error: error.message });
-                          console.error(`Erreur paiement à ${recipient.fullName}:`, error);
-                        }
-
-                        // Petite pause entre les paiements
-                        if (i < multiPayRecipients.length - 1) {
-                          await new Promise(resolve => setTimeout(resolve, 500));
-                        }
-                      }
-
-                      setIsProcessingMultiPay(false);
-
-                      // Afficher le résumé
-                      if (failCount === 0) {
-                        toast({
-                          title: 'Tous les paiements réussis ! ✅',
-                          description: `${successCount} paiement(s) effectué(s) avec succès`,
-                          className: 'bg-primary text-white border-none',
-                        });
-                        setMultiPayRecipients([]);
-                        setMultiPayTotalAmount(0);
+                {multiPayStep === 4 && (
+                  <div className="space-y-4 text-center">
+                    <div className="mx-auto grid h-24 w-24 place-items-center rounded-full bg-primary text-white shadow-lg shadow-primary/20">
+                      <CheckCircle2 className="h-12 w-12" />
+                    </div>
+                    <div>
+                      <h4 className="text-xl font-black text-slate-950">Paiement envoyé avec succès !</h4>
+                      <p className="mt-2 text-sm font-semibold text-slate-500">
+                        {multiPayResults.filter((result) => result.success).length} paiement(s) réussi(s) sur {multiPayResults.length}.
+                      </p>
+                    </div>
+                    <div className="rounded-[8px] bg-primary/5 p-4">
+                      <p className="text-xs font-bold text-slate-500">Référence de transaction</p>
+                      <p className="mt-1 font-mono text-lg font-black text-primary">{multiPayBatchReference || 'ENKMP'}</p>
+                    </div>
+                    <div className="space-y-2 text-left">
+                      {multiPayResults.map((result) => (
+                        <div key={`${result.recipient}-${result.amount}`} className="flex items-center justify-between rounded-[8px] border border-slate-200 p-3 text-sm">
+                          <span className="font-semibold">{result.recipient}</span>
+                          <span className={result.success ? 'font-black text-primary' : 'font-black text-red-600'}>
+                            {result.success ? 'Envoyé' : 'Échec'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="space-y-2">
+                      <Button variant="outline" className="w-full justify-between" onClick={downloadMultiPayReceipt}>
+                        <span className="flex items-center gap-2"><ClipboardList className="h-4 w-4" /> Télécharger le reçu</span>
+                        <ArrowLeft className="h-4 w-4 rotate-180" />
+                      </Button>
+                      <Button variant="outline" className="w-full justify-between" onClick={() => navigator.share?.({ title: 'Paiement multiple eNkamba', text: `Référence ${multiPayBatchReference}` })}>
+                        <span className="flex items-center gap-2"><Share2 className="h-4 w-4" /> Partager le reçu</span>
+                        <ArrowLeft className="h-4 w-4 rotate-180" />
+                      </Button>
+                      <Button className="h-12 w-full font-black" onClick={() => {
+                        resetMultiPay();
                         setMode('receive');
-                      } else {
-                        toast({
-                          variant: 'destructive',
-                          title: 'Paiements terminés avec erreurs',
-                          description: `Réussis: ${successCount}, Échoués: ${failCount}`,
-                        });
-                        
-                        // Retirer les destinataires payés avec succès
-                        const failedRecipients = multiPayRecipients.filter((r, idx) => !results[idx].success);
-                        setMultiPayRecipients(failedRecipients);
-                        const newTotal = failedRecipients.reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
-                        setMultiPayTotalAmount(newTotal);
-                      }
-
-                      console.log('=== FIN PAIEMENT MULTIPLE ===');
-                      console.log('Résultats:', results);
-                    }}
-                    disabled={isProcessingMultiPay || multiPayRecipients.length === 0 || multiPayTotalAmount <= 0 || multiPayTotalAmount > balance}
-                  >
-                    {isProcessingMultiPay ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                    {isProcessingMultiPay ? 'Paiements en cours...' : `Payer ${multiPayRecipients.length} personne(s)`}
-                  </Button>
+                      }}>
+                        Accueil
+                      </Button>
+                    </div>
+                  </div>
                 )}
               </div>
 
-              <Button 
-                variant="ghost" 
-                className="w-full"
-                onClick={() => {
-                  setMode('receive');
-                  setMultiPayRecipients([]);
-                  setMultiPayTotalAmount(0);
-                }}
-              >
-                Retour
-              </Button>
+              {multiPayStep < 4 && (
+                <Button
+                  variant="ghost"
+                  className="w-full"
+                  onClick={() => {
+                    resetMultiPay();
+                    setMode('receive');
+                  }}
+                >
+                  Retour
+                </Button>
+              )}
             </div>
           )}
 
@@ -985,11 +1486,21 @@ export default function PayReceivePage() {
           isOpen={showPinDialog}
           onClose={() => setShowPinDialog(false)}
           onSuccess={handlePinSuccess}
-          paymentDetails={scannedData ? {
-            recipient: scannedData.fullName,
-            amount: paymentAmount,
-            currency: paymentCurrency,
-          } : undefined}
+          paymentDetails={
+            pinContext === 'multi'
+              ? {
+                  recipient: `${multiPayRecipients.length} bénéficiaire(s)`,
+                  amount: String(multiPayDebitTotal),
+                  currency: paymentCurrency,
+                }
+              : scannedData
+                ? {
+                    recipient: scannedData.fullName,
+                    amount: paymentAmount,
+                    currency: paymentCurrency,
+                  }
+                : undefined
+          }
         />
       )}
     </div>

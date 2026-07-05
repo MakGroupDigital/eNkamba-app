@@ -155,7 +155,7 @@ export default function LoginPage() {
       toast({
         title: "Connexion réussie",
         description: "Bienvenue sur eNkamba !",
-        className: "bg-[#479B67] text-white border-none",
+        className: "bg-[#25543A] text-white border-none",
       });
 
       router.push("/dashboard/miyiki-chat");
@@ -281,7 +281,7 @@ export default function LoginPage() {
         toast({
           title: "Connexion réussie",
           description: "Bienvenue sur eNkamba !",
-          className: "bg-[#479B67] text-white border-none",
+          className: "bg-[#25543A] text-white border-none",
         });
 
         router.push("/dashboard/miyiki-chat");
@@ -351,7 +351,7 @@ export default function LoginPage() {
       toast({
         title: "Connexion réussie",
         description: "Bienvenue sur eNkamba !",
-        className: "bg-[#479B67] text-white border-none",
+        className: "bg-[#25543A] text-white border-none",
       });
 
       router.push("/dashboard/miyiki-chat");
@@ -388,7 +388,7 @@ export default function LoginPage() {
                 />
                 <path
                   d="M12.0003 24c3.2438 0 5.9578-1.0734 7.9453-2.9063l-3.9187-2.5312c-1.0781.7266-2.461 1.1578-4.0266 1.1578-3.1078 0-5.7422-2.1094-6.6844-4.9453H1.3815v2.625C3.391 21.3938 7.3972 24 12.0003 24z"
-                  fill="#479B67"
+                  fill="#25543A"
                 />
                 <path
                   d="M5.3159 14.775c-.2444-.7313-.3831-1.5141-.3831-2.325 0-.8109.1388-1.5938.3831-2.325V7.5H1.3816C.5128 9.2437.0284 11.2172.0284 13.25c0 2.0328.4844 4.0063 1.3531 5.75l3.9344-2.625z"
@@ -410,7 +410,7 @@ export default function LoginPage() {
           <span className="w-full border-t border-white/20" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-[#479B67] px-2 text-white/80">Ou continuer avec</span>
+          <span className="bg-[#25543A] px-2 text-white/80">Ou continuer avec</span>
         </div>
       </div>
 
@@ -446,12 +446,12 @@ export default function LoginPage() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="bg-white/90 border-0 text-black placeholder:text-gray-400 focus-visible:ring-offset-2 focus-visible:ring-[#479B67]"
+          className="bg-white/90 border-0 text-black placeholder:text-gray-400 focus-visible:ring-offset-2 focus-visible:ring-[#25543A]"
         />
       </div>
       <Button
         type="submit"
-        className="w-full bg-[#479B67] hover:bg-[#479B67] text-white"
+        className="w-full bg-[#25543A] hover:bg-[#25543A] text-white"
         disabled={isLoading}
       >
         {isLoading ? <Loader2 className="animate-spin" /> : "Recevoir un code par email"}
@@ -472,7 +472,7 @@ export default function LoginPage() {
       {selectedCountry && (
         <Button
           type="submit"
-          className="w-full bg-[#479B67] hover:bg-[#479B67] text-white"
+          className="w-full bg-[#25543A] hover:bg-[#25543A] text-white"
           disabled={isLoading || !phone || phone === selectedCountry.dialCode + " "}
         >
           {isLoading ? <Loader2 className="animate-spin" /> : "Recevoir un code par SMS"}
@@ -507,7 +507,7 @@ export default function LoginPage() {
 
       <Button
         type="submit"
-        className="w-full bg-[#479B67] hover:bg-[#479B67] text-white h-12 text-lg"
+        className="w-full bg-[#25543A] hover:bg-[#25543A] text-white h-12 text-lg"
         disabled={isLoading || otpCode.length < 6}
       >
         {isLoading ? <Loader2 className="animate-spin" /> : (
@@ -537,7 +537,7 @@ export default function LoginPage() {
       className="min-h-screen overflow-hidden relative"
       style={{
         background:
-          "linear-gradient(to bottom right, #479B67, #479B67, #479B67)",
+          "linear-gradient(to bottom right, #25543A, #25543A, #25543A)",
       }}
     >
       {/* Background Animations */}

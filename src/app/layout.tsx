@@ -39,7 +39,7 @@ export default function RootLayout({
         <link rel="icon" type="image/png" href="/favicon.png" />
         <link rel="apple-touch-icon" href="/favicon.png" />
         <link rel="manifest" href="/site.webmanifest" />
-        <meta name="theme-color" content="#479B67" />
+        <meta name="theme-color" content="#25543A" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           rel="preconnect"

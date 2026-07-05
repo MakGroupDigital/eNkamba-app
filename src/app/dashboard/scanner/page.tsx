@@ -448,7 +448,7 @@ export default function ScannerPage() {
           {viewMode === 'default' && (
             <div className="w-full max-w-sm flex flex-col items-center justify-center gap-4">
               <Button
-                className="w-full h-14 bg-gradient-to-r from-[#479B67] to-primary hover:from-[#479B67] hover:to-primary text-white font-bold text-base shadow-lg"
+                className="w-full h-14 bg-gradient-to-r from-[#25543A] to-primary hover:from-[#25543A] hover:to-primary text-white font-bold text-base shadow-lg"
                 onClick={() => {
                   setViewMode('camera-scan');
                   setIsScanning(true);
@@ -472,7 +472,7 @@ export default function ScannerPage() {
                   />
                   <div className="absolute inset-0 bg-black/30 flex flex-col items-center justify-center">
                     <div 
-                      className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#479B67] to-transparent shadow-lg shadow-[#479B67]"
+                      className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#25543A] to-transparent shadow-lg shadow-[#25543A]"
                       style={{
                         top: `${importProgress}%`,
                         transition: 'top 0.1s linear'

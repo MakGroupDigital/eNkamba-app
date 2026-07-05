@@ -217,7 +217,7 @@ export default function SendPage() {
       QRCodeLib.toDataURL(link, {
         width: 300,
         margin: 2,
-        color: { dark: '#479B67', light: '#ffffff' }
+        color: { dark: '#25543A', light: '#ffffff' }
       }).then(qrCodeUrl => {
         setCollectionQR(qrCodeUrl);
       });
@@ -311,11 +311,11 @@ export default function SendPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Mode Demander */}
-            <Card className="border-2 border-[#479B67]/20 hover:border-[#479B67]/50 cursor-pointer transition-all hover:shadow-lg"
+            <Card className="border-2 border-[#25543A]/20 hover:border-[#25543A]/50 cursor-pointer transition-all hover:shadow-lg"
               onClick={() => { setMode('demand'); setViewMode('menu'); }}>
-              <CardHeader className="bg-gradient-to-r from-[#479B67]/10 to-transparent">
+              <CardHeader className="bg-gradient-to-r from-[#25543A]/10 to-transparent">
                 <CardTitle className="flex items-center gap-2">
-                  <QrCode className="w-5 h-5 text-[#479B67]" />
+                  <QrCode className="w-5 h-5 text-[#25543A]" />
                   Demander de l'argent
                 </CardTitle>
               </CardHeader>
@@ -332,11 +332,11 @@ export default function SendPage() {
             </Card>
 
             {/* Mode Encaisser */}
-            <Card className="border-2 border-[#479B67]/20 hover:border-[#479B67]/50 cursor-pointer transition-all hover:shadow-lg"
+            <Card className="border-2 border-[#25543A]/20 hover:border-[#25543A]/50 cursor-pointer transition-all hover:shadow-lg"
               onClick={() => { setMode('collect'); setViewMode('menu'); }}>
-              <CardHeader className="bg-gradient-to-r from-[#479B67]/10 to-transparent">
+              <CardHeader className="bg-gradient-to-r from-[#25543A]/10 to-transparent">
                 <CardTitle className="flex items-center gap-2">
-                  <Download className="w-5 h-5 text-[#479B67]" />
+                  <Download className="w-5 h-5 text-[#25543A]" />
                   Encaisser
                 </CardTitle>
               </CardHeader>
@@ -400,7 +400,7 @@ export default function SendPage() {
 
                 <Button
                   onClick={() => { setScannedUser(null); setIsScanning(true); setViewMode('scanning'); }}
-                  className="w-full bg-[#479B67] hover:bg-[#479B67]"
+                  className="w-full bg-[#25543A] hover:bg-[#25543A]"
                   disabled={!amount || parseFloat(amount) <= 0}
                 >
                   <Camera className="w-4 h-4 mr-2" />
@@ -441,8 +441,8 @@ export default function SendPage() {
 
                 {/* Overlay scanner */}
                 <div className="absolute inset-0 pointer-events-none">
-                  <div className="absolute inset-0 border-2 border-[#479B67] opacity-50 rounded-lg" />
-                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 border-4 border-[#479B67]" />
+                  <div className="absolute inset-0 border-2 border-[#25543A] opacity-50 rounded-lg" />
+                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 border-4 border-[#25543A]" />
                 </div>
               </CardContent>
             </Card>
@@ -481,10 +481,10 @@ export default function SendPage() {
               <h1 className="text-2xl font-bold">Demande de paiement</h1>
             </div>
 
-            <Card className="border-[#479B67]/50 bg-[#479B67]/5">
+            <Card className="border-[#25543A]/50 bg-[#25543A]/5">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-[#479B67]" />
+                  <CheckCircle2 className="w-5 h-5 text-[#25543A]" />
                   Bénéficiaire trouvé
                 </CardTitle>
               </CardHeader>
@@ -506,7 +506,7 @@ export default function SendPage() {
 
                 <div className="bg-muted p-4 rounded-lg space-y-2">
                   <p className="text-sm font-semibold">Montant à demander</p>
-                  <p className="text-2xl font-bold text-[#479B67]">{amount} {currency}</p>
+                  <p className="text-2xl font-bold text-[#25543A]">{amount} {currency}</p>
                 </div>
 
                 <div className="flex gap-2">
@@ -519,7 +519,7 @@ export default function SendPage() {
                   </Button>
                   <Button
                     onClick={sendDemandMessage}
-                    className="flex-1 bg-[#479B67] hover:bg-[#479B67]"
+                    className="flex-1 bg-[#25543A] hover:bg-[#25543A]"
                     disabled={isProcessing}
                   >
                     {isProcessing ? (
@@ -542,8 +542,8 @@ export default function SendPage() {
         <div className="min-h-screen bg-gradient-to-b from-background to-muted/50">
           <div className="container mx-auto max-w-4xl p-4 space-y-6 pt-20">
             <div className="text-center space-y-4">
-              <div className="w-16 h-16 rounded-full bg-[#479B67]/20 flex items-center justify-center mx-auto animate-pulse">
-                <CheckCircle2 className="w-8 h-8 text-[#479B67]" />
+              <div className="w-16 h-16 rounded-full bg-[#25543A]/20 flex items-center justify-center mx-auto animate-pulse">
+                <CheckCircle2 className="w-8 h-8 text-[#25543A]" />
               </div>
               <h1 className="text-2xl font-bold">Demande envoyée!</h1>
               <p className="text-muted-foreground">{confirmationMessage}</p>
@@ -551,7 +551,7 @@ export default function SendPage() {
 
             <Button
               onClick={() => { setMode(null); setViewMode('menu'); setAmount(''); setScannedUser(null); setConfirmationMessage(''); }}
-              className="w-full bg-[#479B67] hover:bg-[#479B67]"
+              className="w-full bg-[#25543A] hover:bg-[#25543A]"
             >
               Terminer
             </Button>
@@ -610,7 +610,7 @@ export default function SendPage() {
 
                 <Button
                   onClick={generateCollectionLink}
-                  className="w-full bg-[#479B67] hover:bg-[#479B67]"
+                  className="w-full bg-[#25543A] hover:bg-[#25543A]"
                   disabled={isLoading || !amount || parseFloat(amount) <= 0}
                 >
                   {isLoading ? (
@@ -623,10 +623,10 @@ export default function SendPage() {
             </Card>
           ) : (
             <>
-              <Card className="border-[#479B67]/50 bg-[#479B67]/5">
+              <Card className="border-[#25543A]/50 bg-[#25543A]/5">
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-[#479B67]" />
+                    <CheckCircle2 className="w-5 h-5 text-[#25543A]" />
                     Lien généré avec succès!
                   </CardTitle>
                 </CardHeader>
@@ -658,7 +658,7 @@ export default function SendPage() {
                       </Button>
                       <Button
                         onClick={shareCollectionLink}
-                        className="flex-1 bg-[#479B67] hover:bg-[#479B67]"
+                        className="flex-1 bg-[#25543A] hover:bg-[#25543A]"
                       >
                         <Share2 className="w-4 h-4 mr-2" />
                         Partager

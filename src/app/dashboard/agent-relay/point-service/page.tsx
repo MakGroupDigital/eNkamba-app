@@ -40,7 +40,7 @@ export default function PointServicePage() {
 
       {/* Hero Section */}
       <Card className="overflow-hidden">
-        <div className="bg-gradient-to-r from-[#479B67] via-[#479B67] to-[#479B67] p-8 text-white">
+        <div className="bg-gradient-to-r from-[#25543A] via-[#25543A] to-[#25543A] p-8 text-white">
           <div className="flex items-center gap-6">
             <div className="h-20 w-20 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
               <MapPin size={40} />
@@ -389,7 +389,7 @@ export default function PointServicePage() {
       <div className="text-center space-y-4">
         <Button 
           size="lg" 
-          className="w-full h-14 rounded-xl text-base font-semibold bg-gradient-to-r from-[#479B67] to-[#479B67] hover:from-[#479B67] hover:to-[#479B67] shadow-lg"
+          className="w-full h-14 rounded-xl text-base font-semibold bg-gradient-to-r from-[#25543A] to-[#25543A] hover:from-[#25543A] hover:to-[#25543A] shadow-lg"
           asChild
         >
           <Link href="/dashboard/agent-relay/application?type=point-service">

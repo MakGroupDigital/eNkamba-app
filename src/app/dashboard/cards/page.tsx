@@ -32,7 +32,7 @@ export default function CardsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-[#479B67]/5 to-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-[#25543A]/5 to-background">
       <div className="container mx-auto max-w-4xl p-4 space-y-8">
         {/* Header */}
         <header className="flex items-center gap-4 pt-4">
@@ -42,7 +42,7 @@ export default function CardsPage() {
             </Link>
           </Button>
           <div>
-            <h1 className="font-headline text-3xl font-bold bg-gradient-to-r from-[#479B67] to-[#479B67] bg-clip-text text-transparent">
+            <h1 className="font-headline text-3xl font-bold bg-gradient-to-r from-[#25543A] to-[#25543A] bg-clip-text text-transparent">
               Mes Cartes
             </h1>
             <p className="text-sm text-muted-foreground">Gérez vos cartes bancaires</p>
@@ -55,7 +55,7 @@ export default function CardsPage() {
             <CardTitle className="font-headline text-xl">Cartes Enregistrées</CardTitle>
             <Button
               onClick={() => setIsDialogOpen(true)}
-              className="bg-[#479B67] hover:bg-[#479B67] gap-2"
+              className="bg-[#25543A] hover:bg-[#25543A] gap-2"
               size="sm"
             >
               <Plus className="w-4 h-4" />
@@ -139,10 +139,10 @@ export default function CardsPage() {
         </Card>
 
         {/* Order Physical Card */}
-        <Card className="border-0 bg-gradient-to-br from-[#479B67]/10 to-[#479B67]/5 shadow-md">
+        <Card className="border-0 bg-gradient-to-br from-[#25543A]/10 to-[#25543A]/5 shadow-md">
           <CardHeader>
             <CardTitle className="font-headline text-xl flex items-center gap-2">
-              <ShoppingCart className="w-5 h-5 text-[#479B67]" />
+              <ShoppingCart className="w-5 h-5 text-[#25543A]" />
               Commander une Carte Physique
             </CardTitle>
           </CardHeader>
@@ -167,15 +167,15 @@ export default function CardsPage() {
 
                 <ul className="space-y-2 mb-6 text-sm">
                   <li className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#479B67]"></span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#25543A]"></span>
                     Paiements en ligne et en magasin
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#479B67]"></span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#25543A]"></span>
                     Retraits aux distributeurs
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#479B67]"></span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#25543A]"></span>
                     Frais de gestion: 5 000 CDF
                   </li>
                 </ul>
@@ -199,15 +199,15 @@ export default function CardsPage() {
 
                 <ul className="space-y-2 mb-6 text-sm">
                   <li className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#479B67]"></span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#25543A]"></span>
                     Paiements en ligne et en magasin
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#479B67]"></span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#25543A]"></span>
                     Retraits aux distributeurs
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#479B67]"></span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#25543A]"></span>
                     Frais de gestion: 5 000 CDF
                   </li>
                 </ul>

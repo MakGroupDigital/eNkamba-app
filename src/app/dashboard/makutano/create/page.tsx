@@ -614,7 +614,7 @@ export default function MakutanoCreatePage() {
             <button
               type="button"
               onClick={togglePreviewPlay}
-              className="absolute left-1/2 top-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-[#479B67] shadow-xl"
+              className="absolute left-1/2 top-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-[#25543A] shadow-xl"
               aria-label="Lire la vidéo"
             >
               <MakutanoPlayIcon size={30} />
@@ -632,7 +632,7 @@ export default function MakutanoCreatePage() {
                 step={0.1}
                 value={Math.min(previewCurrentTime, previewDuration || 0)}
                 onChange={(event) => handlePreviewSeek(Number(event.target.value))}
-                className="h-1 min-w-0 flex-1 accent-[#479B67]"
+                className="h-1 min-w-0 flex-1 accent-[#25543A]"
                 aria-label="Progression vidéo"
               />
               <button type="button" onClick={togglePreviewMute} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 backdrop-blur" aria-label="Son">
@@ -651,7 +651,7 @@ export default function MakutanoCreatePage() {
 
     if (mediaType === 'audio') {
       return (
-        <div className={cn('overflow-hidden rounded-[1.65rem] bg-[#479B67] p-4 text-white shadow-inner', compact ? 'min-h-36' : 'min-h-[18rem]')}>
+        <div className={cn('overflow-hidden rounded-[1.65rem] bg-[#25543A] p-4 text-white shadow-inner', compact ? 'min-h-36' : 'min-h-[18rem]')}>
           <audio
             ref={(node) => {
               previewMediaRef.current = node;
@@ -664,7 +664,7 @@ export default function MakutanoCreatePage() {
               <p className="text-xs font-bold uppercase text-white/60">Vocal Makutano</p>
               <p className="mt-1 text-base font-black">Aperçu audio</p>
             </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-[#479B67]">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-[#25543A]">
               <MakutanoAudioIcon size={28} />
             </div>
           </div>
@@ -672,7 +672,7 @@ export default function MakutanoCreatePage() {
             {Array.from({ length: compact ? 26 : 42 }).map((_, index) => (
               <span
                 key={index}
-                className="w-1.5 rounded-full bg-[#479B67]"
+                className="w-1.5 rounded-full bg-[#25543A]"
                 style={{ height: `${10 + ((index * 9) % (compact ? 34 : 70))}px` }}
               />
             ))}
@@ -681,7 +681,7 @@ export default function MakutanoCreatePage() {
             <button
               type="button"
               onClick={togglePreviewPlay}
-              className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-[#479B67]"
+              className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-[#25543A]"
               aria-label={isPreviewPlaying ? 'Mettre en pause' : 'Lire'}
             >
               {isPreviewPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
@@ -693,7 +693,7 @@ export default function MakutanoCreatePage() {
               step={0.1}
               value={Math.min(previewCurrentTime, previewDuration || 0)}
               onChange={(event) => handlePreviewSeek(Number(event.target.value))}
-              className="h-1 min-w-0 flex-1 accent-[#479B67]"
+              className="h-1 min-w-0 flex-1 accent-[#25543A]"
               aria-label="Progression audio"
             />
             <span className="text-[10px] font-bold text-white/70">{formatTime(previewCurrentTime)}</span>
@@ -710,22 +710,22 @@ export default function MakutanoCreatePage() {
   };
 
   return (
-    <div className="min-h-full bg-[#f5fbf8] px-3 py-3 text-[#479B67]">
+    <div className="min-h-full bg-[#f5fbf8] px-3 py-3 text-[#25543A]">
       <div className="mx-auto flex min-h-[calc(100dvh-10.5rem)] max-w-xl flex-col overflow-hidden rounded-[2rem] border border-[#dcefe5] bg-white shadow-[0_18px_50px_rgba(20,90,56,0.12)]">
         <header className="flex flex-shrink-0 items-center gap-3 border-b border-[#e8f4ed] px-3 py-3">
           <button
             type="button"
             onClick={() => router.push('/dashboard/makutano')}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-[#eef8f2] text-[#479B67] transition hover:bg-[#479B67] hover:text-white"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-[#eef8f2] text-[#25543A] transition hover:bg-[#25543A] hover:text-white"
             aria-label="Retour"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-black uppercase text-[#479B67]">Makutano</p>
+            <p className="text-[11px] font-black uppercase text-[#25543A]">Makutano</p>
             <h1 className="truncate text-base font-black">Créer une publication</h1>
           </div>
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#479B67]/10">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#25543A]/10">
             <MakutanoCreateIcon size={28} />
           </div>
         </header>
@@ -746,10 +746,10 @@ export default function MakutanoCreatePage() {
                 className={cn(
                   'flex h-9 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full text-[11px] font-black transition',
                   isActive
-                    ? 'bg-[#479B67] text-white shadow-[0_8px_18px_rgba(50,187,120,0.24)]'
+                    ? 'bg-[#25543A] text-white shadow-[0_8px_18px_rgba(50,187,120,0.24)]'
                     : isDone
-                      ? 'bg-[#e5f7ed] text-[#479B67]'
-                      : 'bg-[#f3f6f4] text-[#479B67]'
+                      ? 'bg-[#e5f7ed] text-[#25543A]'
+                      : 'bg-[#f3f6f4] text-[#25543A]'
                 )}
               >
                 {isDone ? <Check className="h-3.5 w-3.5" /> : <span className="h-1.5 w-1.5 rounded-full bg-current" />}
@@ -762,9 +762,9 @@ export default function MakutanoCreatePage() {
         <main className="min-h-0 flex-1 overflow-y-auto px-4 pb-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {activeStep === 'media' && (
             <section className="space-y-4">
-              <div className="rounded-[1.7rem] bg-[#479B67] p-4 text-white">
+              <div className="rounded-[1.7rem] bg-[#25543A] p-4 text-white">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-[#479B67]">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-[#25543A]">
                     <EStreamPostIcon size={30} />
                   </div>
                   <div className="min-w-0">
@@ -778,7 +778,7 @@ export default function MakutanoCreatePage() {
                 <div className="grid gap-3">
                   <div className="grid grid-cols-[1fr_auto] overflow-hidden rounded-[1.45rem] border border-[#dcefe5] bg-[#f8fcfa]">
                     <button type="button" onClick={startVideoCapture} className="flex items-center gap-3 px-4 py-3 text-left transition hover:bg-[#eef8f2]">
-                      <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#479B67]/10 text-[#479B67]">
+                      <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#25543A]/10 text-[#25543A]">
                         <Video className="h-5 w-5" />
                       </span>
                       <span className="min-w-0">
@@ -786,14 +786,14 @@ export default function MakutanoCreatePage() {
                         <span className="block text-xs font-semibold text-[#6d7c73]">Caméra native du téléphone</span>
                       </span>
                     </button>
-                    <button type="button" onClick={() => openFilePicker('video/*', 'video')} className="flex w-24 items-center justify-center border-l border-[#dcefe5] text-[#479B67] transition hover:bg-[#eef8f2]" aria-label="Importer une vidéo">
+                    <button type="button" onClick={() => openFilePicker('video/*', 'video')} className="flex w-24 items-center justify-center border-l border-[#dcefe5] text-[#25543A] transition hover:bg-[#eef8f2]" aria-label="Importer une vidéo">
                       <Upload className="h-5 w-5" />
                     </button>
                   </div>
 
                   <div className="grid grid-cols-[1fr_auto] overflow-hidden rounded-[1.45rem] border border-[#dcefe5] bg-[#f8fcfa]">
                     <button type="button" onClick={startAudioCapture} className="flex items-center gap-3 px-4 py-3 text-left transition hover:bg-[#eef8f2]">
-                      <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#479B67]/10 text-[#479B67]">
+                      <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#25543A]/10 text-[#25543A]">
                         <MakutanoAudioIcon size={25} />
                       </span>
                       <span className="min-w-0">
@@ -801,14 +801,14 @@ export default function MakutanoCreatePage() {
                         <span className="block text-xs font-semibold text-[#6d7c73]">Micro, note vocale ou message audio</span>
                       </span>
                     </button>
-                    <button type="button" onClick={() => openFilePicker('audio/*', 'audio')} className="flex w-24 items-center justify-center border-l border-[#dcefe5] text-[#479B67] transition hover:bg-[#eef8f2]" aria-label="Importer un audio">
+                    <button type="button" onClick={() => openFilePicker('audio/*', 'audio')} className="flex w-24 items-center justify-center border-l border-[#dcefe5] text-[#25543A] transition hover:bg-[#eef8f2]" aria-label="Importer un audio">
                       <FileAudio className="h-5 w-5" />
                     </button>
                   </div>
 
                   <div className="grid grid-cols-[1fr_auto] overflow-hidden rounded-[1.45rem] border border-[#dcefe5] bg-[#f8fcfa]">
                     <button type="button" onClick={startPhotoCapture} className="flex items-center gap-3 px-4 py-3 text-left transition hover:bg-[#eef8f2]">
-                      <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#479B67]/10 text-[#479B67]">
+                      <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#25543A]/10 text-[#25543A]">
                         <Camera className="h-5 w-5" />
                       </span>
                       <span className="min-w-0">
@@ -816,7 +816,7 @@ export default function MakutanoCreatePage() {
                         <span className="block text-xs font-semibold text-[#6d7c73]">Prise instantanée ou image de galerie</span>
                       </span>
                     </button>
-                    <button type="button" onClick={() => openFilePicker('image/*', 'image')} className="flex w-24 items-center justify-center border-l border-[#dcefe5] text-[#479B67] transition hover:bg-[#eef8f2]" aria-label="Importer une photo">
+                    <button type="button" onClick={() => openFilePicker('image/*', 'image')} className="flex w-24 items-center justify-center border-l border-[#dcefe5] text-[#25543A] transition hover:bg-[#eef8f2]" aria-label="Importer une photo">
                       <ImageIcon className="h-5 w-5" />
                     </button>
                   </div>
@@ -834,12 +834,12 @@ export default function MakutanoCreatePage() {
                     </button>
                   </div>
                   {cameraMode === 'photo' ? (
-                    <Button onClick={capturePhoto} className="h-12 w-full rounded-full bg-[#479B67] font-black hover:bg-[#479B67]">
+                    <Button onClick={capturePhoto} className="h-12 w-full rounded-full bg-[#25543A] font-black hover:bg-[#25543A]">
                       <Camera className="mr-2 h-5 w-5" />
                       Capturer la photo
                     </Button>
                   ) : !isVideoRecording ? (
-                    <Button onClick={startVideoRecording} className="h-12 w-full rounded-full bg-[#479B67] font-black hover:bg-[#479B67]">
+                    <Button onClick={startVideoRecording} className="h-12 w-full rounded-full bg-[#25543A] font-black hover:bg-[#25543A]">
                       <Video className="mr-2 h-5 w-5" />
                       Démarrer la vidéo
                     </Button>
@@ -853,23 +853,23 @@ export default function MakutanoCreatePage() {
               )}
 
               {(audioStream || isAudioRecording) && (
-                <div className="space-y-4 rounded-[1.7rem] bg-[#479B67] p-4 text-white">
+                <div className="space-y-4 rounded-[1.7rem] bg-[#25543A] p-4 text-white">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs font-bold uppercase text-white/55">Micro actif</p>
                       <h3 className="text-base font-black">Enregistrement vocal</h3>
                     </div>
-                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-[#479B67]">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-[#25543A]">
                       <Mic className="h-5 w-5" />
                     </div>
                   </div>
                   <div className="flex h-24 items-end gap-1 rounded-2xl bg-white/10 px-3">
                     {audioLevelData.map((level, index) => (
-                      <span key={index} className="w-1.5 rounded-full bg-[#479B67] transition-all" style={{ height: `${level}px` }} />
+                      <span key={index} className="w-1.5 rounded-full bg-[#25543A] transition-all" style={{ height: `${level}px` }} />
                     ))}
                   </div>
                   {!isAudioRecording ? (
-                    <Button onClick={startAudioRecording} className="h-12 w-full rounded-full bg-[#479B67] font-black hover:bg-[#479B67]">
+                    <Button onClick={startAudioRecording} className="h-12 w-full rounded-full bg-[#25543A] font-black hover:bg-[#25543A]">
                       <Mic className="mr-2 h-5 w-5" />
                       Démarrer le vocal
                     </Button>
@@ -886,10 +886,10 @@ export default function MakutanoCreatePage() {
                 <div className="space-y-3">
                   {renderMediaPreview()}
                   <div className="flex gap-2">
-                    <Button type="button" variant="outline" onClick={clearSelectedMedia} className="h-11 flex-1 rounded-full border-[#dcefe5] font-black text-[#479B67]">
+                    <Button type="button" variant="outline" onClick={clearSelectedMedia} className="h-11 flex-1 rounded-full border-[#dcefe5] font-black text-[#25543A]">
                       Changer
                     </Button>
-                    <Button type="button" onClick={goToDetails} className="h-11 flex-1 rounded-full bg-[#479B67] font-black hover:bg-[#479B67]">
+                    <Button type="button" onClick={goToDetails} className="h-11 flex-1 rounded-full bg-[#25543A] font-black hover:bg-[#25543A]">
                       Continuer
                       <ChevronRight className="ml-1 h-4 w-4" />
                     </Button>
@@ -904,7 +904,7 @@ export default function MakutanoCreatePage() {
               <div className="grid grid-cols-[6.5rem_1fr] gap-3 rounded-[1.5rem] border border-[#dcefe5] bg-[#f8fcfa] p-2">
                 {renderMediaPreview(true)}
                 <div className="min-w-0 py-2 pr-2">
-                  <p className="text-[11px] font-black uppercase text-[#479B67]">{mediaLabel}</p>
+                  <p className="text-[11px] font-black uppercase text-[#25543A]">{mediaLabel}</p>
                   <h2 className="mt-1 text-base font-black">Décrire la publication</h2>
                   <p className="mt-1 text-xs font-semibold text-[#6d7c73]">Ajoutez une légende claire avant publication.</p>
                 </div>
@@ -915,7 +915,7 @@ export default function MakutanoCreatePage() {
                   value={text}
                   onChange={(event) => setText(event.target.value)}
                   placeholder="Exprimez votre idée, votre annonce ou votre moment..."
-                  className="min-h-[9rem] resize-none border-0 bg-transparent p-1 text-base font-semibold leading-7 text-[#479B67] shadow-none placeholder:text-[#479B67] focus-visible:ring-0"
+                  className="min-h-[9rem] resize-none border-0 bg-transparent p-1 text-base font-semibold leading-7 text-[#25543A] shadow-none placeholder:text-[#25543A] focus-visible:ring-0"
                 />
                 <div className="mt-2 flex items-center justify-between border-t border-[#edf5f0] pt-2 text-[11px] font-bold text-[#7a8a80]">
                   <span>{text.trim().length} caractères</span>
@@ -924,7 +924,7 @@ export default function MakutanoCreatePage() {
               </div>
 
               <div className="space-y-2">
-                <p className="text-xs font-black uppercase text-[#479B67]">Catégorie</p>
+                <p className="text-xs font-black uppercase text-[#25543A]">Catégorie</p>
                 <div className="flex flex-wrap gap-2">
                   {categories.map((item) => (
                     <button
@@ -934,8 +934,8 @@ export default function MakutanoCreatePage() {
                       className={cn(
                         'h-10 rounded-full px-4 text-xs font-black transition',
                         category === item
-                          ? 'bg-[#479B67] text-white shadow-[0_8px_18px_rgba(50,187,120,0.22)]'
-                          : 'bg-[#eef8f2] text-[#479B67] hover:bg-[#479B67]'
+                          ? 'bg-[#25543A] text-white shadow-[0_8px_18px_rgba(50,187,120,0.22)]'
+                          : 'bg-[#eef8f2] text-[#25543A] hover:bg-[#25543A]'
                       )}
                     >
                       {item}
@@ -945,11 +945,11 @@ export default function MakutanoCreatePage() {
               </div>
 
               <div className="flex flex-wrap gap-2 rounded-[1.35rem] bg-[#f6faf7] p-2">
-                <Button variant="ghost" size="sm" className="h-9 rounded-full px-3 text-xs font-black text-[#479B67]" onClick={saveDraft}>
+                <Button variant="ghost" size="sm" className="h-9 rounded-full px-3 text-xs font-black text-[#25543A]" onClick={saveDraft}>
                   <Save className="mr-1.5 h-3.5 w-3.5" />
                   Brouillon
                 </Button>
-                <Button variant="ghost" size="sm" className="h-9 rounded-full px-3 text-xs font-black text-[#479B67]" onClick={loadDraft} disabled={!hasDraft}>
+                <Button variant="ghost" size="sm" className="h-9 rounded-full px-3 text-xs font-black text-[#25543A]" onClick={loadDraft} disabled={!hasDraft}>
                   <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
                   Reprendre
                 </Button>
@@ -965,10 +965,10 @@ export default function MakutanoCreatePage() {
               </div>
 
               <div className="flex gap-2">
-                <Button type="button" variant="outline" onClick={() => setActiveStep('media')} className="h-11 flex-1 rounded-full border-[#dcefe5] font-black text-[#479B67]">
+                <Button type="button" variant="outline" onClick={() => setActiveStep('media')} className="h-11 flex-1 rounded-full border-[#dcefe5] font-black text-[#25543A]">
                   Retour
                 </Button>
-                <Button type="button" onClick={goToPublish} className="h-11 flex-1 rounded-full bg-[#479B67] font-black hover:bg-[#479B67]">
+                <Button type="button" onClick={goToPublish} className="h-11 flex-1 rounded-full bg-[#25543A] font-black hover:bg-[#25543A]">
                   Suivant
                   <ChevronRight className="ml-1 h-4 w-4" />
                 </Button>
@@ -981,21 +981,21 @@ export default function MakutanoCreatePage() {
               <div className="rounded-[1.5rem] border border-[#dcefe5] bg-[#f8fcfa] p-2">
                 {renderMediaPreview(true)}
                 <div className="mt-3 px-2 pb-2">
-                  <p className="line-clamp-3 text-sm font-bold leading-6 text-[#479B67]">{text}</p>
+                  <p className="line-clamp-3 text-sm font-bold leading-6 text-[#25543A]">{text}</p>
                   <div className="mt-3 flex items-center gap-2">
-                    <span className="rounded-full bg-[#479B67]/10 px-3 py-1 text-[11px] font-black text-[#479B67]">{category}</span>
-                    <span className="rounded-full bg-[#479B67]/5 px-3 py-1 text-[11px] font-black text-[#479B67]">{mediaLabel}</span>
+                    <span className="rounded-full bg-[#25543A]/10 px-3 py-1 text-[11px] font-black text-[#25543A]">{category}</span>
+                    <span className="rounded-full bg-[#25543A]/5 px-3 py-1 text-[11px] font-black text-[#25543A]">{mediaLabel}</span>
                   </div>
                 </div>
               </div>
 
               <div className="rounded-[1.5rem] border border-[#dcefe5] bg-white p-4">
                 <div className="flex items-start gap-3">
-                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-[#479B67]/10">
+                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-[#25543A]/10">
                     <MapPinIcon size={28} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs font-black uppercase text-[#479B67]">Localisation</p>
+                    <p className="text-xs font-black uppercase text-[#25543A]">Localisation</p>
                     <h2 className="mt-1 truncate text-base font-black">{hasStoredLocation ? location.label : 'Autorisation nécessaire'}</h2>
                     <p className="mt-1 text-xs font-semibold text-[#6d7c73]">
                       {hasStoredLocation ? locationDetail || 'Position enregistrée dans l’app' : 'La publication utilisera la localisation globale de l’application.'}
@@ -1005,7 +1005,7 @@ export default function MakutanoCreatePage() {
                 </div>
 
                 {!hasStoredLocation && (
-                  <Button type="button" onClick={detectLocation} disabled={isLocating} className="mt-4 h-11 w-full rounded-full bg-[#479B67] font-black hover:bg-[#479B67]">
+                  <Button type="button" onClick={detectLocation} disabled={isLocating} className="mt-4 h-11 w-full rounded-full bg-[#25543A] font-black hover:bg-[#25543A]">
                     {isLocating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MapPinIcon size={20} />}
                     {isLocating ? 'Localisation...' : 'Autoriser la localisation'}
                   </Button>
@@ -1013,10 +1013,10 @@ export default function MakutanoCreatePage() {
               </div>
 
               <div className="flex gap-2">
-                <Button type="button" variant="outline" onClick={() => setActiveStep('details')} className="h-12 flex-1 rounded-full border-[#dcefe5] font-black text-[#479B67]">
+                <Button type="button" variant="outline" onClick={() => setActiveStep('details')} className="h-12 flex-1 rounded-full border-[#dcefe5] font-black text-[#25543A]">
                   Modifier
                 </Button>
-                <Button type="button" onClick={publishPost} disabled={isPublishing || isLocating} className="h-12 flex-[1.35] rounded-full bg-[#479B67] font-black hover:bg-[#479B67]">
+                <Button type="button" onClick={publishPost} disabled={isPublishing || isLocating} className="h-12 flex-[1.35] rounded-full bg-[#25543A] font-black hover:bg-[#25543A]">
                   {isPublishing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
                   {isPublishing ? 'Publication...' : 'Publier'}
                 </Button>

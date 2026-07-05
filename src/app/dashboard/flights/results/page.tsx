@@ -143,7 +143,7 @@ function FlightResultsContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-[#479B67]/5 to-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-[#25543A]/5 to-background">
       <div className="container mx-auto max-w-7xl p-4 space-y-6 animate-in fade-in duration-500">
         <header className="flex items-center gap-4 pt-4">
           <Button variant="ghost" size="icon" asChild>

@@ -103,9 +103,9 @@ export default function JoinGroupPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#479B67]/10 to-[#479B67]/5">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#25543A]/10 to-[#25543A]/5">
         <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-[#479B67] mx-auto mb-4" />
+          <Loader2 className="h-12 w-12 animate-spin text-[#25543A] mx-auto mb-4" />
           <p className="text-muted-foreground">Chargement du groupe...</p>
         </div>
       </div>
@@ -124,7 +124,7 @@ export default function JoinGroupPage() {
             <p className="text-muted-foreground">{error}</p>
           </div>
           <Link href="/dashboard/miyiki-chat">
-            <Button className="w-full gap-2 bg-[#479B67] hover:bg-[#479B67]">
+            <Button className="w-full gap-2 bg-[#25543A] hover:bg-[#25543A]">
               <ArrowLeft className="h-4 w-4" />
               Retour aux conversations
             </Button>
@@ -136,10 +136,10 @@ export default function JoinGroupPage() {
 
   if (alreadyMember) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#479B67]/10 to-[#479B67]/5 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#25543A]/10 to-[#25543A]/5 p-4">
         <Card className="max-w-md w-full p-8 text-center space-y-6">
-          <div className="w-16 h-16 bg-[#479B67]/20 rounded-full flex items-center justify-center mx-auto">
-            <Check className="h-8 w-8 text-[#479B67]" />
+          <div className="w-16 h-16 bg-[#25543A]/20 rounded-full flex items-center justify-center mx-auto">
+            <Check className="h-8 w-8 text-[#25543A]" />
           </div>
           <div>
             <h1 className="text-2xl font-bold mb-2">Déjà membre</h1>
@@ -148,7 +148,7 @@ export default function JoinGroupPage() {
             </p>
           </div>
           <Link href={`/dashboard/miyiki-chat/${groupId}`}>
-            <Button className="w-full gap-2 bg-[#479B67] hover:bg-[#479B67]">
+            <Button className="w-full gap-2 bg-[#25543A] hover:bg-[#25543A]">
               Ouvrir la conversation
             </Button>
           </Link>
@@ -158,18 +158,18 @@ export default function JoinGroupPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#479B67]/10 to-[#479B67]/5 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#25543A]/10 to-[#25543A]/5 p-4">
       <Card className="max-w-md w-full p-8 space-y-6">
         {/* Header */}
         <div className="text-center space-y-4">
-          <Avatar className="h-20 w-20 mx-auto bg-[#479B67]/20">
-            <AvatarFallback className="bg-[#479B67]/20 text-[#479B67]">
+          <Avatar className="h-20 w-20 mx-auto bg-[#25543A]/20">
+            <AvatarFallback className="bg-[#25543A]/20 text-[#25543A]">
               <Users className="h-10 w-10" />
             </AvatarFallback>
           </Avatar>
           <div>
             <h1 className="text-2xl font-bold mb-2">Rejoindre le groupe</h1>
-            <p className="text-xl font-semibold text-[#479B67]">
+            <p className="text-xl font-semibold text-[#25543A]">
               {groupData?.name}
             </p>
           </div>
@@ -196,7 +196,7 @@ export default function JoinGroupPage() {
           <Button
             onClick={handleJoinGroup}
             disabled={isJoining}
-            className="w-full gap-2 bg-[#479B67] hover:bg-[#479B67]"
+            className="w-full gap-2 bg-[#25543A] hover:bg-[#25543A]"
           >
             {isJoining ? (
               <>

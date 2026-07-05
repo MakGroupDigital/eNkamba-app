@@ -52,12 +52,12 @@ const DocumentIcon = ({ size = 24 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <linearGradient id="docGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#479B67" />
-        <stop offset="100%" stopColor="#479B67" />
+        <stop offset="0%" stopColor="#25543A" />
+        <stop offset="100%" stopColor="#25543A" />
       </linearGradient>
     </defs>
     <path d="M12 4H28L36 12V44H12V4Z" fill="url(#docGrad)" />
-    <path d="M28 4V12H36" fill="#479B67" />
+    <path d="M28 4V12H36" fill="#25543A" />
     <rect x="16" y="18" width="16" height="2" rx="1" fill="#fff" fillOpacity="0.5" />
     <rect x="16" y="24" width="12" height="2" rx="1" fill="#fff" fillOpacity="0.5" />
     <rect x="16" y="30" width="14" height="2" rx="1" fill="#fff" fillOpacity="0.5" />
@@ -69,7 +69,7 @@ const UgaviBusinessAccountIcon = ({ size = 24 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <linearGradient id="ugaviBusinessSettingsGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#479B67" />
+        <stop offset="0%" stopColor="#25543A" />
         <stop offset="100%" stopColor="#F97316" />
       </linearGradient>
     </defs>

@@ -17,7 +17,7 @@ export default function ReceivePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-[#479B67]/5 to-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-[#25543A]/5 to-background">
       <div className="container mx-auto max-w-2xl p-4 space-y-6 animate-in fade-in duration-500">
         {/* Header */}
         <header className="flex items-center gap-4 pt-4">
@@ -27,7 +27,7 @@ export default function ReceivePage() {
             </Link>
           </Button>
           <div>
-            <h1 className="font-headline text-3xl font-bold bg-gradient-to-r from-[#479B67] to-[#479B67] bg-clip-text text-transparent">
+            <h1 className="font-headline text-3xl font-bold bg-gradient-to-r from-[#25543A] to-[#25543A] bg-clip-text text-transparent">
               Encaisser un paiement
             </h1>
             <p className="text-sm text-muted-foreground">Utilisez le portefeuille unifié</p>

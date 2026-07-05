@@ -29,7 +29,7 @@ export default function AgentRelayStatusPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 size={48} className="animate-spin text-[#479B67] mx-auto mb-4" />
+          <Loader2 size={48} className="animate-spin text-[#25543A] mx-auto mb-4" />
           <p className="text-gray-600">Chargement...</p>
         </div>
       </div>
@@ -41,7 +41,7 @@ export default function AgentRelayStatusPage() {
     return (
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
-        <div className="bg-gradient-to-r from-[#479B67] via-[#479B67] to-[#479B67] px-4 py-6">
+        <div className="bg-gradient-to-r from-[#25543A] via-[#25543A] to-[#25543A] px-4 py-6">
           <div className="flex items-center justify-between">
             <Button 
               variant="ghost" 
@@ -83,7 +83,7 @@ export default function AgentRelayStatusPage() {
             </p>
             <Button
               onClick={() => router.push('/dashboard/agent-relay')}
-              className="bg-[#479B67] hover:bg-[#479B67] text-white"
+              className="bg-[#25543A] hover:bg-[#25543A] text-white"
             >
               Commencer une demande
             </Button>
@@ -145,7 +145,7 @@ export default function AgentRelayStatusPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#479B67] via-[#479B67] to-[#479B67] px-4 py-6">
+      <div className="bg-gradient-to-r from-[#25543A] via-[#25543A] to-[#25543A] px-4 py-6">
         <div className="flex items-center justify-between">
           <Button 
             variant="ghost" 
@@ -198,8 +198,8 @@ export default function AgentRelayStatusPage() {
           
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-[#479B67]/10 flex items-center justify-center">
-                <FileText size={20} className="text-[#479B67]" />
+              <div className="h-10 w-10 rounded-lg bg-[#25543A]/10 flex items-center justify-center">
+                <FileText size={20} className="text-[#25543A]" />
               </div>
               <div>
                 <p className="text-sm text-gray-600">Type d'agent</p>
@@ -211,8 +211,8 @@ export default function AgentRelayStatusPage() {
 
             {application.fullName && (
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-[#479B67]/10 flex items-center justify-center">
-                  <User size={20} className="text-[#479B67]" />
+                <div className="h-10 w-10 rounded-lg bg-[#25543A]/10 flex items-center justify-center">
+                  <User size={20} className="text-[#25543A]" />
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Nom complet</p>
@@ -223,8 +223,8 @@ export default function AgentRelayStatusPage() {
 
             {application.phoneNumber && (
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-[#479B67]/10 flex items-center justify-center">
-                  <Phone size={20} className="text-[#479B67]" />
+                <div className="h-10 w-10 rounded-lg bg-[#25543A]/10 flex items-center justify-center">
+                  <Phone size={20} className="text-[#25543A]" />
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Téléphone</p>
@@ -235,8 +235,8 @@ export default function AgentRelayStatusPage() {
 
             {application.submittedAt && (
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-[#479B67]/10 flex items-center justify-center">
-                  <Clock size={20} className="text-[#479B67]" />
+                <div className="h-10 w-10 rounded-lg bg-[#25543A]/10 flex items-center justify-center">
+                  <Clock size={20} className="text-[#25543A]" />
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Date de soumission</p>
@@ -258,7 +258,7 @@ export default function AgentRelayStatusPage() {
           {status === 'in_progress' && (
             <Button
               onClick={() => router.push(`/dashboard/agent-relay/signup?type=${application.agentType}`)}
-              className="w-full h-12 bg-[#479B67] hover:bg-[#479B67] text-white rounded-xl"
+              className="w-full h-12 bg-[#25543A] hover:bg-[#25543A] text-white rounded-xl"
             >
               Continuer l'inscription
             </Button>
@@ -267,7 +267,7 @@ export default function AgentRelayStatusPage() {
           {status === 'rejected' && (
             <Button
               onClick={() => router.push('/dashboard/agent-relay')}
-              className="w-full h-12 bg-[#479B67] hover:bg-[#479B67] text-white rounded-xl"
+              className="w-full h-12 bg-[#25543A] hover:bg-[#25543A] text-white rounded-xl"
             >
               Soumettre une nouvelle demande
             </Button>
@@ -286,7 +286,7 @@ export default function AgentRelayStatusPage() {
         <div className="mt-8 p-4 rounded-xl bg-gray-100 border border-gray-200">
           <p className="text-sm text-gray-600 text-center">
             Besoin d'aide ? Contactez notre support à{' '}
-            <a href="mailto:support@enkamba.com" className="text-[#479B67] font-medium hover:underline">
+            <a href="mailto:support@enkamba.com" className="text-[#25543A] font-medium hover:underline">
               support@enkamba.com
             </a>
           </p>

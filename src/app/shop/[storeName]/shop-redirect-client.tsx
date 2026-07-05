@@ -100,22 +100,22 @@ export default function ShopRedirectClient({ params }: { params: Promise<{ store
     <div className="min-h-screen bg-[#F6F8F7] text-slate-950">
       <div className="mx-auto max-w-7xl px-4 py-4">
         <div className="overflow-hidden rounded-[34px] border border-slate-200 bg-white shadow-sm">
-          <div className="relative h-[330px] bg-[#479B67] sm:h-[390px]">
+          <div className="relative h-[330px] bg-[#25543A] sm:h-[390px]">
             {storeDoc.coverUrl ? (
               <>
                 <Image src={storeDoc.coverUrl} alt="Cover" fill className="object-cover" priority />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
               </>
             ) : (
-              <div className="absolute inset-0 bg-[linear-gradient(135deg,#479B67_0%,#479B67_54%,#101827_100%)]" />
+              <div className="absolute inset-0 bg-[linear-gradient(135deg,#25543A_0%,#25543A_54%,#101827_100%)]" />
             )}
 
             <div className="absolute left-4 right-4 top-4 flex items-center justify-between gap-3">
-              <Badge className="rounded-full border border-white/20 bg-white/90 px-3 py-1 text-[#479B67]">
+              <Badge className="rounded-full border border-white/20 bg-white/90 px-3 py-1 text-[#25543A]">
                 {isApproved ? 'Boutique vérifiée' : 'En attente'}
               </Badge>
               {isOwner ? (
-                <Button asChild className="rounded-2xl bg-white text-[#479B67] hover:bg-white/90">
+                <Button asChild className="rounded-2xl bg-white text-[#25543A] hover:bg-white/90">
                   <Link href="/dashboard/nkampa/store/dashboard">Gérer</Link>
                 </Button>
               ) : null}
@@ -127,7 +127,7 @@ export default function ShopRedirectClient({ params }: { params: Promise<{ store
                   {storeDoc.logoUrl ? (
                     <Image src={storeDoc.logoUrl} alt="Logo" fill className="object-cover" />
                   ) : (
-                    <div className="grid h-full w-full place-items-center bg-[#479B67]/10">
+                    <div className="grid h-full w-full place-items-center bg-[#25543A]/10">
                       <NkampaNavSellerIcon size={54} />
                     </div>
                   )}
@@ -148,7 +148,7 @@ export default function ShopRedirectClient({ params }: { params: Promise<{ store
               {storeDoc.description || 'Cette boutique prépare sa vitrine. Les articles et offres apparaîtront ici.'}
             </p>
             <div className="flex flex-wrap gap-2 md:justify-end">
-              <Badge className="rounded-full border border-[#479B67]/20 bg-[#479B67]/10 px-3 py-1 text-[#479B67]">
+              <Badge className="rounded-full border border-[#25543A]/20 bg-[#25543A]/10 px-3 py-1 text-[#25543A]">
                 <VerifiedIcon size={18} /> <span className="ml-1">{sellLabel}</span>
               </Badge>
               <Badge className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-slate-700">
@@ -207,7 +207,7 @@ export default function ShopRedirectClient({ params }: { params: Promise<{ store
             ) : null}
 
             {storeDoc.promoEnabled && (isApproved || isOwner) ? (
-              <div className="rounded-[28px] border border-[#479B67]/20 bg-[#479B67]/10 p-4">
+              <div className="rounded-[28px] border border-[#25543A]/20 bg-[#25543A]/10 p-4">
                 <div className="flex items-center gap-3">
                   <div className="relative h-16 w-24 overflow-hidden rounded-2xl border border-white bg-white">
                     {storeDoc.promoImageUrl ? <Image src={storeDoc.promoImageUrl} alt="Promo" fill className="object-cover" /> : null}
@@ -215,7 +215,7 @@ export default function ShopRedirectClient({ params }: { params: Promise<{ store
                   <div className="min-w-0">
                     <div className="mb-1 flex items-center gap-2">
                       <RatingIcon size={22} />
-                      <p className="text-sm font-black text-[#479B67] truncate">{storeDoc.promoTitle || 'Promo boutique'}</p>
+                      <p className="text-sm font-black text-[#25543A] truncate">{storeDoc.promoTitle || 'Promo boutique'}</p>
                     </div>
                     <p className="truncate text-xs text-slate-600">{storeDoc.promoText || ''}</p>
                   </div>
@@ -227,7 +227,7 @@ export default function ShopRedirectClient({ params }: { params: Promise<{ store
               <div className="space-y-2">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-xs font-black uppercase tracking-wide text-[#479B67]">Catalogue</p>
+                    <p className="text-xs font-black uppercase tracking-wide text-[#25543A]">Catalogue</p>
                     <h2 className="text-xl font-black tracking-tight">{sellLabel} en vitrine</h2>
                   </div>
                   <Badge className="rounded-full border border-slate-200 bg-white px-3 py-1 text-slate-700">
@@ -252,17 +252,17 @@ export default function ShopRedirectClient({ params }: { params: Promise<{ store
                       >
                         <div className="relative w-full aspect-square bg-gray-100">
                           {p.image ? <Image src={p.image} alt={p.name || 'Produit'} fill className="object-cover" /> : (
-                            <div className="grid h-full w-full place-items-center bg-[#479B67]/10">
+                            <div className="grid h-full w-full place-items-center bg-[#25543A]/10">
                               <ProductsIcon size={40} />
                             </div>
                           )}
-                          <div className="absolute right-2 top-2 rounded-full bg-white/90 px-2 py-1 text-[10px] font-black text-[#479B67] shadow">
+                          <div className="absolute right-2 top-2 rounded-full bg-white/90 px-2 py-1 text-[10px] font-black text-[#25543A] shadow">
                             Voir
                           </div>
                         </div>
                         <div className="p-3">
                           <p className="line-clamp-1 text-xs font-black">{p.name}</p>
-                          <p className="mt-1 text-sm font-black text-[#479B67]">
+                          <p className="mt-1 text-sm font-black text-[#25543A]">
                             {(p.price || 0).toLocaleString()} {p.currency || 'CDF'}
                           </p>
                         </div>
@@ -274,7 +274,7 @@ export default function ShopRedirectClient({ params }: { params: Promise<{ store
             ) : null}
 
             <div className="flex flex-wrap gap-2">
-              <Button asChild className="rounded-2xl bg-[#479B67] hover:bg-[#0A4747]">
+              <Button asChild className="rounded-2xl bg-[#25543A] hover:bg-[#0A4747]">
                 <Link href="/dashboard/nkampa">Explorer Nkampa</Link>
               </Button>
             </div>

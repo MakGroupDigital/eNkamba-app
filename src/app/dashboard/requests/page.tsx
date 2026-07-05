@@ -68,7 +68,7 @@ export default function RequestsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-[#479B67]/5 to-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-[#25543A]/5 to-background">
       <div className="container mx-auto max-w-4xl p-4 space-y-6 animate-in fade-in duration-500">
         {/* Header */}
         <header className="flex items-center gap-4 pt-4">
@@ -78,7 +78,7 @@ export default function RequestsPage() {
             </Link>
           </Button>
           <div>
-            <h1 className="font-headline text-3xl font-bold bg-gradient-to-r from-[#479B67] to-[#479B67] bg-clip-text text-transparent">
+            <h1 className="font-headline text-3xl font-bold bg-gradient-to-r from-[#25543A] to-[#25543A] bg-clip-text text-transparent">
               Demandes de paiement
             </h1>
             <p className="text-sm text-muted-foreground">Gérez vos demandes et paiements</p>
@@ -108,7 +108,7 @@ export default function RequestsPage() {
               </Card>
             ) : (
               receivedRequests.map((request) => (
-                <Card key={request.id} className="border-[#479B67]/20">
+                <Card key={request.id} className="border-[#25543A]/20">
                   <CardContent className="pt-6">
                     <div className="space-y-4">
                       <div className="flex items-start justify-between">
@@ -120,7 +120,7 @@ export default function RequestsPage() {
                           <p className="text-sm text-muted-foreground">{request.description}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-2xl font-bold text-[#479B67]">
+                          <p className="text-2xl font-bold text-[#25543A]">
                             {request.amount.toLocaleString('fr-FR')} CDF
                           </p>
                           <p className="text-xs text-muted-foreground">
@@ -149,7 +149,7 @@ export default function RequestsPage() {
                           <Button
                             onClick={() => handleAccept(request.id)}
                             disabled={processingId === request.id}
-                            className="flex-1 bg-[#479B67] hover:bg-[#479B67]"
+                            className="flex-1 bg-[#25543A] hover:bg-[#25543A]"
                           >
                             {processingId === request.id ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
@@ -167,7 +167,7 @@ export default function RequestsPage() {
                         <div className="pt-4 border-t">
                           <Button
                             asChild
-                            className="w-full bg-[#479B67] hover:bg-[#479B67]"
+                            className="w-full bg-[#25543A] hover:bg-[#25543A]"
                           >
                             <Link href="/dashboard/send">
                               Envoyer le paiement
@@ -194,7 +194,7 @@ export default function RequestsPage() {
               </Card>
             ) : (
               sentRequests.map((request) => (
-                <Card key={request.id} className="border-[#479B67]/20">
+                <Card key={request.id} className="border-[#25543A]/20">
                   <CardContent className="pt-6">
                     <div className="space-y-4">
                       <div className="flex items-start justify-between">
@@ -206,7 +206,7 @@ export default function RequestsPage() {
                           <p className="text-sm text-muted-foreground">{request.description}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-2xl font-bold text-[#479B67]">
+                          <p className="text-2xl font-bold text-[#25543A]">
                             {request.amount.toLocaleString('fr-FR')} CDF
                           </p>
                           <p className="text-xs text-muted-foreground">
@@ -228,7 +228,7 @@ export default function RequestsPage() {
                           </p>
                           <Button
                             asChild
-                            className="w-full bg-[#479B67] hover:bg-[#479B67]"
+                            className="w-full bg-[#25543A] hover:bg-[#25543A]"
                           >
                             <Link href="/dashboard/send">
                               Envoyer le paiement

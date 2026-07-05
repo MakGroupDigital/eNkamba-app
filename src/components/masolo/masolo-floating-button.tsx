@@ -28,7 +28,7 @@ export default function MasoloFloatingButton({ onOpenChange }: MasoloFloatingBut
             repeat: Infinity,
             ease: "easeInOut"
           }}
-          className="absolute inset-0 rounded-full bg-[#479B67] blur-xl"
+          className="absolute inset-0 rounded-full bg-[#25543A] blur-xl"
         />
         
         {/* Cercle intermédiaire - Anneau rotatif */}
@@ -44,9 +44,9 @@ export default function MasoloFloatingButton({ onOpenChange }: MasoloFloatingBut
             background: `conic-gradient(
               from 0deg,
               transparent 0deg,
-              #479B67 90deg,
+              #25543A 90deg,
               transparent 180deg,
-              #479B67 270deg,
+              #25543A 270deg,
               transparent 360deg
             )`,
             padding: '2px',
@@ -59,10 +59,10 @@ export default function MasoloFloatingButton({ onOpenChange }: MasoloFloatingBut
         <motion.div
           className={cn(
             "absolute inset-1 rounded-full",
-            "bg-gradient-to-br from-[#479B67] via-[#479B67] to-[#479B67]",
+            "bg-gradient-to-br from-[#25543A] via-[#25543A] to-[#25543A]",
             "flex items-center justify-center",
-            "shadow-2xl shadow-[#479B67]/50",
-            "border-2 border-[#479B67]/30"
+            "shadow-2xl shadow-[#25543A]/50",
+            "border-2 border-[#25543A]/30"
           )}
         >
           {/* Effet de brillance */}
@@ -115,7 +115,7 @@ export default function MasoloFloatingButton({ onOpenChange }: MasoloFloatingBut
           className={cn(
             "absolute -bottom-1 -right-1",
             "h-6 w-6 rounded-full",
-            "bg-gradient-to-br from-[#479B67] to-[#479B67]",
+            "bg-gradient-to-br from-[#25543A] to-[#25543A]",
             "flex items-center justify-center",
             "border-2 border-background",
             "shadow-lg"
@@ -135,7 +135,7 @@ export default function MasoloFloatingButton({ onOpenChange }: MasoloFloatingBut
             repeat: Infinity,
             ease: "easeOut"
           }}
-          className="absolute inset-0 rounded-full border-2 border-[#479B67]"
+          className="absolute inset-0 rounded-full border-2 border-[#25543A]"
         />
       </motion.div>
     </Link>

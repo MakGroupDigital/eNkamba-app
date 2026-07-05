@@ -348,7 +348,7 @@ export function AdminPageHeader({ title, description }: { title: string; descrip
         <h1 className="font-headline text-3xl font-black">{title}</h1>
         <p className="mt-2 max-w-2xl text-sm text-slate-600">{description}</p>
       </div>
-      <Badge className="w-fit bg-[#479B67] hover:bg-[#479B67]">
+      <Badge className="w-fit bg-[#25543A] hover:bg-[#25543A]">
         <Activity className="mr-1 h-3.5 w-3.5" />
         Temps reel
       </Badge>
@@ -395,7 +395,7 @@ export function AdminInfrastructureView() {
             Rapport
           </Button>
           <Button
-            className="gap-2 bg-[#479B67] hover:bg-[#479B67]"
+            className="gap-2 bg-[#25543A] hover:bg-[#25543A]"
             onClick={() => downloadCsv(`enkamba-admin-activity-${exportDateSuffix()}.csv`, userActivities.map(mapActivityForExport))}
           >
             <Download className="h-4 w-4" />
@@ -432,7 +432,7 @@ export function AdminInfrastructureView() {
           const Icon = item.icon;
           return (
             <div key={item.label} className="flex items-center gap-3 rounded-[8px] border border-slate-200 bg-white p-4">
-              <Icon className="h-5 w-5 text-[#479B67]" />
+              <Icon className="h-5 w-5 text-[#25543A]" />
               <div>
                 <p className="text-sm font-semibold">{item.label}</p>
                 <p className="text-xs text-slate-500">{item.status}</p>
@@ -490,7 +490,7 @@ export function AdminLogsView() {
           </Button>
           <Button
             size="sm"
-            className="h-9 gap-2 bg-[#479B67] hover:bg-[#479B67]"
+            className="h-9 gap-2 bg-[#25543A] hover:bg-[#25543A]"
             onClick={() => downloadCsv(`enkamba-admin-logs-${exportDateSuffix()}.csv`, filteredLogs.map(mapErrorLogForExport))}
           >
             <Download className="h-4 w-4" />
@@ -528,7 +528,7 @@ export function AdminLogsView() {
               key={item.key}
               size="sm"
               variant={severityFilter === item.key ? 'default' : 'outline'}
-              className={cn('h-9', severityFilter === item.key && 'bg-[#479B67] hover:bg-[#479B67]')}
+              className={cn('h-9', severityFilter === item.key && 'bg-[#25543A] hover:bg-[#25543A]')}
               onClick={() => setSeverityFilter(item.key as typeof severityFilter)}
             >
               {item.label}
@@ -600,14 +600,14 @@ export function AdminCyberView() {
       <section className="rounded-[8px] border border-primary/10 bg-white p-4 shadow-sm">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <h2 className="flex items-center gap-2 font-headline text-xl font-bold"><Fingerprint className="h-5 w-5 text-[#479B67]" />Cyber intelligence</h2>
+            <h2 className="flex items-center gap-2 font-headline text-xl font-bold"><Fingerprint className="h-5 w-5 text-[#25543A]" />Cyber intelligence</h2>
             <p className="mt-1 text-sm text-slate-500">IP admin actuelle: <span className="font-mono font-semibold text-slate-900">{formatIp(clientContext?.ip)}</span> - {formatLocation(clientContext)}</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Badge variant="outline">{clientContext?.ipType === 'local' ? 'IP locale' : 'IP reseau'}</Badge>
             <Button
               size="sm"
-              className="h-9 gap-2 bg-[#479B67] hover:bg-[#479B67]"
+              className="h-9 gap-2 bg-[#25543A] hover:bg-[#25543A]"
               onClick={() => downloadCsv(`enkamba-admin-cyber-activity-${exportDateSuffix()}.csv`, filteredActivities.map(mapActivityForExport))}
             >
               <Download className="h-4 w-4" />
@@ -626,7 +626,7 @@ export function AdminCyberView() {
             const Icon = item.icon;
             return (
               <div key={item.label} className="rounded-[8px] border border-slate-200 bg-slate-50 p-3">
-                <Icon className="h-4 w-4 text-[#479B67]" />
+                <Icon className="h-4 w-4 text-[#25543A]" />
                 <p className="mt-2 text-2xl font-black">{item.value}</p>
                 <p className="text-xs text-slate-500">{item.label}</p>
               </div>
@@ -649,7 +649,7 @@ export function AdminCyberView() {
                 key={item.key}
                 size="sm"
                 variant={activityFilter === item.key ? 'default' : 'outline'}
-                className={cn('h-9', activityFilter === item.key && 'bg-[#479B67] hover:bg-[#479B67]')}
+                className={cn('h-9', activityFilter === item.key && 'bg-[#25543A] hover:bg-[#25543A]')}
                 onClick={() => setActivityFilter(item.key as typeof activityFilter)}
               >
                 {item.label}
@@ -677,7 +677,7 @@ export function AdminCyberView() {
                 <p className="truncate text-sm font-bold">{activity.userName || activity.userEmail || activity.userId || 'Utilisateur inconnu'}</p>
                 <p className="mt-1 truncate text-xs text-slate-500">{activity.module} - {activity.path}</p>
               </div>
-              <Badge variant={activity.active ? 'default' : 'secondary'} className={activity.active ? 'bg-[#479B67] hover:bg-[#479B67]' : ''}>{activity.active ? 'Actif' : formatDuration(activity.durationSeconds)}</Badge>
+              <Badge variant={activity.active ? 'default' : 'secondary'} className={activity.active ? 'bg-[#25543A] hover:bg-[#25543A]' : ''}>{activity.active ? 'Actif' : formatDuration(activity.durationSeconds)}</Badge>
             </div>
             <div className="mt-3 grid gap-2 text-xs text-slate-500 sm:grid-cols-3">
               <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{[activity.city, activity.country].filter(Boolean).join(', ') || 'Localisation N/A'}</span>
@@ -732,7 +732,7 @@ export function AdminAttacksView() {
           </Button>
           <Button
             size="sm"
-            className="h-9 gap-2 bg-[#479B67] hover:bg-[#479B67]"
+            className="h-9 gap-2 bg-[#25543A] hover:bg-[#25543A]"
             onClick={() => downloadCsv(`enkamba-admin-attacks-${exportDateSuffix()}.csv`, filteredAttacks.map(mapAttackForExport))}
           >
             <Download className="h-4 w-4" />
@@ -868,7 +868,7 @@ export function AdminReportsView() {
             <h2 className="font-headline text-xl font-bold">Exports operationnels</h2>
             <p className="mt-1 text-sm text-slate-500">Telechargement direct des rapports admin pour audit, support, supervision et client.</p>
           </div>
-          <Badge className="w-fit bg-[#479B67] hover:bg-[#479B67]">Export local</Badge>
+          <Badge className="w-fit bg-[#25543A] hover:bg-[#25543A]">Export local</Badge>
         </div>
         <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
           {exportActions.map((item) => {
@@ -878,12 +878,12 @@ export function AdminReportsView() {
                 key={item.label}
                 type="button"
                 onClick={item.action}
-                className="rounded-[8px] border border-slate-200 bg-slate-50 p-4 text-left transition hover:border-[#479B67]/50 hover:bg-[#479B67]/5"
+                className="rounded-[8px] border border-slate-200 bg-slate-50 p-4 text-left transition hover:border-[#25543A]/50 hover:bg-[#25543A]/5"
               >
-                <Icon className="h-5 w-5 text-[#479B67]" />
+                <Icon className="h-5 w-5 text-[#25543A]" />
                 <p className="mt-3 font-bold">{item.label}</p>
                 <p className="mt-1 text-xs leading-5 text-slate-500">{item.detail}</p>
-                <span className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-[#479B67]">
+                <span className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-[#25543A]">
                   <Download className="h-3.5 w-3.5" />
                   Telecharger
                 </span>

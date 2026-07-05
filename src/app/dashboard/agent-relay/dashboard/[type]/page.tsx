@@ -68,24 +68,24 @@ const typeThemes: Record<
   }
 > = {
   'agent-relais': {
-    gradient: 'from-[#479B67] via-[#479B67] to-[#479B67]',
-    accent: '#479B67',
-    accentSoft: 'bg-[#479B67]/10',
-    accentText: 'text-[#479B67]',
+    gradient: 'from-[#25543A] via-[#25543A] to-[#25543A]',
+    accent: '#25543A',
+    accentSoft: 'bg-[#25543A]/10',
+    accentText: 'text-[#25543A]',
     heroIcon: AgentIcon,
   },
   cabinet: {
-    gradient: 'from-[#479B67] via-[#479B67] to-[#479B67]',
-    accent: '#479B67',
-    accentSoft: 'bg-[#479B67]/10',
-    accentText: 'text-[#479B67]',
+    gradient: 'from-[#25543A] via-[#25543A] to-[#25543A]',
+    accent: '#25543A',
+    accentSoft: 'bg-[#25543A]/10',
+    accentText: 'text-[#25543A]',
     heroIcon: AgentIcon,
   },
   'point-service': {
-    gradient: 'from-[#479B67] via-[#479B67] to-[#479B67]',
-    accent: '#479B67',
-    accentSoft: 'bg-[#479B67]/10',
-    accentText: 'text-[#479B67]',
+    gradient: 'from-[#25543A] via-[#25543A] to-[#25543A]',
+    accent: '#25543A',
+    accentSoft: 'bg-[#25543A]/10',
+    accentText: 'text-[#25543A]',
     heroIcon: LogisticsNavIcon,
   },
 };
