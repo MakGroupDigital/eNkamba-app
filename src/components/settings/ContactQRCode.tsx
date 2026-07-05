@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Download, Share2, QrCode as QrCodeIcon } from 'lucide-react';
+import { Download, Share2, QrCode as QrCodeIcon, ScanLine } from 'lucide-react';
 import { ChatNavIcon } from '@/components/icons/service-icons';
 import { BrandedQRCodeCard, createBrandedQRCodeDataUrl } from '@/components/qrcode/branded-qr-code-card';
+import { ContactQRScanner } from '@/components/contacts/ContactQRScanner';
 import QRCode from 'qrcode';
 import { useToast } from '@/hooks/use-toast';
 
@@ -22,12 +23,8 @@ interface ContactQRCodeProps {
 
 export function ContactQRCode({ open, onOpenChange, userData }: ContactQRCodeProps) {
   const [qrCode, setQrCode] = useState<string>('');
+  const [scannerOpen, setScannerOpen] = useState(false);
   const { toast } = useToast();
-  const contactDetails = [
-    { label: 'Nom', value: userData.name },
-    { label: 'Email', value: userData.email },
-    { label: 'Téléphone', value: userData.phone },
-  ];
 
   useEffect(() => {
     if (!open || !userData.uid) return;
@@ -69,7 +66,7 @@ export function ContactQRCode({ open, onOpenChange, userData }: ContactQRCodePro
       title: 'QR contact Masolo',
       name: userData.name,
       subtitle: "Scannez pour m'ajouter",
-      details: contactDetails,
+      details: [],
       centerLabel: 'Chat',
       variant: 'contact',
       outputType: 'image/jpeg',
@@ -99,7 +96,7 @@ export function ContactQRCode({ open, onOpenChange, userData }: ContactQRCodePro
         title: 'QR contact Masolo',
         name: userData.name,
         subtitle: "Scannez pour m'ajouter",
-        details: contactDetails,
+        details: [],
         centerLabel: 'Chat',
         variant: 'contact',
         outputType: 'image/jpeg',
@@ -144,57 +141,87 @@ export function ContactQRCode({ open, onOpenChange, userData }: ContactQRCodePro
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <QrCodeIcon className="h-5 w-5 text-primary" />
-            Mon QR Code de Contact
-          </DialogTitle>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <QrCodeIcon className="h-5 w-5 text-primary" />
+              Mon QR Code de Contact
+            </DialogTitle>
+          </DialogHeader>
 
-        <div className="space-y-4 py-4">
-          {/* QR Code Display */}
-          {qrCode && (
-            <BrandedQRCodeCard
-              qrCode={qrCode}
-              title="QR contact Masolo"
-              name={userData.name}
-              subtitle="Scannez pour m'ajouter"
-              details={contactDetails}
-              centerIcon={<ChatNavIcon size={28} className="text-white" />}
-              variant="contact"
-              qrAlt="QR Code Contact"
-            />
-          )}
+          <div className="space-y-4 py-4">
+            {qrCode && (
+              <BrandedQRCodeCard
+                qrCode={qrCode}
+                title="QR contact Masolo"
+                name={userData.name}
+                subtitle="Scannez pour m'ajouter"
+                details={[]}
+                centerIcon={<ChatNavIcon size={28} className="text-white" />}
+                variant="contact"
+                qrAlt="QR Code Contact"
+              />
+            )}
 
-          {/* Actions */}
-          <div className="flex gap-2">
-            <Button
-              onClick={handleDownloadQR}
-              variant="outline"
-              className="flex-1 gap-2"
-              disabled={!qrCode}
-            >
-              <Download className="h-4 w-4" />
-              Télécharger
-            </Button>
-            <Button
-              onClick={handleShareQR}
-              variant="default"
-              className="flex-1 gap-2"
-              disabled={!qrCode}
-            >
-              <Share2 className="h-4 w-4" />
-              Partager
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={handleDownloadQR}
+                variant="outline"
+                className="flex-1 gap-2"
+                disabled={!qrCode}
+              >
+                <Download className="h-4 w-4" />
+                Télécharger
+              </Button>
+              <Button
+                onClick={handleShareQR}
+                variant="default"
+                className="flex-1 gap-2"
+                disabled={!qrCode}
+              >
+                <Share2 className="h-4 w-4" />
+                Partager
+              </Button>
+            </div>
+
+            <section className="rounded-[8px] border border-primary/15 bg-primary/5 p-3">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-black text-slate-950">Scanner</p>
+                  <p className="mt-1 text-xs font-semibold text-slate-500">
+                    Scanner un QR contact pour ajouter ou écrire à une personne.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  onClick={() => {
+                    onOpenChange(false);
+                    setScannerOpen(true);
+                  }}
+                  className="shrink-0 gap-2"
+                >
+                  <ScanLine className="h-4 w-4" />
+                  Ouvrir
+                </Button>
+              </div>
+            </section>
+
+            <p className="text-center text-xs text-muted-foreground">
+              Partagez ce QR code pour que d'autres puissent vous ajouter facilement.
+            </p>
           </div>
+        </DialogContent>
+      </Dialog>
 
-          <p className="text-xs text-muted-foreground text-center">
-            Partagez ce QR code pour que d'autres puissent vous ajouter facilement
-          </p>
-        </div>
-      </DialogContent>
-    </Dialog>
+      <ContactQRScanner
+        open={scannerOpen}
+        onOpenChange={setScannerOpen}
+        onContactFound={() => {
+          setScannerOpen(false);
+        }}
+      />
+    </>
   );
 }
