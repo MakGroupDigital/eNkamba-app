@@ -99,7 +99,7 @@ export function GlobalSurveillanceMap() {
         <div className="relative min-h-[420px] overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_50%_40%,rgba(50,187,120,0.18),rgba(2,6,23,0.25)_48%,rgba(2,6,23,0.96))] xl:border-b-0 xl:border-r">
           <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.045)_1px,transparent_1px)] bg-[size:42px_42px]" />
           <div className="absolute left-4 top-4 z-20 flex flex-wrap items-center gap-2">
-            <Badge className="bg-[#32BB78] hover:bg-[#32BB78]">
+            <Badge className="bg-[#479B67] hover:bg-[#479B67]">
               <Globe2 className="mr-1 h-3.5 w-3.5" />
               Surveillance mondiale
             </Badge>
@@ -107,12 +107,12 @@ export function GlobalSurveillanceMap() {
           </div>
 
           <svg className="absolute inset-0 h-full w-full p-5" viewBox="0 0 1000 520" role="img" aria-label="Carte mondiale de surveillance eNkamba">
-            <path className="fill-[#32BB78]/25 stroke-[#32BB78]/80 stroke-2" d="M166 138c36-34 98-42 140-18 31 17 46 48 73 66 28 18 63 20 81 46 20 29 3 72-33 82-26 7-54-7-79 4-31 14-37 59-68 76-26 14-60 3-78-20-19-25-16-58-32-85-17-29-55-43-63-76-7-27 17-54 59-75z" />
-            <path className="fill-[#32BB78]/25 stroke-[#32BB78]/80 stroke-2" d="M320 326c34 6 66 25 82 55 17 33 10 73-8 106-12 22-32 44-58 42-32-3-40-38-51-64-12-31-43-47-53-78-12-37 26-68 88-61z" />
-            <path className="fill-[#32BB78]/25 stroke-[#32BB78]/80 stroke-2" d="M474 120c42-20 95-19 135 2 26 14 44 37 73 45 31 9 66-1 96 13 38 17 55 63 45 103-10 39-43 65-80 74-35 9-72 2-105 17-33 16-52 53-87 65-34 12-73-4-91-35-18-30-15-69 1-100 18-35 51-59 65-96 12-31-6-58-52-88z" />
-            <path className="fill-[#32BB78]/25 stroke-[#32BB78]/80 stroke-2" d="M535 288c50 4 102 28 127 72 26 45 19 105-9 148-20 31-54 54-91 45-36-9-49-48-62-80-15-38-50-64-55-105-5-45 36-83 90-80z" />
-            <path className="fill-[#32BB78]/25 stroke-[#32BB78]/80 stroke-2" d="M656 118c56-30 139-24 188 17 45 38 58 103 37 158-18 47-60 76-108 86-49 10-99 1-148 11-34 7-67 22-101 14 19-33 54-52 67-91 13-40-5-83 9-123 9-28 28-52 56-72z" />
-            <path className="fill-[#32BB78]/25 stroke-[#32BB78]/80 stroke-2" d="M780 367c38-16 92-7 121 24 25 27 27 70 4 98-24 30-72 34-107 18-31-15-58-47-50-83 5-25 15-44 32-57z" />
+            <path className="fill-[#479B67]/25 stroke-[#479B67]/80 stroke-2" d="M166 138c36-34 98-42 140-18 31 17 46 48 73 66 28 18 63 20 81 46 20 29 3 72-33 82-26 7-54-7-79 4-31 14-37 59-68 76-26 14-60 3-78-20-19-25-16-58-32-85-17-29-55-43-63-76-7-27 17-54 59-75z" />
+            <path className="fill-[#479B67]/25 stroke-[#479B67]/80 stroke-2" d="M320 326c34 6 66 25 82 55 17 33 10 73-8 106-12 22-32 44-58 42-32-3-40-38-51-64-12-31-43-47-53-78-12-37 26-68 88-61z" />
+            <path className="fill-[#479B67]/25 stroke-[#479B67]/80 stroke-2" d="M474 120c42-20 95-19 135 2 26 14 44 37 73 45 31 9 66-1 96 13 38 17 55 63 45 103-10 39-43 65-80 74-35 9-72 2-105 17-33 16-52 53-87 65-34 12-73-4-91-35-18-30-15-69 1-100 18-35 51-59 65-96 12-31-6-58-52-88z" />
+            <path className="fill-[#479B67]/25 stroke-[#479B67]/80 stroke-2" d="M535 288c50 4 102 28 127 72 26 45 19 105-9 148-20 31-54 54-91 45-36-9-49-48-62-80-15-38-50-64-55-105-5-45 36-83 90-80z" />
+            <path className="fill-[#479B67]/25 stroke-[#479B67]/80 stroke-2" d="M656 118c56-30 139-24 188 17 45 38 58 103 37 158-18 47-60 76-108 86-49 10-99 1-148 11-34 7-67 22-101 14 19-33 54-52 67-91 13-40-5-83 9-123 9-28 28-52 56-72z" />
+            <path className="fill-[#479B67]/25 stroke-[#479B67]/80 stroke-2" d="M780 367c38-16 92-7 121 24 25 27 27 70 4 98-24 30-72 34-107 18-31-15-58-47-50-83 5-25 15-44 32-57z" />
             <path className="fill-white/10 stroke-white/30 stroke-2" d="M330 94c18-16 48-20 72-9 20 9 30 28 24 48-8 26-42 39-68 30-28-9-47-44-28-69z" />
             <path className="fill-none stroke-[#FF8C00]/35 stroke-2 [stroke-dasharray:8_10]" d="M530 575 C500 360 490 320 480 170" />
             <path className="fill-none stroke-[#FF8C00]/35 stroke-2 [stroke-dasharray:8_10]" d="M530 575 C420 430 320 350 230 250" />
@@ -128,14 +128,14 @@ export function GlobalSurveillanceMap() {
               style={{ left: `${point.x}%`, top: `${point.y}%` }}
               aria-label={`Point GPS ${point.city}`}
             >
-              <span className={cn('absolute inset-0 rounded-full bg-[#32BB78]/40 animate-ping', selectedPoint.city === point.city && 'bg-[#FFB45C]/45')} />
-              <span className={cn('absolute left-1/2 top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#32BB78] shadow-[0_0_18px_rgba(126,231,175,0.95)]', selectedPoint.city === point.city && 'bg-[#FFB45C] shadow-[0_0_22px_rgba(255,180,92,0.95)]')} />
+              <span className={cn('absolute inset-0 rounded-full bg-[#479B67]/40 animate-ping', selectedPoint.city === point.city && 'bg-[#FFB45C]/45')} />
+              <span className={cn('absolute left-1/2 top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#479B67] shadow-[0_0_18px_rgba(126,231,175,0.95)]', selectedPoint.city === point.city && 'bg-[#FFB45C] shadow-[0_0_22px_rgba(255,180,92,0.95)]')} />
             </button>
           ))}
 
           <div className="absolute bottom-4 left-4 right-4 z-20 grid gap-3 rounded-[8px] border border-white/10 bg-slate-950/80 p-4 backdrop-blur md:grid-cols-4">
             <div className="md:col-span-2">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#32BB78]">Point selectionne</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#479B67]">Point selectionne</p>
               <h3 className="mt-1 text-2xl font-black">{selectedPoint.city}</h3>
               <p className="text-sm text-white/60">{selectedPoint.country} - {selectedPoint.continent}</p>
             </div>
@@ -153,7 +153,7 @@ export function GlobalSurveillanceMap() {
         <aside className="p-4">
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="rounded-[8px] border border-white/10 bg-white/[0.06] p-3">
-              <Server className="h-5 w-5 text-[#32BB78]" />
+              <Server className="h-5 w-5 text-[#479B67]" />
               <p className="mt-2 text-2xl font-black">{activeServers}</p>
               <p className="text-xs text-white/50">serveurs modules</p>
             </div>
@@ -193,7 +193,7 @@ export function GlobalSurveillanceMap() {
                   onClick={() => setSelectedNode(node)}
                   className={cn(
                     'w-full rounded-[8px] border p-3 text-left transition hover:scale-[1.01]',
-                    selectedNode.id === node.id ? 'border-[#32BB78] bg-[#32BB78]/12' : 'border-white/10 bg-white/[0.06]',
+                    selectedNode.id === node.id ? 'border-[#479B67] bg-[#479B67]/12' : 'border-white/10 bg-white/[0.06]',
                   )}
                 >
                   <div className="flex items-start justify-between gap-3">
@@ -217,14 +217,14 @@ export function GlobalSurveillanceMap() {
             })}
           </div>
 
-          <div className="mt-4 rounded-[8px] border border-[#32BB78]/25 bg-[#32BB78]/10 p-4">
+          <div className="mt-4 rounded-[8px] border border-[#479B67]/25 bg-[#479B67]/10 p-4">
             <div className="flex items-start gap-3">
-              <RadioTower className="mt-1 h-5 w-5 text-[#32BB78]" />
+              <RadioTower className="mt-1 h-5 w-5 text-[#479B67]" />
               <div>
                 <p className="font-black">{selectedNode.label}</p>
                 <p className="mt-1 text-sm leading-6 text-white/65">{selectedNode.description}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <Badge className="bg-[#32BB78] hover:bg-[#32BB78]">{selectedNode.module}</Badge>
+                  <Badge className="bg-[#479B67] hover:bg-[#479B67]">{selectedNode.module}</Badge>
                   <Badge className="bg-white/10 text-white hover:bg-white/10">{selectedNode.region}</Badge>
                   <Badge className="bg-white/10 text-white hover:bg-white/10">{selectedNode.status}</Badge>
                 </div>
@@ -242,7 +242,7 @@ export function GlobalSurveillanceMap() {
           ['Reseau surveille', 'Latence, charge et agents en ligne', Wifi],
         ].map(([title, text, Icon]) => (
           <div key={title as string} className="rounded-[8px] border border-white/10 bg-white/[0.05] p-3">
-            <Icon className="h-5 w-5 text-[#32BB78]" />
+            <Icon className="h-5 w-5 text-[#479B67]" />
             <p className="mt-2 text-sm font-bold">{title as string}</p>
             <p className="mt-1 text-xs leading-5 text-white/50">{text as string}</p>
           </div>

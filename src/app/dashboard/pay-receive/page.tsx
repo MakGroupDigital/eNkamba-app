@@ -95,7 +95,7 @@ export default function PayReceivePage() {
         width: 300,
         margin: 2,
         errorCorrectionLevel: 'H',
-        color: { dark: '#32BB78', light: '#ffffff' },
+        color: { dark: '#479B67', light: '#ffffff' },
       }).then(setQrCode);
     }
   }, [profile?.uid, profile?.name, profile?.fullName, profile?.email]);
@@ -442,7 +442,7 @@ export default function PayReceivePage() {
           <div className="flex gap-2">
             <Button 
               size="icon" 
-              className="bg-[#32BB78] hover:bg-[#32BB78] text-white"
+              className="bg-[#479B67] hover:bg-[#479B67] text-white"
               onClick={() => {
                 setPreviousMode('receive');
                 setMode('scanner');
@@ -541,7 +541,7 @@ export default function PayReceivePage() {
                   />
                   <div className="absolute inset-0 bg-black/30">
                     <div 
-                      className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#32BB78] to-transparent shadow-lg shadow-[#32BB78]"
+                      className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#479B67] to-transparent shadow-lg shadow-[#479B67]"
                       style={{ top: `${importProgress}%`, transition: 'top 0.1s linear' }}
                     />
                   </div>

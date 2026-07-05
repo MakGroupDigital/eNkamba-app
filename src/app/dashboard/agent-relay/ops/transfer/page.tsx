@@ -82,8 +82,8 @@ export default function AgentOpsTransferPage() {
                   {balance.toLocaleString('fr-FR')} CDF
                 </div>
               </div>
-              <div className="h-12 w-12 rounded-2xl bg-[#32BB78]/10 flex items-center justify-center">
-                <Send className="text-[#32BB78]" />
+              <div className="h-12 w-12 rounded-2xl bg-[#479B67]/10 flex items-center justify-center">
+                <Send className="text-[#479B67]" />
               </div>
             </div>
           </CardContent>
@@ -134,7 +134,7 @@ export default function AgentOpsTransferPage() {
               <Button
                 onClick={startPin}
                 disabled={isProcessing}
-                className="w-full h-12 rounded-xl bg-[#32BB78] hover:bg-[#32BB78] text-white"
+                className="w-full h-12 rounded-xl bg-[#479B67] hover:bg-[#479B67] text-white"
               >
                 Confirmer et envoyer
                 <ArrowRight className="ml-2 h-4 w-4" />

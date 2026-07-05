@@ -23,21 +23,21 @@ export default function AgentRelayMainPage() {
       id: 'agent-relais',
       title: 'Agent Relais',
       icon: Handshake,
-      color: 'bg-[#32BB78] hover:bg-[#32BB78]',
+      color: 'bg-[#479B67] hover:bg-[#479B67]',
       description: 'Effectuez des transactions pour vos clients'
     },
     {
       id: 'cabinet',
       title: 'Cabiniste',
       icon: Store,
-      color: 'bg-[#32BB78] hover:bg-[#2BA169]',
+      color: 'bg-[#479B67] hover:bg-[#479B67]',
       description: 'Gérez un point de vente fixe'
     },
     {
       id: 'point-service',
       title: 'Point de Service',
       icon: MapPin,
-      color: 'bg-[#32BB78] hover:bg-[#2BA169]',
+      color: 'bg-[#479B67] hover:bg-[#479B67]',
       description: 'Offrez des services eNkamba dans votre commerce'
     }
   ];
@@ -49,7 +49,7 @@ export default function AgentRelayMainPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#32BB78] via-[#32BB78] to-[#32BB78]">
+    <div className="min-h-screen bg-gradient-to-b from-[#479B67] via-[#479B67] to-[#479B67]">
       {/* Header avec logo */}
       <div className="pt-12 pb-6 px-6">
         <div className="flex items-center justify-between">
@@ -83,10 +83,10 @@ export default function AgentRelayMainPage() {
       <div className="bg-white rounded-t-[40px] min-h-screen pt-8 px-6">
         {/* Titre de bienvenue */}
         <div className="text-center mb-8">
-          <h1 className="text-[#32BB78] text-2xl font-bold mb-2">
+          <h1 className="text-[#479B67] text-2xl font-bold mb-2">
             Bienvenue
           </h1>
-          <p className="text-[#32BB78] text-lg font-semibold">
+          <p className="text-[#479B67] text-lg font-semibold">
             Agents Relais eNKAMBA Pay
           </p>
           <p className="text-gray-600 text-sm mt-2">
@@ -106,13 +106,13 @@ export default function AgentRelayMainPage() {
                 onClick={() => setSelectedType(type.id)}
                 className={`w-full p-5 rounded-2xl border-2 transition-all ${
                   isSelected
-                    ? 'border-[#32BB78] bg-[#32BB78]/10 shadow-lg scale-[1.02]'
-                    : 'border-gray-200 bg-white hover:border-[#32BB78]/50 hover:shadow-md'
+                    ? 'border-[#479B67] bg-[#479B67]/10 shadow-lg scale-[1.02]'
+                    : 'border-gray-200 bg-white hover:border-[#479B67]/50 hover:shadow-md'
                 }`}
               >
                 <div className="flex items-center gap-4">
                   <div className={`h-14 w-14 rounded-xl ${
-                    isSelected ? 'bg-[#32BB78]' : 'bg-gray-100'
+                    isSelected ? 'bg-[#479B67]' : 'bg-gray-100'
                   } flex items-center justify-center transition-colors`}>
                     <Icon size={28} className={isSelected ? 'text-white' : 'text-gray-600'} />
                   </div>
@@ -125,7 +125,7 @@ export default function AgentRelayMainPage() {
                     </p>
                   </div>
                   {isSelected && (
-                    <CheckCircle2 size={24} className="text-[#32BB78]" />
+                    <CheckCircle2 size={24} className="text-[#479B67]" />
                   )}
                 </div>
               </button>
@@ -140,20 +140,20 @@ export default function AgentRelayMainPage() {
           </h3>
           <div className="flex items-center justify-center gap-8">
             <div className="flex flex-col items-center">
-              <div className="h-16 w-16 rounded-xl bg-[#32BB78]/10 flex items-center justify-center mb-2">
-                <Shield size={32} className="text-[#32BB78]" />
+              <div className="h-16 w-16 rounded-xl bg-[#479B67]/10 flex items-center justify-center mb-2">
+                <Shield size={32} className="text-[#479B67]" />
               </div>
             </div>
             
             <div className="flex flex-col items-center">
-              <div className="h-16 w-16 rounded-xl bg-[#32BB78]/10 flex items-center justify-center mb-2">
-                <Fingerprint size={32} className="text-[#32BB78]" />
+              <div className="h-16 w-16 rounded-xl bg-[#479B67]/10 flex items-center justify-center mb-2">
+                <Fingerprint size={32} className="text-[#479B67]" />
               </div>
             </div>
             
             <div className="flex flex-col items-center">
-              <div className="h-16 w-16 rounded-xl bg-[#32BB78]/10 flex items-center justify-center mb-2">
-                <CheckCircle2 size={32} className="text-[#32BB78]" />
+              <div className="h-16 w-16 rounded-xl bg-[#479B67]/10 flex items-center justify-center mb-2">
+                <CheckCircle2 size={32} className="text-[#479B67]" />
               </div>
             </div>
           </div>
@@ -162,8 +162,8 @@ export default function AgentRelayMainPage() {
         {/* Vagues décoratives */}
         <div className="relative h-24 mb-8">
           <svg className="absolute bottom-0 w-full" viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M0 0C240 40 480 40 720 20C960 0 1200 0 1440 20V120H0V0Z" fill="#32BB78" fillOpacity="0.3"/>
-            <path d="M0 20C240 60 480 60 720 40C960 20 1200 20 1440 40V120H0V20Z" fill="#32BB78" fillOpacity="0.2"/>
+            <path d="M0 0C240 40 480 40 720 20C960 0 1200 0 1440 20V120H0V0Z" fill="#479B67" fillOpacity="0.3"/>
+            <path d="M0 20C240 60 480 60 720 40C960 20 1200 20 1440 40V120H0V20Z" fill="#479B67" fillOpacity="0.2"/>
           </svg>
         </div>
 
@@ -175,7 +175,7 @@ export default function AgentRelayMainPage() {
             onClick={handleContinue}
             className={`w-full h-14 rounded-xl text-lg font-semibold shadow-lg transition-all ${
               selectedType
-                ? 'bg-[#32BB78] hover:bg-[#32BB78] text-white'
+                ? 'bg-[#479B67] hover:bg-[#479B67] text-white'
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
             }`}
           >

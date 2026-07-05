@@ -45,17 +45,17 @@ function PaymentReturnContent() {
   }, [displayName, params, status, transactionId, userId]);
 
   const icon =
-    state === 'loading' ? <Loader2 className="h-14 w-14 animate-spin text-[#32BB78]" /> :
-    state === 'completed' ? <CheckCircle2 className="h-14 w-14 text-[#32BB78]" /> :
+    state === 'loading' ? <Loader2 className="h-14 w-14 animate-spin text-[#479B67]" /> :
+    state === 'completed' ? <CheckCircle2 className="h-14 w-14 text-[#479B67]" /> :
     <AlertCircle className="h-14 w-14 text-red-600" />;
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-[#32BB78]/5 to-background p-4">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-[#479B67]/5 to-background p-4">
       <Card className="w-full max-w-md">
         <CardContent className="space-y-6 p-6 text-center">
           <div className="flex items-center justify-center gap-2">
             {brand === 'enkambapay' && <Image src="/enkamba-logo.png" alt="" width={34} height={34} className="h-9 w-9 object-contain" />}
-            <span className="text-lg font-semibold text-[#0B6E4F]">{displayName}</span>
+            <span className="text-lg font-semibold text-[#479B67]">{displayName}</span>
           </div>
           <div className="flex justify-center">{icon}</div>
           <div>
@@ -70,7 +70,7 @@ function PaymentReturnContent() {
                   : 'Le paiement a été annulé, refusé ou reste non confirmé.'}
             </p>
           </div>
-          <Button className="w-full bg-[#32BB78] hover:bg-[#32BB78]" onClick={() => router.push('/dashboard/wallet')}>
+          <Button className="w-full bg-[#479B67] hover:bg-[#479B67]" onClick={() => router.push('/dashboard/wallet')}>
             Retour au portefeuille
           </Button>
         </CardContent>
@@ -81,7 +81,7 @@ function PaymentReturnContent() {
 
 export default function PaymentReturnPage() {
   return (
-    <Suspense fallback={<div className="grid min-h-screen place-items-center"><Loader2 className="h-8 w-8 animate-spin text-[#32BB78]" /></div>}>
+    <Suspense fallback={<div className="grid min-h-screen place-items-center"><Loader2 className="h-8 w-8 animate-spin text-[#479B67]" /></div>}>
       <PaymentReturnContent />
     </Suspense>
   );

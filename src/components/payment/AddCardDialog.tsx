@@ -82,7 +82,7 @@ export function AddCardDialog({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <CreditCard className="w-5 h-5 text-[#32BB78]" />
+            <CreditCard className="w-5 h-5 text-[#479B67]" />
             Ajouter une Carte
           </DialogTitle>
           <DialogDescription>
@@ -201,7 +201,7 @@ export function AddCardDialog({
             </Button>
             <Button
               type="submit"
-              className="flex-1 bg-[#32BB78] hover:bg-[#32BB78]"
+              className="flex-1 bg-[#479B67] hover:bg-[#479B67]"
               disabled={isLoading}
             >
               {isLoading ? (

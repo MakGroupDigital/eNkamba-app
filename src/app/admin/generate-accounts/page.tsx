@@ -81,7 +81,7 @@ export default function GenerateAccountsPage() {
               onClick={handleGenerate}
               disabled={isGenerating}
               size="lg"
-              className="bg-[#32BB78] hover:bg-[#32BB78] gap-2"
+              className="bg-[#479B67] hover:bg-[#479B67] gap-2"
             >
               {isGenerating ? (
                 <>

@@ -140,8 +140,8 @@ Date: ${new Date().toISOString()}
           <div className="flex items-center justify-center gap-2 mb-8">
             {isOnline ? (
               <>
-                <Wifi className="w-5 h-5 text-[#32BB78]" />
-                <span className="text-sm text-[#32BB78] font-semibold">Connexion active</span>
+                <Wifi className="w-5 h-5 text-[#479B67]" />
+                <span className="text-sm text-[#479B67] font-semibold">Connexion active</span>
               </>
             ) : (
               <>
@@ -155,7 +155,7 @@ Date: ${new Date().toISOString()}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
             <Button
               onClick={reset}
-              className="w-full bg-gradient-to-r from-[#32BB78] to-[#32BB78] hover:from-[#32BB78] hover:to-[#32BB78] text-white gap-2"
+              className="w-full bg-gradient-to-r from-[#479B67] to-[#479B67] hover:from-[#479B67] hover:to-[#479B67] text-white gap-2"
             >
               <RefreshCw className="w-4 h-4" />
               Réessayer
@@ -164,7 +164,7 @@ Date: ${new Date().toISOString()}
             <Button
               onClick={() => router.push('/dashboard')}
               variant="outline"
-              className="w-full border-[#32BB78]/30 hover:bg-[#32BB78]/10 gap-2"
+              className="w-full border-[#479B67]/30 hover:bg-[#479B67]/10 gap-2"
             >
               <Home className="w-4 h-4" />
               Tableau de bord
@@ -175,7 +175,7 @@ Date: ${new Date().toISOString()}
             <Button
               onClick={handleGoBack}
               variant="outline"
-              className="w-full border-[#32BB78]/30 hover:bg-[#32BB78]/10 gap-2"
+              className="w-full border-[#479B67]/30 hover:bg-[#479B67]/10 gap-2"
             >
               <ArrowLeft className="w-4 h-4" />
               Retour
@@ -184,11 +184,11 @@ Date: ${new Date().toISOString()}
             <Button
               onClick={handleCopyError}
               variant="outline"
-              className="w-full border-[#32BB78]/30 hover:bg-[#32BB78]/10 gap-2"
+              className="w-full border-[#479B67]/30 hover:bg-[#479B67]/10 gap-2"
             >
               {copied ? (
                 <>
-                  <Check className="w-4 h-4 text-[#32BB78]" />
+                  <Check className="w-4 h-4 text-[#479B67]" />
                   Copié !
                 </>
               ) : (
@@ -225,26 +225,26 @@ Date: ${new Date().toISOString()}
             </p>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li className="flex items-start gap-2">
-                <span className="text-[#32BB78] mt-0.5">•</span>
+                <span className="text-[#479B67] mt-0.5">•</span>
                 <span>Vérifiez votre connexion internet</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-[#32BB78] mt-0.5">•</span>
+                <span className="text-[#479B67] mt-0.5">•</span>
                 <span>Actualisez la page</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-[#32BB78] mt-0.5">•</span>
+                <span className="text-[#479B67] mt-0.5">•</span>
                 <span>Essayez de vous reconnecter</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-[#32BB78] mt-0.5">•</span>
+                <span className="text-[#479B67] mt-0.5">•</span>
                 <span>Si le problème persiste, contactez le support</span>
               </li>
             </ul>
           </div>
 
           {/* Message d'aide */}
-          <div className="mt-6 p-4 bg-[#32BB78]/10 rounded-lg border border-[#32BB78]/20">
+          <div className="mt-6 p-4 bg-[#479B67]/10 rounded-lg border border-[#479B67]/20">
             <p className="text-xs text-muted-foreground text-center">
               Besoin d'aide ? Contactez le support eNkamba avec l'ID d'erreur ci-dessus
             </p>

@@ -391,10 +391,10 @@ export default function MakutanoPublicProfilePage() {
   if (!publicUser) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-primary/5 px-4">
-        <div className="w-full max-w-sm rounded-[28px] border border-[#32BB78] bg-white p-6 text-center shadow-sm">
+        <div className="w-full max-w-sm rounded-[28px] border border-[#479B67] bg-white p-6 text-center shadow-sm">
           <h1 className="text-lg font-black text-foreground">Profil introuvable</h1>
           <p className="mt-2 text-sm text-muted-foreground">Ce profil public n’est pas disponible.</p>
-          <Button onClick={() => router.back()} className="mt-4 rounded-full bg-[#32BB78] hover:bg-[#32BB78]">
+          <Button onClick={() => router.back()} className="mt-4 rounded-full bg-[#479B67] hover:bg-[#479B67]">
             Retour
           </Button>
         </div>
@@ -404,12 +404,12 @@ export default function MakutanoPublicProfilePage() {
 
   return (
     <main className="min-h-screen bg-primary/5 pb-10 text-foreground">
-      <header className="sticky top-0 z-30 border-b border-[#32BB78]/70 bg-primary/5 px-4 py-3 backdrop-blur-xl">
+      <header className="sticky top-0 z-30 border-b border-[#479B67]/70 bg-primary/5 px-4 py-3 backdrop-blur-xl">
         <div className="mx-auto flex max-w-4xl items-center justify-between gap-3">
           <button
             type="button"
             onClick={() => router.back()}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-foreground shadow-sm ring-1 ring-[#32BB78] transition hover:bg-primary/10"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-foreground shadow-sm ring-1 ring-[#479B67] transition hover:bg-primary/10"
             aria-label="Retour"
           >
             <ArrowLeft className="h-5 w-5" />
@@ -420,26 +420,26 @@ export default function MakutanoPublicProfilePage() {
       </header>
 
       <section className="mx-auto max-w-4xl px-4 pt-5">
-        <div className="overflow-hidden rounded-[34px] border border-[#32BB78] bg-white shadow-[0_24px_80px_rgba(18,33,22,0.08)]">
-          <div className="h-28 bg-[radial-gradient(circle_at_18%_20%,rgba(255,140,0,0.38),transparent_28%),radial-gradient(circle_at_82%_15%,rgba(50,187,120,0.42),transparent_30%),linear-gradient(135deg,#32BB78,#32BB78)]" />
+        <div className="overflow-hidden rounded-[34px] border border-[#479B67] bg-white shadow-[0_24px_80px_rgba(18,33,22,0.08)]">
+          <div className="h-28 bg-[radial-gradient(circle_at_18%_20%,rgba(255,140,0,0.38),transparent_28%),radial-gradient(circle_at_82%_15%,rgba(50,187,120,0.42),transparent_30%),linear-gradient(135deg,#479B67,#479B67)]" />
           <div className="px-5 pb-5 sm:px-7">
             <div className="-mt-12 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div className="flex min-w-0 items-end gap-4">
-                <Avatar className="h-24 w-24 border-4 border-white shadow-xl ring-1 ring-[#32BB78]">
+                <Avatar className="h-24 w-24 border-4 border-white shadow-xl ring-1 ring-[#479B67]">
                   <AvatarImage src={publicUser.avatar} />
-                  <AvatarFallback className="bg-primary/10 text-3xl font-black text-[#32BB78]">
+                  <AvatarFallback className="bg-primary/10 text-3xl font-black text-[#479B67]">
                     {publicUser.name.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
                 <div className="min-w-0 pb-1">
                   <h1 className="truncate text-2xl font-black tracking-tight sm:text-3xl">{publicUser.name}</h1>
                   <p className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-muted-foreground">
-                    <MapPin className="h-4 w-4 text-[#32BB78]" />
+                    <MapPin className="h-4 w-4 text-[#479B67]" />
                     {publicUser.location}
                   </p>
                 </div>
               </div>
-              <div className="inline-flex rounded-full bg-primary/10 px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-[#32BB78]">
+              <div className="inline-flex rounded-full bg-primary/10 px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-[#479B67]">
                 Public
               </div>
             </div>
@@ -454,8 +454,8 @@ export default function MakutanoPublicProfilePage() {
                   disabled={!canInteract || isFollowLoading}
                   className={`h-11 rounded-2xl font-black shadow-sm ${
                     isFollowing
-                      ? 'bg-primary/10 text-[#32BB78] hover:bg-primary/20'
-                      : 'bg-[#32BB78] text-white hover:bg-[#32BB78]'
+                      ? 'bg-primary/10 text-[#479B67] hover:bg-primary/20'
+                      : 'bg-[#479B67] text-white hover:bg-[#479B67]'
                   }`}
                 >
                   <UserCheck className="mr-2 h-4 w-4" />
@@ -465,7 +465,7 @@ export default function MakutanoPublicProfilePage() {
                   type="button"
                   onClick={() => void handleOpenChat()}
                   disabled={!canInteract || isChatOpening}
-                  className="h-11 rounded-2xl bg-primary font-black text-white shadow-sm hover:bg-[#32BB78]"
+                  className="h-11 rounded-2xl bg-primary font-black text-white shadow-sm hover:bg-[#479B67]"
                 >
                   <Send className="mr-2 h-4 w-4" />
                   {isChatOpening ? 'Ouverture...' : 'Écrire'}
@@ -477,7 +477,7 @@ export default function MakutanoPublicProfilePage() {
                   className={`h-11 rounded-2xl font-black shadow-sm ${
                     relationshipControl.restricted
                       ? 'bg-amber-100 text-amber-800 hover:bg-amber-200'
-                      : 'bg-white text-foreground ring-1 ring-[#32BB78] hover:bg-primary/5'
+                      : 'bg-white text-foreground ring-1 ring-[#479B67] hover:bg-primary/5'
                   }`}
                 >
                   <ShieldAlert className="mr-2 h-4 w-4" />
@@ -522,7 +522,7 @@ export default function MakutanoPublicProfilePage() {
           <div>
             <h2 className="text-base font-black">Publications</h2>
           </div>
-          <div className="flex h-9 items-center gap-2 rounded-full bg-white px-3 text-xs font-black text-[#32BB78] ring-1 ring-[#32BB78]">
+          <div className="flex h-9 items-center gap-2 rounded-full bg-white px-3 text-xs font-black text-[#479B67] ring-1 ring-[#479B67]">
             <Grid3X3 className="h-4 w-4" />
             {posts.length}
           </div>
@@ -543,13 +543,13 @@ export default function MakutanoPublicProfilePage() {
                 key={post.id}
                 type="button"
                 onClick={() => setSelectedPost(post)}
-                className="group relative aspect-[4/5] overflow-hidden rounded-[22px] bg-primary/10 text-left shadow-sm ring-1 ring-[#32BB78] transition hover:-translate-y-0.5 hover:shadow-xl"
+                className="group relative aspect-[4/5] overflow-hidden rounded-[22px] bg-primary/10 text-left shadow-sm ring-1 ring-[#479B67] transition hover:-translate-y-0.5 hover:shadow-xl"
               >
                 {post.mediaUrl ? (
                   post.mediaType === 'video' ? (
                     <video src={post.mediaUrl} className="h-full w-full object-cover" muted playsInline preload="metadata" />
                   ) : post.mediaType === 'audio' ? (
-                    <div className="flex h-full w-full flex-col justify-between bg-[#32BB78] p-4 text-white">
+                    <div className="flex h-full w-full flex-col justify-between bg-[#479B67] p-4 text-white">
                       <PlayCircle className="h-9 w-9" />
                       <div>
                         <p className="text-xs font-black uppercase tracking-[0.16em] text-white/60">Audio</p>
@@ -560,7 +560,7 @@ export default function MakutanoPublicProfilePage() {
                     <img src={post.mediaUrl} alt={post.text || 'Publication'} className="h-full w-full object-cover" loading="lazy" />
                   )
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center p-4 text-center text-sm font-bold text-[#32BB78]">
+                  <div className="flex h-full w-full items-center justify-center p-4 text-center text-sm font-bold text-[#479B67]">
                     {post.text || 'Publication'}
                   </div>
                 )}
@@ -598,7 +598,7 @@ export default function MakutanoPublicProfilePage() {
                 selectedPost.mediaType === 'video' ? (
                   <video src={selectedPost.mediaUrl} controls autoPlay className="max-h-[70vh] w-full object-contain" />
                 ) : selectedPost.mediaType === 'audio' ? (
-                  <div className="flex min-h-[260px] items-center justify-center bg-[#32BB78] p-6">
+                  <div className="flex min-h-[260px] items-center justify-center bg-[#479B67] p-6">
                     <audio src={selectedPost.mediaUrl} controls autoPlay className="w-full max-w-xl" />
                   </div>
                 ) : (
@@ -610,8 +610,8 @@ export default function MakutanoPublicProfilePage() {
             <div className="space-y-3 p-4">
               {selectedPost.text && <p className="text-sm leading-6 text-foreground">{selectedPost.text}</p>}
               <div className="flex items-center gap-4 text-xs font-black text-muted-foreground">
-                <span className="flex items-center gap-1"><Heart className="h-4 w-4 text-[#32BB78]" /> {selectedPost.likes}</span>
-                <span className="flex items-center gap-1"><MessageCircle className="h-4 w-4 text-[#32BB78]" /> {selectedPost.comments}</span>
+                <span className="flex items-center gap-1"><Heart className="h-4 w-4 text-[#479B67]" /> {selectedPost.likes}</span>
+                <span className="flex items-center gap-1"><MessageCircle className="h-4 w-4 text-[#479B67]" /> {selectedPost.comments}</span>
               </div>
             </div>
           </div>
@@ -623,7 +623,7 @@ export default function MakutanoPublicProfilePage() {
 
 function StatPill({ value, label }: { value: number; label: string }) {
   return (
-    <div className="rounded-2xl bg-primary/5 px-3 py-3 text-center ring-1 ring-[#32BB78]">
+    <div className="rounded-2xl bg-primary/5 px-3 py-3 text-center ring-1 ring-[#479B67]">
       <p className="text-xl font-black text-foreground">{value}</p>
       <p className="text-[11px] font-black uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
     </div>

@@ -21,19 +21,19 @@ const TelegramIcon = () => (
 
 const ReferralGiftIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
   <svg viewBox="0 0 48 48" fill="none" className={className} aria-hidden="true">
-    <rect x="10" y="19" width="28" height="20" rx="6" fill="#32BB78" />
+    <rect x="10" y="19" width="28" height="20" rx="6" fill="#479B67" />
     <path d="M24 19v20M10 26h28" stroke="white" strokeWidth="3" strokeLinecap="round" opacity="0.85" />
     <path d="M23 18c-7-1-10-5-8-8 3-4 8 1 8 8ZM25 18c7-1 10-5 8-8-3-4-8 1-8 8Z" fill="#FFB545" />
-    <circle cx="36" cy="14" r="4" fill="#173f2b" />
+    <circle cx="36" cy="14" r="4" fill="#479B67" />
   </svg>
 );
 
 const NetworkRewardIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
   <svg viewBox="0 0 48 48" fill="none" className={className} aria-hidden="true">
-    <circle cx="24" cy="14" r="6" fill="#32BB78" />
-    <circle cx="14" cy="32" r="5" fill="#173f2b" />
+    <circle cx="24" cy="14" r="6" fill="#479B67" />
+    <circle cx="14" cy="32" r="5" fill="#479B67" />
     <circle cx="34" cy="32" r="5" fill="#FFB545" />
-    <path d="M21 19l-5 8M27 19l5 8M19 32h10" stroke="#32BB78" strokeWidth="3" strokeLinecap="round" opacity="0.65" />
+    <path d="M21 19l-5 8M27 19l5 8M19 32h10" stroke="#479B67" strokeWidth="3" strokeLinecap="round" opacity="0.65" />
   </svg>
 );
 
@@ -70,7 +70,7 @@ export default function ReferralPage() {
         const dataUrl = await QRCode.toDataURL(referralLink, { 
             width: 200, 
             margin: 2, 
-            color: { dark: '#32BB78', light: '#FFFFFF' } 
+            color: { dark: '#479B67', light: '#FFFFFF' } 
         });
         setQrCodeDataUrl(dataUrl);
     } catch (err) {
@@ -115,7 +115,7 @@ export default function ReferralPage() {
   return (
     <div className="min-h-screen bg-[#f7faf8]">
     <div className="container mx-auto max-w-4xl p-3 space-y-4 animate-in fade-in duration-500 sm:p-4">
-      <header className="overflow-hidden rounded-2xl bg-gradient-to-br from-[#32BB78] to-[#21945e] p-4 text-white shadow-lg shadow-[#32BB78]/20">
+      <header className="overflow-hidden rounded-2xl bg-gradient-to-br from-[#479B67] to-[#479B67] p-4 text-white shadow-lg shadow-[#479B67]/20">
         <div className="flex items-center justify-between gap-4">
           <div className="flex min-w-0 items-center gap-3">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/16 ring-1 ring-white/25">
@@ -132,7 +132,7 @@ export default function ReferralPage() {
             </div>
           </div>
           <Button
-            className="hidden h-10 shrink-0 rounded-xl bg-white px-3 text-xs font-bold text-[#173f2b] hover:bg-white/90 sm:inline-flex"
+            className="hidden h-10 shrink-0 rounded-xl bg-white px-3 text-xs font-bold text-[#479B67] hover:bg-white/90 sm:inline-flex"
             onClick={() => referralLink && handleCopy(referralLink, "Votre lien de partage a été copié.")}
             disabled={!referralLink}
           >
@@ -144,33 +144,33 @@ export default function ReferralPage() {
       
       {/* Stats */}
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        <Card className="overflow-hidden border-[#32BB78]/10 bg-white shadow-sm">
+        <Card className="overflow-hidden border-[#479B67]/10 bg-white shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-bold text-[#173f2b]">Amis Parrainés</CardTitle>
-            <Users className="h-4 w-4 text-[#32BB78]" />
+            <CardTitle className="text-sm font-bold text-[#479B67]">Amis Parrainés</CardTitle>
+            <Users className="h-4 w-4 text-[#479B67]" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black text-[#173f2b]">Non disponible</div>
+            <div className="text-2xl font-black text-[#479B67]">Non disponible</div>
             <p className="text-xs text-muted-foreground">Aucune source réelle de filleuls connectée.</p>
           </CardContent>
         </Card>
-        <Card className="overflow-hidden border-[#32BB78]/10 bg-white shadow-sm">
+        <Card className="overflow-hidden border-[#479B67]/10 bg-white shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-bold text-[#173f2b]">Gains Totaux</CardTitle>
+            <CardTitle className="text-sm font-bold text-[#479B67]">Gains Totaux</CardTitle>
             <Award className="h-4 w-4 text-[#FFB545]" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black text-[#173f2b]">Non disponible</div>
+            <div className="text-2xl font-black text-[#479B67]">Non disponible</div>
             <p className="text-xs text-muted-foreground">Aucun montant réel de bonus chargé.</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Referral Code and Link */}
-      <Card className="overflow-hidden border-[#32BB78]/10 bg-white shadow-sm">
-        <CardHeader className="border-b border-[#32BB78]/10 px-4 py-3">
-          <CardTitle className="font-headline flex items-center gap-2 text-lg text-[#173f2b]">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#32BB78]/10">
+      <Card className="overflow-hidden border-[#479B67]/10 bg-white shadow-sm">
+        <CardHeader className="border-b border-[#479B67]/10 px-4 py-3">
+          <CardTitle className="font-headline flex items-center gap-2 text-lg text-[#479B67]">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#479B67]/10">
               <NetworkRewardIcon className="h-6 w-6" />
             </span>
             Votre Code de Parrainage
@@ -181,8 +181,8 @@ export default function ReferralPage() {
           <div>
             <label htmlFor="referral-code" className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Votre Code</label>
             <div className="flex gap-2 mt-1">
-              <Input id="referral-code" value={isLoading ? 'Chargement...' : referralCode || ''} readOnly className="h-12 rounded-xl border-[#32BB78]/20 bg-[#f7faf8] font-mono text-lg font-black" />
-              <Button size="icon" className="h-12 w-12 rounded-xl bg-[#32BB78] hover:bg-[#299c63]" disabled={!referralCode} onClick={() => handleCopy(referralCode || '', "Votre code a été copié.")}>
+              <Input id="referral-code" value={isLoading ? 'Chargement...' : referralCode || ''} readOnly className="h-12 rounded-xl border-[#479B67]/20 bg-[#f7faf8] font-mono text-lg font-black" />
+              <Button size="icon" className="h-12 w-12 rounded-xl bg-[#479B67] hover:bg-[#479B67]" disabled={!referralCode} onClick={() => handleCopy(referralCode || '', "Votre code a été copié.")}>
                 <Copy className="h-4 w-4" />
               </Button>
             </div>
@@ -190,26 +190,26 @@ export default function ReferralPage() {
            <div>
             <label htmlFor="referral-link" className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Votre Lien de Partage</label>
             <div className="flex gap-2 mt-1">
-              <Input id="referral-link" value={referralLink} readOnly className="h-12 rounded-xl border-[#32BB78]/20 bg-[#f7faf8]" />
-              <Button size="icon" className="h-12 w-12 rounded-xl bg-[#173f2b] hover:bg-[#23563c]" disabled={!referralLink} onClick={() => handleCopy(referralLink, "Votre lien de partage a été copié.")}>
+              <Input id="referral-link" value={referralLink} readOnly className="h-12 rounded-xl border-[#479B67]/20 bg-[#f7faf8]" />
+              <Button size="icon" className="h-12 w-12 rounded-xl bg-[#479B67] hover:bg-[#479B67]" disabled={!referralLink} onClick={() => handleCopy(referralLink, "Votre lien de partage a été copié.")}>
                 <Copy className="h-4 w-4" />
               </Button>
             </div>
           </div>
         </CardContent>
-        <CardFooter className="flex flex-col items-center gap-2 border-t border-[#32BB78]/10 px-4 py-3 sm:flex-row">
-            <Button className="w-full rounded-xl bg-[#32BB78] hover:bg-[#299c63] sm:w-auto" onClick={() => handleShare('whatsapp')}><WhatsAppIcon/> Partager sur WhatsApp</Button>
-            <Button className="w-full rounded-xl border-[#32BB78]/20 text-[#173f2b] hover:bg-[#32BB78]/5 sm:w-auto" variant="outline" onClick={() => handleShare('telegram')}><TelegramIcon/> Partager sur Telegram</Button>
-            <Button className="w-full rounded-xl border-[#32BB78]/20 text-[#173f2b] hover:bg-[#32BB78]/5 sm:w-auto" variant="outline" onClick={() => handleShare('email')}><Mail className="h-4 w-4"/> Partager par e-mail</Button>
+        <CardFooter className="flex flex-col items-center gap-2 border-t border-[#479B67]/10 px-4 py-3 sm:flex-row">
+            <Button className="w-full rounded-xl bg-[#479B67] hover:bg-[#479B67] sm:w-auto" onClick={() => handleShare('whatsapp')}><WhatsAppIcon/> Partager sur WhatsApp</Button>
+            <Button className="w-full rounded-xl border-[#479B67]/20 text-[#479B67] hover:bg-[#479B67]/5 sm:w-auto" variant="outline" onClick={() => handleShare('telegram')}><TelegramIcon/> Partager sur Telegram</Button>
+            <Button className="w-full rounded-xl border-[#479B67]/20 text-[#479B67] hover:bg-[#479B67]/5 sm:w-auto" variant="outline" onClick={() => handleShare('email')}><Mail className="h-4 w-4"/> Partager par e-mail</Button>
         </CardFooter>
       </Card>
       
       {/* QR Code */}
-      <Card className="overflow-hidden border-[#32BB78]/10 bg-white shadow-sm">
-        <CardHeader className="border-b border-[#32BB78]/10 px-4 py-3">
-          <CardTitle className="font-headline flex items-center gap-2 text-lg text-[#173f2b]">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#32BB78]/10">
-              <QrCode className="h-5 w-5 text-[#32BB78]" />
+      <Card className="overflow-hidden border-[#479B67]/10 bg-white shadow-sm">
+        <CardHeader className="border-b border-[#479B67]/10 px-4 py-3">
+          <CardTitle className="font-headline flex items-center gap-2 text-lg text-[#479B67]">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#479B67]/10">
+              <QrCode className="h-5 w-5 text-[#479B67]" />
             </span>
             Partage par QR Code
           </CardTitle>
@@ -217,17 +217,17 @@ export default function ReferralPage() {
         </CardHeader>
         <CardContent className="flex flex-col items-center justify-center gap-4 p-4 text-center">
           {qrCodeDataUrl ? (
-            <img src={qrCodeDataUrl} alt="QR Code de parrainage" className="rounded-2xl border border-[#32BB78]/20 bg-white p-2 shadow-sm" />
+            <img src={qrCodeDataUrl} alt="QR Code de parrainage" className="rounded-2xl border border-[#479B67]/20 bg-white p-2 shadow-sm" />
           ) : (
-            <div className="flex h-[200px] w-[200px] items-center justify-center rounded-2xl border-2 border-dashed border-[#32BB78]/25 bg-[#f7faf8]">
+            <div className="flex h-[200px] w-[200px] items-center justify-center rounded-2xl border-2 border-dashed border-[#479B67]/25 bg-[#f7faf8]">
               <p className="text-sm text-muted-foreground">Cliquez pour générer</p>
             </div>
           )}
-          <Button onClick={generateQrCode} disabled={isLoadingQr || !referralLink} className="rounded-xl bg-[#32BB78] hover:bg-[#299c63]">
+          <Button onClick={generateQrCode} disabled={isLoadingQr || !referralLink} className="rounded-xl bg-[#479B67] hover:bg-[#479B67]">
             {isLoadingQr ? <Loader2 className="animate-spin" /> : (qrCodeDataUrl ? "Regénérer le QR Code" : "Générer le QR Code")}
           </Button>
-          <div className="flex items-center gap-2 rounded-full bg-[#32BB78]/10 px-3 py-1 text-xs font-semibold text-[#173f2b]">
-            <ShieldCheck className="h-3.5 w-3.5 text-[#32BB78]" />
+          <div className="flex items-center gap-2 rounded-full bg-[#479B67]/10 px-3 py-1 text-xs font-semibold text-[#479B67]">
+            <ShieldCheck className="h-3.5 w-3.5 text-[#479B67]" />
             Code généré localement, sans statistique fictive
           </div>
         </CardContent>

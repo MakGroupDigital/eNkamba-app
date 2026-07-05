@@ -97,7 +97,7 @@ export default function AgentOpsCollectPage() {
         const dataUrl = await QRCodeLib.toDataURL(qrData, {
           width: 320,
           margin: 2,
-          color: { dark: '#32BB78', light: '#ffffff' },
+          color: { dark: '#479B67', light: '#ffffff' },
         });
         setQrCode(dataUrl);
       } catch (err) {
@@ -263,8 +263,8 @@ export default function AgentOpsCollectPage() {
                   {balance.toLocaleString('fr-FR')} CDF
                 </div>
               </div>
-              <div className="h-12 w-12 rounded-2xl bg-[#32BB78]/10 flex items-center justify-center">
-                <Wallet className="text-[#32BB78]" />
+              <div className="h-12 w-12 rounded-2xl bg-[#479B67]/10 flex items-center justify-center">
+                <Wallet className="text-[#479B67]" />
               </div>
             </div>
           </CardContent>
@@ -302,7 +302,7 @@ export default function AgentOpsCollectPage() {
                 <div className="rounded-2xl border border-gray-200 bg-white p-4 flex items-center justify-center">
                   {isGenerating ? (
                     <div className="text-center py-10">
-                      <Loader2 className="h-8 w-8 animate-spin text-[#32BB78] mx-auto mb-2" />
+                      <Loader2 className="h-8 w-8 animate-spin text-[#479B67] mx-auto mb-2" />
                       <div className="text-sm text-gray-600">Génération du QR...</div>
                     </div>
                   ) : qrCode ? (
@@ -317,7 +317,7 @@ export default function AgentOpsCollectPage() {
                     <Download className="h-4 w-4 mr-2" />
                     Télécharger
                   </Button>
-                  <Button onClick={shareQr} className="h-12 rounded-xl bg-[#32BB78] hover:bg-[#32BB78] text-white">
+                  <Button onClick={shareQr} className="h-12 rounded-xl bg-[#479B67] hover:bg-[#479B67] text-white">
                     <Share2 className="h-4 w-4 mr-2" />
                     Partager
                   </Button>
@@ -336,7 +336,7 @@ export default function AgentOpsCollectPage() {
                 {!isScanning && !scanned && (
                   <Button
                     onClick={startScan}
-                    className="w-full h-12 rounded-xl bg-[#32BB78] hover:bg-[#32BB78] text-white"
+                    className="w-full h-12 rounded-xl bg-[#479B67] hover:bg-[#479B67] text-white"
                   >
                     <Camera className="h-4 w-4 mr-2" />
                     Démarrer le scan
@@ -385,7 +385,7 @@ export default function AgentOpsCollectPage() {
                     <Button
                       onClick={confirmPay}
                       disabled={isProcessing}
-                      className="w-full h-12 rounded-xl bg-[#32BB78] hover:bg-[#32BB78] text-white"
+                      className="w-full h-12 rounded-xl bg-[#479B67] hover:bg-[#479B67] text-white"
                     >
                       <Send className="h-4 w-4 mr-2" />
                       Payer

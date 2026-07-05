@@ -42,7 +42,7 @@ const quickActions = [
   {
     icon: SendIcon,
     label: 'Envoyer',
-    color: 'from-[#32BB78] to-[#32BB78]',
+    color: 'from-[#479B67] to-[#479B67]',
     methods: [
       { icon: Scan, label: 'Scanner QR', href: '/dashboard/scanner' },
       { icon: Mail, label: 'Par Email', href: '/dashboard/send?method=email' },
@@ -105,7 +105,7 @@ export default function WalletPage() {
         width: 200,
         margin: 1,
         color: {
-          dark: '#32BB78',
+          dark: '#479B67',
           light: '#ffffff',
         },
       }).then(setQrCode);
@@ -121,7 +121,7 @@ export default function WalletPage() {
     : '••••••••';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-[#32BB78]/5 to-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-[#479B67]/5 to-background">
       <style>{`
         @keyframes shimmer {
           0% { background-position: -1000px 0; }
@@ -190,7 +190,7 @@ export default function WalletPage() {
             </Link>
           </Button>
           <div>
-            <h1 className="font-headline text-3xl font-bold bg-gradient-to-r from-[#32BB78] to-[#32BB78] bg-clip-text text-transparent">
+            <h1 className="font-headline text-3xl font-bold bg-gradient-to-r from-[#479B67] to-[#479B67] bg-clip-text text-transparent">
               Mon Portefeuille
             </h1>
             <p className="text-sm text-muted-foreground">La vie simplifiée et meilleure</p>
@@ -206,7 +206,7 @@ export default function WalletPage() {
                 {/* FRONT */}
                 <div className="card-front">
                   <div className="relative w-full h-full rounded-3xl overflow-hidden shadow-2xl">
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#32BB78] via-[#32BB78] to-[#32BB78]"></div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#479B67] via-[#479B67] to-[#479B67]"></div>
                     <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
                     <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -ml-16 -mb-16"></div>
                     <div className="absolute inset-0 card-shimmer"></div>
@@ -344,8 +344,8 @@ export default function WalletPage() {
                             <Link key={method.label} href={method.href}>
                               <div className="bg-white/90 hover:bg-white rounded-xl p-3 shadow-md hover:shadow-lg transition-all duration-200 border border-gray-100 group cursor-pointer">
                                 <div className="flex flex-col items-center gap-2">
-                                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-2 group-hover:from-[#32BB78]/10 group-hover:to-[#32BB78]/5 transition-colors">
-                                    <MethodIcon className="w-5 h-5 text-gray-600 group-hover:text-[#32BB78] transition-colors" />
+                                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-2 group-hover:from-[#479B67]/10 group-hover:to-[#479B67]/5 transition-colors">
+                                    <MethodIcon className="w-5 h-5 text-gray-600 group-hover:text-[#479B67] transition-colors" />
                                   </div>
                                   <p className="text-[10px] font-medium text-gray-700 text-center leading-tight">{method.label}</p>
                                 </div>
@@ -384,15 +384,15 @@ export default function WalletPage() {
         {/* Stats Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 slide-up" style={{ animationDelay: '0.3s' }}>
           {/* Balance Overview */}
-          <Card className="bg-gradient-to-br from-[#32BB78]/10 to-[#32BB78]/5 border-[#32BB78]/20 border-l-4 border-l-[#FFA500] overflow-hidden">
+          <Card className="bg-gradient-to-br from-[#479B67]/10 to-[#479B67]/5 border-[#479B67]/20 border-l-4 border-l-[#FFA500] overflow-hidden">
             <CardContent className="pt-6">
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Solde Total</p>
-                  <p className="text-3xl font-bold text-[#32BB78]">{walletBalance.toLocaleString('fr-FR')} CDF</p>
+                  <p className="text-3xl font-bold text-[#479B67]">{walletBalance.toLocaleString('fr-FR')} CDF</p>
                 </div>
-                <div className="p-3 rounded-full bg-[#32BB78]/20">
-                  <Zap className="w-6 h-6 text-[#32BB78]" />
+                <div className="p-3 rounded-full bg-[#479B67]/20">
+                  <Zap className="w-6 h-6 text-[#479B67]" />
                 </div>
               </div>
               <div className="flex items-center gap-2 text-sm text-primary">
@@ -403,39 +403,39 @@ export default function WalletPage() {
           </Card>
 
           {/* Account Status */}
-          <Card className="bg-gradient-to-br from-[#32BB78]/10 to-[#32BB78]/5 border-[#32BB78]/20 border-l-4 border-l-[#FFA500] overflow-hidden">
+          <Card className="bg-gradient-to-br from-[#479B67]/10 to-[#479B67]/5 border-[#479B67]/20 border-l-4 border-l-[#FFA500] overflow-hidden">
             <CardContent className="pt-6">
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Compte</p>
                   <p className="text-lg font-bold">{accountNumber}</p>
                 </div>
-                <div className="p-3 rounded-full bg-[#32BB78]/20">
-                  <CreditCard className="w-6 h-6 text-[#32BB78]" />
+                <div className="p-3 rounded-full bg-[#479B67]/20">
+                  <CreditCard className="w-6 h-6 text-[#479B67]" />
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-[#32BB78]"></div>
-                <span className="text-sm font-semibold text-[#32BB78]">Actif</span>
+                <div className="w-2 h-2 rounded-full bg-[#479B67]"></div>
+                <span className="text-sm font-semibold text-[#479B67]">Actif</span>
               </div>
             </CardContent>
           </Card>
 
           {/* Security */}
-          <Card className="bg-gradient-to-br from-[#32BB78]/10 to-[#32BB78]/5 border-[#32BB78]/20 border-l-4 border-l-[#FFA500] overflow-hidden">
+          <Card className="bg-gradient-to-br from-[#479B67]/10 to-[#479B67]/5 border-[#479B67]/20 border-l-4 border-l-[#FFA500] overflow-hidden">
             <CardContent className="pt-6">
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Sécurité</p>
                   <p className="text-lg font-bold">Protégé</p>
                 </div>
-                <div className="p-3 rounded-full bg-[#32BB78]/20">
-                  <Shield className="w-6 h-6 text-[#32BB78]" />
+                <div className="p-3 rounded-full bg-[#479B67]/20">
+                  <Shield className="w-6 h-6 text-[#479B67]" />
                 </div>
               </div>
               <div className="flex items-center gap-2 text-sm">
-                <div className="w-2 h-2 rounded-full bg-[#32BB78]"></div>
-                <span className="text-[#32BB78] font-semibold">2FA Activé</span>
+                <div className="w-2 h-2 rounded-full bg-[#479B67]"></div>
+                <span className="text-[#479B67] font-semibold">2FA Activé</span>
               </div>
             </CardContent>
           </Card>
@@ -443,7 +443,7 @@ export default function WalletPage() {
 
         {/* Transactions Timeline */}
         <div className="slide-up" style={{ animationDelay: '0.4s' }}>
-          <Card className="border-[#32BB78]/20">
+          <Card className="border-[#479B67]/20">
             <CardHeader>
               <CardTitle className="font-headline text-xl">Transactions Récentes</CardTitle>
             </CardHeader>
@@ -459,14 +459,14 @@ export default function WalletPage() {
                     
                     return (
                       <div key={tx.id} className="flex items-center gap-4 p-4 rounded-xl hover:bg-muted/50 transition-colors group cursor-pointer">
-                        <div className={`p-3 rounded-full ${isDeposit ? 'bg-[#32BB78]/20' : 'bg-red-100'}`}>
-                          <Icon className={`w-5 h-5 ${isDeposit ? 'text-[#32BB78]' : 'text-red-600'}`} />
+                        <div className={`p-3 rounded-full ${isDeposit ? 'bg-[#479B67]/20' : 'bg-red-100'}`}>
+                          <Icon className={`w-5 h-5 ${isDeposit ? 'text-[#479B67]' : 'text-red-600'}`} />
                         </div>
                         <div className="flex-1">
                           <p className="font-semibold text-sm">{tx.description}</p>
                           <p className="text-xs text-muted-foreground">{formattedDate}</p>
                         </div>
-                        <p className={`font-bold text-sm ${isDeposit ? 'text-[#32BB78]' : 'text-foreground'}`}>
+                        <p className={`font-bold text-sm ${isDeposit ? 'text-[#479B67]' : 'text-foreground'}`}>
                           {isDeposit ? '+' : '-'} {tx.amount.toLocaleString('fr-FR')} CDF
                         </p>
                       </div>

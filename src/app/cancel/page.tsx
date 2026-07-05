@@ -40,7 +40,7 @@ export default function PaymentCancelPage() {
               </Button>
               <Button
                 onClick={() => router.push('/dashboard')}
-                className="flex-1 bg-[#32BB78] hover:bg-[#32BB78]"
+                className="flex-1 bg-[#479B67] hover:bg-[#479B67]"
               >
                 <Home className="w-4 h-4 mr-2" />
                 Accueil

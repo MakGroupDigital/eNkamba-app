@@ -102,12 +102,12 @@ function PaymentSuccessContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-[#32BB78]/5 to-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-background via-[#479B67]/5 to-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardContent className="pt-6">
           {isProcessing ? (
             <div className="flex flex-col items-center gap-4 py-8">
-              <Loader2 className="w-16 h-16 text-[#32BB78] animate-spin" />
+              <Loader2 className="w-16 h-16 text-[#479B67] animate-spin" />
               <h2 className="text-xl font-semibold">Traitement du paiement...</h2>
               <p className="text-sm text-muted-foreground text-center">
                 Conversion USD → CDF en cours...
@@ -122,7 +122,7 @@ function PaymentSuccessContent() {
               <p className="text-sm text-muted-foreground text-center">{error}</p>
               <Button
                 onClick={handleGoHome}
-                className="mt-4 bg-[#32BB78] hover:bg-[#32BB78]"
+                className="mt-4 bg-[#479B67] hover:bg-[#479B67]"
               >
                 <Home className="w-4 h-4 mr-2" />
                 Retour à l'accueil
@@ -130,8 +130,8 @@ function PaymentSuccessContent() {
             </div>
           ) : (
             <div className="flex flex-col items-center gap-4 py-8">
-              <CheckCircle className="w-16 h-16 text-[#32BB78]" />
-              <h2 className="text-2xl font-bold text-[#32BB78]">Paiement réussi!</h2>
+              <CheckCircle className="w-16 h-16 text-[#479B67]" />
+              <h2 className="text-2xl font-bold text-[#479B67]">Paiement réussi!</h2>
               <p className="text-sm text-muted-foreground text-center">
                 Votre paiement PayPal a été traité avec succès.
               </p>
@@ -146,11 +146,11 @@ function PaymentSuccessContent() {
                   </p>
                 </div>
 
-                <div className="bg-[#32BB78]/10 border border-[#32BB78]/30 rounded-lg p-4">
+                <div className="bg-[#479B67]/10 border border-[#479B67]/30 rounded-lg p-4">
                   <p className="text-sm text-center text-muted-foreground mb-1">
                     Montant ajouté (CDF)
                   </p>
-                  <p className="text-2xl font-bold text-center text-[#32BB78]">
+                  <p className="text-2xl font-bold text-center text-[#479B67]">
                     {amountCdf.toLocaleString('fr-FR')} CDF
                   </p>
                   <p className="text-xs text-center text-muted-foreground mt-2">
@@ -161,7 +161,7 @@ function PaymentSuccessContent() {
 
               <Button
                 onClick={handleGoHome}
-                className="mt-4 w-full bg-[#32BB78] hover:bg-[#32BB78]"
+                className="mt-4 w-full bg-[#479B67] hover:bg-[#479B67]"
               >
                 <Home className="w-4 h-4 mr-2" />
                 Retour à l'accueil
@@ -177,11 +177,11 @@ function PaymentSuccessContent() {
 export default function PaymentSuccessPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-background via-[#32BB78]/5 to-background flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-background via-[#479B67]/5 to-background flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardContent className="pt-6">
             <div className="flex flex-col items-center gap-4 py-8">
-              <Loader2 className="w-16 h-16 text-[#32BB78] animate-spin" />
+              <Loader2 className="w-16 h-16 text-[#479B67] animate-spin" />
               <h2 className="text-xl font-semibold">Chargement...</h2>
             </div>
           </CardContent>

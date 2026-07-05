@@ -188,7 +188,7 @@ export default function WithdrawPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-[#32BB78]/5 to-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-[#479B67]/5 to-background">
       <div className="container mx-auto max-w-2xl p-4 space-y-6 animate-in fade-in duration-500">
         {/* Header */}
         <header className="flex items-center gap-4 pt-4">
@@ -198,7 +198,7 @@ export default function WithdrawPage() {
             </Link>
           </Button>
           <div>
-            <h1 className="font-headline text-3xl font-bold bg-gradient-to-r from-[#32BB78] to-[#32BB78] bg-clip-text text-transparent">
+            <h1 className="font-headline text-3xl font-bold bg-gradient-to-r from-[#479B67] to-[#479B67] bg-clip-text text-transparent">
               Retirer des fonds
             </h1>
             <p className="text-sm text-muted-foreground">Solde disponible: {balance.toLocaleString('fr-FR')} CDF</p>
@@ -209,7 +209,7 @@ export default function WithdrawPage() {
         {step === 'method' && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card
-              className="cursor-pointer border-2 hover:border-[#32BB78] transition-colors"
+              className="cursor-pointer border-2 hover:border-[#479B67] transition-colors"
               onClick={() => handleMethodSelect('mobile_money')}
             >
               <CardContent className="pt-6">
@@ -246,12 +246,12 @@ export default function WithdrawPage() {
             </Card>
 
             <Card
-              className="cursor-pointer border-2 hover:border-[#32BB78] transition-colors"
+              className="cursor-pointer border-2 hover:border-[#479B67] transition-colors"
               onClick={() => handleMethodSelect('agent')}
             >
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center gap-4 text-center">
-                  <div className="p-4 rounded-full bg-gradient-to-br from-[#32BB78] to-[#32BB78]">
+                  <div className="p-4 rounded-full bg-gradient-to-br from-[#479B67] to-[#479B67]">
                     <Building2 className="w-8 h-8 text-white" />
                   </div>
                   <div>
@@ -263,7 +263,7 @@ export default function WithdrawPage() {
             </Card>
 
             <Card
-              className="cursor-pointer border-2 hover:border-[#32BB78] transition-colors"
+              className="cursor-pointer border-2 hover:border-[#479B67] transition-colors"
               onClick={() => handleMethodSelect('card')}
             >
               <CardContent className="pt-6">
@@ -280,7 +280,7 @@ export default function WithdrawPage() {
             </Card>
 
             <Card
-              className="cursor-pointer border-2 hover:border-[#32BB78] transition-colors"
+              className="cursor-pointer border-2 hover:border-[#479B67] transition-colors"
               onClick={() => handleMethodSelect('bank')}
             >
               <CardContent className="pt-6">
@@ -339,7 +339,7 @@ export default function WithdrawPage() {
                     {currency === 'USD' && amount && parseFloat(amount) > 0 && (
                       <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                         <p className="text-sm text-muted-foreground">Montant à débiter de votre portefeuille:</p>
-                        <p className="text-xl font-bold text-[#32BB78]">
+                        <p className="text-xl font-bold text-[#479B67]">
                           {isLoadingRate ? (
                             'Calcul...'
                           ) : (
@@ -366,8 +366,8 @@ export default function WithdrawPage() {
                     </p>
                   </div>
 
-                  <div className="rounded-lg border border-[#0B6E4F]/20 bg-[#0B6E4F]/5 p-4 text-sm">
-                    <p className="mb-2 font-semibold text-[#0B6E4F]">Mobile Money RDC</p>
+                  <div className="rounded-lg border border-[#479B67]/20 bg-[#479B67]/5 p-4 text-sm">
+                    <p className="mb-2 font-semibold text-[#479B67]">Mobile Money RDC</p>
                     <p className="text-muted-foreground">
                       Retrait via Airtel, M-Pesa, Orange ou Africell. Les fonds seront envoyés directement sur votre compte mobile money.
                     </p>
@@ -418,8 +418,8 @@ export default function WithdrawPage() {
                     </p>
                   </div>
 
-                  <div className="rounded-lg border border-[#32BB78]/20 bg-[#32BB78]/5 p-4 text-sm">
-                    <p className="mb-2 font-semibold text-[#32BB78]">Agent eNkamba</p>
+                  <div className="rounded-lg border border-[#479B67]/20 bg-[#479B67]/5 p-4 text-sm">
+                    <p className="mb-2 font-semibold text-[#479B67]">Agent eNkamba</p>
                     <p className="text-muted-foreground">
                       Retirez vos fonds en espèces auprès d'un agent eNkamba agréé. Présentez votre code de retrait à l'agent.
                     </p>
@@ -534,7 +534,7 @@ export default function WithdrawPage() {
                 </Button>
                 <Button
                   onClick={handleDetailsSubmit}
-                  className="flex-1 bg-[#32BB78] hover:bg-[#32BB78]"
+                  className="flex-1 bg-[#479B67] hover:bg-[#479B67]"
                 >
                   Continuer
                 </Button>
@@ -632,7 +632,7 @@ export default function WithdrawPage() {
                 </Button>
                 <Button
                   onClick={handleConfirm}
-                  className="flex-1 bg-[#32BB78] hover:bg-[#32BB78]"
+                  className="flex-1 bg-[#479B67] hover:bg-[#479B67]"
                   disabled={isLoading}
                 >
                   {isLoading ? (

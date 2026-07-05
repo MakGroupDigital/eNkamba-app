@@ -85,7 +85,7 @@ export default function InvitePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-[#32BB78]/5 to-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-[#479B67]/5 to-background">
       <div className="container mx-auto max-w-2xl p-4 space-y-6 animate-in fade-in duration-500">
         {/* Header */}
         <header className="flex items-center gap-4 pt-4">
@@ -95,7 +95,7 @@ export default function InvitePage() {
             </Link>
           </Button>
           <div>
-            <h1 className="font-headline text-3xl font-bold bg-gradient-to-r from-[#32BB78] to-[#32BB78] bg-clip-text text-transparent">
+            <h1 className="font-headline text-3xl font-bold bg-gradient-to-r from-[#479B67] to-[#479B67] bg-clip-text text-transparent">
               Inviter des amis
             </h1>
             <p className="text-sm text-muted-foreground">Gagnez des bonus en parrainant</p>
@@ -105,19 +105,19 @@ export default function InvitePage() {
         {isLoading ? (
           <Card>
             <CardContent className="pt-6 flex justify-center">
-              <Loader2 className="h-8 w-8 animate-spin text-[#32BB78]" />
+              <Loader2 className="h-8 w-8 animate-spin text-[#479B67]" />
             </CardContent>
           </Card>
         ) : (
           <>
             {/* Referral Link Card */}
             {referralLink && (
-              <Card className="border-[#32BB78]/20 bg-gradient-to-br from-[#32BB78]/10 to-[#32BB78]/5">
+              <Card className="border-[#479B67]/20 bg-gradient-to-br from-[#479B67]/10 to-[#479B67]/5">
                 <CardHeader>
                   <CardTitle>Votre lien de parrainage</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="bg-white p-4 rounded-lg border border-[#32BB78]/20 break-all font-mono text-sm">
+                  <div className="bg-white p-4 rounded-lg border border-[#479B67]/20 break-all font-mono text-sm">
                     {referralLink}
                   </div>
 
@@ -140,7 +140,7 @@ export default function InvitePage() {
                     </Button>
                     <Button
                       onClick={shareLink}
-                      className="flex-1 bg-[#32BB78] hover:bg-[#32BB78]"
+                      className="flex-1 bg-[#479B67] hover:bg-[#479B67]"
                     >
                       <Share2 className="w-4 h-4 mr-2" />
                       Partager
@@ -157,7 +157,7 @@ export default function InvitePage() {
                   <CardTitle>Votre code de parrainage</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="bg-gradient-to-r from-[#32BB78] to-[#32BB78] p-8 rounded-lg text-center">
+                  <div className="bg-gradient-to-r from-[#479B67] to-[#479B67] p-8 rounded-lg text-center">
                     <p className="text-white text-sm mb-2">Code</p>
                     <p className="text-white text-4xl font-bold font-mono tracking-widest">
                       {referralCode}
@@ -166,7 +166,7 @@ export default function InvitePage() {
 
                   <Button
                     onClick={() => copyToClipboard(referralCode)}
-                    className="w-full bg-[#32BB78] hover:bg-[#32BB78]"
+                    className="w-full bg-[#479B67] hover:bg-[#479B67]"
                   >
                     <Copy className="w-4 h-4 mr-2" />
                     Copier le code
@@ -183,10 +183,10 @@ export default function InvitePage() {
                     <div className="flex items-start justify-between">
                       <div>
                         <p className="text-sm text-muted-foreground mb-1">Parrainages</p>
-                        <p className="text-3xl font-bold text-[#32BB78]">{stats.totalReferrals}</p>
+                        <p className="text-3xl font-bold text-[#479B67]">{stats.totalReferrals}</p>
                       </div>
-                      <div className="p-3 rounded-full bg-[#32BB78]/20">
-                        <Users className="w-6 h-6 text-[#32BB78]" />
+                      <div className="p-3 rounded-full bg-[#479B67]/20">
+                        <Users className="w-6 h-6 text-[#479B67]" />
                       </div>
                     </div>
                   </CardContent>
@@ -197,12 +197,12 @@ export default function InvitePage() {
                     <div className="flex items-start justify-between">
                       <div>
                         <p className="text-sm text-muted-foreground mb-1">Gains</p>
-                        <p className="text-3xl font-bold text-[#32BB78]">
+                        <p className="text-3xl font-bold text-[#479B67]">
                           {stats.totalEarnings.toLocaleString('fr-FR')} CDF
                         </p>
                       </div>
-                      <div className="p-3 rounded-full bg-[#32BB78]/20">
-                        <Gift className="w-6 h-6 text-[#32BB78]" />
+                      <div className="p-3 rounded-full bg-[#479B67]/20">
+                        <Gift className="w-6 h-6 text-[#479B67]" />
                       </div>
                     </div>
                   </CardContent>
@@ -218,7 +218,7 @@ export default function InvitePage() {
               <CardContent className="space-y-4">
                 <div className="space-y-3">
                   <div className="flex gap-3">
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#32BB78] text-white flex items-center justify-center font-bold">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#479B67] text-white flex items-center justify-center font-bold">
                       1
                     </div>
                     <div>
@@ -228,7 +228,7 @@ export default function InvitePage() {
                   </div>
 
                   <div className="flex gap-3">
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#32BB78] text-white flex items-center justify-center font-bold">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#479B67] text-white flex items-center justify-center font-bold">
                       2
                     </div>
                     <div>
@@ -238,7 +238,7 @@ export default function InvitePage() {
                   </div>
 
                   <div className="flex gap-3">
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#32BB78] text-white flex items-center justify-center font-bold">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#479B67] text-white flex items-center justify-center font-bold">
                       3
                     </div>
                     <div>
@@ -254,26 +254,26 @@ export default function InvitePage() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-[#32BB78]" />
+                  <TrendingUp className="w-5 h-5 text-[#479B67]" />
                   Avantages du parrainage
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2 text-sm">
                   <li className="flex items-center gap-2">
-                    <span className="text-[#32BB78]">✓</span>
+                    <span className="text-[#479B67]">✓</span>
                     <span>Bonus de bienvenue pour chaque ami</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="text-[#32BB78]">✓</span>
+                    <span className="text-[#479B67]">✓</span>
                     <span>Commissions sur les transactions</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="text-[#32BB78]">✓</span>
+                    <span className="text-[#479B67]">✓</span>
                     <span>Accès à des offres exclusives</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="text-[#32BB78]">✓</span>
+                    <span className="text-[#479B67]">✓</span>
                     <span>Pas de limite de parrainage</span>
                   </li>
                 </ul>

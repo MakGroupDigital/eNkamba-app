@@ -96,7 +96,7 @@ function AddressAutocompleteInput({
         onChange={(event) => onChange(event.target.value)}
         onFocus={onFocus}
         placeholder={placeholder}
-        className="h-12 rounded-2xl border-slate-200 bg-slate-50 pl-11 text-sm shadow-none focus-visible:ring-[#32BB78]"
+        className="h-12 rounded-2xl border-slate-200 bg-slate-50 pl-11 text-sm shadow-none focus-visible:ring-[#479B67]"
       />
       {isOpen && (isLoading || suggestions.length > 0) && (
         <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-50 max-h-56 overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-2xl">
@@ -114,7 +114,7 @@ function AddressAutocompleteInput({
                 }}
                 className="flex w-full items-start gap-3 px-4 py-3 text-left transition hover:bg-primary/5"
               >
-                <MapPin className="mt-0.5 h-4 w-4 flex-none text-[#32BB78]" />
+                <MapPin className="mt-0.5 h-4 w-4 flex-none text-[#479B67]" />
                 <span className="min-w-0">
                   <span className="block truncate text-sm font-bold text-slate-900">{suggestion.label}</span>
                   <span className="block truncate text-xs text-slate-500">{suggestion.secondary}</span>
@@ -359,7 +359,7 @@ export default function MobilityPage() {
     toast({
       title: 'Course démarrée',
       description: 'Le trajet est maintenant en cours.',
-      className: 'bg-[#32BB78] text-white border-none',
+      className: 'bg-[#479B67] text-white border-none',
     });
   };
 
@@ -407,7 +407,7 @@ export default function MobilityPage() {
 
       <div className="absolute left-4 right-4 top-[calc(env(safe-area-inset-top)+1rem)] z-30 mx-auto flex max-w-xl items-center justify-between gap-3 rounded-[1.4rem] bg-white/92 p-3 shadow-xl backdrop-blur">
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#32BB78] text-white">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#479B67] text-white">
             <MobilityIcon size={28} />
           </div>
           <div>
@@ -415,14 +415,14 @@ export default function MobilityPage() {
             <p className="text-xs font-medium text-slate-500">Taxi, moto et trajets urbains</p>
           </div>
         </div>
-        <Badge className="rounded-full bg-[#32BB78]/10 text-[#32BB78] hover:bg-[#32BB78]/10">eNkamba</Badge>
+        <Badge className="rounded-full bg-[#479B67]/10 text-[#479B67] hover:bg-[#479B67]/10">eNkamba</Badge>
       </div>
 
       {rideOrder && rideStatus !== 'idle' && (
         <div className="absolute left-4 right-4 top-[calc(env(safe-area-inset-top)+5.8rem)] z-30 mx-auto max-w-xl rounded-[1.4rem] bg-white/95 p-4 shadow-xl backdrop-blur">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-xs font-bold uppercase tracking-wide text-[#32BB78]">{rideOrder.id}</p>
+              <p className="text-xs font-bold uppercase tracking-wide text-[#479B67]">{rideOrder.id}</p>
               <h2 className="mt-1 text-lg font-extrabold text-slate-950">{rideStatusCopy[rideStatus].title}</h2>
               <p className="mt-1 text-sm leading-5 text-slate-500">{rideStatusCopy[rideStatus].description}</p>
             </div>
@@ -437,26 +437,26 @@ export default function MobilityPage() {
           </div>
 
           <div className="mt-4 flex items-center gap-3 rounded-2xl bg-slate-50 p-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#32BB78] text-white">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#479B67] text-white">
               {rideOrder.ride.type === 'moto' ? <MotoRideIcon size={28} /> : <MobilityIcon size={28} />}
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-bold text-slate-950">{rideOrder.ride.driver}</p>
               <p className="text-xs text-slate-500">{rideOrder.ride.name} · {rideOrder.ride.price.toLocaleString('fr-FR')} CDF</p>
             </div>
-            <Button size="icon" className="rounded-full bg-[#32BB78] hover:bg-[#32BB78]">
+            <Button size="icon" className="rounded-full bg-[#479B67] hover:bg-[#479B67]">
               <RidePhoneIcon size={22} />
             </Button>
           </div>
 
           {rideStatus === 'searching' && (
             <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-100">
-              <div className="h-full w-2/3 animate-pulse rounded-full bg-[#32BB78]" />
+              <div className="h-full w-2/3 animate-pulse rounded-full bg-[#479B67]" />
             </div>
           )}
 
           {(rideStatus === 'accepted' || rideStatus === 'arriving') && (
-            <Button onClick={startRide} className="mt-4 h-11 w-full rounded-full bg-[#32BB78] font-bold hover:bg-[#32BB78]">
+            <Button onClick={startRide} className="mt-4 h-11 w-full rounded-full bg-[#479B67] font-bold hover:bg-[#479B67]">
               {rideStatusCopy[rideStatus].action}
             </Button>
           )}
@@ -466,16 +466,16 @@ export default function MobilityPage() {
       <button
         type="button"
         title="Ma localisation"
-        className="absolute z-20 flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-[#32BB78] shadow-xl ring-4 ring-[#32BB78]/20"
+        className="absolute z-20 flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-[#479B67] shadow-xl ring-4 ring-[#479B67]/20"
         style={markerPosition(userPosition, mapViewCenter, mapRadius)}
       >
-        <span className="absolute h-12 w-12 animate-ping rounded-full bg-[#32BB78]/20" />
-        <Navigation className="relative h-5 w-5 fill-[#32BB78]" />
+        <span className="absolute h-12 w-12 animate-ping rounded-full bg-[#479B67]/20" />
+        <Navigation className="relative h-5 w-5 fill-[#479B67]" />
       </button>
 
       {pickupPoint && (
         <div
-          className="absolute z-20 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-full bg-[#32BB78] px-2.5 py-1.5 text-xs font-semibold text-white shadow-lg ring-2 ring-white"
+          className="absolute z-20 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-full bg-[#479B67] px-2.5 py-1.5 text-xs font-semibold text-white shadow-lg ring-2 ring-white"
           style={markerPosition(pickupPoint, mapViewCenter, mapRadius)}
         >
           <MapPin className="h-3.5 w-3.5" />
@@ -499,7 +499,7 @@ export default function MobilityPage() {
           type="button"
           onClick={() => setSelectedRide(ride.id)}
           className={`absolute z-20 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full shadow-lg ring-2 ring-white transition ${
-            selectedRide === ride.id ? 'h-11 w-11 bg-[#32BB78] text-white' : 'h-9 w-9 bg-white text-[#32BB78]'
+            selectedRide === ride.id ? 'h-11 w-11 bg-[#479B67] text-white' : 'h-9 w-9 bg-white text-[#479B67]'
           }`}
           style={markerPosition(ride, mapViewCenter, mapRadius)}
           title={ride.driver}
@@ -511,7 +511,7 @@ export default function MobilityPage() {
       <div className="absolute right-4 top-28 z-30 flex flex-col gap-2">
         <Button size="icon" className="rounded-full bg-white text-slate-800 shadow-lg hover:bg-white" onClick={() => zoomMap('in')}>+</Button>
         <Button size="icon" className="rounded-full bg-white text-slate-800 shadow-lg hover:bg-white" onClick={() => zoomMap('out')}>-</Button>
-        <Button size="icon" className="rounded-full bg-white text-[#32BB78] shadow-lg hover:bg-white" onClick={recenterMap}>
+        <Button size="icon" className="rounded-full bg-white text-[#479B67] shadow-lg hover:bg-white" onClick={recenterMap}>
           <LocateFixed className="h-5 w-5" />
         </Button>
       </div>
@@ -528,12 +528,12 @@ export default function MobilityPage() {
                 <LocateFixed className="mt-0.5 h-4 w-4 text-[#FF8C00]" />
                 <p className="truncate text-sm font-semibold text-slate-900">{rideOrder.destination}</p>
               </div>
-              <div className="flex items-center justify-between rounded-2xl bg-[#32BB78]/10 px-4 py-3">
+              <div className="flex items-center justify-between rounded-2xl bg-[#479B67]/10 px-4 py-3">
                 <div>
                   <p className="text-sm font-bold text-slate-950">{rideStatusCopy[rideStatus].action}</p>
                   <p className="text-xs text-slate-500">Suivi de la course actif</p>
                 </div>
-                <p className="text-sm font-extrabold text-[#32BB78]">{rideOrder.ride.eta}</p>
+                <p className="text-sm font-extrabold text-[#479B67]">{rideOrder.ride.eta}</p>
               </div>
               {rideStatus === 'in_progress' && (
                 <Button onClick={cancelRide} variant="outline" className="h-11 w-full rounded-full">
@@ -548,7 +548,7 @@ export default function MobilityPage() {
               value={pickup}
               placeholder="Point de départ"
               Icon={MapPin}
-              iconClassName="text-[#32BB78]"
+              iconClassName="text-[#479B67]"
               suggestions={addressSuggestions.pickup}
               isLoading={isAddressSearchLoading && activeAddressField === 'pickup'}
               isOpen={activeAddressField === 'pickup'}
@@ -574,7 +574,7 @@ export default function MobilityPage() {
               onFocus={() => setActiveAddressField('destination')}
               onSelect={(suggestion) => selectAddressSuggestion('destination', suggestion)}
             />
-            <button type="button" onClick={useCurrentPosition} className="text-xs font-semibold text-[#32BB78]">
+            <button type="button" onClick={useCurrentPosition} className="text-xs font-semibold text-[#479B67]">
               Utiliser ma position actuelle
             </button>
           </div>
@@ -586,7 +586,7 @@ export default function MobilityPage() {
                 type="button"
                 onClick={() => setSelectedRide(option.id)}
                 className={`min-w-[145px] rounded-2xl border p-3 text-left transition ${
-                  selectedRide === option.id ? 'border-[#32BB78] bg-[#32BB78]/10' : 'border-slate-200 bg-white'
+                  selectedRide === option.id ? 'border-[#479B67] bg-[#479B67]/10' : 'border-slate-200 bg-white'
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -610,10 +610,10 @@ export default function MobilityPage() {
                 <p className="text-xs text-slate-500">Paiement eNkamba disponible</p>
               </div>
             </div>
-            <p className="text-sm font-extrabold text-[#32BB78]">{selectedRideOption.eta}</p>
+            <p className="text-sm font-extrabold text-[#479B67]">{selectedRideOption.eta}</p>
           </div>
 
-          <Button onClick={requestRide} className="h-12 w-full rounded-full bg-[#32BB78] text-base font-bold hover:bg-[#32BB78]">
+          <Button onClick={requestRide} className="h-12 w-full rounded-full bg-[#479B67] text-base font-bold hover:bg-[#479B67]">
             Commander {selectedRideOption.name}
           </Button>
             </>

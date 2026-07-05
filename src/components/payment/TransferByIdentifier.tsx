@@ -162,7 +162,7 @@ export function TransferByIdentifier({ onCancel, onTransferComplete }: TransferB
                       variant={identifierType === option.value ? 'default' : 'outline'}
                       className={`h-auto py-3 flex flex-col items-center gap-2 ${
                         identifierType === option.value 
-                          ? 'bg-[#32BB78] hover:bg-[#32BB78]' 
+                          ? 'bg-[#479B67] hover:bg-[#479B67]' 
                           : ''
                       }`}
                       onClick={() => {
@@ -199,7 +199,7 @@ export function TransferByIdentifier({ onCancel, onTransferComplete }: TransferB
                 <Button
                   onClick={handleSearch}
                   disabled={isSearching || !identifierValue.trim()}
-                  className="bg-[#32BB78] hover:bg-[#32BB78]"
+                  className="bg-[#479B67] hover:bg-[#479B67]"
                 >
                   {isSearching ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -240,19 +240,19 @@ export function TransferByIdentifier({ onCancel, onTransferComplete }: TransferB
 
             {/* Avatar et nom */}
             <div className="flex flex-col items-center gap-3 py-4">
-              <div className="bg-[#32BB78]/10 rounded-full p-6">
-                <User className="w-12 h-12 text-[#32BB78]" />
+              <div className="bg-[#479B67]/10 rounded-full p-6">
+                <User className="w-12 h-12 text-[#479B67]" />
               </div>
               <div className="text-center">
-                <p className="font-bold text-xl text-[#32BB78]">{userInfo.fullName}</p>
+                <p className="font-bold text-xl text-[#479B67]">{userInfo.fullName}</p>
               </div>
             </div>
 
             {/* Toutes les informations */}
             <div className="space-y-3 bg-muted/50 rounded-lg p-4">
               <div className="flex items-center gap-3">
-                <div className="bg-[#32BB78]/10 rounded-full p-2">
-                  <Hash className="w-4 h-4 text-[#32BB78]" />
+                <div className="bg-[#479B67]/10 rounded-full p-2">
+                  <Hash className="w-4 h-4 text-[#479B67]" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-muted-foreground">Numéro eNkamba</p>
@@ -323,7 +323,7 @@ export function TransferByIdentifier({ onCancel, onTransferComplete }: TransferB
 
           {/* Boutons d'action */}
           <Button
-            className="w-full bg-gradient-to-r from-[#32BB78] to-primary hover:from-[#32BB78] hover:to-primary h-12 text-base font-bold"
+            className="w-full bg-gradient-to-r from-[#479B67] to-primary hover:from-[#479B67] hover:to-primary h-12 text-base font-bold"
             onClick={handleContinue}
             disabled={!amount || parseFloat(amount) <= 0}
           >

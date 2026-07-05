@@ -40,8 +40,8 @@ export function getTransactionIconConfig(type: TransactionType): TransactionIcon
     // Dépôt - Icône personnalisée de dépôt (argent qui entre)
     deposit: {
       icon: DepositTransactionIcon,
-      bgColor: 'bg-[#32BB78]/20',
-      iconColor: 'text-[#32BB78]',
+      bgColor: 'bg-[#479B67]/20',
+      iconColor: 'text-[#479B67]',
       label: 'Dépôt'
     },
     
@@ -56,8 +56,8 @@ export function getTransactionIconConfig(type: TransactionType): TransactionIcon
     // Réception - Icône personnalisée de réception (main qui reçoit)
     transfer_received: {
       icon: ReceiveTransactionIcon,
-      bgColor: 'bg-[#32BB78]/20',
-      iconColor: 'text-[#32BB78]',
+      bgColor: 'bg-[#479B67]/20',
+      iconColor: 'text-[#479B67]',
       label: 'Réception'
     },
     
@@ -112,8 +112,8 @@ export function getTransactionIconConfig(type: TransactionType): TransactionIcon
     // Dépôt épargne - Tirelire avec pièce
     savings_deposit: {
       icon: SavingsTransactionIcon,
-      bgColor: 'bg-[#32BB78]/20',
-      iconColor: 'text-[#32BB78]',
+      bgColor: 'bg-[#479B67]/20',
+      iconColor: 'text-[#479B67]',
       label: 'Épargne'
     },
     

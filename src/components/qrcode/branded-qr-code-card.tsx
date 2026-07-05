@@ -126,8 +126,8 @@ export async function createBrandedQRCodeDataUrl({
   context.fillRect(18, 18, width - 36, height - 36);
 
   const topLine = context.createLinearGradient(40, 34, width - 40, 34);
-  topLine.addColorStop(0, '#32BB78');
-  topLine.addColorStop(0.55, '#32BB78');
+  topLine.addColorStop(0, '#479B67');
+  topLine.addColorStop(0.55, '#479B67');
   topLine.addColorStop(1, '#FF8C00');
   context.fillStyle = topLine;
   drawRoundRect(context, 40, 34, width - 80, 8, 4);
@@ -191,7 +191,7 @@ export async function createBrandedQRCodeDataUrl({
   }
 
   if (!centerImageDrawn) {
-    context.fillStyle = isPayment ? '#32BB78' : '#32BB78';
+    context.fillStyle = isPayment ? '#479B67' : '#479B67';
     context.fillRect(centerX - centerSize / 2, centerY - centerSize / 2, centerSize, centerSize);
     context.fillStyle = '#ffffff';
     context.font = '800 26px Arial, sans-serif';
@@ -237,7 +237,7 @@ export async function createBrandedQRCodeDataUrl({
     });
   }
 
-  context.fillStyle = isPayment ? '#32BB78' : '#32BB78';
+  context.fillStyle = isPayment ? '#479B67' : '#479B67';
   context.font = '700 14px Arial, sans-serif';
   context.textAlign = 'center';
   context.fillText('eNkamba', width / 2, height - 52);
@@ -264,11 +264,11 @@ export function BrandedQRCodeCard({
       className={cn(
         'relative w-full overflow-hidden rounded-[8px] border p-5 text-center shadow-sm',
         isPayment
-          ? 'border-[#32BB78]/25 bg-[radial-gradient(circle_at_20%_12%,rgba(50,187,120,0.18),transparent_34%),linear-gradient(145deg,#ffffff,#effbf4)]'
-          : 'border-[#32BB78]/20 bg-[radial-gradient(circle_at_78%_16%,rgba(14,90,89,0.16),transparent_34%),linear-gradient(145deg,#ffffff,#f2fbf8)]',
+          ? 'border-[#479B67]/25 bg-[radial-gradient(circle_at_20%_12%,rgba(50,187,120,0.18),transparent_34%),linear-gradient(145deg,#ffffff,#effbf4)]'
+          : 'border-[#479B67]/20 bg-[radial-gradient(circle_at_78%_16%,rgba(14,90,89,0.16),transparent_34%),linear-gradient(145deg,#ffffff,#f2fbf8)]',
       )}
     >
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#32BB78] via-[#32BB78] to-[#FF8C00]" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#479B67] via-[#479B67] to-[#FF8C00]" />
 
       {title && (
         <p className="mb-4 text-sm font-bold uppercase tracking-[0.14em] text-slate-700">
@@ -296,7 +296,7 @@ export function BrandedQRCodeCard({
               <div
                 className={cn(
                   'flex h-full w-full items-center justify-center rounded-full text-white',
-                  isPayment ? 'bg-[#32BB78]' : 'bg-[#32BB78]',
+                  isPayment ? 'bg-[#479B67]' : 'bg-[#479B67]',
                 )}
               >
                 {centerIcon || <span className="text-lg font-black">{name.charAt(0).toUpperCase()}</span>}

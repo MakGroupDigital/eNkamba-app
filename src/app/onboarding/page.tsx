@@ -183,7 +183,7 @@ export default function OnboardingPage() {
       <div
         className="min-h-screen flex items-center justify-center"
         style={{
-          background: "linear-gradient(to bottom right, #32BB78, #32BB78, #32BB78)",
+          background: "linear-gradient(to bottom right, #479B67, #479B67, #479B67)",
         }}
       >
         <Loader2 className="w-8 h-8 animate-spin text-white" />
@@ -217,7 +217,7 @@ export default function OnboardingPage() {
     <div
       className="min-h-screen overflow-hidden relative"
       style={{
-        background: "linear-gradient(to bottom right, #32BB78, #32BB78, #32BB78)",
+        background: "linear-gradient(to bottom right, #479B67, #479B67, #479B67)",
       }}
     >
       {/* Floating decorative circles */}
@@ -373,7 +373,7 @@ export default function OnboardingPage() {
                   ) : (
                     <div className="rounded-2xl bg-white flex items-center justify-center shadow-lg p-4">
                       {IconComponent && (
-                        <IconComponent className="w-10 h-10 text-[#32BB78]" />
+                        <IconComponent className="w-10 h-10 text-[#479B67]" />
                       )}
                     </div>
                   )}
@@ -387,7 +387,7 @@ export default function OnboardingPage() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.4, delay: 0.2 }}
               >
-                <span className="bg-white text-[#32BB78] text-xs font-bold px-4 py-1.5 rounded-full shadow-md">
+                <span className="bg-white text-[#479B67] text-xs font-bold px-4 py-1.5 rounded-full shadow-md">
                   {currentSlideData.module}
                 </span>
               </motion.div>
@@ -453,7 +453,7 @@ export default function OnboardingPage() {
           {/* CTA Button */}
           {isLastSlide ? (
             <Link href="/login" className="block">
-              <Button className="w-full h-14 bg-white text-[#32BB78] hover:bg-white/90 rounded-full text-lg font-semibold shadow-lg border-0">
+              <Button className="w-full h-14 bg-white text-[#479B67] hover:bg-white/90 rounded-full text-lg font-semibold shadow-lg border-0">
                 C&apos;est parti !
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>

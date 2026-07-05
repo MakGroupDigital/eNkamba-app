@@ -23,22 +23,22 @@ const typeThemes: Record<
   { gradient: string; accent: string; accentSoft: string; accentText: string }
 > = {
   'agent-relais': {
-    gradient: 'from-[#32BB78] via-[#32BB78] to-[#32BB78]',
-    accent: '#32BB78',
-    accentSoft: 'bg-[#32BB78]/10',
-    accentText: 'text-[#32BB78]',
+    gradient: 'from-[#479B67] via-[#479B67] to-[#479B67]',
+    accent: '#479B67',
+    accentSoft: 'bg-[#479B67]/10',
+    accentText: 'text-[#479B67]',
   },
   cabinet: {
-    gradient: 'from-[#32BB78] via-[#32BB78] to-[#32BB78]',
-    accent: '#32BB78',
-    accentSoft: 'bg-[#32BB78]/10',
-    accentText: 'text-[#32BB78]',
+    gradient: 'from-[#479B67] via-[#479B67] to-[#479B67]',
+    accent: '#479B67',
+    accentSoft: 'bg-[#479B67]/10',
+    accentText: 'text-[#479B67]',
   },
   'point-service': {
-    gradient: 'from-[#32BB78] via-[#32BB78] to-[#32BB78]',
-    accent: '#32BB78',
-    accentSoft: 'bg-[#32BB78]/10',
-    accentText: 'text-[#32BB78]',
+    gradient: 'from-[#479B67] via-[#479B67] to-[#479B67]',
+    accent: '#479B67',
+    accentSoft: 'bg-[#479B67]/10',
+    accentText: 'text-[#479B67]',
   },
 };
 

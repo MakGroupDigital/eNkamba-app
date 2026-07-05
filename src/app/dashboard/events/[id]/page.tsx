@@ -258,7 +258,7 @@ export default function EventDetailPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-[#32BB78]/5 to-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-[#479B67]/5 to-background">
       <div className="container mx-auto max-w-6xl p-4 space-y-6 animate-in fade-in duration-500">
         <header className="flex items-center gap-4 pt-4">
           <Button variant="ghost" size="icon" onClick={() => {
@@ -497,7 +497,7 @@ export default function EventDetailPage() {
         {step === 'receipt' && receipt && (
           <div className="space-y-6">
             <div ref={receiptRef} className="bg-white rounded-2xl shadow-2xl overflow-hidden">
-              <div className="bg-gradient-to-r from-[#32BB78] to-[#32BB78] p-6 text-white">
+              <div className="bg-gradient-to-r from-[#479B67] to-[#479B67] p-6 text-white">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">

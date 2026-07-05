@@ -251,7 +251,7 @@ export default function AddFundsPage() {
   const busy = isLoading || isProcessing;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-[#32BB78]/5 to-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-[#479B67]/5 to-background">
       <div className="container mx-auto max-w-3xl space-y-6 p-4">
         <header className="flex items-center gap-4 pt-4">
           <Button variant="ghost" size="icon" asChild>
@@ -260,7 +260,7 @@ export default function AddFundsPage() {
             </Link>
           </Button>
           <div>
-            <h1 className="font-headline text-3xl font-bold text-[#0B6E4F]">Ajouter des fonds</h1>
+            <h1 className="font-headline text-3xl font-bold text-[#479B67]">Ajouter des fonds</h1>
           </div>
         </header>
 
@@ -280,23 +280,23 @@ export default function AddFundsPage() {
         {step === 'method' && (
           <div className="space-y-4">
             <Card
-              className="cursor-pointer border-2 border-[#32BB78]/40 bg-[#32BB78]/5 transition-colors hover:border-[#0B6E4F]"
+              className="cursor-pointer border-2 border-[#479B67]/40 bg-[#479B67]/5 transition-colors hover:border-[#479B67]"
               onClick={() => handleMethodSelect('enkambapay')}
             >
               <CardContent className="p-5">
                 <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#32BB78]/25 bg-white">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#479B67]/25 bg-white">
                     <Image src="/enkamba-logo.png" alt="eNkambaPay" width={56} height={56} className="h-14 w-14 max-w-none object-cover" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-semibold text-[#0B6E4F]">eNkambaPay</h2>
+                    <h2 className="text-xl font-semibold text-[#479B67]">eNkambaPay</h2>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <Card className="cursor-pointer border-2 transition-colors hover:border-[#0B6E4F]" onClick={() => handleMethodSelect('wonyapay')}>
+              <Card className="cursor-pointer border-2 transition-colors hover:border-[#479B67]" onClick={() => handleMethodSelect('wonyapay')}>
                 <CardContent className="space-y-4 p-5 text-center">
                   <div className="grid grid-cols-4 gap-2">
                     {[
@@ -369,7 +369,7 @@ export default function AddFundsPage() {
                         onChange={(event) => setAmount(event.target.value)}
                       />
                       {numericAmount > 0 && (
-                        <p className="text-sm font-semibold text-[#32BB78]">
+                        <p className="text-sm font-semibold text-[#479B67]">
                           Crédit portefeuille: {isLoadingRate ? 'Calcul...' : `${convertedAmount.toLocaleString('fr-FR')} CDF`}
                         </p>
                       )}
@@ -442,7 +442,7 @@ export default function AddFundsPage() {
                 <Button variant="outline" onClick={() => setStep('method')} className="flex-1">
                   Retour
                 </Button>
-                <Button onClick={handleDetailsSubmit} className="flex-1 bg-[#32BB78] hover:bg-[#32BB78]">
+                <Button onClick={handleDetailsSubmit} className="flex-1 bg-[#479B67] hover:bg-[#479B67]">
                   Continuer
                 </Button>
               </div>
@@ -479,7 +479,7 @@ export default function AddFundsPage() {
                 </div>
                 <div className="flex justify-between gap-4">
                   <span className="text-muted-foreground">Crédit portefeuille</span>
-                  <span className="text-right font-bold text-[#32BB78]">{convertedAmount.toLocaleString('fr-FR')} CDF</span>
+                  <span className="text-right font-bold text-[#479B67]">{convertedAmount.toLocaleString('fr-FR')} CDF</span>
                 </div>
                 {phoneNumber && (
                   <div className="flex justify-between gap-4">
@@ -501,7 +501,7 @@ export default function AddFundsPage() {
                 <Button variant="outline" onClick={() => setStep('details')} className="flex-1" disabled={busy}>
                   Retour
                 </Button>
-                <Button onClick={handleConfirm} className="flex-1 bg-[#32BB78] hover:bg-[#32BB78]" disabled={busy}>
+                <Button onClick={handleConfirm} className="flex-1 bg-[#479B67] hover:bg-[#479B67]" disabled={busy}>
                   {busy ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />

@@ -87,8 +87,8 @@ export default function OrdersPage() {
         <title>Reçu de Commande</title>
         <style>
           body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-          .header { background: #32BB78; color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-          .content { border: 2px solid #32BB78; padding: 30px; border-radius: 0 0 10px 10px; }
+          .header { background: #479B67; color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+          .content { border: 2px solid #479B67; padding: 30px; border-radius: 0 0 10px 10px; }
           .section { margin: 20px 0; }
           .label { color: #666; font-size: 14px; }
           .value { font-size: 16px; font-weight: bold; margin-top: 5px; }
@@ -96,7 +96,7 @@ export default function OrdersPage() {
           .footer { text-align: center; color: #666; margin-top: 30px; font-size: 12px; }
           .tracking { background: #e3f2fd; padding: 15px; border-radius: 8px; border-left: 4px solid #2196F3; }
           .qr-section { text-align: center; margin: 30px 0; padding: 20px; background: #f5f5f5; border-radius: 8px; }
-          .qr-section img { border: 3px solid #32BB78; border-radius: 8px; padding: 10px; background: white; }
+          .qr-section img { border: 3px solid #479B67; border-radius: 8px; padding: 10px; background: white; }
           @media print {
             body { margin: 0; padding: 10px; }
             .no-print { display: none; }
@@ -149,7 +149,7 @@ export default function OrdersPage() {
           
           <div class="total">
             <div class="label">Total Payé</div>
-            <div class="value" style="color: #32BB78; font-size: 24px;">
+            <div class="value" style="color: #479B67; font-size: 24px;">
               ${(order.totalPrice || order.totalAmount || 0).toLocaleString()} ${order.currency || 'CDF'}
             </div>
           </div>
