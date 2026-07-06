@@ -568,7 +568,7 @@ function LogisticsSideDrawer({
       <aside
         className={`absolute left-0 top-0 flex h-full w-[min(88vw,390px)] flex-col overflow-hidden bg-white shadow-[26px_0_70px_rgba(15,23,42,0.18)] transition-transform duration-300 ${open ? 'translate-x-0' : '-translate-x-full'}`}
       >
-        <div className="h-1.5 bg-[linear-gradient(90deg,#0A8B46_0%,#0A8B46_42%,#f59e0b_72%,#e11d48_100%)]" />
+        <div className="h-1.5 bg-[linear-gradient(90deg,#009058_0%,#009058_42%,#f59e0b_72%,#e11d48_100%)]" />
 
         <header className="flex items-center justify-between gap-4 border-b border-slate-100 px-5 py-5">
           <div className="flex min-w-0 items-center gap-3">
@@ -657,7 +657,7 @@ function LogisticsHubCard({
             <UgaviIcon size={86} className="h-[86px] w-[86px]" />
           </div>
           <div className="min-w-0 pt-1">
-            <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#0A8B46]">UGAVI BUSINESS</p>
+            <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#009058]">UGAVI BUSINESS</p>
             <h1 className="mt-1 line-clamp-2 text-[1.55rem] font-black leading-[1.05] tracking-tight text-white sm:text-3xl">
               {businessName || 'FIVE GOO Logistics Hub'}
             </h1>
@@ -668,7 +668,7 @@ function LogisticsHubCard({
           </div>
         </div>
         <span className="hidden shrink-0 items-center gap-2 rounded-2xl bg-white/10 px-3 py-2 text-sm font-black text-white ring-1 ring-white/12 sm:inline-flex">
-          <span className="h-2.5 w-2.5 rounded-full bg-[#0A8B46]" />
+          <span className="h-2.5 w-2.5 rounded-full bg-[#009058]" />
           Hub actif
         </span>
       </div>
@@ -683,7 +683,7 @@ function LogisticsHubCard({
           Scanner QR
         </button>
         <span className="inline-flex items-center gap-2 rounded-2xl bg-white/10 px-3 py-2 text-xs font-bold text-white/85 ring-1 ring-white/12 sm:hidden">
-          <span className="h-2.5 w-2.5 rounded-full bg-[#0A8B46]" />
+          <span className="h-2.5 w-2.5 rounded-full bg-[#009058]" />
           Hub actif
         </span>
       </div>
@@ -783,11 +783,11 @@ function generateBarcodeDataUrl(payload: string, label: string) {
     .map((bit, index) => {
       const width = bit === '1' ? 3 : 1;
       const x = 12 + index * 2;
-      return `<rect x="${x}" y="12" width="${width}" height="72" fill="#0A8B46" />`;
+      return `<rect x="${x}" y="12" width="${width}" height="72" fill="#009058" />`;
     })
     .join('');
   const safeLabel = label.replace(/[<>&"]/g, '');
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="430" height="140" viewBox="0 0 430 140"><rect width="430" height="140" rx="16" fill="#ffffff"/><rect x="8" y="8" width="414" height="124" rx="12" fill="#0A8B46" stroke="#0A8B46"/>${bars}<text x="215" y="114" text-anchor="middle" font-family="monospace" font-size="18" font-weight="700" fill="#0A8B46">${safeLabel}</text></svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="430" height="140" viewBox="0 0 430 140"><rect width="430" height="140" rx="16" fill="#ffffff"/><rect x="8" y="8" width="414" height="124" rx="12" fill="#009058" stroke="#009058"/>${bars}<text x="215" y="114" text-anchor="middle" font-family="monospace" font-size="18" font-weight="700" fill="#009058">${safeLabel}</text></svg>`;
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 
@@ -842,29 +842,29 @@ function buildMaritimeReceiptHtml(packageData: {
         * { box-sizing: border-box; }
         body { margin: 0; padding: 24px; font-family: Arial, sans-serif; color: #0f172a; background: #f8fafc; }
         .sheet { max-width: 860px; margin: 0 auto 22px; border: 1px solid #dbe7df; border-radius: 22px; background: #ffffff; overflow: hidden; }
-        .header { padding: 22px 26px; color: #ffffff; background: linear-gradient(135deg, #0A8B46, #0A8B46); }
+        .header { padding: 22px 26px; color: #ffffff; background: linear-gradient(135deg, #009058, #009058); }
         .header h1 { margin: 0; font-size: 24px; letter-spacing: .02em; }
         .header p { margin: 7px 0 0; font-size: 13px; opacity: .9; }
         .content { padding: 22px 26px; }
         .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
         .box { border: 1px solid #e2e8f0; border-radius: 16px; padding: 14px; background: #fff; }
-        .box h2 { margin: 0 0 10px; font-size: 13px; color: #0A8B46; text-transform: uppercase; letter-spacing: .08em; }
+        .box h2 { margin: 0 0 10px; font-size: 13px; color: #009058; text-transform: uppercase; letter-spacing: .08em; }
         .line { margin: 6px 0; font-size: 12px; line-height: 1.45; }
         .line strong { color: #111827; }
         table { width: 100%; border-collapse: collapse; font-size: 12px; }
         td { padding: 9px 10px; border-bottom: 1px solid #e2e8f0; }
-        td:last-child { text-align: right; font-weight: 800; color: #0A8B46; }
-        .total td { background: #0A8B46; font-size: 13px; font-weight: 900; }
+        td:last-child { text-align: right; font-weight: 800; color: #009058; }
+        .total td { background: #009058; font-size: 13px; font-weight: 900; }
         .signatures { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 18px; }
         .signature { min-height: 70px; border: 1px dashed #94a3b8; border-radius: 14px; padding: 10px; font-size: 11px; color: #475569; }
         .label-sheet { max-width: 560px; }
-        .label-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px; color: #ffffff; background: #0A8B46; }
+        .label-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px; color: #ffffff; background: #009058; }
         .tracking { font-family: monospace; font-size: 18px; font-weight: 900; }
         .code-grid { display: grid; grid-template-columns: 170px 1fr; gap: 14px; align-items: center; }
         .qr { width: 160px; height: 160px; border: 1px solid #e2e8f0; border-radius: 16px; padding: 8px; background: #fff; }
         .barcode { width: 100%; max-height: 110px; object-fit: contain; border: 1px solid #e2e8f0; border-radius: 14px; padding: 8px; background: #fff; }
         .marks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
-        .mark { border: 1px solid #0A8B46; border-radius: 12px; background: #0A8B46; padding: 8px; font-size: 11px; font-weight: 800; color: #0A8B46; }
+        .mark { border: 1px solid #009058; border-radius: 12px; background: #009058; padding: 8px; font-size: 11px; font-weight: 800; color: #009058; }
         .note { margin-top: 14px; border-radius: 14px; background: #f8fafc; padding: 12px; font-size: 11px; line-height: 1.5; color: #475569; }
         @media print {
           body { padding: 0; background: #fff; }
@@ -1383,7 +1383,7 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
       const qrCodeUrl = await (QRCode as any).toDataURL(qrPayload, {
         margin: 1,
         width: 220,
-        color: { dark: '#0A8B46', light: '#ffffff' },
+        color: { dark: '#009058', light: '#ffffff' },
       });
 
       const requestDoc = await addDoc(collection(db, 'ugaviRequests'), {

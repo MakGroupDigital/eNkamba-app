@@ -39,7 +39,7 @@ export function ContactQRCode({ open, onOpenChange, userData }: ContactQRCodePro
           margin: 4,
           errorCorrectionLevel: 'H',
           color: {
-            dark: '#0A8B46',
+            dark: '#009058',
             light: '#ffffff',
           },
         });

@@ -142,7 +142,7 @@ export default function FlightsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-[#0A8B46]/5 to-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-[#009058]/5 to-background">
       {/* Overlay de recherche */}
       {isSearching && (
         <div className="fixed inset-0 bg-background/95 backdrop-blur-sm z-50 flex items-center justify-center">
@@ -208,7 +208,7 @@ export default function FlightsPage() {
             </Link>
           </Button>
           <div className="flex-1">
-            <h1 className="font-headline text-2xl font-bold bg-gradient-to-r from-[#0A8B46] to-[#0A8B46] bg-clip-text text-transparent">
+            <h1 className="font-headline text-2xl font-bold bg-gradient-to-r from-[#009058] to-[#009058] bg-clip-text text-transparent">
               Réservation de vols
             </h1>
             <p className="text-sm text-muted-foreground">Trouvez et réservez votre vol</p>

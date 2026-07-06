@@ -30,13 +30,13 @@ export function AccessCodeGate({ children }: { children: React.ReactNode }) {
           <div className="flex justify-center">
             <div className="relative animate-float">
               <div className="absolute inset-0 rounded-full bg-primary/20 blur-2xl"></div>
-              <div className="relative h-28 w-28 overflow-hidden rounded-full bg-white shadow-2xl ring-4 ring-white/50">
+              <div className="relative h-28 w-28 overflow-hidden rounded-full bg-primary shadow-2xl ring-4 ring-white/60">
                 <Image
                   src="/enkamba-logo.png"
                   alt="eNkamba"
                   width={112}
                   height={112}
-                  className="h-full w-full object-cover"
+                  className="h-full w-full scale-[1.42] rounded-full object-cover [clip-path:circle(50%_at_50%_50%)]"
                   priority
                 />
               </div>

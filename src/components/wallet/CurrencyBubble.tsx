@@ -35,7 +35,7 @@ export function CurrencyBubble({ balance, code, symbol, label }: CurrencyBubbleP
         </div>
       </div>
       
-      <span className="text-[10px] font-semibold text-foreground group-hover:text-[#0A8B46] transition-colors duration-300">
+      <span className="text-[10px] font-semibold text-foreground group-hover:text-[#009058] transition-colors duration-300">
         {code}
       </span>
     </div>

@@ -6,12 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Settings, 
-  Users, 
-  QrCode, 
-  UserPlus, 
-  X, 
+import {
+  Settings,
+  Users,
+  QrCode,
+  UserPlus,
+  X,
   Check,
   Copy,
   Download,
@@ -81,7 +81,7 @@ export function GroupSettingsDialog({
           width: 300,
           margin: 2,
           color: {
-            dark: '#0A8B46',
+            dark: '#009058',
             light: '#ffffff',
           },
         });
@@ -97,7 +97,7 @@ export function GroupSettingsDialog({
   // Filtrer les contacts non membres
   const availableContacts = contacts.filter(
     contact => !groupData.participants.includes(contact.id)
-  ).filter(contact => 
+  ).filter(contact =>
     contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     contact.phoneNumber?.includes(searchQuery)
   );
@@ -326,7 +326,7 @@ export function GroupSettingsDialog({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Settings className="w-5 h-5 text-[#0A8B46]" />
+            <Settings className="w-5 h-5 text-[#009058]" />
             Paramètres du groupe
           </DialogTitle>
         </DialogHeader>
@@ -355,7 +355,7 @@ export function GroupSettingsDialog({
                     onClick={handleSaveGroupName}
                     disabled={isSavingName}
                     size="icon"
-                    className="bg-[#0A8B46] hover:bg-[#0A8B46]"
+                    className="bg-[#009058] hover:bg-[#009058]"
                   >
                     {isSavingName ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                   </Button>
@@ -390,9 +390,9 @@ export function GroupSettingsDialog({
 
             {/* Statistiques */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 bg-[#0A8B46]/10 rounded-lg border border-[#0A8B46]/20">
+              <div className="p-4 bg-[#009058]/10 rounded-lg border border-[#009058]/20">
                 <p className="text-sm text-muted-foreground">Membres</p>
-                <p className="text-2xl font-bold text-[#0A8B46]">{groupData.participants.length}</p>
+                <p className="text-2xl font-bold text-[#009058]">{groupData.participants.length}</p>
               </div>
               <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
                 <p className="text-sm text-muted-foreground">Admins</p>
@@ -434,7 +434,7 @@ export function GroupSettingsDialog({
                     inviteTab?.click();
                   }}
                   size="sm"
-                  className="bg-[#0A8B46] hover:bg-[#0A8B46] gap-2"
+                  className="bg-[#009058] hover:bg-[#009058] gap-2"
                 >
                   <UserPlus className="w-4 h-4" />
                   Ajouter
@@ -456,7 +456,7 @@ export function GroupSettingsDialog({
                   >
                     <div className="flex items-center gap-3">
                       <Avatar>
-                        <AvatarFallback className="bg-[#0A8B46] text-white">
+                        <AvatarFallback className="bg-[#009058] text-white">
                           {participantName.charAt(0).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
@@ -514,7 +514,7 @@ export function GroupSettingsDialog({
           {/* Onglet Inviter */}
           <TabsContent value="invite" className="space-y-4">
             {/* QR Code */}
-            <div className="flex flex-col items-center gap-4 p-6 bg-gradient-to-br from-[#0A8B46]/10 to-[#0A8B46]/5 rounded-lg border border-[#0A8B46]/20">
+            <div className="flex flex-col items-center gap-4 p-6 bg-gradient-to-br from-[#009058]/10 to-[#009058]/5 rounded-lg border border-[#009058]/20">
               <p className="text-sm font-semibold text-center">Scannez ce QR code pour rejoindre</p>
               {qrCode && (
                 <div className="bg-white p-4 rounded-lg shadow-lg">
@@ -547,7 +547,7 @@ export function GroupSettingsDialog({
             {isAdmin && (
               <div className="space-y-3">
                 <p className="text-sm font-semibold">Ajouter des contacts</p>
-                
+
                 {/* Recherche */}
                 <Input
                   placeholder="Rechercher un contact..."
@@ -564,7 +564,7 @@ export function GroupSettingsDialog({
                   ) : (
                     availableContacts.map((contact) => {
                       const isSelected = selectedContacts.includes(contact.id);
-                      
+
                       return (
                         <div
                           key={contact.id}
@@ -576,14 +576,14 @@ export function GroupSettingsDialog({
                             }
                           }}
                           className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
-                            isSelected 
-                              ? 'bg-[#0A8B46]/20 border-2 border-[#0A8B46]' 
+                            isSelected
+                              ? 'bg-[#009058]/20 border-2 border-[#009058]'
                               : 'bg-muted hover:bg-muted/80 border-2 border-transparent'
                           }`}
                         >
                           <div className="flex items-center gap-3">
                             <Avatar>
-                              <AvatarFallback className="bg-[#0A8B46] text-white">
+                              <AvatarFallback className="bg-[#009058] text-white">
                                 {contact.name.charAt(0).toUpperCase()}
                               </AvatarFallback>
                             </Avatar>
@@ -592,7 +592,7 @@ export function GroupSettingsDialog({
                               <p className="text-xs text-muted-foreground">{contact.phoneNumber}</p>
                             </div>
                           </div>
-                          {isSelected && <Check className="w-5 h-5 text-[#0A8B46]" />}
+                          {isSelected && <Check className="w-5 h-5 text-[#009058]" />}
                         </div>
                       );
                     })
@@ -604,7 +604,7 @@ export function GroupSettingsDialog({
                   <Button
                     onClick={handleAddMembers}
                     disabled={isAddingMembers}
-                    className="w-full bg-[#0A8B46] hover:bg-[#0A8B46] gap-2"
+                    className="w-full bg-[#009058] hover:bg-[#009058] gap-2"
                   >
                     {isAddingMembers ? (
                       <>

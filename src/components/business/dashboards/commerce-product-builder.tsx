@@ -795,8 +795,8 @@ export function CommerceProductBuilder({
 
   return (
     <div className="space-y-5">
-      <div className="overflow-hidden rounded-[30px] border border-[#0A8B46]/25 bg-white shadow-sm">
-        <div className="bg-[#0A8B46] px-4 py-4 text-white">
+      <div className="overflow-hidden rounded-[30px] border border-[#009058]/25 bg-white shadow-sm">
+        <div className="bg-[#009058] px-4 py-4 text-white">
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -812,7 +812,7 @@ export function CommerceProductBuilder({
               <p className="line-clamp-2 text-xs font-semibold text-white/75">{config.description}</p>
             </div>
             <div className="hidden h-12 w-12 place-items-center rounded-2xl bg-white sm:grid">
-              <PackagePlus className="h-6 w-6 text-[#0A8B46]" />
+              <PackagePlus className="h-6 w-6 text-[#009058]" />
             </div>
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
@@ -827,7 +827,7 @@ export function CommerceProductBuilder({
         <div className="grid gap-4 p-4 lg:grid-cols-[0.85fr_1.15fr]">
           <section className="space-y-4 rounded-[26px] border border-slate-200 bg-slate-50 p-4">
             <div className="flex items-start gap-3">
-              <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#0A8B46]/10 text-[#0A8B46]">
+              <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#009058]/10 text-[#009058]">
                 <ShieldCheck className="h-5 w-5" />
               </div>
               <div>
@@ -852,24 +852,24 @@ export function CommerceProductBuilder({
               ))}
             </div>
 
-            <div className="rounded-2xl border border-[#0A8B46]/20 bg-white p-4">
+            <div className="rounded-2xl border border-[#009058]/20 bg-white p-4">
               <div className="mb-3 flex items-center gap-2">
-                <FileCheck2 className="h-4 w-4 text-[#0A8B46]" />
+                <FileCheck2 className="h-4 w-4 text-[#009058]" />
                 <p className="text-sm font-black text-slate-950">Contrôles intégrés</p>
               </div>
               <div className="space-y-2 text-xs font-semibold text-slate-600">
                 {['Facture automatique', 'Stock et disponibilité', 'Paiement traçable', 'Audit commande', 'Remboursement contrôlé'].map((item) => (
                   <div key={item} className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-[#0A8B46]" />
+                    <CheckCircle2 className="h-4 w-4 text-[#009058]" />
                     {item}
                   </div>
                 ))}
               </div>
             </div>
 
-            <label className="block cursor-pointer rounded-[24px] border-2 border-dashed border-[#0A8B46]/30 bg-white p-5 text-center transition hover:border-[#0A8B46]">
-              <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-[#0A8B46]/10">
-                <UploadCloud className="h-6 w-6 text-[#0A8B46]" />
+            <label className="block cursor-pointer rounded-[24px] border-2 border-dashed border-[#009058]/30 bg-white p-5 text-center transition hover:border-[#009058]">
+              <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-[#009058]/10">
+                <UploadCloud className="h-6 w-6 text-[#009058]" />
               </div>
               <p className="mt-3 text-sm font-black text-slate-950">
                 {listingType === 'service' ? 'Images du service' : listingType === 'digital' ? 'Visuels de l’offre' : 'Images produit'}
@@ -889,9 +889,9 @@ export function CommerceProductBuilder({
             ) : null}
 
             {listingType === 'digital' ? (
-              <div className="rounded-[24px] border border-[#0A8B46]/20 bg-white p-4">
+              <div className="rounded-[24px] border border-[#009058]/20 bg-white p-4">
                 <div className="mb-3 flex items-start gap-3">
-                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-[#0A8B46]/10 text-[#0A8B46]">
+                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-[#009058]/10 text-[#009058]">
                     <DownloadCloud className="h-5 w-5" />
                   </div>
                   <div>
@@ -901,8 +901,8 @@ export function CommerceProductBuilder({
                     </p>
                   </div>
                 </div>
-                <label className="block cursor-pointer rounded-2xl border-2 border-dashed border-[#0A8B46]/30 bg-[#0A8B46]/5 p-4 text-center transition hover:border-[#0A8B46]">
-                  <FileArchive className="mx-auto h-7 w-7 text-[#0A8B46]" />
+                <label className="block cursor-pointer rounded-2xl border-2 border-dashed border-[#009058]/30 bg-[#009058]/5 p-4 text-center transition hover:border-[#009058]">
+                  <FileArchive className="mx-auto h-7 w-7 text-[#009058]" />
                   <p className="mt-2 text-sm font-black text-slate-950">Importer le livrable digital</p>
                   <p className="mt-1 text-[11px] font-semibold text-slate-500">
                     {getDigitalTypeMeta(form.digitalProductType).hint}
@@ -923,7 +923,7 @@ export function CommerceProductBuilder({
                           <p className="truncate text-xs font-black text-slate-900">{file.name}</p>
                           <p className="text-[11px] font-semibold text-slate-500">{(file.size / 1024 / 1024).toFixed(2)} Mo</p>
                         </div>
-                        <span className="rounded-full bg-[#0A8B46]/10 px-2 py-1 text-[10px] font-black text-[#0A8B46]">Cloudinary</span>
+                        <span className="rounded-full bg-[#009058]/10 px-2 py-1 text-[10px] font-black text-[#009058]">Cloudinary</span>
                       </div>
                     ))}
                   </div>
@@ -1025,7 +1025,7 @@ export function CommerceProductBuilder({
             {Array.from(visibleFields).some((field) => !['stock', 'moq'].includes(field)) ? (
             <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-4">
               <div className="mb-3 flex items-center gap-2">
-                <Boxes className="h-4 w-4 text-[#0A8B46]" />
+                <Boxes className="h-4 w-4 text-[#009058]" />
                 <p className="text-sm font-black text-slate-950">
                   Détails utiles pour {listingType === 'service' ? 'ce service' : listingType === 'digital' ? 'cette offre digitale' : 'ce produit'}
                 </p>
@@ -1129,7 +1129,7 @@ export function CommerceProductBuilder({
               <Button type="button" variant="outline" className="rounded-2xl" onClick={onBack} disabled={isSubmitting}>
                 Annuler
               </Button>
-              <Button type="button" className="rounded-2xl bg-[#0A8B46] hover:bg-[#0A4747]" onClick={handleSubmit} disabled={isSubmitting}>
+              <Button type="button" className="rounded-2xl bg-[#009058] hover:bg-[#009058]" onClick={handleSubmit} disabled={isSubmitting}>
                 {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PackagePlus className="mr-2 h-4 w-4" />}
                 {config.cta}
               </Button>
@@ -1154,7 +1154,7 @@ function Field({
     <label className="block space-y-2">
       <span className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-slate-600">
         {label}
-        {required ? <Badge className="rounded-full bg-[#0A8B46]/10 px-2 py-0.5 text-[10px] text-[#0A8B46] hover:bg-[#0A8B46]/10">requis</Badge> : null}
+        {required ? <Badge className="rounded-full bg-[#009058]/10 px-2 py-0.5 text-[10px] text-[#009058] hover:bg-[#009058]/10">requis</Badge> : null}
       </span>
       {children}
     </label>

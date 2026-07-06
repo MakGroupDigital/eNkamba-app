@@ -164,8 +164,8 @@ export default function HistoryPage() {
             </Link>
           </Button>
           <div className="flex items-center gap-2">
-            <HistoryIcon className="h-6 w-6 text-[#0A8B46]" />
-            <h1 className="font-headline text-2xl font-bold bg-gradient-to-r from-[#0A8B46] to-[#0A8B46] bg-clip-text text-transparent">
+            <HistoryIcon className="h-6 w-6 text-[#009058]" />
+            <h1 className="font-headline text-2xl font-bold bg-gradient-to-r from-[#009058] to-[#009058] bg-clip-text text-transparent">
               Historique des Transactions
             </h1>
           </div>
@@ -253,7 +253,7 @@ export default function HistoryPage() {
                   <div
                     key={tx.id}
                     onClick={() => setSelectedTransaction(tx)}
-                    className="flex items-center gap-4 p-4 rounded-xl hover:bg-muted/50 transition-colors group cursor-pointer border border-border/50 hover:border-[#0A8B46]/50"
+                    className="flex items-center gap-4 p-4 rounded-xl hover:bg-muted/50 transition-colors group cursor-pointer border border-border/50 hover:border-[#009058]/50"
                   >
                     <div className={`p-3 rounded-full flex-shrink-0 ${iconConfig.bgColor}`}>
                       <Icon className={`w-5 h-5 ${iconConfig.iconColor}`} size={20} />
@@ -265,7 +265,7 @@ export default function HistoryPage() {
                         {getStatusBadge(tx.status)}
                       </div>
                     </div>
-                    <p className={`font-bold text-sm flex-shrink-0 ${isIncoming ? 'text-[#0A8B46]' : 'text-foreground'}`}>
+                    <p className={`font-bold text-sm flex-shrink-0 ${isIncoming ? 'text-[#009058]' : 'text-foreground'}`}>
                       {isIncoming ? '+' : '-'} {tx.amount.toLocaleString('fr-FR')} {tx.currency || 'CDF'}
                     </p>
                   </div>
@@ -384,7 +384,7 @@ export default function HistoryPage() {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">Solde après</span>
-                      <span className="font-semibold text-[#0A8B46]">{selectedTransaction.newBalance.toLocaleString('fr-FR')} CDF</span>
+                      <span className="font-semibold text-[#009058]">{selectedTransaction.newBalance.toLocaleString('fr-FR')} CDF</span>
                     </div>
                   </div>
                 </>
@@ -439,7 +439,7 @@ export default function HistoryPage() {
               <Button
                 onClick={handleDownloadReceipt}
                 disabled={isDownloading}
-                className="flex-1 bg-[#0A8B46] hover:bg-[#0A8B46] text-white gap-2"
+                className="flex-1 bg-[#009058] hover:bg-[#009058] text-white gap-2"
               >
                 {isDownloading ? (
                   <>

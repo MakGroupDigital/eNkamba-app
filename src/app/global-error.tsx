@@ -21,7 +21,7 @@ export default function GlobalError({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: 'linear-gradient(135deg, #f5f5f5 0%, #0A8B46 100%)',
+          background: 'linear-gradient(135deg, #f5f5f5 0%, #009058 100%)',
           padding: '20px',
           fontFamily: 'system-ui, -apple-system, sans-serif'
         }}>
@@ -39,7 +39,7 @@ export default function GlobalError({
               width: '80px',
               height: '80px',
               margin: '0 auto 24px',
-              background: 'linear-gradient(135deg, #0A8B46 0%, #0A8B46 100%)',
+              background: 'linear-gradient(135deg, #009058 0%, #009058 100%)',
               borderRadius: '50%',
               display: 'flex',
               alignItems: 'center',
@@ -109,7 +109,7 @@ export default function GlobalError({
               <button
                 onClick={reset}
                 style={{
-                  background: 'linear-gradient(135deg, #0A8B46 0%, #0A8B46 100%)',
+                  background: 'linear-gradient(135deg, #009058 0%, #009058 100%)',
                   color: 'white',
                   border: 'none',
                   borderRadius: '8px',
@@ -130,8 +130,8 @@ export default function GlobalError({
                 onClick={() => window.location.href = '/dashboard'}
                 style={{
                   background: 'white',
-                  color: '#0A8B46',
-                  border: '2px solid #0A8B46',
+                  color: '#009058',
+                  border: '2px solid #009058',
                   borderRadius: '8px',
                   padding: '14px 24px',
                   fontSize: '16px',
@@ -141,12 +141,12 @@ export default function GlobalError({
                   width: '100%'
                 }}
                 onMouseOver={(e) => {
-                  e.currentTarget.style.background = '#0A8B46';
+                  e.currentTarget.style.background = '#009058';
                   e.currentTarget.style.color = 'white';
                 }}
                 onMouseOut={(e) => {
                   e.currentTarget.style.background = 'white';
-                  e.currentTarget.style.color = '#0A8B46';
+                  e.currentTarget.style.color = '#009058';
                 }}
               >
                 🏠 Retour au tableau de bord
@@ -181,13 +181,13 @@ export default function GlobalError({
             <div style={{
               marginTop: '24px',
               padding: '16px',
-              background: '#0A8B46',
+              background: '#009058',
               borderRadius: '8px',
-              border: '1px solid #0A8B46'
+              border: '1px solid #009058'
             }}>
               <p style={{
                 fontSize: '12px',
-                color: '#0A8B46',
+                color: '#009058',
                 margin: '0',
                 lineHeight: '1.5'
               }}>

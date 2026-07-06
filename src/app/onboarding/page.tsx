@@ -183,7 +183,7 @@ export default function OnboardingPage() {
       <div
         className="min-h-screen flex items-center justify-center"
         style={{
-          background: "linear-gradient(to bottom right, #0A8B46, #0A8B46, #0A8B46)",
+          background: "linear-gradient(to bottom right, #009058, #009058, #009058)",
         }}
       >
         <Loader2 className="w-8 h-8 animate-spin text-white" />
@@ -217,7 +217,7 @@ export default function OnboardingPage() {
     <div
       className="min-h-screen overflow-hidden relative"
       style={{
-        background: "linear-gradient(to bottom right, #0A8B46, #0A8B46, #0A8B46)",
+        background: "linear-gradient(to bottom right, #009058, #009058, #009058)",
       }}
     >
       {/* Floating decorative circles */}
@@ -361,19 +361,19 @@ export default function OnboardingPage() {
                   transition={{ duration: 0.5, delay: 0.2 }}
                 >
                   {currentSlideData.isLogo ? (
-                    <div className="w-20 h-20 rounded-2xl overflow-hidden shadow-lg">
+                    <div className="h-20 w-20 overflow-hidden rounded-full bg-[#009058] shadow-lg ring-2 ring-white/60">
                       <Image
                         src="/enkamba-logo.png"
                         alt="eNkamba Logo"
                         width={80}
                         height={80}
-                        className="w-full h-full object-cover"
+                        className="h-full w-full scale-[1.42] rounded-full object-cover [clip-path:circle(50%_at_50%_50%)]"
                       />
                     </div>
                   ) : (
                     <div className="rounded-2xl bg-white flex items-center justify-center shadow-lg p-4">
                       {IconComponent && (
-                        <IconComponent className="w-10 h-10 text-[#0A8B46]" />
+                        <IconComponent className="w-10 h-10 text-[#009058]" />
                       )}
                     </div>
                   )}
@@ -387,7 +387,7 @@ export default function OnboardingPage() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.4, delay: 0.2 }}
               >
-                <span className="bg-white text-[#0A8B46] text-xs font-bold px-4 py-1.5 rounded-full shadow-md">
+                <span className="bg-white text-[#009058] text-xs font-bold px-4 py-1.5 rounded-full shadow-md">
                   {currentSlideData.module}
                 </span>
               </motion.div>
@@ -453,7 +453,7 @@ export default function OnboardingPage() {
           {/* CTA Button */}
           {isLastSlide ? (
             <Link href="/login" className="block">
-              <Button className="w-full h-14 bg-white text-[#0A8B46] hover:bg-white/90 rounded-full text-lg font-semibold shadow-lg border-0">
+              <Button className="w-full h-14 bg-white text-[#009058] hover:bg-white/90 rounded-full text-lg font-semibold shadow-lg border-0">
                 C&apos;est parti !
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>

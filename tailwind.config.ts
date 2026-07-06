@@ -16,10 +16,10 @@ export default {
       },
       colors: {
         enkamba: {
-          primary: '#0A8B46',
-          active: '#0F9A61',
-          card: '#089961',
-          accent: '#18A96E',
+          primary: '#009058',
+          active: '#009058',
+          card: '#009058',
+          accent: '#009058',
           orange: '#FFA500',
           soft: '#E8F6F1',
           page: '#FCFDFC',

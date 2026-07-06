@@ -11,8 +11,8 @@ const Styles = () => (
   <style>{`
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Roboto:wght@300;400;500;700&display=swap');
     :root {
-      --color-primary: #0A8B46;
-      --color-dark: #0A8B46;
+      --color-primary: #009058;
+      --color-dark: #009058;
       --color-accent: #FFA500;
     }
     body {
@@ -41,7 +41,7 @@ const Styles = () => (
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
     .bubble-user {
-      background-color: #0A8B46;
+      background-color: #009058;
       box-shadow: 0 4px 15px rgba(50, 187, 120, 0.3);
     }
     .bubble-ai {
@@ -65,7 +65,7 @@ const Styles = () => (
     }
     .setting-card:hover {
       background: rgba(255, 255, 255, 0.06);
-      border-color: #0A8B46;
+      border-color: #009058;
     }
   `}</style>
 );
@@ -74,15 +74,15 @@ const Styles = () => (
 const Logo = () => (
   <div className="flex flex-col items-center mb-10 mt-8">
     <div className="relative w-16 h-16 mb-4 group cursor-pointer">
-      <div className="absolute inset-0 bg-[#0A8B46] opacity-20 blur-xl rounded-full group-hover:opacity-40 transition-opacity"></div>
+      <div className="absolute inset-0 bg-[#009058] opacity-20 blur-xl rounded-full group-hover:opacity-40 transition-opacity"></div>
       <svg viewBox="0 0 100 100" className="w-full h-full relative z-10">
-        <path d="M25 80 L25 30 Q25 20 35 25 L65 55 Q75 60 75 50 L75 20" stroke="#0A8B46" strokeWidth="14" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-        <path d="M75 20 L55 20 M75 20 L75 40" stroke="#0A8B46" strokeWidth="14" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M25 80 L25 30 Q25 20 35 25 L65 55 Q75 60 75 50 L75 20" stroke="#009058" strokeWidth="14" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M75 20 L55 20 M75 20 L75 40" stroke="#009058" strokeWidth="14" strokeLinecap="round" strokeLinejoin="round" />
         <circle cx="88" cy="15" r="4" fill="#FFA500" className="animate-pulse" />
       </svg>
     </div>
     <div className="font-brand font-bold text-xl tracking-wide">
-      eNkamba<span className="font-light text-[#0A8B46]">.ai</span>
+      eNkamba<span className="font-light text-[#009058]">.ai</span>
     </div>
   </div>
 );
@@ -106,7 +106,7 @@ const Sidebar = ({ activeTab, setActiveTab }: any) => {
             onClick={() => setActiveTab(item.id)}
             className={`flex items-center gap-3 p-4 rounded-xl font-medium transition-all duration-200 ${
               activeTab === item.id
-                ? 'bg-[#0A8B46] text-white shadow-lg shadow-[#0A8B46]/20'
+                ? 'bg-[#009058] text-white shadow-lg shadow-[#009058]/20'
                 : 'text-gray-400 hover:bg-white/5 hover:text-white'
             }`}
           >
@@ -174,23 +174,23 @@ const ChatInterface = ({ chatId }: { chatId: string }) => {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-[#0A8B46] relative overflow-hidden">
+    <div className="flex-1 flex flex-col h-full bg-[#009058] relative overflow-hidden">
       <div className="ai-glow"></div>
-      <header className="h-20 flex items-center justify-between px-8 border-b border-white/5 bg-[#0A8B46]/80 backdrop-blur-md z-10">
+      <header className="h-20 flex items-center justify-between px-8 border-b border-white/5 bg-[#009058]/80 backdrop-blur-md z-10">
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-full bg-[#0A8B46]/10 flex items-center justify-center border border-[#0A8B46]/20">
-            <MessageSquare size={18} className="text-[#0A8B46]" />
+          <div className="w-10 h-10 rounded-full bg-[#009058]/10 flex items-center justify-center border border-[#009058]/20">
+            <MessageSquare size={18} className="text-[#009058]" />
           </div>
           <div>
             <h1 className="font-brand font-bold text-lg">Assistant eNkamba</h1>
-            <span className="text-[10px] text-[#0A8B46] uppercase font-bold tracking-widest">Actif</span>
+            <span className="text-[10px] text-[#009058] uppercase font-bold tracking-widest">Actif</span>
           </div>
         </div>
         <div className="flex items-center gap-3">
           <button className="p-2 text-gray-400 hover:text-white">
             <Bell size={20} />
           </button>
-          <div className="w-8 h-8 rounded-full bg-[#0A8B46] flex items-center justify-center font-bold text-xs">
+          <div className="w-8 h-8 rounded-full bg-[#009058] flex items-center justify-center font-bold text-xs">
             {user?.firstName?.substring(0, 1) || 'U'}
           </div>
         </div>
@@ -198,7 +198,7 @@ const ChatInterface = ({ chatId }: { chatId: string }) => {
       <main className="flex-1 overflow-y-auto p-6 space-y-6 relative z-0">
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center">
-            <MessageSquare size={48} className="text-[#0A8B46] mb-4 opacity-50" />
+            <MessageSquare size={48} className="text-[#009058] mb-4 opacity-50" />
             <p className="text-gray-400">Commencez une conversation</p>
           </div>
         )}
@@ -211,23 +211,23 @@ const ChatInterface = ({ chatId }: { chatId: string }) => {
             </div>
           </div>
         ))}
-        {isLoading && <div className="text-xs text-[#0A8B46] animate-pulse">eNkamba réfléchit...</div>}
+        {isLoading && <div className="text-xs text-[#009058] animate-pulse">eNkamba réfléchit...</div>}
         <div ref={messagesEndRef} />
       </main>
-      <footer className="p-6 bg-[#0A8B46] border-t border-white/5">
+      <footer className="p-6 bg-[#009058] border-t border-white/5">
         <div className="max-w-4xl mx-auto relative">
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && !isLoading && handleSend()}
             disabled={isLoading}
-            className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-6 pr-14 outline-none focus:border-[#0A8B46] transition-all disabled:opacity-50"
+            className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-6 pr-14 outline-none focus:border-[#009058] transition-all disabled:opacity-50"
             placeholder="Écrivez votre message..."
           />
           <button
             onClick={() => handleSend()}
             disabled={isLoading}
-            className="absolute right-2 top-2 bottom-2 aspect-square bg-[#0A8B46] rounded-lg flex items-center justify-center text-white disabled:opacity-50"
+            className="absolute right-2 top-2 bottom-2 aspect-square bg-[#009058] rounded-lg flex items-center justify-center text-white disabled:opacity-50"
           >
             <Send size={18} />
           </button>
@@ -246,8 +246,8 @@ const HistoryPage = ({ aiChats, onDeleteChat }: any) => (
         {aiChats.map((chat: any) => (
           <div key={chat.id} className="setting-card p-5 rounded-2xl flex items-center justify-between group">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-[#0A8B46]/10 rounded-xl flex items-center justify-center">
-                <MessageSquare size={20} className="text-[#0A8B46]" />
+              <div className="w-12 h-12 bg-[#009058]/10 rounded-xl flex items-center justify-center">
+                <MessageSquare size={20} className="text-[#009058]" />
               </div>
               <div>
                 <h4 className="font-bold text-sm">{chat.title}</h4>
@@ -274,7 +274,7 @@ const SettingsPage = () => (
       <h2 className="text-3xl font-brand font-bold mb-8">Paramètres AI</h2>
       <div className="grid gap-6">
         <section className="space-y-4">
-          <h3 className="text-xs font-bold text-[#0A8B46] uppercase tracking-widest">Préférences</h3>
+          <h3 className="text-xs font-bold text-[#009058] uppercase tracking-widest">Préférences</h3>
           <div className="setting-card p-5 rounded-2xl flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Zap size={20} className="text-[#FFA500]" />
@@ -283,15 +283,15 @@ const SettingsPage = () => (
                 <p className="text-xs text-gray-500">Prioriser la rapidité</p>
               </div>
             </div>
-            <div className="w-12 h-6 bg-[#0A8B46] rounded-full relative">
+            <div className="w-12 h-6 bg-[#009058] rounded-full relative">
               <div className="absolute right-1 top-1 bottom-1 aspect-square bg-white rounded-full"></div>
             </div>
           </div>
         </section>
         <section className="space-y-4 mt-4">
-          <h3 className="text-xs font-bold text-[#0A8B46] uppercase tracking-widest">Sécurité</h3>
+          <h3 className="text-xs font-bold text-[#009058] uppercase tracking-widest">Sécurité</h3>
           <div className="setting-card p-5 rounded-2xl flex items-center gap-4">
-            <ShieldCheck size={20} className="text-[#0A8B46]" />
+            <ShieldCheck size={20} className="text-[#009058]" />
             <div>
               <h4 className="text-sm font-bold">Cryptage E2E</h4>
               <p className="text-xs text-gray-500">Données chiffrées localement</p>
@@ -318,7 +318,7 @@ export default function EnkambaAIModule({ params }: { params: { id: string } }) 
   };
 
   return (
-    <div className="flex h-screen bg-[#0A8B46] text-white">
+    <div className="flex h-screen bg-[#009058] text-white">
       <Styles />
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
       {activeTab === 'assistant' && <ChatInterface chatId={chatId} />}

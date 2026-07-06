@@ -27,9 +27,9 @@ const fiveGoServices = [
 
 export default function FiveGoPage() {
   return (
-    <div className="min-h-screen bg-[#0A8B46]">
+    <div className="min-h-screen bg-[#009058]">
       <div className="mx-auto max-w-4xl space-y-5 p-4">
-        <header className="relative overflow-hidden rounded-[1.75rem] bg-[#0A8B46] p-5 text-white shadow-lg shadow-[#0A8B46]/20">
+        <header className="relative overflow-hidden rounded-[1.75rem] bg-[#009058] p-5 text-white shadow-lg shadow-[#009058]/20">
           <div className="absolute -right-8 -top-10 h-28 w-28 rounded-full bg-white/20 blur-2xl" />
           <div className="relative flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/18">
@@ -42,10 +42,10 @@ export default function FiveGoPage() {
           </div>
         </header>
 
-        <Card className="overflow-hidden rounded-2xl border-[#0A8B46]">
-          <CardHeader className="bg-gradient-to-r from-[#0A8B46]/10 to-transparent">
+        <Card className="overflow-hidden rounded-2xl border-[#009058]">
+          <CardHeader className="bg-gradient-to-r from-[#009058]/10 to-transparent">
             <CardTitle className="font-headline flex items-center gap-2 text-foreground">
-              <span className="h-2 w-2 rounded-full bg-[#0A8B46]" />
+              <span className="h-2 w-2 rounded-full bg-[#009058]" />
               Services 5go
             </CardTitle>
           </CardHeader>
@@ -57,7 +57,7 @@ export default function FiveGoPage() {
                   <Link
                     href={service.href}
                     key={service.title}
-                    className="group flex min-h-[132px] flex-col items-center justify-center gap-2 rounded-xl border border-border/50 bg-gradient-to-br from-background to-muted/30 p-4 text-center text-sm font-medium text-foreground transition-all duration-300 hover:scale-[1.02] hover:border-[#0A8B46]/30 hover:shadow-md"
+                    className="group flex min-h-[132px] flex-col items-center justify-center gap-2 rounded-xl border border-border/50 bg-gradient-to-br from-background to-muted/30 p-4 text-center text-sm font-medium text-foreground transition-all duration-300 hover:scale-[1.02] hover:border-[#009058]/30 hover:shadow-md"
                   >
                     <div className="transition-transform duration-300 group-hover:scale-110">
                       <IconComponent size={40} />

@@ -151,8 +151,8 @@ export default function AgentOpsWithdrawPage() {
                   {balance.toLocaleString('fr-FR')} CDF
                 </div>
               </div>
-              <div className="h-12 w-12 rounded-2xl bg-[#0A8B46]/10 flex items-center justify-center">
-                <HandCoins className="text-[#0A8B46]" />
+              <div className="h-12 w-12 rounded-2xl bg-[#009058]/10 flex items-center justify-center">
+                <HandCoins className="text-[#009058]" />
               </div>
             </div>
           </CardContent>
@@ -179,7 +179,7 @@ export default function AgentOpsWithdrawPage() {
                       <Button
                         key={op}
                         variant={operator === op ? 'default' : 'outline'}
-                        className={operator === op ? 'bg-[#0A8B46] hover:bg-[#0A8B46]' : ''}
+                        className={operator === op ? 'bg-[#009058] hover:bg-[#009058]' : ''}
                         onClick={() => setOperator(op)}
                         type="button"
                       >
@@ -287,7 +287,7 @@ export default function AgentOpsWithdrawPage() {
             {step === 'details' ? (
               <Button
                 onClick={goConfirm}
-                className="w-full h-12 rounded-xl bg-[#0A8B46] hover:bg-[#0A8B46] text-white"
+                className="w-full h-12 rounded-xl bg-[#009058] hover:bg-[#009058] text-white"
               >
                 Continuer
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -308,7 +308,7 @@ export default function AgentOpsWithdrawPage() {
                   <Button
                     onClick={startPin}
                     disabled={isLoading}
-                    className="h-12 rounded-xl bg-[#0A8B46] hover:bg-[#0A8B46] text-white"
+                    className="h-12 rounded-xl bg-[#009058] hover:bg-[#009058] text-white"
                   >
                     {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Confirmer'}
                   </Button>

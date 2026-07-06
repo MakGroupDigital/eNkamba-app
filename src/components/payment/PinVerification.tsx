@@ -234,7 +234,7 @@ export function PinVerification({ isOpen, onClose, onSuccess, purpose = 'payment
       <DialogContent className="max-w-md" onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Lock className="w-5 h-5 text-[#0A8B46]" />
+            <Lock className="w-5 h-5 text-[#009058]" />
             {hasPin === false ? 'Créer votre code PIN' : 'Vérification du code PIN'}
           </DialogTitle>
           <DialogDescription>
@@ -257,7 +257,7 @@ export function PinVerification({ isOpen, onClose, onSuccess, purpose = 'payment
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Montant :</span>
-                <span className="font-bold text-[#0A8B46]">
+                <span className="font-bold text-[#009058]">
                   {paymentDetails.amount} {paymentDetails.currency}
                 </span>
               </div>
@@ -266,7 +266,7 @@ export function PinVerification({ isOpen, onClose, onSuccess, purpose = 'payment
 
           {hasPin === null ? (
             <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0A8B46]"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#009058]"></div>
             </div>
           ) : hasPin === false ? (
             <div className="space-y-4">
@@ -399,7 +399,7 @@ export function PinVerification({ isOpen, onClose, onSuccess, purpose = 'payment
             <Button
               onClick={createPin}
               disabled={isCreatingPin || pin.length !== 4 || confirmPin.length !== 4 || pin !== confirmPin}
-              className="bg-[#0A8B46] hover:bg-[#0A8B46]"
+              className="bg-[#009058] hover:bg-[#009058]"
             >
               {isCreatingPin ? 'Création...' : 'Créer le code PIN'}
             </Button>
@@ -407,7 +407,7 @@ export function PinVerification({ isOpen, onClose, onSuccess, purpose = 'payment
             <Button
               onClick={verifyPin}
               disabled={isVerifying || pin.length !== 4}
-              className="bg-[#0A8B46] hover:bg-[#0A8B46]"
+              className="bg-[#009058] hover:bg-[#009058]"
             >
               {isVerifying ? 'Vérification...' : purpose === 'balance' ? 'Afficher le solde' : 'Confirmer le paiement'}
             </Button>

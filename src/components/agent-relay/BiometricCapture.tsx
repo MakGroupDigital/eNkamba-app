@@ -297,13 +297,13 @@ export function BiometricCapture({ type, onCapture, capturedUrl }: BiometricCapt
   const isRecording = mediaRecorderRef.current?.state === 'recording';
 
   return (
-    <div className="p-6 rounded-2xl bg-[#0A8B46]/10 border border-[#0A8B46]/30">
+    <div className="p-6 rounded-2xl bg-[#009058]/10 border border-[#009058]/30">
       <div className="text-center">
-        <div className="h-20 w-20 mx-auto mb-4 rounded-full bg-[#0A8B46]/20 flex items-center justify-center">
+        <div className="h-20 w-20 mx-auto mb-4 rounded-full bg-[#009058]/20 flex items-center justify-center">
           {type === 'photo' ? (
-            <Camera size={32} className="text-[#0A8B46]" />
+            <Camera size={32} className="text-[#009058]" />
           ) : (
-            <Video size={32} className="text-[#0A8B46]" />
+            <Video size={32} className="text-[#009058]" />
           )}
         </div>
         
@@ -365,7 +365,7 @@ export function BiometricCapture({ type, onCapture, capturedUrl }: BiometricCapt
             )}
 
             {isUploading ? (
-              <div className="flex items-center justify-center gap-2 text-[#0A8B46]">
+              <div className="flex items-center justify-center gap-2 text-[#009058]">
                 <Loader2 size={20} className="animate-spin" />
                 <span className="text-sm">Upload en cours...</span>
               </div>
@@ -379,7 +379,7 @@ export function BiometricCapture({ type, onCapture, capturedUrl }: BiometricCapt
                 {type === 'photo' ? (
                   <Button
                     onClick={capturePhoto}
-                    className="flex-1 bg-[#0A8B46] hover:bg-[#0A8B46]"
+                    className="flex-1 bg-[#009058] hover:bg-[#009058]"
                   >
                     <Camera size={16} className="mr-2" />
                     Capturer
@@ -394,7 +394,7 @@ export function BiometricCapture({ type, onCapture, capturedUrl }: BiometricCapt
                 ) : (
                   <Button
                     onClick={startRecording}
-                    className="flex-1 bg-[#0A8B46] hover:bg-[#0A8B46]"
+                    className="flex-1 bg-[#009058] hover:bg-[#009058]"
                   >
                     <Video size={16} className="mr-2" />
                     Enregistrer
@@ -425,7 +425,7 @@ export function BiometricCapture({ type, onCapture, capturedUrl }: BiometricCapt
             
             <Button
               onClick={startCamera}
-              className="bg-[#0A8B46] hover:bg-[#0A8B46]"
+              className="bg-[#009058] hover:bg-[#009058]"
             >
               {type === 'photo' ? (
                 <>

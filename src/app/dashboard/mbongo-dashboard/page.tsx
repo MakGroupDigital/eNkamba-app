@@ -230,7 +230,7 @@ export default function MbongoDashboard() {
             return (
               <Link key={action.labelKey} href={action.href} className="flex flex-col items-center gap-2.5 group">
                 {/* Icon Circle - Green background */}
-                <div className="flex h-[84px] w-[84px] items-center justify-center rounded-full bg-[#0A8B46] text-white shadow-xl shadow-[#0A8B46]/25 transition-all duration-300 hover:scale-110 hover:bg-[#0A8B46] sm:h-24 sm:w-24">
+                <div className="flex h-[84px] w-[84px] items-center justify-center rounded-full bg-[#009058] text-white shadow-xl shadow-[#009058]/25 transition-all duration-300 hover:scale-110 hover:bg-[#009058] sm:h-24 sm:w-24">
                   <IconComponent size={62} className="h-[62px] w-[62px] text-white sm:h-[68px] sm:w-[68px]" />
                 </div>
                 {/* Label */}
@@ -241,7 +241,7 @@ export default function MbongoDashboard() {
         </div>
 
         <section className="space-y-3">
-          <div className="group relative mx-auto flex w-full max-w-[500px] items-center justify-between overflow-hidden rounded-2xl bg-gradient-to-br from-[#0A8B46] to-[#0A8B46] px-4 py-3 text-white shadow-lg shadow-[#0A8B46]/20 ring-1 ring-white/20 animate-in fade-in-50 slide-in-from-bottom-3 duration-500">
+          <div className="group relative mx-auto flex w-full max-w-[500px] items-center justify-between overflow-hidden rounded-2xl bg-gradient-to-br from-[#009058] to-[#009058] px-4 py-3 text-white shadow-lg shadow-[#009058]/20 ring-1 ring-white/20 animate-in fade-in-50 slide-in-from-bottom-3 duration-500">
             <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,rgba(255,255,255,0.28),transparent_32%,transparent_68%,rgba(0,0,0,0.10))]" />
             <div className="pointer-events-none absolute inset-y-0 -left-20 w-16 skew-x-[-18deg] bg-white/25 blur-sm transition-transform duration-1000 group-hover:translate-x-[620px]" />
             <Link href="/dashboard/wallet" className="relative min-w-0 flex-1">

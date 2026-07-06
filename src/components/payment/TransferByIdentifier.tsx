@@ -29,7 +29,7 @@ interface TransferByIdentifierProps {
 
 export function TransferByIdentifier({ onCancel, onTransferComplete }: TransferByIdentifierProps) {
   const { toast } = useToast();
-  
+
   const [identifierType, setIdentifierType] = useState<IdentifierType>('phone');
   const [identifierValue, setIdentifierValue] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -70,7 +70,7 @@ export function TransferByIdentifier({ onCancel, onTransferComplete }: TransferB
     setIsSearching(true);
     try {
       console.log('Recherche utilisateur avec:', identifierValue);
-      
+
       const resolvedUser = await resolveUserByIdentifier(identifierValue);
 
       if (!resolvedUser) {
@@ -132,7 +132,7 @@ export function TransferByIdentifier({ onCancel, onTransferComplete }: TransferB
   // Continuer vers le paiement
   const handleContinue = () => {
     if (!userInfo) return;
-    
+
     if (!amount || parseFloat(amount) <= 0) {
       toast({
         variant: 'destructive',
@@ -161,8 +161,8 @@ export function TransferByIdentifier({ onCancel, onTransferComplete }: TransferB
                       key={option.value}
                       variant={identifierType === option.value ? 'default' : 'outline'}
                       className={`h-auto py-3 flex flex-col items-center gap-2 ${
-                        identifierType === option.value 
-                          ? 'bg-[#0A8B46] hover:bg-[#0A8B46]' 
+                        identifierType === option.value
+                          ? 'bg-[#009058] hover:bg-[#009058]'
                           : ''
                       }`}
                       onClick={() => {
@@ -199,7 +199,7 @@ export function TransferByIdentifier({ onCancel, onTransferComplete }: TransferB
                 <Button
                   onClick={handleSearch}
                   disabled={isSearching || !identifierValue.trim()}
-                  className="bg-[#0A8B46] hover:bg-[#0A8B46]"
+                  className="bg-[#009058] hover:bg-[#009058]"
                 >
                   {isSearching ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -240,19 +240,19 @@ export function TransferByIdentifier({ onCancel, onTransferComplete }: TransferB
 
             {/* Avatar et nom */}
             <div className="flex flex-col items-center gap-3 py-4">
-              <div className="bg-[#0A8B46]/10 rounded-full p-6">
-                <User className="w-12 h-12 text-[#0A8B46]" />
+              <div className="bg-[#009058]/10 rounded-full p-6">
+                <User className="w-12 h-12 text-[#009058]" />
               </div>
               <div className="text-center">
-                <p className="font-bold text-xl text-[#0A8B46]">{userInfo.fullName}</p>
+                <p className="font-bold text-xl text-[#009058]">{userInfo.fullName}</p>
               </div>
             </div>
 
             {/* Toutes les informations */}
             <div className="space-y-3 bg-muted/50 rounded-lg p-4">
               <div className="flex items-center gap-3">
-                <div className="bg-[#0A8B46]/10 rounded-full p-2">
-                  <Hash className="w-4 h-4 text-[#0A8B46]" />
+                <div className="bg-[#009058]/10 rounded-full p-2">
+                  <Hash className="w-4 h-4 text-[#009058]" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-muted-foreground">Numéro eNkamba</p>
@@ -323,7 +323,7 @@ export function TransferByIdentifier({ onCancel, onTransferComplete }: TransferB
 
           {/* Boutons d'action */}
           <Button
-            className="w-full bg-gradient-to-r from-[#0A8B46] to-primary hover:from-[#0A8B46] hover:to-primary h-12 text-base font-bold"
+            className="w-full bg-gradient-to-r from-[#009058] to-primary hover:from-[#009058] hover:to-primary h-12 text-base font-bold"
             onClick={handleContinue}
             disabled={!amount || parseFloat(amount) <= 0}
           >

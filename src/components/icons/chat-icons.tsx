@@ -8,8 +8,8 @@ interface IconProps {
 const SvgDefs = () => (
   <defs>
     <linearGradient id="chatPrimaryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stopColor="#0A8B46" />
-      <stop offset="100%" stopColor="#0A8B46" />
+      <stop offset="0%" stopColor="#009058" />
+      <stop offset="100%" stopColor="#009058" />
     </linearGradient>
     <linearGradient id="chatAccentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stopColor="#FFA500" />
@@ -45,7 +45,7 @@ export const ChatGroupCustomIcon: React.FC<IconProps> = ({ size = 24, className 
     <circle cx="18" cy="17" r="7" fill="url(#chatPrimaryGrad)" />
     <circle cx="32" cy="18" r="6" fill="url(#chatAccentGrad)" />
     <path d="M7 40C8 31 12 27 18 27C24 27 28 31 29 40H7Z" fill="url(#chatPrimaryGrad)" />
-    <path d="M25 40C26 32 29 29 34 29C39 29 42 33 43 40H25Z" fill="#0A8B46" opacity="0.9" />
+    <path d="M25 40C26 32 29 29 34 29C39 29 42 33 43 40H25Z" fill="#009058" opacity="0.9" />
   </svg>
 );
 
@@ -89,8 +89,8 @@ export const ChatMicCustomIcon: React.FC<IconProps> = ({ size = 24, className = 
     <SvgDefs />
     <rect x="17" y="6" width="14" height="24" rx="7" fill="url(#chatPrimaryGrad)" />
     <path d="M12 23C12 30 17 35 24 35C31 35 36 30 36 23" stroke="#FFA500" strokeWidth="4" strokeLinecap="round" />
-    <path d="M24 35V42" stroke="#0A8B46" strokeWidth="4" strokeLinecap="round" />
-    <path d="M18 42H30" stroke="#0A8B46" strokeWidth="4" strokeLinecap="round" />
+    <path d="M24 35V42" stroke="#009058" strokeWidth="4" strokeLinecap="round" />
+    <path d="M18 42H30" stroke="#009058" strokeWidth="4" strokeLinecap="round" />
   </svg>
 );
 

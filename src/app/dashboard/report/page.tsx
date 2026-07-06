@@ -133,7 +133,7 @@ export default function ReportPage() {
     const url = `${window.location.origin}/report/view?data=${reportBase64}`;
     
     try {
-        const dataUrl = await QRCode.toDataURL(url, { width: 300, margin: 2, color: { dark: '#0A8B46', light: '#FFFFFF' } });
+        const dataUrl = await QRCode.toDataURL(url, { width: 300, margin: 2, color: { dark: '#009058', light: '#FFFFFF' } });
         setQrCodeDataUrl(dataUrl);
     } catch (err) {
         console.error("Failed to generate QR code", err);

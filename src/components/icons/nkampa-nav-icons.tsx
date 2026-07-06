@@ -21,8 +21,8 @@ export const NkampaNavShopIcon = ({ className, size = 24 }: IconProps) => (
   >
     <defs>
       <linearGradient id="shopGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#0A8B46" />
-        <stop offset="100%" stopColor="#0A8B46" />
+        <stop offset="0%" stopColor="#009058" />
+        <stop offset="100%" stopColor="#009058" />
       </linearGradient>
     </defs>
     {/* Sac de shopping */}
@@ -30,13 +30,13 @@ export const NkampaNavShopIcon = ({ className, size = 24 }: IconProps) => (
     {/* Poignées du sac */}
     <path d="M14 16C14 10 18 6 24 6C30 6 34 10 34 16" stroke="currentColor" strokeWidth="3" strokeLinecap="round" fill="none" />
     {/* Détails du sac */}
-    <rect x="12" y="20" width="24" height="3" rx="1.5" fill="#0A8B46" opacity="0.6" />
+    <rect x="12" y="20" width="24" height="3" rx="1.5" fill="#009058" opacity="0.6" />
     {/* Tag de prix */}
     <circle cx="24" cy="30" r="6" fill="#FFD700" />
-    <text x="24" y="33" textAnchor="middle" fontSize="8" fill="#0A8B46" fontWeight="bold">%</text>
+    <text x="24" y="33" textAnchor="middle" fontSize="8" fill="#009058" fontWeight="bold">%</text>
     {/* Sparkles */}
-    <circle cx="16" cy="12" r="2" fill="#0A8B46" opacity="0.7" />
-    <circle cx="32" cy="12" r="2" fill="#0A8B46" opacity="0.7" />
+    <circle cx="16" cy="12" r="2" fill="#009058" opacity="0.7" />
+    <circle cx="32" cy="12" r="2" fill="#009058" opacity="0.7" />
     <circle cx="38" cy="24" r="1.5" fill="#FFD700" opacity="0.8" />
   </svg>
 );
@@ -62,12 +62,12 @@ export const NkampaNavOrdersIcon = ({ className, size = 24 }: IconProps) => (
     {/* En-tête du document */}
     <rect x="14" y="10" width="20" height="4" rx="2" fill="#1565C0" />
     {/* Lignes de commande avec checks */}
-    <circle cx="16" cy="20" r="3" fill="#0A8B46" />
+    <circle cx="16" cy="20" r="3" fill="#009058" />
     <path d="M14.5 20L15.5 21L17.5 19" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     <rect x="22" y="18" width="12" height="2" rx="1" fill="#fff" opacity="0.8" />
     <rect x="22" y="21" width="8" height="1.5" rx="0.75" fill="#fff" opacity="0.5" />
     
-    <circle cx="16" cy="28" r="3" fill="#0A8B46" />
+    <circle cx="16" cy="28" r="3" fill="#009058" />
     <path d="M14.5 28L15.5 29L17.5 27" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     <rect x="22" y="26" width="12" height="2" rx="1" fill="#fff" opacity="0.8" />
     <rect x="22" y="29" width="8" height="1.5" rx="0.75" fill="#fff" opacity="0.5" />
@@ -159,7 +159,7 @@ export const NkampaNavSellerIcon = ({ className, size = 24 }: IconProps) => (
     <rect x="20" y="32" width="8" height="12" rx="1" fill="#C66900" />
     <circle cx="26" cy="38" r="1" fill="#FFD700" />
     {/* Panneau "OPEN" */}
-    <rect x="14" y="28" width="6" height="4" rx="0.5" fill="#0A8B46" />
+    <rect x="14" y="28" width="6" height="4" rx="0.5" fill="#009058" />
     <text x="17" y="31" textAnchor="middle" fontSize="2.5" fill="#fff" fontWeight="bold">OPEN</text>
     {/* Étoile de qualité */}
     <circle cx="38" cy="10" r="6" fill="#FFD700" />

@@ -306,7 +306,7 @@ export default function HotelsPage() {
   ].filter(Boolean).length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-[#0A8B46]/5 to-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-[#009058]/5 to-background">
       <div className="container mx-auto max-w-7xl p-4 space-y-6 animate-in fade-in duration-500">
         <header className="flex items-center gap-4 pt-4">
           <Button variant="ghost" size="icon" asChild>
@@ -315,7 +315,7 @@ export default function HotelsPage() {
             </Link>
           </Button>
           <div className="flex-1">
-            <h1 className="font-headline text-2xl font-bold bg-gradient-to-r from-[#0A8B46] to-[#0A8B46] bg-clip-text text-transparent">
+            <h1 className="font-headline text-2xl font-bold bg-gradient-to-r from-[#009058] to-[#009058] bg-clip-text text-transparent">
               Réservation d'hôtels
             </h1>
             <p className="text-sm text-muted-foreground">
@@ -574,7 +574,7 @@ export default function HotelsPage() {
                     className="object-cover group-hover:scale-110 transition-transform duration-300"
                   />
                   {hotel.featured && (
-                    <Badge className="absolute top-2 right-2 bg-gradient-to-r from-[#0A8B46] to-[#0A8B46]">
+                    <Badge className="absolute top-2 right-2 bg-gradient-to-r from-[#009058] to-[#009058]">
                       Recommandé
                     </Badge>
                   )}

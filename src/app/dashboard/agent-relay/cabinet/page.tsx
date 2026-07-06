@@ -40,7 +40,7 @@ export default function CabinetPage() {
 
       {/* Hero Section */}
       <Card className="overflow-hidden">
-        <div className="bg-gradient-to-r from-[#0A8B46] via-[#0A8B46] to-[#0A8B46] p-8 text-white">
+        <div className="bg-gradient-to-r from-[#009058] via-[#009058] to-[#009058] p-8 text-white">
           <div className="flex items-center gap-6">
             <div className="h-20 w-20 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
               <Store size={40} />
@@ -362,7 +362,7 @@ export default function CabinetPage() {
       <div className="text-center space-y-4">
         <Button 
           size="lg" 
-          className="w-full h-14 rounded-xl text-base font-semibold bg-gradient-to-r from-[#0A8B46] to-[#0A8B46] hover:from-[#0A8B46] hover:to-[#0A8B46] shadow-lg"
+          className="w-full h-14 rounded-xl text-base font-semibold bg-gradient-to-r from-[#009058] to-[#009058] hover:from-[#009058] hover:to-[#009058] shadow-lg"
           asChild
         >
           <Link href="/dashboard/agent-relay/application?type=cabinet">
