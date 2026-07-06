@@ -24,9 +24,9 @@ function getCustomWallpaperUrl(wallpaperId?: string | null) {
   return String(wallpaperId).slice(CUSTOM_CHAT_WALLPAPER_PREFIX.length);
 }
 
-function imageBackground(url: string, overlayOpacity = 0.66) {
+function imageBackground(url: string) {
   const cssUrl = `url(${JSON.stringify(url)})`;
-  return `linear-gradient(rgba(255,255,255,${overlayOpacity}), rgba(255,255,255,${overlayOpacity})), ${cssUrl}`;
+  return cssUrl;
 }
 
 export const CHAT_WALLPAPERS: ChatWallpaper[] = [
@@ -34,13 +34,13 @@ export const CHAT_WALLPAPERS: ChatWallpaper[] = [
     id: 'chatfond1',
     label: 'Chat eNkamba',
     previewClass: 'bg-[url("/chatfond1.jpeg")] bg-cover bg-center',
-    backgroundImage: imageBackground('/chatfond1.jpeg', 0.66),
+    backgroundImage: imageBackground('/chatfond1.jpeg'),
   },
   {
     id: 'fondchat',
     label: 'eNkamba',
     previewClass: 'bg-[url("/fondchat.jpeg")] bg-cover bg-center',
-    backgroundImage: imageBackground('/fondchat.jpeg', 0.72),
+    backgroundImage: imageBackground('/fondchat.jpeg'),
   },
   {
     id: 'clean',
@@ -74,7 +74,7 @@ export function getChatWallpaper(wallpaperId?: string | null) {
         backgroundSize: 'cover',
         backgroundPosition: 'center',
       },
-      backgroundImage: imageBackground(customUrl, 0.66),
+      backgroundImage: imageBackground(customUrl),
     };
   }
 

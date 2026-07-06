@@ -18,10 +18,12 @@ import { MoneyTransferMessage } from '@/components/chat/MoneyTransferMessage';
 import { useLocationSharing } from '@/hooks/useLocationSharing';
 import { useChatMoneyTransfer } from '@/hooks/useChatMoneyTransfer';
 import { uploadToCloudinary } from '@/lib/cloudinary-upload';
-import { Ban, Bell, BellOff, ChevronLeft, Flag, Image as ImageIcon, Send, Loader2, Mail, Phone, Mic, Video, MapPin, DollarSign, Paperclip, Plus, X, Check, Square, Settings, ShieldAlert, UserMinus, Users, Trash2, Edit2, MoreVertical, Languages } from 'lucide-react';
+import { Ban, Bell, BellOff, ChevronLeft, Flag, Image as ImageIcon, Send, Loader2, Mail, Phone, Mic, Video, MapPin, DollarSign, Paperclip, Plus, X, Check, Square, Settings, ShieldAlert, UserMinus, Users, Trash2, Edit2, MoreVertical, Languages, Keyboard } from 'lucide-react';
 import Link from 'next/link';
 import { GroupSettingsDialog } from '@/components/group-settings-dialog';
 import { CHAT_WALLPAPERS, createCustomChatWallpaperId, getChatWallpaper, isCustomChatWallpaper } from '@/lib/chat-wallpapers';
+import { EnkambaSmartKeyboard } from '@/components/chat/EnkambaSmartKeyboard';
+import type { EnkambaKeyboardItem } from '@/lib/enkamba-keyboard';
 
 type IncomingCallDoc = {
     id: string;
@@ -98,6 +100,7 @@ export default function ConversationClient() {
         lastSeenAt?: any;
     }>({ onlineStatus: true, lastSeen: true, isOnline: false });
     const [showMoreActions, setShowMoreActions] = useState(false);
+    const [showSmartKeyboard, setShowSmartKeyboard] = useState(false);
     const [isRecording, setIsRecording] = useState(false);
     const [recordingType, setRecordingType] = useState<'audio' | 'video' | null>(null);
     const [recordingBlob, setRecordingBlob] = useState<Blob | null>(null);
@@ -787,6 +790,55 @@ export default function ConversationClient() {
         } catch (error) {
             console.error('Erreur envoi message:', error);
             setInputValue(messageText); // Restaurer le message en cas d'erreur
+        } finally {
+            setIsSending(false);
+        }
+    };
+
+    const insertKeyboardText = (text: string) => {
+        setInputValue((current) => {
+            const separator = current && !current.endsWith(' ') ? ' ' : '';
+            return `${current}${separator}${text} `;
+        });
+        requestAnimationFrame(() => textAreaRef.current?.focus());
+    };
+
+    const sendKeyboardItem = async (item: EnkambaKeyboardItem) => {
+        if (!conversationId || isSending) return;
+        if (!isGroup && relationshipControl.blocked) {
+            alert('Ce contact est bloqué. Débloquez-le pour envoyer un message.');
+            return;
+        }
+
+        setIsSending(true);
+        try {
+            const metadata = {
+                keyboardItem: {
+                    id: item.id,
+                    category: item.category,
+                    symbol: item.symbol,
+                    label: item.label,
+                    tone: item.tone,
+                },
+                ...(replyingTo
+                    ? {
+                        replyTo: replyingTo.id,
+                        repliedMessage: {
+                            id: replyingTo.id,
+                            text: replyingTo.text,
+                            senderName: replyingTo.senderName,
+                            senderId: replyingTo.senderId,
+                            messageType: replyingTo.messageType,
+                        },
+                    }
+                    : {}),
+            };
+
+            await sendMessage(conversationId, `${item.symbol} ${item.text}`, 'text', metadata);
+            setReplyingTo(null);
+            setShowSmartKeyboard(false);
+        } catch (error) {
+            console.error('Erreur envoi clavier eNkamba:', error);
         } finally {
             setIsSending(false);
         }
@@ -1768,6 +1820,35 @@ export default function ConversationClient() {
                                                 </div>
                                             );
                                         })()
+                                    ) : message.metadata?.keyboardItem ? (
+                                        <div className={`min-w-[150px] rounded-2xl border p-2.5 ${
+                                            isOwn ? 'border-white/15 bg-white/10' : 'border-primary/10 bg-primary/5'
+                                        }`}>
+                                            <div className="flex items-center gap-2">
+                                                <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-2xl shadow-sm ${
+                                                    message.metadata.keyboardItem.tone === 'orange'
+                                                        ? 'bg-[#FFA500] text-white'
+                                                        : 'bg-primary text-white'
+                                                }`}>
+                                                    {message.metadata.keyboardItem.symbol}
+                                                </span>
+                                                <div className="min-w-0">
+                                                    <p className={`truncate text-xs font-black ${isOwn ? 'text-white' : 'text-foreground'}`}>
+                                                        {message.metadata.keyboardItem.label}
+                                                    </p>
+                                                    <p className={`text-[10px] font-semibold uppercase tracking-wide ${isOwn ? 'text-white/65' : 'text-muted-foreground'}`}>
+                                                        {message.metadata.keyboardItem.category === 'enbimoji'
+                                                            ? 'eNbimoji'
+                                                            : message.metadata.keyboardItem.category === 'icons'
+                                                                ? 'Icône eNkamba'
+                                                                : 'Sticker eNkamba'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <p className={`mt-2 text-sm font-semibold leading-5 whitespace-pre-wrap break-words ${isOwn ? 'text-white' : 'text-foreground'}`}>
+                                                {message.text}
+                                            </p>
+                                        </div>
                                     ) : (
                                         <p className="text-sm leading-5 whitespace-pre-wrap break-words">{message.text}</p>
                                     )}
@@ -2124,6 +2205,16 @@ export default function ConversationClient() {
                     </div>
                 )}
 
+                {!recordingBlob && showSmartKeyboard && (
+                    <EnkambaSmartKeyboard
+                        open={showSmartKeyboard}
+                        disabled={isSending || isRecording || (!isGroup && relationshipControl.blocked)}
+                        onClose={() => setShowSmartKeyboard(false)}
+                        onInsertText={insertKeyboardText}
+                        onSendItem={sendKeyboardItem}
+                    />
+                )}
+
                 {/* Main Input Area */}
                 {!recordingBlob && (
                     <div className="flex gap-2 items-end">
@@ -2138,11 +2229,28 @@ export default function ConversationClient() {
                             {showMoreActions ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
                         </Button>
 
+                        <Button
+                            size="icon"
+                            variant={showSmartKeyboard ? 'default' : 'outline'}
+                            className="rounded-full"
+                            onClick={() => {
+                                setShowMoreActions(false);
+                                setShowSmartKeyboard((value) => !value);
+                            }}
+                            disabled={isSending || isRecording || (!isGroup && relationshipControl.blocked)}
+                            title="Clavier eNkamba"
+                        >
+                            <Keyboard className="h-4 w-4" />
+                        </Button>
+
                         {/* Text Input (auto-wrap + auto-grow) */}
                         <textarea
                             ref={textAreaRef}
                             placeholder="Écrivez votre message..."
                             value={inputValue}
+                            onFocus={() => {
+                                setShowSmartKeyboard(true);
+                            }}
                             onChange={(e) => setInputValue(e.target.value)}
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' && !e.shiftKey) {

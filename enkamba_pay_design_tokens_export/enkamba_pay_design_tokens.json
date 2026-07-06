@@ -1,0 +1,168 @@
+{
+  "project": "eNKAMBA Pay - UI Update",
+  "version": "1.0",
+  "source_screen": "Paiement / Wallet",
+  "colors": {
+    "primary_green": {
+      "hex": "#028355",
+      "usage": "Identité officielle, header, éléments principaux"
+    },
+    "active_green": {
+      "hex": "#0F9A61",
+      "usage": "Boutons actifs, icônes principales"
+    },
+    "card_green": {
+      "hex": "#089961",
+      "usage": "Cartes solde, cartes devises"
+    },
+    "accent_green": {
+      "hex": "#18A96E",
+      "usage": "Notifications, badges, accents"
+    },
+    "soft_green_bg": {
+      "hex": "#E8F6F1",
+      "usage": "Fond actif menu, arrière-plan doux"
+    },
+    "page_bg": {
+      "hex": "#FCFDFC",
+      "usage": "Fond général de l'application"
+    },
+    "text_primary": {
+      "hex": "#1B2026",
+      "usage": "Titres et textes importants"
+    },
+    "text_secondary": {
+      "hex": "#477063",
+      "usage": "Labels, sous-titres, menu inactif"
+    },
+    "border_light": {
+      "hex": "#E9F0ED",
+      "usage": "Bordures des cartes et séparateurs"
+    },
+    "white": {
+      "hex": "#FFFFFF",
+      "usage": "Cartes, textes sur vert, bordures bouton IA"
+    }
+  },
+  "gradients": {
+    "green_card_header": "linear-gradient(135deg, #028355 0%, #089961 55%, #18A96E 100%)",
+    "round_action_button": "linear-gradient(145deg, #028355 0%, #0F9A61 70%, #18A96E 100%)",
+    "ai_floating_button": "linear-gradient(145deg, #028355 0%, #18A96E 100%)"
+  },
+  "icon_sizes": {
+    "top_actions": {
+      "items": [
+        "Scanner",
+        "Payer/Recevoir",
+        "Investir",
+        "Portefeuille"
+      ],
+      "container": {
+        "width": 72,
+        "height": 72,
+        "unit": "px"
+      },
+      "icon": {
+        "width": 34,
+        "height": 34,
+        "unit": "px"
+      },
+      "border_radius": "50%"
+    },
+    "financial_services": {
+      "items": [
+        "Épargne",
+        "Crédit",
+        "Tontine",
+        "Conversion",
+        "Parrainage",
+        "Compte Agent",
+        "Lier un compte",
+        "Bonus"
+      ],
+      "card": {
+        "width": 100,
+        "height": 115,
+        "unit": "px"
+      },
+      "icon": {
+        "width": 42,
+        "height": 42,
+        "unit": "px"
+      },
+      "border_radius": 14
+    },
+    "bottom_navigation": {
+      "items": [
+        "Chat",
+        "Marché",
+        "Logistique",
+        "Paiement",
+        "Réseau",
+        "Paramètres"
+      ],
+      "icon": {
+        "width": 24,
+        "height": 24,
+        "unit": "px"
+      },
+      "active_icon": {
+        "width": 26,
+        "height": 26,
+        "unit": "px"
+      },
+      "active_background": "#E8F6F1",
+      "active_color": "#0F9A61",
+      "inactive_color": "#477063"
+    },
+    "floating_ai": {
+      "container": {
+        "width": 64,
+        "height": 64,
+        "unit": "px"
+      },
+      "letter_size": {
+        "size": 32,
+        "unit": "px"
+      },
+      "mini_ai_badge": {
+        "width": 22,
+        "height": 22,
+        "unit": "px"
+      },
+      "border": "3px solid #FFFFFF"
+    }
+  },
+  "typography": {
+    "font_family": [
+      "Inter",
+      "Poppins",
+      "Roboto",
+      "sans-serif"
+    ],
+    "title_size": "22px",
+    "section_title_size": "14px",
+    "card_label_size": "13px",
+    "bottom_menu_size": "11px",
+    "weights": {
+      "title": 700,
+      "section": 600,
+      "normal": 500
+    }
+  },
+  "layout": {
+    "screen_width_reference": "390px",
+    "page_padding_horizontal": "24px",
+    "card_radius": "18px",
+    "small_card_radius": "10px",
+    "card_shadow": "0 6px 18px rgba(2, 131, 85, 0.16)",
+    "service_card_shadow": "0 3px 12px rgba(27, 32, 38, 0.08)"
+  },
+  "developer_notes": [
+    "Utiliser #028355 comme couleur officielle de la marque.",
+    "Utiliser #0F9A61 pour les actions principales et l'état actif.",
+    "Utiliser #18A96E seulement pour les accents, notifications et badges.",
+    "Garder les icônes en vert pour renforcer l'identité eNKAMBA.",
+    "Respecter les tailles d'icônes pour éviter les différences visuelles entre Android et iOS."
+  ]
+}

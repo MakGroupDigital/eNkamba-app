@@ -1,0 +1,128 @@
+/* eNKAMBA Pay - Design Tokens CSS
+   Version: 1.0
+   Ready for developer integration
+*/
+
+:root {
+  /* Colors */
+  --enkamba-primary-green: #028355;
+  --enkamba-active-green: #0F9A61;
+  --enkamba-card-green: #089961;
+  --enkamba-accent-green: #18A96E;
+  --enkamba-soft-green-bg: #E8F6F1;
+  --enkamba-page-bg: #FCFDFC;
+  --enkamba-text-primary: #1B2026;
+  --enkamba-text-secondary: #477063;
+  --enkamba-border-light: #E9F0ED;
+  --enkamba-white: #FFFFFF;
+
+  /* Gradients */
+  --enkamba-gradient-card-header: linear-gradient(135deg, #028355 0%, #089961 55%, #18A96E 100%);
+  --enkamba-gradient-round-button: linear-gradient(145deg, #028355 0%, #0F9A61 70%, #18A96E 100%);
+  --enkamba-gradient-ai-button: linear-gradient(145deg, #028355 0%, #18A96E 100%);
+
+  /* Typography */
+  --enkamba-font-family: Inter, Poppins, Roboto, sans-serif;
+  --enkamba-title-size: 22px;
+  --enkamba-section-title-size: 14px;
+  --enkamba-card-label-size: 13px;
+  --enkamba-bottom-menu-size: 11px;
+  --enkamba-weight-title: 700;
+  --enkamba-weight-section: 600;
+  --enkamba-weight-normal: 500;
+
+  /* Radius & Shadows */
+  --enkamba-card-radius: 18px;
+  --enkamba-small-card-radius: 10px;
+  --enkamba-card-shadow: 0 6px 18px rgba(2, 131, 85, 0.16);
+  --enkamba-service-card-shadow: 0 3px 12px rgba(27, 32, 38, 0.08);
+
+  /* Icon Sizes */
+  --enkamba-top-action-container: 72px;
+  --enkamba-top-action-icon: 34px;
+  --enkamba-service-card-width: 100px;
+  --enkamba-service-card-height: 115px;
+  --enkamba-service-icon: 42px;
+  --enkamba-bottom-icon: 24px;
+  --enkamba-bottom-icon-active: 26px;
+  --enkamba-ai-button: 64px;
+  --enkamba-ai-letter: 32px;
+  --enkamba-ai-badge: 22px;
+}
+
+/* Suggested UI classes */
+.enkamba-page {
+  background: var(--enkamba-page-bg);
+  font-family: var(--enkamba-font-family);
+  color: var(--enkamba-text-primary);
+}
+
+.enkamba-header,
+.enkamba-balance-card,
+.enkamba-currency-card {
+  background: var(--enkamba-gradient-card-header);
+  border-radius: var(--enkamba-card-radius);
+  box-shadow: var(--enkamba-card-shadow);
+}
+
+.enkamba-round-action {
+  width: var(--enkamba-top-action-container);
+  height: var(--enkamba-top-action-container);
+  border-radius: 50%;
+  background: var(--enkamba-gradient-round-button);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.enkamba-round-action svg,
+.enkamba-round-action img {
+  width: var(--enkamba-top-action-icon);
+  height: var(--enkamba-top-action-icon);
+}
+
+.enkamba-service-card {
+  width: var(--enkamba-service-card-width);
+  height: var(--enkamba-service-card-height);
+  border-radius: 14px;
+  border: 1px solid var(--enkamba-border-light);
+  background: var(--enkamba-white);
+  box-shadow: var(--enkamba-service-card-shadow);
+}
+
+.enkamba-service-card svg,
+.enkamba-service-card img {
+  width: var(--enkamba-service-icon);
+  height: var(--enkamba-service-icon);
+  color: var(--enkamba-active-green);
+}
+
+.enkamba-bottom-nav-item {
+  color: var(--enkamba-text-secondary);
+  font-size: var(--enkamba-bottom-menu-size);
+}
+
+.enkamba-bottom-nav-item svg,
+.enkamba-bottom-nav-item img {
+  width: var(--enkamba-bottom-icon);
+  height: var(--enkamba-bottom-icon);
+}
+
+.enkamba-bottom-nav-item.active {
+  color: var(--enkamba-active-green);
+  background: var(--enkamba-soft-green-bg);
+}
+
+.enkamba-bottom-nav-item.active svg,
+.enkamba-bottom-nav-item.active img {
+  width: var(--enkamba-bottom-icon-active);
+  height: var(--enkamba-bottom-icon-active);
+}
+
+.enkamba-ai-floating {
+  width: var(--enkamba-ai-button);
+  height: var(--enkamba-ai-button);
+  border-radius: 50%;
+  border: 3px solid var(--enkamba-white);
+  background: var(--enkamba-gradient-ai-button);
+}
