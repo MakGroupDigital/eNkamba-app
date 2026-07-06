@@ -54,7 +54,7 @@ export default function MbongoNavigation() {
         <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary/20 via-accent/20 to-primary/20 blur-xl opacity-60" />
         
         {/* Barre de navigation */}
-        <div className="relative flex h-16 items-center justify-center gap-2 rounded-full bg-background/80 px-3 shadow-2xl backdrop-blur-xl border border-white/10 dark:border-white/5">
+        <div className="relative flex h-20 items-center justify-center gap-3.5 rounded-full bg-background/80 px-4 shadow-2xl backdrop-blur-xl border border-white/10 dark:border-white/5">
           {/* Effet de brillance */}
           <div className="absolute inset-x-4 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/30 to-transparent" />
           
@@ -71,7 +71,7 @@ export default function MbongoNavigation() {
                   whileHover={{ scale: 1.15 }}
                   whileTap={{ scale: 0.95 }}
                   className={cn(
-                    'relative flex h-12 w-12 items-center justify-center rounded-full transition-all duration-300',
+                    'relative flex h-16 w-16 items-center justify-center rounded-full transition-all duration-300',
                     isActive
                       ? `bg-gradient-to-br ${item.gradient} text-white shadow-lg`
                       : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
@@ -96,10 +96,10 @@ export default function MbongoNavigation() {
                   
                   {/* Icône */}
                   <IconComponent 
-                    size={isActive ? 26 : 22} 
+                    size={isActive ? 42 : 38} 
                     className={cn(
                       "relative z-10 transition-all duration-300",
-                      isActive ? "drop-shadow-md" : ""
+                      isActive ? "h-[42px] w-[42px] drop-shadow-md" : "h-[38px] w-[38px]"
                     )}
                   />
                   

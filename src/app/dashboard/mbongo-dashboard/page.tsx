@@ -223,18 +223,18 @@ export default function MbongoDashboard() {
       <DashboardHeader />
       <div className="container mx-auto max-w-4xl p-4 space-y-6 animate-in fade-in duration-500 pt-24">
         {/* Quick Actions - 4 Circles */}
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-4 gap-2.5 sm:gap-5">
           {quickActions.map((action) => {
             const IconComponent = action.icon;
             
             return (
-              <Link key={action.labelKey} href={action.href} className="flex flex-col items-center gap-2 group">
+              <Link key={action.labelKey} href={action.href} className="flex flex-col items-center gap-2.5 group">
                 {/* Icon Circle - Green background */}
-                <div className="flex items-center justify-center w-16 h-16 rounded-full bg-[#0A8B46] hover:bg-[#0A8B46] transition-all duration-300 hover:scale-110 flex-shrink-0 shadow-md text-white">
-                  <IconComponent size={32} className="text-white" />
+                <div className="flex h-[84px] w-[84px] items-center justify-center rounded-full bg-[#0A8B46] text-white shadow-xl shadow-[#0A8B46]/25 transition-all duration-300 hover:scale-110 hover:bg-[#0A8B46] sm:h-24 sm:w-24">
+                  <IconComponent size={62} className="h-[62px] w-[62px] text-white sm:h-[68px] sm:w-[68px]" />
                 </div>
                 {/* Label */}
-                <p className="text-xs font-medium text-gray-800 text-center">{copy[action.labelKey]}</p>
+                <p className="text-center text-[12px] font-bold leading-tight text-gray-900 sm:text-sm">{copy[action.labelKey]}</p>
               </Link>
             );
           })}
@@ -304,15 +304,15 @@ export default function MbongoDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
-            <div className="grid grid-cols-4 gap-x-4 gap-y-6 text-center">
+            <div className="grid grid-cols-4 gap-x-2.5 gap-y-7 text-center sm:gap-x-5">
               {financialServices.map(service => {
                 const IconComponent = service.icon;
                 return (
-                  <Link href={service.href} key={service.labelKey} className="flex flex-col items-center gap-3 text-sm font-medium text-foreground hover:text-primary transition-all group">
-                    <div className={cn("flex h-14 w-14 items-center justify-center rounded-2xl", "bg-gradient-to-br from-muted to-muted/50", "group-hover:shadow-lg group-hover:scale-105 transition-all duration-300", "border border-transparent group-hover:border-primary/20")}>
-                      <IconComponent size={32} />
+                  <Link href={service.href} key={service.labelKey} className="flex flex-col items-center gap-3 text-sm font-semibold text-foreground transition-all hover:text-primary group">
+                    <div className={cn("flex h-[92px] w-[92px] items-center justify-center overflow-visible rounded-[26px] sm:h-[104px] sm:w-[104px]", "bg-gradient-to-br from-muted to-muted/50", "group-hover:shadow-lg group-hover:scale-105 transition-all duration-300", "border border-transparent group-hover:border-primary/20")}>
+                      <IconComponent size={92} className="h-[92px] w-[92px] scale-110 sm:h-[102px] sm:w-[102px]" />
                     </div>
-                    <span className="text-center text-xs leading-tight">{copy[service.labelKey]}</span>
+                    <span className="text-center text-[12px] font-bold leading-tight sm:text-[13px]">{copy[service.labelKey]}</span>
                   </Link>
                 );
               })}
@@ -327,15 +327,15 @@ export default function MbongoDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
-            <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+            <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 sm:gap-4">
               {bills.map(bill => {
                 const IconComponent = bill.icon;
                 return (
-                  <Link href={bill.href} key={bill.labelKey} className={cn("flex flex-col items-center gap-2 rounded-xl p-4 text-center", "bg-gradient-to-br from-background to-muted/30", "border border-border/50 hover:border-primary/30", "text-sm font-medium text-foreground", "hover:shadow-md hover:scale-[1.02] transition-all duration-300", "group")}>
+                  <Link href={bill.href} key={bill.labelKey} className={cn("flex min-h-[138px] flex-col items-center justify-center gap-3.5 rounded-[22px] p-4 text-center", "bg-gradient-to-br from-background to-muted/30", "border border-border/50 hover:border-primary/30", "text-sm font-semibold text-foreground", "hover:shadow-md hover:scale-[1.02] transition-all duration-300", "group")}>
                     <div className="group-hover:scale-110 transition-transform duration-300">
-                      <IconComponent size={36} />
+                      <IconComponent size={72} className="h-[72px] w-[72px]" />
                     </div>
-                    <span className="text-center text-xs leading-tight">{copy[bill.labelKey]}</span>
+                    <span className="text-center text-[12px] font-bold leading-tight sm:text-[13px]">{copy[bill.labelKey]}</span>
                   </Link>
                 );
               })}
