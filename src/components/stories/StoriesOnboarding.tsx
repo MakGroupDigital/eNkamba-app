@@ -110,7 +110,7 @@ export function StoriesOnboarding({ onClose }: StoriesOnboardingProps) {
           {/* Content */}
           <div className="text-center space-y-3">
             <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br ${currentStepData.gradient} shadow-lg`}>
-              <IconComponent size={32} className="text-white" />
+              <IconComponent size={64} className="h-[64px] w-[64px] text-white" />
             </div>
             
             <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">

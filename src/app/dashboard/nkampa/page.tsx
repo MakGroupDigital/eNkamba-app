@@ -1147,11 +1147,11 @@ export default function NkampaPage() {
               const content = cat.href ? (
                 <div className="flex-shrink-0 flex flex-col items-center gap-2 transition-all">
                   <div
-                    className={`w-16 h-16 rounded-full flex items-center justify-center transition-all shadow-md bg-white text-primary hover:shadow-lg hover:scale-105`}
+                    className={`flex h-24 w-24 items-center justify-center rounded-full bg-white text-primary shadow-md transition-all hover:scale-105 hover:shadow-lg`}
                   >
-                    <IconComponent className="text-primary" size={32} />
+                    <IconComponent className="h-[72px] w-[72px] text-primary" size={72} />
                   </div>
-                  <span className="text-xs font-semibold text-gray-700 text-center max-w-[70px]">
+                  <span className="max-w-[88px] text-center text-[12px] font-bold text-gray-800">
                     {cat.label}
                   </span>
                 </div>
@@ -1166,18 +1166,21 @@ export default function NkampaPage() {
                       setSelectedSubcategory(null);
                     }
                   }}
-                  className="flex-shrink-0 flex flex-col items-center gap-2 transition-all"
+                    className="flex-shrink-0 flex flex-col items-center gap-2.5 transition-all"
                 >
                   <div
-                    className={`w-16 h-16 rounded-full flex items-center justify-center transition-all shadow-md ${
+                    className={`flex h-24 w-24 items-center justify-center rounded-full shadow-md transition-all ${
                       isActive || (cat.id === 'all' && !selectedMainCategory)
                         ? 'bg-primary text-white shadow-lg scale-110'
                         : 'bg-white text-primary hover:shadow-lg hover:scale-105'
                     }`}
                   >
-                    <IconComponent className={`${isActive || (cat.id === 'all' && !selectedMainCategory) ? 'text-white' : 'text-primary'}`} size={32} />
+                    <IconComponent
+                      className={`${isActive || (cat.id === 'all' && !selectedMainCategory) ? 'h-[72px] w-[72px] text-white' : 'h-[72px] w-[72px] text-primary'}`}
+                      size={72}
+                    />
                   </div>
-                  <span className="text-xs font-semibold text-gray-700 text-center max-w-[70px]">
+                  <span className="max-w-[88px] text-center text-[12px] font-bold text-gray-800">
                     {cat.label}
                   </span>
                 </button>

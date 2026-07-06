@@ -94,8 +94,8 @@ const SettingsItem = ({
     <>
       <div className="flex items-center justify-between p-4 rounded-xl hover:bg-muted/50 transition-all group">
         <div className="flex items-center gap-4">
-          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center group-hover:scale-105 transition-transform">
-            <IconComponent size={28} />
+          <div className="flex h-[76px] w-[76px] items-center justify-center rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 transition-transform group-hover:scale-105">
+            <IconComponent size={58} />
           </div>
           <div>
             <p className="font-semibold text-foreground">{title}</p>
@@ -125,8 +125,8 @@ const BusinessAccessItem = ({
   <>
     <div className="flex items-center justify-between gap-4 p-4 transition-all hover:bg-muted/50">
       <div className="flex min-w-0 items-center gap-4">
-        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/10 to-primary/5">
-          <IconComponent size={28} />
+        <div className="flex h-[76px] w-[76px] flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5">
+          <IconComponent size={58} />
         </div>
         <div className="min-w-0">
           <p className="font-semibold text-foreground">{title}</p>
@@ -230,8 +230,8 @@ export default function SettingsPage() {
       <Card className="overflow-hidden border-0 shadow-xl">
         <div className="bg-gradient-to-r from-primary via-primary to-primary p-6">
           <CardTitle className="flex items-center gap-3 font-headline text-white">
-            <div className="h-12 w-12 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
-              <SettingsPageIcon size={32} />
+            <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white/20 backdrop-blur">
+              <SettingsPageIcon size={62} />
             </div>
             <div>
               <span className="text-2xl">Paramètres</span>

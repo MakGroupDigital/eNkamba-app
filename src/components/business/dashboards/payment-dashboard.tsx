@@ -45,8 +45,8 @@ export function PaymentDashboard({ businessUser }: PaymentDashboardProps) {
         <div className="mx-auto max-w-5xl">
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
-              <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl border border-white/30 bg-white shadow-md">
-                <PaymentNavIcon size={38} />
+              <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-3xl border border-white/30 bg-white shadow-md">
+                <PaymentNavIcon size={62} className="h-[62px] w-[62px]" />
               </div>
               <div className="min-w-0">
                 <p className="text-[11px] font-black uppercase tracking-[0.18em] text-white/70">Mbongo Business</p>
@@ -72,8 +72,8 @@ export function PaymentDashboard({ businessUser }: PaymentDashboardProps) {
                   onClick={() => setActiveTab(action.tab)}
                   className="group flex min-w-0 flex-col items-center gap-2 rounded-2xl bg-white/12 p-2.5 text-center ring-1 ring-white/18 transition hover:bg-white/20"
                 >
-                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-md transition group-hover:scale-105">
-                    <Icon size={32} />
+                  <span className="flex h-[76px] w-[76px] items-center justify-center rounded-full bg-white shadow-md transition group-hover:scale-105">
+                    <Icon size={58} className="h-[58px] w-[58px]" />
                   </span>
                   <span className="line-clamp-2 text-[11px] font-bold leading-tight text-white">{action.label}</span>
                 </button>
@@ -96,7 +96,7 @@ export function PaymentDashboard({ businessUser }: PaymentDashboardProps) {
                     : 'bg-primary/5 text-muted-foreground hover:bg-primary/10 hover:text-[#0A8B46]'
                 }`}
               >
-                <Icon size={22} />
+                <Icon size={34} className="h-[34px] w-[34px]" />
                 {label}
               </button>
             ))}

@@ -175,7 +175,7 @@ export default function RequestPage() {
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center gap-4 text-center">
                   <div className="p-4 rounded-full bg-[#0A8B46]/20">
-                    <CreditCard className="w-8 h-8 text-[#0A8B46]" />
+                    <CreditCard className="h-[64px] w-[64px] text-[#0A8B46]" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-lg">Numéro de Carte</h3>
@@ -192,7 +192,7 @@ export default function RequestPage() {
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center gap-4 text-center">
                   <div className="p-4 rounded-full bg-[#0A8B46]/20">
-                    <User className="w-8 h-8 text-[#0A8B46]" />
+                    <User className="h-[64px] w-[64px] text-[#0A8B46]" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-lg">Numéro de Compte</h3>
@@ -209,7 +209,7 @@ export default function RequestPage() {
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center gap-4 text-center">
                   <div className="p-4 rounded-full bg-[#0A8B46]/20">
-                    <Mail className="w-8 h-8 text-[#0A8B46]" />
+                    <Mail className="h-[64px] w-[64px] text-[#0A8B46]" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-lg">Adresse Email</h3>
@@ -226,7 +226,7 @@ export default function RequestPage() {
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center gap-4 text-center">
                   <div className="p-4 rounded-full bg-[#0A8B46]/20">
-                    <Phone className="w-8 h-8 text-[#0A8B46]" />
+                    <Phone className="h-[64px] w-[64px] text-[#0A8B46]" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-lg">Numéro de Téléphone</h3>

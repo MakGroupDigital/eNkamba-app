@@ -241,7 +241,7 @@ export function UnifiedReceiveFlow({
             <CardContent className="pt-6">
               <div className="flex flex-col items-center gap-4 text-center">
                 <div className="p-4 rounded-full bg-[#0A8B46]/20">
-                  <LinkIcon className="w-8 h-8 text-[#0A8B46]" />
+                  <LinkIcon className="h-[64px] w-[64px] text-[#0A8B46]" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-lg">Lien de Paiement</h3>
@@ -258,7 +258,7 @@ export function UnifiedReceiveFlow({
             <CardContent className="pt-6">
               <div className="flex flex-col items-center gap-4 text-center">
                 <div className="p-4 rounded-full bg-[#0A8B46]/20">
-                  <QrCode className="w-8 h-8 text-[#0A8B46]" />
+                  <QrCode className="h-[64px] w-[64px] text-[#0A8B46]" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-lg">Code QR</h3>
@@ -275,7 +275,7 @@ export function UnifiedReceiveFlow({
             <CardContent className="pt-6">
               <div className="flex flex-col items-center gap-4 text-center">
                 <div className="p-4 rounded-full bg-[#0A8B46]/20">
-                  <Zap className="w-8 h-8 text-[#0A8B46]" />
+                  <Zap className="h-[64px] w-[64px] text-[#0A8B46]" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-lg">Code Unique</h3>
@@ -292,7 +292,7 @@ export function UnifiedReceiveFlow({
             <CardContent className="pt-6">
               <div className="flex flex-col items-center gap-4 text-center">
                 <div className="p-4 rounded-full bg-[#0A8B46]/20">
-                  <Bluetooth className="w-8 h-8 text-[#0A8B46]" />
+                  <Bluetooth className="h-[64px] w-[64px] text-[#0A8B46]" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-lg">Paiement Bluetooth</h3>
@@ -315,7 +315,7 @@ export function UnifiedReceiveFlow({
             <CardContent className="pt-6">
               <div className="flex flex-col items-center gap-4 text-center">
                 <div className="p-4 rounded-full bg-[#0A8B46]/20">
-                  <Wifi className="w-8 h-8 text-[#0A8B46]" />
+                  <Wifi className="h-[64px] w-[64px] text-[#0A8B46]" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-lg">Paiement NFC</h3>
@@ -338,7 +338,7 @@ export function UnifiedReceiveFlow({
             <CardContent className="pt-6">
               <div className="flex flex-col items-center gap-4 text-center">
                 <div className="p-4 rounded-full bg-[#0A8B46]/20">
-                  <Wifi className="w-8 h-8 text-[#0A8B46]" />
+                  <Wifi className="h-[64px] w-[64px] text-[#0A8B46]" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-lg">Paiement WiFi</h3>

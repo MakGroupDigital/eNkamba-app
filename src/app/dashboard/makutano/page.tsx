@@ -1218,9 +1218,9 @@ export default function MakutanoPage() {
                     key={item.name}
                     type="button"
                     onClick={() => router.push(item.link)}
-                    className="flex h-10 items-center gap-2 whitespace-nowrap rounded-full px-3 text-xs font-bold text-[#0A8B46] transition hover:bg-[#0A8B46]/10 hover:text-[#0A8B46]"
+                    className="flex h-12 items-center gap-2.5 whitespace-nowrap rounded-full px-3.5 text-xs font-bold text-[#0A8B46] transition hover:bg-[#0A8B46]/10 hover:text-[#0A8B46]"
                   >
-                    <IconComponent size={16} />
+                    <IconComponent size={28} className="h-7 w-7" />
                     <span>{item.name}</span>
                   </button>
                 );
@@ -1235,13 +1235,13 @@ export default function MakutanoPage() {
                     recordCategoryPreference(item.name as Post['category']);
                   }}
                   className={cn(
-                    'flex h-10 items-center gap-2 whitespace-nowrap rounded-full px-3 text-xs font-bold transition',
+                    'flex h-12 items-center gap-2.5 whitespace-nowrap rounded-full px-3.5 text-xs font-bold transition',
                     activeTab === item.name
                       ? 'bg-[#0A8B46] text-white shadow-[0_8px_18px_rgba(50,187,120,0.24)]'
                       : 'text-[#0A8B46] hover:bg-[#0A8B46]/10 hover:text-[#0A8B46]'
                   )}
                 >
-                  <IconComponent size={16} />
+                  <IconComponent size={28} className="h-7 w-7" />
                   <span>{item.name}</span>
                 </button>
               );

@@ -987,11 +987,11 @@ export default function MiyikiChatPage() {
                       key={filter.value}
                       variant="ghost"
                       size="sm"
-                      className="flex-shrink-0 rounded-full h-9 px-3 space-x-2 border border-primary/30 bg-primary/5 text-primary hover:bg-primary/10"
+                      className="flex-shrink-0 rounded-full h-12 px-4 space-x-2.5 border border-primary/30 bg-primary/5 text-primary hover:bg-primary/10"
                       onClick={() => setShowActionsMenu(true)}
                     >
-                      <IconComponent size={16} />
-                      <span className="font-medium text-xs">{filter.label}</span>
+                      <IconComponent size={28} className="h-7 w-7" />
+                      <span className="text-xs font-bold">{filter.label}</span>
                     </Button>
                   );
                 }
@@ -1001,15 +1001,15 @@ export default function MiyikiChatPage() {
                     key={filter.value} 
                     variant={isActive ? "secondary" : "ghost"} 
                     size="sm"
-                    className={`flex-shrink-0 rounded-full h-9 px-3 space-x-2 border-transparent ${
+                    className={`flex-shrink-0 rounded-full h-12 px-4 space-x-2.5 border-transparent ${
                       isActive 
                         ? 'bg-primary/10 text-primary border border-primary/20' 
                         : 'text-muted-foreground hover:bg-muted/50'
                     }`}
                     onClick={() => setActiveFilter(filter.value)}
                   >
-                    <IconComponent size={16} />
-                    <span className="font-medium text-xs">{filter.label}</span>
+                    <IconComponent size={28} className="h-7 w-7" />
+                    <span className="text-xs font-bold">{filter.label}</span>
                     {filter.value === 'unread' && unreadCount > 0 && (
                       <Badge className="bg-red-500 text-white rounded-full h-4 w-4 flex items-center justify-center text-[10px] p-0">
                         {unreadCount}

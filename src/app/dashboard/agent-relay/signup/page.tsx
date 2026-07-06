@@ -513,7 +513,7 @@ export default function AgentSignupPage() {
               >
                 <div className="text-center space-y-4">
                   <div className="h-16 w-16 mx-auto rounded-2xl bg-[#0A8B46]/20 flex items-center justify-center">
-                    <User size={32} className="text-[#0A8B46]" />
+                    <User size={64} className="h-[64px] w-[64px] text-[#0A8B46]" />
                   </div>
                   <h3 className="font-semibold text-gray-800">Individuel</h3>
                 </div>
@@ -529,7 +529,7 @@ export default function AgentSignupPage() {
               >
                 <div className="text-center space-y-4">
                   <div className="h-16 w-16 mx-auto rounded-2xl bg-[#0A8B46]/20 flex items-center justify-center">
-                    <Building size={32} className="text-[#0A8B46]" />
+                    <Building size={64} className="h-[64px] w-[64px] text-[#0A8B46]" />
                   </div>
                   <h3 className="font-semibold text-gray-800">Entreprise</h3>
                 </div>
@@ -711,7 +711,7 @@ export default function AgentSignupPage() {
               <div className="p-6 rounded-2xl bg-gray-100 border border-gray-300">
                 <div className="text-center">
                   <div className="h-20 w-20 mx-auto mb-4 rounded-full bg-gray-200 flex items-center justify-center">
-                    <Fingerprint size={32} className="text-gray-500" />
+                    <Fingerprint size={64} className="h-[64px] w-[64px] text-gray-500" />
                   </div>
                   <h3 className="font-semibold mb-2 text-gray-800">Empreinte Digitale</h3>
                   <p className="text-sm text-gray-600 mb-4">

@@ -366,7 +366,7 @@ export default function CreateStoryPage() {
               className="w-full p-6 rounded-3xl bg-white/10 backdrop-blur border-2 border-white/20 hover:bg-white/20 transition-all flex items-center gap-4"
             >
               <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
-                <Camera size={32} className="text-white" />
+                <Camera size={64} className="h-[64px] w-[64px] text-white" />
               </div>
               <div className="flex-1 text-left">
                 <p className="text-white font-bold text-lg">Prendre une photo</p>
@@ -379,7 +379,7 @@ export default function CreateStoryPage() {
               className="w-full p-6 rounded-3xl bg-white/10 backdrop-blur border-2 border-white/20 hover:bg-white/20 transition-all flex items-center gap-4"
             >
               <div className="w-16 h-16 rounded-full bg-blue-500/20 flex items-center justify-center">
-                <Upload size={32} className="text-white" />
+                <Upload size={64} className="h-[64px] w-[64px] text-white" />
               </div>
               <div className="flex-1 text-left">
                 <p className="text-white font-bold text-lg">Importer une photo</p>
@@ -405,7 +405,7 @@ export default function CreateStoryPage() {
               className="w-full p-6 rounded-3xl bg-white/10 backdrop-blur border-2 border-white/20 hover:bg-white/20 transition-all flex items-center gap-4"
             >
               <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
-                <Camera size={32} className="text-white" />
+                <Camera size={64} className="h-[64px] w-[64px] text-white" />
               </div>
               <div className="flex-1 text-left">
                 <p className="text-white font-bold text-lg">Prendre une photo</p>
@@ -417,7 +417,7 @@ export default function CreateStoryPage() {
               className="w-full p-6 rounded-3xl bg-white/10 backdrop-blur border-2 border-white/20 hover:bg-white/20 transition-all flex items-center gap-4"
             >
               <div className="w-16 h-16 rounded-full bg-blue-500/20 flex items-center justify-center">
-                <Upload size={32} className="text-white" />
+                <Upload size={64} className="h-[64px] w-[64px] text-white" />
               </div>
               <div className="flex-1 text-left">
                 <p className="text-white font-bold text-lg">Importer une photo</p>
@@ -483,7 +483,7 @@ export default function CreateStoryPage() {
               className="w-full p-6 rounded-3xl bg-white/10 backdrop-blur border-2 border-white/20 hover:bg-white/20 transition-all flex items-center gap-4"
             >
               <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center">
-                <Video size={32} className="text-white" />
+                <Video size={64} className="h-[64px] w-[64px] text-white" />
               </div>
               <div className="flex-1 text-left">
                 <p className="text-white font-bold text-lg">Filmer maintenant</p>
@@ -496,7 +496,7 @@ export default function CreateStoryPage() {
               className="w-full p-6 rounded-3xl bg-white/10 backdrop-blur border-2 border-white/20 hover:bg-white/20 transition-all flex items-center gap-4"
             >
               <div className="w-16 h-16 rounded-full bg-blue-500/20 flex items-center justify-center">
-                <Upload size={32} className="text-white" />
+                <Upload size={64} className="h-[64px] w-[64px] text-white" />
               </div>
               <div className="flex-1 text-left">
                 <p className="text-white font-bold text-lg">Importer une vidéo</p>
@@ -524,7 +524,7 @@ export default function CreateStoryPage() {
               className="w-full p-6 rounded-3xl bg-white/10 backdrop-blur border-2 border-white/20 hover:bg-white/20 transition-all flex items-center gap-4"
             >
               <div className="w-16 h-16 rounded-full bg-purple-500/20 flex items-center justify-center">
-                <Mic size={32} className="text-white" />
+                <Mic size={64} className="h-[64px] w-[64px] text-white" />
               </div>
               <div className="flex-1 text-left">
                 <p className="text-white font-bold text-lg">Enregistrer maintenant</p>
@@ -537,7 +537,7 @@ export default function CreateStoryPage() {
               className="w-full p-6 rounded-3xl bg-white/10 backdrop-blur border-2 border-white/20 hover:bg-white/20 transition-all flex items-center gap-4"
             >
               <div className="w-16 h-16 rounded-full bg-blue-500/20 flex items-center justify-center">
-                <Upload size={32} className="text-white" />
+                <Upload size={64} className="h-[64px] w-[64px] text-white" />
               </div>
               <div className="flex-1 text-left">
                 <p className="text-white font-bold text-lg">Importer un audio</p>

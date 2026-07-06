@@ -54,7 +54,7 @@ export default function HubNavigation({
       <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
       
       <div className="relative mx-auto max-w-lg px-2 py-2 md:py-3">
-        <div className="grid h-16 grid-cols-6 items-stretch gap-1 md:h-20">
+        <div className="grid h-20 grid-cols-6 items-stretch gap-1 md:h-24">
           {navItems.map((item, index) => {
             const isActive = activeTab === item.name;
             const IconComponent = item.icon;
@@ -92,10 +92,10 @@ export default function HubNavigation({
                   whileTap={{ scale: 0.95 }}
                 >
                   <IconComponent 
-                    size={isActive ? 28 : 24} 
+                    size={isActive ? 42 : 36} 
                     className={cn(
                       "transition-all duration-300",
-                      isActive ? "drop-shadow-lg" : ""
+                      isActive ? "h-[42px] w-[42px] drop-shadow-lg" : "h-9 w-9"
                     )}
                   />
                   

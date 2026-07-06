@@ -572,8 +572,8 @@ function LogisticsSideDrawer({
 
         <header className="flex items-center justify-between gap-4 border-b border-slate-100 px-5 py-5">
           <div className="flex min-w-0 items-center gap-3">
-            <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-primary/10 shadow-sm ring-1 ring-primary/10">
-              <UgaviIcon size={38} />
+            <span className="grid h-20 w-20 shrink-0 place-items-center rounded-3xl bg-primary/10 shadow-sm ring-1 ring-primary/10">
+              <UgaviIcon size={64} className="h-16 w-16" />
             </span>
             <div className="min-w-0">
               <p className="text-[11px] font-black uppercase tracking-[0.32em] text-slate-400">Logistique</p>
@@ -619,7 +619,7 @@ function LogisticsSideDrawer({
                             : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'
                         }`}
                       >
-                        <Icon className={`h-5 w-5 shrink-0 ${isActive ? 'text-primary' : 'text-slate-500'}`} />
+                        <Icon className={`h-8 w-8 shrink-0 ${isActive ? 'text-primary' : 'text-slate-500'}`} />
                         <span className="truncate text-[15px] font-bold">{item.label}</span>
                         {isActive && <span className="ml-auto h-7 w-1 rounded-full bg-primary" />}
                       </button>
@@ -653,8 +653,8 @@ function LogisticsHubCard({
       </div>
       <div className="relative z-10 flex items-start justify-between gap-3">
         <div className="flex min-w-0 gap-4">
-          <div className="grid h-[86px] w-[86px] shrink-0 place-items-center rounded-[1.35rem] bg-white shadow-[0_14px_28px_rgba(0,0,0,0.16)]">
-            <UgaviIcon size={58} />
+          <div className="grid h-[110px] w-[110px] shrink-0 place-items-center rounded-[1.65rem] bg-white shadow-[0_14px_28px_rgba(0,0,0,0.16)]">
+            <UgaviIcon size={86} className="h-[86px] w-[86px]" />
           </div>
           <div className="min-w-0 pt-1">
             <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#0A8B46]">UGAVI BUSINESS</p>
@@ -679,7 +679,7 @@ function LogisticsHubCard({
           onClick={onScan}
           className="inline-flex h-14 min-w-[13rem] items-center justify-center gap-3 rounded-2xl bg-white px-5 text-sm font-black text-primary shadow-[0_14px_24px_rgba(0,0,0,0.18)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_32px_rgba(0,0,0,0.2)]"
         >
-          <ScanLine className="h-5 w-5" />
+          <ScanLine className="h-8 w-8" />
           Scanner QR
         </button>
         <span className="inline-flex items-center gap-2 rounded-2xl bg-white/10 px-3 py-2 text-xs font-bold text-white/85 ring-1 ring-white/12 sm:hidden">
@@ -735,8 +735,8 @@ function LogisticsActionCard({
       onClick={onClick}
       className="group min-h-[8.9rem] rounded-[1.35rem] bg-white p-3 text-center shadow-[0_10px_24px_rgba(15,23,42,0.07)] ring-1 ring-slate-100 transition hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(15,23,42,0.1)] sm:min-h-[9.5rem] sm:p-4"
     >
-      <span className={`mx-auto grid h-12 w-12 place-items-center rounded-2xl ${tone} transition group-hover:scale-105 sm:h-14 sm:w-14`}>
-        <Icon className="h-7 w-7" />
+      <span className={`mx-auto grid h-[78px] w-[78px] place-items-center rounded-[24px] ${tone} transition group-hover:scale-105 sm:h-[88px] sm:w-[88px]`}>
+        <Icon className="h-[58px] w-[58px] sm:h-[66px] sm:w-[66px]" />
       </span>
       <span className="mt-3 block text-[12px] font-black leading-tight text-slate-950 sm:text-sm">{label}</span>
       <span className="mt-1 block text-[10px] font-semibold leading-tight text-slate-500 sm:text-xs">{description}</span>

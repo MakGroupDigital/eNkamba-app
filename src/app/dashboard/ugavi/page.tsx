@@ -2052,7 +2052,7 @@ export default function UgaviPage() {
                   isActive ? 'bg-white text-primary shadow-lg shadow-primary/10' : 'text-slate-500 hover:bg-white/50 hover:text-slate-800'
                 }`}
               >
-                <Icon size={26} />
+                <Icon size={42} className="h-[42px] w-[42px]" />
                 {item.label}
               </button>
             );

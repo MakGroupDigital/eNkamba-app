@@ -252,7 +252,7 @@ export default function WithdrawPage() {
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center gap-4 text-center">
                   <div className="p-4 rounded-full bg-gradient-to-br from-[#0A8B46] to-[#0A8B46]">
-                    <Building2 className="w-8 h-8 text-white" />
+                    <Building2 className="h-[64px] w-[64px] text-white" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-lg">Agent eNkamba</h3>
@@ -269,7 +269,7 @@ export default function WithdrawPage() {
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center gap-4 text-center">
                   <div className="p-4 rounded-full bg-gradient-to-br from-blue-500 to-blue-600">
-                    <CreditCard className="w-8 h-8 text-white" />
+                    <CreditCard className="h-[64px] w-[64px] text-white" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-lg">Carte Visa/Mastercard</h3>
@@ -286,7 +286,7 @@ export default function WithdrawPage() {
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center gap-4 text-center">
                   <div className="p-4 rounded-full bg-gradient-to-br from-purple-500 to-purple-600">
-                    <Landmark className="w-8 h-8 text-white" />
+                    <Landmark className="h-[64px] w-[64px] text-white" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-lg">Compte Bancaire</h3>
