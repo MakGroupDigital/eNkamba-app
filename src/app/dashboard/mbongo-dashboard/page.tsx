@@ -309,8 +309,8 @@ export default function MbongoDashboard() {
                 const IconComponent = service.icon;
                 return (
                   <Link href={service.href} key={service.labelKey} className="flex flex-col items-center gap-3 text-sm font-semibold text-foreground transition-all hover:text-primary group">
-                    <div className={cn("flex h-[92px] w-[92px] items-center justify-center overflow-visible rounded-[26px] sm:h-[104px] sm:w-[104px]", "bg-gradient-to-br from-muted to-muted/50", "group-hover:shadow-lg group-hover:scale-105 transition-all duration-300", "border border-transparent group-hover:border-primary/20")}>
-                      <IconComponent size={92} className="h-[92px] w-[92px] scale-110 sm:h-[102px] sm:w-[102px]" />
+                    <div className={cn("flex h-[82px] w-[82px] items-center justify-center overflow-visible rounded-[24px] sm:h-[94px] sm:w-[94px]", "bg-gradient-to-br from-muted to-muted/50", "group-hover:shadow-lg group-hover:scale-105 transition-all duration-300", "border border-transparent group-hover:border-primary/20")}>
+                      <IconComponent size={76} className="h-[76px] w-[76px] sm:h-[86px] sm:w-[86px]" />
                     </div>
                     <span className="text-center text-[12px] font-bold leading-tight sm:text-[13px]">{copy[service.labelKey]}</span>
                   </Link>

@@ -7,7 +7,7 @@ const EnkambaLogo = ({
 }: HTMLAttributes<HTMLDivElement>) => (
   <div className={cn('flex flex-col items-center', className)} {...props}>
     <div className="flex items-center gap-3">
-      <div className="relative flex h-14 w-14 items-center justify-center rounded-[1.35rem] bg-[linear-gradient(135deg,#0A8B46_0%,#089961_58%,#18A96E_100%)] shadow-[0_12px_28px_rgba(10,139,70,0.24)]">
+      <div className="relative flex h-14 w-14 items-center justify-center rounded-md bg-[linear-gradient(135deg,#18A96E_0%,#0A8B46_50%,#1F5F2E_100%)] shadow-[0_12px_28px_rgba(10,139,70,0.18)]">
         <svg
           width="42"
           height="42"
@@ -36,7 +36,6 @@ const EnkambaLogo = ({
             strokeLinecap="square"
           />
         </svg>
-        <span className="absolute left-2.5 top-2.5 h-4 w-4 rounded-full border-2 border-white bg-[#FFA500] shadow-[0_0_16px_rgba(255,165,0,0.65)]" />
       </div>
       <div className="flex items-center">
         <span className="font-headline text-4xl font-black tracking-tight text-foreground">
