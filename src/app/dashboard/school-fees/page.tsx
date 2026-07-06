@@ -204,7 +204,7 @@ export default function SchoolFeesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-[#25543A]/5 to-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-[#0A8B46]/5 to-background">
       <div className="container mx-auto max-w-4xl p-4 space-y-6 animate-in fade-in duration-500">
         {/* Header */}
         <header className="flex items-center gap-4 pt-4">
@@ -214,7 +214,7 @@ export default function SchoolFeesPage() {
             </Link>
           </Button>
           <div className="flex-1">
-            <h1 className="font-headline text-2xl font-bold bg-gradient-to-r from-[#25543A] to-[#25543A] bg-clip-text text-transparent">
+            <h1 className="font-headline text-2xl font-bold bg-gradient-to-r from-[#0A8B46] to-[#0A8B46] bg-clip-text text-transparent">
               Paiement Frais Scolaires
             </h1>
             <p className="text-sm text-muted-foreground">Payez les frais scolaires en toute sécurité</p>
@@ -454,7 +454,7 @@ export default function SchoolFeesPage() {
             {/* Reçu moderne eNkambaPay */}
             <div ref={receiptRef} className="bg-white rounded-2xl shadow-2xl overflow-hidden">
               {/* Header avec dégradé */}
-              <div className="bg-gradient-to-r from-[#25543A] to-[#25543A] p-6 text-white">
+              <div className="bg-gradient-to-r from-[#0A8B46] to-[#0A8B46] p-6 text-white">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">

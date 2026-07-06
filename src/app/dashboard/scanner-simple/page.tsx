@@ -269,7 +269,7 @@ export default function ScannerSimplePage() {
                     />
                     <div className="absolute inset-0 bg-black/30">
                       <div 
-                        className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#25543A] to-transparent shadow-lg shadow-[#25543A]"
+                        className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#0A8B46] to-transparent shadow-lg shadow-[#0A8B46]"
                         style={{ top: `${importProgress}%`, transition: 'top 0.1s linear' }}
                       />
                     </div>
@@ -318,7 +318,7 @@ export default function ScannerSimplePage() {
                     {isImporting ? 'Scan...' : 'Importer'}
                   </Button>
                   <Button 
-                    className="flex-1 bg-[#25543A] hover:bg-[#25543A]"
+                    className="flex-1 bg-[#0A8B46] hover:bg-[#0A8B46]"
                     onClick={() => {
                       setIsScanning(!isScanning);
                     }}
@@ -336,15 +336,15 @@ export default function ScannerSimplePage() {
               </>
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center gap-4 bg-gradient-to-br from-primary to-blue-50 rounded-2xl p-6">
-                <div className="bg-[#25543A]/10 rounded-full p-4">
-                  <QrCode className="w-12 h-12 text-[#25543A]" />
+                <div className="bg-[#0A8B46]/10 rounded-full p-4">
+                  <QrCode className="w-12 h-12 text-[#0A8B46]" />
                 </div>
                 <div className="text-center space-y-2">
                   <p className="font-bold text-lg text-primary">{scannedData.fullName}</p>
                   <p className="text-sm text-muted-foreground font-mono">{scannedData.accountNumber}</p>
                 </div>
                 <Button
-                  className="w-full bg-gradient-to-r from-[#25543A] to-primary hover:from-[#25543A] hover:to-primary"
+                  className="w-full bg-gradient-to-r from-[#0A8B46] to-primary hover:from-[#0A8B46] hover:to-primary"
                   onClick={() => {
                     router.push(`/dashboard/pay-receive?recipient=${scannedData.accountNumber}&name=${scannedData.fullName}`);
                   }}

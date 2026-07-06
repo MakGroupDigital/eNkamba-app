@@ -300,7 +300,7 @@ export default function CommerceProductStatsPage({
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge className="rounded-full bg-primary text-white hover:bg-primary">{product.businessAudience || product.category || 'COMMERCE'}</Badge>
                   {isSponsored ? (
-                    <Badge className="rounded-full bg-orange-500 text-white hover:bg-orange-500">
+                    <Badge className="rounded-full bg-[#FFA500]/100 text-white hover:bg-[#FFA500]/100">
                       Sponsorisé jusqu’au {sponsoredUntil?.toLocaleDateString('fr-FR')}
                     </Badge>
                   ) : (

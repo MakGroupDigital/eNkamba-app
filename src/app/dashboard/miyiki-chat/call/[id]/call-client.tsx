@@ -554,9 +554,9 @@ export default function CallClient() {
       <div className="absolute inset-0">
         <video ref={remoteVideoRef} autoPlay playsInline className="h-full w-full object-cover" />
         {!remoteReady && (
-          <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-orange-500">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-[#FFA500]">
             <div className="absolute inset-0 bg-black/35 backdrop-blur-[2px]" />
-            <div className="pointer-events-none absolute -top-24 left-1/2 h-56 w-[min(620px,90vw)] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(255,140,0,0.45),transparent)] blur-2xl" />
+            <div className="pointer-events-none absolute -top-24 left-1/2 h-56 w-[min(620px,90vw)] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(255,165,0,0.45),transparent)] blur-2xl" />
             <div className="pointer-events-none absolute -bottom-28 left-1/2 h-72 w-[min(720px,92vw)] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(50,187,120,0.55),transparent)] blur-2xl" />
 
             <div className="relative z-10 flex h-full flex-col items-center justify-center px-6 text-center">

@@ -306,7 +306,7 @@ export default function BusinessRequestsPage() {
                 Rapport
               </Button>
               <Button
-                className="gap-2 bg-[#25543A] hover:bg-[#25543A]"
+                className="gap-2 bg-[#0A8B46] hover:bg-[#0A8B46]"
                 onClick={() => downloadCsv('enkamba-business-requests.csv', filteredRequests.map(buildBusinessRequestExport))}
               >
                 <Download size={16} />

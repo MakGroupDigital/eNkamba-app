@@ -131,7 +131,7 @@ const PRODUCER_SUBCATEGORIES: SubcategoryOption[] = [
 const NKAMPA_IMAGE_PLACEHOLDER =
   'data:image/svg+xml;charset=utf-8,' +
   encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#25543A"/><stop offset="1" stop-color="#25543A"/></linearGradient></defs><rect width="900" height="420" fill="url(#g)"/><circle cx="720" cy="70" r="180" fill="#fff" opacity=".12"/><circle cx="120" cy="360" r="150" fill="#FF8C00" opacity=".22"/></svg>`
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#0A8B46"/><stop offset="1" stop-color="#0A8B46"/></linearGradient></defs><rect width="900" height="420" fill="url(#g)"/><circle cx="720" cy="70" r="180" fill="#fff" opacity=".12"/><circle cx="120" cy="360" r="150" fill="#FFA500" opacity=".22"/></svg>`
   );
 
 function optimizeMarketplaceImage(src?: string, width = 420, height = 420) {

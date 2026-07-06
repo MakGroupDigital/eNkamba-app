@@ -719,10 +719,10 @@ export default function ShopProductPage({
           </div>
         </div>
         <div className="max-w-5xl mx-auto p-4">
-          <Card className="border border-amber-200 bg-amber-50">
+          <Card className="border border-[#FFA500]/30 bg-[#FFA500]/10">
             <CardContent className="p-4">
-              <p className="text-sm font-semibold text-amber-900">Accès non disponible</p>
-              <p className="text-xs text-amber-800 mt-1">Ce produit n'est pas encore public.</p>
+              <p className="text-sm font-semibold text-[#FFA500]">Accès non disponible</p>
+              <p className="text-xs text-[#FFA500] mt-1">Ce produit n'est pas encore public.</p>
               <Button asChild className="mt-3 bg-primary hover:bg-primary/90">
                 <Link href={`/shop/${slug}`}>Retour boutique</Link>
               </Button>
@@ -885,9 +885,9 @@ export default function ShopProductPage({
       {/* Signaux marketplace essentiels */}
       <div className="mx-4 mt-4 max-w-[calc(100vw-2rem)] rounded-2xl border border-gray-100 bg-white p-3 shadow-sm">
         <div className="flex flex-wrap items-center gap-2">
-          <Badge className="rounded-full bg-amber-50 px-2.5 py-1 text-amber-700 hover:bg-amber-50">
+          <Badge className="rounded-full bg-[#FFA500]/10 px-2.5 py-1 text-[#FFA500] hover:bg-[#FFA500]/10">
             ★ {productRating.toFixed(1)}
-            <span className="ml-1 font-medium text-amber-600">
+            <span className="ml-1 font-medium text-[#FFA500]">
               ({productReviewCount > 0 ? `${productReviewCount.toLocaleString('fr-FR')} avis` : 'avis vérifiés'})
             </span>
           </Badge>
@@ -915,9 +915,9 @@ export default function ShopProductPage({
             <p className="font-black">Livré par eNKAMBA</p>
             <p className="mt-0.5 text-primary/75">{deliveryDelay}</p>
           </div>
-          <div className="rounded-xl bg-orange-50 px-3 py-2 text-orange-800">
+          <div className="rounded-xl bg-[#FFA500]/10 px-3 py-2 text-[#FFA500]">
             <p className="font-black">Paiement sécurisé</p>
-            <p className="mt-0.5 text-orange-700/75">eNkamba Pay</p>
+            <p className="mt-0.5 text-[#FFA500]/75">eNkamba Pay</p>
           </div>
           <div className="rounded-xl bg-slate-50 px-3 py-2 text-slate-800">
             <p className="font-black">Livraison réussie</p>
@@ -945,7 +945,7 @@ export default function ShopProductPage({
       {/* Vendeur */}
       <button 
         onClick={() => router.push(`/shop/${slug}`)}
-        className="mx-4 mt-4 w-[calc(100%-2rem)] max-w-[calc(100vw-2rem)] rounded-2xl border border-primary/15 bg-gradient-to-r from-primary via-white to-orange-50 p-3 transition-colors hover:bg-gray-100"
+        className="mx-4 mt-4 w-[calc(100%-2rem)] max-w-[calc(100vw-2rem)] rounded-2xl border border-primary/15 bg-gradient-to-r from-primary via-white to-[#FFA500]/10 p-3 transition-colors hover:bg-gray-100"
       >
         <div className="flex min-w-0 items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
@@ -990,12 +990,12 @@ export default function ShopProductPage({
               Notez la boutique, le fournisseur ou l’entreprise après votre expérience.
             </p>
           </div>
-          <div className="rounded-2xl bg-amber-50 px-3 py-2 text-right">
-            <div className="flex items-center justify-end gap-1 text-amber-600">
-              <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+          <div className="rounded-2xl bg-[#FFA500]/10 px-3 py-2 text-right">
+            <div className="flex items-center justify-end gap-1 text-[#FFA500]">
+              <Star className="h-4 w-4 fill-[#FFA500] text-[#FFA500]" />
               <span className="text-sm font-black">{sellerReviewAverage.toFixed(1)}</span>
             </div>
-            <p className="mt-0.5 text-[10px] font-bold text-amber-700">
+            <p className="mt-0.5 text-[10px] font-bold text-[#FFA500]">
               {sellerReviewCount.toLocaleString('fr-FR')} avis
             </p>
           </div>
@@ -1014,7 +1014,7 @@ export default function ShopProductPage({
                   className="rounded-full p-1 transition hover:bg-white"
                   aria-label={`Donner ${value} étoile${value > 1 ? 's' : ''}`}
                 >
-                  <Star className={`h-6 w-6 ${active ? 'fill-amber-400 text-amber-400' : 'text-slate-300'}`} />
+                  <Star className={`h-6 w-6 ${active ? 'fill-[#FFA500] text-[#FFA500]' : 'text-slate-300'}`} />
                 </button>
               );
             })}
@@ -1047,7 +1047,7 @@ export default function ShopProductPage({
                     {Array.from({ length: 5 }).map((_, index) => (
                       <Star
                         key={index}
-                        className={`h-3.5 w-3.5 ${index < Math.round(review.rating) ? 'fill-amber-400 text-amber-400' : 'text-slate-300'}`}
+                        className={`h-3.5 w-3.5 ${index < Math.round(review.rating) ? 'fill-[#FFA500] text-[#FFA500]' : 'text-slate-300'}`}
                       />
                     ))}
                   </div>
@@ -1129,7 +1129,7 @@ export default function ShopProductPage({
                 className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
               />
             ) : (
-              <div className="rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-800">
+              <div className="rounded-2xl border border-[#FFA500]/30 bg-[#FFA500]/10 px-4 py-3 text-sm text-[#FFA500]">
                 <div className="flex items-start gap-2">
                   <MapPinned className="mt-0.5 h-4 w-4 flex-shrink-0" />
                   <div>
@@ -1293,9 +1293,9 @@ export default function ShopProductPage({
               )}
             </div>
 
-            <div className="rounded-2xl border border-orange-100 bg-orange-50 p-4">
-              <p className="text-sm font-semibold text-orange-900">Paiement sécurisé</p>
-              <p className="mt-1 text-sm text-orange-800">
+            <div className="rounded-2xl border border-[#FFA500]/20 bg-[#FFA500]/10 p-4">
+              <p className="text-sm font-semibold text-[#FFA500]">Paiement sécurisé</p>
+              <p className="mt-1 text-sm text-[#FFA500]">
                 Votre solde actuel est de {balance.toLocaleString()} CDF. Le paiement sera confirmé avec votre PIN eNkambaPay.
               </p>
             </div>

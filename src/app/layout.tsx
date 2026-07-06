@@ -13,6 +13,7 @@ import { UserPinAccessGate } from "@/components/security/UserPinAccessGate";
 import { AdminTelemetryAgent } from "@/components/admin/admin-telemetry-agent";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://enkamba.app"),
   title: "eNkamba - La vie simplifiée et meilleure",
   description:
     "Écosystème digital tout-en-un : finance, e-commerce, logistique, messagerie et réseau social.",
@@ -22,6 +23,27 @@ export const metadata: Metadata = {
       { url: "/favicon.png", type: "image/png" },
     ],
     apple: "/apple-touch-icon.png",
+  },
+  openGraph: {
+    title: "eNkamba - La vie simplifiée et meilleure",
+    description:
+      "Écosystème digital tout-en-un : finance, e-commerce, logistique, messagerie et réseau social.",
+    type: "website",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 512,
+        height: 512,
+        alt: "Logo eNkamba",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary",
+    title: "eNkamba - La vie simplifiée et meilleure",
+    description:
+      "Écosystème digital tout-en-un : finance, e-commerce, logistique, messagerie et réseau social.",
+    images: ["/og-image.png"],
   },
   manifest: "/site.webmanifest",
 };
@@ -37,9 +59,9 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" type="image/png" href="/favicon.png" />
-        <link rel="apple-touch-icon" href="/favicon.png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/site.webmanifest" />
-        <meta name="theme-color" content="#25543A" />
+        <meta name="theme-color" content="#0A8B46" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           rel="preconnect"

@@ -62,8 +62,8 @@ async function hashPin(pin: string): Promise<string> {
 
 const agentTypes = {
   'agent-relais': { title: 'Agent Relais', color: 'bg-primary' },
-  'cabinet': { title: 'Cabiniste', color: 'bg-orange-600' },
-  'point-service': { title: 'Point de Service', color: 'bg-orange-600' }
+  'cabinet': { title: 'Cabiniste', color: 'bg-[#FFA500]' },
+  'point-service': { title: 'Point de Service', color: 'bg-[#FFA500]' }
 };
 
 export default function AgentSignupPage() {
@@ -481,7 +481,7 @@ export default function AgentSignupPage() {
                 </div>
               </div>
               
-              <div className="p-4 rounded-lg bg-[#25543A]/10 border border-[#25543A]/30">
+              <div className="p-4 rounded-lg bg-[#0A8B46]/10 border border-[#0A8B46]/30">
                 <p className="text-xs text-gray-600 text-center">
                   Ce code PIN sera utilisé pour sécuriser votre compte agent
                 </p>
@@ -507,13 +507,13 @@ export default function AgentSignupPage() {
                 onClick={() => updateData('profileType', 'individual')}
                 className={`p-8 rounded-2xl border-2 transition-all ${
                   signupData.profileType === 'individual'
-                    ? 'border-[#25543A] bg-[#25543A]/10'
-                    : 'border-gray-200 bg-white hover:border-[#25543A]/50'
+                    ? 'border-[#0A8B46] bg-[#0A8B46]/10'
+                    : 'border-gray-200 bg-white hover:border-[#0A8B46]/50'
                 }`}
               >
                 <div className="text-center space-y-4">
-                  <div className="h-16 w-16 mx-auto rounded-2xl bg-[#25543A]/20 flex items-center justify-center">
-                    <User size={32} className="text-[#25543A]" />
+                  <div className="h-16 w-16 mx-auto rounded-2xl bg-[#0A8B46]/20 flex items-center justify-center">
+                    <User size={32} className="text-[#0A8B46]" />
                   </div>
                   <h3 className="font-semibold text-gray-800">Individuel</h3>
                 </div>
@@ -523,13 +523,13 @@ export default function AgentSignupPage() {
                 onClick={() => updateData('profileType', 'enterprise')}
                 className={`p-8 rounded-2xl border-2 transition-all ${
                   signupData.profileType === 'enterprise'
-                    ? 'border-[#25543A] bg-[#25543A]/10'
-                    : 'border-gray-200 bg-white hover:border-[#25543A]/50'
+                    ? 'border-[#0A8B46] bg-[#0A8B46]/10'
+                    : 'border-gray-200 bg-white hover:border-[#0A8B46]/50'
                 }`}
               >
                 <div className="text-center space-y-4">
-                  <div className="h-16 w-16 mx-auto rounded-2xl bg-[#25543A]/20 flex items-center justify-center">
-                    <Building size={32} className="text-[#25543A]" />
+                  <div className="h-16 w-16 mx-auto rounded-2xl bg-[#0A8B46]/20 flex items-center justify-center">
+                    <Building size={32} className="text-[#0A8B46]" />
                   </div>
                   <h3 className="font-semibold text-gray-800">Entreprise</h3>
                 </div>
@@ -620,10 +620,10 @@ export default function AgentSignupPage() {
                   />
                   <label
                     htmlFor="id-photos-upload"
-                    className="flex items-center justify-center gap-2 w-full h-12 border-2 border-dashed border-[#25543A] rounded-lg cursor-pointer hover:bg-[#25543A]/5 transition-colors"
+                    className="flex items-center justify-center gap-2 w-full h-12 border-2 border-dashed border-[#0A8B46] rounded-lg cursor-pointer hover:bg-[#0A8B46]/5 transition-colors"
                   >
-                    <Upload size={16} className="text-[#25543A]" />
-                    <span className="text-sm font-medium text-[#25543A]">
+                    <Upload size={16} className="text-[#0A8B46]" />
+                    <span className="text-sm font-medium text-[#0A8B46]">
                       {signupData.idPhotos.length > 0 
                         ? `${signupData.idPhotos.length} fichier(s) sélectionné(s)` 
                         : 'Ajouter Photos des Documents'}
@@ -633,8 +633,8 @@ export default function AgentSignupPage() {
                 {signupData.idPhotos.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {signupData.idPhotos.map((file, index) => (
-                      <div key={index} className="flex items-center gap-2 px-3 py-1 bg-[#25543A]/10 rounded-lg">
-                        <FileText size={14} className="text-[#25543A]" />
+                      <div key={index} className="flex items-center gap-2 px-3 py-1 bg-[#0A8B46]/10 rounded-lg">
+                        <FileText size={14} className="text-[#0A8B46]" />
                         <span className="text-xs text-gray-700">{file.name}</span>
                         <button
                           onClick={() => {
@@ -832,17 +832,17 @@ export default function AgentSignupPage() {
                 {/* Bouton pour lire le contrat */}
                 <button
                   onClick={() => setShowContract(true)}
-                  className="w-full p-4 rounded-lg border-2 border-[#25543A] bg-[#25543A]/5 hover:bg-[#25543A]/10 transition-colors"
+                  className="w-full p-4 rounded-lg border-2 border-[#0A8B46] bg-[#0A8B46]/5 hover:bg-[#0A8B46]/10 transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <FileText size={20} className="text-[#25543A]" />
+                    <FileText size={20} className="text-[#0A8B46]" />
                     <div className="flex-1 text-left">
                       <p className="font-semibold text-gray-800">Lire le contrat</p>
                       <p className="text-sm text-gray-600">
                         Contrat {agentTypes[signupData.agentType as keyof typeof agentTypes]?.title || 'Agent Relais'}
                       </p>
                     </div>
-                    <div className="text-[#25543A]">→</div>
+                    <div className="text-[#0A8B46]">→</div>
                   </div>
                 </button>
                 
@@ -851,13 +851,13 @@ export default function AgentSignupPage() {
                   onClick={() => updateData('confirmAccuracy', !signupData.confirmAccuracy)}
                   className={`w-full flex items-start gap-3 p-4 rounded-lg border-2 transition-all ${
                     signupData.confirmAccuracy
-                      ? 'border-[#25543A] bg-[#25543A]/10'
-                      : 'border-gray-300 bg-white hover:border-[#25543A]/50'
+                      ? 'border-[#0A8B46] bg-[#0A8B46]/10'
+                      : 'border-gray-300 bg-white hover:border-[#0A8B46]/50'
                   }`}
                 >
                   <div className={`h-6 w-6 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
                     signupData.confirmAccuracy
-                      ? 'border-[#25543A] bg-[#25543A]'
+                      ? 'border-[#0A8B46] bg-[#0A8B46]'
                       : 'border-gray-400 bg-white'
                   }`}>
                     {signupData.confirmAccuracy && (
@@ -874,13 +874,13 @@ export default function AgentSignupPage() {
                   onClick={() => updateData('confirmContract', !signupData.confirmContract)}
                   className={`w-full flex items-start gap-3 p-4 rounded-lg border-2 transition-all ${
                     signupData.confirmContract
-                      ? 'border-[#25543A] bg-[#25543A]/10'
-                      : 'border-gray-300 bg-white hover:border-[#25543A]/50'
+                      ? 'border-[#0A8B46] bg-[#0A8B46]/10'
+                      : 'border-gray-300 bg-white hover:border-[#0A8B46]/50'
                   }`}
                 >
                   <div className={`h-6 w-6 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
                     signupData.confirmContract
-                      ? 'border-[#25543A] bg-[#25543A]'
+                      ? 'border-[#0A8B46] bg-[#0A8B46]'
                       : 'border-gray-400 bg-white'
                   }`}>
                     {signupData.confirmContract && (
@@ -912,14 +912,14 @@ export default function AgentSignupPage() {
       {isLoadingProgress ? (
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
-            <Loader2 size={48} className="animate-spin text-[#25543A] mx-auto mb-4" />
+            <Loader2 size={48} className="animate-spin text-[#0A8B46] mx-auto mb-4" />
             <p className="text-gray-600">Chargement de votre progression...</p>
           </div>
         </div>
       ) : (
         <>
           {/* Header - Avec couleurs Enkamba */}
-          <div className="bg-gradient-to-r from-[#25543A] via-[#25543A] to-[#25543A] px-4 py-6">
+          <div className="bg-gradient-to-r from-[#0A8B46] via-[#0A8B46] to-[#0A8B46] px-4 py-6">
             <div className="flex items-center justify-between">
               <Button 
                 variant="ghost" 
@@ -963,7 +963,7 @@ export default function AgentSignupPage() {
             <Button 
               onClick={nextStep} 
               disabled={isLoading}
-              className="w-full h-12 bg-[#25543A] hover:bg-[#25543A] text-white rounded-lg font-medium disabled:opacity-50"
+              className="w-full h-12 bg-[#0A8B46] hover:bg-[#0A8B46] text-white rounded-lg font-medium disabled:opacity-50"
             >
               {isLoading ? 'Vérification...' : currentStep === 1 ? 'Continuer' : 'Suivant'}
             </Button>
@@ -971,7 +971,7 @@ export default function AgentSignupPage() {
             <Button 
               onClick={handleSubmit}
               disabled={isLoading}
-              className="w-full h-12 bg-[#25543A] hover:bg-[#25543A] text-white rounded-lg font-medium disabled:opacity-50"
+              className="w-full h-12 bg-[#0A8B46] hover:bg-[#0A8B46] text-white rounded-lg font-medium disabled:opacity-50"
             >
               {isLoading ? 'Envoi...' : 'Soumettre'}
             </Button>
@@ -984,7 +984,7 @@ export default function AgentSignupPage() {
             <div className="max-w-md mx-auto px-4">
               <div className="h-1 bg-gray-200 rounded-full">
                 <div 
-                  className="h-1 bg-[#25543A] rounded-full transition-all duration-300"
+                  className="h-1 bg-[#0A8B46] rounded-full transition-all duration-300"
                   style={{ width: `${(currentStep / totalSteps) * 100}%` }}
                 />
               </div>

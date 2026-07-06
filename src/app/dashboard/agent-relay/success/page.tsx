@@ -138,9 +138,9 @@ export default function AgentRelaySuccessPage() {
             </div>
             
             <div className="grid md:grid-cols-2 gap-4">
-              <div className="p-4 rounded-xl bg-amber-50 border border-amber-200">
-                <h4 className="font-semibold text-amber-800 mb-2">Documents manquants ?</h4>
-                <p className="text-sm text-amber-700">
+              <div className="p-4 rounded-xl bg-[#FFA500]/10 border border-[#FFA500]/30">
+                <h4 className="font-semibold text-[#FFA500] mb-2">Documents manquants ?</h4>
+                <p className="text-sm text-[#FFA500]">
                   Si des documents sont manquants, nous vous contacterons par email 
                   avec les instructions pour les compléter.
                 </p>

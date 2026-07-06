@@ -21,8 +21,8 @@ export default function AgentOpsClientsPage() {
                 Liste des clients servis, fréquence, volumes, et accès rapide aux opérations.
               </div>
             </div>
-            <div className="h-12 w-12 rounded-2xl bg-[#25543A]/10 flex items-center justify-center">
-              <Users className="text-[#25543A]" />
+            <div className="h-12 w-12 rounded-2xl bg-[#0A8B46]/10 flex items-center justify-center">
+              <Users className="text-[#0A8B46]" />
             </div>
           </div>
 

@@ -568,7 +568,7 @@ function LogisticsSideDrawer({
       <aside
         className={`absolute left-0 top-0 flex h-full w-[min(88vw,390px)] flex-col overflow-hidden bg-white shadow-[26px_0_70px_rgba(15,23,42,0.18)] transition-transform duration-300 ${open ? 'translate-x-0' : '-translate-x-full'}`}
       >
-        <div className="h-1.5 bg-[linear-gradient(90deg,#25543A_0%,#25543A_42%,#f59e0b_72%,#e11d48_100%)]" />
+        <div className="h-1.5 bg-[linear-gradient(90deg,#0A8B46_0%,#0A8B46_42%,#f59e0b_72%,#e11d48_100%)]" />
 
         <header className="flex items-center justify-between gap-4 border-b border-slate-100 px-5 py-5">
           <div className="flex min-w-0 items-center gap-3">
@@ -657,7 +657,7 @@ function LogisticsHubCard({
             <UgaviIcon size={58} />
           </div>
           <div className="min-w-0 pt-1">
-            <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#25543A]">UGAVI BUSINESS</p>
+            <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#0A8B46]">UGAVI BUSINESS</p>
             <h1 className="mt-1 line-clamp-2 text-[1.55rem] font-black leading-[1.05] tracking-tight text-white sm:text-3xl">
               {businessName || 'FIVE GOO Logistics Hub'}
             </h1>
@@ -668,7 +668,7 @@ function LogisticsHubCard({
           </div>
         </div>
         <span className="hidden shrink-0 items-center gap-2 rounded-2xl bg-white/10 px-3 py-2 text-sm font-black text-white ring-1 ring-white/12 sm:inline-flex">
-          <span className="h-2.5 w-2.5 rounded-full bg-[#25543A]" />
+          <span className="h-2.5 w-2.5 rounded-full bg-[#0A8B46]" />
           Hub actif
         </span>
       </div>
@@ -683,7 +683,7 @@ function LogisticsHubCard({
           Scanner QR
         </button>
         <span className="inline-flex items-center gap-2 rounded-2xl bg-white/10 px-3 py-2 text-xs font-bold text-white/85 ring-1 ring-white/12 sm:hidden">
-          <span className="h-2.5 w-2.5 rounded-full bg-[#25543A]" />
+          <span className="h-2.5 w-2.5 rounded-full bg-[#0A8B46]" />
           Hub actif
         </span>
       </div>
@@ -724,7 +724,7 @@ function LogisticsActionCard({
   onClick: () => void;
 }) {
   const tone = accent === 'orange'
-    ? 'bg-[#fff7ed] text-[#d97706]'
+    ? 'bg-[#fff7ed] text-[#FFA500]'
     : accent === 'slate'
       ? 'bg-slate-100 text-slate-700'
       : 'bg-primary/10 text-primary';
@@ -783,11 +783,11 @@ function generateBarcodeDataUrl(payload: string, label: string) {
     .map((bit, index) => {
       const width = bit === '1' ? 3 : 1;
       const x = 12 + index * 2;
-      return `<rect x="${x}" y="12" width="${width}" height="72" fill="#25543A" />`;
+      return `<rect x="${x}" y="12" width="${width}" height="72" fill="#0A8B46" />`;
     })
     .join('');
   const safeLabel = label.replace(/[<>&"]/g, '');
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="430" height="140" viewBox="0 0 430 140"><rect width="430" height="140" rx="16" fill="#ffffff"/><rect x="8" y="8" width="414" height="124" rx="12" fill="#25543A" stroke="#25543A"/>${bars}<text x="215" y="114" text-anchor="middle" font-family="monospace" font-size="18" font-weight="700" fill="#25543A">${safeLabel}</text></svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="430" height="140" viewBox="0 0 430 140"><rect width="430" height="140" rx="16" fill="#ffffff"/><rect x="8" y="8" width="414" height="124" rx="12" fill="#0A8B46" stroke="#0A8B46"/>${bars}<text x="215" y="114" text-anchor="middle" font-family="monospace" font-size="18" font-weight="700" fill="#0A8B46">${safeLabel}</text></svg>`;
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 
@@ -842,29 +842,29 @@ function buildMaritimeReceiptHtml(packageData: {
         * { box-sizing: border-box; }
         body { margin: 0; padding: 24px; font-family: Arial, sans-serif; color: #0f172a; background: #f8fafc; }
         .sheet { max-width: 860px; margin: 0 auto 22px; border: 1px solid #dbe7df; border-radius: 22px; background: #ffffff; overflow: hidden; }
-        .header { padding: 22px 26px; color: #ffffff; background: linear-gradient(135deg, #25543A, #25543A); }
+        .header { padding: 22px 26px; color: #ffffff; background: linear-gradient(135deg, #0A8B46, #0A8B46); }
         .header h1 { margin: 0; font-size: 24px; letter-spacing: .02em; }
         .header p { margin: 7px 0 0; font-size: 13px; opacity: .9; }
         .content { padding: 22px 26px; }
         .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
         .box { border: 1px solid #e2e8f0; border-radius: 16px; padding: 14px; background: #fff; }
-        .box h2 { margin: 0 0 10px; font-size: 13px; color: #25543A; text-transform: uppercase; letter-spacing: .08em; }
+        .box h2 { margin: 0 0 10px; font-size: 13px; color: #0A8B46; text-transform: uppercase; letter-spacing: .08em; }
         .line { margin: 6px 0; font-size: 12px; line-height: 1.45; }
         .line strong { color: #111827; }
         table { width: 100%; border-collapse: collapse; font-size: 12px; }
         td { padding: 9px 10px; border-bottom: 1px solid #e2e8f0; }
-        td:last-child { text-align: right; font-weight: 800; color: #25543A; }
-        .total td { background: #25543A; font-size: 13px; font-weight: 900; }
+        td:last-child { text-align: right; font-weight: 800; color: #0A8B46; }
+        .total td { background: #0A8B46; font-size: 13px; font-weight: 900; }
         .signatures { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 18px; }
         .signature { min-height: 70px; border: 1px dashed #94a3b8; border-radius: 14px; padding: 10px; font-size: 11px; color: #475569; }
         .label-sheet { max-width: 560px; }
-        .label-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px; color: #ffffff; background: #25543A; }
+        .label-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px; color: #ffffff; background: #0A8B46; }
         .tracking { font-family: monospace; font-size: 18px; font-weight: 900; }
         .code-grid { display: grid; grid-template-columns: 170px 1fr; gap: 14px; align-items: center; }
         .qr { width: 160px; height: 160px; border: 1px solid #e2e8f0; border-radius: 16px; padding: 8px; background: #fff; }
         .barcode { width: 100%; max-height: 110px; object-fit: contain; border: 1px solid #e2e8f0; border-radius: 14px; padding: 8px; background: #fff; }
         .marks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
-        .mark { border: 1px solid #25543A; border-radius: 12px; background: #25543A; padding: 8px; font-size: 11px; font-weight: 800; color: #25543A; }
+        .mark { border: 1px solid #0A8B46; border-radius: 12px; background: #0A8B46; padding: 8px; font-size: 11px; font-weight: 800; color: #0A8B46; }
         .note { margin-top: 14px; border-radius: 14px; background: #f8fafc; padding: 12px; font-size: 11px; line-height: 1.5; color: #475569; }
         @media print {
           body { padding: 0; background: #fff; }
@@ -1383,7 +1383,7 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
       const qrCodeUrl = await (QRCode as any).toDataURL(qrPayload, {
         margin: 1,
         width: 220,
-        color: { dark: '#25543A', light: '#ffffff' },
+        color: { dark: '#0A8B46', light: '#ffffff' },
       });
 
       const requestDoc = await addDoc(collection(db, 'ugaviRequests'), {
@@ -1743,7 +1743,7 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
             <MetricCard label="Poids facture" value={`${quote.chargeableWeight.toFixed(2)} kg`} />
           </div>
 
-          <div className="rounded-2xl border border-orange-100 bg-orange-50/60 p-4">
+          <div className="rounded-2xl border border-[#FFA500]/20 bg-[#FFA500]/10 p-4">
             <div className="grid gap-3 md:grid-cols-3">
               <SelectField label="Devise facture" value={billingCurrency} onChange={setBillingCurrency} options={CURRENCIES.map((item) => ({ value: item, label: item }))} />
               <MetricCard label="Methode tarifaire" value={selectedTransport.method} />
@@ -1903,7 +1903,7 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
                 <button
                   type="button"
                   onClick={() => void openCamera()}
-                  className="mt-2 w-full rounded-xl bg-orange-50 px-3 py-2 text-sm font-bold text-orange-700"
+                  className="mt-2 w-full rounded-xl bg-[#FFA500]/10 px-3 py-2 text-sm font-bold text-[#FFA500]"
                 >
                   Reprendre la photo
                 </button>
@@ -1955,8 +1955,8 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
                   Telecharger QR
                 </button>
               </div>
-              <div className="rounded-xl border border-orange-100 bg-white p-3 text-center">
-                <p className="mb-2 text-xs font-bold uppercase tracking-[0.14em] text-orange-700">Code-barres</p>
+              <div className="rounded-xl border border-[#FFA500]/20 bg-white p-3 text-center">
+                <p className="mb-2 text-xs font-bold uppercase tracking-[0.14em] text-[#FFA500]">Code-barres</p>
                 <img
                   src={registeredPackage.barcodeUrl}
                   alt={`Barcode ${registeredPackage.trackingNumber}`}
@@ -1965,7 +1965,7 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
                 <button
                   type="button"
                   onClick={() => downloadDataUrl(registeredPackage.barcodeUrl, `${registeredPackage.trackingNumber}-barcode.svg`)}
-                  className="mt-3 w-full rounded-xl bg-orange-50 px-3 py-2 text-xs font-bold text-orange-700"
+                  className="mt-3 w-full rounded-xl bg-[#FFA500]/10 px-3 py-2 text-xs font-bold text-[#FFA500]"
                 >
                   Telecharger barcode
                 </button>
@@ -1982,7 +1982,7 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
               <button
                 type="button"
                 onClick={() => downloadPackageLabel(registeredPackage)}
-                className="rounded-xl bg-orange-500 px-3 py-2 text-sm font-bold text-white"
+                className="rounded-xl bg-[#FFA500]/100 px-3 py-2 text-sm font-bold text-white"
               >
                 Telecharger
               </button>
@@ -2173,7 +2173,7 @@ function LogisticsKpiCard({
   note: string;
   tone: 'green' | 'orange';
 }) {
-  const color = tone === 'orange' ? 'bg-[#fff7ed] text-[#d97706]' : 'bg-primary/10 text-primary';
+  const color = tone === 'orange' ? 'bg-[#fff7ed] text-[#FFA500]' : 'bg-primary/10 text-primary';
 
   return (
     <article className="min-h-[7.1rem] rounded-[1.25rem] bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.06)] ring-1 ring-slate-100">
@@ -2184,7 +2184,7 @@ function LogisticsKpiCard({
         <div className="min-w-0">
           <p className="line-clamp-2 text-xs font-bold leading-tight text-slate-700">{label}</p>
           <p className="mt-1 text-2xl font-black leading-tight text-slate-950">{value}</p>
-          <p className={`mt-1 text-xs font-bold ${tone === 'orange' ? 'text-[#d97706]' : 'text-primary'}`}>{note}</p>
+          <p className={`mt-1 text-xs font-bold ${tone === 'orange' ? 'text-[#FFA500]' : 'text-primary'}`}>{note}</p>
         </div>
       </div>
     </article>
@@ -2200,7 +2200,7 @@ function LogisticsRecentShipmentRow({ shipment }: { shipment: AgencyShipment }) 
       onClick={() => window.open(`/dashboard/ugavi/tracking?tracking=${encodeURIComponent(shipment.trackingNumber)}`, '_blank')}
       className="grid w-full grid-cols-[3rem_1fr_auto_auto] items-center gap-3 px-4 py-3 text-left transition hover:bg-slate-50"
     >
-      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[#fff7ed] text-[#d97706]">
+      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[#fff7ed] text-[#FFA500]">
         <Box className="h-7 w-7" />
       </span>
       <span className="min-w-0">
@@ -2234,14 +2234,14 @@ function getShipmentStatusMeta(status: UgaviLogisticsStatus) {
   const meta: Record<string, { label: string; className: string; dot: string }> = {
     registered: { label: 'En entrepôt', className: 'bg-primary/10 text-primary', dot: 'bg-primary' },
     assigned: { label: 'Prêt pour expédition', className: 'bg-blue-50 text-blue-700', dot: 'bg-blue-500' },
-    in_transit: { label: 'En transit', className: 'bg-[#fff7ed] text-[#d97706]', dot: 'bg-[#f59e0b]' },
+    in_transit: { label: 'En transit', className: 'bg-[#fff7ed] text-[#FFA500]', dot: 'bg-[#f59e0b]' },
     arrived_depot: { label: 'Arrivé dépôt', className: 'bg-primary/10 text-primary', dot: 'bg-primary' },
     out_for_delivery: { label: 'En livraison', className: 'bg-blue-50 text-blue-700', dot: 'bg-blue-500' },
     delivered: { label: 'Livré', className: 'bg-primary/10 text-primary', dot: 'bg-primary' },
     returned: { label: 'Retourné', className: 'bg-red-50 text-red-700', dot: 'bg-red-500' },
     blocked: { label: 'Incident', className: 'bg-red-50 text-red-700', dot: 'bg-red-500' },
     draft: { label: 'Brouillon', className: 'bg-slate-100 text-slate-600', dot: 'bg-slate-400' },
-    pending_payment: { label: 'Paiement attendu', className: 'bg-[#fff7ed] text-[#d97706]', dot: 'bg-[#f59e0b]' },
+    pending_payment: { label: 'Paiement attendu', className: 'bg-[#fff7ed] text-[#FFA500]', dot: 'bg-[#f59e0b]' },
     paid: { label: 'Payé', className: 'bg-primary/10 text-primary', dot: 'bg-primary' },
   };
 
@@ -2528,7 +2528,7 @@ function LogisticsFleet({ title, emptyState, businessUser, mode = 'fleet' }: { t
               type="button"
               onClick={addResource}
               disabled={isSavingResource}
-              className="h-11 rounded-xl bg-orange-500 px-4 text-sm font-bold text-white"
+              className="h-11 rounded-xl bg-[#FFA500]/100 px-4 text-sm font-bold text-white"
             >
               {isSavingResource ? '...' : 'Valider'}
             </button>
@@ -2597,7 +2597,7 @@ function LogisticsFleet({ title, emptyState, businessUser, mode = 'fleet' }: { t
           type="button"
           onClick={showZoneForm ? saveZone : () => setShowZoneForm(true)}
           disabled={isSavingZone}
-          className="mt-5 w-full rounded-xl bg-orange-500 px-4 py-2 text-sm font-bold text-white"
+          className="mt-5 w-full rounded-xl bg-[#FFA500]/100 px-4 py-2 text-sm font-bold text-white"
         >
           {showZoneForm ? (isSavingZone ? 'Sauvegarde...' : 'Sauvegarder la zone') : 'Configurer la zone'}
         </button>
@@ -2748,7 +2748,7 @@ function LogisticsShipments({
                   <button
                     type="button"
                     onClick={() => window.open(`/dashboard/ugavi/tracking?tracking=${encodeURIComponent(shipment.trackingNumber)}`, '_blank')}
-                    className="h-11 rounded-xl bg-orange-500 px-4 text-sm font-bold text-white"
+                    className="h-11 rounded-xl bg-[#FFA500]/100 px-4 text-sm font-bold text-white"
                   >
                     Suivre
                   </button>
@@ -3013,7 +3013,7 @@ function RelayScanner({ title, description, businessUser }: { title: string; des
 
   return (
     <div className="grid gap-5 lg:grid-cols-[0.85fr_1.15fr]">
-      <div className="rounded-2xl bg-gradient-to-br from-primary to-orange-500 p-6 text-white shadow-sm">
+      <div className="rounded-2xl bg-gradient-to-br from-primary to-[#FFA500] p-6 text-white shadow-sm">
         <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white/10">
           <UgaviShareIcon size={48} />
         </div>

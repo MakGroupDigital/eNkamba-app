@@ -92,7 +92,7 @@ export default function AgentOpsReferralPage() {
           <Card className="rounded-2xl border border-gray-200">
             <CardContent className="p-10 flex items-center justify-center">
               <div className="text-center">
-                <Loader2 className="h-8 w-8 animate-spin text-[#25543A] mx-auto mb-2" />
+                <Loader2 className="h-8 w-8 animate-spin text-[#0A8B46] mx-auto mb-2" />
                 <div className="text-sm text-muted-foreground">Chargement...</div>
               </div>
             </CardContent>
@@ -109,8 +109,8 @@ export default function AgentOpsReferralPage() {
                         {stats?.totalReferrals ?? 0}
                       </div>
                     </div>
-                    <div className="h-12 w-12 rounded-2xl bg-[#25543A]/10 flex items-center justify-center">
-                      <Users className="text-[#25543A]" />
+                    <div className="h-12 w-12 rounded-2xl bg-[#0A8B46]/10 flex items-center justify-center">
+                      <Users className="text-[#0A8B46]" />
                     </div>
                   </div>
                 </CardContent>
@@ -123,8 +123,8 @@ export default function AgentOpsReferralPage() {
                       <div className="text-sm text-gray-500">Gains</div>
                       <div className="text-3xl font-bold text-gray-900 tabular-nums">{earningsText}</div>
                     </div>
-                    <div className="h-12 w-12 rounded-2xl bg-[#25543A]/10 flex items-center justify-center">
-                      <Gift className="text-[#25543A]" />
+                    <div className="h-12 w-12 rounded-2xl bg-[#0A8B46]/10 flex items-center justify-center">
+                      <Gift className="text-[#0A8B46]" />
                     </div>
                   </div>
                 </CardContent>
@@ -132,12 +132,12 @@ export default function AgentOpsReferralPage() {
             </div>
 
             {referralLink && (
-              <Card className="rounded-2xl border border-[#25543A]/20 bg-gradient-to-br from-[#25543A]/10 to-[#25543A]/5">
+              <Card className="rounded-2xl border border-[#0A8B46]/20 bg-gradient-to-br from-[#0A8B46]/10 to-[#0A8B46]/5">
                 <CardHeader>
                   <CardTitle>Votre lien de parrainage</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="bg-white p-4 rounded-xl border border-[#25543A]/20 break-all font-mono text-sm">
+                  <div className="bg-white p-4 rounded-xl border border-[#0A8B46]/20 break-all font-mono text-sm">
                     {referralLink}
                   </div>
 
@@ -152,7 +152,7 @@ export default function AgentOpsReferralPage() {
                     </Button>
                     <Button
                       onClick={shareLink}
-                      className="h-12 rounded-xl bg-[#25543A] hover:bg-[#25543A] text-white"
+                      className="h-12 rounded-xl bg-[#0A8B46] hover:bg-[#0A8B46] text-white"
                     >
                       <Share2 className="w-4 h-4 mr-2" />
                       Partager
@@ -168,14 +168,14 @@ export default function AgentOpsReferralPage() {
                   <CardTitle>Votre code</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="bg-gradient-to-r from-[#25543A] to-[#25543A] p-8 rounded-2xl text-center">
+                  <div className="bg-gradient-to-r from-[#0A8B46] to-[#0A8B46] p-8 rounded-2xl text-center">
                     <div className="text-white/90 text-sm mb-2">Code</div>
                     <div className="text-white text-4xl font-bold font-mono tracking-widest">{referralCode}</div>
                   </div>
 
                   <Button
                     onClick={() => copyToClipboard(referralCode)}
-                    className="w-full h-12 rounded-xl bg-[#25543A] hover:bg-[#25543A] text-white"
+                    className="w-full h-12 rounded-xl bg-[#0A8B46] hover:bg-[#0A8B46] text-white"
                   >
                     <Copy className="w-4 h-4 mr-2" />
                     Copier le code
@@ -192,7 +192,7 @@ export default function AgentOpsReferralPage() {
                   </div>
                   <Button
                     onClick={() => void loadReferralData()}
-                    className="mt-4 h-12 rounded-xl bg-[#25543A] hover:bg-[#25543A] text-white"
+                    className="mt-4 h-12 rounded-xl bg-[#0A8B46] hover:bg-[#0A8B46] text-white"
                   >
                     Recharger
                   </Button>

@@ -510,12 +510,12 @@ export default function BecomeSellerPage() {
                 </div>
               </div>
             ) : (
-              <Card className="border-amber-200 bg-amber-50">
+              <Card className="border-[#FFA500]/30 bg-[#FFA500]/10">
                 <CardContent className="p-4 flex items-start gap-3">
-                  <Briefcase className="h-5 w-5 text-amber-700 mt-0.5" />
+                  <Briefcase className="h-5 w-5 text-[#FFA500] mt-0.5" />
                   <div>
-                    <p className="text-sm font-semibold text-amber-900">Boutique requise</p>
-                    <p className="text-xs text-amber-800 mt-1">Créez votre boutique Nkampa pour personnaliser l’ajout de produits.</p>
+                    <p className="text-sm font-semibold text-[#FFA500]">Boutique requise</p>
+                    <p className="text-xs text-[#FFA500] mt-1">Créez votre boutique Nkampa pour personnaliser l’ajout de produits.</p>
                     <Button size="sm" className="mt-3 bg-primary hover:bg-primary/90" onClick={() => router.push('/dashboard/nkampa/store')}>
                       Créer une boutique
                     </Button>

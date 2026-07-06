@@ -48,7 +48,7 @@ export default function WearablesPage() {
       title: 'Synchronisation Automatique',
       description: 'Tous vos appareils synchronisés en temps réel',
       status: 'En cours de développement',
-      color: 'from-orange-500 to-red-600',
+      color: 'from-[#FFA500] to-red-600',
     },
   ];
 

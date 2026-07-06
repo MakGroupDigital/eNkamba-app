@@ -12,8 +12,8 @@ const AgentRelayIcon = ({ size = 24 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <linearGradient id="agentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#25543A" />
-        <stop offset="100%" stopColor="#25543A" />
+        <stop offset="0%" stopColor="#0A8B46" />
+        <stop offset="100%" stopColor="#0A8B46" />
       </linearGradient>
     </defs>
     <circle cx="24" cy="24" r="20" fill="url(#agentGrad)" />
@@ -128,10 +128,10 @@ export function AgentRelaySection() {
     const isSubmitted = status === 'submitted';
     
     return (
-      <Card className="overflow-hidden border-2 border-[#25543A]/30 bg-[#25543A]/5">
-        <CardHeader className="bg-gradient-to-r from-[#25543A]/10 to-transparent">
+      <Card className="overflow-hidden border-2 border-[#0A8B46]/30 bg-[#0A8B46]/5">
+        <CardHeader className="bg-gradient-to-r from-[#0A8B46]/10 to-transparent">
           <CardTitle className="font-headline text-lg flex items-center gap-2">
-            <Clock size={20} className="text-[#25543A]" />
+            <Clock size={20} className="text-[#0A8B46]" />
             Demande Agent Relais
           </CardTitle>
         </CardHeader>
@@ -161,7 +161,7 @@ export function AgentRelaySection() {
               </Button>
             }
             badge={
-              <span className="px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 text-xs font-medium">
+              <span className="px-2 py-0.5 rounded-full bg-[#FFA500]/15 text-[#FFA500] text-xs font-medium">
                 {isSubmitted ? 'En examen' : `Étape ${application?.currentStep || 1}/5`}
               </span>
             }

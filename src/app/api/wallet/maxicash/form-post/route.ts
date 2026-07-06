@@ -159,14 +159,14 @@ export async function POST(request: NextRequest) {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Ouverture ${escapeHtml(displayName)}</title>
     <style>
-      body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:0;min-height:100vh;display:grid;place-items:center;background:#f7fbf9;color:#25543A}
+      body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:0;min-height:100vh;display:grid;place-items:center;background:#f7fbf9;color:#0A8B46}
       .box{width:min(420px,calc(100vw - 32px));border:1px solid #d7eee4;border-radius:12px;background:#fff;padding:24px;text-align:center;box-shadow:0 12px 30px rgba(11,110,79,.08)}
       .brand{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px}
       .brand img{width:42px;height:42px;object-fit:contain}
       .brand strong{font-size:22px}
-      .spinner{width:34px;height:34px;border:4px solid #d7eee4;border-top-color:#25543A;border-radius:50%;margin:0 auto 16px;animation:spin .9s linear infinite}
+      .spinner{width:34px;height:34px;border:4px solid #d7eee4;border-top-color:#0A8B46;border-radius:50%;margin:0 auto 16px;animation:spin .9s linear infinite}
       @keyframes spin{to{transform:rotate(360deg)}}
-      button{margin-top:14px;border:0;border-radius:8px;background:#25543A;color:white;font-weight:700;padding:10px 14px}
+      button{margin-top:14px;border:0;border-radius:8px;background:#0A8B46;color:white;font-weight:700;padding:10px 14px}
     </style>
   </head>
   <body>

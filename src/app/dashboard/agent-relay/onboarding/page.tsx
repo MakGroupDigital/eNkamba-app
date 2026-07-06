@@ -164,12 +164,12 @@ export default function AgentRelayOnboardingPage() {
               ))}
             </div>
             
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+            <div className="bg-[#FFA500]/10 border border-[#FFA500]/30 rounded-xl p-4">
               <div className="flex items-start gap-3">
-                <Shield size={20} className="text-amber-600 flex-shrink-0 mt-0.5" />
+                <Shield size={20} className="text-[#FFA500] flex-shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="font-semibold text-amber-800 mb-1">Important</h4>
-                  <p className="text-sm text-amber-700">
+                  <h4 className="font-semibold text-[#FFA500] mb-1">Important</h4>
+                  <p className="text-sm text-[#FFA500]">
                     Tous les agents doivent respecter la réglementation locale et 
                     les politiques anti-blanchiment d\'argent.
                   </p>
@@ -205,14 +205,14 @@ export default function AgentRelayOnboardingPage() {
                   description: 'Cabinet de services financiers complet',
                   commission: '10-15%',
                   investment: 'Moyen',
-                  color: 'from-[#25543A] to-[#25543A]'
+                  color: 'from-[#0A8B46] to-[#0A8B46]'
                 },
                 {
                   type: 'Point de Service',
                   description: 'Services intégrés à votre activité',
                   commission: '3-8%',
                   investment: 'Aucun',
-                  color: 'from-[#25543A] to-[#25543A]'
+                  color: 'from-[#0A8B46] to-[#0A8B46]'
                 }
               ].map((option, index) => (
                 <div key={index} className="p-4 rounded-xl border border-border hover:border-primary/30 transition-colors cursor-pointer">

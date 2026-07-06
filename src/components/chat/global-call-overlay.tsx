@@ -126,7 +126,7 @@ export function GlobalCallOverlay() {
   return (
     <div className="fixed inset-0 z-[250] overflow-hidden bg-[radial-gradient(circle_at_top,rgba(50,187,120,0.35),transparent_35%),linear-gradient(180deg,#03140d_0%,#072b1b_34%,#0b1b14_100%)] text-white">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-md" />
-      <div className="pointer-events-none absolute -top-24 left-1/2 h-64 w-[min(720px,95vw)] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(255,140,0,0.32),transparent)] blur-3xl" />
+      <div className="pointer-events-none absolute -top-24 left-1/2 h-64 w-[min(720px,95vw)] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(255,165,0,0.32),transparent)] blur-3xl" />
       <div className="pointer-events-none absolute bottom-0 left-1/2 h-80 w-[min(920px,110vw)] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(50,187,120,0.28),transparent)] blur-3xl" />
 
       <div className="relative z-10 flex h-full flex-col items-center justify-between px-6 pb-12 pt-16 text-center sm:pt-20">

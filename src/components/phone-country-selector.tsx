@@ -123,7 +123,7 @@ export function PhoneCountrySelector({
                         placeholder="Rechercher un pays..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#25543A]"
+                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#0A8B46]"
                         autoFocus
                       />
                     </div>

@@ -455,7 +455,7 @@ function FloatingBadge({
 }) {
   const toneClass =
     tone === 'orange'
-      ? 'border-orange-200/70 bg-orange-50/76 shadow-orange-900/10'
+      ? 'border-[#FFA500]/30/70 bg-[#FFA500]/10 shadow-[#FFA500]/10'
       : tone === 'slate'
         ? 'border-slate-200/70 bg-white/74 shadow-slate-900/10'
         : 'border-primary/20/70 bg-primary/5/76 shadow-primary/10';
@@ -1914,7 +1914,7 @@ export default function UgaviPage() {
         <button
           type="button"
           title={dropoffLocation}
-          className="absolute z-20 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-full bg-orange-600 px-2.5 py-1.5 text-xs font-semibold text-white shadow-lg ring-2 ring-white/80"
+          className="absolute z-20 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-full bg-[#FFA500] px-2.5 py-1.5 text-xs font-semibold text-white shadow-lg ring-2 ring-white/80"
           style={markerPosition(dropoffPoint, mapCenter, mapRadius)}
         >
           <MapPinIcon size={16} />
@@ -1955,7 +1955,7 @@ export default function UgaviPage() {
             }}
             title={`${courier.name} - ${locomotionLabels[courier.locomotion]}`}
             className={`absolute z-20 flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full shadow-xl ring-2 ring-white/80 ${
-              selectedCourierId === courier.id ? 'bg-orange-600 text-white' : 'bg-white text-slate-800'
+              selectedCourierId === courier.id ? 'bg-[#FFA500] text-white' : 'bg-white text-slate-800'
             }`}
             style={markerPosition(courier, mapCenter, mapRadius)}
           >
@@ -2184,7 +2184,7 @@ export default function UgaviPage() {
                     onSelect={(suggestion) => selectAddressSuggestion('dropoff', suggestion)}
                     placeholder="Destination"
                     Icon={UgaviIcon}
-                    iconClassName="text-orange-600"
+                    iconClassName="text-[#FFA500]"
                     suggestions={addressSuggestions.dropoff}
                     isLoading={isAddressSearchLoading && activeAddressField === 'dropoff'}
                     isOpen={activeAddressField === 'dropoff'}
@@ -2250,7 +2250,7 @@ export default function UgaviPage() {
                       onSelect={(suggestion) => selectAddressSuggestion('dropoff', suggestion)}
                       placeholder={shipmentType === 'international' ? 'Pays ou ville destination' : shipmentType === 'relay' ? 'Point de livraison ou zone' : 'Ville de destination'}
                       Icon={UgaviIcon}
-                      iconClassName="text-orange-600"
+                      iconClassName="text-[#FFA500]"
                       suggestions={addressSuggestions.dropoff}
                       isLoading={isAddressSearchLoading && activeAddressField === 'dropoff'}
                       isOpen={activeAddressField === 'dropoff'}
@@ -2748,7 +2748,7 @@ export default function UgaviPage() {
                             setDepositInstructions(null);
                             setDepositInstructionCode(null);
                           }}
-                          className={`w-full rounded-2xl border bg-white/78 px-3 py-2 text-left text-sm shadow-lg shadow-orange-950/5 backdrop-blur-xl transition ${
+                          className={`w-full rounded-2xl border bg-white/78 px-3 py-2 text-left text-sm shadow-lg shadow-[#FFA500]/10 backdrop-blur-xl transition ${
 	                            selectedAgencyId === agency.id ? 'border-primary' : 'border-white/70 hover:border-primary/20'
 	                          }`}
                         >
@@ -2777,9 +2777,9 @@ export default function UgaviPage() {
                   )}
 
                   {shipmentType === 'international' && selectedAgency && (
-                    <div className="space-y-2 rounded-[24px] border border-orange-100/80 bg-orange-50/78 p-3 shadow-2xl shadow-orange-950/10 backdrop-blur-2xl ring-1 ring-white/55">
+                    <div className="space-y-2 rounded-[24px] border border-[#FFA500]/20/80 bg-[#FFA500]/10 p-3 shadow-2xl shadow-[#FFA500]/15 backdrop-blur-2xl ring-1 ring-white/55">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-xs font-black uppercase text-orange-800">3. Instructions de depot</p>
+                        <p className="text-xs font-black uppercase text-[#FFA500]">3. Instructions de depot</p>
                         <button
                           type="button"
                           onClick={() => {
@@ -2855,17 +2855,17 @@ export default function UgaviPage() {
                           <div className="space-y-2">
                             <div className="flex items-center justify-between gap-3">
                               <div>
-                                <p className="text-xs font-black uppercase text-orange-800">Trajet analyse</p>
+                                <p className="text-xs font-black uppercase text-[#FFA500]">Trajet analyse</p>
                                 <p className="text-sm font-bold text-slate-900">{pickupLocation} → {dropoffLocation}</p>
                               </div>
-                              <span className="rounded-full bg-white px-2 py-1 text-xs font-bold text-orange-700">
+                              <span className="rounded-full bg-white px-2 py-1 text-xs font-bold text-[#FFA500]">
                                 {deliveryRouteDistance ? `${deliveryRouteDistance.toFixed(1)} km` : 'Distance'}
                               </span>
                             </div>
                             <Button
                               type="button"
                               onClick={() => setDeliveryStep('options')}
-                              className="h-10 w-full rounded-2xl bg-orange-600 hover:bg-orange-700"
+                              className="h-10 w-full rounded-2xl bg-[#FFA500] hover:bg-[#FFA500]"
                             >
                               Continuer
                             </Button>
@@ -2888,10 +2888,10 @@ export default function UgaviPage() {
                             setConfirmedDeliveryTracking(null);
                             setDeliveryStep('parcel');
                           }}
-                          className="rounded-2xl border border-white/70 bg-white/78 p-3 text-left shadow-xl backdrop-blur-xl transition hover:border-orange-200 hover:bg-white/90"
+                          className="rounded-2xl border border-white/70 bg-white/78 p-3 text-left shadow-xl backdrop-blur-xl transition hover:border-[#FFA500]/30 hover:bg-white/90"
                         >
                           <div className="mb-2 flex items-center justify-between">
-                            <span className="rounded-2xl bg-orange-50 p-2 text-orange-700">
+                            <span className="rounded-2xl bg-[#FFA500]/10 p-2 text-[#FFA500]">
                               <LocomotionIcon type={courier.locomotion} />
                             </span>
                             <span className="text-xs font-bold text-primary">Disponible</span>
@@ -2905,10 +2905,10 @@ export default function UgaviPage() {
                   )}
 
                   {deliveryStep === 'parcel' && selectedCourier && (
-                    <div className="space-y-2 rounded-[24px] border border-orange-100/80 bg-orange-50/78 p-3 shadow-2xl shadow-orange-950/10 backdrop-blur-2xl ring-1 ring-white/55">
+                    <div className="space-y-2 rounded-[24px] border border-[#FFA500]/20/80 bg-[#FFA500]/10 p-3 shadow-2xl shadow-[#FFA500]/15 backdrop-blur-2xl ring-1 ring-white/55">
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
-                          <span className="rounded-2xl bg-white p-2 text-orange-700 shadow-sm">
+                          <span className="rounded-2xl bg-white p-2 text-[#FFA500] shadow-sm">
                             <LocomotionIcon type={selectedCourier.locomotion} />
                           </span>
                           <div>
@@ -3014,7 +3014,7 @@ export default function UgaviPage() {
                   )}
 
                   {deliveryStep === 'payment' && selectedCourier && paymentChoice && (
-                    <Button onClick={confirmExpressDelivery} className="h-11 w-full rounded-2xl bg-orange-600 hover:bg-orange-700">
+                    <Button onClick={confirmExpressDelivery} className="h-11 w-full rounded-2xl bg-[#FFA500] hover:bg-[#FFA500]">
                       Confirmer et envoyer
                     </Button>
                   )}
@@ -3136,7 +3136,7 @@ export default function UgaviPage() {
               <div className="grid grid-cols-2 gap-2">
                 {[
                   { label: 'Livraisons', value: recentShipments.length, tone: 'bg-primary/5 text-primary' },
-                  { label: 'A deposer', value: recentShipments.filter((item) => item.status === 'En attente').length, tone: 'bg-amber-50 text-amber-700' },
+                  { label: 'A deposer', value: recentShipments.filter((item) => item.status === 'En attente').length, tone: 'bg-[#FFA500]/10 text-[#FFA500]' },
                   { label: 'En transit', value: recentShipments.filter((item) => item.status === 'En transit').length, tone: 'bg-blue-50 text-blue-700' },
                   { label: 'Livres', value: recentShipments.filter((item) => item.status === 'Livre').length, tone: 'bg-slate-100 text-slate-700' },
                 ].map((section) => (

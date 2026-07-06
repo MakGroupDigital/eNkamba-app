@@ -104,7 +104,7 @@ export function PendingPaymentWatcher() {
           <Card
             className={cn(
               "shadow-2xl border",
-              activeNotification.status === "completed" ? "border-primary" : "border-amber-500"
+              activeNotification.status === "completed" ? "border-primary" : "border-[#FFA500]"
             )}
           >
             <CardContent className="space-y-3 pt-4">

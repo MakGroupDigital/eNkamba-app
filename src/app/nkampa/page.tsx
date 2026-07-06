@@ -108,7 +108,7 @@ export default function NkampaPage() {
                               <h3 className="font-headline text-base font-semibold truncate">{prod.name}</h3>
                               <div className="flex justify-between items-center">
                                   <p className="text-lg font-bold text-primary">{prod.price}</p>
-                                  <div className="flex items-center gap-1 text-sm text-amber-500">
+                                  <div className="flex items-center gap-1 text-sm text-[#FFA500]">
                                       <Star className="w-4 h-4 fill-current"/>
                                       <span>{prod.rating}</span>
                                   </div>

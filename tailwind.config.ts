@@ -10,11 +10,23 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ['Roboto', 'sans-serif'],
-        headline: ['Montserrat', 'sans-serif'],
+        body: ['Inter', 'Poppins', 'Roboto', 'sans-serif'],
+        headline: ['Inter', 'Poppins', 'Roboto', 'sans-serif'],
         code: ['"Fira Code"', 'monospace'],
       },
       colors: {
+        enkamba: {
+          primary: '#0A8B46',
+          active: '#0F9A61',
+          card: '#089961',
+          accent: '#18A96E',
+          orange: '#FFA500',
+          soft: '#E8F6F1',
+          page: '#FCFDFC',
+          text: '#1B2026',
+          muted: '#477063',
+          border: '#E9F0ED',
+        },
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: {

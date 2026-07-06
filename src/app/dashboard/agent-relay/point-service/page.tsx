@@ -40,7 +40,7 @@ export default function PointServicePage() {
 
       {/* Hero Section */}
       <Card className="overflow-hidden">
-        <div className="bg-gradient-to-r from-[#25543A] via-[#25543A] to-[#25543A] p-8 text-white">
+        <div className="bg-gradient-to-r from-[#0A8B46] via-[#0A8B46] to-[#0A8B46] p-8 text-white">
           <div className="flex items-center gap-6">
             <div className="h-20 w-20 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
               <MapPin size={40} />
@@ -70,7 +70,7 @@ export default function PointServicePage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Store size={24} className="text-orange-600" />
+            <Store size={24} className="text-[#FFA500]" />
             Idéal pour votre type de commerce
           </CardTitle>
         </CardHeader>
@@ -96,10 +96,10 @@ export default function PointServicePage() {
                 examples: ['Salon de coiffure', 'Garage auto', 'Atelier couture']
               }
             ].map((business, index) => (
-              <div key={index} className="p-4 rounded-xl border border-border hover:border-orange-500/30 transition-colors">
+              <div key={index} className="p-4 rounded-xl border border-border hover:border-[#FFA500]/30 transition-colors">
                 <div className="text-center mb-4">
-                  <div className="h-12 w-12 mx-auto mb-3 rounded-xl bg-orange-100 flex items-center justify-center">
-                    <business.icon size={24} className="text-orange-600" />
+                  <div className="h-12 w-12 mx-auto mb-3 rounded-xl bg-[#FFA500]/15 flex items-center justify-center">
+                    <business.icon size={24} className="text-[#FFA500]" />
                   </div>
                   <h3 className="font-semibold">{business.type}</h3>
                   <p className="text-sm text-muted-foreground mt-1">{business.description}</p>
@@ -107,7 +107,7 @@ export default function PointServicePage() {
                 <div className="space-y-1">
                   {business.examples.map((example, idx) => (
                     <div key={idx} className="text-xs text-muted-foreground flex items-center gap-2">
-                      <div className="h-1 w-1 rounded-full bg-orange-600" />
+                      <div className="h-1 w-1 rounded-full bg-[#FFA500]" />
                       {example}
                     </div>
                   ))}
@@ -122,7 +122,7 @@ export default function PointServicePage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Smartphone size={24} className="text-orange-600" />
+            <Smartphone size={24} className="text-[#FFA500]" />
             Services que vous pourrez offrir
           </CardTitle>
         </CardHeader>
@@ -166,7 +166,7 @@ export default function PointServicePage() {
                 difficulty: 'Facile'
               }
             ].map((service, index) => (
-              <div key={index} className="p-4 rounded-xl border border-border hover:border-orange-500/30 transition-colors">
+              <div key={index} className="p-4 rounded-xl border border-border hover:border-[#FFA500]/30 transition-colors">
                 <div className="flex justify-between items-start mb-2">
                   <div>
                     <h3 className="font-semibold">{service.title}</h3>
@@ -175,13 +175,13 @@ export default function PointServicePage() {
                       className={`text-xs mt-1 ${
                         service.difficulty === 'Facile' 
                           ? 'border-primary text-primary' 
-                          : 'border-orange-500 text-orange-700'
+                          : 'border-[#FFA500] text-[#FFA500]'
                       }`}
                     >
                       {service.difficulty}
                     </Badge>
                   </div>
-                  <Badge variant="secondary" className="text-xs bg-orange-100 text-orange-700">
+                  <Badge variant="secondary" className="text-xs bg-[#FFA500]/15 text-[#FFA500]">
                     {service.commission}
                   </Badge>
                 </div>
@@ -196,14 +196,14 @@ export default function PointServicePage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <CheckCircle2 size={24} className="text-orange-600" />
+            <CheckCircle2 size={24} className="text-[#FFA500]" />
             Prérequis simples
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <h3 className="font-semibold mb-4 text-orange-600">Prérequis obligatoires</h3>
+              <h3 className="font-semibold mb-4 text-[#FFA500]">Prérequis obligatoires</h3>
               <div className="space-y-3">
                 {[
                   'Avoir un commerce existant',
@@ -213,7 +213,7 @@ export default function PointServicePage() {
                   'Respect des procédures'
                 ].map((req, index) => (
                   <div key={index} className="flex items-center gap-3">
-                    <CheckCircle2 size={16} className="text-orange-600 flex-shrink-0" />
+                    <CheckCircle2 size={16} className="text-[#FFA500] flex-shrink-0" />
                     <span className="text-sm">{req}</span>
                   </div>
                 ))}
@@ -247,15 +247,15 @@ export default function PointServicePage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <TrendingUp size={24} className="text-orange-600" />
+            <TrendingUp size={24} className="text-[#FFA500]" />
             Exemples de revenus
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid md:grid-cols-3 gap-6">
-            <div className="text-center p-4 rounded-xl bg-orange-50">
-              <div className="h-12 w-12 mx-auto mb-3 rounded-xl bg-orange-100 flex items-center justify-center">
-                <Coffee size={24} className="text-orange-600" />
+            <div className="text-center p-4 rounded-xl bg-[#FFA500]/10">
+              <div className="h-12 w-12 mx-auto mb-3 rounded-xl bg-[#FFA500]/15 flex items-center justify-center">
+                <Coffee size={24} className="text-[#FFA500]" />
               </div>
               <h3 className="font-semibold mb-2">Petit café</h3>
               <p className="text-sm text-muted-foreground mb-2">
@@ -273,15 +273,15 @@ export default function PointServicePage() {
                 <div className="border-t pt-1 mt-2">
                   <div className="flex justify-between font-semibold text-sm">
                     <span>Total/mois</span>
-                    <span className="text-orange-600">23,000 FCFA</span>
+                    <span className="text-[#FFA500]">23,000 FCFA</span>
                   </div>
                 </div>
               </div>
             </div>
             
-            <div className="text-center p-4 rounded-xl bg-orange-50">
-              <div className="h-12 w-12 mx-auto mb-3 rounded-xl bg-orange-100 flex items-center justify-center">
-                <ShoppingBag size={24} className="text-orange-600" />
+            <div className="text-center p-4 rounded-xl bg-[#FFA500]/10">
+              <div className="h-12 w-12 mx-auto mb-3 rounded-xl bg-[#FFA500]/15 flex items-center justify-center">
+                <ShoppingBag size={24} className="text-[#FFA500]" />
               </div>
               <h3 className="font-semibold mb-2">Épicerie</h3>
               <p className="text-sm text-muted-foreground mb-2">
@@ -299,15 +299,15 @@ export default function PointServicePage() {
                 <div className="border-t pt-1 mt-2">
                   <div className="flex justify-between font-semibold text-sm">
                     <span>Total/mois</span>
-                    <span className="text-orange-600">55,000 FCFA</span>
+                    <span className="text-[#FFA500]">55,000 FCFA</span>
                   </div>
                 </div>
               </div>
             </div>
             
-            <div className="text-center p-4 rounded-xl bg-orange-50">
-              <div className="h-12 w-12 mx-auto mb-3 rounded-xl bg-orange-100 flex items-center justify-center">
-                <Smartphone size={24} className="text-orange-600" />
+            <div className="text-center p-4 rounded-xl bg-[#FFA500]/10">
+              <div className="h-12 w-12 mx-auto mb-3 rounded-xl bg-[#FFA500]/15 flex items-center justify-center">
+                <Smartphone size={24} className="text-[#FFA500]" />
               </div>
               <h3 className="font-semibold mb-2">Salon coiffure</h3>
               <p className="text-sm text-muted-foreground mb-2">
@@ -325,7 +325,7 @@ export default function PointServicePage() {
                 <div className="border-t pt-1 mt-2">
                   <div className="flex justify-between font-semibold text-sm">
                     <span>Total/mois</span>
-                    <span className="text-orange-600">40,000 FCFA</span>
+                    <span className="text-[#FFA500]">40,000 FCFA</span>
                   </div>
                 </div>
               </div>
@@ -338,7 +338,7 @@ export default function PointServicePage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Clock size={24} className="text-orange-600" />
+            <Clock size={24} className="text-[#FFA500]" />
             Processus d\'inscription
           </CardTitle>
         </CardHeader>
@@ -371,7 +371,7 @@ export default function PointServicePage() {
               }
             ].map((process, index) => (
               <div key={index} className="flex items-center gap-4 p-4 rounded-xl bg-muted/30">
-                <div className="h-10 w-10 rounded-full bg-orange-600 text-white flex items-center justify-center font-semibold">
+                <div className="h-10 w-10 rounded-full bg-[#FFA500] text-white flex items-center justify-center font-semibold">
                   {process.step}
                 </div>
                 <div className="flex-1">
@@ -389,7 +389,7 @@ export default function PointServicePage() {
       <div className="text-center space-y-4">
         <Button 
           size="lg" 
-          className="w-full h-14 rounded-xl text-base font-semibold bg-gradient-to-r from-[#25543A] to-[#25543A] hover:from-[#25543A] hover:to-[#25543A] shadow-lg"
+          className="w-full h-14 rounded-xl text-base font-semibold bg-gradient-to-r from-[#0A8B46] to-[#0A8B46] hover:from-[#0A8B46] hover:to-[#0A8B46] shadow-lg"
           asChild
         >
           <Link href="/dashboard/agent-relay/application?type=point-service">
@@ -399,7 +399,7 @@ export default function PointServicePage() {
         </Button>
         
         <p className="text-sm text-muted-foreground">
-          Questions ? <Link href="/dashboard/settings/help" className="text-orange-600 hover:underline">Contactez-nous</Link>
+          Questions ? <Link href="/dashboard/settings/help" className="text-[#FFA500] hover:underline">Contactez-nous</Link>
         </p>
       </div>
     </div>

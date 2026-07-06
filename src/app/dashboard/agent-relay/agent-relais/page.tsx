@@ -149,7 +149,7 @@ export default function AgentRelaisPage() {
             </div>
             
             <div>
-              <h3 className="font-semibold mb-4 text-orange-600">Recommandations</h3>
+              <h3 className="font-semibold mb-4 text-[#FFA500]">Recommandations</h3>
               <div className="space-y-3">
                 {[
                   'Avoir une clientèle régulière',
@@ -159,8 +159,8 @@ export default function AgentRelaisPage() {
                   'Parler les langues locales'
                 ].map((rec, index) => (
                   <div key={index} className="flex items-center gap-3">
-                    <div className="h-4 w-4 rounded-full border-2 border-orange-600 flex items-center justify-center">
-                      <div className="h-1.5 w-1.5 rounded-full bg-orange-600" />
+                    <div className="h-4 w-4 rounded-full border-2 border-[#FFA500] flex items-center justify-center">
+                      <div className="h-1.5 w-1.5 rounded-full bg-[#FFA500]" />
                     </div>
                     <span className="text-sm">{rec}</span>
                   </div>

@@ -17,7 +17,7 @@ export function CurrencyBubble({ balance, code, symbol, label }: CurrencyBubbleP
       <div className="relative">
         <div className="absolute inset-0 -m-1 rounded-full bg-[#FFA500]/20 opacity-0 group-hover:opacity-100 transition-all duration-300 blur-lg"></div>
         
-        <div className="relative bg-gradient-to-br from-[#FFA500] to-[#FF8C00] rounded-full p-2 shadow-md hover:shadow-lg transition-all duration-300 transform group-hover:scale-105 border border-[#FFA500]/60 group-hover:border-[#FFA500]/100 w-14 h-14 flex flex-col items-center justify-center">
+        <div className="relative bg-[#FFA500] rounded-full p-2 shadow-md hover:shadow-lg transition-all duration-300 transform group-hover:scale-105 border border-[#FFA500]/60 group-hover:border-[#FFA500]/100 w-14 h-14 flex flex-col items-center justify-center">
           <span className="text-white font-bold text-sm leading-none">{symbol}</span>
           
           <div className="mt-0.5 text-center">
@@ -35,7 +35,7 @@ export function CurrencyBubble({ balance, code, symbol, label }: CurrencyBubbleP
         </div>
       </div>
       
-      <span className="text-[10px] font-semibold text-foreground group-hover:text-[#25543A] transition-colors duration-300">
+      <span className="text-[10px] font-semibold text-foreground group-hover:text-[#0A8B46] transition-colors duration-300">
         {code}
       </span>
     </div>

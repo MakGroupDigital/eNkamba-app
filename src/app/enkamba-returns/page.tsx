@@ -96,13 +96,13 @@ export default function EnkambaReturnsPage() {
           </CardContent>
         </Card>
 
-        <Card className="mb-8 border-orange-200 bg-orange-50">
+        <Card className="mb-8 border-[#FFA500]/30 bg-[#FFA500]/10">
           <CardContent className="p-8">
             <div className="flex gap-4">
-              <AlertCircle className="w-6 h-6 text-orange-600 flex-shrink-0 mt-0.5" />
+              <AlertCircle className="w-6 h-6 text-[#FFA500] flex-shrink-0 mt-0.5" />
               <div>
-                <h3 className="text-lg font-bold text-orange-900 mb-3">Articles non retournables</h3>
-                <ul className="space-y-2 text-orange-800 text-sm">
+                <h3 className="text-lg font-bold text-[#FFA500] mb-3">Articles non retournables</h3>
+                <ul className="space-y-2 text-[#FFA500] text-sm">
                   <li>• Articles personnalisés ou sur commande</li>
                   <li>• Produits numériques ou téléchargés</li>
                   <li>• Articles endommagés par le client</li>

@@ -82,14 +82,14 @@ export default function UgaviTrackingPage() {
         <title>Recu Ugavi</title>
         <style>
           body { font-family: Arial, sans-serif; max-width: 760px; margin: 0 auto; padding: 24px; color: #0f172a; }
-          .hero { background: linear-gradient(135deg, #25543A, #F28C28); color: white; padding: 28px; border-radius: 20px 20px 0 0; }
+          .hero { background: linear-gradient(135deg, #0A8B46, #F28C28); color: white; padding: 28px; border-radius: 20px 20px 0 0; }
           .content { border: 1px solid #dbe4ea; border-top: none; padding: 24px; border-radius: 0 0 20px 20px; }
           .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
           .item { background: #f8fafc; border-radius: 14px; padding: 14px; }
           .label { font-size: 12px; color: #64748b; margin-bottom: 6px; }
           .value { font-weight: 700; }
           .timeline { margin-top: 20px; }
-          .timeline-item { border-left: 3px solid #25543A; padding: 0 0 14px 14px; margin-left: 6px; }
+          .timeline-item { border-left: 3px solid #0A8B46; padding: 0 0 14px 14px; margin-left: 6px; }
         </style>
       </head>
       <body>
@@ -782,7 +782,7 @@ export default function UgaviTrackingPage() {
                       type="button"
                       size="sm"
                       variant="outline"
-                      className="rounded-full border-orange-200 text-orange-700"
+                      className="rounded-full border-[#FFA500]/30 text-[#FFA500]"
                       disabled={isUpdatingStatus}
                       onClick={() => void moveUgaviStatus('returned')}
                     >

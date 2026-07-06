@@ -4,8 +4,8 @@ export const StoreStatsIcon = ({ size = 24 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <linearGradient id="storeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#25543A" />
-        <stop offset="100%" stopColor="#25543A" />
+        <stop offset="0%" stopColor="#0A8B46" />
+        <stop offset="100%" stopColor="#0A8B46" />
       </linearGradient>
     </defs>
     <rect x="6" y="18" width="8" height="22" rx="1" fill="url(#storeGrad)" />
@@ -19,8 +19,8 @@ export const CustomersIcon = ({ size = 24 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <linearGradient id="customersGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#25543A" />
-        <stop offset="100%" stopColor="#25543A" />
+        <stop offset="0%" stopColor="#0A8B46" />
+        <stop offset="100%" stopColor="#0A8B46" />
       </linearGradient>
     </defs>
     <circle cx="16" cy="12" r="6" fill="url(#customersGrad)" />
@@ -34,8 +34,8 @@ export const OrdersIcon = ({ size = 24 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <linearGradient id="ordersGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#25543A" />
-        <stop offset="100%" stopColor="#25543A" />
+        <stop offset="0%" stopColor="#0A8B46" />
+        <stop offset="100%" stopColor="#0A8B46" />
       </linearGradient>
     </defs>
     <rect x="8" y="6" width="32" height="36" rx="2" stroke="url(#ordersGrad)" strokeWidth="2" fill="none" />
@@ -50,8 +50,8 @@ export const DeliveryIcon = ({ size = 24 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <linearGradient id="deliveryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#25543A" />
-        <stop offset="100%" stopColor="#25543A" />
+        <stop offset="0%" stopColor="#0A8B46" />
+        <stop offset="100%" stopColor="#0A8B46" />
       </linearGradient>
     </defs>
     <path d="M6 24H38L42 14H12L6 24Z" fill="url(#deliveryGrad)" opacity="0.7" />
@@ -66,8 +66,8 @@ export const ProductsIcon = ({ size = 24 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <linearGradient id="productsGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#25543A" />
-        <stop offset="100%" stopColor="#25543A" />
+        <stop offset="0%" stopColor="#0A8B46" />
+        <stop offset="100%" stopColor="#0A8B46" />
       </linearGradient>
     </defs>
     <rect x="6" y="8" width="14" height="16" rx="1" fill="url(#productsGrad)" />
@@ -93,8 +93,8 @@ export const VerifiedIcon = ({ size = 24 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <linearGradient id="verifiedGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#25543A" />
-        <stop offset="100%" stopColor="#25543A" />
+        <stop offset="0%" stopColor="#0A8B46" />
+        <stop offset="100%" stopColor="#0A8B46" />
       </linearGradient>
     </defs>
     <circle cx="24" cy="24" r="20" fill="url(#verifiedGrad)" />
@@ -106,8 +106,8 @@ export const ExperienceIcon = ({ size = 24 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <linearGradient id="experienceGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#25543A" />
-        <stop offset="100%" stopColor="#25543A" />
+        <stop offset="0%" stopColor="#0A8B46" />
+        <stop offset="100%" stopColor="#0A8B46" />
       </linearGradient>
     </defs>
     <path d="M8 10H40C42 10 44 12 44 14V38C44 40 42 42 40 42H8C6 42 4 40 4 38V14C4 12 6 10 8 10Z" fill="url(#experienceGrad)" opacity="0.1" stroke="url(#experienceGrad)" strokeWidth="2" />

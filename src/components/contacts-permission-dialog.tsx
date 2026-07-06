@@ -70,11 +70,11 @@ export function ContactsPermissionDialog({
             </div>
           </div>
 
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex gap-3">
-            <div className="h-5 w-5 rounded-full bg-amber-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+          <div className="bg-[#FFA500]/10 border border-[#FFA500]/30 rounded-lg p-3 flex gap-3">
+            <div className="h-5 w-5 rounded-full bg-[#FFA500] flex items-center justify-center flex-shrink-0 mt-0.5">
               <span className="text-white text-xs">!</span>
             </div>
-            <p className="text-xs text-amber-800">
+            <p className="text-xs text-[#FFA500]">
               Vous pouvez modifier cette permission à tout moment dans les paramètres de votre appareil.
             </p>
           </div>

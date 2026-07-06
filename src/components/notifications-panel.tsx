@@ -19,7 +19,7 @@ export function NotificationsPanel() {
       case 'transfer_sent':
         return <AlertCircle className="w-5 h-5 text-blue-600" />;
       case 'payment_request':
-        return <Info className="w-5 h-5 text-orange-600" />;
+        return <Info className="w-5 h-5 text-[#FFA500]" />;
       case 'BUSINESS_APPROVED':
         return <CheckCircle2 className="w-5 h-5 text-primary" />;
       case 'BUSINESS_REJECTED':
@@ -36,7 +36,7 @@ export function NotificationsPanel() {
       case 'transfer_sent':
         return 'bg-blue-50 border-blue-200';
       case 'payment_request':
-        return 'bg-orange-50 border-orange-200';
+        return 'bg-[#FFA500]/10 border-[#FFA500]/30';
       case 'BUSINESS_APPROVED':
         return 'bg-primary/5 border-primary/20';
       case 'BUSINESS_REJECTED':

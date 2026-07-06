@@ -53,7 +53,7 @@ const OpportunityIcon = () => (
 
 export default function InvestPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-[#25543A]/5 to-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-[#0A8B46]/5 to-background">
       <div className="container mx-auto max-w-4xl p-4 space-y-6 animate-in fade-in duration-500">
         {/* Header */}
         <header className="flex items-center gap-4 pt-4 slide-up">
@@ -63,7 +63,7 @@ export default function InvestPage() {
             </Link>
           </Button>
           <div>
-            <h1 className="font-headline text-3xl font-bold bg-gradient-to-r from-[#25543A] to-[#25543A] bg-clip-text text-transparent">
+            <h1 className="font-headline text-3xl font-bold bg-gradient-to-r from-[#0A8B46] to-[#0A8B46] bg-clip-text text-transparent">
               Investir
             </h1>
             <p className="text-sm text-muted-foreground">Opportunités d'investissement</p>
@@ -71,13 +71,13 @@ export default function InvestPage() {
         </header>
 
         {/* Hero Card avec animation */}
-        <Card className="bg-gradient-to-br from-[#25543A]/10 via-[#25543A]/5 to-transparent border-[#25543A]/20 overflow-hidden slide-up" style={{ animationDelay: '0.1s' }}>
+        <Card className="bg-gradient-to-br from-[#0A8B46]/10 via-[#0A8B46]/5 to-transparent border-[#0A8B46]/20 overflow-hidden slide-up" style={{ animationDelay: '0.1s' }}>
           <CardContent className="p-8">
             <div className="flex flex-col items-center text-center space-y-6">
               {/* Icône principale avec effet glow */}
               <div className="relative">
-                <div className="absolute inset-0 bg-[#25543A]/30 rounded-full blur-3xl animate-pulse"></div>
-                <div className="relative bg-gradient-to-br from-[#25543A] to-[#25543A] p-8 rounded-3xl shadow-2xl transform hover:scale-105 transition-transform duration-300">
+                <div className="absolute inset-0 bg-[#0A8B46]/30 rounded-full blur-3xl animate-pulse"></div>
+                <div className="relative bg-gradient-to-br from-[#0A8B46] to-[#0A8B46] p-8 rounded-3xl shadow-2xl transform hover:scale-105 transition-transform duration-300">
                   <div className="w-16 h-16 text-white">
                     <InvestIcon />
                   </div>
@@ -97,14 +97,14 @@ export default function InvestPage() {
         </Card>
 
         {/* Empty State moderne */}
-        <Card className="border-2 border-dashed border-[#25543A]/30 bg-gradient-to-br from-orange-500/5 to-transparent slide-up" style={{ animationDelay: '0.2s' }}>
+        <Card className="border-2 border-dashed border-[#0A8B46]/30 bg-gradient-to-br from-[#FFA500]/5 to-transparent slide-up" style={{ animationDelay: '0.2s' }}>
           <CardContent className="p-12">
             <div className="flex flex-col items-center text-center space-y-6">
               {/* Icône opportunité */}
               <div className="relative">
-                <div className="absolute inset-0 bg-orange-500/20 rounded-full blur-2xl"></div>
-                <div className="relative bg-gradient-to-br from-orange-500/20 to-orange-600/20 p-6 rounded-2xl border-2 border-orange-500/30">
-                  <div className="w-12 h-12 text-orange-600">
+                <div className="absolute inset-0 bg-[#FFA500]/100/20 rounded-full blur-2xl"></div>
+                <div className="relative bg-gradient-to-br from-[#FFA500]/20 to-[#FFA500]/20 p-6 rounded-2xl border-2 border-[#FFA500]/30">
+                  <div className="w-12 h-12 text-[#FFA500]">
                     <OpportunityIcon />
                   </div>
                 </div>
@@ -120,8 +120,8 @@ export default function InvestPage() {
               </div>
 
               {/* Badge informatif */}
-              <div className="inline-flex items-center gap-2 text-sm font-medium text-orange-700 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/30 px-6 py-3 rounded-full border border-orange-200 dark:border-orange-800">
-                <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></div>
+              <div className="inline-flex items-center gap-2 text-sm font-medium text-[#FFA500] dark:text-[#FFA500] bg-[#FFA500]/15 dark:bg-[#FFA500]/20 px-6 py-3 rounded-full border border-[#FFA500]/30 dark:border-[#FFA500]/40">
+                <div className="w-2 h-2 rounded-full bg-[#FFA500]/100 animate-pulse"></div>
                 <span>Nouvelles opportunités à venir</span>
               </div>
             </div>
@@ -189,7 +189,7 @@ export default function InvestPage() {
         </div>
 
         {/* CTA moderne */}
-        <Card className="bg-gradient-to-r from-[#25543A] to-[#25543A] text-white shadow-xl slide-up" style={{ animationDelay: '0.4s' }}>
+        <Card className="bg-gradient-to-r from-[#0A8B46] to-[#0A8B46] text-white shadow-xl slide-up" style={{ animationDelay: '0.4s' }}>
           <CardContent className="p-6">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="text-center sm:text-left">

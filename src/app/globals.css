@@ -4,74 +4,111 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%; /* #FFFFFF */
-    --foreground: 150 18% 9%;
+    --enkamba-primary-green: #0A8B46;
+    --enkamba-active-green: #0F9A61;
+    --enkamba-card-green: #089961;
+    --enkamba-accent-green: #18A96E;
+    --enkamba-orange: #FFA500;
+    --enkamba-soft-green-bg: #E8F6F1;
+    --enkamba-page-bg: #FCFDFC;
+    --enkamba-text-primary: #1B2026;
+    --enkamba-text-secondary: #477063;
+    --enkamba-border-light: #E9F0ED;
+    --enkamba-white: #FFFFFF;
+    --enkamba-gradient-card-header: linear-gradient(135deg, #0A8B46 0%, #089961 55%, #18A96E 100%);
+    --enkamba-gradient-round-button: linear-gradient(145deg, #0A8B46 0%, #0F9A61 70%, #18A96E 100%);
+    --enkamba-gradient-ai-button: linear-gradient(145deg, #0A8B46 0%, #18A96E 100%);
+    --enkamba-font-family: Inter, Poppins, Roboto, sans-serif;
+    --enkamba-title-size: 22px;
+    --enkamba-section-title-size: 14px;
+    --enkamba-card-label-size: 13px;
+    --enkamba-bottom-menu-size: 11px;
+    --enkamba-weight-title: 700;
+    --enkamba-weight-section: 600;
+    --enkamba-weight-normal: 500;
+    --enkamba-card-radius: 18px;
+    --enkamba-small-card-radius: 10px;
+    --enkamba-card-shadow: 0 6px 18px rgba(10,139,70, 0.16);
+    --enkamba-service-card-shadow: 0 3px 12px rgba(27, 32, 38, 0.08);
+    --enkamba-top-action-container: 72px;
+    --enkamba-top-action-icon: 34px;
+    --enkamba-service-card-width: 100px;
+    --enkamba-service-card-height: 115px;
+    --enkamba-service-icon: 42px;
+    --enkamba-bottom-icon: 24px;
+    --enkamba-bottom-icon-active: 26px;
+    --enkamba-ai-button: 64px;
+    --enkamba-ai-letter: 32px;
+    --enkamba-ai-badge: 22px;
+
+    --background: 120 20% 99%; /* #FCFDFC */
+    --foreground: 213 17% 13%; /* #1B2026 */
     --card: 0 0% 100%; /* #FFFFFF */
-    --card-foreground: 150 18% 9%;
+    --card-foreground: 213 17% 13%;
     --popover: 0 0% 100%;
-    --popover-foreground: 150 18% 9%;
-    --primary: 147 39% 24%; /* #25543A */
+    --popover-foreground: 213 17% 13%;
+    --primary: 149 87% 29%; /* #0A8B46 */
     --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 100%;
-    --secondary-foreground: 150 18% 9%;
-    --muted: 0 0% 90%;
-    --muted-foreground: 154 12% 28%;
-    --accent: 147 39% 24%; /* #25543A */
+    --secondary: 159 44% 94%; /* #E8F6F1 */
+    --secondary-foreground: 213 17% 13%;
+    --muted: 159 44% 94%;
+    --muted-foreground: 161 22% 36%; /* #477063 */
+    --accent: 155 82% 33%; /* #0F9A61 */
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 147 39% 24%;
-    --chart-1: 147 39% 24%;
-    --chart-2: 147 39% 24%;
-    --chart-3: 147 39% 24%;
-    --chart-4: 147 39% 24%;
-    --chart-5: 147 39% 24%;
-    --radius: 0.75rem;
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 150 18% 9%;
-    --sidebar-primary: 147 39% 24%;
+    --border: 154 19% 93%; /* #E9F0ED */
+    --input: 154 19% 93%;
+    --ring: 149 87% 29%;
+    --chart-1: 149 87% 29%;
+    --chart-2: 155 82% 33%;
+    --chart-3: 157 90% 32%;
+    --chart-4: 156 75% 38%;
+    --chart-5: 161 22% 36%;
+    --radius: 1.125rem;
+    --sidebar-background: 120 20% 99%;
+    --sidebar-foreground: 213 17% 13%;
+    --sidebar-primary: 149 87% 29%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 147 39% 24%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 147 39% 24%;
-    --sidebar-ring: 147 39% 24%;
+    --sidebar-accent: 159 44% 94%;
+    --sidebar-accent-foreground: 155 82% 33%;
+    --sidebar-border: 154 19% 93%;
+    --sidebar-ring: 149 87% 29%;
   }
  
   .dark {
-    --background: 147 39% 12%;
+    --background: 159 48% 9%;
     --foreground: 0 0% 100%;
-    --card: 147 39% 14%;
+    --card: 159 42% 12%;
     --card-foreground: 0 0% 100%;
-    --popover: 147 39% 12%;
+    --popover: 159 48% 9%;
     --popover-foreground: 0 0% 100%;
-    --primary: 147 39% 24%;
+    --primary: 149 87% 29%;
     --primary-foreground: 0 0% 100%;
     --secondary: 240 4% 16%;
     --secondary-foreground: 0 0% 98%;
     --muted: 240 4% 16%;
     --muted-foreground: 150 10% 78%;
-    --accent: 147 39% 24%;
+    --accent: 149 87% 29%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
     --border: 240 4% 16%;
     --input: 240 4% 16%;
-    --ring: 147 39% 24%;
-    --chart-1: 147 39% 24%;
-    --chart-2: 147 39% 24%;
-    --chart-3: 147 39% 24%;
-    --chart-4: 147 39% 24%;
-    --chart-5: 147 39% 24%;
+    --ring: 149 87% 29%;
+    --chart-1: 149 87% 29%;
+    --chart-2: 155 82% 33%;
+    --chart-3: 157 90% 32%;
+    --chart-4: 156 75% 38%;
+    --chart-5: 161 22% 36%;
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 147 39% 24%;
+    --sidebar-primary: 149 87% 29%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 240 3.7% 15.9%;
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 147 39% 24%;
+    --sidebar-ring: 149 87% 29%;
   }
 }
  
@@ -92,6 +129,7 @@
     @apply bg-background text-foreground;
     position: relative;
     min-height: 100dvh;
+    font-family: var(--enkamba-font-family);
     -webkit-tap-highlight-color: transparent;
     color: hsl(var(--foreground));
     font-weight: 450;
@@ -124,6 +162,84 @@
   }
 }
 
+@layer components {
+  .enkamba-page {
+    background: var(--enkamba-page-bg);
+    color: var(--enkamba-text-primary);
+    font-family: var(--enkamba-font-family);
+  }
+
+  .enkamba-header,
+  .enkamba-balance-card,
+  .enkamba-currency-card {
+    background: var(--enkamba-gradient-card-header);
+    border-radius: var(--enkamba-card-radius);
+    box-shadow: var(--enkamba-card-shadow);
+  }
+
+  .enkamba-round-action {
+    width: var(--enkamba-top-action-container);
+    height: var(--enkamba-top-action-container);
+    border-radius: 9999px;
+    background: var(--enkamba-gradient-round-button);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .enkamba-round-action svg,
+  .enkamba-round-action img {
+    width: var(--enkamba-top-action-icon);
+    height: var(--enkamba-top-action-icon);
+  }
+
+  .enkamba-service-card {
+    width: var(--enkamba-service-card-width);
+    min-height: var(--enkamba-service-card-height);
+    border-radius: 14px;
+    border: 1px solid var(--enkamba-border-light);
+    background: var(--enkamba-white);
+    box-shadow: var(--enkamba-service-card-shadow);
+  }
+
+  .enkamba-service-card svg,
+  .enkamba-service-card img {
+    width: var(--enkamba-service-icon);
+    height: var(--enkamba-service-icon);
+    color: var(--enkamba-active-green);
+  }
+
+  .enkamba-bottom-nav-item {
+    color: var(--enkamba-text-secondary);
+    font-size: var(--enkamba-bottom-menu-size);
+  }
+
+  .enkamba-bottom-nav-item svg,
+  .enkamba-bottom-nav-item img {
+    width: var(--enkamba-bottom-icon);
+    height: var(--enkamba-bottom-icon);
+  }
+
+  .enkamba-bottom-nav-item.active {
+    color: var(--enkamba-active-green);
+    background: var(--enkamba-soft-green-bg);
+  }
+
+  .enkamba-bottom-nav-item.active svg,
+  .enkamba-bottom-nav-item.active img {
+    width: var(--enkamba-bottom-icon-active);
+    height: var(--enkamba-bottom-icon-active);
+  }
+
+  .enkamba-ai-floating {
+    width: var(--enkamba-ai-button);
+    height: var(--enkamba-ai-button);
+    border-radius: 9999px;
+    border: 3px solid var(--enkamba-white);
+    background: var(--enkamba-gradient-ai-button);
+  }
+}
+
 @layer utilities {
   .text-muted-foreground {
     color: hsl(var(--muted-foreground)) !important;
@@ -137,14 +253,14 @@
   .text-zinc-500,
   .text-neutral-400,
   .text-neutral-500 {
-    color: hsl(154 12% 28%) !important;
+    color: hsl(161 22% 36%) !important;
   }
 
   .text-gray-600,
   .text-slate-600,
   .text-zinc-600,
   .text-neutral-600 {
-    color: hsl(150 18% 16%) !important;
+    color: hsl(213 17% 13%) !important;
   }
 
   .dark .text-gray-400,

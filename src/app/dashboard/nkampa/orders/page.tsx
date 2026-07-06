@@ -87,8 +87,8 @@ export default function OrdersPage() {
         <title>Reçu de Commande</title>
         <style>
           body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-          .header { background: #25543A; color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-          .content { border: 2px solid #25543A; padding: 30px; border-radius: 0 0 10px 10px; }
+          .header { background: #0A8B46; color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+          .content { border: 2px solid #0A8B46; padding: 30px; border-radius: 0 0 10px 10px; }
           .section { margin: 20px 0; }
           .label { color: #666; font-size: 14px; }
           .value { font-size: 16px; font-weight: bold; margin-top: 5px; }
@@ -96,7 +96,7 @@ export default function OrdersPage() {
           .footer { text-align: center; color: #666; margin-top: 30px; font-size: 12px; }
           .tracking { background: #e3f2fd; padding: 15px; border-radius: 8px; border-left: 4px solid #2196F3; }
           .qr-section { text-align: center; margin: 30px 0; padding: 20px; background: #f5f5f5; border-radius: 8px; }
-          .qr-section img { border: 3px solid #25543A; border-radius: 8px; padding: 10px; background: white; }
+          .qr-section img { border: 3px solid #0A8B46; border-radius: 8px; padding: 10px; background: white; }
           @media print {
             body { margin: 0; padding: 10px; }
             .no-print { display: none; }
@@ -149,7 +149,7 @@ export default function OrdersPage() {
           
           <div class="total">
             <div class="label">Total Payé</div>
-            <div class="value" style="color: #25543A; font-size: 24px;">
+            <div class="value" style="color: #0A8B46; font-size: 24px;">
               ${(order.totalPrice || order.totalAmount || 0).toLocaleString()} ${order.currency || 'CDF'}
             </div>
           </div>
@@ -359,12 +359,12 @@ export default function OrdersPage() {
                   </div>
 
                   {order.deliveryOption === 'pickup' && order.pickupRoute?.enabled && (
-                    <div className="mb-2 rounded-lg border border-orange-200 bg-orange-50 p-2">
+                    <div className="mb-2 rounded-lg border border-[#FFA500]/30 bg-[#FFA500]/10 p-2">
                       <div className="flex items-center gap-2">
-                        <Route className="w-4 h-4 text-orange-600" />
+                        <Route className="w-4 h-4 text-[#FFA500]" />
                         <div className="flex-1">
-                          <p className="text-xs font-semibold text-orange-700">Retrait en boutique</p>
-                          <p className="text-xs text-orange-800">Itineraire disponible depuis cette commande</p>
+                          <p className="text-xs font-semibold text-[#FFA500]">Retrait en boutique</p>
+                          <p className="text-xs text-[#FFA500]">Itineraire disponible depuis cette commande</p>
                         </div>
                       </div>
                     </div>
@@ -637,7 +637,7 @@ export default function OrdersPage() {
                 )}
                 {selectedOrder.pickupRoute?.enabled && (
                   <Button
-                    className="flex-1 gap-2 bg-orange-500 hover:bg-orange-600"
+                    className="flex-1 gap-2 bg-[#FFA500]/100 hover:bg-[#FFA500]"
                     onClick={() => openPickupRoute(selectedOrder)}
                   >
                     <Route className="w-4 h-4" />

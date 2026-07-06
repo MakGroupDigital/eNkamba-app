@@ -18,29 +18,29 @@ const GOAL_ICONS = ['🎯', '🚗', '✈️', '🏠', '💍', '📚', '🎮', '�
 
 const SavingsVaultIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
   <svg viewBox="0 0 48 48" fill="none" className={className} aria-hidden="true">
-    <rect x="8" y="14" width="32" height="25" rx="8" fill="#25543A" />
+    <rect x="8" y="14" width="32" height="25" rx="8" fill="#0A8B46" />
     <path d="M14 20h20" stroke="white" strokeWidth="3" strokeLinecap="round" opacity="0.85" />
-    <circle cx="24" cy="28" r="6" fill="#25543A" opacity="0.9" />
-    <circle cx="24" cy="28" r="2" fill="#FFB545" />
-    <path d="M17 14v-2a7 7 0 0 1 14 0v2" stroke="#25543A" strokeWidth="3" strokeLinecap="round" opacity="0.4" />
+    <circle cx="24" cy="28" r="6" fill="#0A8B46" opacity="0.9" />
+    <circle cx="24" cy="28" r="2" fill="#FFA500" />
+    <path d="M17 14v-2a7 7 0 0 1 14 0v2" stroke="#0A8B46" strokeWidth="3" strokeLinecap="round" opacity="0.4" />
   </svg>
 );
 
 const GoalSeedIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
   <svg viewBox="0 0 48 48" fill="none" className={className} aria-hidden="true">
-    <path d="M24 39V22" stroke="#25543A" strokeWidth="3" strokeLinecap="round" />
-    <path d="M24 24c-8 0-13-5-13-12 8 0 13 5 13 12Z" fill="#25543A" />
-    <path d="M24 27c8 0 13-5 13-12-8 0-13 5-13 12Z" fill="#FFB545" />
-    <rect x="13" y="37" width="22" height="4" rx="2" fill="#25543A" opacity="0.35" />
+    <path d="M24 39V22" stroke="#0A8B46" strokeWidth="3" strokeLinecap="round" />
+    <path d="M24 24c-8 0-13-5-13-12 8 0 13 5 13 12Z" fill="#0A8B46" />
+    <path d="M24 27c8 0 13-5 13-12-8 0-13 5-13 12Z" fill="#FFA500" />
+    <rect x="13" y="37" width="22" height="4" rx="2" fill="#0A8B46" opacity="0.35" />
   </svg>
 );
 
 const AutoSaveIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
   <svg viewBox="0 0 48 48" fill="none" className={className} aria-hidden="true">
-    <rect x="9" y="10" width="30" height="28" rx="8" fill="#25543A" />
+    <rect x="9" y="10" width="30" height="28" rx="8" fill="#0A8B46" />
     <path d="M16 25h13" stroke="white" strokeWidth="3" strokeLinecap="round" />
-    <path d="M26 18l7 7-7 7" stroke="#25543A" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-    <circle cx="17" cy="18" r="3" fill="#FFB545" />
+    <path d="M26 18l7 7-7 7" stroke="#0A8B46" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+    <circle cx="17" cy="18" r="3" fill="#FFA500" />
   </svg>
 );
 
@@ -287,7 +287,7 @@ export default function SavingsPage() {
     <div className="min-h-screen bg-[#f7faf8]">
     <div className="container mx-auto max-w-4xl p-3 space-y-4 animate-in fade-in duration-500 sm:p-4">
       {/* Header */}
-      <header className="overflow-hidden rounded-2xl bg-gradient-to-br from-[#25543A] to-[#25543A] p-4 text-white shadow-lg shadow-[#25543A]/20">
+      <header className="overflow-hidden rounded-2xl bg-gradient-to-br from-[#0A8B46] to-[#0A8B46] p-4 text-white shadow-lg shadow-[#0A8B46]/20">
         <div className="flex items-center justify-between gap-4">
           <div className="flex min-w-0 items-center gap-3">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/16 ring-1 ring-white/25">
@@ -303,7 +303,7 @@ export default function SavingsPage() {
               </p>
             </div>
           </div>
-          <Button onClick={() => setShowCreateDialog(true)} className="h-10 shrink-0 rounded-xl bg-white px-3 text-xs font-bold text-[#25543A] hover:bg-white/90 sm:text-sm">
+          <Button onClick={() => setShowCreateDialog(true)} className="h-10 shrink-0 rounded-xl bg-white px-3 text-xs font-bold text-[#0A8B46] hover:bg-white/90 sm:text-sm">
             <Plus className="mr-1.5 h-4 w-4" />
             Nouvel Objectif
           </Button>
@@ -312,10 +312,10 @@ export default function SavingsPage() {
 
       {/* Total Savings Card */}
       <Card className="overflow-hidden border-0 bg-white shadow-sm">
-        <CardHeader className="border-b border-[#25543A]/10 px-4 py-3">
-          <CardTitle className="font-headline flex items-center gap-2 text-lg text-[#25543A]">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#25543A]/10">
-              <PiggyBank className="h-5 w-5 text-[#25543A]" />
+        <CardHeader className="border-b border-[#0A8B46]/10 px-4 py-3">
+          <CardTitle className="font-headline flex items-center gap-2 text-lg text-[#0A8B46]">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0A8B46]/10">
+              <PiggyBank className="h-5 w-5 text-[#0A8B46]" />
             </span>
             Épargne Totale
           </CardTitle>
@@ -324,7 +324,7 @@ export default function SavingsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3 p-4 sm:grid-cols-[1.2fr_0.8fr]">
-          <div className="rounded-2xl bg-[#25543A] p-4 text-white shadow-sm shadow-[#25543A]/20">
+          <div className="rounded-2xl bg-[#0A8B46] p-4 text-white shadow-sm shadow-[#0A8B46]/20">
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-white/70">Total sécurisé</p>
             <p className="mt-2 text-3xl font-black tracking-tight">{formatCurrency(totalSavings, 'CDF')}</p>
             <div className="mt-4 flex items-center gap-4 text-sm text-white/80">
@@ -339,14 +339,14 @@ export default function SavingsPage() {
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-1">
-            <div className="rounded-2xl border border-[#25543A]/10 bg-[#f7faf8] p-3">
-              <WalletCards className="mb-2 h-5 w-5 text-[#25543A]" />
-              <p className="text-xs font-bold text-[#25543A]">Portefeuille lié</p>
-              <p className="mt-1 text-sm font-black text-[#25543A]">{formatCurrency(walletBalance, 'CDF')}</p>
+            <div className="rounded-2xl border border-[#0A8B46]/10 bg-[#f7faf8] p-3">
+              <WalletCards className="mb-2 h-5 w-5 text-[#0A8B46]" />
+              <p className="text-xs font-bold text-[#0A8B46]">Portefeuille lié</p>
+              <p className="mt-1 text-sm font-black text-[#0A8B46]">{formatCurrency(walletBalance, 'CDF')}</p>
             </div>
-            <div className="rounded-2xl border border-[#25543A]/10 bg-[#f7faf8] p-3">
-              <ShieldCheck className="mb-2 h-5 w-5 text-[#FFB545]" />
-              <p className="text-xs font-bold text-[#25543A]">Débits planifiés</p>
+            <div className="rounded-2xl border border-[#0A8B46]/10 bg-[#f7faf8] p-3">
+              <ShieldCheck className="mb-2 h-5 w-5 text-[#FFA500]" />
+              <p className="text-xs font-bold text-[#0A8B46]">Débits planifiés</p>
               <p className="mt-1 text-[11px] leading-4 text-muted-foreground">Selon vos fréquences.</p>
             </div>
           </div>
@@ -363,16 +363,16 @@ export default function SavingsPage() {
 
       {/* No Goals State */}
       {goals.length === 0 && (
-        <Card className="border-2 border-dashed border-[#25543A]/30 bg-white">
+        <Card className="border-2 border-dashed border-[#0A8B46]/30 bg-white">
           <CardContent className="space-y-4 p-10 text-center">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#25543A]/10">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#0A8B46]/10">
               <GoalSeedIcon className="h-10 w-10" />
             </div>
             <div>
-              <h3 className="font-headline mb-2 text-lg font-bold text-[#25543A]">Aucun objectif d'épargne</h3>
+              <h3 className="font-headline mb-2 text-lg font-bold text-[#0A8B46]">Aucun objectif d'épargne</h3>
               <p className="mb-4 text-sm text-muted-foreground">Créez votre premier objectif d'épargne pour commencer à économiser.</p>
             </div>
-            <Button onClick={() => setShowCreateDialog(true)} className="rounded-xl bg-[#25543A] font-bold hover:bg-[#25543A]">
+            <Button onClick={() => setShowCreateDialog(true)} className="rounded-xl bg-[#0A8B46] font-bold hover:bg-[#0A8B46]">
               <Plus className="mr-2 h-4 w-4" />
               Créer un Objectif
             </Button>
@@ -384,8 +384,8 @@ export default function SavingsPage() {
       {goals.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="font-headline text-lg font-bold text-[#25543A]">Mes Objectifs</h2>
-            <div className="rounded-full bg-[#25543A]/10 px-3 py-1 text-xs font-bold text-[#25543A]">
+            <h2 className="font-headline text-lg font-bold text-[#0A8B46]">Mes Objectifs</h2>
+            <div className="rounded-full bg-[#0A8B46]/10 px-3 py-1 text-xs font-bold text-[#0A8B46]">
               <span>{goals.length} objectif{goals.length !== 1 ? 's' : ''}</span>
             </div>
           </div>
@@ -394,18 +394,18 @@ export default function SavingsPage() {
             const isCompleted = goal.status === 'completed';
 
             return (
-              <Card key={goal.id} className={`overflow-hidden border-[#25543A]/10 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${isCompleted ? 'border-[#25543A]/30 bg-[#25543A]/5' : ''}`}>
+              <Card key={goal.id} className={`overflow-hidden border-[#0A8B46]/10 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${isCompleted ? 'border-[#0A8B46]/30 bg-[#0A8B46]/5' : ''}`}>
                 <CardContent className="p-4">
                   <div className="space-y-4">
                     {/* Header */}
                     <div className="flex items-start justify-between">
                       <div className="flex flex-1 items-start gap-3">
-                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#25543A]/10 text-3xl ring-1 ring-[#25543A]/10">{goal.icon}</div>
+                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#0A8B46]/10 text-3xl ring-1 ring-[#0A8B46]/10">{goal.icon}</div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-headline truncate font-bold text-[#25543A]">{goal.name}</h3>
+                            <h3 className="font-headline truncate font-bold text-[#0A8B46]">{goal.name}</h3>
                             {isCompleted && (
-                              <CheckCircle2 className="h-5 w-5 shrink-0 text-[#25543A]" />
+                              <CheckCircle2 className="h-5 w-5 shrink-0 text-[#0A8B46]" />
                             )}
                             {goal.status === 'paused' && (
                               <Pause className="h-5 w-5 shrink-0 text-yellow-600" />
@@ -415,23 +415,23 @@ export default function SavingsPage() {
                             <p className="text-sm text-muted-foreground mb-2">{goal.description}</p>
                           )}
                           <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                            <span className="flex items-center gap-1 rounded-full bg-[#25543A]/10 px-2 py-1 font-semibold text-[#25543A]">
+                            <span className="flex items-center gap-1 rounded-full bg-[#0A8B46]/10 px-2 py-1 font-semibold text-[#0A8B46]">
                               <Zap className="h-3.5 w-3.5" />
                               {goal.frequency === 'daily' ? 'Quotidien' : goal.frequency === 'weekly' ? 'Hebdomadaire' : 'Mensuel'}
                             </span>
-                            <span className="rounded-full bg-[#f7faf8] px-2 py-1 font-semibold text-[#25543A]">{formatCurrency(goal.frequencyAmount, goal.currency)}</span>
+                            <span className="rounded-full bg-[#f7faf8] px-2 py-1 font-semibold text-[#0A8B46]">{formatCurrency(goal.frequencyAmount, goal.currency)}</span>
                           </div>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-2xl font-black text-[#25543A]">{progress.toFixed(0)}%</p>
+                        <p className="text-2xl font-black text-[#0A8B46]">{progress.toFixed(0)}%</p>
                         <p className="text-xs text-muted-foreground">Atteint</p>
                       </div>
                     </div>
 
                     {/* Progress Bar */}
                     <div className="space-y-2">
-                      <Progress value={progress} className="h-3 rounded-full bg-[#25543A]/10" />
+                      <Progress value={progress} className="h-3 rounded-full bg-[#0A8B46]/10" />
                       <div className="flex justify-between text-xs text-muted-foreground">
                         <span>{formatCurrency(goal.currentAmount, goal.currency)}</span>
                         <span>{formatCurrency(goal.targetAmount, goal.currency)}</span>
@@ -440,10 +440,10 @@ export default function SavingsPage() {
 
                     {/* Status Alert */}
                     {isCompleted && (
-                      <Alert className="rounded-2xl border-[#25543A]/20 bg-[#25543A]/5">
-                        <CheckCircle2 className="h-4 w-4 text-[#25543A]" />
-                        <AlertTitle className="text-[#25543A]">Objectif atteint!</AlertTitle>
-                        <AlertDescription className="text-[#25543A]">
+                      <Alert className="rounded-2xl border-[#0A8B46]/20 bg-[#0A8B46]/5">
+                        <CheckCircle2 className="h-4 w-4 text-[#0A8B46]" />
+                        <AlertTitle className="text-[#0A8B46]">Objectif atteint!</AlertTitle>
+                        <AlertDescription className="text-[#0A8B46]">
                           Vous pouvez maintenant retirer vos fonds.
                         </AlertDescription>
                       </Alert>
@@ -468,7 +468,7 @@ export default function SavingsPage() {
                           setSelectedGoalId(goal.id);
                           setShowAddFundsDialog(true);
                         }}
-                        className="h-9 flex-1 rounded-xl border-[#25543A]/20 text-[#25543A] hover:bg-[#25543A]/5"
+                        className="h-9 flex-1 rounded-xl border-[#0A8B46]/20 text-[#0A8B46] hover:bg-[#0A8B46]/5"
                       >
                         <Plus className="h-4 w-4 mr-1" />
                         Ajouter
@@ -482,7 +482,7 @@ export default function SavingsPage() {
                             setSelectedGoalId(goal.id);
                             setShowWithdrawDialog(true);
                           }}
-                          className="h-9 flex-1 rounded-xl border-[#25543A]/20 text-[#25543A] hover:bg-[#25543A]/5"
+                          className="h-9 flex-1 rounded-xl border-[#0A8B46]/20 text-[#0A8B46] hover:bg-[#0A8B46]/5"
                         >
                           <ArrowRight className="h-4 w-4 mr-1" />
                           Retirer
@@ -493,7 +493,7 @@ export default function SavingsPage() {
                         variant="outline"
                         size="sm"
                         onClick={() => handleToggleStatus(goal.id, goal.status)}
-                        className="h-9 flex-1 rounded-xl border-[#25543A]/20 text-[#25543A] hover:bg-[#25543A]/5"
+                        className="h-9 flex-1 rounded-xl border-[#0A8B46]/20 text-[#0A8B46] hover:bg-[#0A8B46]/5"
                       >
                         {goal.status === 'active' ? (
                           <>
@@ -529,8 +529,8 @@ export default function SavingsPage() {
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
         <DialogContent className="max-w-md rounded-2xl">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-[#25543A]">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#25543A]/10">
+            <DialogTitle className="flex items-center gap-2 text-[#0A8B46]">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0A8B46]/10">
                 <GoalSeedIcon className="h-6 w-6" />
               </span>
               Créer un nouvel objectif d'épargne
@@ -549,7 +549,7 @@ export default function SavingsPage() {
                 placeholder="Ex: Voyage à Dubaï"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="rounded-xl border-[#25543A]/20 focus-visible:ring-[#25543A]"
+                className="rounded-xl border-[#0A8B46]/20 focus-visible:ring-[#0A8B46]"
               />
             </div>
 
@@ -563,8 +563,8 @@ export default function SavingsPage() {
                     onClick={() => setFormData({ ...formData, icon })}
                     className={`rounded-xl border-2 p-2 text-2xl transition-all ${
                       formData.icon === icon
-                        ? 'border-[#25543A] bg-[#25543A]/10'
-                        : 'border-muted hover:border-[#25543A]/50'
+                        ? 'border-[#0A8B46] bg-[#0A8B46]/10'
+                        : 'border-muted hover:border-[#0A8B46]/50'
                     }`}
                   >
                     {icon}
@@ -581,7 +581,7 @@ export default function SavingsPage() {
                 placeholder="Détails sur votre objectif"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="rounded-xl border-[#25543A]/20 focus-visible:ring-[#25543A]"
+                className="rounded-xl border-[#0A8B46]/20 focus-visible:ring-[#0A8B46]"
               />
             </div>
 
@@ -595,13 +595,13 @@ export default function SavingsPage() {
                   placeholder="0"
                   value={formData.targetAmount}
                   onChange={(e) => setFormData({ ...formData, targetAmount: e.target.value })}
-                  className="rounded-xl border-[#25543A]/20 focus-visible:ring-[#25543A]"
+                  className="rounded-xl border-[#0A8B46]/20 focus-visible:ring-[#0A8B46]"
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="currency" className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Devise</Label>
                 <Select value={formData.currency} onValueChange={(value: any) => setFormData({ ...formData, currency: value })}>
-                  <SelectTrigger className="rounded-xl border-[#25543A]/20">
+                  <SelectTrigger className="rounded-xl border-[#0A8B46]/20">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -618,7 +618,7 @@ export default function SavingsPage() {
               <div className="space-y-2">
                 <Label htmlFor="frequency" className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Fréquence</Label>
                 <Select value={formData.frequency} onValueChange={(value: any) => setFormData({ ...formData, frequency: value })}>
-                  <SelectTrigger className="rounded-xl border-[#25543A]/20">
+                  <SelectTrigger className="rounded-xl border-[#0A8B46]/20">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -636,14 +636,14 @@ export default function SavingsPage() {
                   placeholder="0"
                   value={formData.frequencyAmount}
                   onChange={(e) => setFormData({ ...formData, frequencyAmount: e.target.value })}
-                  className="rounded-xl border-[#25543A]/20 focus-visible:ring-[#25543A]"
+                  className="rounded-xl border-[#0A8B46]/20 focus-visible:ring-[#0A8B46]"
                 />
               </div>
             </div>
 
-            <Alert className="rounded-2xl border-[#25543A]/20 bg-[#25543A]/5">
+            <Alert className="rounded-2xl border-[#0A8B46]/20 bg-[#0A8B46]/5">
               <AutoSaveIcon className="h-4 w-4" />
-              <AlertTitle className="text-[#25543A]">Contributions automatiques</AlertTitle>
+              <AlertTitle className="text-[#0A8B46]">Contributions automatiques</AlertTitle>
               <AlertDescription>
                 Le montant sera automatiquement débité de votre portefeuille selon la fréquence choisie.
               </AlertDescription>
@@ -654,7 +654,7 @@ export default function SavingsPage() {
             <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
               Annuler
             </Button>
-            <Button onClick={handleCreateGoal} disabled={isProcessing} className="bg-[#25543A] hover:bg-[#25543A]">
+            <Button onClick={handleCreateGoal} disabled={isProcessing} className="bg-[#0A8B46] hover:bg-[#0A8B46]">
               {isProcessing ? "Création..." : "Créer"}
             </Button>
           </DialogFooter>
@@ -665,9 +665,9 @@ export default function SavingsPage() {
       <Dialog open={showAddFundsDialog} onOpenChange={setShowAddFundsDialog}>
         <DialogContent className="rounded-2xl">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-[#25543A]">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#25543A]/10">
-                <Plus className="h-5 w-5 text-[#25543A]" />
+            <DialogTitle className="flex items-center gap-2 text-[#0A8B46]">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0A8B46]/10">
+                <Plus className="h-5 w-5 text-[#0A8B46]" />
               </span>
               Ajouter des fonds
             </DialogTitle>
@@ -680,11 +680,11 @@ export default function SavingsPage() {
             <div className="space-y-2 rounded-2xl bg-[#f7faf8] p-4">
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">Solde portefeuille:</span>
-                <span className="font-bold text-[#25543A]">{formatCurrency(walletBalance, 'CDF')}</span>
+                <span className="font-bold text-[#0A8B46]">{formatCurrency(walletBalance, 'CDF')}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">Solde objectif:</span>
-                <span className="font-bold text-[#25543A]">{formatCurrency(selectedGoal?.currentAmount || 0, selectedGoal?.currency || 'CDF')}</span>
+                <span className="font-bold text-[#0A8B46]">{formatCurrency(selectedGoal?.currentAmount || 0, selectedGoal?.currency || 'CDF')}</span>
               </div>
             </div>
 
@@ -696,7 +696,7 @@ export default function SavingsPage() {
                 placeholder="0"
                 value={addAmount}
                 onChange={(e) => setAddAmount(e.target.value)}
-                className="rounded-xl border-[#25543A]/20 text-lg font-bold focus-visible:ring-[#25543A]"
+                className="rounded-xl border-[#0A8B46]/20 text-lg font-bold focus-visible:ring-[#0A8B46]"
               />
               <p className="text-xs text-muted-foreground">
                 Devise: {selectedGoal?.currency}
@@ -711,7 +711,7 @@ export default function SavingsPage() {
             }}>
               Annuler
             </Button>
-            <Button onClick={handleAddFunds} disabled={isProcessing} className="bg-[#25543A] hover:bg-[#25543A]">
+            <Button onClick={handleAddFunds} disabled={isProcessing} className="bg-[#0A8B46] hover:bg-[#0A8B46]">
               {isProcessing ? "Traitement..." : "Ajouter"}
             </Button>
           </DialogFooter>
@@ -722,9 +722,9 @@ export default function SavingsPage() {
       <Dialog open={showWithdrawDialog} onOpenChange={setShowWithdrawDialog}>
         <DialogContent className="rounded-2xl">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-[#25543A]">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#25543A]/10">
-                <ArrowRight className="h-5 w-5 text-[#25543A]" />
+            <DialogTitle className="flex items-center gap-2 text-[#0A8B46]">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0A8B46]/10">
+                <ArrowRight className="h-5 w-5 text-[#0A8B46]" />
               </span>
               Retirer des fonds
             </DialogTitle>
@@ -734,10 +734,10 @@ export default function SavingsPage() {
           </DialogHeader>
 
           <div className="space-y-4 py-4">
-            <Alert className="rounded-2xl border-[#25543A]/20 bg-[#25543A]/5">
-              <CheckCircle2 className="h-4 w-4 text-[#25543A]" />
-              <AlertTitle className="text-[#25543A]">Objectif atteint!</AlertTitle>
-              <AlertDescription className="text-[#25543A]">
+            <Alert className="rounded-2xl border-[#0A8B46]/20 bg-[#0A8B46]/5">
+              <CheckCircle2 className="h-4 w-4 text-[#0A8B46]" />
+              <AlertTitle className="text-[#0A8B46]">Objectif atteint!</AlertTitle>
+              <AlertDescription className="text-[#0A8B46]">
                 Vous pouvez retirer jusqu'à {formatCurrency(selectedGoal?.currentAmount || 0, selectedGoal?.currency || 'CDF')}
               </AlertDescription>
             </Alert>
@@ -750,7 +750,7 @@ export default function SavingsPage() {
                 placeholder="0"
                 value={withdrawAmount}
                 onChange={(e) => setWithdrawAmount(e.target.value)}
-                className="rounded-xl border-[#25543A]/20 text-lg font-bold focus-visible:ring-[#25543A]"
+                className="rounded-xl border-[#0A8B46]/20 text-lg font-bold focus-visible:ring-[#0A8B46]"
               />
               <p className="text-xs text-muted-foreground">
                 Devise: {selectedGoal?.currency}
@@ -765,7 +765,7 @@ export default function SavingsPage() {
             }}>
               Annuler
             </Button>
-            <Button onClick={handleWithdraw} disabled={isProcessing} className="bg-[#25543A] hover:bg-[#25543A]">
+            <Button onClick={handleWithdraw} disabled={isProcessing} className="bg-[#0A8B46] hover:bg-[#0A8B46]">
               {isProcessing ? "Traitement..." : "Retirer"}
             </Button>
           </DialogFooter>

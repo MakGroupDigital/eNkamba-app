@@ -275,7 +275,7 @@ export function OrderReceipt({ order, onClose, primaryActionLabel, onPrimaryActi
           {primaryActionLabel && onPrimaryAction && (
             <Button
               onClick={onPrimaryAction}
-              className="col-span-2 min-w-0 flex-1 bg-orange-500 text-xs hover:bg-orange-600 sm:col-span-1 sm:text-sm"
+              className="col-span-2 min-w-0 flex-1 bg-[#FFA500]/100 text-xs hover:bg-[#FFA500] sm:col-span-1 sm:text-sm"
             >
               {primaryActionLabel}
             </Button>

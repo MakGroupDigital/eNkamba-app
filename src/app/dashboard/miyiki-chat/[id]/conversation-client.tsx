@@ -1358,7 +1358,7 @@ export default function ConversationClient() {
 
             {/* Incoming call banner */}
             {incomingCall && !isGroup && (
-                <div className="flex items-center justify-between gap-3 px-4 py-3 bg-gradient-to-r from-primary via-primary to-orange-600 text-white shadow-md flex-shrink-0">
+                <div className="flex items-center justify-between gap-3 px-4 py-3 bg-gradient-to-r from-primary via-primary to-[#FFA500] text-white shadow-md flex-shrink-0">
                     <div className="flex items-center gap-3 min-w-0">
                         <Avatar className="h-9 w-9 border border-white/30">
                             {contact?.avatar ? (
@@ -1953,9 +1953,9 @@ export default function ConversationClient() {
                 
                 {/* Edit Preview */}
                 {editingMessage && (
-                    <div className={`border-l-4 border-orange-500 rounded-lg p-3 bg-orange-50 dark:bg-orange-900/20 flex items-start justify-between`}>
+                    <div className={`border-l-4 border-[#FFA500] rounded-lg p-3 bg-[#FFA500]/10 dark:bg-[#FFA500]/20 flex items-start justify-between`}>
                         <div className="flex-1 min-w-0">
-                            <p className="text-xs font-semibold text-orange-600 dark:text-orange-400 mb-1">Modification du message</p>
+                            <p className="text-xs font-semibold text-[#FFA500] dark:text-[#FFA500] mb-1">Modification du message</p>
                             <p className="text-sm truncate text-muted-foreground">
                                 {editingMessage.text?.substring(0, 50)}
                             </p>

@@ -58,9 +58,9 @@ const MULTI_PAY_TYPES: Array<{
 }> = [
   { id: 'same', title: 'Même montant à plusieurs', subtitle: 'Même montant pour tous les bénéficiaires', icon: Users, tone: 'bg-primary/10 text-primary' },
   { id: 'different', title: 'Montants différents', subtitle: 'Chaque bénéficiaire reçoit un montant différent', icon: User, tone: 'bg-blue-50 text-blue-700' },
-  { id: 'salary', title: 'Salaires', subtitle: 'Paiement mensuel des employés', icon: BriefcaseBusiness, tone: 'bg-orange-50 text-orange-700' },
+  { id: 'salary', title: 'Salaires', subtitle: 'Paiement mensuel des employés', icon: BriefcaseBusiness, tone: 'bg-[#FFA500]/10 text-[#FFA500]' },
   { id: 'bonus', title: 'Primes', subtitle: 'Primes, bonus et indemnités', icon: Gift, tone: 'bg-purple-50 text-purple-700' },
-  { id: 'commission', title: 'Commissions', subtitle: 'Commissions commerciales', icon: TrendingUp, tone: 'bg-amber-50 text-amber-700' },
+  { id: 'commission', title: 'Commissions', subtitle: 'Commissions commerciales', icon: TrendingUp, tone: 'bg-[#FFA500]/10 text-[#FFA500]' },
   { id: 'suppliers', title: 'Fournisseurs', subtitle: 'Prestataires et partenaires', icon: Truck, tone: 'bg-sky-50 text-sky-700' },
   { id: 'excel', title: 'Importer Excel', subtitle: 'Importer un fichier CSV/Excel exporté', icon: FileSpreadsheet, tone: 'bg-primary/10 text-primary' },
   { id: 'scheduled', title: 'Paiement programmé', subtitle: 'Planifier vos paiements récurrents', icon: CalendarClock, tone: 'bg-violet-50 text-violet-700' },
@@ -169,7 +169,7 @@ export default function PayReceivePage() {
         width: 300,
         margin: 2,
         errorCorrectionLevel: 'H',
-        color: { dark: '#25543A', light: '#ffffff' },
+        color: { dark: '#0A8B46', light: '#ffffff' },
       }).then(setQrCode);
     }
   }, [profile?.uid, profile?.name, profile?.fullName, profile?.email]);
@@ -700,7 +700,7 @@ export default function PayReceivePage() {
           <style>
             body { font-family: Arial, sans-serif; color: #0f172a; padding: 24px; background: #f8fafc; }
             .receipt { max-width: 780px; margin: 0 auto; background: white; border: 1px solid #dbe7df; border-radius: 18px; overflow: hidden; }
-            .header { background: #25543A; color: white; padding: 22px 26px; }
+            .header { background: #0A8B46; color: white; padding: 22px 26px; }
             h1 { margin: 0; font-size: 24px; }
             .content { padding: 24px 26px; }
             .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
@@ -709,8 +709,8 @@ export default function PayReceivePage() {
             .value { margin-top: 4px; font-weight: 900; }
             table { width: 100%; border-collapse: collapse; margin-top: 18px; font-size: 13px; }
             th, td { padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: left; }
-            th { background: #f0f7f3; color: #25543A; }
-            .total { margin-top: 18px; border-radius: 12px; background: #f0f7f3; padding: 14px; color: #25543A; font-weight: 900; }
+            th { background: #f0f7f3; color: #0A8B46; }
+            .total { margin-top: 18px; border-radius: 12px; background: #f0f7f3; padding: 14px; color: #0A8B46; font-weight: 900; }
           </style>
         </head>
         <body>
@@ -843,7 +843,7 @@ export default function PayReceivePage() {
           <div className="flex gap-2">
             <Button 
               size="icon" 
-              className="bg-[#25543A] hover:bg-[#25543A] text-white"
+              className="bg-[#0A8B46] hover:bg-[#0A8B46] text-white"
               onClick={() => {
                 setPreviousMode('receive');
                 setMode('scanner');
@@ -945,7 +945,7 @@ export default function PayReceivePage() {
                   />
                   <div className="absolute inset-0 bg-black/30">
                     <div 
-                      className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#25543A] to-transparent shadow-lg shadow-[#25543A]"
+                      className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#0A8B46] to-transparent shadow-lg shadow-[#0A8B46]"
                       style={{ top: `${importProgress}%`, transition: 'top 0.1s linear' }}
                     />
                   </div>

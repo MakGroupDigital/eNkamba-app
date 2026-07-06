@@ -22,7 +22,7 @@ const mbongoNavItems = [
     name: 'Wallet', 
     icon: WalletNavIcon, 
     href: '/dashboard/wallet',
-    gradient: 'from-orange-500 to-amber-600'
+    gradient: 'from-[#FFA500] to-[#FFA500]'
   },
   { 
     name: 'Historique', 

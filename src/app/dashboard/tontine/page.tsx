@@ -33,9 +33,9 @@ const publicTontines: Tontine[] = [];
 
 const TontineCircleIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
   <svg viewBox="0 0 48 48" fill="none" className={className} aria-hidden="true">
-    <circle cx="24" cy="24" r="15" fill="#25543A" />
-    <circle cx="24" cy="14" r="5" fill="#25543A" />
-    <circle cx="34" cy="29" r="5" fill="#FFB545" />
+    <circle cx="24" cy="24" r="15" fill="#0A8B46" />
+    <circle cx="24" cy="14" r="5" fill="#0A8B46" />
+    <circle cx="34" cy="29" r="5" fill="#FFA500" />
     <circle cx="14" cy="29" r="5" fill="white" opacity="0.92" />
     <path d="M19 20a12 12 0 0 1 10 0M29 28a12 12 0 0 1-10 0" stroke="white" strokeWidth="2.8" strokeLinecap="round" opacity="0.85" />
   </svg>
@@ -43,19 +43,19 @@ const TontineCircleIcon = ({ className = "h-6 w-6" }: { className?: string }) =>
 
 const InviteLinkIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
   <svg viewBox="0 0 48 48" fill="none" className={className} aria-hidden="true">
-    <rect x="8" y="12" width="32" height="24" rx="8" fill="#25543A" />
+    <rect x="8" y="12" width="32" height="24" rx="8" fill="#0A8B46" />
     <path d="M18 24h12" stroke="white" strokeWidth="3" strokeLinecap="round" />
-    <path d="M21 17h-2a7 7 0 0 0 0 14h2M27 17h2a7 7 0 0 1 0 14h-2" stroke="#25543A" strokeWidth="3" strokeLinecap="round" />
-    <circle cx="36" cy="14" r="4" fill="#FFB545" />
+    <path d="M21 17h-2a7 7 0 0 0 0 14h2M27 17h2a7 7 0 0 1 0 14h-2" stroke="#0A8B46" strokeWidth="3" strokeLinecap="round" />
+    <circle cx="36" cy="14" r="4" fill="#FFA500" />
   </svg>
 );
 
 const TrustPotIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
   <svg viewBox="0 0 48 48" fill="none" className={className} aria-hidden="true">
-    <path d="M12 19h24l-3 20H15l-3-20Z" fill="#25543A" />
-    <path d="M17 19a7 7 0 0 1 14 0" stroke="#25543A" strokeWidth="3" strokeLinecap="round" />
+    <path d="M12 19h24l-3 20H15l-3-20Z" fill="#0A8B46" />
+    <path d="M17 19a7 7 0 0 1 14 0" stroke="#0A8B46" strokeWidth="3" strokeLinecap="round" />
     <path d="M19 29l4 4 7-9" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-    <circle cx="34" cy="14" r="4" fill="#FFB545" />
+    <circle cx="34" cy="14" r="4" fill="#FFA500" />
   </svg>
 );
 
@@ -140,7 +140,7 @@ export default function TontinePage() {
     <div className="min-h-screen bg-[#f7faf8]">
     <div className="container mx-auto max-w-4xl p-3 space-y-4 animate-in fade-in duration-500 sm:p-4">
       {/* Header */}
-      <header className="overflow-hidden rounded-2xl bg-gradient-to-br from-[#25543A] to-[#25543A] p-4 text-white shadow-lg shadow-[#25543A]/20">
+      <header className="overflow-hidden rounded-2xl bg-gradient-to-br from-[#0A8B46] to-[#0A8B46] p-4 text-white shadow-lg shadow-[#0A8B46]/20">
         <div className="flex items-center justify-between gap-4">
           <div className="flex min-w-0 items-center gap-3">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/16 ring-1 ring-white/25">
@@ -171,10 +171,10 @@ export default function TontinePage() {
 
         <TabsContent value="overview" className="space-y-4">
           {/* Main Actions */}
-          <Card className="overflow-hidden border-[#25543A]/10 bg-white shadow-sm">
-            <CardHeader className="border-b border-[#25543A]/10 px-4 py-3">
-              <CardTitle className="font-headline flex items-center gap-2 text-lg text-[#25543A]">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#25543A]/10">
+          <Card className="overflow-hidden border-[#0A8B46]/10 bg-white shadow-sm">
+            <CardHeader className="border-b border-[#0A8B46]/10 px-4 py-3">
+              <CardTitle className="font-headline flex items-center gap-2 text-lg text-[#0A8B46]">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0A8B46]/10">
                   <TrustPotIcon className="h-6 w-6" />
                 </span>
                 Rejoignez ou Créez une Tontine
@@ -184,7 +184,7 @@ export default function TontinePage() {
             <CardContent className="grid grid-cols-1 gap-3 p-4 md:grid-cols-2">
               <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
                 <DialogTrigger asChild>
-                  <Button size="lg" className="h-20 justify-start rounded-2xl bg-[#25543A] px-4 text-left hover:bg-[#25543A]">
+                  <Button size="lg" className="h-20 justify-start rounded-2xl bg-[#0A8B46] px-4 text-left hover:bg-[#0A8B46]">
                     <span className="mr-3 flex h-11 w-11 items-center justify-center rounded-xl bg-white/18">
                       <Plus className="h-5 w-5" />
                     </span>
@@ -196,8 +196,8 @@ export default function TontinePage() {
                 </DialogTrigger>
                 <DialogContent className="rounded-2xl">
                   <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2 text-[#25543A]">
-                      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#25543A]/10">
+                    <DialogTitle className="flex items-center gap-2 text-[#0A8B46]">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0A8B46]/10">
                         <TontineCircleIcon className="h-6 w-6" />
                       </span>
                       Créer une nouvelle tontine
@@ -214,7 +214,7 @@ export default function TontinePage() {
                         placeholder="Ex: Épargne Familiale"
                         value={tontineName}
                         onChange={(e) => setTontineName(e.target.value)}
-                        className="rounded-xl border-[#25543A]/20 focus-visible:ring-[#25543A]"
+                        className="rounded-xl border-[#0A8B46]/20 focus-visible:ring-[#0A8B46]"
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
@@ -227,10 +227,10 @@ export default function TontinePage() {
                             placeholder="0"
                             value={tontineAmount}
                             onChange={(e) => setTontineAmount(e.target.value)}
-                            className="rounded-xl border-[#25543A]/20 focus-visible:ring-[#25543A]"
+                            className="rounded-xl border-[#0A8B46]/20 focus-visible:ring-[#0A8B46]"
                           />
                           <Select value={tontineCurrency} onValueChange={(value) => setTontineCurrency(value as Currency)}>
-                            <SelectTrigger className="w-[100px] rounded-xl border-[#25543A]/20">
+                            <SelectTrigger className="w-[100px] rounded-xl border-[#0A8B46]/20">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -249,14 +249,14 @@ export default function TontinePage() {
                           placeholder="10"
                           value={maxMembers}
                           onChange={(e) => setMaxMembers(e.target.value)}
-                          className="rounded-xl border-[#25543A]/20 focus-visible:ring-[#25543A]"
+                          className="rounded-xl border-[#0A8B46]/20 focus-visible:ring-[#0A8B46]"
                         />
                       </div>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="frequency" className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Fréquence des cotisations</Label>
                       <Select value={tontineFrequency} onValueChange={(value) => setTontineFrequency(value as Frequency)}>
-                        <SelectTrigger className="rounded-xl border-[#25543A]/20">
+                        <SelectTrigger className="rounded-xl border-[#0A8B46]/20">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -270,7 +270,7 @@ export default function TontinePage() {
                       <Button variant="outline" onClick={() => setShowCreateForm(false)}>
                         Annuler
                       </Button>
-                      <Button onClick={handleCreateTontine} disabled={isCreating} className="bg-[#25543A] hover:bg-[#25543A]">
+                      <Button onClick={handleCreateTontine} disabled={isCreating} className="bg-[#0A8B46] hover:bg-[#0A8B46]">
                         {isCreating ? "Création en cours..." : "Créer la tontine"}
                       </Button>
                     </DialogFooter>
@@ -280,20 +280,20 @@ export default function TontinePage() {
 
               <Dialog open={showJoinForm} onOpenChange={setShowJoinForm}>
                 <DialogTrigger asChild>
-                  <Button size="lg" variant="outline" className="h-20 justify-start rounded-2xl border-[#25543A]/20 bg-[#f7faf8] px-4 text-left hover:bg-[#25543A]/5">
-                    <span className="mr-3 flex h-11 w-11 items-center justify-center rounded-xl bg-[#25543A]/10 text-[#25543A]">
+                  <Button size="lg" variant="outline" className="h-20 justify-start rounded-2xl border-[#0A8B46]/20 bg-[#f7faf8] px-4 text-left hover:bg-[#0A8B46]/5">
+                    <span className="mr-3 flex h-11 w-11 items-center justify-center rounded-xl bg-[#0A8B46]/10 text-[#0A8B46]">
                       <LogIn className="h-5 w-5" />
                     </span>
                     <span>
-                      <span className="block text-base font-black text-[#25543A]">Rejoindre une Tontine</span>
+                      <span className="block text-base font-black text-[#0A8B46]">Rejoindre une Tontine</span>
                       <span className="block text-xs font-medium text-muted-foreground">Utiliser un lien d’invitation réel</span>
                     </span>
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="rounded-2xl">
                   <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2 text-[#25543A]">
-                      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#25543A]/10">
+                    <DialogTitle className="flex items-center gap-2 text-[#0A8B46]">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0A8B46]/10">
                         <InviteLinkIcon className="h-6 w-6" />
                       </span>
                       Rejoindre une tontine
@@ -311,9 +311,9 @@ export default function TontinePage() {
                           placeholder="https://enkamba.io/tontine/..."
                           value={inviteLink}
                           onChange={(e) => setInviteLink(e.target.value)}
-                          className="flex-1 rounded-xl border-[#25543A]/20 focus-visible:ring-[#25543A]"
+                          className="flex-1 rounded-xl border-[#0A8B46]/20 focus-visible:ring-[#0A8B46]"
                         />
-                        <Button variant="outline" size="icon" className="rounded-xl border-[#25543A]/20">
+                        <Button variant="outline" size="icon" className="rounded-xl border-[#0A8B46]/20">
                           <QrCode className="h-4 w-4" />
                         </Button>
                       </div>
@@ -322,7 +322,7 @@ export default function TontinePage() {
                       <Button variant="outline" onClick={() => setShowJoinForm(false)}>
                         Annuler
                       </Button>
-                      <Button onClick={handleJoinByLink} disabled={isJoining} className="bg-[#25543A] hover:bg-[#25543A]">
+                      <Button onClick={handleJoinByLink} disabled={isJoining} className="bg-[#0A8B46] hover:bg-[#0A8B46]">
                         {isJoining ? "Traitement..." : "Rejoindre"}
                       </Button>
                     </DialogFooter>
@@ -330,17 +330,17 @@ export default function TontinePage() {
                 </DialogContent>
               </Dialog>
             </CardContent>
-            <CardFooter className="flex flex-col items-start gap-3 border-t border-[#25543A]/10 px-4 py-3">
+            <CardFooter className="flex flex-col items-start gap-3 border-t border-[#0A8B46]/10 px-4 py-3">
               <p className="text-sm font-medium text-muted-foreground">Autres façons de rejoindre :</p>
               <div className="flex w-full flex-col gap-2 sm:flex-row">
-                <Button variant="secondary" className="flex-1 justify-start rounded-xl bg-[#25543A]/10 text-[#25543A] hover:bg-[#25543A]/15">
+                <Button variant="secondary" className="flex-1 justify-start rounded-xl bg-[#0A8B46]/10 text-[#0A8B46] hover:bg-[#0A8B46]/15">
                   <QrCode className="mr-2" /> Scanner un QR Code
                 </Button>
                 <div className="flex-1 relative">
                   <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Coller un lien d'invitation"
-                    className="rounded-xl border-[#25543A]/20 pl-10 focus-visible:ring-[#25543A]"
+                    className="rounded-xl border-[#0A8B46]/20 pl-10 focus-visible:ring-[#0A8B46]"
                     value={inviteLink}
                     onChange={(e) => setInviteLink(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && inviteLink && handleJoinByLink()}
@@ -352,11 +352,11 @@ export default function TontinePage() {
         </TabsContent>
 
         <TabsContent value="my-tontines" className="space-y-4">
-          <Card className="overflow-hidden border-[#25543A]/10 bg-white shadow-sm">
-            <CardHeader className="border-b border-[#25543A]/10 px-4 py-3">
-              <CardTitle className="font-headline flex items-center gap-2 text-lg text-[#25543A]">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#25543A]/10">
-                  <UserRoundCheck className="h-5 w-5 text-[#25543A]" />
+          <Card className="overflow-hidden border-[#0A8B46]/10 bg-white shadow-sm">
+            <CardHeader className="border-b border-[#0A8B46]/10 px-4 py-3">
+              <CardTitle className="font-headline flex items-center gap-2 text-lg text-[#0A8B46]">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0A8B46]/10">
+                  <UserRoundCheck className="h-5 w-5 text-[#0A8B46]" />
                 </span>
                 Mes Tontines
               </CardTitle>
@@ -364,36 +364,36 @@ export default function TontinePage() {
             </CardHeader>
             <CardContent className="p-4">
               {myTontines.length === 0 ? (
-                <div className="rounded-2xl border-2 border-dashed border-[#25543A]/25 bg-[#f7faf8] p-8 text-center">
-                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#25543A]/10">
+                <div className="rounded-2xl border-2 border-dashed border-[#0A8B46]/25 bg-[#f7faf8] p-8 text-center">
+                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#0A8B46]/10">
                     <TontineCircleIcon className="h-9 w-9" />
                   </div>
-                  <p className="font-bold text-[#25543A]">Aucune tontine réelle chargée</p>
+                  <p className="font-bold text-[#0A8B46]">Aucune tontine réelle chargée</p>
                   <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted-foreground">
                     Cette section n’affiche pas de données de démonstration. Créez une tontine ou utilisez un lien d’invitation réel.
                   </p>
-                  <Button variant="outline" className="mt-4 rounded-xl border-[#25543A]/20 text-[#25543A] hover:bg-[#25543A]/5" onClick={() => setShowJoinForm(true)}>
+                  <Button variant="outline" className="mt-4 rounded-xl border-[#0A8B46]/20 text-[#0A8B46] hover:bg-[#0A8B46]/5" onClick={() => setShowJoinForm(true)}>
                     Rejoindre via invitation
                   </Button>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {myTontines.map((tontine) => (
-                    <Card key={tontine.id} className="border-[#25543A]/10 transition hover:shadow-md">
+                    <Card key={tontine.id} className="border-[#0A8B46]/10 transition hover:shadow-md">
                       <CardContent className="p-4">
                         <div className="flex items-center gap-4">
-                          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#25543A]/10 font-black text-[#25543A]">
+                          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#0A8B46]/10 font-black text-[#0A8B46]">
                             {tontine.name.charAt(0)}
                           </div>
                           <div className="flex-1">
-                            <p className="font-headline font-bold text-[#25543A]">{tontine.name}</p>
+                            <p className="font-headline font-bold text-[#0A8B46]">{tontine.name}</p>
                             <div className="mt-1 flex items-center gap-4 text-sm text-muted-foreground">
                               <span>{formatCurrency(tontine.amount, tontine.currency)} {tontine.frequency}</span>
                               <span>•</span>
                               <span>{tontine.members}/{tontine.maxMembers} membres</span>
                             </div>
                           </div>
-                          <Button variant="outline" className="rounded-xl border-[#25543A]/20 text-[#25543A]">
+                          <Button variant="outline" className="rounded-xl border-[#0A8B46]/20 text-[#0A8B46]">
                             Gérer
                           </Button>
                         </div>
@@ -409,23 +409,23 @@ export default function TontinePage() {
         <TabsContent value="discover" className="space-y-4">
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h2 className="font-headline text-lg font-bold text-[#25543A]">Tontines à découvrir</h2>
+              <h2 className="font-headline text-lg font-bold text-[#0A8B46]">Tontines à découvrir</h2>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Rechercher..." className="w-64 rounded-xl border-[#25543A]/20 pl-10 focus-visible:ring-[#25543A]" />
+                <Input placeholder="Rechercher..." className="w-64 rounded-xl border-[#0A8B46]/20 pl-10 focus-visible:ring-[#0A8B46]" />
               </div>
             </div>
             {publicTontines.length === 0 ? (
-              <Card className="border-[#25543A]/10 bg-white shadow-sm">
+              <Card className="border-[#0A8B46]/10 bg-white shadow-sm">
                 <CardContent className="p-8 text-center">
-                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#25543A]/10">
-                    <Search className="h-7 w-7 text-[#25543A]" />
+                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#0A8B46]/10">
+                    <Search className="h-7 w-7 text-[#0A8B46]" />
                   </div>
-                  <p className="font-bold text-[#25543A]">Aucune tontine publique réelle disponible</p>
+                  <p className="font-bold text-[#0A8B46]">Aucune tontine publique réelle disponible</p>
                   <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted-foreground">
                     Les anciennes données d’exemple ont été retirées. Les tontines publiques s’afficheront uniquement lorsqu’une source réelle sera connectée.
                   </p>
-                  <Button className="mt-4 rounded-xl bg-[#25543A] hover:bg-[#25543A]" onClick={() => setShowCreateForm(true)}>
+                  <Button className="mt-4 rounded-xl bg-[#0A8B46] hover:bg-[#0A8B46]" onClick={() => setShowCreateForm(true)}>
                     Créer une tontine réelle <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </CardContent>

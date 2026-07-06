@@ -4,8 +4,8 @@
   "description": "Écosystème digital tout-en-un : finance, e-commerce, logistique, messagerie et réseau social",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#25543A",
-  "theme_color": "#25543A",
+  "background_color": "#0A8B46",
+  "theme_color": "#0A8B46",
   "icons": [
     {
       "src": "/favicon.png",

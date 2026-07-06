@@ -15,10 +15,10 @@ import {
 } from '@/components/icons/service-icons';
 
 const navItems = [
-  { name: 'Chat', icon: ChatNavIcon, href: '/dashboard/miyiki-chat', color: '#25543A' },
-  { name: 'Marché', icon: ShopNavIcon, href: '/dashboard/nkampa', color: '#FF8C00' },
-  { name: 'Logistique', icon: LogisticsNavIcon, href: '/dashboard/ugavi', color: '#25543A' },
-  { name: 'Paiement', icon: PaymentNavIcon, href: '/dashboard/mbongo-dashboard', color: '#25543A' },
+  { name: 'Chat', icon: ChatNavIcon, href: '/dashboard/miyiki-chat', color: '#0A8B46' },
+  { name: 'Marché', icon: ShopNavIcon, href: '/dashboard/nkampa', color: '#FFA500' },
+  { name: 'Logistique', icon: LogisticsNavIcon, href: '/dashboard/ugavi', color: '#0A8B46' },
+  { name: 'Paiement', icon: PaymentNavIcon, href: '/dashboard/mbongo-dashboard', color: '#0A8B46' },
   { name: 'Réseau', icon: SocialNavIcon, href: '/dashboard/makutano', color: '#9C27B0' },
   { name: 'Paramètres', icon: SettingsNavIcon, href: '/dashboard/settings', color: '#666' },
 ];

@@ -541,8 +541,8 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
 
                 {/* Message d'erreur minimaliste */}
                 {message && (
-                  <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 text-center">
-                    <p className="text-sm text-amber-800">{message}</p>
+                  <div className="rounded-xl bg-[#FFA500]/10 border border-[#FFA500]/30 p-3 text-center">
+                    <p className="text-sm text-[#FFA500]">{message}</p>
                   </div>
                 )}
 

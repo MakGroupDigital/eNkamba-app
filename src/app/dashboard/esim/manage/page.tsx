@@ -167,7 +167,7 @@ export default function ESIMManagePage() {
 
   if (esims.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-[#25543A]/5 to-background">
+      <div className="min-h-screen bg-gradient-to-br from-background via-[#0A8B46]/5 to-background">
         <div className="container mx-auto max-w-2xl p-4 space-y-6 animate-in fade-in duration-500">
           <header className="flex items-center gap-4 pt-4">
             <Button variant="ghost" size="icon" asChild>
@@ -197,7 +197,7 @@ export default function ESIMManagePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-[#25543A]/5 to-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-[#0A8B46]/5 to-background">
       <div className="container mx-auto max-w-4xl p-4 space-y-6 animate-in fade-in duration-500">
         {/* Header */}
         <header className="flex items-center justify-between pt-4">

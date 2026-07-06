@@ -67,7 +67,7 @@ export default function NotFound() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-[#25543A]/5 to-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-background via-[#0A8B46]/5 to-background flex items-center justify-center p-4">
       <style>{`
         @keyframes float {
           0%, 100% { transform: translateY(0px); }
@@ -85,17 +85,17 @@ export default function NotFound() {
         }
       `}</style>
 
-      <Card className="w-full max-w-2xl border-[#25543A]/20 shadow-2xl">
+      <Card className="w-full max-w-2xl border-[#0A8B46]/20 shadow-2xl">
         <CardContent className="p-8 sm:p-12">
           {/* Icône 404 animée */}
           <div className="flex justify-center mb-8">
             <div className="relative">
               {/* Cercles pulsants */}
-              <div className="absolute inset-0 rounded-full bg-[#25543A]/20 pulse-ring"></div>
-              <div className="absolute inset-0 rounded-full bg-[#25543A]/20 pulse-ring" style={{ animationDelay: '1s' }}></div>
+              <div className="absolute inset-0 rounded-full bg-[#0A8B46]/20 pulse-ring"></div>
+              <div className="absolute inset-0 rounded-full bg-[#0A8B46]/20 pulse-ring" style={{ animationDelay: '1s' }}></div>
               
               {/* Icône principale */}
-              <div className="relative bg-gradient-to-br from-[#25543A] to-[#25543A] rounded-full p-8 float-animation">
+              <div className="relative bg-gradient-to-br from-[#0A8B46] to-[#0A8B46] rounded-full p-8 float-animation">
                 <AlertCircle className="w-16 h-16 sm:w-20 sm:h-20 text-white" />
               </div>
             </div>
@@ -103,7 +103,7 @@ export default function NotFound() {
 
           {/* Titre */}
           <div className="text-center mb-6">
-            <h1 className="font-headline text-6xl sm:text-8xl font-bold bg-gradient-to-r from-[#25543A] to-[#25543A] bg-clip-text text-transparent mb-4">
+            <h1 className="font-headline text-6xl sm:text-8xl font-bold bg-gradient-to-r from-[#0A8B46] to-[#0A8B46] bg-clip-text text-transparent mb-4">
               404
             </h1>
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
@@ -118,8 +118,8 @@ export default function NotFound() {
           <div className="flex items-center justify-center gap-2 mb-8">
             {isOnline ? (
               <>
-                <Wifi className="w-5 h-5 text-[#25543A]" />
-                <span className="text-sm text-[#25543A] font-semibold">Connexion active</span>
+                <Wifi className="w-5 h-5 text-[#0A8B46]" />
+                <span className="text-sm text-[#0A8B46] font-semibold">Connexion active</span>
               </>
             ) : (
               <>
@@ -134,7 +134,7 @@ export default function NotFound() {
             <div className="text-center mb-6">
               <p className="text-sm text-muted-foreground">
                 Redirection automatique dans{' '}
-                <span className="font-bold text-[#25543A]">{countdown}</span> secondes
+                <span className="font-bold text-[#0A8B46]">{countdown}</span> secondes
               </p>
               <button
                 onClick={() => setAutoRedirect(false)}
@@ -149,7 +149,7 @@ export default function NotFound() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
             <Button
               onClick={() => router.push('/dashboard')}
-              className="w-full bg-gradient-to-r from-[#25543A] to-[#25543A] hover:from-[#25543A] hover:to-[#25543A] text-white gap-2"
+              className="w-full bg-gradient-to-r from-[#0A8B46] to-[#0A8B46] hover:from-[#0A8B46] hover:to-[#0A8B46] text-white gap-2"
             >
               <Home className="w-4 h-4" />
               Tableau de bord
@@ -158,7 +158,7 @@ export default function NotFound() {
             <Button
               onClick={handleGoBack}
               variant="outline"
-              className="w-full border-[#25543A]/30 hover:bg-[#25543A]/10 gap-2"
+              className="w-full border-[#0A8B46]/30 hover:bg-[#0A8B46]/10 gap-2"
             >
               <ArrowLeft className="w-4 h-4" />
               Retour
@@ -169,7 +169,7 @@ export default function NotFound() {
             <Button
               onClick={handleRefresh}
               variant="outline"
-              className="w-full border-[#25543A]/30 hover:bg-[#25543A]/10 gap-2"
+              className="w-full border-[#0A8B46]/30 hover:bg-[#0A8B46]/10 gap-2"
             >
               <RefreshCw className="w-4 h-4" />
               Actualiser
@@ -184,7 +184,7 @@ export default function NotFound() {
                 }
               }}
               variant="outline"
-              className="w-full border-[#25543A]/30 hover:bg-[#25543A]/10 gap-2"
+              className="w-full border-[#0A8B46]/30 hover:bg-[#0A8B46]/10 gap-2"
             >
               {isOnline ? <Wifi className="w-4 h-4" /> : <WifiOff className="w-4 h-4" />}
               Vérifier connexion
@@ -194,31 +194,31 @@ export default function NotFound() {
           {/* Suggestions */}
           <div className="mt-8 pt-6 border-t border-border">
             <p className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-              <Search className="w-4 h-4 text-[#25543A]" />
+              <Search className="w-4 h-4 text-[#0A8B46]" />
               Pages populaires
             </p>
             <div className="grid grid-cols-2 gap-2 text-sm">
               <Link 
                 href="/dashboard/wallet" 
-                className="text-muted-foreground hover:text-[#25543A] transition-colors"
+                className="text-muted-foreground hover:text-[#0A8B46] transition-colors"
               >
                 → Portefeuille
               </Link>
               <Link 
                 href="/dashboard/send" 
-                className="text-muted-foreground hover:text-[#25543A] transition-colors"
+                className="text-muted-foreground hover:text-[#0A8B46] transition-colors"
               >
                 → Envoyer
               </Link>
               <Link 
                 href="/dashboard/history" 
-                className="text-muted-foreground hover:text-[#25543A] transition-colors"
+                className="text-muted-foreground hover:text-[#0A8B46] transition-colors"
               >
                 → Historique
               </Link>
               <Link 
                 href="/dashboard/settings" 
-                className="text-muted-foreground hover:text-[#25543A] transition-colors"
+                className="text-muted-foreground hover:text-[#0A8B46] transition-colors"
               >
                 → Paramètres
               </Link>
@@ -226,7 +226,7 @@ export default function NotFound() {
           </div>
 
           {/* Message d'aide */}
-          <div className="mt-6 p-4 bg-[#25543A]/10 rounded-lg border border-[#25543A]/20">
+          <div className="mt-6 p-4 bg-[#0A8B46]/10 rounded-lg border border-[#0A8B46]/20">
             <p className="text-xs text-muted-foreground text-center">
               Si le problème persiste, contactez le support eNkamba
             </p>

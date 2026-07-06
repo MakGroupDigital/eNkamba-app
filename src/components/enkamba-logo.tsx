@@ -6,29 +6,41 @@ const EnkambaLogo = ({
   ...props
 }: HTMLAttributes<HTMLDivElement>) => (
   <div className={cn('flex flex-col items-center', className)} {...props}>
-    <div className="flex items-center">
-      <div className="relative flex items-center justify-center">
+    <div className="flex items-center gap-3">
+      <div className="relative flex h-14 w-14 items-center justify-center rounded-[1.35rem] bg-[linear-gradient(135deg,#0A8B46_0%,#089961_58%,#18A96E_100%)] shadow-[0_12px_28px_rgba(10,139,70,0.24)]">
         <svg
-          width="48"
-          height="48"
-          viewBox="0 0 48 48"
+          width="42"
+          height="42"
+          viewBox="0 0 512 512"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
         >
           <path
-            d="M39.6923 24C39.6923 32.6751 32.6751 39.6923 24 39.6923C15.3249 39.6923 8.30769 32.6751 8.30769 24C8.30769 15.3249 15.3249 8.30769 24 8.30769C28.9383 8.30769 33.323 10.3692 36.4615 13.5"
-            stroke="#25543A"
-            strokeWidth="8"
-            strokeLinecap="round"
+            d="M126 348C126 230 216 140 334 140"
+            stroke="white"
+            strokeWidth="64"
+            strokeLinecap="square"
+          />
+          <path
+            d="M334 140H400V248"
+            stroke="white"
+            strokeWidth="64"
+            strokeLinecap="square"
+            strokeLinejoin="miter"
+          />
+          <path
+            d="M280 346V228"
+            stroke="white"
+            strokeWidth="64"
+            strokeLinecap="square"
           />
         </svg>
-        <div className="absolute flex h-8 w-8 items-center justify-center rounded-full bg-accent">
-          <span className="font-headline text-2xl font-bold text-white">e</span>
-        </div>
+        <span className="absolute left-2.5 top-2.5 h-4 w-4 rounded-full border-2 border-white bg-[#FFA500] shadow-[0_0_16px_rgba(255,165,0,0.65)]" />
       </div>
-      <div className="-ml-2 flex items-center">
-        <span className="font-headline text-4xl font-bold text-primary">
-          Nkamba
+      <div className="flex items-center">
+        <span className="font-headline text-4xl font-black tracking-tight text-foreground">
+          eNKAMBA
         </span>
       </div>
     </div>

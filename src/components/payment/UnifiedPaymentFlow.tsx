@@ -175,7 +175,7 @@ export function UnifiedPaymentFlow(props: UnifiedPaymentFlowProps) {
             </Button>
           )}
           <div>
-            <h2 className="font-headline text-2xl font-bold text-[#25543A]">{customLabel}</h2>
+            <h2 className="font-headline text-2xl font-bold text-[#0A8B46]">{customLabel}</h2>
             <p className="text-sm text-muted-foreground">Solde: {balance.toLocaleString('fr-FR')} CDF</p>
           </div>
         </div>
@@ -189,13 +189,13 @@ export function UnifiedPaymentFlow(props: UnifiedPaymentFlowProps) {
             return (
               <Card
                 key={method.id}
-                className="cursor-pointer border-2 hover:border-[#25543A] transition-colors"
+                className="cursor-pointer border-2 hover:border-[#0A8B46] transition-colors"
                 onClick={() => handleMethodSelect(method.id)}
               >
                 <CardContent className="pt-6">
                   <div className="flex flex-col items-center gap-4 text-center">
-                    <div className="p-4 rounded-full bg-[#25543A]/20">
-                      <Icon className="w-8 h-8 text-[#25543A]" />
+                    <div className="p-4 rounded-full bg-[#0A8B46]/20">
+                      <Icon className="w-8 h-8 text-[#0A8B46]" />
                     </div>
                     <div>
                       <h3 className="font-semibold text-lg">{method.label}</h3>
@@ -228,7 +228,7 @@ export function UnifiedPaymentFlow(props: UnifiedPaymentFlowProps) {
                 </div>
 
                 {!isScanning ? (
-                  <Button onClick={startQRScanning} className="w-full bg-[#25543A] hover:bg-[#25543A] gap-2">
+                  <Button onClick={startQRScanning} className="w-full bg-[#0A8B46] hover:bg-[#0A8B46] gap-2">
                     <Camera className="h-4 w-4" />
                     Démarrer le scan
                   </Button>
@@ -299,7 +299,7 @@ export function UnifiedPaymentFlow(props: UnifiedPaymentFlowProps) {
 
                 <Button
                   onClick={() => setStep('confirm')}
-                  className="w-full bg-[#25543A] hover:bg-[#25543A]"
+                  className="w-full bg-[#0A8B46] hover:bg-[#0A8B46]"
                 >
                   Continuer
                 </Button>
@@ -333,7 +333,7 @@ export function UnifiedPaymentFlow(props: UnifiedPaymentFlowProps) {
                     <Button
                       onClick={handleSearch}
                       disabled={isSearching}
-                      className="bg-[#25543A] hover:bg-[#25543A]"
+                      className="bg-[#0A8B46] hover:bg-[#0A8B46]"
                     >
                       {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Chercher'}
                     </Button>
@@ -373,7 +373,7 @@ export function UnifiedPaymentFlow(props: UnifiedPaymentFlowProps) {
               </div>
               <div className="border-t pt-3 flex justify-between font-bold">
                 <span>Nouveau solde</span>
-                <span className="text-[#25543A]">
+                <span className="text-[#0A8B46]">
                   {(balance - parseFloat(amount || '0')).toLocaleString('fr-FR')} CDF
                 </span>
               </div>
@@ -385,7 +385,7 @@ export function UnifiedPaymentFlow(props: UnifiedPaymentFlowProps) {
               </Button>
               <Button
                 onClick={handlePayment}
-                className="flex-1 bg-[#25543A] hover:bg-[#25543A]"
+                className="flex-1 bg-[#0A8B46] hover:bg-[#0A8B46]"
                 disabled={isProcessing}
               >
                 {isProcessing ? (

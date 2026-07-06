@@ -458,16 +458,16 @@ export function ContactQRScanner({ open, onOpenChange, onContactFound }: Contact
               ) : (
                 <>
                   {/* Contact non trouvé */}
-                  <div className="flex flex-col items-center gap-4 p-6 bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg border border-amber-200">
-                    <div className="h-20 w-20 rounded-full bg-amber-500 flex items-center justify-center">
+                  <div className="flex flex-col items-center gap-4 p-6 bg-gradient-to-br from-[#FFA500]/10 to-[#FFA500]/15 rounded-lg border border-[#FFA500]/30">
+                    <div className="h-20 w-20 rounded-full bg-[#FFA500]/100 flex items-center justify-center">
                       <UserPlus className="h-10 w-10 text-white" />
                     </div>
                     
                     <div className="text-center">
-                      <p className="text-lg font-bold text-amber-900">
+                      <p className="text-lg font-bold text-[#FFA500]">
                         Contact non trouvé
                       </p>
-                      <p className="text-sm text-amber-700 mt-1">
+                      <p className="text-sm text-[#FFA500] mt-1">
                         Ce contact n'est pas encore sur eNkamba
                       </p>
                     </div>

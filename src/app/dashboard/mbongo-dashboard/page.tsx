@@ -230,7 +230,7 @@ export default function MbongoDashboard() {
             return (
               <Link key={action.labelKey} href={action.href} className="flex flex-col items-center gap-2 group">
                 {/* Icon Circle - Green background */}
-                <div className="flex items-center justify-center w-16 h-16 rounded-full bg-[#25543A] hover:bg-[#25543A] transition-all duration-300 hover:scale-110 flex-shrink-0 shadow-md text-white">
+                <div className="flex items-center justify-center w-16 h-16 rounded-full bg-[#0A8B46] hover:bg-[#0A8B46] transition-all duration-300 hover:scale-110 flex-shrink-0 shadow-md text-white">
                   <IconComponent size={32} className="text-white" />
                 </div>
                 {/* Label */}
@@ -241,7 +241,7 @@ export default function MbongoDashboard() {
         </div>
 
         <section className="space-y-3">
-          <div className="group relative mx-auto flex w-full max-w-[500px] items-center justify-between overflow-hidden rounded-2xl bg-gradient-to-br from-[#25543A] to-[#25543A] px-4 py-3 text-white shadow-lg shadow-[#25543A]/20 ring-1 ring-white/20 animate-in fade-in-50 slide-in-from-bottom-3 duration-500">
+          <div className="group relative mx-auto flex w-full max-w-[500px] items-center justify-between overflow-hidden rounded-2xl bg-gradient-to-br from-[#0A8B46] to-[#0A8B46] px-4 py-3 text-white shadow-lg shadow-[#0A8B46]/20 ring-1 ring-white/20 animate-in fade-in-50 slide-in-from-bottom-3 duration-500">
             <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,rgba(255,255,255,0.28),transparent_32%,transparent_68%,rgba(0,0,0,0.10))]" />
             <div className="pointer-events-none absolute inset-y-0 -left-20 w-16 skew-x-[-18deg] bg-white/25 blur-sm transition-transform duration-1000 group-hover:translate-x-[620px]" />
             <Link href="/dashboard/wallet" className="relative min-w-0 flex-1">
