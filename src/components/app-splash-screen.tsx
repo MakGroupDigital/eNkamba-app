@@ -46,11 +46,11 @@ export function AppSplashScreen() {
           priority
         />
         <Image
-          src="/splachone.jpeg"
+          src="/splachone-desktop.jpeg"
           alt=""
           fill
           sizes="100vw"
-          className="hidden object-contain md:block"
+          className="hidden object-cover md:block"
           priority
         />
       </div>
