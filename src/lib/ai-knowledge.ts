@@ -177,9 +177,23 @@ export function buildAiKnowledgeContext(entries: AiKnowledgeEntry[]) {
   ].join('\n\n');
 }
 
-export function buildKnowledgeFallbackAnswer(message: string, entries: AiKnowledgeEntry[]) {
+export function buildKnowledgeFallbackAnswer(
+  message: string,
+  entries: AiKnowledgeEntry[],
+  options?: { searchUnavailableReason?: string }
+) {
   const normalizedMessage = normalizeText(message);
   const isGreeting = /^(salut|bonjour|bonsoir|hello|hi|coucou|slt)\b/.test(normalizedMessage);
+
+  if (options?.searchUnavailableReason) {
+    return [
+      'La recherche web est bien activée, mais elle n’est pas disponible pour le moment.',
+      '',
+      options.searchUnavailableReason,
+      '',
+      'Je peux répondre avec les connaissances eNkamba déjà disponibles, ou vous pouvez réessayer avec une requête plus précise.',
+    ].join('\n');
+  }
 
   if (isGreeting) {
     return [

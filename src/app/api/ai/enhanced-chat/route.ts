@@ -22,6 +22,8 @@ export async function POST(request: NextRequest) {
     // Effectuer la recherche web si demandée
     let searchContext = '';
     let hasSearchResults = false;
+    let searchUnavailableReason = '';
+    let webSearchResults: any[] = [];
     
     if (options.searchWeb) {
       try {
@@ -35,18 +37,33 @@ export async function POST(request: NextRequest) {
         
         if (searchResults && searchResults.length > 0) {
           hasSearchResults = true;
+          webSearchResults = searchResults;
           searchContext = '\n\n=== RÉSULTATS DE RECHERCHE WEB EN TEMPS RÉEL ===\n';
           searchResults.forEach((result: any, idx: number) => {
-            searchContext += `\n[${idx + 1}] ${result.title}\n`;
+            searchContext += `\n[${idx + 1}] ${result.title}${result.source ? ` (${result.source})` : ''}\n`;
             searchContext += `Contenu: ${result.snippet}\n`;
             searchContext += `Source: ${result.url}\n`;
           });
           searchContext += '\n=== FIN DES RÉSULTATS DE RECHERCHE ===\n';
-          searchContext += '\nIMPORTANT: Utilise les informations ci-dessus pour répondre à la question. Ces résultats sont en temps réel et à jour.\n';
+          searchContext += '\nIMPORTANT: Utilise les informations ci-dessus pour répondre à la question. Cite les sources utiles sous forme de liens courts quand la réponse dépend du web. Ces résultats sont en temps réel et à jour.\n';
+        } else {
+          searchUnavailableReason = "La recherche web sans clé API n'a retourné aucun résultat exploitable pour cette requête.";
+          searchContext = [
+            '\n\n=== RECHERCHE WEB DEMANDÉE MAIS INDISPONIBLE ===',
+            searchUnavailableReason,
+            "IMPORTANT: ne prétends pas avoir consulté Internet. Dis clairement que la recherche web est indisponible, puis propose de répondre avec les connaissances eNkamba si l'utilisateur le souhaite.",
+            '=== FIN RECHERCHE WEB INDISPONIBLE ===\n',
+          ].join('\n');
         }
       } catch (error) {
         console.error('Erreur lors de la recherche web:', error);
-        // Continuer sans résultats de recherche
+        searchUnavailableReason = 'La recherche web a échoué ou a expiré pendant la requête.';
+        searchContext = [
+          '\n\n=== RECHERCHE WEB DEMANDÉE MAIS INDISPONIBLE ===',
+          searchUnavailableReason,
+          "IMPORTANT: ne prétends pas avoir consulté Internet. Dis clairement que la recherche web est indisponible, puis propose de répondre avec les connaissances eNkamba si l'utilisateur le souhaite.",
+          '=== FIN RECHERCHE WEB INDISPONIBLE ===\n',
+        ].join('\n');
       }
     }
 
@@ -83,6 +100,8 @@ export async function POST(request: NextRequest) {
     // Si recherche web activée, ajouter une instruction spéciale
     if (hasSearchResults) {
       systemPrompt += ' Tu as accès à des résultats de recherche web en temps réel. Utilise-les pour fournir des informations actuelles et précises.';
+    } else if (options.searchWeb && searchUnavailableReason) {
+      systemPrompt += " La recherche web a été demandée, mais aucun résultat web exploitable n’est disponible. Ne prétends pas avoir consulté Internet.";
     }
 
     // Construire le message final
@@ -128,7 +147,41 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      const localAnswer = buildKnowledgeFallbackAnswer(message, knowledgeEntries);
+      if (hasSearchResults && webSearchResults.length > 0) {
+        const webAnswer = [
+          'Voici les résultats trouvés sur Internet :',
+          '',
+          ...webSearchResults.slice(0, 5).map((result, index) => {
+            return [
+              `${index + 1}. ${result.title}`,
+              result.snippet,
+              `Source : ${result.url}`,
+            ].join('\n');
+          }),
+          '',
+          'Je peux aussi reformuler ces résultats ou les analyser si vous précisez ce que vous voulez comparer.',
+        ].join('\n\n');
+
+        return new NextResponse(
+          new ReadableStream({
+            start(controller) {
+              controller.enqueue(encoder.encode(webAnswer));
+              controller.close();
+            },
+          }),
+          {
+            headers: {
+              'Content-Type': 'text/event-stream',
+              'Cache-Control': 'no-cache',
+              'Connection': 'keep-alive',
+            },
+          }
+        );
+      }
+
+      const localAnswer = buildKnowledgeFallbackAnswer(message, knowledgeEntries, {
+        searchUnavailableReason: options.searchWeb && !hasSearchResults ? searchUnavailableReason : undefined,
+      });
       return new NextResponse(
         new ReadableStream({
           start(controller) {
