@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FiveGoBusIcon, FiveGoFlightIcon, FiveGoHotelIcon, FiveGoIcon } from '@/components/icons/service-icons';
+import { FiveGoBusIcon, FiveGoFlightIcon, FiveGoHotelIcon, FiveGoIcon, MobilityIcon } from '@/components/icons/service-icons';
 
 const fiveGoServices = [
   {
@@ -22,6 +22,12 @@ const fiveGoServices = [
     description: 'Réserver un trajet et acheter un ticket.',
     icon: FiveGoBusIcon,
     href: '/dashboard/pay-bill?type=bus',
+  },
+  {
+    title: 'Mobilité',
+    description: 'Commander une course, suivre le trajet et payer depuis eNkamba.',
+    icon: MobilityIcon,
+    href: '/dashboard/mobility',
   },
 ];
 

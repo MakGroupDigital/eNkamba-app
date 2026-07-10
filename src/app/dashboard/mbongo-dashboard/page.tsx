@@ -6,7 +6,7 @@ import { QrCode, ArrowLeftRight, TrendingUp, Wallet, Eye, EyeOff, Loader2 } from
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import DashboardHeader from "@/components/dashboard/dashboard-header";
-import { SavingsIcon, CreditIcon, TontineIcon, ConversionIcon, ReferralIcon, AgentIcon, LinkAccountIcon, BonusIcon, TaxIcon, WaterIcon, TvIcon, AcademicIcon, SchoolIcon, EventIcon, PhoneCreditIcon, InsuranceIcon, ESimIcon, HealthIcon, FiveGoIcon, MobilityIcon } from "@/components/icons/service-icons";
+import { SavingsIcon, CreditIcon, TontineIcon, ConversionIcon, ReferralIcon, AgentIcon, LinkAccountIcon, BonusIcon, TaxIcon, WaterIcon, TvIcon, AcademicIcon, SchoolIcon, EventIcon, PhoneCreditIcon, InsuranceIcon, ESimIcon, HealthIcon, FiveGoIcon, EChurchIcon } from "@/components/icons/service-icons";
 import { useWalletTransactions } from '@/hooks/useWalletTransactions';
 import { useSecureBalanceVisibility } from '@/hooks/useSecureBalanceVisibility';
 import { PinVerification } from '@/components/payment/PinVerification';
@@ -41,7 +41,7 @@ const DEFAULT_COPY: DashboardCopy = {
   hotel: 'Hôtel',
   health: 'Santé',
   fivego: '5go',
-  mobility: 'Mobilité',
+  echurch: 'eChurch',
   events: 'Événements',
   phoneCredit: 'Crédit Téléphone',
   insurance: 'Assurance',
@@ -105,7 +105,7 @@ const bills = [
   { icon: SchoolIcon, labelKey: 'schoolFees', href: '/dashboard/school-fees' },
   { icon: HealthIcon, labelKey: 'health', href: '/dashboard/health' },
   { icon: FiveGoIcon, labelKey: 'fivego', href: '/dashboard/5go' },
-  { icon: MobilityIcon, labelKey: 'mobility', href: '/dashboard/mobility' },
+  { icon: EChurchIcon, labelKey: 'echurch', href: '/dashboard/echurch' },
   { icon: EventIcon, labelKey: 'events', href: '/dashboard/events' },
   { icon: PhoneCreditIcon, labelKey: 'phoneCredit', href: '/dashboard/pay-bill?type=phone' },
   { icon: InsuranceIcon, labelKey: 'insurance', href: '/dashboard/insurance' },
@@ -309,8 +309,8 @@ export default function MbongoDashboard() {
                 const IconComponent = service.icon;
                 return (
                   <Link href={service.href} key={service.labelKey} className="flex flex-col items-center gap-3 text-sm font-semibold text-foreground transition-all hover:text-primary group">
-                    <div className={cn("flex h-[82px] w-[82px] items-center justify-center overflow-visible rounded-[24px] sm:h-[94px] sm:w-[94px]", "bg-gradient-to-br from-muted to-muted/50", "group-hover:shadow-lg group-hover:scale-105 transition-all duration-300", "border border-transparent group-hover:border-primary/20")}>
-                      <IconComponent size={76} className="h-[76px] w-[76px] sm:h-[86px] sm:w-[86px]" />
+                    <div className={cn("mbongo-service-icon flex h-[82px] w-[82px] items-center justify-center overflow-visible rounded-[24px] sm:h-[94px] sm:w-[94px]", "bg-gradient-to-br from-muted to-muted/50", "group-hover:shadow-lg group-hover:scale-105 transition-all duration-300", "border border-transparent group-hover:border-primary/20")}>
+                      <IconComponent size={62} className="h-[62px] w-[62px] sm:h-[70px] sm:w-[70px]" />
                     </div>
                     <span className="text-center text-[12px] font-bold leading-tight sm:text-[13px]">{copy[service.labelKey]}</span>
                   </Link>
@@ -332,7 +332,7 @@ export default function MbongoDashboard() {
                 const IconComponent = bill.icon;
                 return (
                   <Link href={bill.href} key={bill.labelKey} className={cn("flex min-h-[138px] flex-col items-center justify-center gap-3.5 rounded-[22px] p-4 text-center", "bg-gradient-to-br from-background to-muted/30", "border border-border/50 hover:border-primary/30", "text-sm font-semibold text-foreground", "hover:shadow-md hover:scale-[1.02] transition-all duration-300", "group")}>
-                    <div className="group-hover:scale-110 transition-transform duration-300">
+                    <div className="mbongo-service-icon group-hover:scale-110 transition-transform duration-300">
                       <IconComponent size={72} className="h-[72px] w-[72px]" />
                     </div>
                     <span className="text-center text-[12px] font-bold leading-tight sm:text-[13px]">{copy[bill.labelKey]}</span>
@@ -353,6 +353,25 @@ export default function MbongoDashboard() {
             currency: 'CDF',
           }}
         />
+        <style jsx global>{`
+          .mbongo-service-icon svg [fill='#FFA500'] {
+            fill: #FFA500 !important;
+            transform: scale(0.32);
+            transform-box: fill-box;
+            transform-origin: center;
+          }
+
+          .mbongo-service-icon svg [stroke='#FFA500'] {
+            stroke: #FFA500 !important;
+            transform: scale(0.32);
+            transform-box: fill-box;
+            transform-origin: center;
+          }
+
+          .mbongo-service-icon svg [stop-color='#FFA500'] {
+            stop-color: #009058 !important;
+          }
+        `}</style>
       </div>
     </>
   );

@@ -824,6 +824,32 @@ export const MobilityIcon = ({ className, size = 24 }: IconProps) => (
   </svg>
 );
 
+// eChurch - Logo applicatif
+export const EChurchIcon = ({ className, size = 24 }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={cn('', className)}
+  >
+    <defs>
+      <linearGradient id="eChurchGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#009058" />
+        <stop offset="100%" stopColor="#009058" />
+      </linearGradient>
+    </defs>
+    <rect x="7" y="8" width="34" height="32" rx="9" fill="url(#eChurchGrad)" />
+    <path d="M15 25L24 17L33 25V36H15V25Z" fill="#fff" opacity="0.96" />
+    <path d="M13 25.5L24 15.5L35 25.5" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M24 10V18" stroke="#FFA500" strokeWidth="2.6" strokeLinecap="round" />
+    <path d="M20.5 13.5H27.5" stroke="#FFA500" strokeWidth="2.6" strokeLinecap="round" />
+    <rect x="21" y="27" width="6" height="9" rx="2" fill="#009058" />
+    <circle cx="34" cy="15" r="3" fill="#FFA500" />
+  </svg>
+);
+
 // Moto - Course rapide
 export const MotoRideIcon = ({ className, size = 24 }: IconProps) => (
   <svg
