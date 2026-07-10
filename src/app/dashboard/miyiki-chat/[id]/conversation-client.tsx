@@ -18,7 +18,7 @@ import { MoneyTransferMessage } from '@/components/chat/MoneyTransferMessage';
 import { useLocationSharing } from '@/hooks/useLocationSharing';
 import { useChatMoneyTransfer } from '@/hooks/useChatMoneyTransfer';
 import { uploadToCloudinary } from '@/lib/cloudinary-upload';
-import { Ban, Bell, BellOff, ChevronLeft, Flag, Image as ImageIcon, Send, Loader2, Mail, Phone, Mic, Video, MapPin, DollarSign, Paperclip, Plus, X, Check, Square, Settings, ShieldAlert, UserMinus, Users, Trash2, Edit2, MoreVertical, Languages, Keyboard } from 'lucide-react';
+import { Ban, Bell, BellOff, Camera, ChevronLeft, Flag, Image as ImageIcon, ScanLine, Send, Loader2, Mail, Phone, Mic, Video, MapPin, DollarSign, Paperclip, Plus, X, Check, Square, Settings, ShieldAlert, UserMinus, Users, Trash2, Edit2, MoreVertical, Languages, SmilePlus } from 'lucide-react';
 import Link from 'next/link';
 import { GroupSettingsDialog } from '@/components/group-settings-dialog';
 import { CHAT_WALLPAPERS, createCustomChatWallpaperId, getChatWallpaper, isCustomChatWallpaper } from '@/lib/chat-wallpapers';
@@ -834,7 +834,7 @@ export default function ConversationClient() {
                     : {}),
             };
 
-            await sendMessage(conversationId, `${item.symbol} ${item.text}`, 'text', metadata);
+            await sendMessage(conversationId, item.symbol, 'text', metadata);
             setReplyingTo(null);
             setShowSmartKeyboard(false);
         } catch (error) {
@@ -1250,70 +1250,87 @@ export default function ConversationClient() {
         }
     };
 
-    // Envoyer un fichier
-    const handleSendFile = async () => {
+    const uploadAndSendChatFile = async (file: File) => {
+        setIsSending(true);
+        setSendingProgress(0);
+
+        const progressInterval = setInterval(() => {
+            setSendingProgress((prev) => {
+                if (prev >= 70) return prev;
+                return prev + Math.random() * 20;
+            });
+        }, 200);
+
+        try {
+            let resourceType: 'image' | 'video' | 'raw' = 'raw';
+            let messageType: 'file' | 'voice' | 'video' = 'file';
+            let messageText = `📎 ${file.name}`;
+
+            if (file.type.startsWith('image/')) {
+                resourceType = 'image';
+                messageText = `🖼️ ${file.name}`;
+            } else if (file.type.startsWith('video/')) {
+                resourceType = 'video';
+                messageType = 'video';
+                messageText = `🎥 ${file.name}`;
+            } else if (file.type.startsWith('audio/')) {
+                resourceType = 'video';
+                messageType = 'voice';
+                messageText = `🎤 ${file.name}`;
+            }
+
+            const uploadResult = await uploadToCloudinary(file, resourceType);
+
+            setSendingProgress(90);
+
+            await sendMessage(conversationId, messageText, messageType, {
+                fileName: file.name,
+                fileType: file.type,
+                fileSize: file.size,
+                mediaUrl: uploadResult.secureUrl,
+                thumbnailUrl: uploadResult.thumbnailUrl,
+            });
+
+            setSendingProgress(100);
+            setTimeout(() => {
+                setSendingProgress(0);
+            }, 500);
+        } catch (error) {
+            console.error('Erreur envoi fichier:', error);
+        } finally {
+            clearInterval(progressInterval);
+            setIsSending(false);
+        }
+    };
+
+    const openFilePicker = (accept: string, capture?: 'environment' | 'user') => {
         const input = document.createElement('input');
         input.type = 'file';
-        input.accept = 'image/*,video/*,audio/*,.pdf,.doc,.docx,.txt';
+        input.accept = accept;
+        if (capture) input.setAttribute('capture', capture);
         input.onchange = async (e) => {
             const file = (e.target as HTMLInputElement).files?.[0];
-            if (file) {
-                setIsSending(true);
-                setSendingProgress(0);
-                
-                const progressInterval = setInterval(() => {
-                    setSendingProgress((prev) => {
-                        if (prev >= 70) return prev;
-                        return prev + Math.random() * 20;
-                    });
-                }, 200);
-
-                try {
-                    // Déterminer le type de ressource pour Cloudinary
-                    let resourceType: 'image' | 'video' | 'raw' = 'raw';
-                    let messageType: 'file' | 'voice' | 'video' = 'file';
-                    let messageText = `📎 ${file.name}`;
-
-                    if (file.type.startsWith('image/')) {
-                        resourceType = 'image';
-                        messageText = `🖼️ ${file.name}`;
-                    } else if (file.type.startsWith('video/')) {
-                        resourceType = 'video';
-                        messageType = 'video';
-                        messageText = `🎥 ${file.name}`;
-                    } else if (file.type.startsWith('audio/')) {
-                        resourceType = 'video'; // Cloudinary traite audio comme video
-                        messageType = 'voice';
-                        messageText = `🎤 ${file.name}`;
-                    }
-
-                    // Upload vers Cloudinary
-                    const uploadResult = await uploadToCloudinary(file, resourceType);
-                    
-                    setSendingProgress(90);
-
-                    // Envoyer le message avec l'URL Cloudinary
-                    await sendMessage(conversationId, messageText, messageType, { 
-                        fileName: file.name, 
-                        fileType: file.type, 
-                        fileSize: file.size,
-                        mediaUrl: uploadResult.secureUrl,
-                        thumbnailUrl: uploadResult.thumbnailUrl
-                    });
-
-                    setSendingProgress(100);
-                    setTimeout(() => {
-                        setSendingProgress(0);
-                    }, 500);
-                } catch (error) {
-                    console.error('Erreur envoi fichier:', error);
-                } finally {
-                    clearInterval(progressInterval);
-                    setIsSending(false);
-                }
-            }
+            if (file) await uploadAndSendChatFile(file);
         };
         input.click();
+    };
+
+    // Envoyer un fichier
+    const handleSendFile = async () => {
+        openFilePicker('image/*,video/*,audio/*,.pdf,.doc,.docx,.txt');
+    };
+
+    const handleSendPhotoVideo = async () => {
+        openFilePicker('image/*,video/*');
+    };
+
+    const handleOpenCamera = async () => {
+        openFilePicker('image/*,video/*', 'environment');
+    };
+
+    const handleOpenScanner = () => {
+        setShowMoreActions(false);
+        router.push('/dashboard/scanner-simple');
     };
 
     return (
@@ -1539,9 +1556,11 @@ export default function ConversationClient() {
                                         )}
                                         <Card
                                             className={`relative px-3 py-1 rounded-2xl cursor-pointer hover:shadow-md transition-shadow w-fit max-w-full ${
-                                                isOwn
-                                                    ? 'bg-primary text-white rounded-br-none'
-                                                    : 'bg-muted text-foreground rounded-bl-none'
+                                                message.metadata?.keyboardItem
+                                                    ? 'border-transparent !bg-transparent !p-0 text-foreground shadow-none hover:shadow-none'
+                                                    : isOwn
+                                                        ? 'bg-primary text-white rounded-br-none'
+                                                        : 'bg-muted text-foreground rounded-bl-none'
                                             } ${!isOwn && canTranslateMessage(message) ? 'pr-12' : ''} ${message.isDeleted ? 'opacity-60 italic' : ''}`}
                                             onPointerDown={(e) => {
                                                 if (e.pointerType === 'mouse') return;
@@ -1821,33 +1840,13 @@ export default function ConversationClient() {
                                             );
                                         })()
                                     ) : message.metadata?.keyboardItem ? (
-                                        <div className={`min-w-[150px] rounded-2xl border p-2.5 ${
-                                            isOwn ? 'border-white/15 bg-white/10' : 'border-primary/10 bg-primary/5'
-                                        }`}>
-                                            <div className="flex items-center gap-2">
-                                                <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-2xl shadow-sm ${
-                                                    message.metadata.keyboardItem.tone === 'orange'
-                                                        ? 'bg-[#FFA500] text-white'
-                                                        : 'bg-primary text-white'
-                                                }`}>
-                                                    {message.metadata.keyboardItem.symbol}
-                                                </span>
-                                                <div className="min-w-0">
-                                                    <p className={`truncate text-xs font-black ${isOwn ? 'text-white' : 'text-foreground'}`}>
-                                                        {message.metadata.keyboardItem.label}
-                                                    </p>
-                                                    <p className={`text-[10px] font-semibold uppercase tracking-wide ${isOwn ? 'text-white/65' : 'text-muted-foreground'}`}>
-                                                        {message.metadata.keyboardItem.category === 'enbimoji'
-                                                            ? 'eNbimoji'
-                                                            : message.metadata.keyboardItem.category === 'icons'
-                                                                ? 'Icône eNkamba'
-                                                                : 'Sticker eNkamba'}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <p className={`mt-2 text-sm font-semibold leading-5 whitespace-pre-wrap break-words ${isOwn ? 'text-white' : 'text-foreground'}`}>
-                                                {message.text}
-                                            </p>
+                                        <div className="inline-flex max-w-[120px] flex-col items-center">
+                                            <span className="block text-center text-5xl leading-none drop-shadow-sm">
+                                                {message.metadata.keyboardItem.symbol || message.text}
+                                            </span>
+                                            <span className="mt-1 max-w-full truncate text-center text-[10px] font-semibold leading-tight text-muted-foreground">
+                                                {message.metadata.keyboardItem.label}
+                                            </span>
                                         </div>
                                     ) : (
                                         <p className="text-sm leading-5 whitespace-pre-wrap break-words">{message.text}</p>
@@ -2181,6 +2180,36 @@ export default function ConversationClient() {
                             size="sm"
                             variant="outline"
                             className="gap-2"
+                            onClick={handleOpenCamera}
+                            disabled={isSending || (!isGroup && relationshipControl.blocked)}
+                        >
+                            <Camera className="h-4 w-4" />
+                            Caméra
+                        </Button>
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-2"
+                            onClick={handleSendPhotoVideo}
+                            disabled={isSending || (!isGroup && relationshipControl.blocked)}
+                        >
+                            <ImageIcon className="h-4 w-4" />
+                            Photo/Vidéo
+                        </Button>
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-2"
+                            onClick={handleOpenScanner}
+                            disabled={isSending}
+                        >
+                            <ScanLine className="h-4 w-4" />
+                            Scanner
+                        </Button>
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-2"
                             onClick={handleSendFile}
                             disabled={isSending || (!isGroup && relationshipControl.blocked)}
                         >
@@ -2233,14 +2262,18 @@ export default function ConversationClient() {
                             size="icon"
                             variant={showSmartKeyboard ? 'default' : 'outline'}
                             className="rounded-full"
+                            onPointerDown={(event) => {
+                                event.preventDefault();
+                            }}
                             onClick={() => {
                                 setShowMoreActions(false);
                                 setShowSmartKeyboard((value) => !value);
+                                requestAnimationFrame(() => textAreaRef.current?.focus());
                             }}
                             disabled={isSending || isRecording || (!isGroup && relationshipControl.blocked)}
-                            title="Clavier eNkamba"
+                            title="eNbimoji eNkamba"
                         >
-                            <Keyboard className="h-4 w-4" />
+                            <SmilePlus className="h-4 w-4" />
                         </Button>
 
                         {/* Text Input (auto-wrap + auto-grow) */}
@@ -2248,9 +2281,6 @@ export default function ConversationClient() {
                             ref={textAreaRef}
                             placeholder="Écrivez votre message..."
                             value={inputValue}
-                            onFocus={() => {
-                                setShowSmartKeyboard(true);
-                            }}
                             onChange={(e) => setInputValue(e.target.value)}
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' && !e.shiftKey) {

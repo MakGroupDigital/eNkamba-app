@@ -1147,11 +1147,11 @@ export default function NkampaPage() {
               const content = cat.href ? (
                 <div className="flex-shrink-0 flex flex-col items-center gap-2 transition-all">
                   <div
-                    className={`flex h-24 w-24 items-center justify-center rounded-full bg-white text-primary shadow-md transition-all hover:scale-105 hover:shadow-lg`}
+                    className={`flex h-[74px] w-[74px] items-center justify-center rounded-full bg-white text-primary shadow-md transition-all hover:scale-105 hover:shadow-lg`}
                   >
-                    <IconComponent className="h-[72px] w-[72px] text-primary" size={72} />
+                    <IconComponent className="h-[48px] w-[48px] text-primary" size={48} />
                   </div>
-                  <span className="max-w-[88px] text-center text-[12px] font-bold text-gray-800">
+                  <span className="max-w-[78px] text-center text-[11px] font-bold text-gray-800">
                     {cat.label}
                   </span>
                 </div>
@@ -1166,21 +1166,21 @@ export default function NkampaPage() {
                       setSelectedSubcategory(null);
                     }
                   }}
-                    className="flex-shrink-0 flex flex-col items-center gap-2.5 transition-all"
+                    className="flex-shrink-0 flex flex-col items-center gap-2 transition-all"
                 >
                   <div
-                    className={`flex h-24 w-24 items-center justify-center rounded-full shadow-md transition-all ${
+                    className={`flex h-[74px] w-[74px] items-center justify-center rounded-full shadow-md transition-all ${
                       isActive || (cat.id === 'all' && !selectedMainCategory)
-                        ? 'bg-primary text-white shadow-lg scale-110'
+                        ? 'bg-primary text-white shadow-lg scale-105'
                         : 'bg-white text-primary hover:shadow-lg hover:scale-105'
                     }`}
                   >
                     <IconComponent
-                      className={`${isActive || (cat.id === 'all' && !selectedMainCategory) ? 'h-[72px] w-[72px] text-white' : 'h-[72px] w-[72px] text-primary'}`}
-                      size={72}
+                      className={`${isActive || (cat.id === 'all' && !selectedMainCategory) ? 'h-[48px] w-[48px] text-white' : 'h-[48px] w-[48px] text-primary'}`}
+                      size={48}
                     />
                   </div>
-                  <span className="max-w-[88px] text-center text-[12px] font-bold text-gray-800">
+                  <span className="max-w-[78px] text-center text-[11px] font-bold text-gray-800">
                     {cat.label}
                   </span>
                 </button>

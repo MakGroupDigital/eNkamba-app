@@ -25,15 +25,6 @@ const categoryIcons = {
   enbimoji: SmilePlus,
 };
 
-const toneClass: Record<EnkambaKeyboardItem['tone'], string> = {
-  green: 'from-primary to-primary text-white',
-  orange: 'from-[#FFA500] to-[#FFA500] text-white',
-  gold: 'from-amber-400 to-amber-500 text-white',
-  blue: 'from-sky-500 to-sky-600 text-white',
-  violet: 'from-violet-500 to-violet-600 text-white',
-  rose: 'from-rose-500 to-rose-600 text-white',
-};
-
 export function EnkambaSmartKeyboard({
   open,
   disabled,
@@ -91,15 +82,15 @@ export function EnkambaSmartKeyboard({
   };
 
   return (
-    <div className="rounded-[1.5rem] border border-primary/10 bg-background/96 p-3 shadow-2xl shadow-primary/10 backdrop-blur-xl">
-      <div className="mb-3 flex items-center justify-between gap-2">
+    <div className="rounded-[1.25rem] border border-primary/10 bg-background/98 p-2.5 shadow-xl shadow-primary/10 backdrop-blur-xl sm:p-3">
+      <div className="mb-2 flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-primary text-white shadow-sm">
-            <Keyboard className="h-5 w-5" />
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary text-white shadow-sm">
+            <Keyboard className="h-4 w-4" />
           </span>
           <div className="min-w-0">
-            <p className="truncate text-sm font-black text-foreground">Clavier eNkamba</p>
-            <p className="truncate text-[11px] font-semibold text-muted-foreground">
+            <p className="truncate text-xs font-black text-foreground">Clavier eNkamba</p>
+            <p className="truncate text-[10px] font-semibold text-muted-foreground">
               {ENKAMBA_KEYBOARD_TOTAL}+ stickers, icônes et eNbimoji
             </p>
           </div>
@@ -122,11 +113,11 @@ export function EnkambaSmartKeyboard({
       </div>
 
       {showSettings && (
-        <div className="mb-3 grid grid-cols-2 gap-2 rounded-2xl border border-border bg-muted/30 p-2 text-xs">
+        <div className="mb-2 grid grid-cols-2 gap-2 rounded-xl border border-border bg-muted/20 p-2 text-xs">
           <button
             type="button"
             onClick={() => setCompact((value) => !value)}
-            className="flex items-center justify-between rounded-xl bg-background px-3 py-2 font-bold text-foreground"
+            className="flex items-center justify-between rounded-lg bg-background px-3 py-2 font-bold text-foreground"
           >
             <span className="flex items-center gap-2"><SlidersHorizontal className="h-3.5 w-3.5" /> Compact</span>
             <span className="text-primary">{compact ? 'Oui' : 'Non'}</span>
@@ -134,7 +125,7 @@ export function EnkambaSmartKeyboard({
           <button
             type="button"
             onClick={() => setSendDirectly((value) => !value)}
-            className="flex items-center justify-between rounded-xl bg-background px-3 py-2 font-bold text-foreground"
+            className="flex items-center justify-between rounded-lg bg-background px-3 py-2 font-bold text-foreground"
           >
             <span>Envoi direct</span>
             <span className="text-primary">{sendDirectly ? 'Oui' : 'Non'}</span>
@@ -142,7 +133,7 @@ export function EnkambaSmartKeyboard({
         </div>
       )}
 
-      <div className="mb-3 grid grid-cols-3 gap-1.5 rounded-2xl bg-muted/40 p-1">
+      <div className="mb-2 grid grid-cols-3 gap-1 rounded-xl bg-muted/30 p-1">
         {(Object.keys(categoryLabels) as EnkambaKeyboardCategory[]).map((category) => {
           const Icon = categoryIcons[category];
           const active = activeCategory === category;
@@ -151,7 +142,7 @@ export function EnkambaSmartKeyboard({
               key={category}
               type="button"
               onClick={() => setActiveCategory(category)}
-              className={`flex h-9 items-center justify-center gap-1.5 rounded-xl text-[11px] font-black transition ${
+              className={`flex h-8 items-center justify-center gap-1.5 rounded-lg text-[10px] font-black transition ${
                 active ? 'bg-primary text-white shadow-sm' : 'text-muted-foreground hover:bg-background'
               }`}
             >
@@ -162,7 +153,7 @@ export function EnkambaSmartKeyboard({
         })}
       </div>
 
-      <label className="mb-3 flex h-10 items-center gap-2 rounded-2xl border border-border bg-background px-3 text-sm shadow-sm">
+      <label className="mb-2 flex h-9 items-center gap-2 rounded-xl border border-border bg-background px-3 text-sm shadow-sm">
         <Search className="h-4 w-4 text-muted-foreground" />
         <input
           value={query}
@@ -172,28 +163,24 @@ export function EnkambaSmartKeyboard({
         />
       </label>
 
-      <div className={`grid gap-2 overflow-y-auto pr-1 ${compact ? 'max-h-48 grid-cols-4' : 'max-h-64 grid-cols-3'}`}>
+      <div className={`grid overflow-y-auto pr-1 ${compact ? 'max-h-[160px] grid-cols-4 gap-y-3' : 'max-h-[220px] grid-cols-4 gap-y-4'}`}>
         {filteredItems.map((item) => (
           <button
             key={item.id}
             type="button"
             disabled={disabled}
             onClick={() => handlePick(item)}
-            className={`group min-w-0 rounded-2xl border border-border bg-card p-2 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50 ${
-              compact ? 'min-h-[76px]' : 'min-h-[96px]'
-            }`}
+            className="group min-w-0 rounded-xl px-1 py-1 text-center transition hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <span className={`mx-auto mb-1.5 grid rounded-2xl bg-gradient-to-br text-lg font-black shadow-sm ${toneClass[item.tone]} ${compact ? 'h-9 w-9' : 'h-12 w-12 text-2xl'}`}>
-              <span className="m-auto">{item.symbol}</span>
+            <span className={`mx-auto block leading-none ${compact ? 'text-2xl' : 'text-4xl'}`}>
+              {item.symbol}
             </span>
-            <span className="block truncate text-center text-[10px] font-black leading-tight text-foreground">
+            <span className="mt-1 block truncate text-center text-[9px] font-bold leading-tight text-foreground">
               {item.label}
             </span>
-            {!compact && (
-              <span className="mt-1 line-clamp-2 block text-center text-[10px] font-medium leading-tight text-muted-foreground">
-                {item.text}
-              </span>
-            )}
+            <span className="mt-0.5 line-clamp-1 block text-center text-[8.5px] font-medium leading-tight text-muted-foreground">
+              {item.text}
+            </span>
           </button>
         ))}
       </div>

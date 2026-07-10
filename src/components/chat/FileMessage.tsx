@@ -19,7 +19,7 @@ interface FileMessageProps {
 
 export function FileMessage({
   fileName,
-  fileType,
+  fileType = '',
   fileData,
   mediaUrl,
   thumbnailUrl,
@@ -77,6 +77,45 @@ export function FileMessage({
     if (isAudio) return 'text-primary';
     return 'text-gray-600';
   };
+
+  if ((isImage || isVideo) && fileUrl) {
+    return (
+      <div className="group relative max-w-[260px] overflow-hidden rounded-2xl bg-black shadow-sm">
+        {isImage ? (
+          <img
+            src={thumbnailUrl || fileUrl}
+            alt={fileName || 'Image'}
+            className="block max-h-[320px] w-full object-cover"
+            onError={() => setPreviewError(true)}
+          />
+        ) : (
+          <video
+            src={fileUrl}
+            className="block max-h-[320px] w-full bg-black object-contain"
+            controls
+            playsInline
+            onError={() => setPreviewError(true)}
+          />
+        )}
+
+        <button
+          type="button"
+          onClick={handleDownload}
+          className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/55 text-white shadow-sm backdrop-blur transition hover:bg-primary"
+          aria-label="Télécharger le média"
+          title="Télécharger"
+        >
+          <Download className="h-4 w-4" />
+        </button>
+
+        {previewError && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/70 px-3 text-center text-xs font-semibold text-white">
+            Impossible d'afficher ce média
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <>

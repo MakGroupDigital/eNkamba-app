@@ -136,11 +136,40 @@ const enbimojiLabels = [
   ['bye', 'A plus', 'A plus'],
   ['wait', 'Patience', 'Un instant'],
   ['launch', 'Lance', 'On lance'],
+  ['trust', 'Confiance', 'Confiance eNkamba'],
+  ['verified-face', 'Verifie', 'Profil fiable'],
+  ['seller-smile', 'Vendeur', 'Vendeur serieux'],
+  ['buyer-smile', 'Acheteur', 'Acheteur confirme'],
+  ['rider-happy', 'Livreur', 'Livreur arrive'],
+  ['pay-happy', 'Paiement', 'Paiement reussi'],
+  ['family-care', 'Famille', 'Famille protegee'],
+  ['market-joy', 'Marche', 'Bonne trouvaille'],
+  ['chat-heart', 'Chat', 'Message bien recu'],
+  ['ugavi-ok', 'Ugavi', 'Colis sous controle'],
+  ['mbongo-ok', 'Mbongo', 'Argent bien recu'],
+  ['ai-smile', 'Miyiki', 'Assistant utile'],
+  ['admin-check', 'Controle', 'Verification faite'],
+  ['premium-smile', 'Premium', 'Experience premium'],
+  ['local-proud', 'Local', 'Fier du local'],
+  ['africa-win', 'Afrique', 'Afrique gagne'],
 ];
 
 const stickerSymbols = ['🟢', '📦', '💳', '🚚', '✅', '🔐', '📍', '🧾', '💬', '⚡'];
-const iconSymbols = ['◉', '◆', '⬢', '▣', '◎', '◇', '✦', '●', '▰', '⬡'];
-const enbimojiSymbols = ['😊', '🤝', '💪', '👌', '🕊️', '👏', '🤔', '👍', '😔', '😮', '🔥', '💵'];
+const iconSymbols = [
+  '💸', '📤', '📥', '👛', '💳', '🔎', '💬', '📞', '🗺️', '🧭',
+  '🚚', '📦', '🚢', '✈️', '🚆', '🏍️', '🛍️', '🏪', '🏭', '🏢',
+  '🏨', '🍽️', '🎓', '🏥', '🛡️', '🔒', '🔔', '⭐', '💚', '👤',
+  '👥', '📷', '🎥', '🎙️', '📎', '📍', '📅', '⏰', '🎁', '✨',
+];
+const enbimojiSymbols = [
+  '🟢😊', '🟢🤝', '🟢💪', '🟢👌', '🟢🕊️', '🟢👏', '🟢🤔', '🟢👍',
+  '🟢😔', '🟢😮', '🟢🔥', '🟢💵', '🟠😎', '🟢🎓', '🟢🎨', '🟢🌱',
+  '🟢🏍️', '🟢🧑‍💼', '🟢🛒', '🟢👨‍👩‍👧', '🟢🌍', '🟢K', '🟢L', '🟢G',
+  '🟢M', '🟢AF', '🟢🔐', '🟢⚡', '🟢✅', '🟢💎', '🟢🧠', '🟢IA',
+  '🟢LIVE', '🟢🎯', '🟢🏆', '🟢🙏', '🟢👋', '🟢BYE', '🟢⏳', '🟢🚀',
+  '🟢🤍', '🟢✔️', '🟢🏪', '🟢🧾', '🟢📍', '🟢💳', '🟢👨‍👩‍👧‍👦', '🟢🛍️',
+  '🟢💬', '🟢📦', '🟢💰', '🟢🤖', '🟢🛡️', '🟢⭐', '🟢🇨🇩', '🟢🌍',
+];
 const tones: EnkambaKeyboardItem['tone'][] = ['green', 'orange', 'gold', 'blue', 'violet', 'rose'];
 
 const makeItems = (

@@ -23,18 +23,18 @@ export const AllCategoriesIcon = ({ className, size = 48 }: IconProps) => (
     </defs>
     {/* Bâtiment boutique */}
     <rect x="6" y="14" width="36" height="28" rx="2" fill="url(#allGrad)" />
-    <rect x="10" y="18" width="28" height="20" rx="1" fill="#009058" />
+    <rect x="10" y="18" width="28" height="20" rx="1" fill="#fff" opacity="0.94" />
     {/* Porte */}
     <rect x="20" y="24" width="8" height="14" rx="1" fill="#009058" />
     <circle cx="27" cy="31" r="1" fill="#009058" />
     {/* Fenêtres */}
-    <rect x="12" y="20" width="5" height="5" fill="#009058" />
-    <rect x="31" y="20" width="5" height={5} fill="#009058" />
+    <rect x="12" y="20" width="5" height="5" fill="#009058" opacity="0.75" />
+    <rect x="31" y="20" width="5" height={5} fill="#009058" opacity="0.75" />
     {/* Toit */}
     <path d="M6 14L24 4L42 14" stroke="url(#allGrad)" strokeWidth="2" fill="none" />
     {/* Drapeau/Enseigne */}
     <rect x="38" y="8" width="2" height="8" fill="#009058" />
-    <path d="M40 8Q45 8 45 12Q40 16 40 16" fill="#FFA500" />
+    <path d="M40 8Q45 8 45 12Q40 16 40 16" fill="#009058" />
   </svg>
 );
 
@@ -71,7 +71,7 @@ export const SuppliersIcon = ({ className, size = 48 }: IconProps) => (
     <circle cx="11.5" cy="4" r="1.5" fill="#009058" opacity="0.6" />
     <circle cx="36.5" cy="6" r="1.5" fill="#009058" opacity="0.6" />
     {/* Porte */}
-    <rect x="22" y="34" width="4" height="6" fill="#FFA500" />
+    <rect x="22" y="34" width="4" height="6" fill="#009058" />
   </svg>
 );
 
@@ -101,9 +101,9 @@ export const WholesalersIcon = ({ className, size = 48 }: IconProps) => (
     <rect x="14" y="6" width="20" height="10" rx="1" fill="url(#wholesaleGrad)" />
     <rect x="17" y="8" width="14" height="4" rx="1" fill="#009058" />
     {/* Ruban */}
-    <line x1="24" y1="6" x2="24" y2="42" stroke="#FFA500" strokeWidth="1.5" />
+    <line x1="24" y1="6" x2="24" y2="42" stroke="#009058" strokeWidth="1.5" />
     {/* Nœud */}
-    <circle cx="24" cy="24" r="2" fill="#FFA500" />
+    <circle cx="24" cy="24" r="2" fill="#009058" />
   </svg>
 );
 
@@ -131,9 +131,9 @@ export const RetailersIcon = ({ className, size = 48 }: IconProps) => (
     <path d="M18 4Q18 12 18 16" stroke="url(#retailGrad)" strokeWidth="2" fill="none" strokeLinecap="round" />
     <path d="M30 4Q30 12 30 16" stroke="url(#retailGrad)" strokeWidth="2" fill="none" strokeLinecap="round" />
     {/* Articles dans le sac */}
-    <rect x="16" y="22" width="4" height="8" fill="#FFA500" rx="1" />
-    <rect x="22" y="20" width="4" height="10" fill="#FFA500" rx="1" />
-    <rect x="28" y="22" width="4" height="8" fill="#FFA500" rx="1" />
+    <rect x="16" y="22" width="4" height="8" fill="#009058" rx="1" />
+    <rect x="22" y="20" width="4" height="10" fill="#009058" rx="1" />
+    <rect x="28" y="22" width="4" height="8" fill="#009058" rx="1" />
   </svg>
 );
 
@@ -165,11 +165,11 @@ export const ProducersIcon = ({ className, size = 48 }: IconProps) => (
     <path d="M24 12Q36 8 38 18" stroke="url(#producerGrad)" strokeWidth="2.5" fill="none" strokeLinecap="round" />
     <path d="M24 20Q40 18 42 28" stroke="url(#producerGrad)" strokeWidth="2.5" fill="none" strokeLinecap="round" />
     {/* Fleur */}
-    <circle cx="24" cy="6" r="2" fill="#FFA500" />
-    <circle cx="20" cy="4" r="1.5" fill="#FFA500" />
-    <circle cx="28" cy="4" r="1.5" fill="#FFA500" />
-    <circle cx="22" cy="2" r="1.5" fill="#FFA500" />
-    <circle cx="26" cy="2" r="1.5" fill="#FFA500" />
+    <circle cx="24" cy="6" r="2" fill="#009058" />
+    <circle cx="20" cy="4" r="1.5" fill="#009058" />
+    <circle cx="28" cy="4" r="1.5" fill="#009058" />
+    <circle cx="22" cy="2" r="1.5" fill="#009058" />
+    <circle cx="26" cy="2" r="1.5" fill="#009058" />
   </svg>
 );
 
@@ -201,8 +201,8 @@ export const DigitalProductsIcon = ({ className, size = 48 }: IconProps) => (
     <rect x="20" y="30" width="8" height="3" fill="url(#digitalGrad)" />
     <rect x="18" y="33" width="12" height="2" fill="url(#digitalGrad)" />
     {/* Nuage (symbole digital) */}
-    <path d="M32 8Q38 8 40 12Q42 14 42 16" stroke="#FFA500" strokeWidth="1.5" fill="none" strokeLinecap="round" />
-    <circle cx="36" cy="12" r="1" fill="#FFA500" />
+    <path d="M32 8Q38 8 40 12Q42 14 42 16" stroke="#009058" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+    <circle cx="36" cy="12" r="1" fill="#009058" />
   </svg>
 );
 
@@ -236,7 +236,7 @@ export const TrackingIcon = ({ className, size = 48 }: IconProps) => (
     {/* Essieu */}
     <line x1="12" y1="34" x2="38" y2="34" stroke="url(#trackingGrad)" strokeWidth="1" />
     {/* Flèche de mouvement */}
-    <path d="M42 24L46 24M44 22L46 24L44 26" stroke="#FFA500" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    <path d="M42 24L46 24M44 22L46 24L44 26" stroke="#009058" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
   </svg>
 );
 
@@ -264,9 +264,9 @@ export const ProductIcon = ({ className, size = 48 }: IconProps) => (
     {/* Arête centrale */}
     <line x1="24" y1="6" x2="24" y2="24" stroke="#009058" strokeWidth="1" />
     {/* Décoration */}
-    <circle cx="24" cy="28" r="3" fill="#FFA500" />
-    <line x1="20" y1="28" x2="28" y2="28" stroke="#FFA500" strokeWidth="1" />
-    <line x1="24" y1="24" x2="24" y2="32" stroke="#FFA500" strokeWidth="1" />
+    <circle cx="24" cy="28" r="3" fill="#009058" />
+    <line x1="20" y1="28" x2="28" y2="28" stroke="#009058" strokeWidth="1" />
+    <line x1="24" y1="24" x2="24" y2="32" stroke="#009058" strokeWidth="1" />
   </svg>
 );
 
@@ -296,7 +296,7 @@ export const ServiceIcon = ({ className, size = 48 }: IconProps) => (
     <rect x="40" y="30" width="3" height="4" fill="url(#serviceGrad)" />
     {/* Engrenage décoratif */}
     <circle cx="16" cy="12" r="5" fill="none" stroke="url(#serviceGrad)" strokeWidth="2" />
-    <circle cx="16" cy="12" r="2" fill="#FFA500" />
+    <circle cx="16" cy="12" r="2" fill="#009058" />
     {/* Rayons */}
     <line x1="16" y1="7" x2="16" y2="5" stroke="url(#serviceGrad)" strokeWidth="1.5" />
     <line x1="16" y1="19" x2="16" y2="21" stroke="url(#serviceGrad)" strokeWidth="1.5" />
