@@ -63,12 +63,20 @@ async function main() {
   }
 
   if (!admin.apps.length) {
-    admin.initializeApp({
-      credential: admin.credential.cert(await getServiceAccount()),
-    });
+    if (process.env.SEED_AI_KNOWLEDGE_AUTH === 'service-account') {
+      admin.initializeApp({
+        credential: admin.credential.cert(await getServiceAccount()),
+      });
+    } else {
+      admin.initializeApp({
+        credential: admin.credential.applicationDefault(),
+        projectId: process.env.FIREBASE_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'studio-1153706651-6032b',
+      });
+    }
   }
 
   const db = admin.firestore();
+  db.settings({ preferRest: true });
   const batchSize = 400;
   let imported = 0;
 

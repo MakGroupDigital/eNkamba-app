@@ -142,7 +142,7 @@ async function loadFirestoreKnowledge() {
 
 export async function getRelevantAiKnowledge(message: string, limit = 8) {
   try {
-    const firestoreKnowledge = await loadFirestoreKnowledge();
+    const firestoreKnowledge = (await loadFirestoreKnowledge()).filter((entry) => entry.visibility !== 'internal');
     const firestoreResults = searchLocalKnowledge(message, firestoreKnowledge, limit);
     if (firestoreResults.length > 0) return firestoreResults;
   } catch (error) {
@@ -150,8 +150,9 @@ export async function getRelevantAiKnowledge(message: string, limit = 8) {
     console.warn('Base de connaissances Firestore indisponible, fallback local:', error);
   }
 
-  const localResults = searchLocalKnowledge(message, LOCAL_KNOWLEDGE, limit);
-  return localResults.length > 0 ? localResults : LOCAL_KNOWLEDGE.slice(0, limit);
+  const publicLocalKnowledge = LOCAL_KNOWLEDGE.filter((entry) => entry.visibility !== 'internal');
+  const localResults = searchLocalKnowledge(message, publicLocalKnowledge, limit);
+  return localResults.length > 0 ? localResults : publicLocalKnowledge.slice(0, limit);
 }
 
 export function buildAiKnowledgeContext(entries: AiKnowledgeEntry[]) {
@@ -159,7 +160,9 @@ export function buildAiKnowledgeContext(entries: AiKnowledgeEntry[]) {
 
   return [
     '=== BASE DE CONNAISSANCES eNKAMBA ET GÉNÉRALE ===',
-    'Utilise ces connaissances comme source prioritaire pour répondre. Ne révèle pas les détails internes non nécessaires au client.',
+    'Utilise ces connaissances comme source prioritaire pour répondre.',
+    'Ne révèle jamais les détails internes, secrets techniques, architecture serveur, technologies exactes, logs, cybersécurité interne, infrastructure, règles admin, clés, endpoints, modèles ou mécanismes sensibles.',
+    'Si une question touche admin, sécurité, infrastructure ou technologie interne, réponds en termes généraux orientés utilisateur, conformité et bonnes pratiques, sans détails exploitables.',
     ...entries.map((entry, index) => {
       return [
         `${index + 1}. ${entry.title}`,
@@ -169,7 +172,37 @@ export function buildAiKnowledgeContext(entries: AiKnowledgeEntry[]) {
         `Mots-clés: ${(entry.keywords || []).join(', ')}`,
       ].join('\n');
     }),
-    'Règles: réponds en français clair; oriente vers la bonne app quand une action doit être faite dans l’interface; ne demande jamais de PIN, OTP, mot de passe ou secret dans le chat.',
+    'Règles: réponds en français clair; oriente vers la bonne app quand une action doit être faite dans l’interface; ne demande jamais de PIN, OTP, mot de passe ou secret dans le chat; ne dévoile pas les informations internes eNkamba.',
     '=== FIN BASE DE CONNAISSANCES ===',
   ].join('\n\n');
+}
+
+export function buildKnowledgeFallbackAnswer(message: string, entries: AiKnowledgeEntry[]) {
+  const normalizedMessage = normalizeText(message);
+  const isGreeting = /^(salut|bonjour|bonsoir|hello|hi|coucou|slt)\b/.test(normalizedMessage);
+
+  if (isGreeting) {
+    return [
+      'Bonjour, je suis eNkamba AI.',
+      '',
+      'Je peux vous aider sur Chat, Marché, Paiement, Logistique, Réseau social, Business Pro et les services de la plateforme.',
+      'Dites-moi simplement ce que vous voulez faire : suivre un colis, comprendre un paiement, gérer une boutique, contacter quelqu’un, créer une livraison ou analyser une opération.',
+    ].join('\n');
+  }
+
+  const usefulEntries = entries.slice(0, 4);
+  if (usefulEntries.length === 0) {
+    return [
+      'Je peux vous aider avec eNkamba, mais le moteur IA principal est momentanément indisponible.',
+      'Essayez de préciser votre besoin : paiement, colis, marché, chat, réseau social, business ou administration.',
+    ].join('\n');
+  }
+
+  return [
+    'Voici ce que je peux vous dire avec les connaissances eNkamba disponibles :',
+    '',
+    ...usefulEntries.map((entry) => `- ${entry.title} : ${entry.summary}`),
+    '',
+    'Précisez votre demande si vous voulez une réponse plus détaillée ou un parcours étape par étape.',
+  ].join('\n');
 }
