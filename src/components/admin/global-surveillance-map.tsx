@@ -253,9 +253,7 @@ export function GlobalSurveillanceMap() {
             </div>
 
             <h2 className="mt-3 font-headline text-2xl font-black md:text-3xl">Centre d'administration global eNkamba</h2>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-              Centre de contrôle GPS en temps réel. La carte affiche uniquement les points utilisateurs pour rester lisible.
-            </p>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">Centre de contrôle GPS en temps réel.</p>
           </div>
 
           <div className="grid grid-cols-3 gap-2 lg:min-w-[390px]">
