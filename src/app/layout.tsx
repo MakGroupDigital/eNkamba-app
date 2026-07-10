@@ -11,6 +11,7 @@ import { CurrencyInitializer } from "@/components/currency/CurrencyInitializer";
 import { GlobalAutoTranslator } from "@/components/translation/GlobalAutoTranslator";
 import { UserPinAccessGate } from "@/components/security/UserPinAccessGate";
 import { AdminTelemetryAgent } from "@/components/admin/admin-telemetry-agent";
+import { AppSplashScreen } from "@/components/app-splash-screen";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://enkamba.app"),
@@ -81,6 +82,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <AppSplashScreen />
           <CurrencyInitializer />
           <UserPinAccessGate>
             <AccessCodeGate>
