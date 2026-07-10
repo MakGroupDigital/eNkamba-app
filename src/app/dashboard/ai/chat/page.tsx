@@ -296,7 +296,10 @@ export default function AiChatDefaultPage() {
                 return (
                   <button
                     key={item.key}
-                    onClick={() => setAiOptions((current) => ({ ...current, [item.key]: !current[item.key] }))}
+                    onClick={() => {
+                      setAiOptions((current) => ({ ...current, [item.key]: !current[item.key] }));
+                      setOptionsOpen(false);
+                    }}
                     className={`flex items-center justify-center gap-2 rounded-2xl px-3 py-2 text-[11px] font-black transition ${
                       active ? 'bg-primary text-white' : 'bg-white/7 text-white/70 hover:bg-white/12'
                     }`}

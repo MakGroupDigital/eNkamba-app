@@ -133,6 +133,22 @@ export default function ConversationClient() {
     const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
     const videoPreviewRef = useRef<HTMLVideoElement>(null);
     const audioContextRef = useRef<AudioContext | null>(null);
+
+    useEffect(() => {
+        window.dispatchEvent(
+            new CustomEvent('enkamba:hub-navigation-visibility', {
+                detail: { hidden: showSmartKeyboard },
+            })
+        );
+
+        return () => {
+            window.dispatchEvent(
+                new CustomEvent('enkamba:hub-navigation-visibility', {
+                    detail: { hidden: false },
+                })
+            );
+        };
+    }, [showSmartKeyboard]);
     const analyserRef = useRef<AnalyserNode | null>(null);
     const animationFrameRef = useRef<number | null>(null);
     const activeWallpaper = getChatWallpaper(conversationWallpaper || chatSettings.wallpaper);
@@ -2029,7 +2045,11 @@ export default function ConversationClient() {
             )}
 
             {/* Fixed Input Footer */}
-            <footer className="z-30 mb-[calc(88px+env(safe-area-inset-bottom))] flex max-h-[30vh] flex-shrink-0 flex-col overflow-y-auto border-t bg-background shadow-lg md:mb-[calc(128px+env(safe-area-inset-bottom))]">
+            <footer className={`z-30 flex max-h-[30vh] flex-shrink-0 flex-col overflow-y-auto border-t bg-background shadow-lg ${
+                showSmartKeyboard
+                    ? 'mb-[calc(12px+env(safe-area-inset-bottom))]'
+                    : 'mb-[calc(88px+env(safe-area-inset-bottom))] md:mb-[calc(128px+env(safe-area-inset-bottom))]'
+            }`}>
                 <div className="px-4 pt-3 pb-2 space-y-3">
                 
                 {/* Edit Preview */}

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { remote_web_search } from '@/lib/web-search';
 import { buildAiPlatformContext } from '@/lib/ai-service-context';
+import { buildAiKnowledgeContext, getRelevantAiKnowledge } from '@/lib/ai-knowledge';
 
 interface RequestBody {
   message: string;
@@ -49,9 +50,21 @@ export async function POST(request: NextRequest) {
     }
 
     const platformContext = buildAiPlatformContext(message);
+    const knowledgeEntries = await getRelevantAiKnowledge(message, 8);
+    const knowledgeContext = buildAiKnowledgeContext(knowledgeEntries);
 
     // Construire le prompt avec les options
-    let systemPrompt = `Tu es eNkamba AI, un assistant IA intelligent développé par Global Solution and Services SARL. Tu aides les utilisateurs en tenant compte des services réellement disponibles dans la plateforme. Réponds toujours en français de manière professionnelle et utile.\n\n${platformContext}`;
+    let systemPrompt = [
+      'Tu es eNkamba AI, un assistant IA intelligent développé par Global Solution and Services SARL.',
+      'Tu aides les utilisateurs en tenant compte des services réellement disponibles dans la plateforme eNkamba.',
+      'Tu dois prioriser la base de connaissances eNkamba fournie ci-dessous, puis compléter avec tes connaissances générales lorsque c’est utile.',
+      'Quand une information concerne un état réel, une transaction, un colis, une commande ou un compte utilisateur, explique où consulter l’information dans l’app au lieu d’inventer une donnée.',
+      'Réponds toujours en français de manière professionnelle, claire, utile et concise.',
+      '',
+      platformContext,
+      '',
+      knowledgeContext,
+    ].join('\n');
     
     if (options.reflection) {
       systemPrompt += ' Réfléchis profondément à la question avant de répondre.';
@@ -69,9 +82,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Construire le message final
-    let finalMessage = `${message}\n\n${platformContext}`;
+    let finalMessage = `${message}\n\n${platformContext}\n\n${knowledgeContext}`;
     if (searchContext) {
-      finalMessage = `${message}\n\n${platformContext}${searchContext}`;
+      finalMessage = `${message}\n\n${platformContext}\n\n${knowledgeContext}${searchContext}`;
     }
 
     // Appeler Groq API

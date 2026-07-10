@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev --turbopack -p 9002",
     "icons:logistics": "node scripts/generate-logistics-icons.mjs",
+    "seed:ai-knowledge": "node scripts/seed-ai-knowledge.mjs",
     "turn:env": "bash scripts/generate-turn-env.sh",
     "genkit:dev": "genkit start -- tsx src/ai/dev.ts",
     "genkit:watch": "genkit start -- tsx --watch src/ai/dev.ts",

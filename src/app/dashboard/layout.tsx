@@ -20,6 +20,7 @@ export default function DashboardLayout({
   const pathname = usePathname() ?? '';
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('Chat');
+  const [hideHubNavigation, setHideHubNavigation] = useState(false);
   usePushNotifications();
   // useSupabaseNotifications(); // Disabled - Supabase realtime not needed
 
@@ -75,12 +76,28 @@ export default function DashboardLayout({
     highTrafficRoutes.forEach((route) => router.prefetch(route));
   }, [router]);
 
-  const showMasoloButton = !pathname.includes('/miyiki-chat');
   const isChatSubpage = pathname.startsWith('/dashboard/miyiki-chat/') && pathname !== '/dashboard/miyiki-chat';
   const isAiPage = pathname.startsWith('/dashboard/ai');
+  const showMasoloButton = !pathname.includes('/miyiki-chat') && !isAiPage;
   const isUgaviHome = pathname === '/dashboard/ugavi' || pathname === '/dashboard/ugavi/';
   const isCallPage = pathname.includes('/dashboard/miyiki-chat/audiocall/') || pathname.includes('/dashboard/miyiki-chat/call/');
   const showLogisticsClientButton = !isCallPage && !isUgaviHome;
+
+  useEffect(() => {
+    const handleHubNavigationVisibility = (event: Event) => {
+      const customEvent = event as CustomEvent<{ hidden?: boolean }>;
+      setHideHubNavigation(Boolean(customEvent.detail?.hidden));
+    };
+
+    window.addEventListener('enkamba:hub-navigation-visibility', handleHubNavigationVisibility);
+    return () => {
+      window.removeEventListener('enkamba:hub-navigation-visibility', handleHubNavigationVisibility);
+    };
+  }, []);
+
+  useEffect(() => {
+    setHideHubNavigation(false);
+  }, [pathname]);
 
   return (
     <AuthGuard>
@@ -108,7 +125,7 @@ export default function DashboardLayout({
             </button>
           )}
 
-          {!isCallPage && <HubNavigation activeTab={activeTab} setActiveTab={setActiveTab} />}
+          {!isCallPage && !hideHubNavigation && <HubNavigation activeTab={activeTab} setActiveTab={setActiveTab} />}
           
           {/* Modal de notification de transfert reçu */}
           <TransferNotificationModal />
