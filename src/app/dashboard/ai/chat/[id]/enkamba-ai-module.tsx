@@ -1,138 +1,311 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Send, MessageSquare, Settings, User, Bell, LogOut, Clock, Trash2, ShieldCheck, Zap, Volume2 } from 'lucide-react';
-import { useUser } from '@clerk/nextjs';
+import { type Dispatch, type SetStateAction, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Bell, BookOpen, Brain, Clock, Code2, CreditCard, Menu, Mic, Plus, Search, Send, Settings, SlidersHorizontal, Trash2, X, Zap } from 'lucide-react';
+
 import { useFirestoreAiChat } from '@/hooks/useFirestoreAiChat';
+import { useAuth } from '@/hooks/useAuth';
+import { EnkambaAIIcon } from '@/components/icons/service-icons';
 
-// --- CONFIGURATION DU STYLE & POLICES ---
-const Styles = () => (
-  <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Roboto:wght@300;400;500;700&display=swap');
-    :root {
-      --color-primary: #009058;
-      --color-dark: #009058;
-      --color-accent: #FFA500;
-    }
-    body {
-      font-family: 'Roboto', sans-serif;
-      background-color: var(--color-dark);
-      color: white;
-      margin: 0;
-    }
-    h1, h2, h3, .font-brand {
-      font-family: 'Montserrat', sans-serif;
-    }
-    ::-webkit-scrollbar {
-      width: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: rgba(50, 187, 120, 0.3);
-      border-radius: 10px;
-    }
-    .glass-panel {
-      background: rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    .bubble-user {
-      background-color: #009058;
-      box-shadow: 0 4px 15px rgba(50, 187, 120, 0.3);
-    }
-    .bubble-ai {
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-    }
-    .ai-glow {
-      position: absolute;
-      width: 400px;
-      height: 400px;
-      background: radial-gradient(circle, rgba(50,187,120,0.12) 0%, rgba(26,61,42,0) 70%);
-      top: -150px;
-      right: -150px;
-      pointer-events: none;
-      z-index: 0;
-    }
-    .setting-card {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      transition: all 0.2s ease;
-    }
-    .setting-card:hover {
-      background: rgba(255, 255, 255, 0.06);
-      border-color: #009058;
-    }
-  `}</style>
-);
+type ModuleTab = 'assistant' | 'history' | 'settings';
+type AiOptions = {
+  advanced: boolean;
+  code: boolean;
+  literature: boolean;
+  searchWeb: boolean;
+};
 
-// --- LOGO ---
-const Logo = () => (
-  <div className="flex flex-col items-center mb-10 mt-8">
-    <div className="relative w-16 h-16 mb-4 group cursor-pointer">
-      <div className="absolute inset-0 bg-[#009058] opacity-20 blur-xl rounded-full group-hover:opacity-40 transition-opacity"></div>
-      <svg viewBox="0 0 100 100" className="w-full h-full relative z-10">
-        <path d="M25 80 L25 30 Q25 20 35 25 L65 55 Q75 60 75 50 L75 20" stroke="#009058" strokeWidth="14" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-        <path d="M75 20 L55 20 M75 20 L75 40" stroke="#009058" strokeWidth="14" strokeLinecap="round" strokeLinejoin="round" />
-        <circle cx="88" cy="15" r="4" fill="#FFA500" className="animate-pulse" />
-      </svg>
+const quickPrompts = [
+  'Explique-moi eNkamba simplement',
+  'Aide-moi à vendre plus sur Marché',
+  'Comment sécuriser mes paiements ?',
+  'Prépare un plan logistique',
+];
+
+const optionItems: Array<{ key: keyof AiOptions; label: string; icon: any }> = [
+  { key: 'advanced', label: 'Avancé', icon: Brain },
+  { key: 'code', label: 'Code', icon: Code2 },
+  { key: 'literature', label: 'Littérature', icon: BookOpen },
+  { key: 'searchWeb', label: 'Recherche', icon: Search },
+];
+
+function AiMark({ size = 48 }: { size?: number }) {
+  return (
+    <div className="relative grid place-items-center" style={{ width: size, height: size }}>
+      <span className="absolute inset-0 rounded-full bg-primary/25 blur-2xl" />
+      <span className="absolute h-1/2 w-1/2 rounded-full bg-[#FFA500]/20 blur-xl" />
+      <EnkambaAIIcon size={size} className="relative drop-shadow-[0_0_24px_rgba(10,139,70,0.45)]" />
     </div>
-    <div className="font-brand font-bold text-xl tracking-wide">
-      eNkamba<span className="font-light text-[#009058]">.ai</span>
-    </div>
-  </div>
-);
+  );
+}
 
-// --- SIDEBAR ---
-const Sidebar = ({ activeTab, setActiveTab }: any) => {
-  const menuItems = [
-    { id: 'assistant', icon: MessageSquare, label: 'Assistant IA' },
-    { id: 'history', icon: Clock, label: 'Historique' },
-    { id: 'settings', icon: Settings, label: 'Paramètres' },
+function getLocalGreeting() {
+  const hour = new Date().getHours();
+  if (hour >= 18 || hour < 5) return 'Bonsoir';
+  return 'Bonjour';
+}
+
+function AnimatedAiBackground() {
+  return (
+    <>
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_48%_72%,rgba(10,139,70,0.36),transparent_35%),radial-gradient(circle_at_82%_16%,rgba(255,165,0,0.16),transparent_28%),linear-gradient(180deg,#020403_0%,#050706_58%,#07180f_100%)]" />
+      <div className="pointer-events-none absolute -left-24 top-1/4 h-72 w-72 animate-pulse rounded-full bg-primary/20 blur-3xl" />
+      <div className="pointer-events-none absolute -right-20 bottom-24 h-80 w-80 animate-pulse rounded-full bg-[#FFA500]/12 blur-3xl [animation-delay:900ms]" />
+      <div className="pointer-events-none absolute inset-x-8 bottom-20 h-44 rounded-[999px] bg-primary/18 blur-3xl" />
+      <div className="pointer-events-none absolute left-[18%] top-[22%] h-2 w-2 animate-bounce rounded-full bg-white/40 [animation-duration:3.5s]" />
+      <div className="pointer-events-none absolute right-[24%] top-[36%] h-1.5 w-1.5 animate-bounce rounded-full bg-[#FFA500]/70 [animation-duration:4.2s]" />
+      <div className="pointer-events-none absolute left-[55%] top-[18%] h-1 w-1 animate-pulse rounded-full bg-primary" />
+    </>
+  );
+}
+
+function UserAvatar({ photoURL, initial }: { photoURL?: string | null; initial: string }) {
+  return (
+    <div className="grid h-12 w-12 overflow-hidden rounded-full border border-white/15 bg-white text-primary shadow-2xl">
+      {photoURL ? (
+        <img src={photoURL} alt="Profil" className="h-full w-full object-cover" />
+      ) : (
+        <span className="m-auto text-sm font-black">{initial}</span>
+      )}
+    </div>
+  );
+}
+
+function AiSideMenu({
+  open,
+  onClose,
+  activeTab,
+  setActiveTab,
+  aiChats,
+  onOpenChat,
+  onDeleteChat,
+  onNewChat,
+}: {
+  open: boolean;
+  onClose: () => void;
+  activeTab: ModuleTab;
+  setActiveTab: (tab: ModuleTab) => void;
+  aiChats: any[];
+  onOpenChat: (id: string) => void;
+  onDeleteChat: (id: string) => void;
+  onNewChat: () => void;
+}) {
+  if (!open) return null;
+
+  const items: Array<{ id: ModuleTab; label: string; icon: any }> = [
+    { id: 'assistant', label: 'Assistant intelligent', icon: EnkambaAIIcon },
+    { id: 'history', label: 'Historique récent', icon: Clock },
+    { id: 'settings', label: 'Préférences IA', icon: Settings },
   ];
 
   return (
-    <div className="hidden md:flex flex-col w-72 h-full glass-panel border-r-0 z-20 relative">
-      <Logo />
-      <div className="flex flex-col gap-2 px-4 flex-1">
-        <div className="px-4 py-2 text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] mb-2">Navigation AI</div>
-        {menuItems.map((item: any) => (
-          <button
-            key={item.id}
-            onClick={() => setActiveTab(item.id)}
-            className={`flex items-center gap-3 p-4 rounded-xl font-medium transition-all duration-200 ${
-              activeTab === item.id
-                ? 'bg-[#009058] text-white shadow-lg shadow-[#009058]/20'
-                : 'text-gray-400 hover:bg-white/5 hover:text-white'
-            }`}
-          >
-            <item.icon size={20} />
-            <span className="font-brand text-sm">{item.label}</span>
+    <div className="fixed inset-0 z-50">
+      <button className="absolute inset-0 bg-black/55 backdrop-blur-sm" onClick={onClose} aria-label="Fermer le menu" />
+      <aside className="relative h-full w-[86vw] max-w-sm border-r border-white/10 bg-[#050806]/95 p-4 text-white shadow-2xl">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-[11px] font-black uppercase tracking-[0.24em] text-primary">Miyiki AI</p>
+            <h2 className="mt-1 text-xl font-black">Centre IA</h2>
+          </div>
+          <button onClick={onClose} className="grid h-10 w-10 place-items-center rounded-full bg-white/8 text-white">
+            <X className="h-5 w-5" />
           </button>
-        ))}
+        </div>
+
+        <div className="mt-5 grid gap-2">
+          <button onClick={onNewChat} className="flex items-center gap-3 rounded-2xl bg-primary px-4 py-3 text-sm font-black text-white">
+            <Plus className="h-5 w-5" />
+            Nouvelle conversation
+          </button>
+          <button onClick={() => onOpenChat('__subscription__')} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/7 px-4 py-3 text-left text-sm font-bold text-white/82">
+            <CreditCard className="h-5 w-5 text-[#FFA500]" />
+            Mon abonnement
+          </button>
+          {items.map((item) => {
+            const Icon = item.icon;
+            const active = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  setActiveTab(item.id);
+                  onClose();
+                }}
+                className={`flex items-center gap-3 rounded-2xl border px-4 py-3 text-left text-sm font-bold transition ${
+                  active ? 'border-primary/70 bg-primary text-white' : 'border-white/10 bg-white/7 text-white/82'
+                }`}
+              >
+                {item.id === 'assistant' ? (
+                  <EnkambaAIIcon size={22} />
+                ) : (
+                  <Icon className={`h-5 w-5 ${active ? 'text-white' : 'text-[#FFA500]'}`} />
+                )}
+                {item.label}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="mt-6">
+          <p className="mb-3 text-[11px] font-black uppercase tracking-[0.22em] text-white/40">Historiques</p>
+          <div className="max-h-[48vh] space-y-2 overflow-y-auto pr-1">
+            {aiChats.length === 0 ? (
+              <div className="rounded-2xl border border-white/10 bg-white/7 p-4 text-xs font-semibold text-white/55">
+                Aucune conversation pour le moment.
+              </div>
+            ) : (
+              aiChats.map((chat) => (
+                <div key={chat.id} className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/7 p-2">
+                  <button onClick={() => onOpenChat(chat.id)} className="min-w-0 flex-1 px-2 py-2 text-left">
+                    <p className="truncate text-sm font-black text-white">{chat.title}</p>
+                    <p className="mt-1 text-[11px] font-semibold text-white/40">Conversation IA</p>
+                  </button>
+                  <button onClick={() => onDeleteChat(chat.id)} className="grid h-9 w-9 place-items-center rounded-full text-white/45 hover:bg-red-500/15 hover:text-red-300">
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </aside>
+    </div>
+  );
+}
+
+function TopBar({
+  userInitial,
+  userPhoto,
+  onOpenMenu,
+}: {
+  userInitial: string;
+  userPhoto?: string | null;
+  onOpenMenu: () => void;
+}) {
+  return (
+    <header className="absolute inset-x-0 top-0 z-30 px-4 pt-4 sm:px-6">
+      <div className="mx-auto flex max-w-5xl items-center justify-between gap-3">
+        <button
+          type="button"
+          onClick={onOpenMenu}
+          className="grid h-12 w-12 place-items-center rounded-full border border-white/10 bg-white/8 text-white shadow-2xl backdrop-blur-xl transition hover:bg-white/12"
+          aria-label="Menu eNkamba AI"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+
+        <div className="flex-1" />
+
+        <div className="flex items-center gap-2">
+          <button className="hidden h-11 w-11 place-items-center rounded-full border border-white/10 bg-white/8 text-white backdrop-blur-xl transition hover:bg-white/12 sm:grid">
+            <Bell className="h-4 w-4" />
+          </button>
+          <UserAvatar photoURL={userPhoto} initial={userInitial} />
+        </div>
       </div>
-      <div className="p-6 mt-auto">
-        <button className="flex items-center gap-3 text-gray-500 hover:text-[#DC2626] transition-colors w-full p-2 text-sm font-medium">
-          <LogOut size={18} />
-          <span>Quitter</span>
+    </header>
+  );
+}
+
+function FloatingComposer({
+  input,
+  setInput,
+  isLoading,
+  options,
+  setOptions,
+  onSend,
+}: {
+  input: string;
+  setInput: (value: string) => void;
+  isLoading: boolean;
+  options: AiOptions;
+  setOptions: Dispatch<SetStateAction<AiOptions>>;
+  onSend: () => void;
+}) {
+  const [optionsOpen, setOptionsOpen] = useState(false);
+  const hasActiveOptions = Object.values(options).some(Boolean);
+
+  return (
+    <div className="fixed inset-x-0 bottom-[calc(92px+env(safe-area-inset-bottom))] z-40 mx-auto w-full max-w-2xl px-3 sm:px-6 md:bottom-[calc(108px+env(safe-area-inset-bottom))]">
+      {optionsOpen && (
+        <div className="mb-2 grid grid-cols-2 gap-2 rounded-3xl border border-white/10 bg-black/70 p-2 text-white shadow-2xl backdrop-blur-2xl sm:grid-cols-4">
+          {optionItems.map((item) => {
+            const Icon = item.icon;
+            const active = options[item.key];
+            return (
+              <button
+                key={item.key}
+                onClick={() => setOptions((current) => ({ ...current, [item.key]: !current[item.key] }))}
+                className={`flex items-center justify-center gap-2 rounded-2xl px-3 py-2 text-[11px] font-black transition ${
+                  active ? 'bg-primary text-white' : 'bg-white/7 text-white/70 hover:bg-white/12'
+                }`}
+              >
+                <Icon className={`h-4 w-4 ${active ? 'text-white' : 'text-[#FFA500]'}`} />
+                {item.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+      <div className="flex items-end gap-1.5 rounded-[1.35rem] border border-white/10 bg-[#171B1A]/95 p-1.5 shadow-[0_20px_70px_rgba(0,0,0,0.45)] backdrop-blur-2xl">
+        <button className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-white/90 transition hover:bg-white/8">
+          <Plus className="h-5 w-5" />
+        </button>
+        <button
+          onClick={() => setOptionsOpen((value) => !value)}
+          className={`grid h-9 w-9 shrink-0 place-items-center rounded-full transition ${
+            hasActiveOptions || optionsOpen ? 'bg-primary text-white' : 'text-white/85 hover:bg-white/8'
+          }`}
+          aria-label="Paramètres IA"
+        >
+          <SlidersHorizontal className="h-[18px] w-[18px]" />
+        </button>
+        <textarea
+          value={input}
+          onChange={(event) => setInput(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' && !event.shiftKey) {
+              event.preventDefault();
+              onSend();
+            }
+          }}
+          disabled={isLoading}
+          placeholder="Demander à eNkamba AI..."
+          rows={1}
+          className="max-h-24 min-h-9 min-w-0 flex-1 resize-none bg-transparent py-1.5 text-sm font-semibold leading-6 text-white outline-none placeholder:text-white/45 disabled:opacity-50"
+        />
+        <button className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-white/85 transition hover:bg-white/8">
+          <Mic className="h-[18px] w-[18px]" />
+        </button>
+        <button
+          onClick={onSend}
+          disabled={isLoading || !input.trim()}
+          className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary text-white shadow-lg shadow-primary/25 transition hover:scale-105 disabled:scale-100 disabled:opacity-50"
+          aria-label="Envoyer"
+        >
+          {isLoading ? <Zap className="h-[18px] w-[18px] animate-pulse" /> : <Send className="h-[18px] w-[18px]" />}
         </button>
       </div>
     </div>
   );
-};
+}
 
-// --- CHAT ---
-const ChatInterface = ({ chatId }: { chatId: string }) => {
+function ChatInterface({ chatId }: { chatId: string }) {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [aiOptions, setAiOptions] = useState<AiOptions>({
+    advanced: false,
+    code: false,
+    literature: false,
+    searchWeb: false,
+  });
   const [messages, setMessages] = useState<any[]>([]);
-  const messagesEndRef = useRef<any>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const { sendAiMessage, loadAiMessages } = useFirestoreAiChat();
-  const { user } = useUser();
+  const { user } = useAuth();
+  const userName = user?.displayName?.split(' ')[0] || user?.email?.split('@')[0] || 'Utilisateur';
+  const greeting = getLocalGreeting();
 
   useEffect(() => {
     if (!chatId) return;
@@ -142,7 +315,7 @@ const ChatInterface = ({ chatId }: { chatId: string }) => {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages, isLoading]);
 
   const handleSend = async (text = input) => {
     if (!text.trim() || isLoading) return;
@@ -152,175 +325,196 @@ const ChatInterface = ({ chatId }: { chatId: string }) => {
     try {
       const response = await fetch('/api/ai/enhanced-chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: text,
-          conversationHistory: messages.map((m) => ({
-            role: m.role,
-            content: m.text,
-          })),
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+          message: aiOptions.literature
+            ? `${text}\n\nRéponds avec un style littéraire, clair et élégant, sans perdre la précision.`
+            : text,
+          options: {
+            searchWeb: aiOptions.searchWeb,
+            analysis: aiOptions.advanced,
+            reflection: aiOptions.advanced,
+            code: aiOptions.code,
+          },
         }),
       });
 
       if (!response.ok) throw new Error('Erreur API');
-      const data = await response.json();
-      await sendAiMessage(chatId, text, data.response || 'Erreur');
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error('Pas de réponse');
+
+      const decoder = new TextDecoder();
+      let aiResponseText = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        aiResponseText += decoder.decode(value);
+      }
+
+      await sendAiMessage(chatId, text, aiResponseText || 'Réponse indisponible.');
     } catch (error) {
-      console.error('Erreur:', error);
-      await sendAiMessage(chatId, text, 'Désolé, une erreur s\'est produite.');
+      console.error('Erreur IA:', error);
+      await sendAiMessage(chatId, text, "Désolé, je n'ai pas pu répondre maintenant.");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-[#009058] relative overflow-hidden">
-      <div className="ai-glow"></div>
-      <header className="h-20 flex items-center justify-between px-8 border-b border-white/5 bg-[#009058]/80 backdrop-blur-md z-10">
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-full bg-[#009058]/10 flex items-center justify-center border border-[#009058]/20">
-            <MessageSquare size={18} className="text-[#009058]" />
-          </div>
-          <div>
-            <h1 className="font-brand font-bold text-lg">Assistant eNkamba</h1>
-            <span className="text-[10px] text-[#009058] uppercase font-bold tracking-widest">Actif</span>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <button className="p-2 text-gray-400 hover:text-white">
-            <Bell size={20} />
-          </button>
-          <div className="w-8 h-8 rounded-full bg-[#009058] flex items-center justify-center font-bold text-xs">
-            {user?.firstName?.substring(0, 1) || 'U'}
-          </div>
-        </div>
-      </header>
-      <main className="flex-1 overflow-y-auto p-6 space-y-6 relative z-0">
-        {messages.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <MessageSquare size={48} className="text-[#009058] mb-4 opacity-50" />
-            <p className="text-gray-400">Commencez une conversation</p>
-          </div>
-        )}
-        {messages.map((msg: any) => (
-          <div key={msg.id} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-            <div className={`flex gap-3 max-w-[80%] ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-              <div className={`p-4 rounded-2xl text-sm leading-relaxed ${msg.role === 'user' ? 'bubble-user text-white' : 'bubble-ai text-gray-100'}`}>
-                {msg.text}
+    <section className="flex h-full flex-col">
+      <main className="relative z-10 flex-1 overflow-y-auto px-4 pb-48 pt-24 sm:px-6 md:pb-52">
+        <div className="mx-auto flex min-h-full max-w-4xl flex-col justify-end">
+          {messages.length === 0 ? (
+            <div className="flex flex-1 flex-col items-center justify-start pt-2 text-center">
+              <AiMark size={58} />
+              <h1 className="mt-5 text-3xl font-light tracking-normal text-white sm:text-5xl">
+                {greeting}, {userName}
+              </h1>
+              <p className="mt-3 max-w-md text-sm font-medium leading-6 text-white/55">
+                En quoi puis-je vous aider aujourd'hui ?
+              </p>
+              <div className="mt-5 grid w-full max-w-2xl grid-cols-1 gap-2 sm:grid-cols-2">
+                {quickPrompts.map((prompt) => (
+                  <button
+                    key={prompt}
+                    onClick={() => setInput(prompt)}
+                    className="rounded-2xl border border-white/10 bg-white/7 px-4 py-3 text-left text-xs font-bold text-white/78 shadow-xl backdrop-blur-xl transition hover:border-primary/40 hover:bg-primary/12 hover:text-white"
+                  >
+                    {prompt}
+                  </button>
+                ))}
               </div>
             </div>
-          </div>
-        ))}
-        {isLoading && <div className="text-xs text-[#009058] animate-pulse">eNkamba réfléchit...</div>}
-        <div ref={messagesEndRef} />
+          ) : (
+            <div className="space-y-5 pb-4">
+              {messages.map((message) => (
+                <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div
+                    className={`max-w-[86%] rounded-[1.35rem] px-4 py-3 text-sm leading-6 shadow-xl backdrop-blur-xl sm:max-w-[76%] ${
+                      message.role === 'user'
+                        ? 'rounded-br-md bg-primary text-white shadow-primary/18'
+                        : 'rounded-bl-md border border-white/10 bg-white/8 text-white/88'
+                    }`}
+                  >
+                    <p className="whitespace-pre-wrap">{message.text}</p>
+                  </div>
+                </div>
+              ))}
+              {isLoading && (
+                <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/8 px-4 py-2 text-xs font-bold text-white/65 backdrop-blur-xl">
+                  <span className="h-2 w-2 animate-pulse rounded-full bg-[#FFA500]" />
+                  eNkamba AI réfléchit...
+                </div>
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+          )}
+        </div>
       </main>
-      <footer className="p-6 bg-[#009058] border-t border-white/5">
-        <div className="max-w-4xl mx-auto relative">
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && !isLoading && handleSend()}
-            disabled={isLoading}
-            className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-6 pr-14 outline-none focus:border-[#009058] transition-all disabled:opacity-50"
-            placeholder="Écrivez votre message..."
-          />
-          <button
-            onClick={() => handleSend()}
-            disabled={isLoading}
-            className="absolute right-2 top-2 bottom-2 aspect-square bg-[#009058] rounded-lg flex items-center justify-center text-white disabled:opacity-50"
-          >
-            <Send size={18} />
-          </button>
-        </div>
-      </footer>
-    </div>
+      <FloatingComposer input={input} setInput={setInput} isLoading={isLoading} options={aiOptions} setOptions={setAiOptions} onSend={() => handleSend()} />
+    </section>
   );
-};
+}
 
-// --- HISTORIQUE ---
-const HistoryPage = ({ aiChats, onDeleteChat }: any) => (
-  <div className="flex-1 p-10 overflow-y-auto">
-    <div className="max-w-3xl mx-auto">
-      <h2 className="text-3xl font-brand font-bold mb-8">Historique</h2>
-      <div className="space-y-4">
-        {aiChats.map((chat: any) => (
-          <div key={chat.id} className="setting-card p-5 rounded-2xl flex items-center justify-between group">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-[#009058]/10 rounded-xl flex items-center justify-center">
-                <MessageSquare size={20} className="text-[#009058]" />
-              </div>
-              <div>
-                <h4 className="font-bold text-sm">{chat.title}</h4>
-                <p className="text-xs text-gray-500">{new Date(chat.createdAt?.toDate?.() || chat.createdAt).toLocaleDateString()}</p>
-              </div>
+function HistoryPage({ aiChats, onDeleteChat }: any) {
+  return (
+    <section className="relative z-10 h-full overflow-y-auto px-4 pb-32 pt-28 text-white sm:px-6">
+      <div className="mx-auto max-w-3xl">
+        <p className="text-xs font-black uppercase tracking-[0.22em] text-primary">Conversations</p>
+        <h2 className="mt-2 text-3xl font-black">Historique</h2>
+        <div className="mt-6 space-y-3">
+          {aiChats.length === 0 ? (
+            <div className="rounded-3xl border border-white/10 bg-white/8 p-6 text-sm text-white/60 backdrop-blur-xl">
+              Aucune conversation enregistrée.
             </div>
-            <button
-              onClick={() => onDeleteChat(chat.id)}
-              className="p-2 opacity-0 group-hover:opacity-100 text-gray-500 hover:text-[#DC2626] transition-all"
-            >
-              <Trash2 size={18} />
-            </button>
-          </div>
-        ))}
+          ) : (
+            aiChats.map((chat: any) => (
+              <div key={chat.id} className="group flex items-center justify-between gap-3 rounded-3xl border border-white/10 bg-white/8 p-4 backdrop-blur-xl transition hover:bg-white/12">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-black">{chat.title}</p>
+                  <p className="mt-1 text-xs text-white/45">{new Date(chat.createdAt?.toDate?.() || chat.createdAt).toLocaleDateString('fr-FR')}</p>
+                </div>
+                <button onClick={() => onDeleteChat(chat.id)} className="grid h-10 w-10 place-items-center rounded-full text-white/45 transition hover:bg-red-500/15 hover:text-red-300">
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            ))
+          )}
+        </div>
       </div>
-    </div>
-  </div>
-);
+    </section>
+  );
+}
 
-// --- PARAMÈTRES ---
-const SettingsPage = () => (
-  <div className="flex-1 p-10 overflow-y-auto">
-    <div className="max-w-3xl mx-auto">
-      <h2 className="text-3xl font-brand font-bold mb-8">Paramètres AI</h2>
-      <div className="grid gap-6">
-        <section className="space-y-4">
-          <h3 className="text-xs font-bold text-[#009058] uppercase tracking-widest">Préférences</h3>
-          <div className="setting-card p-5 rounded-2xl flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Zap size={20} className="text-[#FFA500]" />
+function SettingsPage() {
+  return (
+    <section className="relative z-10 h-full overflow-y-auto px-4 pb-32 pt-28 text-white sm:px-6">
+      <div className="mx-auto max-w-3xl">
+        <p className="text-xs font-black uppercase tracking-[0.22em] text-primary">Configuration</p>
+        <h2 className="mt-2 text-3xl font-black">Réglages IA</h2>
+        <div className="mt-6 grid gap-3">
+          {[
+            ['Réponses rapides', 'Optimiser la vitesse de génération.'],
+            ['Contexte eNkamba', "Prioriser les services de l'application."],
+            ['Sécurité', 'Limiter les données sensibles dans les réponses.'],
+          ].map(([title, description]) => (
+            <div key={title} className="flex items-center justify-between rounded-3xl border border-white/10 bg-white/8 p-4 backdrop-blur-xl">
               <div>
-                <h4 className="text-sm font-bold">Vitesse de réponse</h4>
-                <p className="text-xs text-gray-500">Prioriser la rapidité</p>
+                <p className="text-sm font-black">{title}</p>
+                <p className="mt-1 text-xs text-white/45">{description}</p>
+              </div>
+              <div className="relative h-7 w-12 rounded-full bg-primary">
+                <span className="absolute right-1 top-1 h-5 w-5 rounded-full bg-white" />
               </div>
             </div>
-            <div className="w-12 h-6 bg-[#009058] rounded-full relative">
-              <div className="absolute right-1 top-1 bottom-1 aspect-square bg-white rounded-full"></div>
-            </div>
-          </div>
-        </section>
-        <section className="space-y-4 mt-4">
-          <h3 className="text-xs font-bold text-[#009058] uppercase tracking-widest">Sécurité</h3>
-          <div className="setting-card p-5 rounded-2xl flex items-center gap-4">
-            <ShieldCheck size={20} className="text-[#009058]" />
-            <div>
-              <h4 className="text-sm font-bold">Cryptage E2E</h4>
-              <p className="text-xs text-gray-500">Données chiffrées localement</p>
-            </div>
-          </div>
-        </section>
+          ))}
+        </div>
       </div>
-    </div>
-  </div>
-);
+    </section>
+  );
+}
 
-// --- APP ---
 export default function EnkambaAIModule({ params }: { params: { id: string } }) {
-  const [activeTab, setActiveTab] = useState('assistant');
+  const [activeTab, setActiveTab] = useState<ModuleTab>('assistant');
+  const [menuOpen, setMenuOpen] = useState(false);
   const { aiChats, deleteAiChat } = useFirestoreAiChat();
+  const { user } = useAuth();
   const router = useRouter();
   const chatId = params.id;
+  const userName = user?.displayName || user?.email?.split('@')[0] || 'Utilisateur';
+  const userInitial = userName.charAt(0).toUpperCase();
 
   const handleDeleteChat = async (id: string) => {
     await deleteAiChat(id);
-    if (id === chatId) {
-      router.push('/dashboard/ai/chat');
-    }
+    if (id === chatId) router.push('/dashboard/ai/chat');
   };
 
   return (
-    <div className="flex h-screen bg-[#009058] text-white">
-      <Styles />
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+    <div className="relative h-full min-h-0 overflow-hidden bg-black text-white">
+      <AnimatedAiBackground />
+      <AiSideMenu
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        aiChats={aiChats}
+        onOpenChat={(id) => {
+          setMenuOpen(false);
+          if (id === '__subscription__') {
+            router.push('/dashboard/ai/subscription');
+            return;
+          }
+          router.push(`/dashboard/ai/chat/${id}`);
+        }}
+        onDeleteChat={(id) => void handleDeleteChat(id)}
+        onNewChat={() => {
+          setMenuOpen(false);
+          router.push('/dashboard/ai/chat');
+        }}
+      />
+      <TopBar userInitial={userInitial} userPhoto={user?.photoURL} onOpenMenu={() => setMenuOpen(true)} />
       {activeTab === 'assistant' && <ChatInterface chatId={chatId} />}
       {activeTab === 'history' && <HistoryPage aiChats={aiChats} onDeleteChat={handleDeleteChat} />}
       {activeTab === 'settings' && <SettingsPage />}
