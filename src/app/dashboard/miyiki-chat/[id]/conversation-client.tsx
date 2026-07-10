@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { useFirestoreConversations } from '@/hooks/useFirestoreConversations';
 import { useAuth } from '@/hooks/useAuth';
 import { useChatSettings } from '@/hooks/useChatSettings';
-import { ChatNavIcon } from '@/components/icons/service-icons';
+import { ChatNavIcon, EnkambaAIIcon } from '@/components/icons/service-icons';
 import { LocationMessage } from '@/components/chat/LocationMessage';
 import { FileMessage } from '@/components/chat/FileMessage';
 import { MoneyTransferMessage } from '@/components/chat/MoneyTransferMessage';
@@ -1325,7 +1325,8 @@ export default function ConversationClient() {
     };
 
     const handleOpenCamera = async () => {
-        openFilePicker('image/*,video/*', 'environment');
+        setShowMoreActions(false);
+        await handleVideoMessage();
     };
 
     const handleOpenScanner = () => {
@@ -2028,7 +2029,7 @@ export default function ConversationClient() {
             )}
 
             {/* Fixed Input Footer */}
-            <footer className="flex-shrink-0 border-t bg-background z-20 shadow-lg flex flex-col max-h-[30vh] overflow-y-auto mb-[calc(80px+env(safe-area-inset-bottom))]">
+            <footer className="z-30 mb-[calc(88px+env(safe-area-inset-bottom))] flex max-h-[30vh] flex-shrink-0 flex-col overflow-y-auto border-t bg-background shadow-lg md:mb-[calc(128px+env(safe-area-inset-bottom))]">
                 <div className="px-4 pt-3 pb-2 space-y-3">
                 
                 {/* Edit Preview */}
@@ -2205,6 +2206,19 @@ export default function ConversationClient() {
                         >
                             <ScanLine className="h-4 w-4" />
                             Scanner
+                        </Button>
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-2"
+                            onClick={() => {
+                                setShowMoreActions(false);
+                                router.push('/dashboard/ai');
+                            }}
+                            disabled={isSending}
+                        >
+                            <EnkambaAIIcon className="h-4 w-4" size={16} />
+                            eNkamba AI
                         </Button>
                         <Button
                             size="sm"
