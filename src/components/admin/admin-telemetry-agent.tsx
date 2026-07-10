@@ -6,6 +6,7 @@ import { addDoc, collection, doc, serverTimestamp, updateDoc } from 'firebase/fi
 
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/useAuth';
+import { DASHBOARD_LOCATION_EVENT, getDashboardLocationOrDefault, type DashboardLocation } from '@/lib/dashboard-location';
 
 const MODULE_BY_PATH: Array<[string, string]> = [
   ['/admin/infrastructure', 'Admin Infrastructure'],
@@ -44,6 +45,7 @@ export function AdminTelemetryAgent() {
   const pathname = usePathname() || '/dashboard';
   const { user } = useAuth();
   const [clientContext, setClientContext] = useState<Record<string, any> | null>(null);
+  const [dashboardLocation, setDashboardLocation] = useState<DashboardLocation | null>(null);
   const activeVisitRef = useRef<{ id: string; startedAt: number; path: string } | null>(null);
 
   const moduleName = useMemo(() => resolveModule(pathname), [pathname]);
@@ -70,6 +72,18 @@ export function AdminTelemetryAgent() {
     return () => {
       cancelled = true;
     };
+  }, []);
+
+  useEffect(() => {
+    setDashboardLocation(getDashboardLocationOrDefault());
+
+    const handleLocationChange = (event: Event) => {
+      const customEvent = event as CustomEvent<DashboardLocation>;
+      setDashboardLocation(customEvent.detail || getDashboardLocationOrDefault());
+    };
+
+    window.addEventListener(DASHBOARD_LOCATION_EVENT, handleLocationChange);
+    return () => window.removeEventListener(DASHBOARD_LOCATION_EVENT, handleLocationChange);
   }, []);
 
   useEffect(() => {
@@ -110,11 +124,14 @@ export function AdminTelemetryAgent() {
           page: document.title || pathname,
           path: pathname,
           ip: context.ip || 'unknown',
-          city: context.city || null,
-          region: context.region || null,
-          country: context.country || null,
-          latitude: context.latitude || null,
-          longitude: context.longitude || null,
+          city: dashboardLocation?.ville || context.city || null,
+          region: dashboardLocation?.region || context.region || null,
+          country: dashboardLocation?.pays || context.country || null,
+          latitude: dashboardLocation?.latitude || context.latitude || null,
+          longitude: dashboardLocation?.longitude || context.longitude || null,
+          locationLabel: dashboardLocation?.label || [context.city, context.country].filter(Boolean).join(', ') || null,
+          locationSource: dashboardLocation?.source || null,
+          locationAccuracy: dashboardLocation?.accuracy || null,
           userAgent: context.userAgent || navigator.userAgent,
           language: navigator.language,
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
@@ -151,6 +168,14 @@ export function AdminTelemetryAgent() {
           void updateDoc(doc(db, 'admin_user_activity', currentVisit.id), {
             durationMs,
             durationSeconds: Math.round(durationMs / 1000),
+            city: dashboardLocation?.ville || context.city || null,
+            region: dashboardLocation?.region || context.region || null,
+            country: dashboardLocation?.pays || context.country || null,
+            latitude: dashboardLocation?.latitude || context.latitude || null,
+            longitude: dashboardLocation?.longitude || context.longitude || null,
+            locationLabel: dashboardLocation?.label || [context.city, context.country].filter(Boolean).join(', ') || null,
+            locationSource: dashboardLocation?.source || null,
+            locationAccuracy: dashboardLocation?.accuracy || null,
             updatedAt: serverTimestamp(),
           }).catch(() => undefined);
         }, 15000);
@@ -166,7 +191,7 @@ export function AdminTelemetryAgent() {
       if (intervalId) clearInterval(intervalId);
       void closePreviousVisit();
     };
-  }, [clientContext, moduleName, pathname, user]);
+  }, [clientContext, dashboardLocation, moduleName, pathname, user]);
 
   useEffect(() => {
     if (!user || !clientContext) return;

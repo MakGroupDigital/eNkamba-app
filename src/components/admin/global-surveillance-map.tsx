@@ -1,252 +1,383 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import {
-  Activity,
-  Database,
-  Globe2,
-  LockKeyhole,
-  RadioTower,
-  Server,
-  ShieldCheck,
-  UserCog,
-  Wifi,
-  type LucideIcon,
-} from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
+import { Activity, Globe2, LocateFixed, MapPin, RadioTower, RefreshCw, Users, Wifi } from 'lucide-react';
+import { collection, limit, onSnapshot, orderBy, query } from 'firebase/firestore';
+import type { Map as LeafletMap, Marker } from 'leaflet';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { cn } from '@/lib/utils';
+import { db } from '@/lib/firebase';
 
-type SurveillancePoint = {
-  city: string;
-  country: string;
-  continent: string;
-  module: string;
-  users: number;
-  latency: string;
-  status: string;
-  x: number;
-  y: number;
-};
-
-type InfrastructureNode = {
+type LiveUserPoint = {
   id: string;
-  label: string;
-  category: 'server' | 'firewall' | 'agent' | 'database' | 'security';
-  module: string;
-  region: string;
-  status: string;
-  load: number;
-  description: string;
-  icon: LucideIcon;
+  userId: string;
+  userName: string;
+  userEmail?: string | null;
+  module?: string | null;
+  path?: string | null;
+  city?: string | null;
+  region?: string | null;
+  country?: string | null;
+  ip?: string | null;
+  latitude: number;
+  longitude: number;
+  active?: boolean;
+  durationSeconds?: number;
+  updatedAt?: any;
 };
 
-const surveillancePoints: SurveillancePoint[] = [
-  { city: 'Kinshasa', country: 'RDC', continent: 'Afrique', module: 'Mbongo', users: 1284, latency: '38ms', status: 'Actif', x: 53, y: 57 },
-  { city: 'Lubumbashi', country: 'RDC', continent: 'Afrique', module: 'Ugavi', users: 426, latency: '44ms', status: 'Actif', x: 55, y: 70 },
-  { city: 'Goma', country: 'RDC', continent: 'Afrique', module: 'Masolo', users: 312, latency: '41ms', status: 'Actif', x: 57, y: 53 },
-  { city: 'Paris', country: 'France', continent: 'Europe', module: 'Makutano', users: 217, latency: '52ms', status: 'Actif', x: 48, y: 32 },
-  { city: 'Bruxelles', country: 'Belgique', continent: 'Europe', module: 'Business Pro', users: 144, latency: '56ms', status: 'Controle', x: 49, y: 29 },
-  { city: 'Johannesburg', country: 'Afrique du Sud', continent: 'Afrique', module: 'Nkampa', users: 96, latency: '61ms', status: 'Actif', x: 56, y: 82 },
-  { city: 'Dubai', country: 'EAU', continent: 'Asie', module: 'Paiement', users: 88, latency: '64ms', status: 'Actif', x: 63, y: 43 },
-  { city: 'Montreal', country: 'Canada', continent: 'Amerique du Nord', module: 'Masolo', users: 64, latency: '71ms', status: 'Actif', x: 23, y: 27 },
-  { city: 'New York', country: 'USA', continent: 'Amerique du Nord', module: 'AI', users: 52, latency: '69ms', status: 'Actif', x: 26, y: 36 },
-  { city: 'Sao Paulo', country: 'Bresil', continent: 'Amerique du Sud', module: 'Makutano', users: 39, latency: '82ms', status: 'Actif', x: 35, y: 76 },
-  { city: 'Guangzhou', country: 'Chine', continent: 'Asie', module: 'Nkampa', users: 33, latency: '93ms', status: 'Actif', x: 78, y: 47 },
-  { city: 'Sydney', country: 'Australie', continent: 'Oceanie', module: 'eStream', users: 21, latency: '104ms', status: 'Actif', x: 86, y: 80 },
-];
+const DEFAULT_CENTER: [number, number] = [-4.325, 15.3222];
 
-const infrastructureNodes: InfrastructureNode[] = [
-  { id: 'srv-masolo-01', label: 'MASOLO-CHAT-RT-01', category: 'server', module: 'Masolo', region: 'Kinshasa Edge', status: 'Stable', load: 42, description: 'Conversations, appels, presence et notifications temps reel.', icon: Server },
-  { id: 'srv-mbongo-01', label: 'MBONGO-PAY-CORE-01', category: 'server', module: 'Mbongo', region: 'Finance Core', status: 'Surveille', load: 58, description: 'Paiements, wallet, QR, transferts et reconciliation.', icon: Server },
-  { id: 'srv-nkampa-01', label: 'NKAMPA-CATALOG-01', category: 'server', module: 'Nkampa', region: 'Commerce Cluster', status: 'Stable', load: 49, description: 'Catalogue, recherche produit, commandes et boutiques.', icon: Server },
-  { id: 'srv-ugavi-01', label: 'UGAVI-TRACKING-01', category: 'server', module: 'Ugavi', region: 'Logistics Core', status: 'Stable', load: 53, description: 'Tracking colis, agences, relais, scans et livraisons.', icon: Server },
-  { id: 'srv-makutano-01', label: 'MAKUTANO-FEED-01', category: 'server', module: 'Makutano', region: 'Social Graph', status: 'Actif', load: 46, description: 'Feed social, profils publics, relations et stories.', icon: Server },
-  { id: 'fw-edge-01', label: 'FIREWALL-EDGE-01', category: 'firewall', module: 'Global', region: 'Perimetre web', status: 'Protection active', load: 31, description: 'Filtrage routes sensibles, motifs URL suspects et acces anormaux.', icon: LockKeyhole },
-  { id: 'fw-payment-01', label: 'FIREWALL-PAYMENT-01', category: 'firewall', module: 'Mbongo', region: 'Finance Zone', status: 'Protection haute', load: 38, description: 'Surveillance transactions, QR paiement et comportements sensibles.', icon: LockKeyhole },
-  { id: 'db-firestore-01', label: 'DATASTORE-FIRESTORE-01', category: 'database', module: 'Global', region: 'Realtime Data', status: 'Synchronise', load: 44, description: 'Donnees temps reel, logs admin, activite et modules.', icon: Database },
-  { id: 'agent-ops-01', label: 'OPS-AGENTS-LIVE', category: 'agent', module: 'Support', region: 'Centre operationnel', status: 'Connectes', load: 67, description: 'Agents admin, support, logistique et verification business.', icon: UserCog },
-  { id: 'sec-cyber-01', label: 'CYBER-WATCH-AI-01', category: 'security', module: 'Admin', region: 'Security Desk', status: 'Analyse', load: 36, description: 'Classification signaux, erreurs critiques et attaques probables.', icon: ShieldCheck },
-];
+function toNumber(value: unknown) {
+  const numberValue = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(numberValue) ? numberValue : null;
+}
 
-const categoryStyles: Record<InfrastructureNode['category'], string> = {
-  server: 'border-primary/20 bg-primary/5 text-primary',
-  firewall: 'border-[#FFA500]/30 bg-[#FFA500]/10 text-[#FFA500]',
-  agent: 'border-sky-200 bg-sky-50 text-sky-800',
-  database: 'border-violet-200 bg-violet-50 text-violet-800',
-  security: 'border-red-200 bg-red-50 text-red-800',
-};
+function formatDuration(seconds?: number) {
+  const safeSeconds = Math.max(0, Math.round(seconds || 0));
+  if (safeSeconds < 60) return `${safeSeconds}s`;
+  const minutes = Math.floor(safeSeconds / 60);
+  if (minutes < 60) return `${minutes}m ${safeSeconds % 60}s`;
+  return `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
+}
+
+function formatLastUpdate(value: any) {
+  const date = value?.toDate?.() || (value ? new Date(value) : null);
+  if (!date || Number.isNaN(date.getTime())) return 'temps réel';
+  return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+}
+
+function normalizeActivity(id: string, data: any): LiveUserPoint | null {
+  const latitude = toNumber(data.latitude ?? data.location?.latitude ?? data.currentLocation?.latitude);
+  const longitude = toNumber(data.longitude ?? data.location?.longitude ?? data.currentLocation?.longitude);
+
+  if (latitude === null || longitude === null) return null;
+  if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) return null;
+
+  return {
+    id,
+    userId: String(data.userId || data.uid || id),
+    userName: String(data.userName || data.displayName || data.userEmail || 'Utilisateur eNkamba'),
+    userEmail: data.userEmail || data.email || null,
+    module: data.module || null,
+    path: data.path || null,
+    city: data.city || data.location?.city || null,
+    region: data.region || data.location?.region || null,
+    country: data.country || data.location?.country || null,
+    ip: data.ip || null,
+    latitude,
+    longitude,
+    active: data.active !== false,
+    durationSeconds: Number(data.durationSeconds || 0),
+    updatedAt: data.updatedAt,
+  };
+}
+
+function buildPopup(point: LiveUserPoint) {
+  const place = [point.city, point.region, point.country].filter(Boolean).join(', ') || `${point.latitude.toFixed(5)}, ${point.longitude.toFixed(5)}`;
+  const safeName = point.userName.replace(/[<>"']/g, '');
+  const safeModule = String(point.module || 'Module inconnu').replace(/[<>"']/g, '');
+  const safePlace = place.replace(/[<>"']/g, '');
+  const profileHref = `/dashboard/makutano/profile/${encodeURIComponent(point.userId)}`;
+
+  return `
+    <div class="enkamba-admin-popup">
+      <div class="enkamba-admin-popup__header">
+        <span class="enkamba-admin-popup__avatar">${safeName.charAt(0).toUpperCase() || 'U'}</span>
+        <div>
+          <a class="enkamba-admin-popup__name" href="${profileHref}">${safeName}</a>
+          <p>${safeModule}</p>
+        </div>
+      </div>
+      <div class="enkamba-admin-popup__body">
+        <span>📍 ${safePlace}</span>
+        <span>⏱ ${formatDuration(point.durationSeconds)}</span>
+        <span>🛰 ${point.ip || 'IP N/A'}</span>
+      </div>
+    </div>
+  `;
+}
 
 export function GlobalSurveillanceMap() {
-  const [selectedPoint, setSelectedPoint] = useState(surveillancePoints[0]);
-  const [selectedNode, setSelectedNode] = useState(infrastructureNodes[0]);
-  const [selectedCategory, setSelectedCategory] = useState<InfrastructureNode['category'] | 'all'>('all');
+  const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<LeafletMap | null>(null);
+  const markersRef = useRef<Record<string, Marker>>({});
+  const leafletRef = useRef<any>(null);
 
-  const filteredNodes = useMemo(
-    () => selectedCategory === 'all' ? infrastructureNodes : infrastructureNodes.filter((node) => node.category === selectedCategory),
-    [selectedCategory],
-  );
+  const [points, setPoints] = useState<LiveUserPoint[]>([]);
+  const [selectedPoint, setSelectedPoint] = useState<LiveUserPoint | null>(null);
+  const [streamStatus, setStreamStatus] = useState<'connexion' | 'connecte' | 'erreur'>('connexion');
 
-  const totalUsers = surveillancePoints.reduce((sum, point) => sum + point.users, 0);
-  const activeServers = infrastructureNodes.filter((node) => node.category === 'server').length;
-  const activeSecurity = infrastructureNodes.filter((node) => node.category === 'firewall' || node.category === 'security').length;
+  useEffect(() => {
+    const activityQuery = query(collection(db, 'admin_user_activity'), orderBy('updatedAt', 'desc'), limit(240));
+
+    return onSnapshot(
+      activityQuery,
+      (snapshot) => {
+        const latestByUser = new Map<string, LiveUserPoint>();
+        snapshot.docs.forEach((entry) => {
+          const point = normalizeActivity(entry.id, entry.data());
+          if (!point || !point.active) return;
+          if (!latestByUser.has(point.userId)) latestByUser.set(point.userId, point);
+        });
+        const nextPoints = Array.from(latestByUser.values());
+        setPoints(nextPoints);
+        setSelectedPoint((current) => {
+          if (!current) return nextPoints[0] || null;
+          return nextPoints.find((point) => point.userId === current.userId) || nextPoints[0] || null;
+        });
+        setStreamStatus('connecte');
+      },
+      (error) => {
+        console.warn('Carte admin utilisateurs indisponible:', error);
+        setStreamStatus('erreur');
+      },
+    );
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function initMap() {
+      if (!mapContainerRef.current || mapRef.current) return;
+
+      const L = await import('leaflet');
+      if (cancelled || !mapContainerRef.current) return;
+
+      leafletRef.current = L;
+      const map = L.map(mapContainerRef.current, {
+        zoomControl: false,
+        attributionControl: false,
+        minZoom: 2,
+        maxZoom: 18,
+        worldCopyJump: true,
+      }).setView(DEFAULT_CENTER, 3);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+      }).addTo(map);
+
+      L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+      mapRef.current = map;
+    }
+
+    initMap();
+
+    return () => {
+      cancelled = true;
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+      markersRef.current = {};
+    };
+  }, []);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    const L = leafletRef.current;
+    if (!map || !L) return;
+
+    const currentIds = new Set(points.map((point) => point.userId));
+    Object.entries(markersRef.current).forEach(([userId, marker]) => {
+      if (!currentIds.has(userId)) {
+        marker.remove();
+        delete markersRef.current[userId];
+      }
+    });
+
+    points.forEach((point) => {
+      const icon = L.divIcon({
+        className: '',
+        html: `
+          <span class="enkamba-live-marker ${selectedPoint?.userId === point.userId ? 'enkamba-live-marker--active' : ''}">
+            <span class="enkamba-live-marker__pulse"></span>
+            <span class="enkamba-live-marker__dot"></span>
+          </span>
+        `,
+        iconSize: [34, 34],
+        iconAnchor: [17, 17],
+      });
+
+      const existingMarker = markersRef.current[point.userId];
+      if (existingMarker) {
+        existingMarker.setLatLng([point.latitude, point.longitude]);
+        existingMarker.setIcon(icon);
+        existingMarker.setPopupContent(buildPopup(point));
+        return;
+      }
+
+      const marker = L.marker([point.latitude, point.longitude], { icon }).addTo(map);
+      marker.bindPopup(buildPopup(point), {
+        closeButton: false,
+        className: 'enkamba-admin-leaflet-popup',
+        offset: [0, -10],
+      });
+      marker.on('mouseover', () => marker.openPopup());
+      marker.on('click', () => {
+        setSelectedPoint(point);
+        marker.openPopup();
+      });
+      markersRef.current[point.userId] = marker;
+    });
+  }, [points, selectedPoint?.userId]);
+
+  const moduleStats = useMemo(() => {
+    const stats = new Map<string, number>();
+    points.forEach((point) => stats.set(point.module || 'Inconnu', (stats.get(point.module || 'Inconnu') || 0) + 1));
+    return Array.from(stats.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  }, [points]);
+
+  const focusSelectedPoint = () => {
+    if (!mapRef.current || !selectedPoint) return;
+    mapRef.current.flyTo([selectedPoint.latitude, selectedPoint.longitude], Math.max(mapRef.current.getZoom(), 10), { duration: 0.8 });
+    markersRef.current[selectedPoint.userId]?.openPopup();
+  };
 
   return (
-    <section className="overflow-hidden rounded-[8px] border border-primary/10 bg-slate-950 text-white shadow-sm">
-      <div className="grid gap-0 xl:grid-cols-[1.12fr_0.88fr]">
-        <div className="relative min-h-[420px] overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_50%_40%,rgba(50,187,120,0.18),rgba(2,6,23,0.25)_48%,rgba(2,6,23,0.96))] xl:border-b-0 xl:border-r">
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.045)_1px,transparent_1px)] bg-[size:42px_42px]" />
-          <div className="absolute left-4 top-4 z-20 flex flex-wrap items-center gap-2">
-            <Badge className="bg-[#009058] hover:bg-[#009058]">
-              <Globe2 className="mr-1 h-3.5 w-3.5" />
-              Surveillance mondiale
-            </Badge>
-            <Badge className="bg-white/10 text-white hover:bg-white/10">{totalUsers.toLocaleString('fr-FR')} utilisateurs GPS</Badge>
+    <section className="overflow-hidden rounded-[8px] border border-primary/10 bg-white text-slate-950 shadow-sm">
+      <div className="space-y-4 p-4">
+        <header className="grid gap-3 lg:grid-cols-[1fr_auto] lg:items-start">
+          <div className="rounded-[8px] border border-primary/10 bg-[#F7FAF8] p-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge className="bg-primary hover:bg-primary">
+                <Globe2 className="mr-1 h-3.5 w-3.5" />
+                Carte live
+              </Badge>
+              <Badge className={streamStatus === 'connecte' ? 'bg-primary hover:bg-primary' : streamStatus === 'erreur' ? 'bg-red-500 hover:bg-red-500' : 'bg-[#FFA500] hover:bg-[#FFA500]'}>
+                {streamStatus}
+              </Badge>
+            </div>
+
+            <h2 className="mt-3 font-headline text-2xl font-black md:text-3xl">Centre d'administration global eNkamba</h2>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+              Centre de contrôle GPS en temps réel. La carte affiche uniquement les points utilisateurs pour rester lisible.
+            </p>
           </div>
 
-          <svg className="absolute inset-0 h-full w-full p-5" viewBox="0 0 1000 520" role="img" aria-label="Carte mondiale de surveillance eNkamba">
-            <path className="fill-[#009058]/25 stroke-[#009058]/80 stroke-2" d="M166 138c36-34 98-42 140-18 31 17 46 48 73 66 28 18 63 20 81 46 20 29 3 72-33 82-26 7-54-7-79 4-31 14-37 59-68 76-26 14-60 3-78-20-19-25-16-58-32-85-17-29-55-43-63-76-7-27 17-54 59-75z" />
-            <path className="fill-[#009058]/25 stroke-[#009058]/80 stroke-2" d="M320 326c34 6 66 25 82 55 17 33 10 73-8 106-12 22-32 44-58 42-32-3-40-38-51-64-12-31-43-47-53-78-12-37 26-68 88-61z" />
-            <path className="fill-[#009058]/25 stroke-[#009058]/80 stroke-2" d="M474 120c42-20 95-19 135 2 26 14 44 37 73 45 31 9 66-1 96 13 38 17 55 63 45 103-10 39-43 65-80 74-35 9-72 2-105 17-33 16-52 53-87 65-34 12-73-4-91-35-18-30-15-69 1-100 18-35 51-59 65-96 12-31-6-58-52-88z" />
-            <path className="fill-[#009058]/25 stroke-[#009058]/80 stroke-2" d="M535 288c50 4 102 28 127 72 26 45 19 105-9 148-20 31-54 54-91 45-36-9-49-48-62-80-15-38-50-64-55-105-5-45 36-83 90-80z" />
-            <path className="fill-[#009058]/25 stroke-[#009058]/80 stroke-2" d="M656 118c56-30 139-24 188 17 45 38 58 103 37 158-18 47-60 76-108 86-49 10-99 1-148 11-34 7-67 22-101 14 19-33 54-52 67-91 13-40-5-83 9-123 9-28 28-52 56-72z" />
-            <path className="fill-[#009058]/25 stroke-[#009058]/80 stroke-2" d="M780 367c38-16 92-7 121 24 25 27 27 70 4 98-24 30-72 34-107 18-31-15-58-47-50-83 5-25 15-44 32-57z" />
-            <path className="fill-white/10 stroke-white/30 stroke-2" d="M330 94c18-16 48-20 72-9 20 9 30 28 24 48-8 26-42 39-68 30-28-9-47-44-28-69z" />
-            <path className="fill-none stroke-[#FFA500]/35 stroke-2 [stroke-dasharray:8_10]" d="M530 575 C500 360 490 320 480 170" />
-            <path className="fill-none stroke-[#FFA500]/35 stroke-2 [stroke-dasharray:8_10]" d="M530 575 C420 430 320 350 230 250" />
-            <path className="fill-none stroke-[#FFA500]/35 stroke-2 [stroke-dasharray:8_10]" d="M530 575 C650 430 740 315 805 210" />
-          </svg>
-
-          {surveillancePoints.map((point) => (
-            <button
-              key={`${point.city}-${point.module}`}
-              type="button"
-              onClick={() => setSelectedPoint(point)}
-              className="absolute z-20 h-7 w-7 -translate-x-1/2 -translate-y-1/2 rounded-full"
-              style={{ left: `${point.x}%`, top: `${point.y}%` }}
-              aria-label={`Point GPS ${point.city}`}
-            >
-              <span className={cn('absolute inset-0 rounded-full bg-[#009058]/40 animate-ping', selectedPoint.city === point.city && 'bg-[#FFA500]/45')} />
-              <span className={cn('absolute left-1/2 top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#009058] shadow-[0_0_18px_rgba(126,231,175,0.95)]', selectedPoint.city === point.city && 'bg-[#FFA500] shadow-[0_0_22px_rgba(255,165,0,0.95)]')} />
-            </button>
-          ))}
-
-          <div className="absolute bottom-4 left-4 right-4 z-20 grid gap-3 rounded-[8px] border border-white/10 bg-slate-950/80 p-4 backdrop-blur md:grid-cols-4">
-            <div className="md:col-span-2">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#009058]">Point selectionne</p>
-              <h3 className="mt-1 text-2xl font-black">{selectedPoint.city}</h3>
-              <p className="text-sm text-white/60">{selectedPoint.country} - {selectedPoint.continent}</p>
+          <div className="grid grid-cols-3 gap-2 lg:min-w-[390px]">
+            <div className="rounded-[8px] border border-primary/10 bg-white p-3">
+              <Users className="h-5 w-5 text-primary" />
+              <p className="mt-1 text-2xl font-black">{points.length}</p>
+              <p className="text-[11px] font-semibold text-slate-500">connectés</p>
             </div>
-            <div>
-              <p className="text-xs text-white/45">Module</p>
-              <p className="font-bold">{selectedPoint.module}</p>
+            <div className="rounded-[8px] border border-[#FFA500]/25 bg-[#FFA500]/10 p-3">
+              <Activity className="h-5 w-5 text-[#FFA500]" />
+              <p className="mt-1 text-2xl font-black">{moduleStats.length}</p>
+              <p className="text-[11px] font-semibold text-slate-500">modules</p>
             </div>
-            <div>
-              <p className="text-xs text-white/45">Utilisateurs / latence</p>
-              <p className="font-bold">{selectedPoint.users} - {selectedPoint.latency}</p>
+            <div className="rounded-[8px] border border-primary/10 bg-white p-3">
+              <RadioTower className="h-5 w-5 text-primary" />
+              <p className="mt-1 text-2xl font-black">live</p>
+              <p className="text-[11px] font-semibold text-slate-500">sync</p>
             </div>
           </div>
+        </header>
+
+        <div className="relative min-h-[620px] overflow-hidden rounded-[8px] border border-primary/10 bg-white">
+          <div ref={mapContainerRef} className="absolute inset-0 z-0 bg-[#F7FAF8]" />
+          <div className="pointer-events-none absolute inset-0 z-10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0)_60%)]" />
+          <div className="absolute left-4 top-4 z-20 rounded-full border border-primary/10 bg-white/95 px-4 py-2 text-sm font-black text-primary shadow-lg shadow-primary/10">
+            {points.length} connectés
+          </div>
+
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="absolute right-4 top-4 z-20 rounded-[8px] border-primary/20 bg-white/95 text-primary shadow-xl shadow-primary/10 backdrop-blur-xl hover:bg-primary/10 hover:text-primary"
+            onClick={() => {
+              if (!mapRef.current) return;
+              mapRef.current.flyTo(DEFAULT_CENTER, 3, { duration: 0.8 });
+            }}
+          >
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Vue globale
+          </Button>
         </div>
 
-        <aside className="p-4">
-          <div className="grid gap-3 sm:grid-cols-3">
-            <div className="rounded-[8px] border border-white/10 bg-white/[0.06] p-3">
-              <Server className="h-5 w-5 text-[#009058]" />
-              <p className="mt-2 text-2xl font-black">{activeServers}</p>
-              <p className="text-xs text-white/50">serveurs modules</p>
+        <div className="grid gap-4 lg:grid-cols-[1fr_1.25fr]">
+          <aside className="rounded-[8px] border border-primary/10 bg-[#F7FAF8] p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <p className="text-sm font-black">Modules actifs</p>
+              <Wifi className="h-4 w-4 text-primary" />
             </div>
-            <div className="rounded-[8px] border border-white/10 bg-white/[0.06] p-3">
-              <LockKeyhole className="h-5 w-5 text-[#FFA500]" />
-              <p className="mt-2 text-2xl font-black">{activeSecurity}</p>
-              <p className="text-xs text-white/50">pare-feu / cyber</p>
-            </div>
-            <div className="rounded-[8px] border border-white/10 bg-white/[0.06] p-3">
-              <UserCog className="h-5 w-5 text-sky-300" />
-              <p className="mt-2 text-2xl font-black">24</p>
-              <p className="text-xs text-white/50">agents connectes</p>
-            </div>
-          </div>
-
-          <div className="mt-4 flex flex-wrap gap-2">
-            {(['all', 'server', 'firewall', 'database', 'agent', 'security'] as const).map((category) => (
-              <Button
-                key={category}
-                size="sm"
-                variant={selectedCategory === category ? 'default' : 'outline'}
-                className={cn('h-8 rounded-[8px]', selectedCategory !== category && 'border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white')}
-                onClick={() => setSelectedCategory(category)}
-              >
-                {category === 'all' ? 'Tout' : category}
-              </Button>
-            ))}
-          </div>
-
-          <div className="mt-4 max-h-[318px] space-y-2 overflow-y-auto pr-1">
-            {filteredNodes.map((node) => {
-              const Icon = node.icon;
-              return (
+            <div className="grid gap-2 sm:grid-cols-2">
+              {moduleStats.length === 0 ? (
+                <div className="rounded-[8px] border border-dashed border-primary/20 bg-primary/5 p-3 text-sm text-slate-500 sm:col-span-2">Aucune position utilisateur disponible.</div>
+              ) : moduleStats.map(([module, count]) => (
                 <button
-                  key={node.id}
+                  key={module}
                   type="button"
-                  onClick={() => setSelectedNode(node)}
-                  className={cn(
-                    'w-full rounded-[8px] border p-3 text-left transition hover:scale-[1.01]',
-                    selectedNode.id === node.id ? 'border-[#009058] bg-[#009058]/12' : 'border-white/10 bg-white/[0.06]',
-                  )}
+                  className="flex w-full items-center justify-between rounded-[8px] bg-white px-3 py-2 text-sm transition hover:bg-primary/5"
+                  onClick={() => {
+                    const point = points.find((entry) => (entry.module || 'Inconnu') === module);
+                    if (point) setSelectedPoint(point);
+                  }}
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <div className={cn('flex h-10 w-10 items-center justify-center rounded-[8px] border', categoryStyles[node.category])}>
-                        <Icon className="h-5 w-5" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-black">{node.label}</p>
-                        <p className="truncate text-xs text-white/50">{node.module} - {node.region}</p>
-                      </div>
-                    </div>
-                    <Badge className="bg-white/10 text-white hover:bg-white/10">{node.status}</Badge>
-                  </div>
-                  <div className="mt-3 flex items-center gap-3">
-                    <Progress value={node.load} className="h-1.5 bg-white/10" />
-                    <span className="text-xs font-semibold text-white/70">{node.load}%</span>
-                  </div>
+                  <span className="flex min-w-0 items-center gap-2">
+                    <MapPin className="h-4 w-4 shrink-0 text-primary" />
+                    <span className="truncate font-semibold">{module}</span>
+                  </span>
+                  <Badge className="bg-[#FFA500]/15 text-[#FFA500] hover:bg-[#FFA500]/15">{count}</Badge>
                 </button>
-              );
-            })}
-          </div>
+              ))}
+            </div>
+          </aside>
 
-          <div className="mt-4 rounded-[8px] border border-[#009058]/25 bg-[#009058]/10 p-4">
-            <div className="flex items-start gap-3">
-              <RadioTower className="mt-1 h-5 w-5 text-[#009058]" />
-              <div>
-                <p className="font-black">{selectedNode.label}</p>
-                <p className="mt-1 text-sm leading-6 text-white/65">{selectedNode.description}</p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <Badge className="bg-[#009058] hover:bg-[#009058]">{selectedNode.module}</Badge>
-                  <Badge className="bg-white/10 text-white hover:bg-white/10">{selectedNode.region}</Badge>
-                  <Badge className="bg-white/10 text-white hover:bg-white/10">{selectedNode.status}</Badge>
-                </div>
+          <aside className="rounded-[8px] border border-primary/10 bg-[#F7FAF8] p-4">
+            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Utilisateur sélectionné</p>
+                <h3 className="mt-1 truncate text-xl font-black">{selectedPoint?.userName || 'Aucun utilisateur'}</h3>
+                <p className="mt-1 truncate text-sm text-slate-600">
+                  {selectedPoint
+                    ? [selectedPoint.city, selectedPoint.region, selectedPoint.country].filter(Boolean).join(', ') || `${selectedPoint.latitude.toFixed(5)}, ${selectedPoint.longitude.toFixed(5)}`
+                    : 'Cliquez sur un point GPS'}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {selectedPoint && (
+                  <>
+                    <Button size="sm" className="rounded-[8px] bg-primary hover:bg-primary" onClick={focusSelectedPoint}>
+                      <LocateFixed className="mr-2 h-4 w-4" />
+                      Centrer
+                    </Button>
+                    <Button asChild size="sm" variant="outline" className="rounded-[8px] border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 hover:text-primary">
+                      <Link href={`/dashboard/makutano/profile/${selectedPoint.userId}`}>
+                        Profil
+                      </Link>
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
-          </div>
-        </aside>
-      </div>
 
-      <div className="grid gap-3 border-t border-white/10 bg-white/[0.04] p-4 md:grid-cols-4">
-        {[
-          ['Flux temps reel', 'Collecte activite, erreurs et signaux cyber', Activity],
-          ['GPS utilisateurs', 'Points monde par zone et module dominant', Globe2],
-          ['Protection active', 'Pare-feu applicatif et paiement', ShieldCheck],
-          ['Reseau surveille', 'Latence, charge et agents en ligne', Wifi],
-        ].map(([title, text, Icon]) => (
-          <div key={title as string} className="rounded-[8px] border border-white/10 bg-white/[0.05] p-3">
-            <Icon className="h-5 w-5 text-[#009058]" />
-            <p className="mt-2 text-sm font-bold">{title as string}</p>
-            <p className="mt-1 text-xs leading-5 text-white/50">{text as string}</p>
-          </div>
-        ))}
+            {selectedPoint && (
+              <div className="mt-4 grid gap-2 md:grid-cols-3">
+                <div className="rounded-[8px] bg-white p-3">
+                  <p className="text-xs text-slate-500">Module</p>
+                  <p className="truncate font-bold">{selectedPoint.module || 'Inconnu'}</p>
+                </div>
+                <div className="rounded-[8px] bg-white p-3">
+                  <p className="text-xs text-slate-500">GPS</p>
+                  <p className="truncate font-bold">{selectedPoint.latitude.toFixed(4)}, {selectedPoint.longitude.toFixed(4)}</p>
+                </div>
+                <div className="rounded-[8px] bg-white p-3">
+                  <p className="text-xs text-slate-500">Mise à jour</p>
+                  <p className="font-bold">{formatLastUpdate(selectedPoint.updatedAt)}</p>
+                </div>
+              </div>
+            )}
+          </aside>
+        </div>
+
+        <div className="rounded-[8px] border border-primary/10 bg-[#F7FAF8] px-4 py-3 text-center text-xs font-semibold text-slate-500">
+          Survolez un point pour voir le nom. Cliquez pour ouvrir le profil utilisateur.
+        </div>
       </div>
     </section>
   );

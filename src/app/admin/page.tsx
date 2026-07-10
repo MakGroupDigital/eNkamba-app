@@ -4,10 +4,6 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import {
   Activity,
-  ArrowDown,
-  ArrowLeft,
-  ArrowRight,
-  ArrowUp,
   BadgeCheck,
   Banknote,
   Boxes,
@@ -28,11 +24,9 @@ import {
   Landmark,
   Layers3,
   LockKeyhole,
-  Maximize2,
   MessageCircle,
   PackageCheck,
   RadioTower,
-  RotateCcw,
   Save,
   Search,
   Server,
@@ -45,8 +39,6 @@ import {
   UserCog,
   Users,
   Video,
-  ZoomIn,
-  ZoomOut,
   type LucideIcon,
 } from 'lucide-react';
 import {
@@ -54,6 +46,9 @@ import {
   doc,
   getCountFromServer,
   getDoc,
+  limit,
+  onSnapshot,
+  orderBy,
   query,
   serverTimestamp,
   setDoc,
@@ -67,6 +62,7 @@ import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { db } from '@/lib/firebase';
+import { GlobalSurveillanceMap } from '@/components/admin/global-surveillance-map';
 
 type AdminStat = {
   label: string;
@@ -83,25 +79,19 @@ type ModuleItem = {
   href: string;
   icon: LucideIcon;
   color: string;
-  health: number;
-  users: string;
   submodules: string[];
 };
 
-const connectedCities = [
-  { city: 'Kinshasa', country: 'RDC', continent: 'Afrique', x: 53, y: 57, users: 1284, module: 'Mbongo', status: 'Actif', latency: '38ms' },
-  { city: 'Lubumbashi', country: 'RDC', continent: 'Afrique', x: 55, y: 70, users: 426, module: 'Ugavi', status: 'Actif', latency: '44ms' },
-  { city: 'Goma', country: 'RDC', continent: 'Afrique', x: 57, y: 53, users: 312, module: 'Masolo', status: 'Actif', latency: '41ms' },
-  { city: 'Paris', country: 'France', continent: 'Europe', x: 48, y: 32, users: 217, module: 'Makutano', status: 'Actif', latency: '52ms' },
-  { city: 'Bruxelles', country: 'Belgique', continent: 'Europe', x: 49, y: 29, users: 144, module: 'Business Pro', status: 'Controle', latency: '56ms' },
-  { city: 'Johannesburg', country: 'Afrique du Sud', continent: 'Afrique', x: 56, y: 82, users: 96, module: 'Nkampa', status: 'Actif', latency: '61ms' },
-  { city: 'Dubai', country: 'EAU', continent: 'Asie', x: 63, y: 43, users: 88, module: 'Paiement', status: 'Actif', latency: '64ms' },
-  { city: 'Montreal', country: 'Canada', continent: 'Amerique du Nord', x: 23, y: 27, users: 64, module: 'Masolo', status: 'Actif', latency: '71ms' },
-  { city: 'New York', country: 'USA', continent: 'Amerique du Nord', x: 26, y: 36, users: 52, module: 'AI', status: 'Actif', latency: '69ms' },
-  { city: 'Sao Paulo', country: 'Bresil', continent: 'Amerique du Sud', x: 35, y: 76, users: 39, module: 'Makutano', status: 'Actif', latency: '82ms' },
-  { city: 'Guangzhou', country: 'Chine', continent: 'Asie', x: 78, y: 47, users: 33, module: 'Nkampa', status: 'Actif', latency: '93ms' },
-  { city: 'Sydney', country: 'Australie', continent: 'Oceanie', x: 86, y: 80, users: 21, module: 'eStream', status: 'Actif', latency: '104ms' },
-];
+type AdminModuleActivity = {
+  id: string;
+  userId?: string;
+  userEmail?: string;
+  userName?: string;
+  module?: string;
+  active?: boolean;
+  durationSeconds?: number;
+  updatedAt?: any;
+};
 
 const ACCESS_CONFIG_REF = doc(db, 'app_config', 'access_control');
 
@@ -113,8 +103,6 @@ const modules: ModuleItem[] = [
     href: '/dashboard/miyiki-chat',
     icon: MessageCircle,
     color: '#009058',
-    health: 96,
-    users: '18.4k',
     submodules: ['Conversations', 'Groupes', 'Appels audio/video', 'Stories', 'Partage localisation'],
   },
   {
@@ -124,8 +112,6 @@ const modules: ModuleItem[] = [
     href: '/dashboard/mbongo-dashboard',
     icon: CircleDollarSign,
     color: '#009058',
-    health: 94,
-    users: '12.9k',
     submodules: ['Portefeuille', 'Payer/recevoir', 'Historique', 'Epargne', 'Tontine', 'Factures'],
   },
   {
@@ -135,8 +121,6 @@ const modules: ModuleItem[] = [
     href: '/dashboard/nkampa',
     icon: ShoppingBag,
     color: '#FFA500',
-    health: 89,
-    users: '7.2k',
     submodules: ['Catalogue', 'Boutiques', 'Panier', 'Commandes', 'Seller portal', 'Roles business'],
   },
   {
@@ -146,8 +130,6 @@ const modules: ModuleItem[] = [
     href: '/dashboard/ugavi',
     icon: Truck,
     color: '#009058',
-    health: 91,
-    users: '4.8k',
     submodules: ['Tracking', 'Expeditions', 'Fleet', 'Agent relais', 'Scan colis', 'Livraisons'],
   },
   {
@@ -157,8 +139,6 @@ const modules: ModuleItem[] = [
     href: '/dashboard/makutano',
     icon: RadioTower,
     color: '#9C27B0',
-    health: 87,
-    users: '6.1k',
     submodules: ['Feed', 'Relations', 'Evenements', 'Invitations', 'Communautes'],
   },
   {
@@ -168,8 +148,6 @@ const modules: ModuleItem[] = [
     href: '/dashboard/estream',
     icon: Video,
     color: '#0EA5E9',
-    health: 84,
-    users: '2.7k',
     submodules: ['Recorder', 'Flux video', 'Camera pro', 'Publication', 'Moderation'],
   },
   {
@@ -179,8 +157,6 @@ const modules: ModuleItem[] = [
     href: '/dashboard/ai',
     icon: BrainCircuit,
     color: '#7C3AED',
-    health: 92,
-    users: '3.5k',
     submodules: ['Chat AI', 'Rapports', 'Recherche web', 'Analyse finance', 'Suggestions'],
   },
   {
@@ -190,8 +166,6 @@ const modules: ModuleItem[] = [
     href: '/admin/business-requests',
     icon: BriefcaseBusiness,
     color: '#111827',
-    health: 88,
-    users: '986',
     submodules: ['Demandes', 'Validation KYC', 'Roles entreprise', 'Notifications', 'Audit'],
   },
 ];
@@ -216,6 +190,26 @@ function formatCount(value?: number) {
   return `${value}`;
 }
 
+function normalizeModuleName(value?: string) {
+  const text = String(value || '').toLowerCase();
+  if (text.includes('masolo') || text.includes('chat') || text.includes('message')) return 'Masolo';
+  if (text.includes('mbongo') || text.includes('wallet') || text.includes('paiement') || text.includes('pay')) return 'Mbongo';
+  if (text.includes('nkampa') || text.includes('commerce') || text.includes('march')) return 'Nkampa';
+  if (text.includes('ugavi') || text.includes('logistique') || text.includes('tracking')) return 'Ugavi';
+  if (text.includes('makutano') || text.includes('connexion') || text.includes('social') || text.includes('reseau')) return 'Makutano';
+  if (text.includes('estream') || text.includes('media') || text.includes('video')) return 'eStream';
+  if (text.includes('miyiki') || text.includes('ai') || text.includes('assistant')) return 'Miyiki AI';
+  if (text.includes('business')) return 'Business Pro';
+  return value || 'Inconnu';
+}
+
+function formatDurationLabel(seconds: number) {
+  if (seconds < 60) return `${Math.round(seconds)}s`;
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) return `${minutes} min`;
+  return `${Math.round(minutes / 60)} h`;
+}
+
 async function hashAccessCode(code: string) {
   const encoded = new TextEncoder().encode(code);
   const digest = await crypto.subtle.digest('SHA-256', encoded);
@@ -230,12 +224,7 @@ export default function AdminDashboardPage() {
     businessPending: undefined as number | undefined,
     businessApproved: undefined as number | undefined,
   });
-  const [selectedPoint, setSelectedPoint] = useState(connectedCities[0]);
-  const [mapZoom, setMapZoom] = useState(1);
-  const [mapRotation, setMapRotation] = useState(0);
-  const [mapOffset, setMapOffset] = useState({ x: 0, y: 0 });
-  const [isMapInverted, setIsMapInverted] = useState(false);
-  const [isSortedByActivity, setIsSortedByActivity] = useState(false);
+  const [moduleActivities, setModuleActivities] = useState<AdminModuleActivity[]>([]);
   const [newAccessCode, setNewAccessCode] = useState('');
   const [showAccessCode, setShowAccessCode] = useState(false);
   const [accessVersion, setAccessVersion] = useState<string | null>(null);
@@ -272,6 +261,25 @@ export default function AdminDashboardPage() {
   }, []);
 
   useEffect(() => {
+    const activityQuery = query(collection(db, 'admin_user_activity'), orderBy('updatedAt', 'desc'), limit(1000));
+
+    return onSnapshot(
+      activityQuery,
+      (snapshot) => {
+        setModuleActivities(
+          snapshot.docs.map((entry) => ({
+            id: entry.id,
+            ...(entry.data() as Omit<AdminModuleActivity, 'id'>),
+          })),
+        );
+      },
+      (error) => {
+        console.warn('Admin module activity unavailable:', error);
+      },
+    );
+  }, []);
+
+  useEffect(() => {
     let mounted = true;
 
     async function loadAccessVersion() {
@@ -290,12 +298,6 @@ export default function AdminDashboardPage() {
       mounted = false;
     };
   }, []);
-
-  const visibleCities = useMemo(() => {
-    return isSortedByActivity
-      ? [...connectedCities].sort((a, b) => b.users - a.users)
-      : connectedCities;
-  }, [isSortedByActivity]);
 
   const handleSaveAccessCode = async () => {
     if (newAccessCode.trim().length < 6) {
@@ -363,156 +365,73 @@ export default function AdminDashboardPage() {
     [counts],
   );
 
+  const moduleMetrics = useMemo(() => {
+    const metrics = new Map<
+      string,
+      {
+        uniqueUsers: Set<string>;
+        activeSessions: number;
+        visits: number;
+        durationSeconds: number;
+      }
+    >();
+
+    moduleActivities.forEach((activity) => {
+      const moduleName = normalizeModuleName(activity.module);
+      const metric =
+        metrics.get(moduleName) ||
+        {
+          uniqueUsers: new Set<string>(),
+          activeSessions: 0,
+          visits: 0,
+          durationSeconds: 0,
+        };
+
+      metric.visits += 1;
+      if (activity.active) metric.activeSessions += 1;
+      metric.durationSeconds += Number(activity.durationSeconds || 0);
+
+      const userKey = activity.userId || activity.userEmail || activity.userName;
+      if (userKey) metric.uniqueUsers.add(String(userKey));
+
+      metrics.set(moduleName, metric);
+    });
+
+    return metrics;
+  }, [moduleActivities]);
+
+  const getModuleStats = (moduleName: string) => {
+    const metric = moduleMetrics.get(moduleName);
+    const users = metric?.uniqueUsers.size || 0;
+    const activeSessions = metric?.activeSessions || 0;
+    const visits = metric?.visits || 0;
+    const durationSeconds = metric?.durationSeconds || 0;
+    const health =
+      visits === 0
+        ? 0
+        : Math.min(
+            100,
+            Math.round(
+              45 +
+                Math.min(users * 4, 30) +
+                Math.min(activeSessions * 6, 18) +
+                Math.min(durationSeconds / 900, 7),
+            ),
+          );
+
+    return {
+      users,
+      activeSessions,
+      visits,
+      durationSeconds,
+      health,
+    };
+  };
+
   return (
     <main className="min-h-screen bg-[#F7FAF8] text-slate-950">
       <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-5 sm:px-6 lg:px-8">
-        <section className="relative overflow-hidden rounded-[8px] border border-primary/10 bg-slate-950 text-white shadow-sm">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(50,187,120,0.32),transparent_32%),radial-gradient(circle_at_82%_18%,rgba(255,165,0,0.2),transparent_28%),linear-gradient(135deg,rgba(14,90,89,0.42),rgba(2,6,23,0.94))]" />
-          <div className="relative grid gap-5 p-4 lg:grid-cols-[1fr_310px] lg:p-5">
-            <div className="min-w-0">
-              <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                <div>
-                  <Badge className="bg-[#009058]/15 text-[#009058] hover:bg-[#009058]/15">
-                    Centre de controle mondial
-                  </Badge>
-                  <h1 className="mt-3 font-headline text-2xl font-bold md:text-4xl">
-                    Carte operationnelle eNkamba
-                  </h1>
-                  <p className="mt-2 max-w-3xl text-sm leading-6 text-white/70">
-                    Vue etalee par continents, presence utilisateur instantanee, latence et module dominant par point.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  <div className="rounded-[8px] border border-white/10 bg-white/5 px-3 py-2">
-                    <p className="text-lg font-bold text-[#009058]">99.8%</p>
-                    <p className="text-[11px] text-white/55">Uptime</p>
-                  </div>
-                  <div className="rounded-[8px] border border-white/10 bg-white/5 px-3 py-2">
-                    <p className="text-lg font-bold text-[#FFA500]">42ms</p>
-                    <p className="text-[11px] text-white/55">Latence</p>
-                  </div>
-                  <div className="rounded-[8px] border border-white/10 bg-white/5 px-3 py-2">
-                    <p className="text-lg font-bold">{visibleCities.length}</p>
-                    <p className="text-[11px] text-white/55">Points</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className={cn('admin-world-shell', isMapInverted && 'admin-world-inverted')}>
-                <div
-                  className="admin-world-transform"
-                  style={{
-                    transform: `translate(${mapOffset.x}px, ${mapOffset.y}px) scale(${mapZoom}) rotate(${mapRotation}deg)`,
-                  }}
-                >
-                  <svg className="admin-world-map" viewBox="0 0 1000 520" role="img" aria-label="Carte mondiale des utilisateurs connectes">
-                    <path className="admin-continent" d="M166 138c36-34 98-42 140-18 31 17 46 48 73 66 28 18 63 20 81 46 20 29 3 72-33 82-26 7-54-7-79 4-31 14-37 59-68 76-26 14-60 3-78-20-19-25-16-58-32-85-17-29-55-43-63-76-7-27 17-54 59-75z" />
-                    <path className="admin-continent" d="M320 326c34 6 66 25 82 55 17 33 10 73-8 106-12 22-32 44-58 42-32-3-40-38-51-64-12-31-43-47-53-78-12-37 26-68 88-61z" />
-                    <path className="admin-continent" d="M474 120c42-20 95-19 135 2 26 14 44 37 73 45 31 9 66-1 96 13 38 17 55 63 45 103-10 39-43 65-80 74-35 9-72 2-105 17-33 16-52 53-87 65-34 12-73-4-91-35-18-30-15-69 1-100 18-35 51-59 65-96 12-31-6-58-52-88z" />
-                    <path className="admin-continent" d="M535 288c50 4 102 28 127 72 26 45 19 105-9 148-20 31-54 54-91 45-36-9-49-48-62-80-15-38-50-64-55-105-5-45 36-83 90-80z" />
-                    <path className="admin-continent" d="M656 118c56-30 139-24 188 17 45 38 58 103 37 158-18 47-60 76-108 86-49 10-99 1-148 11-34 7-67 22-101 14 19-33 54-52 67-91 13-40-5-83 9-123 9-28 28-52 56-72z" />
-                    <path className="admin-continent" d="M780 367c38-16 92-7 121 24 25 27 27 70 4 98-24 30-72 34-107 18-31-15-58-47-50-83 5-25 15-44 32-57z" />
-                    <path className="admin-continent muted" d="M330 94c18-16 48-20 72-9 20 9 30 28 24 48-8 26-42 39-68 30-28-9-47-44-28-69z" />
-                    <path className="admin-route" d="M530 575 C500 360 490 320 480 170" />
-                    <path className="admin-route" d="M530 575 C420 430 320 350 230 250" />
-                    <path className="admin-route" d="M530 575 C650 430 740 315 805 210" />
-                    <path className="admin-route" d="M530 575 C635 500 740 455 860 430" />
-                  </svg>
-
-                  {visibleCities.map((point, index) => (
-                    <button
-                      key={point.city}
-                      type="button"
-                      onClick={() => setSelectedPoint(point)}
-                      className={cn(
-                        'admin-map-point',
-                        selectedPoint.city === point.city && 'admin-map-point-active',
-                      )}
-                      style={{ left: `${point.x}%`, top: `${point.y}%`, zIndex: 20 + index }}
-                      aria-label={`${point.city}, ${point.users} utilisateurs actifs`}
-                    >
-                      <span className="admin-map-ping" />
-                      <span className="admin-map-dot" />
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <aside className="grid gap-3">
-              <div className="rounded-[8px] border border-white/10 bg-white/[0.07] p-4 backdrop-blur">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#009058]">Point selectionne</p>
-                    <h2 className="mt-2 text-2xl font-bold">{selectedPoint.city}</h2>
-                    <p className="text-sm text-white/60">{selectedPoint.country} - {selectedPoint.continent}</p>
-                  </div>
-                  <Badge className="bg-[#009058] hover:bg-[#009058]">{selectedPoint.status}</Badge>
-                </div>
-                <div className="mt-4 grid grid-cols-2 gap-3">
-                  <div className="rounded-[8px] bg-white/5 p-3">
-                    <p className="text-xs text-white/50">Utilisateurs</p>
-                    <p className="text-2xl font-bold">{selectedPoint.users}</p>
-                  </div>
-                  <div className="rounded-[8px] bg-white/5 p-3">
-                    <p className="text-xs text-white/50">Latence</p>
-                    <p className="text-2xl font-bold">{selectedPoint.latency}</p>
-                  </div>
-                  <div className="col-span-2 rounded-[8px] bg-white/5 p-3">
-                    <p className="text-xs text-white/50">Module dominant</p>
-                    <p className="mt-1 font-semibold">{selectedPoint.module}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-[8px] border border-white/10 bg-white/[0.07] p-4 backdrop-blur">
-                <p className="mb-3 text-sm font-semibold">Manipulation carte</p>
-                <div className="grid grid-cols-4 gap-2">
-                  <Button size="icon" variant="secondary" onClick={() => setMapZoom((value) => Math.min(1.8, Number((value + 0.1).toFixed(2))))}>
-                    <ZoomIn className="h-4 w-4" />
-                  </Button>
-                  <Button size="icon" variant="secondary" onClick={() => setMapZoom((value) => Math.max(0.75, Number((value - 0.1).toFixed(2))))}>
-                    <ZoomOut className="h-4 w-4" />
-                  </Button>
-                  <Button size="icon" variant="secondary" onClick={() => setMapRotation((value) => value - 8)}>
-                    <RotateCcw className="h-4 w-4" />
-                  </Button>
-                  <Button size="icon" variant="secondary" onClick={() => {
-                    setMapZoom(1);
-                    setMapRotation(0);
-                    setMapOffset({ x: 0, y: 0 });
-                  }}>
-                    <Maximize2 className="h-4 w-4" />
-                  </Button>
-                  <Button size="icon" variant="secondary" onClick={() => setMapOffset((value) => ({ ...value, y: value.y - 18 }))}>
-                    <ArrowUp className="h-4 w-4" />
-                  </Button>
-                  <Button size="icon" variant="secondary" onClick={() => setMapOffset((value) => ({ ...value, x: value.x - 18 }))}>
-                    <ArrowLeft className="h-4 w-4" />
-                  </Button>
-                  <Button size="icon" variant="secondary" onClick={() => setMapOffset((value) => ({ ...value, x: value.x + 18 }))}>
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                  <Button size="icon" variant="secondary" onClick={() => setMapOffset((value) => ({ ...value, y: value.y + 18 }))}>
-                    <ArrowDown className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="mt-3 grid grid-cols-2 gap-2">
-                  <Button variant="outline" className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white" onClick={() => setIsSortedByActivity((value) => !value)}>
-                    Trier
-                  </Button>
-                  <Button variant="outline" className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white" onClick={() => setIsMapInverted((value) => !value)}>
-                    Inverser
-                  </Button>
-                </div>
-                <p className="mt-3 text-xs text-white/45">
-                  Zoom {Math.round(mapZoom * 100)}% - rotation {mapRotation}deg
-                </p>
-              </div>
-            </aside>
-          </div>
-        </section>
+        <GlobalSurveillanceMap />
 
         <header className="flex flex-col gap-4 rounded-[8px] border border-primary/10 bg-white px-4 py-4 shadow-sm md:flex-row md:items-center md:justify-between">
           <div>
@@ -798,13 +717,14 @@ export default function AdminDashboardPage() {
                 <p className="mt-1 text-sm text-slate-500">Vue de controle par domaine fonctionnel.</p>
               </div>
               <Badge className="w-fit bg-[#009058] hover:bg-[#009058]">
-                Architecture unifiee
+                Donnees temps reel
               </Badge>
             </div>
 
             <div className="mt-5 grid gap-4 lg:grid-cols-2">
               {modules.map((module) => {
                 const Icon = module.icon;
+                const moduleStats = getModuleStats(module.name);
                 return (
                   <Link
                     key={module.name}
@@ -828,13 +748,20 @@ export default function AdminDashboardPage() {
                     </div>
                     <p className="mt-3 text-sm leading-6 text-slate-600">{module.description}</p>
                     <div className="mt-4 flex items-center justify-between text-xs">
-                      <span className="font-medium text-slate-500">{module.users} utilisateurs</span>
+                      <span className="font-medium text-slate-500">
+                        {formatCount(moduleStats.users)} utilisateurs reels
+                      </span>
                       <span className="flex items-center gap-1 font-semibold text-primary">
                         <CheckCircle2 className="h-3.5 w-3.5" />
-                        {module.health}%
+                        {moduleStats.health}%
                       </span>
                     </div>
-                    <Progress value={module.health} className="mt-2 h-2" />
+                    <Progress value={moduleStats.health} className="mt-2 h-2" />
+                    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-medium text-slate-500">
+                      <span>{formatCount(moduleStats.visits)} visites</span>
+                      <span>{formatCount(moduleStats.activeSessions)} actifs</span>
+                      <span>{formatDurationLabel(moduleStats.durationSeconds)} cumule</span>
+                    </div>
                     <div className="mt-4 flex flex-wrap gap-2">
                       {module.submodules.slice(0, 4).map((submodule) => (
                         <Badge key={submodule} variant="outline" className="rounded-[6px] text-[11px]">
@@ -871,119 +798,6 @@ export default function AdminDashboardPage() {
           })}
         </section>
       </div>
-
-      <style jsx>{`
-        .admin-world-shell {
-          position: relative;
-          min-height: 430px;
-          overflow: hidden;
-          border-radius: 8px;
-          border: 1px solid rgba(126, 231, 175, 0.22);
-          background:
-            linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px),
-            radial-gradient(circle at 50% 50%, rgba(50, 187, 120, 0.16), rgba(15, 23, 42, 0.16) 50%, rgba(2, 6, 23, 0.5));
-          background-size: 44px 44px, 44px 44px, cover;
-        }
-
-        .admin-world-shell::before {
-          content: '';
-          position: absolute;
-          inset: 9% 6%;
-          border-radius: 50%;
-          border: 1px solid rgba(126, 231, 175, 0.12);
-          box-shadow: 0 0 80px rgba(50, 187, 120, 0.12);
-        }
-
-        .admin-world-inverted {
-          filter: hue-rotate(150deg) invert(0.88);
-        }
-
-        .admin-world-transform {
-          position: absolute;
-          inset: 0;
-          transform-origin: center;
-          transition: transform 220ms ease, filter 220ms ease;
-        }
-
-        .admin-world-map {
-          position: absolute;
-          inset: 0;
-          height: 100%;
-          width: 100%;
-          padding: 22px;
-        }
-
-        .admin-continent {
-          fill: rgba(50, 187, 120, 0.3);
-          stroke: rgba(126, 231, 175, 0.75);
-          stroke-width: 2;
-          filter: drop-shadow(0 0 12px rgba(50, 187, 120, 0.24));
-        }
-
-        .admin-continent.muted {
-          fill: rgba(255, 255, 255, 0.12);
-          stroke: rgba(255, 255, 255, 0.32);
-        }
-
-        .admin-route {
-          fill: none;
-          stroke: rgba(255,165,0, 0.32);
-          stroke-dasharray: 7 10;
-          stroke-linecap: round;
-          stroke-width: 2;
-          animation: admin-route-flow 18s linear infinite;
-        }
-
-        .admin-map-point {
-          position: absolute;
-          height: 24px;
-          width: 24px;
-          transform: translate(-50%, -50%);
-          cursor: pointer;
-        }
-
-        .admin-map-dot,
-        .admin-map-ping {
-          position: absolute;
-          left: 50%;
-          top: 50%;
-          display: block;
-          height: 11px;
-          width: 11px;
-          border-radius: 9999px;
-          background: #009058;
-          transform: translate(-50%, -50%);
-          box-shadow: 0 0 18px rgba(126, 231, 175, 0.95);
-        }
-
-        .admin-map-point-active .admin-map-dot {
-          background: #FFA500;
-          box-shadow: 0 0 24px rgba(255,165,0, 1);
-        }
-
-        .admin-map-ping {
-          animation: admin-ping 1.9s cubic-bezier(0, 0, 0.2, 1) infinite;
-          opacity: 0.7;
-        }
-
-        @keyframes admin-ping {
-          75%,
-          100% {
-            transform: translate(-50%, -50%) scale(3.8);
-            opacity: 0;
-          }
-        }
-
-        @keyframes admin-route-flow {
-          from {
-            stroke-dashoffset: 0;
-          }
-          to {
-            stroke-dashoffset: -180;
-          }
-        }
-      `}</style>
     </main>
   );
 }

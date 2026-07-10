@@ -1,3 +1,5 @@
+@import 'leaflet/dist/leaflet.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -297,22 +299,160 @@
   }
 }
 
-/* Leaflet Styles */
+/* Leaflet admin control center */
 .leaflet-container {
-  font-family: inherit;
+  width: 100%;
+  height: 100%;
+  font-family: var(--enkamba-font-family);
+  background: #F7FAF8;
 }
 
-.leaflet-popup-content-wrapper {
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+.leaflet-control-zoom {
+  overflow: hidden;
+  border: 1px solid rgba(0, 144, 88, 0.14) !important;
+  border-radius: 8px !important;
+  background: rgba(255, 255, 255, 0.94) !important;
+  box-shadow: 0 18px 45px rgba(0, 144, 88, 0.12) !important;
+  backdrop-filter: blur(16px);
 }
 
-.leaflet-popup-tip {
-  background-color: white;
+.leaflet-control-zoom a {
+  border: 0 !important;
+  background: transparent !important;
+  color: #009058 !important;
 }
 
-.leaflet-marker-icon {
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+.leaflet-control-attribution {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.86) !important;
+  color: rgba(27, 32, 38, 0.66) !important;
+  backdrop-filter: blur(14px);
+}
+
+.leaflet-control-attribution a {
+  color: #009058 !important;
+}
+
+.enkamba-live-marker {
+  position: relative;
+  display: block;
+  height: 34px;
+  width: 34px;
+}
+
+.enkamba-live-marker__dot,
+.enkamba-live-marker__pulse {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: block;
+  border-radius: 9999px;
+  transform: translate(-50%, -50%);
+}
+
+.enkamba-live-marker__dot {
+  height: 13px;
+  width: 13px;
+  border: 2px solid white;
+  background: #009058;
+  box-shadow: 0 0 0 4px rgba(0, 144, 88, 0.22), 0 0 26px rgba(0, 144, 88, 0.9);
+}
+
+.enkamba-live-marker__pulse {
+  height: 13px;
+  width: 13px;
+  background: rgba(0, 144, 88, 0.44);
+  animation: enkamba-admin-pulse 1.75s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.enkamba-live-marker--active .enkamba-live-marker__dot {
+  background: #FFA500;
+  box-shadow: 0 0 0 5px rgba(255, 165, 0, 0.24), 0 0 30px rgba(255, 165, 0, 0.92);
+}
+
+.enkamba-live-marker--active .enkamba-live-marker__pulse {
+  background: rgba(255, 165, 0, 0.48);
+}
+
+.enkamba-admin-leaflet-popup .leaflet-popup-content-wrapper {
+  overflow: hidden;
+  border: 1px solid rgba(0, 144, 88, 0.14);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 24px 60px rgba(0, 144, 88, 0.18);
+  color: #1B2026;
+  backdrop-filter: blur(18px);
+}
+
+.enkamba-admin-leaflet-popup .leaflet-popup-content {
+  margin: 0;
+  min-width: 220px;
+}
+
+.enkamba-admin-leaflet-popup .leaflet-popup-tip {
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.enkamba-admin-popup {
+  padding: 12px;
+}
+
+.enkamba-admin-popup__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.enkamba-admin-popup__avatar {
+  display: grid;
+  height: 38px;
+  width: 38px;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 9999px;
+  background: #009058;
+  color: white;
+  font-weight: 900;
+}
+
+.enkamba-admin-popup__name {
+  display: block;
+  max-width: 170px;
+  overflow: hidden;
+  color: #1B2026;
+  font-size: 13px;
+  font-weight: 900;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.enkamba-admin-popup__name:hover {
+  color: #FFA500;
+}
+
+.enkamba-admin-popup p {
+  margin: 2px 0 0;
+  color: rgba(71, 112, 99, 0.92);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.enkamba-admin-popup__body {
+  margin-top: 10px;
+  display: grid;
+  gap: 6px;
+  color: rgba(27, 32, 38, 0.72);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+@keyframes enkamba-admin-pulse {
+  75%,
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(3.7);
+  }
 }
 
 /* Animation shimmer pour la barre de progression */
