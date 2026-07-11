@@ -111,6 +111,24 @@ export async function POST(request: NextRequest) {
     }
 
     const encoder = new TextEncoder();
+    const createTextStreamResponse = (text: string) => {
+      return new NextResponse(
+        new ReadableStream({
+          start(controller) {
+            controller.enqueue(encoder.encode(text));
+            controller.close();
+          },
+        }),
+        {
+          headers: {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+          },
+        }
+      );
+    };
+
     const fallbackToGeminiOrKnowledge = async (reason: string) => {
       console.warn('Fallback IA activé:', reason);
 
@@ -126,21 +144,7 @@ export async function POST(request: NextRequest) {
           const text = result.response.text();
 
           if (text.trim()) {
-            return new NextResponse(
-              new ReadableStream({
-                start(controller) {
-                  controller.enqueue(encoder.encode(text));
-                  controller.close();
-                },
-              }),
-              {
-                headers: {
-                  'Content-Type': 'text/event-stream',
-                  'Cache-Control': 'no-cache',
-                  'Connection': 'keep-alive',
-                },
-              }
-            );
+            return createTextStreamResponse(text);
           }
         } catch (error) {
           console.error('Erreur fallback Gemini:', error);
@@ -162,42 +166,106 @@ export async function POST(request: NextRequest) {
           'Je peux aussi reformuler ces résultats ou les analyser si vous précisez ce que vous voulez comparer.',
         ].join('\n\n');
 
-        return new NextResponse(
-          new ReadableStream({
-            start(controller) {
-              controller.enqueue(encoder.encode(webAnswer));
-              controller.close();
-            },
-          }),
-          {
-            headers: {
-              'Content-Type': 'text/event-stream',
-              'Cache-Control': 'no-cache',
-              'Connection': 'keep-alive',
-            },
-          }
-        );
+        return createTextStreamResponse(webAnswer);
       }
 
       const localAnswer = buildKnowledgeFallbackAnswer(message, knowledgeEntries, {
         searchUnavailableReason: options.searchWeb && !hasSearchResults ? searchUnavailableReason : undefined,
       });
-      return new NextResponse(
-        new ReadableStream({
-          start(controller) {
-            controller.enqueue(encoder.encode(localAnswer));
-            controller.close();
+      return createTextStreamResponse(localAnswer);
+    };
+
+    const openAiApiKey = process.env.OPENAI_API_KEY?.trim();
+    if (openAiApiKey) {
+      try {
+        const openAiResponse = await fetch('https://api.openai.com/v1/responses', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openAiApiKey}`,
+            'Content-Type': 'application/json',
           },
-        }),
-        {
+          body: JSON.stringify({
+            model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+            instructions: systemPrompt,
+            input: finalMessage,
+            stream: true,
+            max_output_tokens: 2048,
+          }),
+        });
+
+        if (!openAiResponse.ok) {
+          const error = await openAiResponse.text();
+          console.error('Erreur OpenAI:', error);
+          return fallbackToGeminiOrKnowledge(`OpenAI HTTP ${openAiResponse.status}`);
+        }
+
+        const stream = new ReadableStream({
+          async start(controller) {
+            try {
+              const reader = openAiResponse.body?.getReader();
+              if (!reader) {
+                throw new Error('Pas de reader OpenAI disponible');
+              }
+
+              const decoder = new TextDecoder();
+              let buffer = '';
+
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const blocks = buffer.split('\n\n');
+                buffer = blocks.pop() || '';
+
+                for (const block of blocks) {
+                  const eventLine = block.split('\n').find((line) => line.startsWith('event: '));
+                  const dataLine = block.split('\n').find((line) => line.startsWith('data: '));
+                  if (!dataLine) continue;
+
+                  const eventName = eventLine?.slice(7).trim();
+                  const data = dataLine.slice(6);
+                  if (data === '[DONE]') continue;
+
+                  try {
+                    const parsed = JSON.parse(data);
+                    const delta =
+                      parsed.delta ||
+                      parsed.output_text ||
+                      parsed.text ||
+                      parsed.response?.output_text;
+
+                    if (eventName === 'response.output_text.delta' && typeof delta === 'string') {
+                      controller.enqueue(encoder.encode(delta));
+                    }
+                  } catch {
+                    // Ignorer les événements OpenAI non textuels.
+                  }
+                }
+              }
+
+              controller.close();
+            } catch (error: any) {
+              console.error('Erreur stream OpenAI:', error);
+              const errorMessage = `Erreur: ${error instanceof Error ? error.message : 'Erreur inconnue'}`;
+              controller.enqueue(encoder.encode(errorMessage));
+              controller.close();
+            }
+          },
+        });
+
+        return new NextResponse(stream, {
           headers: {
             'Content-Type': 'text/event-stream',
             'Cache-Control': 'no-cache',
             'Connection': 'keep-alive',
           },
-        }
-      );
-    };
+        });
+      } catch (error) {
+        console.error('Erreur réseau OpenAI:', error);
+        return fallbackToGeminiOrKnowledge('OpenAI indisponible');
+      }
+    }
 
     const groqApiKey = process.env.GROQ_API_KEY?.trim();
     if (!groqApiKey || groqApiKey === 'your_groq_api_key_here') {
