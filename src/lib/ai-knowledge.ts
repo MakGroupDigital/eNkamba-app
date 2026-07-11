@@ -152,7 +152,7 @@ export async function getRelevantAiKnowledge(message: string, limit = 8) {
 
   const publicLocalKnowledge = LOCAL_KNOWLEDGE.filter((entry) => entry.visibility !== 'internal');
   const localResults = searchLocalKnowledge(message, publicLocalKnowledge, limit);
-  return localResults.length > 0 ? localResults : publicLocalKnowledge.slice(0, limit);
+  return localResults;
 }
 
 export function buildAiKnowledgeContext(entries: AiKnowledgeEntry[]) {
