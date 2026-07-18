@@ -106,6 +106,7 @@ const SUBCATEGORY_MAP: Record<BusinessType, { value: string; label: string }[]> 
   PAYMENT: [
     { value: 'API_INTEGRATION', label: 'Intégration API / plateforme' },
     { value: 'ACCREDITED_ENTERPRISE', label: 'Entreprise accréditée (collecte & cash-in)' },
+    { value: 'TRANSFER_AGENCY', label: 'Agence de transfert d’argent POS' },
     { value: 'APPROVED_AGENT', label: 'Agent agréé / super-agent' },
     { value: 'FINTECH', label: 'Fintech & institution financière' },
     { value: 'B2B_PAYMENTS', label: 'Paiements B2B, facturation, paie' },
@@ -117,6 +118,7 @@ const SUBCATEGORY_TIPS: Record<string, string> = {
     'Interface commerce + logistique pour produits alimentaires (lots, dates péremption, tracing).',
   BIO_PRODUCTS: 'Accès à des modules bio et traçabilité, dashboards Nkampa Bio et listes de certification.',
   RELAY_AGENT: 'Flux inspiré de l’agent relais (KYC, mode d’exploitation, géolocalisation).',
+  TRANSFER_AGENCY: 'Dashboard paiement agence: envoi, paiement bénéficiaire, caisse POS, reçus, commissions et audit.',
   LOCAL_AGENCY: 'Dashboard agence locale: missions, flotte, tarifs rapides et suivi urbain.',
   NATIONAL_AGENCY: 'Dashboard inter-ville avec dépôts, transferts, hubs et réseau national.',
   INTERNATIONAL_AGENCY: 'Dashboard cross-border avec douane, partenaires et tracking multi-pays.',

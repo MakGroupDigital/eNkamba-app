@@ -296,9 +296,10 @@ export function LogisticsDashboard({ businessUser }: LogisticsDashboardProps) {
   const roleConfig = getLogisticsRoleConfig(businessUser.subCategory);
   const { location } = useDashboardLocation();
   const canRegisterPackages = !businessUser.subCategory?.startsWith('COURIER_');
-  const tabs = canRegisterPackages && !roleConfig.tabs.some((tab) => tab.id === 'register')
-    ? [...roleConfig.tabs, REGISTER_TAB]
-    : roleConfig.tabs;
+  const tabs = [
+    ...roleConfig.tabs,
+    ...(canRegisterPackages && !roleConfig.tabs.some((tab) => tab.id === 'register') ? [REGISTER_TAB] : []),
+  ];
   const [activeTab, setActiveTab] = useState(tabs[0]?.id || 'overview');
   const [activeSidebarItem, setActiveSidebarItem] = useState('overview');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -754,7 +755,7 @@ function LogisticsSegmentTabs({
   setActiveTab: (tab: string) => void;
 }) {
   return (
-    <div className="grid grid-cols-5 gap-2">
+    <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))` }}>
       {tabs.map((tab) => (
         <button
           key={tab.id}

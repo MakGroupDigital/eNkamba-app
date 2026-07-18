@@ -110,13 +110,13 @@ export function useBusinessStatus(preferredBusinessType?: BusinessType | null) {
         }
 
         const ranked = candidates.sort((left, right) => {
-          const leftApproved = left.status === 'APPROVED' ? 1 : 0;
-          const rightApproved = right.status === 'APPROVED' ? 1 : 0;
-          if (rightApproved !== leftApproved) return rightApproved - leftApproved;
-
           const leftPreferred = preferredBusinessType && left.businessType === preferredBusinessType ? 1 : 0;
           const rightPreferred = preferredBusinessType && right.businessType === preferredBusinessType ? 1 : 0;
           if (rightPreferred !== leftPreferred) return rightPreferred - leftPreferred;
+
+          const leftApproved = left.status === 'APPROVED' ? 1 : 0;
+          const rightApproved = right.status === 'APPROVED' ? 1 : 0;
+          if (rightApproved !== leftApproved) return rightApproved - leftApproved;
 
           return right.priorityTime - left.priorityTime;
         });

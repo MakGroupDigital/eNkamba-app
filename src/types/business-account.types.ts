@@ -35,6 +35,7 @@ export type LogisticsSubCategory =
 export type PaymentSubCategory = 
   | 'API_INTEGRATION'
   | 'ACCREDITED_ENTERPRISE'
+  | 'TRANSFER_AGENCY'
   | 'APPROVED_AGENT'
   | 'FINTECH'
   | 'B2B_PAYMENTS';
