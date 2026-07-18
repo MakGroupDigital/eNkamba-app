@@ -67,7 +67,7 @@ function scoreKnowledgeEntry(entry: AiKnowledgeEntry, query: string) {
   if (tokens.length === 0) return 0;
 
   const title = normalizeText(entry.title);
-  const module = normalizeText(entry.module);
+  const moduleName = normalizeText(entry.module);
   const summary = normalizeText(entry.summary);
   const content = normalizeText(entry.content);
   const keywords = (entry.keywords || []).map(normalizeText);
@@ -77,7 +77,7 @@ function scoreKnowledgeEntry(entry: AiKnowledgeEntry, query: string) {
 
   for (const token of tokens) {
     if (title.includes(token)) score += 6;
-    if (module.includes(token)) score += 5;
+    if (moduleName.includes(token)) score += 5;
     if (keywords.some((keyword) => keyword.includes(token) || token.includes(keyword))) score += 5;
     if (tags.some((tag) => tag.includes(token))) score += 3;
     if (summary.includes(token)) score += 2.5;
@@ -86,7 +86,7 @@ function scoreKnowledgeEntry(entry: AiKnowledgeEntry, query: string) {
 
   const normalizedQuery = normalizeText(query);
   if (title && normalizedQuery.includes(title)) score += 8;
-  if (module && normalizedQuery.includes(module)) score += 5;
+  if (moduleName && normalizedQuery.includes(moduleName)) score += 5;
 
   return score;
 }

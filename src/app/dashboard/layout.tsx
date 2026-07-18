@@ -37,10 +37,10 @@ export default function DashboardLayout({
     else if (pathname.includes('/business-pro')) {
       // Détection du type de business via le paramètre module dans l'URL
       const searchParams = new URLSearchParams(window.location.search);
-      const module = searchParams.get('module');
-      if (module === 'COMMERCE') setActiveTab('Marché');
-      else if (module === 'LOGISTICS') setActiveTab('Logistique');
-      else if (module === 'PAYMENT') setActiveTab('Paiement');
+      const businessModule = searchParams.get('module');
+      if (businessModule === 'COMMERCE') setActiveTab('Marché');
+      else if (businessModule === 'LOGISTICS') setActiveTab('Logistique');
+      else if (businessModule === 'PAYMENT') setActiveTab('Paiement');
       else setActiveTab('Paiement'); // Par défaut
     }
     else if (pathname.includes('/wallet')) setActiveTab('Paiement');
