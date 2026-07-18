@@ -215,6 +215,11 @@ const SERVICE_CATALOG: Record<BusinessType, { id: string; label: string; descrip
   ],
   PAYMENT: [
     {
+      id: 'pos-transfer-agency',
+      label: 'Transfert POS agence',
+      description: 'Création d’agence, caisse POS, code bénéficiaire, paiement et audit.',
+    },
+    {
       id: 'api',
       label: 'API & webhooks',
       description: 'Intégration via clés publiques/privées et gestion des webhooks.',
@@ -248,6 +253,46 @@ const PAYMENT_ROLES: { value: PaymentRole; label: string }[] = [
   { value: 'AGENT', label: 'Agent agréé / relais' },
   { value: 'FINTECH_PARTNER', label: 'Plateforme fintech ou institution' },
 ];
+
+const TRANSFER_AGENCY_CREATION_STEPS = [
+  'Informations générales',
+  'Documents légaux',
+  'Adresse du siège',
+  'Paramètres financiers',
+  'Vérification et activation',
+];
+
+const TRANSFER_AGENCY_REQUIRED_DOCUMENTS = [
+  'RCCM ou document d’existence légale',
+  'ID Nat / numéro fiscal',
+  'Pièce d’identité du responsable légal',
+  'Autorisation d’agence de transfert ou activité financière',
+  'Adresse vérifiable du siège',
+  'Justificatif compte bancaire ou wallet de règlement',
+  'Contrat eNKAMBA Pay signé',
+];
+
+const TRANSFER_AGENCY_PAYOUT_MODES = [
+  'Cash-in',
+  'Cash-out',
+  'Paiement bénéficiaire par code',
+  'Transfert inter-agence',
+  'Reçu imprimé',
+  'Audit POS',
+];
+
+const TRANSFER_AGENCY_CURRENCIES = ['USD', 'CDF', 'EUR', 'RMB'];
+
+function generateTransferAgencyCode(city: string) {
+  const cityCode = (city || 'KIN')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z]/g, '')
+    .slice(0, 3)
+    .toUpperCase()
+    .padEnd(3, 'X');
+  return `AG-${cityCode}-001`;
+}
 
 const NATIONAL_AGENCY_REQUIRED_DOCUMENTS = [
   'RCCM ou document d’existence légale',
@@ -548,6 +593,22 @@ export default function BusinessAccountPage() {
       trackingCommitmentAccepted: false,
       suspensionRulesAccepted: false,
     },
+    transferAgencyCompliance: {
+      agencyCode: 'AG-KIN-001',
+      legalDocuments: TRANSFER_AGENCY_REQUIRED_DOCUMENTS,
+      headOfficeConfirmed: false,
+      settlementWallet: '',
+      defaultCurrency: 'USD',
+      supportedCurrencies: ['USD', 'CDF'],
+      openingCashFloat: '',
+      dailyTransactionLimit: '',
+      commissionRate: '3',
+      payoutModes: ['Cash-in', 'Cash-out', 'Paiement bénéficiaire par code'],
+      verificationStatus: 'PENDING',
+      contractAccepted: false,
+      auditAccepted: false,
+      activationAccepted: false,
+    },
     documents: {
       idCard: null,
       taxDocument: null,
@@ -589,6 +650,30 @@ export default function BusinessAccountPage() {
         moduleServices: [],
       }));
     }
+
+    if (field === 'subCategory' && value === 'TRANSFER_AGENCY') {
+      setFormData(prev => ({
+        ...prev,
+        paymentRole: 'AGENT',
+        moduleServices: prev.moduleServices.includes('pos-transfer-agency')
+          ? prev.moduleServices
+          : ['pos-transfer-agency', ...prev.moduleServices],
+        transferAgencyCompliance: {
+          ...prev.transferAgencyCompliance,
+          agencyCode: generateTransferAgencyCode(prev.city),
+        },
+      }));
+    }
+
+    if (field === 'city') {
+      setFormData(prev => ({
+        ...prev,
+        transferAgencyCompliance: {
+          ...prev.transferAgencyCompliance,
+          agencyCode: generateTransferAgencyCode(value),
+        },
+      }));
+    }
   };
 
   const handleFileChange = (docType: keyof BusinessFormState['documents'], file: File | null) => {
@@ -625,6 +710,39 @@ export default function BusinessAccountPage() {
         [field]: value,
       },
     }));
+  };
+
+  const handleTransferAgencyComplianceChange = (
+    field: keyof BusinessFormState['transferAgencyCompliance'],
+    value: any
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      transferAgencyCompliance: {
+        ...prev.transferAgencyCompliance,
+        [field]: value,
+      },
+    }));
+  };
+
+  const toggleTransferAgencyArrayValue = (
+    field: 'supportedCurrencies' | 'payoutModes',
+    value: string
+  ) => {
+    setFormData((prev) => {
+      const current = prev.transferAgencyCompliance[field] || [];
+      const next = current.includes(value)
+        ? current.filter((item) => item !== value)
+        : [...current, value];
+
+      return {
+        ...prev,
+        transferAgencyCompliance: {
+          ...prev.transferAgencyCompliance,
+          [field]: next,
+        },
+      };
+    });
   };
 
   const toggleNationalAgencyArrayValue = (
@@ -725,6 +843,25 @@ export default function BusinessAccountPage() {
         if (formData.type === 'PAYMENT' && !formData.paymentRole) {
           toast({ variant: 'destructive', title: 'Rôle', description: 'Précisez si vous êtes intégrateur, agent agréé ou plateforme fintech.' });
           return false;
+        }
+        if (formData.type === 'PAYMENT' && formData.subCategory === 'TRANSFER_AGENCY') {
+          const agency = formData.transferAgencyCompliance;
+          if (!agency.defaultCurrency || agency.supportedCurrencies.length === 0 || !agency.openingCashFloat.trim() || !agency.dailyTransactionLimit.trim() || !agency.settlementWallet.trim()) {
+            toast({
+              variant: 'destructive',
+              title: 'Paramètres agence requis',
+              description: 'Renseignez devise, caisse initiale, plafond journalier et wallet de règlement.',
+            });
+            return false;
+          }
+          if (!agency.contractAccepted || !agency.auditAccepted || !agency.activationAccepted) {
+            toast({
+              variant: 'destructive',
+              title: 'Activation agence',
+              description: 'Acceptez le contrat, l’audit POS et la vérification avant activation.',
+            });
+            return false;
+          }
         }
         return true;
       case 2:
@@ -1195,36 +1332,210 @@ export default function BusinessAccountPage() {
               </div>
             )}
             {formData.type === 'PAYMENT' && (
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <Label htmlFor="paymentRole">Rôle de paiement *</Label>
-                  <Select
-                    value={formData.paymentRole}
-                    onValueChange={(value) => handleInputChange('paymentRole', value)}
-                    disabled={isSubmitting}
-                  >
-                    <SelectTrigger id="paymentRole">
-                      <SelectValue placeholder="Sélectionnez un rôle" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {PAYMENT_ROLES.map((role) => (
-                        <SelectItem key={role.value} value={role.value}>
-                          {role.label}
-                        </SelectItem>
+              <div className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <Label htmlFor="paymentRole">Rôle de paiement *</Label>
+                    <Select
+                      value={formData.paymentRole}
+                      onValueChange={(value) => handleInputChange('paymentRole', value)}
+                      disabled={isSubmitting || formData.subCategory === 'TRANSFER_AGENCY'}
+                    >
+                      <SelectTrigger id="paymentRole">
+                        <SelectValue placeholder="Sélectionnez un rôle" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PAYMENT_ROLES.map((role) => (
+                          <SelectItem key={role.value} value={role.value}>
+                            {role.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="apiCallbackUrl">URL de callback API</Label>
+                    <Input
+                      id="apiCallbackUrl"
+                      value={formData.apiCallbackUrl || ''}
+                      onChange={(e) => handleInputChange('apiCallbackUrl', e.target.value)}
+                      placeholder="https://mon-domaine.com/callback"
+                      disabled={isSubmitting}
+                    />
+                  </div>
+                </div>
+
+                {formData.subCategory === 'TRANSFER_AGENCY' && (
+                  <div className="space-y-4 rounded-2xl border border-primary/20 bg-white p-4 shadow-sm">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-primary">Création Agence</p>
+                        <h4 className="text-lg font-bold text-slate-900">Compte agence de transfert d’argent</h4>
+                        <p className="mt-1 text-sm text-slate-600">
+                          Parcours en cinq étapes avec activation après vérification eNKAMBA Pay.
+                        </p>
+                      </div>
+                      <div className="rounded-2xl bg-primary px-4 py-2 text-center text-white shadow-sm">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/70">Code agence</p>
+                        <p className="text-lg font-black">{formData.transferAgencyCompliance.agencyCode}</p>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-2 md:grid-cols-5">
+                      {TRANSFER_AGENCY_CREATION_STEPS.map((step, index) => (
+                        <div key={step} className="rounded-xl border border-primary/15 bg-primary/5 p-3">
+                          <span className="grid h-7 w-7 place-items-center rounded-full bg-primary text-xs font-black text-white">
+                            {index + 1}
+                          </span>
+                          <p className="mt-2 text-xs font-black text-slate-900">{step}</p>
+                        </div>
                       ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="apiCallbackUrl">URL de callback API</Label>
-                  <Input
-                    id="apiCallbackUrl"
-                    value={formData.apiCallbackUrl || ''}
-                    onChange={(e) => handleInputChange('apiCallbackUrl', e.target.value)}
-                    placeholder="https://mon-domaine.com/callback"
-                    disabled={isSubmitting}
-                  />
-                </div>
+                    </div>
+
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                        <p className="mb-2 text-sm font-semibold text-slate-900">Documents légaux demandés</p>
+                        <ul className="list-disc space-y-1 pl-5 text-sm text-slate-600">
+                          {TRANSFER_AGENCY_REQUIRED_DOCUMENTS.map((document) => (
+                            <li key={document}>{document}</li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                        <p className="mb-2 text-sm font-semibold text-slate-900">Activation</p>
+                        <div className="space-y-2 text-sm text-slate-700">
+                          <label className="flex items-start gap-2">
+                            <Checkbox
+                              checked={formData.transferAgencyCompliance.headOfficeConfirmed}
+                              onCheckedChange={(checked) => handleTransferAgencyComplianceChange('headOfficeConfirmed', Boolean(checked))}
+                              disabled={isSubmitting}
+                            />
+                            Adresse du siège vérifiable et accessible au public
+                          </label>
+                          <label className="flex items-start gap-2">
+                            <Checkbox
+                              checked={formData.transferAgencyCompliance.contractAccepted}
+                              onCheckedChange={(checked) => handleTransferAgencyComplianceChange('contractAccepted', Boolean(checked))}
+                              disabled={isSubmitting}
+                            />
+                            Contrat agence eNKAMBA Pay obligatoire
+                          </label>
+                          <label className="flex items-start gap-2">
+                            <Checkbox
+                              checked={formData.transferAgencyCompliance.auditAccepted}
+                              onCheckedChange={(checked) => handleTransferAgencyComplianceChange('auditAccepted', Boolean(checked))}
+                              disabled={isSubmitting}
+                            />
+                            Audit des opérations POS accepté
+                          </label>
+                          <label className="flex items-start gap-2">
+                            <Checkbox
+                              checked={formData.transferAgencyCompliance.activationAccepted}
+                              onCheckedChange={(checked) => handleTransferAgencyComplianceChange('activationAccepted', Boolean(checked))}
+                              disabled={isSubmitting}
+                            />
+                            Activation uniquement après vérification
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div>
+                        <Label htmlFor="agencySettlementWallet">Wallet / compte de règlement *</Label>
+                        <Input
+                          id="agencySettlementWallet"
+                          value={formData.transferAgencyCompliance.settlementWallet}
+                          onChange={(event) => handleTransferAgencyComplianceChange('settlementWallet', event.target.value)}
+                          placeholder="Ex : wallet eNKAMBA Pay, compte bancaire ou caisse principale"
+                          disabled={isSubmitting}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="agencyDefaultCurrency">Devise principale *</Label>
+                        <Select
+                          value={formData.transferAgencyCompliance.defaultCurrency}
+                          onValueChange={(value) => handleTransferAgencyComplianceChange('defaultCurrency', value)}
+                          disabled={isSubmitting}
+                        >
+                          <SelectTrigger id="agencyDefaultCurrency">
+                            <SelectValue placeholder="Choisissez une devise" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {TRANSFER_AGENCY_CURRENCIES.map((currency) => (
+                              <SelectItem key={currency} value={currency}>
+                                {currency}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="agencyCashFloat">Caisse initiale *</Label>
+                        <Input
+                          id="agencyCashFloat"
+                          value={formData.transferAgencyCompliance.openingCashFloat}
+                          onChange={(event) => handleTransferAgencyComplianceChange('openingCashFloat', event.target.value)}
+                          placeholder="Ex : 5 000 USD"
+                          disabled={isSubmitting}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="agencyDailyLimit">Plafond journalier *</Label>
+                        <Input
+                          id="agencyDailyLimit"
+                          value={formData.transferAgencyCompliance.dailyTransactionLimit}
+                          onChange={(event) => handleTransferAgencyComplianceChange('dailyTransactionLimit', event.target.value)}
+                          placeholder="Ex : 25 000 USD / jour"
+                          disabled={isSubmitting}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="agencyCommission">Commission agence</Label>
+                        <Input
+                          id="agencyCommission"
+                          value={formData.transferAgencyCompliance.commissionRate}
+                          onChange={(event) => handleTransferAgencyComplianceChange('commissionRate', event.target.value)}
+                          placeholder="Ex : 3"
+                          disabled={isSubmitting}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div>
+                        <Label>Devises prises en charge *</Label>
+                        <div className="mt-2 grid grid-cols-2 gap-2">
+                          {TRANSFER_AGENCY_CURRENCIES.map((currency) => (
+                            <label key={currency} className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm">
+                              <Checkbox
+                                checked={formData.transferAgencyCompliance.supportedCurrencies.includes(currency)}
+                                onCheckedChange={() => toggleTransferAgencyArrayValue('supportedCurrencies', currency)}
+                                disabled={isSubmitting}
+                              />
+                              {currency}
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <Label>Fonctions POS à activer</Label>
+                        <div className="mt-2 grid gap-2">
+                          {TRANSFER_AGENCY_PAYOUT_MODES.map((mode) => (
+                            <label key={mode} className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm">
+                              <Checkbox
+                                checked={formData.transferAgencyCompliance.payoutModes.includes(mode)}
+                                onCheckedChange={() => toggleTransferAgencyArrayValue('payoutModes', mode)}
+                                disabled={isSubmitting}
+                              />
+                              {mode}
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
             {moduleOverview && (

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { BusinessUser } from '@/types/business-dashboard.types';
 import { BusinessDashboardIcons } from '@/components/icons/business-dashboard-icons';
 import {
@@ -11,9 +11,42 @@ import {
   SecurityIcon,
   WalletNavIcon,
 } from '@/components/icons/service-icons';
-import { addDoc, arrayUnion, collection, doc, limit, onSnapshot, query, runTransaction, serverTimestamp, updateDoc, where } from 'firebase/firestore';
+import {
+  addDoc,
+  arrayUnion,
+  collection,
+  doc,
+  limit,
+  onSnapshot,
+  query,
+  runTransaction,
+  serverTimestamp,
+  setDoc,
+  updateDoc,
+  where,
+} from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
+import {
+  ArrowRight,
+  Bell,
+  Building2,
+  Check,
+  CheckCircle2,
+  ChevronDown,
+  CircleDollarSign,
+  ClipboardCheck,
+  Copy,
+  Headphones,
+  Languages,
+  Landmark,
+  Save,
+  ShieldCheck,
+  SlidersHorizontal,
+  UserPlus,
+  UsersRound,
+  type LucideIcon,
+} from 'lucide-react';
 
 interface PaymentDashboardProps {
   businessUser: BusinessUser;
@@ -22,6 +55,7 @@ interface PaymentDashboardProps {
 type PaymentTab = 'overview' | 'api' | 'tokens' | 'generation' | 'integration' | 'docs' | 'transactions' | 'balance' | 'pos-transfer';
 type PosMode = 'send' | 'payout' | 'cash' | 'history';
 type PosTransferStatus = 'available' | 'verification' | 'blocked' | 'paid' | 'cancelled' | 'expired' | 'refunded';
+type TransferAgencySection = 'company' | 'agency' | 'offices' | 'agents' | 'pricing' | 'validation';
 type PosTransfer = {
   id: string;
   internalReference: string;
@@ -40,6 +74,51 @@ type PosTransfer = {
   createdAtMs: number;
 };
 
+type TransferAgencyProfile = {
+  commercialName: string;
+  legalName: string;
+  rccm: string;
+  taxId: string;
+  country: string;
+  city: string;
+  address: string;
+  phonePrefix: string;
+  phone: string;
+  email: string;
+  defaultCurrency: string;
+  agencyCode: string;
+  status: 'draft' | 'review' | 'active';
+  progress: number;
+  offices: Array<{ name: string; city: string; manager: string; cashFloat: string }>;
+  agents: Array<{ name: string; phone: string; role: string; status: string }>;
+  pricing: {
+    commissionRate: string;
+    dailyLimit: string;
+    minimumCashFloat: string;
+    payoutDelay: string;
+  };
+  checks: {
+    documents: boolean;
+    headOffice: boolean;
+    pricing: boolean;
+    contract: boolean;
+  };
+};
+
+const TRANSFER_AGENCY_SECTIONS: Array<{
+  id: TransferAgencySection;
+  title: string;
+  subtitle: string;
+  icon: LucideIcon;
+}> = [
+  { id: 'company', title: 'Société', subtitle: 'Informations de la société', icon: CheckCircle2 },
+  { id: 'agency', title: 'Agences', subtitle: 'Créer votre agence', icon: Building2 },
+  { id: 'offices', title: 'Bureaux', subtitle: 'Configurer les bureaux', icon: Landmark },
+  { id: 'agents', title: 'Agents', subtitle: 'Ajouter les agents', icon: UsersRound },
+  { id: 'pricing', title: 'Tarification', subtitle: 'Définir vos tarifs', icon: SlidersHorizontal },
+  { id: 'validation', title: 'Validation', subtitle: 'Vérifier et valider', icon: Check },
+];
+
 const tabs: Array<{ id: PaymentTab; label: string; icon: React.ComponentType<{ size?: number; className?: string }> }> = [
   { id: 'overview', label: 'Vue d’ensemble', icon: PaymentNavIcon },
   { id: 'pos-transfer', label: 'Transfert POS', icon: PaymentNavIcon },
@@ -54,26 +133,21 @@ const tabs: Array<{ id: PaymentTab; label: string; icon: React.ComponentType<{ s
 
 export function PaymentDashboard({ businessUser }: PaymentDashboardProps) {
   const [activeTab, setActiveTab] = useState<PaymentTab>('overview');
-  const [posMode, setPosMode] = useState<PosMode>('send');
   const isTransferAgency = businessUser.subCategory === 'TRANSFER_AGENCY';
   const isIntegrator = businessUser.subCategory === 'API_INTEGRATION';
-  const showTransferTools = businessUser.businessType === 'PAYMENT';
-  const activeTabs = showTransferTools
-    ? tabs
-    : tabs.filter((tab) => tab.id !== 'pos-transfer');
+
+  if (isTransferAgency) {
+    return <TransferAgencyBusinessDashboard businessUser={businessUser} />;
+  }
+
+  const activeTabs = tabs.filter((tab) => tab.id !== 'pos-transfer');
   const baseQuickActions = [
     { label: 'API', tab: 'api' as const, icon: LinkAccountIcon },
     { label: 'Tokens', tab: 'tokens' as const, icon: SecurityIcon },
     { label: 'Générer', tab: 'generation' as const, icon: CreditIcon },
     { label: 'Docs', tab: 'docs' as const, icon: ReportNavIcon },
   ];
-  const posQuickActions = [
-    { label: 'Nouveau transfert', tab: 'pos-transfer' as const, posMode: 'send' as const, icon: CreditIcon },
-    { label: 'Payer code', tab: 'pos-transfer' as const, posMode: 'payout' as const, icon: PaymentNavIcon },
-    { label: 'Caisse POS', tab: 'pos-transfer' as const, posMode: 'cash' as const, icon: WalletNavIcon },
-    { label: 'Audit POS', tab: 'pos-transfer' as const, posMode: 'history' as const, icon: ReportNavIcon },
-  ];
-  const quickActions = showTransferTools ? [...baseQuickActions, ...posQuickActions] : baseQuickActions;
+  const quickActions = baseQuickActions;
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(50,187,120,0.14),transparent_34%),linear-gradient(180deg,rgba(50,187,120,0.05)_0%,rgba(50,187,120,0.08)_54%,rgba(50,187,120,0.04)_100%)] pb-24 text-foreground">
@@ -105,12 +179,7 @@ export function PaymentDashboard({ businessUser }: PaymentDashboardProps) {
                 <button
                   key={action.label}
                   type="button"
-                  onClick={() => {
-                    if ('posMode' in action && action.posMode) {
-                      setPosMode(action.posMode);
-                    }
-                    setActiveTab(action.tab);
-                  }}
+                  onClick={() => setActiveTab(action.tab)}
                   className="group flex min-w-[88px] flex-col items-center gap-2 rounded-2xl bg-white/12 p-2.5 text-center ring-1 ring-white/18 transition hover:bg-white/20"
                 >
                   <span className="flex h-[76px] w-[76px] items-center justify-center rounded-full bg-white shadow-md transition group-hover:scale-105">
@@ -152,9 +221,598 @@ export function PaymentDashboard({ businessUser }: PaymentDashboardProps) {
         {activeTab === 'docs' && <PaymentDocumentation />}
         {activeTab === 'transactions' && <PaymentTransactions />}
         {activeTab === 'balance' && <AgentBalance />}
-        {activeTab === 'pos-transfer' && <PaymentPosTransferAgency businessUser={businessUser} initialMode={posMode} />}
       </div>
     </div>
+  );
+}
+
+function buildAgencyCode(city: string) {
+  const cityCode = (city || 'KIN')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z]/g, '')
+    .slice(0, 3)
+    .toUpperCase()
+    .padEnd(3, 'X');
+  return `AG-${cityCode}-001`;
+}
+
+function getInitialTransferAgencyProfile(businessUser: BusinessUser): TransferAgencyProfile {
+  return {
+    commercialName: businessUser.businessName || '',
+    legalName: `${businessUser.businessName || 'Agence'} SARL`,
+    rccm: '',
+    taxId: '',
+    country: 'République Démocratique du Congo',
+    city: 'Kinshasa',
+    address: '',
+    phonePrefix: '+243',
+    phone: '',
+    email: '',
+    defaultCurrency: 'CDF',
+    agencyCode: buildAgencyCode('Kinshasa'),
+    status: 'draft',
+    progress: 20,
+    offices: [],
+    agents: [],
+    pricing: {
+      commissionRate: '3',
+      dailyLimit: '',
+      minimumCashFloat: '',
+      payoutDelay: 'Instantané après validation',
+    },
+    checks: {
+      documents: false,
+      headOffice: false,
+      pricing: false,
+      contract: false,
+    },
+  };
+}
+
+function TransferAgencyBusinessDashboard({ businessUser }: { businessUser: BusinessUser }) {
+  const { toast } = useToast();
+  const businessId = businessUser.businessId || businessUser.uid;
+  const [section, setSection] = useState<TransferAgencySection>('agency');
+  const [profile, setProfile] = useState<TransferAgencyProfile>(() => getInitialTransferAgencyProfile(businessUser));
+  const [posMode, setPosMode] = useState<PosMode>('send');
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+
+  useEffect(() => {
+    const ref = doc(db, 'business_transfer_agency_profiles', businessId);
+    return onSnapshot(ref, (snapshot) => {
+      if (!snapshot.exists()) return;
+      const data = snapshot.data() as Partial<TransferAgencyProfile>;
+      setProfile((current) => ({
+        ...current,
+        ...data,
+        offices: Array.isArray(data.offices) ? data.offices : current.offices,
+        agents: Array.isArray(data.agents) ? data.agents : current.agents,
+        pricing: { ...current.pricing, ...(data.pricing || {}) },
+        checks: { ...current.checks, ...(data.checks || {}) },
+      }));
+    });
+  }, [businessId]);
+
+  const completion = useMemo(() => {
+    const baseFields = [
+      profile.commercialName,
+      profile.legalName,
+      profile.rccm,
+      profile.taxId,
+      profile.country,
+      profile.city,
+      profile.address,
+      profile.phone,
+      profile.email,
+      profile.defaultCurrency,
+      profile.pricing.commissionRate,
+      profile.pricing.dailyLimit,
+      profile.pricing.minimumCashFloat,
+    ];
+    const baseScore = baseFields.filter((value) => String(value || '').trim()).length;
+    const checkScore = Object.values(profile.checks).filter(Boolean).length * 2;
+    const officeScore = profile.offices.length ? 2 : 0;
+    const agentScore = profile.agents.length ? 2 : 0;
+    return Math.min(100, Math.round(((baseScore + checkScore + officeScore + agentScore) / 25) * 100));
+  }, [profile]);
+
+  useEffect(() => {
+    setProfile((current) => ({
+      ...current,
+      progress: completion,
+      agencyCode: current.agencyCode || buildAgencyCode(current.city),
+    }));
+  }, [completion]);
+
+  const updateProfile = (field: keyof TransferAgencyProfile, value: any) => {
+    setProfile((current) => ({
+      ...current,
+      [field]: value,
+      ...(field === 'city' ? { agencyCode: buildAgencyCode(value) } : {}),
+    }));
+  };
+
+  const updatePricing = (field: keyof TransferAgencyProfile['pricing'], value: string) => {
+    setProfile((current) => ({
+      ...current,
+      pricing: { ...current.pricing, [field]: value },
+    }));
+  };
+
+  const updateCheck = (field: keyof TransferAgencyProfile['checks'], value: boolean) => {
+    setProfile((current) => ({
+      ...current,
+      checks: { ...current.checks, [field]: value },
+    }));
+  };
+
+  const saveAgencyProfile = async (nextStatus: TransferAgencyProfile['status'] = profile.status) => {
+    setIsSavingProfile(true);
+    try {
+      await setDoc(
+        doc(db, 'business_transfer_agency_profiles', businessId),
+        {
+          ...profile,
+          status: nextStatus,
+          progress: completion,
+          businessId,
+          businessName: businessUser.businessName,
+          ownerUid: businessUser.uid,
+          updatedAt: serverTimestamp(),
+          updatedAtIso: new Date().toISOString(),
+        },
+        { merge: true }
+      );
+      setProfile((current) => ({ ...current, status: nextStatus, progress: completion }));
+      toast({
+        title: nextStatus === 'review' ? 'Envoyé en vérification' : 'Brouillon enregistré',
+        description: nextStatus === 'review' ? 'L’agence passera en activation après contrôle.' : 'Les informations agence ont été sauvegardées.',
+      });
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Sauvegarde impossible', description: error instanceof Error ? error.message : 'Réessayez.' });
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
+
+  const addOffice = () => {
+    setProfile((current) => ({
+      ...current,
+      offices: [
+        ...current.offices,
+        { name: `Bureau ${current.offices.length + 1}`, city: current.city || 'Kinshasa', manager: '', cashFloat: '' },
+      ],
+    }));
+  };
+
+  const addAgent = () => {
+    setProfile((current) => ({
+      ...current,
+      agents: [
+        ...current.agents,
+        { name: `Agent ${current.agents.length + 1}`, phone: '', role: 'Caissier POS', status: 'Actif' },
+      ],
+    }));
+  };
+
+  const openPos = (mode: PosMode) => {
+    setPosMode(mode);
+    setSection('validation');
+  };
+
+  return (
+    <div className="min-h-screen bg-[#f8fbf9] text-slate-950">
+      <div className="mx-auto flex min-h-screen max-w-[1440px]">
+        <aside className="hidden w-[300px] shrink-0 bg-primary text-white lg:flex lg:flex-col">
+          <div className="flex items-center gap-3 px-8 py-10">
+            <div className="grid h-14 w-14 place-items-center rounded-2xl bg-white text-primary shadow-lg">
+              <PaymentNavIcon size={42} />
+            </div>
+            <div>
+              <p className="text-xl font-black tracking-tight">TRANSFERT POS</p>
+              <p className="text-xs font-semibold text-white/65">Transferts sécurisés, confiance partagée</p>
+            </div>
+          </div>
+
+          <nav className="relative flex-1 space-y-4 px-4">
+            <div className="absolute bottom-14 left-[38px] top-10 w-px bg-white/20" />
+            {TRANSFER_AGENCY_SECTIONS.map((item) => {
+              const Icon = item.icon;
+              const active = section === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setSection(item.id)}
+                  className={`relative z-10 flex w-full items-center gap-4 rounded-2xl p-4 text-left transition ${active ? 'bg-white text-primary shadow-xl' : 'text-white/85 hover:bg-white/10'}`}
+                >
+                  <span className={`grid h-10 w-10 place-items-center rounded-full border ${active ? 'border-primary/15 bg-primary text-white' : 'border-white/25 bg-white/8'}`}>
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-sm font-black">{item.title}</span>
+                    <span className={`block truncate text-xs font-semibold ${active ? 'text-primary/70' : 'text-white/55'}`}>{item.subtitle}</span>
+                  </span>
+                </button>
+              );
+            })}
+          </nav>
+
+          <div className="m-5 rounded-3xl bg-white/10 p-5 ring-1 ring-white/15">
+            <div className="flex items-start gap-3">
+              <Headphones className="mt-1 h-5 w-5" />
+              <div>
+                <p className="text-sm font-black">Besoin d’aide ?</p>
+                <p className="mt-1 text-xs font-semibold leading-relaxed text-white/65">Notre équipe est disponible du lundi au vendredi.</p>
+              </div>
+            </div>
+            <a href="mailto:support@enkamba.com" className="mt-4 flex h-11 items-center justify-center rounded-xl bg-white text-sm font-black text-primary">
+              Contacter le support
+            </a>
+          </div>
+        </aside>
+
+        <main className="min-w-0 flex-1 px-4 py-5 lg:px-10">
+          <header className="flex items-center justify-between gap-3 border-b border-slate-200/80 pb-5">
+            <div className="flex items-center gap-3 lg:hidden">
+              <div className="grid h-12 w-12 place-items-center rounded-2xl bg-primary text-white">
+                <PaymentNavIcon size={34} />
+              </div>
+              <div>
+                <p className="text-sm font-black">TRANSFERT POS</p>
+                <p className="text-xs font-semibold text-slate-500">Agence</p>
+              </div>
+            </div>
+            <div className="hidden lg:block">
+              <h1 className="text-3xl font-black tracking-tight">Créer votre agence</h1>
+              <p className="mt-1 text-sm font-semibold text-slate-500">Remplissez les informations de base pour enregistrer votre agence.</p>
+            </div>
+            <div className="ml-auto flex items-center gap-3">
+              <button className="hidden items-center gap-2 rounded-full bg-white px-3 py-2 text-sm font-bold text-slate-700 shadow-sm ring-1 ring-slate-200 sm:flex">
+                <Languages className="h-4 w-4" />
+                Français
+                <ChevronDown className="h-4 w-4" />
+              </button>
+              <button className="relative grid h-10 w-10 place-items-center rounded-full bg-white shadow-sm ring-1 ring-slate-200">
+                <Bell className="h-5 w-5 text-slate-700" />
+                <span className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-primary text-[10px] font-black text-white">3</span>
+              </button>
+              <button className="hidden rounded-full bg-white px-4 py-2 text-sm font-black text-slate-700 shadow-sm ring-1 ring-slate-200 md:block">
+                Société: {profile.legalName || businessUser.businessName}
+              </button>
+              <button className="grid h-11 w-11 place-items-center rounded-full bg-primary text-white shadow-sm">
+                <Building2 className="h-5 w-5" />
+              </button>
+            </div>
+          </header>
+
+          <section className="grid gap-6 py-8 xl:grid-cols-[minmax(0,1fr)_330px]">
+            <div className="min-w-0 space-y-6">
+              <TransferAgencyProgress active={section} setSection={setSection} />
+              <TransferAgencyContent
+                section={section}
+                profile={profile}
+                updateProfile={updateProfile}
+                updatePricing={updatePricing}
+                updateCheck={updateCheck}
+                addOffice={addOffice}
+                addAgent={addAgent}
+                openPos={openPos}
+                saveAgencyProfile={saveAgencyProfile}
+                isSavingProfile={isSavingProfile}
+              />
+              {section === 'validation' && (
+                <PaymentPosTransferAgency businessUser={businessUser} initialMode={posMode} />
+              )}
+              <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <button
+                  type="button"
+                  onClick={() => saveAgencyProfile('draft')}
+                  disabled={isSavingProfile}
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-primary bg-white px-5 text-sm font-black text-primary disabled:opacity-60"
+                >
+                  <Save className="h-4 w-4" />
+                  Enregistrer le brouillon
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const currentIndex = TRANSFER_AGENCY_SECTIONS.findIndex((item) => item.id === section);
+                    const next = TRANSFER_AGENCY_SECTIONS[Math.min(currentIndex + 1, TRANSFER_AGENCY_SECTIONS.length - 1)];
+                    setSection(next.id);
+                  }}
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-primary px-6 text-sm font-black text-white shadow-sm"
+                >
+                  Continuer
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
+            <TransferAgencySummary
+              profile={profile}
+              completion={completion}
+              copyCode={() => {
+                navigator.clipboard?.writeText(profile.agencyCode);
+                toast({ title: 'Code copié', description: profile.agencyCode });
+              }}
+            />
+          </section>
+        </main>
+      </div>
+    </div>
+  );
+}
+
+function TransferAgencyProgress({ active, setSection }: { active: TransferAgencySection; setSection: (section: TransferAgencySection) => void }) {
+  const current = TRANSFER_AGENCY_SECTIONS.findIndex((item) => item.id === active);
+  return (
+    <div className="overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <div className="grid min-w-[720px] grid-cols-6 gap-3">
+        {TRANSFER_AGENCY_SECTIONS.map((item, index) => {
+          const activeStep = item.id === active;
+          const done = index < current;
+          return (
+            <button key={item.id} type="button" onClick={() => setSection(item.id)} className="text-left">
+              <div className="flex items-center gap-3">
+                <span className={`grid h-11 w-11 place-items-center rounded-full text-sm font-black ${activeStep || done ? 'bg-primary text-white' : 'bg-white text-slate-500 ring-1 ring-slate-200'}`}>
+                  {done ? <Check className="h-5 w-5" /> : index + 1}
+                </span>
+                {index < TRANSFER_AGENCY_SECTIONS.length - 1 && <span className={`h-1 flex-1 rounded-full ${done ? 'bg-primary' : 'bg-slate-200'}`} />}
+              </div>
+              <p className={`mt-2 text-xs font-black ${activeStep ? 'text-primary' : 'text-slate-500'}`}>{item.title}</p>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function TransferAgencyContent({
+  section,
+  profile,
+  updateProfile,
+  updatePricing,
+  updateCheck,
+  addOffice,
+  addAgent,
+  openPos,
+  saveAgencyProfile,
+  isSavingProfile,
+}: {
+  section: TransferAgencySection;
+  profile: TransferAgencyProfile;
+  updateProfile: (field: keyof TransferAgencyProfile, value: any) => void;
+  updatePricing: (field: keyof TransferAgencyProfile['pricing'], value: string) => void;
+  updateCheck: (field: keyof TransferAgencyProfile['checks'], value: boolean) => void;
+  addOffice: () => void;
+  addAgent: () => void;
+  openPos: (mode: PosMode) => void;
+  saveAgencyProfile: (status?: TransferAgencyProfile['status']) => Promise<void>;
+  isSavingProfile: boolean;
+}) {
+  if (section === 'validation') {
+    return (
+      <div className="space-y-5">
+        <TransferAgencyPanel title="Validation et opérations POS" subtitle="Vérifiez l’agence puis utilisez les opérations de transfert.">
+          <div className="grid gap-3 md:grid-cols-4">
+            {[
+              { label: 'Nouveau transfert', mode: 'send' as const, icon: CreditIcon },
+              { label: 'Payer code', mode: 'payout' as const, icon: PaymentNavIcon },
+              { label: 'Caisse POS', mode: 'cash' as const, icon: WalletNavIcon },
+              { label: 'Historique', mode: 'history' as const, icon: ReportNavIcon },
+            ].map((action) => {
+              const Icon = action.icon;
+              return (
+                <button key={action.label} type="button" onClick={() => openPos(action.mode)} className="rounded-2xl border border-primary/15 bg-primary/5 p-4 text-left transition hover:border-primary hover:bg-primary/10">
+                  <span className="grid h-14 w-14 place-items-center rounded-2xl bg-white text-primary shadow-sm">
+                    <Icon size={40} />
+                  </span>
+                  <span className="mt-3 block text-sm font-black text-slate-950">{action.label}</span>
+                </button>
+              );
+            })}
+          </div>
+          <div className="mt-5 grid gap-3 md:grid-cols-4">
+            {Object.entries(profile.checks).map(([key, checked]) => (
+              <label key={key} className="flex items-center gap-2 rounded-xl border border-slate-200 p-3 text-sm font-bold">
+                <input type="checkbox" checked={checked} onChange={(event) => updateCheck(key as keyof TransferAgencyProfile['checks'], event.target.checked)} />
+                {key === 'documents' ? 'Documents' : key === 'headOffice' ? 'Siège' : key === 'pricing' ? 'Paramètres' : 'Contrat'}
+              </label>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => saveAgencyProfile('review')}
+            disabled={isSavingProfile}
+            className="mt-5 h-12 w-full rounded-xl bg-primary text-sm font-black text-white disabled:opacity-60"
+          >
+            Envoyer en vérification
+          </button>
+        </TransferAgencyPanel>
+      </div>
+    );
+  }
+
+  if (section === 'offices') {
+    return (
+      <TransferAgencyPanel title="Bureaux" subtitle="Configurez les caisses et bureaux de paiement.">
+        <button type="button" onClick={addOffice} className="mb-4 inline-flex h-11 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-black text-white">
+          <Building2 className="h-4 w-4" />
+          Ajouter un bureau
+        </button>
+        <div className="grid gap-3">
+          {profile.offices.length === 0 ? <p className="rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-500">Aucun bureau ajouté.</p> : profile.offices.map((office, index) => (
+            <div key={`${office.name}-${index}`} className="grid gap-3 rounded-2xl border border-slate-200 p-4 md:grid-cols-4">
+              <TransferAgencyField label="Nom bureau" value={office.name} onChange={(value) => updateProfile('offices', profile.offices.map((item, itemIndex) => itemIndex === index ? { ...item, name: value } : item))} />
+              <TransferAgencyField label="Ville" value={office.city} onChange={(value) => updateProfile('offices', profile.offices.map((item, itemIndex) => itemIndex === index ? { ...item, city: value } : item))} />
+              <TransferAgencyField label="Responsable" value={office.manager} onChange={(value) => updateProfile('offices', profile.offices.map((item, itemIndex) => itemIndex === index ? { ...item, manager: value } : item))} />
+              <TransferAgencyField label="Caisse initiale" value={office.cashFloat} onChange={(value) => updateProfile('offices', profile.offices.map((item, itemIndex) => itemIndex === index ? { ...item, cashFloat: value } : item))} />
+            </div>
+          ))}
+        </div>
+      </TransferAgencyPanel>
+    );
+  }
+
+  if (section === 'agents') {
+    return (
+      <TransferAgencyPanel title="Agents" subtitle="Ajoutez les agents autorisés à encaisser et payer.">
+        <button type="button" onClick={addAgent} className="mb-4 inline-flex h-11 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-black text-white">
+          <UserPlus className="h-4 w-4" />
+          Ajouter un agent
+        </button>
+        <div className="grid gap-3">
+          {profile.agents.length === 0 ? <p className="rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-500">Aucun agent ajouté.</p> : profile.agents.map((agent, index) => (
+            <div key={`${agent.name}-${index}`} className="grid gap-3 rounded-2xl border border-slate-200 p-4 md:grid-cols-4">
+              <TransferAgencyField label="Nom agent" value={agent.name} onChange={(value) => updateProfile('agents', profile.agents.map((item, itemIndex) => itemIndex === index ? { ...item, name: value } : item))} />
+              <TransferAgencyField label="Téléphone" value={agent.phone} onChange={(value) => updateProfile('agents', profile.agents.map((item, itemIndex) => itemIndex === index ? { ...item, phone: value } : item))} />
+              <TransferAgencyField label="Rôle" value={agent.role} onChange={(value) => updateProfile('agents', profile.agents.map((item, itemIndex) => itemIndex === index ? { ...item, role: value } : item))} />
+              <TransferAgencyField label="Statut" value={agent.status} onChange={(value) => updateProfile('agents', profile.agents.map((item, itemIndex) => itemIndex === index ? { ...item, status: value } : item))} />
+            </div>
+          ))}
+        </div>
+      </TransferAgencyPanel>
+    );
+  }
+
+  if (section === 'pricing') {
+    return (
+      <TransferAgencyPanel title="Paramètres financiers" subtitle="Définissez les règles de caisse, plafond et commission.">
+        <div className="grid gap-4 md:grid-cols-2">
+          <TransferAgencyField label="Commission agence (%)" value={profile.pricing.commissionRate} onChange={(value) => updatePricing('commissionRate', value)} />
+          <TransferAgencyField label="Plafond journalier" value={profile.pricing.dailyLimit} onChange={(value) => updatePricing('dailyLimit', value)} />
+          <TransferAgencyField label="Caisse minimale" value={profile.pricing.minimumCashFloat} onChange={(value) => updatePricing('minimumCashFloat', value)} />
+          <TransferAgencyField label="Délai de paiement" value={profile.pricing.payoutDelay} onChange={(value) => updatePricing('payoutDelay', value)} />
+        </div>
+      </TransferAgencyPanel>
+    );
+  }
+
+  return (
+    <TransferAgencyPanel
+      title={section === 'company' ? 'Informations société' : 'Informations générales'}
+      subtitle={section === 'company' ? 'Identité légale de la société.' : 'Veuillez renseigner les informations de base de votre agence.'}
+    >
+      <div className="grid gap-4 md:grid-cols-2">
+        <TransferAgencyField label="Nom commercial *" value={profile.commercialName} onChange={(value) => updateProfile('commercialName', value)} />
+        <TransferAgencyField label="Raison sociale *" value={profile.legalName} onChange={(value) => updateProfile('legalName', value)} />
+        <TransferAgencyField label="RCCM *" value={profile.rccm} onChange={(value) => updateProfile('rccm', value)} />
+        <TransferAgencyField label="Numéro fiscal *" value={profile.taxId} onChange={(value) => updateProfile('taxId', value)} />
+        <TransferAgencyField label="Pays *" value={profile.country} onChange={(value) => updateProfile('country', value)} />
+        <TransferAgencyField label="Ville *" value={profile.city} onChange={(value) => updateProfile('city', value)} />
+        <div className="md:col-span-2">
+          <TransferAgencyField label="Adresse *" value={profile.address} onChange={(value) => updateProfile('address', value)} />
+        </div>
+        <TransferAgencyField label="Téléphone *" value={profile.phone} onChange={(value) => updateProfile('phone', value)} prefix={profile.phonePrefix} />
+        <TransferAgencyField label="E-mail *" value={profile.email} onChange={(value) => updateProfile('email', value)} />
+        <TransferAgencyField label="Devise principale *" value={profile.defaultCurrency} onChange={(value) => updateProfile('defaultCurrency', value)} />
+        <div className="rounded-2xl border border-dashed border-primary/25 bg-primary/5 p-4">
+          <p className="text-xs font-black text-slate-500">Logo de l’agence</p>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <button type="button" className="h-20 rounded-xl border border-primary/20 bg-white text-sm font-black text-primary">Téléverser un logo</button>
+            <div className="flex h-20 items-center justify-center gap-2 rounded-xl bg-white text-primary ring-1 ring-primary/15">
+              <PaymentNavIcon size={38} />
+              <span className="text-sm font-black">{profile.commercialName || 'Agence'}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </TransferAgencyPanel>
+  );
+}
+
+function TransferAgencySummary({ profile, completion, copyCode }: { profile: TransferAgencyProfile; completion: number; copyCode: () => void }) {
+  return (
+    <aside className="space-y-5">
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h2 className="text-base font-black text-slate-950">Récapitulatif de l’agence</h2>
+        <div className="mt-5 border-t border-slate-100 pt-5">
+          <p className="text-xs font-bold text-slate-500">Code agence généré</p>
+          <div className="mt-2 flex items-center justify-between gap-3">
+            <p className="text-2xl font-black text-primary">{profile.agencyCode}</p>
+            <button type="button" onClick={copyCode} className="grid h-11 w-11 place-items-center rounded-xl bg-primary/10 text-primary">
+              <Copy className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+        <div className="mt-5">
+          <p className="text-xs font-bold text-slate-500">Statut</p>
+          <span className="mt-2 inline-flex rounded-xl bg-[#FFA500]/12 px-3 py-2 text-xs font-black text-[#B86B00]">
+            {profile.status === 'active' ? 'Actif' : profile.status === 'review' ? 'En vérification' : 'Brouillon'}
+          </span>
+        </div>
+        <div className="mt-5">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-bold text-slate-500">Avancement de la création</p>
+            <p className="text-sm font-black text-primary">{completion}%</p>
+          </div>
+          <div className="mt-3 h-2.5 rounded-full bg-slate-100">
+            <div className="h-full rounded-full bg-primary" style={{ width: `${completion}%` }} />
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h2 className="text-base font-black text-slate-950">Étapes de création</h2>
+        <div className="mt-5 space-y-4">
+          {TRANSFER_AGENCY_SECTIONS.slice(0, 5).map((item, index) => {
+            const done = completion >= (index + 1) * 20;
+            return (
+              <div key={item.id} className="flex items-center gap-3">
+                <span className={`grid h-9 w-9 place-items-center rounded-full text-xs font-black ${done ? 'bg-primary text-white' : 'bg-slate-100 text-slate-500'}`}>
+                  {done ? <Check className="h-4 w-4" /> : index + 1}
+                </span>
+                <span>
+                  <span className="block text-sm font-black text-slate-800">{item.title}</span>
+                  <span className="block text-xs font-semibold text-slate-500">{done ? 'Complété' : 'En attente'}</span>
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-primary/15 bg-primary/5 p-5">
+        <div className="flex gap-3">
+          <ShieldCheck className="h-7 w-7 text-primary" />
+          <div>
+            <p className="text-sm font-black text-primary">Vos données sont sécurisées</p>
+            <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">Toutes les informations sont protégées et reliées au compte business Paiement.</p>
+          </div>
+        </div>
+      </section>
+    </aside>
+  );
+}
+
+function TransferAgencyPanel({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) {
+  return (
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="mb-5">
+        <h2 className="text-lg font-black text-primary">{title}</h2>
+        <p className="mt-1 text-sm font-semibold text-slate-500">{subtitle}</p>
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function TransferAgencyField({ label, value, onChange, prefix }: { label: string; value: string; onChange: (value: string) => void; prefix?: string }) {
+  return (
+    <label className="block">
+      <span className="text-xs font-black text-slate-600">{label}</span>
+      <div className="mt-1 flex overflow-hidden rounded-xl border border-slate-200 bg-white focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10">
+        {prefix && <span className="grid place-items-center border-r border-slate-200 bg-slate-50 px-3 text-sm font-black text-slate-500">{prefix}</span>}
+        <input
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          className="h-12 min-w-0 flex-1 px-3 text-sm font-bold text-slate-900 outline-none"
+        />
+      </div>
+    </label>
   );
 }
 

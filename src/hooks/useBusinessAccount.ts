@@ -113,6 +113,10 @@ export function useBusinessAccount() {
           formData.type === 'LOGISTICS' && formData.subCategory === 'NATIONAL_AGENCY'
             ? formData.nationalAgencyCompliance
             : null,
+        transferAgencyCompliance:
+          formData.type === 'PAYMENT' && formData.subCategory === 'TRANSFER_AGENCY'
+            ? formData.transferAgencyCompliance
+            : null,
         documents: documentUrls,
         status: 'PENDING',
         submittedAt: now,

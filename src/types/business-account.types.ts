@@ -67,6 +67,7 @@ export interface BusinessRequestData {
   expectedVolume?: string;
   commerceCompliance?: CommerceCompliance | null;
   nationalAgencyCompliance?: NationalAgencyCompliance;
+  transferAgencyCompliance?: TransferAgencyCompliance | null;
 
   // Document references
   documents: {
@@ -111,6 +112,23 @@ export interface CommerceCompliance {
   operationControls: string[];
 }
 
+export interface TransferAgencyCompliance {
+  agencyCode: string;
+  legalDocuments: string[];
+  headOfficeConfirmed: boolean;
+  settlementWallet: string;
+  defaultCurrency: 'USD' | 'CDF' | 'EUR' | 'RMB' | '';
+  supportedCurrencies: string[];
+  openingCashFloat: string;
+  dailyTransactionLimit: string;
+  commissionRate: string;
+  payoutModes: string[];
+  verificationStatus: 'PENDING' | 'UNDER_REVIEW' | 'APPROVED';
+  contractAccepted: boolean;
+  auditAccepted: boolean;
+  activationAccepted: boolean;
+}
+
 export interface BusinessProfile extends BusinessRequestData {
   businessId: string;
   isActive: boolean;
@@ -137,6 +155,7 @@ export interface BusinessFormState {
   apiCallbackUrl?: string;
   commerceCompliance: CommerceCompliance;
   nationalAgencyCompliance: NationalAgencyCompliance;
+  transferAgencyCompliance: TransferAgencyCompliance;
   documents: {
     idCard: File | null;
     taxDocument: File | null;
