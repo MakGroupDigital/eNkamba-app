@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { useAccessCode } from '@/hooks/useAccessCode';
 import { Loader2, Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import { ResponsiveSplashBackground } from '@/components/shared/responsive-splash-background';
 
 export function AccessCodeGate({ children }: { children: React.ReactNode }) {
   const { isVerified, isLoading, error, verifyCode } = useAccessCode();
@@ -13,10 +14,11 @@ export function AccessCodeGate({ children }: { children: React.ReactNode }) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-primary/5">
-        <div className="flex flex-col items-center gap-3">
+      <div className="relative isolate min-h-screen flex items-center justify-center overflow-hidden">
+        <ResponsiveSplashBackground />
+        <div className="flex flex-col items-center gap-3 rounded-3xl border border-white/35 bg-white/88 px-8 py-7 shadow-2xl shadow-black/15 backdrop-blur-xl">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-gray-500">Vérification...</p>
+          <p className="text-sm font-semibold text-gray-700">Vérification...</p>
         </div>
       </div>
     );
@@ -24,8 +26,9 @@ export function AccessCodeGate({ children }: { children: React.ReactNode }) {
 
   if (!isVerified) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-primary/5 px-4 py-8 flex items-center justify-center">
-        <div className="w-full max-w-md space-y-8">
+      <div className="relative isolate min-h-screen overflow-hidden px-4 py-8 flex items-center justify-center">
+        <ResponsiveSplashBackground />
+        <div className="w-full max-w-md space-y-7 rounded-[2rem] border border-white/35 bg-white/90 p-6 shadow-2xl shadow-black/18 backdrop-blur-xl sm:p-8">
           {/* Logo avec effet flottant */}
           <div className="flex justify-center">
             <div className="relative animate-float">
@@ -45,10 +48,10 @@ export function AccessCodeGate({ children }: { children: React.ReactNode }) {
 
           {/* Titre minimaliste */}
           <div className="text-center space-y-2">
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-gray-950">
               Accès sécurisé
             </h1>
-            <p className="text-sm text-gray-500 max-w-xs mx-auto">
+            <p className="text-sm font-medium text-gray-600 max-w-xs mx-auto">
               Entrez le code d'accès pour continuer
             </p>
           </div>
@@ -119,7 +122,7 @@ export function AccessCodeGate({ children }: { children: React.ReactNode }) {
           </form>
 
           {/* Badge de sécurité minimaliste */}
-          <div className="flex items-center justify-center gap-2 text-gray-400">
+          <div className="flex items-center justify-center gap-2 text-gray-500">
             <ShieldCheck className="h-4 w-4" />
             <p className="text-xs">Application en développement</p>
           </div>

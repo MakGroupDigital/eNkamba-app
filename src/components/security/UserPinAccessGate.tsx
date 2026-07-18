@@ -16,6 +16,7 @@ import { usePathname } from "next/navigation";
 import { auth, db } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ResponsiveSplashBackground } from "@/components/shared/responsive-splash-background";
 
 const SESSION_PREFIX = "enkamba-user-pin-unlocked";
 const BIOMETRIC_PREFIX = "enkamba-user-biometric";
@@ -412,9 +413,10 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
     : pin.length === 4 && attempts < MAX_ATTEMPTS;
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-primary/5 px-4 py-8 text-foreground">
+    <main className="relative isolate min-h-screen overflow-hidden px-4 py-8 text-foreground">
+      <ResponsiveSplashBackground />
       <section className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-md items-center justify-center">
-        <div className="w-full space-y-8">
+        <div className="w-full space-y-7 rounded-[2rem] border border-white/35 bg-white/90 p-6 shadow-2xl shadow-black/18 backdrop-blur-xl sm:p-8">
           {/* Logo avec effet flottant */}
           <div className="flex justify-center">
             <div className="relative animate-float">
@@ -434,10 +436,10 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
 
           {/* Titre minimaliste */}
           <div className="text-center space-y-2">
-            <h2 className="text-2xl font-bold text-gray-900">
+            <h2 className="text-2xl font-bold text-gray-950">
               {isCreateMode ? "Créer un PIN" : "Bienvenue"}
             </h2>
-            <p className="text-sm text-gray-500 max-w-xs mx-auto">
+            <p className="text-sm font-medium text-gray-600 max-w-xs mx-auto">
               {isCreateMode
                 ? "Sécurisez votre compte avec un code à 4 chiffres"
                 : "Confirmez votre identité pour continuer"}

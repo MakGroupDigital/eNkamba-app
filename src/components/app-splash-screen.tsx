@@ -1,7 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useState } from "react";
+
+import { ResponsiveSplashBackground } from "@/components/shared/responsive-splash-background";
 
 const SPLASH_DURATION_MS = 1800;
 const SPLASH_FADE_MS = 320;
@@ -37,22 +38,7 @@ export function AppSplashScreen() {
       aria-hidden={!visible}
     >
       <div className="relative h-full w-full overflow-hidden">
-        <Image
-          src="/splachone.jpeg"
-          alt=""
-          fill
-          sizes="100vw"
-          className="object-cover md:hidden"
-          priority
-        />
-        <Image
-          src="/fondpc.png"
-          alt=""
-          fill
-          sizes="100vw"
-          className="hidden object-cover md:block"
-          priority
-        />
+        <ResponsiveSplashBackground showOverlay={false} />
       </div>
     </div>
   );
