@@ -46,7 +46,7 @@ export function AppSplashScreen() {
           priority
         />
         <Image
-          src="/splachone-desktop.jpeg"
+          src="/fondpc.png"
           alt=""
           fill
           sizes="100vw"

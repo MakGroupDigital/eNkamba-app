@@ -29,6 +29,7 @@ import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import {
   ArrowRight,
+  BarChart3,
   Bell,
   Building2,
   Check,
@@ -37,14 +38,21 @@ import {
   CircleDollarSign,
   ClipboardCheck,
   Copy,
+  Download,
   Headphones,
   Languages,
   Landmark,
+  Menu,
+  Printer,
+  ReceiptText,
   Save,
+  Send,
   ShieldCheck,
   SlidersHorizontal,
+  Tag,
   UserPlus,
   UsersRound,
+  WalletCards,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -55,7 +63,7 @@ interface PaymentDashboardProps {
 type PaymentTab = 'overview' | 'api' | 'tokens' | 'generation' | 'integration' | 'docs' | 'transactions' | 'balance' | 'pos-transfer';
 type PosMode = 'send' | 'payout' | 'cash' | 'history';
 type PosTransferStatus = 'available' | 'verification' | 'blocked' | 'paid' | 'cancelled' | 'expired' | 'refunded';
-type TransferAgencySection = 'company' | 'agency' | 'offices' | 'agents' | 'pricing' | 'validation';
+type TransferAgencySection = 'dashboard' | 'transfers' | 'receipts' | 'offices' | 'agents' | 'cashiers' | 'pricing' | 'reports' | 'audit' | 'settings';
 type PosTransfer = {
   id: string;
   internalReference: string;
@@ -89,13 +97,17 @@ type TransferAgencyProfile = {
   agencyCode: string;
   status: 'draft' | 'review' | 'active';
   progress: number;
-  offices: Array<{ name: string; city: string; manager: string; cashFloat: string }>;
-  agents: Array<{ name: string; phone: string; role: string; status: string }>;
+  offices: Array<{ name: string; code: string; city: string; manager: string; currency: string; dailyLimit: string; cashFloat: string }>;
+  agents: Array<{ name: string; username: string; password: string; phone: string; officeCode: string; role: string; status: string; permissions: string[] }>;
   pricing: {
     commissionRate: string;
     dailyLimit: string;
     minimumCashFloat: string;
     payoutDelay: string;
+    headquartersShare: string;
+    sendingOfficeShare: string;
+    receivingOfficeShare: string;
+    printerFormat: '58mm' | '80mm';
   };
   checks: {
     documents: boolean;
@@ -111,12 +123,16 @@ const TRANSFER_AGENCY_SECTIONS: Array<{
   subtitle: string;
   icon: LucideIcon;
 }> = [
-  { id: 'company', title: 'Société', subtitle: 'Informations de la société', icon: CheckCircle2 },
-  { id: 'agency', title: 'Agences', subtitle: 'Créer votre agence', icon: Building2 },
-  { id: 'offices', title: 'Bureaux', subtitle: 'Configurer les bureaux', icon: Landmark },
-  { id: 'agents', title: 'Agents', subtitle: 'Ajouter les agents', icon: UsersRound },
-  { id: 'pricing', title: 'Tarification', subtitle: 'Définir vos tarifs', icon: SlidersHorizontal },
-  { id: 'validation', title: 'Validation', subtitle: 'Vérifier et valider', icon: Check },
+  { id: 'dashboard', title: 'Tableau de bord', subtitle: 'Vue globale', icon: ClipboardCheck },
+  { id: 'transfers', title: 'Transferts', subtitle: 'Nouveaux envois', icon: Send },
+  { id: 'receipts', title: 'Réceptions', subtitle: 'Payer un transfert', icon: Download },
+  { id: 'offices', title: 'Agences & bureaux', subtitle: 'Implantations et codes', icon: Building2 },
+  { id: 'agents', title: 'Agents', subtitle: 'Utilisateurs et rôles', icon: UsersRound },
+  { id: 'cashiers', title: 'Caisses', subtitle: 'Ouverture et fermeture', icon: WalletCards },
+  { id: 'pricing', title: 'Tarification', subtitle: 'Frais et répartition', icon: Tag },
+  { id: 'reports', title: 'Rapports', subtitle: 'Finances et volumes', icon: BarChart3 },
+  { id: 'audit', title: 'Audit', subtitle: 'Journal et alertes', icon: ShieldCheck },
+  { id: 'settings', title: 'Paramètres', subtitle: 'Imprimantes POS', icon: Printer },
 ];
 
 const tabs: Array<{ id: PaymentTab; label: string; icon: React.ComponentType<{ size?: number; className?: string }> }> = [
@@ -253,13 +269,30 @@ function getInitialTransferAgencyProfile(businessUser: BusinessUser): TransferAg
     agencyCode: buildAgencyCode('Kinshasa'),
     status: 'draft',
     progress: 20,
-    offices: [],
-    agents: [],
+    offices: [
+      { name: 'Siège principal', code: buildAgencyCode('Kinshasa'), city: 'Kinshasa', manager: 'Administrateur', currency: 'USD', dailyLimit: '25000', cashFloat: '5000' },
+    ],
+    agents: [
+      {
+        name: 'Administrateur',
+        username: 'admin',
+        password: '',
+        phone: '',
+        officeCode: buildAgencyCode('Kinshasa'),
+        role: 'Propriétaire',
+        status: 'Actif',
+        permissions: ['transfers', 'receipts', 'cashiers', 'reports', 'audit', 'settings'],
+      },
+    ],
     pricing: {
       commissionRate: '3',
       dailyLimit: '',
       minimumCashFloat: '',
       payoutDelay: 'Instantané après validation',
+      headquartersShare: '50',
+      sendingOfficeShare: '30',
+      receivingOfficeShare: '20',
+      printerFormat: '80mm',
     },
     checks: {
       documents: false,
@@ -273,10 +306,11 @@ function getInitialTransferAgencyProfile(businessUser: BusinessUser): TransferAg
 function TransferAgencyBusinessDashboard({ businessUser }: { businessUser: BusinessUser }) {
   const { toast } = useToast();
   const businessId = businessUser.businessId || businessUser.uid;
-  const [section, setSection] = useState<TransferAgencySection>('agency');
+  const [section, setSection] = useState<TransferAgencySection>('dashboard');
   const [profile, setProfile] = useState<TransferAgencyProfile>(() => getInitialTransferAgencyProfile(businessUser));
   const [posMode, setPosMode] = useState<PosMode>('send');
   const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [transfers, setTransfers] = useState<PosTransfer[]>([]);
 
   useEffect(() => {
     const ref = doc(db, 'business_transfer_agency_profiles', businessId);
@@ -291,6 +325,33 @@ function TransferAgencyBusinessDashboard({ businessUser }: { businessUser: Busin
         pricing: { ...current.pricing, ...(data.pricing || {}) },
         checks: { ...current.checks, ...(data.checks || {}) },
       }));
+    });
+  }, [businessId]);
+
+  useEffect(() => {
+    const q = query(collection(db, 'business_pos_transfers'), where('businessId', '==', businessId), limit(80));
+    return onSnapshot(q, (snapshot) => {
+      const items = snapshot.docs.map((item) => {
+        const data = item.data() as any;
+        return {
+          id: item.id,
+          internalReference: data.internalReference || `TR-${item.id.slice(0, 8).toUpperCase()}`,
+          clientCode: data.clientCode || '',
+          senderName: data.senderName || '',
+          senderPhone: data.senderPhone || '',
+          beneficiaryName: data.beneficiaryName || '',
+          beneficiaryPhone: data.beneficiaryPhone || '',
+          amount: Number(data.amount || 0),
+          fee: Number(data.fee || 0),
+          totalCollected: Number(data.totalCollected || 0),
+          currency: data.currency || 'USD',
+          payoutCity: data.payoutCity || '',
+          payoutOfficeCode: data.payoutOfficeCode || '',
+          status: (data.status || 'available') as PosTransferStatus,
+          createdAtMs: data.createdAt?.toMillis?.() || Date.parse(data.createdAtIso || '') || 0,
+        };
+      });
+      setTransfers(items.sort((left, right) => right.createdAtMs - left.createdAtMs));
     });
   }, [businessId]);
 
@@ -381,7 +442,15 @@ function TransferAgencyBusinessDashboard({ businessUser }: { businessUser: Busin
       ...current,
       offices: [
         ...current.offices,
-        { name: `Bureau ${current.offices.length + 1}`, city: current.city || 'Kinshasa', manager: '', cashFloat: '' },
+        {
+          name: `Bureau ${current.offices.length + 1}`,
+          code: `AG-${(current.city || 'KIN').slice(0, 3).toUpperCase()}-${String(current.offices.length + 1).padStart(3, '0')}`,
+          city: current.city || 'Kinshasa',
+          manager: '',
+          currency: current.defaultCurrency || 'USD',
+          dailyLimit: current.pricing.dailyLimit || '',
+          cashFloat: '',
+        },
       ],
     }));
   };
@@ -391,14 +460,23 @@ function TransferAgencyBusinessDashboard({ businessUser }: { businessUser: Busin
       ...current,
       agents: [
         ...current.agents,
-        { name: `Agent ${current.agents.length + 1}`, phone: '', role: 'Caissier POS', status: 'Actif' },
+        {
+          name: `Agent ${current.agents.length + 1}`,
+          username: `agent${current.agents.length + 1}`,
+          password: '',
+          phone: '',
+          officeCode: current.offices[0]?.code || current.agencyCode,
+          role: 'Agent envoi/réception',
+          status: 'Actif',
+          permissions: ['transfers', 'receipts'],
+        },
       ],
     }));
   };
 
   const openPos = (mode: PosMode) => {
     setPosMode(mode);
-    setSection('validation');
+    setSection(mode === 'send' ? 'transfers' : mode === 'payout' ? 'receipts' : 'cashiers');
   };
 
   return (
@@ -465,8 +543,8 @@ function TransferAgencyBusinessDashboard({ businessUser }: { businessUser: Busin
               </div>
             </div>
             <div className="hidden lg:block">
-              <h1 className="text-3xl font-black tracking-tight">Créer votre agence</h1>
-              <p className="mt-1 text-sm font-semibold text-slate-500">Remplissez les informations de base pour enregistrer votre agence.</p>
+              <h1 className="text-3xl font-black tracking-tight">Bonjour, Administrateur</h1>
+              <p className="mt-1 text-sm font-semibold text-slate-500">Voici ce qui se passe aujourd’hui dans votre agence.</p>
             </div>
             <div className="ml-auto flex items-center gap-3">
               <button className="hidden items-center gap-2 rounded-full bg-white px-3 py-2 text-sm font-bold text-slate-700 shadow-sm ring-1 ring-slate-200 sm:flex">
@@ -501,8 +579,9 @@ function TransferAgencyBusinessDashboard({ businessUser }: { businessUser: Busin
                 openPos={openPos}
                 saveAgencyProfile={saveAgencyProfile}
                 isSavingProfile={isSavingProfile}
+                transfers={transfers}
               />
-              {section === 'validation' && (
+              {(section === 'transfers' || section === 'receipts' || section === 'cashiers') && (
                 <PaymentPosTransferAgency businessUser={businessUser} initialMode={posMode} />
               )}
               <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -549,7 +628,7 @@ function TransferAgencyProgress({ active, setSection }: { active: TransferAgency
   const current = TRANSFER_AGENCY_SECTIONS.findIndex((item) => item.id === active);
   return (
     <div className="overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-      <div className="grid min-w-[720px] grid-cols-6 gap-3">
+      <div className="grid min-w-[980px] grid-cols-10 gap-3">
         {TRANSFER_AGENCY_SECTIONS.map((item, index) => {
           const activeStep = item.id === active;
           const done = index < current;
@@ -581,6 +660,7 @@ function TransferAgencyContent({
   openPos,
   saveAgencyProfile,
   isSavingProfile,
+  transfers,
 }: {
   section: TransferAgencySection;
   profile: TransferAgencyProfile;
@@ -592,17 +672,70 @@ function TransferAgencyContent({
   openPos: (mode: PosMode) => void;
   saveAgencyProfile: (status?: TransferAgencyProfile['status']) => Promise<void>;
   isSavingProfile: boolean;
+  transfers: PosTransfer[];
 }) {
-  if (section === 'validation') {
+  if (section === 'dashboard') {
+    const sentTotal = transfers.reduce((sum, item) => sum + item.amount, 0);
+    const feesTotal = transfers.reduce((sum, item) => sum + item.fee, 0);
+    const paidCount = transfers.filter((item) => item.status === 'paid').length;
+    const cashTotal = profile.offices.reduce((sum, office) => sum + Number(office.cashFloat || 0), 0);
+
     return (
       <div className="space-y-5">
-        <TransferAgencyPanel title="Validation et opérations POS" subtitle="Vérifiez l’agence puis utilisez les opérations de transfert.">
+        <div className="grid gap-4 md:grid-cols-4">
+          <TransferAgencyStat icon={Send} label="Envois aujourd’hui" value={String(transfers.length)} note={`${sentTotal.toLocaleString('fr-FR')} USD`} />
+          <TransferAgencyStat icon={Download} label="Paiements aujourd’hui" value={String(paidCount)} note="Réceptions confirmées" />
+          <TransferAgencyStat icon={CircleDollarSign} label="Frais collectés" value={`${feesTotal.toLocaleString('fr-FR')} USD`} note="Tarif 3%" />
+          <TransferAgencyStat icon={WalletCards} label="Solde des caisses" value={`${cashTotal.toLocaleString('fr-FR')} ${profile.defaultCurrency}`} note={`${profile.offices.length} bureaux`} />
+        </div>
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(300px,0.8fr)]">
+          <TransferAgencyPanel title="Carte des implantations" subtitle="Agences, bureaux et points de caisse.">
+            <div className="relative h-64 overflow-hidden rounded-3xl border border-primary/10 bg-[radial-gradient(circle_at_25%_28%,rgba(10,139,70,0.20),transparent_28%),radial-gradient(circle_at_70%_55%,rgba(255,165,0,0.16),transparent_24%),linear-gradient(135deg,#f8fbf9,#e9f7ef)]">
+              {profile.offices.map((office, index) => (
+                <span
+                  key={office.code}
+                  className="absolute rounded-full bg-primary px-3 py-2 text-xs font-black text-white shadow-lg"
+                  style={{ left: `${16 + ((index * 22) % 68)}%`, top: `${24 + ((index * 17) % 48)}%` }}
+                >
+                  {office.code}
+                </span>
+              ))}
+            </div>
+          </TransferAgencyPanel>
+          <TransferAgencyPanel title="Liquidité par bureau" subtitle="Caisses affectées aux implantations.">
+            <div className="space-y-3">
+              {profile.offices.map((office) => (
+                <div key={office.code} className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 p-3">
+                  <span>
+                    <span className="block text-sm font-black text-slate-900">{office.name}</span>
+                    <span className="text-xs font-bold text-slate-500">{office.city} • {office.code}</span>
+                  </span>
+                  <span className="text-right text-sm font-black text-primary">{Number(office.cashFloat || 0).toLocaleString('fr-FR')} {office.currency}</span>
+                </div>
+              ))}
+            </div>
+          </TransferAgencyPanel>
+        </div>
+        <TransferAgencyPanel title="Transactions récentes" subtitle="Historique complet des transferts.">
+          <TransferAgencyTransfersTable transfers={transfers} />
+        </TransferAgencyPanel>
+      </div>
+    );
+  }
+
+  if (section === 'transfers' || section === 'receipts' || section === 'cashiers') {
+    return (
+      <div className="space-y-5">
+        <TransferAgencyPanel
+          title={section === 'transfers' ? 'Nouveau transfert' : section === 'receipts' ? 'Réception et paiement' : 'Caisses'}
+          subtitle={section === 'transfers' ? 'Signature de l’expéditeur, code et reçu POS.' : section === 'receipts' ? 'Recherche, identité bénéficiaire, signature et paiement.' : 'Ouverture, fermeture et affectation de caisse.'}
+        >
           <div className="grid gap-3 md:grid-cols-4">
             {[
-              { label: 'Nouveau transfert', mode: 'send' as const, icon: CreditIcon },
-              { label: 'Payer code', mode: 'payout' as const, icon: PaymentNavIcon },
-              { label: 'Caisse POS', mode: 'cash' as const, icon: WalletNavIcon },
-              { label: 'Historique', mode: 'history' as const, icon: ReportNavIcon },
+              { label: 'Nouveau transfert', mode: 'send' as const, icon: Send },
+              { label: 'Payer un transfert', mode: 'payout' as const, icon: Download },
+              { label: 'Caisse POS', mode: 'cash' as const, icon: WalletCards },
+              { label: 'Historique', mode: 'history' as const, icon: ReceiptText },
             ].map((action) => {
               const Icon = action.icon;
               return (
@@ -615,22 +748,6 @@ function TransferAgencyContent({
               );
             })}
           </div>
-          <div className="mt-5 grid gap-3 md:grid-cols-4">
-            {Object.entries(profile.checks).map(([key, checked]) => (
-              <label key={key} className="flex items-center gap-2 rounded-xl border border-slate-200 p-3 text-sm font-bold">
-                <input type="checkbox" checked={checked} onChange={(event) => updateCheck(key as keyof TransferAgencyProfile['checks'], event.target.checked)} />
-                {key === 'documents' ? 'Documents' : key === 'headOffice' ? 'Siège' : key === 'pricing' ? 'Paramètres' : 'Contrat'}
-              </label>
-            ))}
-          </div>
-          <button
-            type="button"
-            onClick={() => saveAgencyProfile('review')}
-            disabled={isSavingProfile}
-            className="mt-5 h-12 w-full rounded-xl bg-primary text-sm font-black text-white disabled:opacity-60"
-          >
-            Envoyer en vérification
-          </button>
         </TransferAgencyPanel>
       </div>
     );
@@ -646,10 +763,13 @@ function TransferAgencyContent({
         <div className="grid gap-3">
           {profile.offices.length === 0 ? <p className="rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-500">Aucun bureau ajouté.</p> : profile.offices.map((office, index) => (
             <div key={`${office.name}-${index}`} className="grid gap-3 rounded-2xl border border-slate-200 p-4 md:grid-cols-4">
+              <TransferAgencyField label="Code bureau" value={office.code} onChange={(value) => updateProfile('offices', profile.offices.map((item, itemIndex) => itemIndex === index ? { ...item, code: value } : item))} />
               <TransferAgencyField label="Nom bureau" value={office.name} onChange={(value) => updateProfile('offices', profile.offices.map((item, itemIndex) => itemIndex === index ? { ...item, name: value } : item))} />
               <TransferAgencyField label="Ville" value={office.city} onChange={(value) => updateProfile('offices', profile.offices.map((item, itemIndex) => itemIndex === index ? { ...item, city: value } : item))} />
               <TransferAgencyField label="Responsable" value={office.manager} onChange={(value) => updateProfile('offices', profile.offices.map((item, itemIndex) => itemIndex === index ? { ...item, manager: value } : item))} />
-              <TransferAgencyField label="Caisse initiale" value={office.cashFloat} onChange={(value) => updateProfile('offices', profile.offices.map((item, itemIndex) => itemIndex === index ? { ...item, cashFloat: value } : item))} />
+              <TransferAgencyField label="Devise" value={office.currency} onChange={(value) => updateProfile('offices', profile.offices.map((item, itemIndex) => itemIndex === index ? { ...item, currency: value } : item))} />
+              <TransferAgencyField label="Limite journalière" value={office.dailyLimit} onChange={(value) => updateProfile('offices', profile.offices.map((item, itemIndex) => itemIndex === index ? { ...item, dailyLimit: value } : item))} />
+              <TransferAgencyField label="Caisse affectée" value={office.cashFloat} onChange={(value) => updateProfile('offices', profile.offices.map((item, itemIndex) => itemIndex === index ? { ...item, cashFloat: value } : item))} />
             </div>
           ))}
         </div>
@@ -668,6 +788,9 @@ function TransferAgencyContent({
           {profile.agents.length === 0 ? <p className="rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-500">Aucun agent ajouté.</p> : profile.agents.map((agent, index) => (
             <div key={`${agent.name}-${index}`} className="grid gap-3 rounded-2xl border border-slate-200 p-4 md:grid-cols-4">
               <TransferAgencyField label="Nom agent" value={agent.name} onChange={(value) => updateProfile('agents', profile.agents.map((item, itemIndex) => itemIndex === index ? { ...item, name: value } : item))} />
+              <TransferAgencyField label="Nom d’utilisateur" value={agent.username} onChange={(value) => updateProfile('agents', profile.agents.map((item, itemIndex) => itemIndex === index ? { ...item, username: value } : item))} />
+              <TransferAgencyField label="Mot de passe" value={agent.password} onChange={(value) => updateProfile('agents', profile.agents.map((item, itemIndex) => itemIndex === index ? { ...item, password: value } : item))} />
+              <TransferAgencyField label="Code bureau" value={agent.officeCode} onChange={(value) => updateProfile('agents', profile.agents.map((item, itemIndex) => itemIndex === index ? { ...item, officeCode: value } : item))} />
               <TransferAgencyField label="Téléphone" value={agent.phone} onChange={(value) => updateProfile('agents', profile.agents.map((item, itemIndex) => itemIndex === index ? { ...item, phone: value } : item))} />
               <TransferAgencyField label="Rôle" value={agent.role} onChange={(value) => updateProfile('agents', profile.agents.map((item, itemIndex) => itemIndex === index ? { ...item, role: value } : item))} />
               <TransferAgencyField label="Statut" value={agent.status} onChange={(value) => updateProfile('agents', profile.agents.map((item, itemIndex) => itemIndex === index ? { ...item, status: value } : item))} />
@@ -680,21 +803,52 @@ function TransferAgencyContent({
 
   if (section === 'pricing') {
     return (
-      <TransferAgencyPanel title="Paramètres financiers" subtitle="Définissez les règles de caisse, plafond et commission.">
+      <TransferAgencyPanel title="Tarification et commissions" subtitle="Tarif de transfert 3 % et répartition : siège 50 %, envoi 30 %, réception 20 %.">
         <div className="grid gap-4 md:grid-cols-2">
           <TransferAgencyField label="Commission agence (%)" value={profile.pricing.commissionRate} onChange={(value) => updatePricing('commissionRate', value)} />
           <TransferAgencyField label="Plafond journalier" value={profile.pricing.dailyLimit} onChange={(value) => updatePricing('dailyLimit', value)} />
           <TransferAgencyField label="Caisse minimale" value={profile.pricing.minimumCashFloat} onChange={(value) => updatePricing('minimumCashFloat', value)} />
           <TransferAgencyField label="Délai de paiement" value={profile.pricing.payoutDelay} onChange={(value) => updatePricing('payoutDelay', value)} />
+          <TransferAgencyField label="Part siège (%)" value={profile.pricing.headquartersShare} onChange={(value) => updatePricing('headquartersShare', value)} />
+          <TransferAgencyField label="Part agence envoi (%)" value={profile.pricing.sendingOfficeShare} onChange={(value) => updatePricing('sendingOfficeShare', value)} />
+          <TransferAgencyField label="Part agence réception (%)" value={profile.pricing.receivingOfficeShare} onChange={(value) => updatePricing('receivingOfficeShare', value)} />
         </div>
+      </TransferAgencyPanel>
+    );
+  }
+
+  if (section === 'reports' || section === 'audit' || section === 'settings') {
+    return (
+      <TransferAgencyPanel
+        title={section === 'reports' ? 'Rapports financiers' : section === 'audit' ? 'Journal d’audit et alertes' : 'Paramètres POS'}
+        subtitle={section === 'reports' ? 'Commissions, rapprochement entre agences et volumes.' : section === 'audit' ? 'Contrôle des actions, sécurité et transferts sensibles.' : 'Paramètres des imprimantes POS 58/80 mm.'}
+      >
+        {section === 'reports' && (
+          <div className="grid gap-4 md:grid-cols-3">
+            <TransferAgencyStat icon={CircleDollarSign} label="Volume" value={`${transfers.reduce((sum, item) => sum + item.amount, 0).toLocaleString('fr-FR')} USD`} note="Transferts" />
+            <TransferAgencyStat icon={ReceiptText} label="Frais 3%" value={`${transfers.reduce((sum, item) => sum + item.fee, 0).toLocaleString('fr-FR')} USD`} note="Collectés" />
+            <TransferAgencyStat icon={Landmark} label="Rapprochement" value={String(transfers.filter((item) => item.status === 'available').length)} note="À payer" />
+          </div>
+        )}
+        {section === 'audit' && <TransferAgencyTransfersTable transfers={transfers} />}
+        {section === 'settings' && (
+          <div className="grid gap-4 md:grid-cols-2">
+            <TransferAgencyField label="Format imprimante POS" value={profile.pricing.printerFormat} onChange={(value) => updatePricing('printerFormat', value)} />
+            <div className="rounded-2xl border border-primary/15 bg-primary/5 p-4">
+              <Printer className="h-8 w-8 text-primary" />
+              <p className="mt-3 text-sm font-black text-slate-950">Reçus 58/80 mm</p>
+              <p className="text-sm font-semibold text-slate-500">Envoi, réception, duplicata et journal d’impression.</p>
+            </div>
+          </div>
+        )}
       </TransferAgencyPanel>
     );
   }
 
   return (
     <TransferAgencyPanel
-      title={section === 'company' ? 'Informations société' : 'Informations générales'}
-      subtitle={section === 'company' ? 'Identité légale de la société.' : 'Veuillez renseigner les informations de base de votre agence.'}
+      title="Informations générales"
+      subtitle="Identité légale de la société et siège principal."
     >
       <div className="grid gap-4 md:grid-cols-2">
         <TransferAgencyField label="Nom commercial *" value={profile.commercialName} onChange={(value) => updateProfile('commercialName', value)} />
@@ -721,6 +875,64 @@ function TransferAgencyContent({
         </div>
       </div>
     </TransferAgencyPanel>
+  );
+}
+
+function TransferAgencyStat({ icon: Icon, label, value, note }: { icon: LucideIcon; label: string; value: string; note: string }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex items-start gap-3">
+        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
+          <Icon className="h-6 w-6" />
+        </span>
+        <span className="min-w-0">
+          <span className="block text-xs font-bold text-slate-500">{label}</span>
+          <span className="mt-1 block truncate text-2xl font-black text-slate-950">{value}</span>
+          <span className="mt-1 block text-xs font-black text-primary">{note}</span>
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function TransferAgencyTransfersTable({ transfers }: { transfers: PosTransfer[] }) {
+  if (!transfers.length) {
+    return <p className="rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-500">Aucun transfert enregistré pour le moment.</p>;
+  }
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="min-w-[760px] w-full text-left text-sm">
+        <thead>
+          <tr className="border-b border-slate-100 text-xs font-black uppercase tracking-[0.08em] text-slate-500">
+            <th className="px-3 py-3">Code</th>
+            <th className="px-3 py-3">Expéditeur</th>
+            <th className="px-3 py-3">Bénéficiaire</th>
+            <th className="px-3 py-3">Destination</th>
+            <th className="px-3 py-3">Montant</th>
+            <th className="px-3 py-3">Frais 3%</th>
+            <th className="px-3 py-3">Statut</th>
+          </tr>
+        </thead>
+        <tbody>
+          {transfers.slice(0, 12).map((item) => (
+            <tr key={item.id} className="border-b border-slate-100">
+              <td className="px-3 py-3 font-black text-primary">{item.internalReference}</td>
+              <td className="px-3 py-3 font-bold text-slate-700">{maskPaymentValue(item.senderName)}</td>
+              <td className="px-3 py-3 font-bold text-slate-700">{item.beneficiaryName}</td>
+              <td className="px-3 py-3 font-semibold text-slate-500">{item.payoutCity || item.payoutOfficeCode}</td>
+              <td className="px-3 py-3 font-black text-slate-950">{item.amount.toLocaleString('fr-FR')} {item.currency}</td>
+              <td className="px-3 py-3 font-black text-[#FFA500]">{item.fee.toLocaleString('fr-FR')} {item.currency}</td>
+              <td className="px-3 py-3">
+                <span className={`rounded-full px-3 py-1 text-xs font-black ${item.status === 'paid' ? 'bg-primary text-white' : 'bg-[#FFA500]/15 text-[#B86B00]'}`}>
+                  {item.status === 'paid' ? 'Payé' : item.status === 'available' ? 'En attente' : item.status}
+                </span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
