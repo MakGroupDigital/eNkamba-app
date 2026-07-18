@@ -4,12 +4,16 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { QrCode, ArrowLeftRight, TrendingUp, Wallet, Eye, EyeOff, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from 'next/navigation';
 import { cn } from "@/lib/utils";
 import DashboardHeader from "@/components/dashboard/dashboard-header";
 import { SavingsIcon, CreditIcon, TontineIcon, ConversionIcon, ReferralIcon, AgentIcon, LinkAccountIcon, BonusIcon, TaxIcon, WaterIcon, TvIcon, AcademicIcon, SchoolIcon, EventIcon, PhoneCreditIcon, InsuranceIcon, ESimIcon, HealthIcon, FiveGoIcon, EChurchIcon } from "@/components/icons/service-icons";
 import { useWalletTransactions } from '@/hooks/useWalletTransactions';
 import { useSecureBalanceVisibility } from '@/hooks/useSecureBalanceVisibility';
 import { PinVerification } from '@/components/payment/PinVerification';
+import { auth, db } from '@/lib/firebase';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
 
 type DashboardCopy = Record<string, string>;
 
@@ -26,7 +30,7 @@ const DEFAULT_COPY: DashboardCopy = {
   savings: 'Épargne',
   credit: 'Crédit',
   tontine: 'Tontine',
-  conversion: 'Conversion',
+  conversion: 'Bureau de change',
   referral: 'Parrainage',
   agentAccount: 'Compte Agent',
   linkAccount: 'Lier un compte',
@@ -66,63 +70,87 @@ const quickActions = [
   { 
     icon: QrCode,
     labelKey: 'scanner',
-    href: '/dashboard/scanner-simple'
+    href: '/dashboard/scanner-simple',
+    aliases: ['qr', 'qrcode', 'code qr', 'scan', 'scanner paiement']
   },
   { 
     icon: ArrowLeftRight,
     labelKey: 'payReceive',
-    href: '/dashboard/pay-receive'
+    href: '/dashboard/pay-receive',
+    aliases: ['payer', 'recevoir', 'envoyer argent', 'transfert', 'retrait']
   },
   { 
     icon: TrendingUp,
     labelKey: 'invest',
-    href: '/dashboard/invest'
+    href: '/dashboard/invest',
+    aliases: ['investissement', 'placement', 'rendement']
   },
   { 
     icon: Wallet,
     labelKey: 'wallet',
-    href: '/dashboard/wallet'
+    href: '/dashboard/wallet',
+    aliases: ['solde', 'portemonnaie', 'compte', 'historique']
   },
 ];
 
 const financialServices = [
-  { icon: SavingsIcon, labelKey: 'savings', href: '/dashboard/savings' },
-  { icon: CreditIcon, labelKey: 'credit', href: '/dashboard/credit' },
-  { icon: TontineIcon, labelKey: 'tontine', href: '/dashboard/tontine' },
-  { icon: ConversionIcon, labelKey: 'conversion', href: '/dashboard/conversion' },
-  { icon: ReferralIcon, labelKey: 'referral', href: '/dashboard/referral' },
-  { icon: AgentIcon, labelKey: 'agentAccount', href: '/dashboard/agent' },
-  { icon: LinkAccountIcon, labelKey: 'linkAccount', href: '/dashboard/link-account' },
-  { icon: BonusIcon, labelKey: 'bonus', href: '/dashboard/bonus' },
+  { icon: SavingsIcon, labelKey: 'savings', href: '/dashboard/savings', aliases: ['epargner', 'argent de cote'] },
+  { icon: CreditIcon, labelKey: 'credit', href: '/dashboard/credit', aliases: ['pret', 'emprunt', 'microcredit'] },
+  { icon: TontineIcon, labelKey: 'tontine', href: '/dashboard/tontine', aliases: ['ristourne', 'cotisation', 'groupe'] },
+  { icon: ConversionIcon, labelKey: 'conversion', href: '/dashboard/conversion', aliases: ['bureau de change', 'devise', 'usd', 'eur', 'rmb', 'fcfa', 'changer argent'] },
+  { icon: ReferralIcon, labelKey: 'referral', href: '/dashboard/referral', aliases: ['inviter', 'parrain', 'commission'] },
+  { icon: AgentIcon, labelKey: 'agentAccount', href: '/dashboard/agent', aliases: ['agent', 'compte agent', 'cash in', 'cash out'] },
+  { icon: LinkAccountIcon, labelKey: 'linkAccount', href: '/dashboard/link-account', aliases: ['banque', 'lier banque', 'compte bancaire'] },
+  { icon: BonusIcon, labelKey: 'bonus', href: '/dashboard/bonus', aliases: ['recompense', 'cadeau', 'promotion'] },
 ];
 
 const bills = [
-  { icon: ESimIcon, labelKey: 'esim', href: '/dashboard/partner-services' },
-  { icon: TaxIcon, labelKey: 'tax', href: '/dashboard/tax-declaration' },
-  { icon: WaterIcon, labelKey: 'regideso', href: '/dashboard/pay-bill?type=water' },
-  { icon: TvIcon, labelKey: 'canal', href: '/dashboard/pay-bill?type=tv' },
-  { icon: AcademicIcon, labelKey: 'academicFees', href: '/dashboard/academic-fees' },
-  { icon: SchoolIcon, labelKey: 'schoolFees', href: '/dashboard/school-fees' },
-  { icon: HealthIcon, labelKey: 'health', href: '/dashboard/health' },
-  { icon: FiveGoIcon, labelKey: 'fivego', href: '/dashboard/5go' },
-  { icon: EChurchIcon, labelKey: 'echurch', href: '/dashboard/echurch' },
-  { icon: EventIcon, labelKey: 'events', href: '/dashboard/events' },
-  { icon: PhoneCreditIcon, labelKey: 'phoneCredit', href: '/dashboard/pay-bill?type=phone' },
-  { icon: InsuranceIcon, labelKey: 'insurance', href: '/dashboard/insurance' },
+  { icon: ESimIcon, labelKey: 'esim', href: '/dashboard/partner-services', aliases: ['sim', 'internet', 'data'] },
+  { icon: TaxIcon, labelKey: 'tax', href: '/dashboard/tax-declaration', aliases: ['impot', 'declaration', 'fiscalite'] },
+  { icon: WaterIcon, labelKey: 'regideso', href: '/dashboard/pay-bill?type=water', aliases: ['eau', 'facture eau'] },
+  { icon: TvIcon, labelKey: 'canal', href: '/dashboard/pay-bill?type=tv', aliases: ['television', 'tv', 'abonnement'] },
+  { icon: AcademicIcon, labelKey: 'academicFees', href: '/dashboard/academic-fees', aliases: ['universite', 'academique', 'etudiant'] },
+  { icon: SchoolIcon, labelKey: 'schoolFees', href: '/dashboard/school-fees', aliases: ['ecole', 'scolarite', 'frais scolaire'] },
+  { icon: HealthIcon, labelKey: 'health', href: '/dashboard/health', aliases: ['hopital', 'clinique', 'medical'] },
+  { icon: FiveGoIcon, labelKey: 'fivego', href: '/dashboard/5go', aliases: ['transport', 'mobilite', 'course'] },
+  { icon: EChurchIcon, labelKey: 'echurch', href: '/dashboard/echurch', aliases: ['eglise', 'offrande', 'don'] },
+  { icon: EventIcon, labelKey: 'events', href: '/dashboard/events', aliases: ['evenement', 'ticket', 'billet'] },
+  { icon: PhoneCreditIcon, labelKey: 'phoneCredit', href: '/dashboard/pay-bill?type=phone', aliases: ['airtime', 'telephone', 'unite', 'credit appel'] },
+  { icon: InsuranceIcon, labelKey: 'insurance', href: '/dashboard/insurance', aliases: ['assurer', 'protection'] },
 ];
 
 const FALLBACK_DAILY_RATES = {
   USD: 0.00035,
   EUR: 0.00032,
   CNY: 0.0027,
+  XAF: 0.21,
 };
 
+type CurrencyWallets = Record<string, { balance?: number; updatedAt?: unknown }>;
+type PaymentDashboardItem = {
+  icon: any;
+  labelKey: string;
+  href: string;
+  aliases?: string[];
+};
+
+function normalizePaymentSearch(value: string) {
+  return value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+}
+
 export default function MbongoDashboard() {
+  const router = useRouter();
   const { balance: walletBalance } = useWalletTransactions();
   const [copy, setCopy] = useState<DashboardCopy>(DEFAULT_COPY);
   const [language, setLanguage] = useState('fr');
   const [isTranslating, setIsTranslating] = useState(false);
   const [dailyRates, setDailyRates] = useState(FALLBACK_DAILY_RATES);
+  const [currencyWallets, setCurrencyWallets] = useState<CurrencyWallets>({});
+  const [searchQuery, setSearchQuery] = useState('');
   const {
     isBalanceVisible,
     isBiometricChecking,
@@ -146,6 +174,7 @@ export default function MbongoDashboard() {
             USD: data.rates.USD || FALLBACK_DAILY_RATES.USD,
             EUR: data.rates.EUR || FALLBACK_DAILY_RATES.EUR,
             CNY: data.rates.CNY || FALLBACK_DAILY_RATES.CNY,
+            XAF: data.rates.XAF || FALLBACK_DAILY_RATES.XAF,
           });
         }
       } catch (error) {
@@ -158,6 +187,25 @@ export default function MbongoDashboard() {
 
     return () => {
       cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let unsubscribeWallet: (() => void) | undefined;
+    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
+      unsubscribeWallet?.();
+      if (!currentUser) {
+        setCurrencyWallets({});
+        return;
+      }
+      unsubscribeWallet = onSnapshot(doc(db, 'users', currentUser.uid), (snapshot) => {
+        setCurrencyWallets((snapshot.data()?.currencyWallets || {}) as CurrencyWallets);
+      });
+    });
+
+    return () => {
+      unsubscribeWallet?.();
+      unsubscribeAuth();
     };
   }, []);
 
@@ -218,130 +266,170 @@ export default function MbongoDashboard() {
     };
   }, [language]);
 
+  const searchText = normalizePaymentSearch(searchQuery);
+  const matchesSearch = (item: PaymentDashboardItem) => {
+    if (!searchText) return true;
+    const values = [copy[item.labelKey], item.labelKey, ...(item.aliases || [])];
+    return values.some((value) => normalizePaymentSearch(value || '').includes(searchText));
+  };
+  const filteredQuickActions = quickActions.filter(matchesSearch);
+  const filteredFinancialServices = financialServices.filter(matchesSearch);
+  const filteredBills = bills.filter(matchesSearch);
+  const paymentSearchResults = [
+    ...filteredQuickActions,
+    ...filteredFinancialServices,
+    ...filteredBills,
+  ];
+  const hasSearchQuery = searchText.length > 0;
+  const hasSearchResults = paymentSearchResults.length > 0;
+
+  const openFirstSearchResult = () => {
+    if (paymentSearchResults.length === 1) {
+      router.push(paymentSearchResults[0].href);
+    }
+  };
+
   return (
     <>
-      <DashboardHeader />
-      <div className="container mx-auto max-w-4xl p-4 space-y-6 animate-in fade-in duration-500 pt-24">
-        {/* Quick Actions - 4 Circles */}
-        <div className="grid grid-cols-4 gap-2.5 sm:gap-5">
-          {quickActions.map((action) => {
-            const IconComponent = action.icon;
-            
-            return (
-              <Link key={action.labelKey} href={action.href} className="flex flex-col items-center gap-2.5 group">
-                {/* Icon Circle - Green background */}
-                <div className="flex h-[84px] w-[84px] items-center justify-center rounded-full bg-[#009058] text-white shadow-xl shadow-[#009058]/25 transition-all duration-300 hover:scale-110 hover:bg-[#009058] sm:h-24 sm:w-24">
-                  <IconComponent size={62} className="h-[62px] w-[62px] text-white sm:h-[68px] sm:w-[68px]" />
-                </div>
-                {/* Label */}
-                <p className="text-center text-[12px] font-bold leading-tight text-gray-900 sm:text-sm">{copy[action.labelKey]}</p>
+      <DashboardHeader
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        onSearchKeyDown={(event) => {
+          if (event.key === 'Enter') openFirstSearchResult();
+        }}
+        searchPlaceholder="Rechercher paiement, facture, devise..."
+      />
+      <div className="min-h-screen bg-white pt-24 animate-in fade-in duration-500">
+        <main className="container mx-auto max-w-5xl space-y-5 px-4 pb-8 pt-2">
+          <div className="grid grid-cols-4 gap-3 sm:gap-6">
+            {filteredQuickActions.map((action) => {
+              const IconComponent = action.icon;
+              return (
+                <Link key={action.labelKey} href={action.href} className="group flex flex-col items-center gap-2.5">
+                  <div className="flex h-[76px] w-[76px] items-center justify-center rounded-full bg-[#0A8B46] text-white shadow-xl shadow-[#0A8B46]/20 transition-all duration-300 hover:scale-105 sm:h-24 sm:w-24">
+                    <IconComponent className="h-11 w-11 text-white sm:h-14 sm:w-14" strokeWidth={2.4} />
+                  </div>
+                  <p className="text-center text-[12px] font-black leading-tight text-slate-800 sm:text-sm">{copy[action.labelKey]}</p>
+                </Link>
+              );
+            })}
+          </div>
+
+          <section className="space-y-4">
+            <div className="relative flex min-h-[118px] items-center justify-between overflow-hidden rounded-2xl bg-[#0A8B46] px-6 py-5 text-white shadow-xl shadow-[#0A8B46]/20">
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_86%_20%,rgba(255,255,255,0.16),transparent_34%)]" />
+              <Link href="/dashboard/wallet" className="relative min-w-0 flex-1">
+                <p className="text-[11px] font-black uppercase tracking-[0.22em] text-white/75">Solde principal</p>
+                <p className="mt-5 truncate text-2xl font-black text-white">
+                  {isBalanceVisible ? walletBalance.toLocaleString('fr-FR') : '••••••'}
+                  <span className="ml-2 text-lg font-black text-white">CDF</span>
+                </p>
               </Link>
-            );
-          })}
-        </div>
-
-        <section className="space-y-3">
-          <div className="group relative mx-auto flex w-full max-w-[500px] items-center justify-between overflow-hidden rounded-2xl bg-gradient-to-br from-[#009058] to-[#009058] px-4 py-3 text-white shadow-lg shadow-[#009058]/20 ring-1 ring-white/20 animate-in fade-in-50 slide-in-from-bottom-3 duration-500">
-            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,rgba(255,255,255,0.28),transparent_32%,transparent_68%,rgba(0,0,0,0.10))]" />
-            <div className="pointer-events-none absolute inset-y-0 -left-20 w-16 skew-x-[-18deg] bg-white/25 blur-sm transition-transform duration-1000 group-hover:translate-x-[620px]" />
-            <Link href="/dashboard/wallet" className="relative min-w-0 flex-1">
-              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-white/75">
-                Solde principal
-              </p>
-              <p className="mt-1 truncate text-2xl font-black text-white drop-shadow-sm">
-                {isBalanceVisible ? walletBalance.toLocaleString('fr-FR') : '••••••'}
-                <span className="ml-1 text-xs font-bold text-white/75">CDF</span>
-              </p>
-            </Link>
-            <button
-              type="button"
-              onClick={isBalanceVisible ? lockBalance : requestUnlock}
-              disabled={isBiometricChecking}
-              aria-label={isBalanceVisible ? 'Masquer le solde' : 'Afficher le solde'}
-              className="relative ml-3 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/35 bg-white/18 text-white shadow-sm backdrop-blur transition hover:scale-105 hover:bg-white/25 active:scale-95 disabled:opacity-60"
-            >
-              {isBiometricChecking ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : isBalanceVisible ? (
-                <Eye className="h-4 w-4" />
-              ) : (
-                <EyeOff className="h-4 w-4" />
-              )}
-            </button>
-          </div>
-
-          <div className="mx-auto max-w-[500px] animate-in fade-in-50 slide-in-from-bottom-4 duration-700">
-            <p className="mb-2 text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
-              Conversion au taux du jour
-            </p>
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                { code: 'USD', value: walletBalance * dailyRates.USD },
-                { code: 'EUR', value: walletBalance * dailyRates.EUR },
-                { code: 'RMB', value: walletBalance * dailyRates.CNY },
-              ].map((item, index) => (
-                <div
-                  key={item.code}
-                  className="group relative overflow-hidden rounded-xl bg-primary px-2.5 py-2 text-center text-primary-foreground shadow-md shadow-primary/15 ring-1 ring-white/20 transition duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/25 animate-in fade-in-50 slide-in-from-bottom-2"
-                  style={{ animationDelay: `${index * 80}ms` }}
-                >
-                  <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(145deg,rgba(255,255,255,0.20),transparent_46%,rgba(0,0,0,0.08))]" />
-                  <p className="relative text-[10px] font-black tracking-[0.14em] text-white/75">{item.code}</p>
-                  <p className="relative mt-1 truncate text-sm font-black text-white">
-                    {isBalanceVisible ? item.value.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) : '••••'}
-                  </p>
-                </div>
-              ))}
+              <button
+                type="button"
+                onClick={isBalanceVisible ? lockBalance : requestUnlock}
+                disabled={isBiometricChecking}
+                aria-label={isBalanceVisible ? 'Masquer le solde' : 'Afficher le solde'}
+                className="relative ml-3 inline-flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-white/28 bg-white/8 text-white transition hover:bg-white/14 disabled:opacity-60"
+              >
+                {isBiometricChecking ? (
+                  <Loader2 className="h-7 w-7 animate-spin" />
+                ) : isBalanceVisible ? (
+                  <Eye className="h-7 w-7" />
+                ) : (
+                  <EyeOff className="h-7 w-7" />
+                )}
+              </button>
             </div>
-          </div>
-        </section>
-        <Card className="overflow-hidden">
-          <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent">
-            <CardTitle className="font-headline flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-              {copy.financialServices}
-              {isTranslating && <span className="text-xs font-normal text-muted-foreground">...</span>}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <div className="grid grid-cols-4 gap-x-2.5 gap-y-7 text-center sm:gap-x-5">
-              {financialServices.map(service => {
+
+            <div>
+              <div className="mb-3 flex items-center justify-center gap-4">
+                <span className="h-px w-14 bg-[#0A8B46]/20" />
+                <p className="text-center text-[12px] font-black uppercase tracking-[0.22em] text-[#0A8B46]">Autres devises</p>
+                <span className="h-px w-14 bg-[#0A8B46]/20" />
+              </div>
+              <div className="grid grid-cols-4 gap-2">
+                {[
+                  { code: 'USD', symbol: '$', estimated: walletBalance * dailyRates.USD },
+                  { code: 'EUR', symbol: '€', estimated: walletBalance * dailyRates.EUR },
+                  { code: 'RMB', symbol: '¥', estimated: walletBalance * dailyRates.CNY },
+                  { code: 'FCFA', symbol: 'FCFA', estimated: walletBalance * dailyRates.XAF },
+                ].map((item) => (
+                  <Link key={item.code} href="/dashboard/conversion" className="relative min-h-[74px] overflow-hidden rounded-xl bg-[#0A8B46] p-2.5 text-white shadow-md shadow-[#0A8B46]/12 transition hover:-translate-y-0.5 hover:shadow-lg">
+                    <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(145deg,rgba(255,255,255,0.14),transparent_58%)]" />
+                    <div className="relative flex items-start justify-between gap-1">
+                      <p className="text-sm font-black">{item.code}</p>
+                      <span className="flex h-6 min-w-6 max-w-[38px] items-center justify-center rounded-full bg-white/14 px-1 text-[10px] font-black text-white/80">
+                        {item.symbol}
+                      </span>
+                    </div>
+                    <p className="relative mt-2 truncate text-base font-black">
+                      {isBalanceVisible ? Number(currencyWallets[item.code]?.balance || 0).toLocaleString('fr-FR', { maximumFractionDigits: 2 }) : '••••'}
+                    </p>
+                    <p className="relative mt-0.5 truncate text-[9px] font-bold text-white/68">
+                      ≈ {isBalanceVisible ? item.estimated.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) : '••••'} si CDF
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <Card className="overflow-hidden rounded-3xl border-[#0A8B46]/10 bg-white shadow-xl shadow-black/5">
+            <CardHeader className="px-5 pb-2 pt-5">
+              <CardTitle className="font-headline flex items-center gap-2 text-2xl text-slate-950">
+                <span className="h-3 w-3 rounded-full bg-[#0A8B46]" />
+                {copy.financialServices}
+                {isTranslating && <span className="text-xs font-normal text-muted-foreground">...</span>}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="px-5 pb-6 pt-2">
+              <div className="grid grid-cols-4 gap-3 text-center sm:gap-5">
+              {filteredFinancialServices.map(service => {
                 const IconComponent = service.icon;
                 return (
-                  <Link href={service.href} key={service.labelKey} className="flex flex-col items-center gap-3 text-sm font-semibold text-foreground transition-all hover:text-primary group">
-                    <div className={cn("mbongo-service-icon flex h-[82px] w-[82px] items-center justify-center overflow-visible rounded-[24px] sm:h-[94px] sm:w-[94px]", "bg-gradient-to-br from-muted to-muted/50", "group-hover:shadow-lg group-hover:scale-105 transition-all duration-300", "border border-transparent group-hover:border-primary/20")}>
-                      <IconComponent size={62} className="h-[62px] w-[62px] sm:h-[70px] sm:w-[70px]" />
+                  <Link href={service.href} key={service.labelKey} className="flex flex-col items-center gap-2 text-sm font-semibold text-slate-950 transition-all hover:text-[#0A8B46] group">
+                    <div className={cn("mbongo-service-icon flex h-[82px] w-full max-w-[92px] items-center justify-center overflow-visible rounded-2xl bg-white", "border border-[#0A8B46]/10 shadow-sm group-hover:shadow-md group-hover:scale-[1.02] transition-all duration-300")}>
+                      <IconComponent size={58} className="h-[58px] w-[58px]" />
                     </div>
-                    <span className="text-center text-[12px] font-bold leading-tight sm:text-[13px]">{copy[service.labelKey]}</span>
+                    <span className="text-center text-[12px] font-bold leading-tight">{copy[service.labelKey]}</span>
                   </Link>
                 );
               })}
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="overflow-hidden">
-          <CardHeader className="bg-gradient-to-r from-accent/10 to-transparent">
-            <CardTitle className="font-headline flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-accent animate-pulse" />
-              {copy.billsServices}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 sm:gap-4">
-              {bills.map(bill => {
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="overflow-hidden rounded-3xl border-[#0A8B46]/10 bg-white shadow-xl shadow-black/5">
+            <CardHeader className="px-5 pb-2 pt-5">
+              <CardTitle className="font-headline flex items-center gap-2 text-xl text-slate-950">
+                <span className="h-3 w-3 rounded-full bg-[#0A8B46]" />
+                {copy.billsServices}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="px-5 pb-6 pt-2">
+              <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 sm:gap-4">
+              {filteredBills.map(bill => {
                 const IconComponent = bill.icon;
                 return (
-                  <Link href={bill.href} key={bill.labelKey} className={cn("flex min-h-[138px] flex-col items-center justify-center gap-3.5 rounded-[22px] p-4 text-center", "bg-gradient-to-br from-background to-muted/30", "border border-border/50 hover:border-primary/30", "text-sm font-semibold text-foreground", "hover:shadow-md hover:scale-[1.02] transition-all duration-300", "group")}>
-                    <div className="mbongo-service-icon group-hover:scale-110 transition-transform duration-300">
-                      <IconComponent size={72} className="h-[72px] w-[72px]" />
+                  <Link href={bill.href} key={bill.labelKey} className={cn("flex min-h-[118px] flex-col items-center justify-center gap-2.5 rounded-2xl p-3 text-center", "bg-white border border-[#0A8B46]/10", "text-sm font-semibold text-slate-950", "hover:shadow-md hover:scale-[1.02] transition-all duration-300", "group")}>
+                    <div className="mbongo-service-icon group-hover:scale-105 transition-transform duration-300">
+                      <IconComponent size={62} className="h-[62px] w-[62px]" />
                     </div>
-                    <span className="text-center text-[12px] font-bold leading-tight sm:text-[13px]">{copy[bill.labelKey]}</span>
+                    <span className="text-center text-[12px] font-bold leading-tight">{copy[bill.labelKey]}</span>
                   </Link>
                 );
               })}
-            </div>
-          </CardContent>
-        </Card>
+              </div>
+              {hasSearchQuery && !hasSearchResults && (
+                <div className="mt-4 rounded-2xl border border-dashed border-[#0A8B46]/20 bg-[#0A8B46]/5 px-4 py-5 text-center">
+                  <p className="text-sm font-black text-slate-900">Aucun service trouvé</p>
+                  <p className="mt-1 text-xs font-semibold text-slate-500">Essayez avec paiement, tontine, bureau de change, facture ou QR.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </main>
         <PinVerification
           isOpen={isPinOpen}
           onClose={() => setIsPinOpen(false)}
@@ -355,21 +443,27 @@ export default function MbongoDashboard() {
         />
         <style jsx global>{`
           .mbongo-service-icon svg [fill='#FFA500'] {
-            fill: #FFA500 !important;
-            transform: scale(0.32);
-            transform-box: fill-box;
-            transform-origin: center;
+            fill: #0A8B46 !important;
           }
 
           .mbongo-service-icon svg [stroke='#FFA500'] {
-            stroke: #FFA500 !important;
-            transform: scale(0.32);
-            transform-box: fill-box;
-            transform-origin: center;
+            stroke: #0A8B46 !important;
           }
 
           .mbongo-service-icon svg [stop-color='#FFA500'] {
-            stop-color: #009058 !important;
+            stop-color: #0A8B46 !important;
+          }
+
+          .mbongo-service-icon svg [fill='#009058'],
+          .mbongo-service-icon svg [fill='#25543A'],
+          .mbongo-service-icon svg [fill='#479B67'] {
+            fill: #0A8B46 !important;
+          }
+
+          .mbongo-service-icon svg [stroke='#009058'],
+          .mbongo-service-icon svg [stroke='#25543A'],
+          .mbongo-service-icon svg [stroke='#479B67'] {
+            stroke: #0A8B46 !important;
           }
         `}</style>
       </div>

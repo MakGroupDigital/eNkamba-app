@@ -2035,7 +2035,7 @@ export default function UgaviPage() {
       </div>
 
       <section className="absolute left-3 right-3 top-16 z-30 mx-auto max-w-md">
-        <div className="grid grid-cols-3 gap-1 rounded-[22px] border border-white/70 bg-white/70 p-1.5 shadow-2xl shadow-primary/10 backdrop-blur-2xl ring-1 ring-white/50">
+        <div className="grid grid-cols-3 items-center gap-1 rounded-[22px] border border-white/70 bg-white/70 p-1.5 shadow-2xl shadow-primary/10 backdrop-blur-2xl ring-1 ring-white/50">
           {[
             { id: 'send', label: 'Envoyer', icon: LogisticsStandardIcon },
             { id: 'track', label: 'Suivi', icon: LogisticsTrackingIcon },
@@ -2048,12 +2048,12 @@ export default function UgaviPage() {
                 key={item.id}
                 type="button"
                 onClick={() => resetContextForMode(item.id as UgaviMode)}
-                className={`flex items-center justify-center gap-1.5 rounded-2xl px-2 py-1.5 text-sm font-semibold transition ${
+                className={`flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-2xl px-1.5 py-1.5 text-xs font-semibold leading-tight transition sm:flex-row sm:gap-1.5 sm:px-2 sm:text-sm ${
                   isActive ? 'bg-white text-primary shadow-lg shadow-primary/10' : 'text-slate-500 hover:bg-white/50 hover:text-slate-800'
                 }`}
               >
-                <Icon size={42} className="h-[42px] w-[42px]" />
-                {item.label}
+                <Icon size={36} className="h-9 w-9 shrink-0 sm:h-[42px] sm:w-[42px]" />
+                <span className="max-w-full truncate">{item.label}</span>
               </button>
             );
           })}

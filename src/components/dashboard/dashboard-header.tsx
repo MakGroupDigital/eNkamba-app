@@ -1,6 +1,7 @@
 
 'use client';
 import { useEffect, useState } from 'react';
+import type { KeyboardEvent } from 'react';
 import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
@@ -11,7 +12,19 @@ import {
 import { Button } from '@/components/ui/button';
 import { Globe, Search } from 'lucide-react';
 
-export default function DashboardHeader() {
+type DashboardHeaderProps = {
+  searchValue?: string;
+  onSearchChange?: (value: string) => void;
+  onSearchKeyDown?: (event: KeyboardEvent<HTMLInputElement>) => void;
+  searchPlaceholder?: string;
+};
+
+export default function DashboardHeader({
+  searchValue,
+  onSearchChange,
+  onSearchKeyDown,
+  searchPlaceholder = 'Recherche...',
+}: DashboardHeaderProps = {}) {
   const [selectedLanguage, setSelectedLanguage] = useState('fr');
 
   const languages = [
@@ -48,7 +61,10 @@ export default function DashboardHeader() {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary-foreground/50" />
         <Input
           type="search"
-          placeholder="Recherche..."
+          placeholder={searchPlaceholder}
+          value={searchValue}
+          onChange={(event) => onSearchChange?.(event.target.value)}
+          onKeyDown={onSearchKeyDown}
           className="bg-primary/50 border-primary-foreground/20 text-primary-foreground h-9 pl-10 placeholder:text-primary-foreground/50"
         />
       </div>

@@ -830,10 +830,10 @@ export default function MiyikiChatPage() {
   };
 
   const renderChatTabs = () => (
-    <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto scrollbar-hide">
+    <div className="grid min-w-0 flex-1 grid-cols-4 items-center gap-1.5">
       <button
         onClick={() => setActiveTab('discussions')}
-        className={`flex items-center gap-2 rounded-full px-3 py-2 text-xs font-medium transition-all whitespace-nowrap ${
+        className={`flex min-w-0 items-center justify-center gap-1.5 rounded-full px-2 py-2 text-xs font-medium transition-all whitespace-nowrap ${
           activeTab === 'discussions'
             ? 'bg-white text-primary shadow-lg'
             : 'bg-white/12 text-white/80 hover:bg-white/20'
@@ -850,7 +850,7 @@ export default function MiyikiChatPage() {
 
       <button
         onClick={() => setActiveTab('stories')}
-        className={`flex items-center gap-2 rounded-full px-3 py-2 text-xs font-medium transition-all whitespace-nowrap ${
+        className={`flex min-w-0 items-center justify-center gap-1.5 rounded-full px-2 py-2 text-xs font-medium transition-all whitespace-nowrap ${
           activeTab === 'stories'
             ? 'bg-white text-purple-600 shadow-lg'
             : 'bg-white/12 text-white/80 hover:bg-white/20'
@@ -862,7 +862,7 @@ export default function MiyikiChatPage() {
 
       <button
         onClick={() => setActiveTab('notifications')}
-        className={`flex items-center gap-2 rounded-full px-3 py-2 text-xs font-medium transition-all whitespace-nowrap ${
+        className={`flex min-w-0 items-center justify-center gap-1.5 rounded-full px-2 py-2 text-xs font-medium transition-all whitespace-nowrap ${
           activeTab === 'notifications'
             ? 'bg-white text-primary shadow-lg'
             : 'bg-white/12 text-white/80 hover:bg-white/20'
@@ -879,7 +879,7 @@ export default function MiyikiChatPage() {
 
       <button
         onClick={() => setActiveTab('settings')}
-        className={`flex items-center gap-2 rounded-full px-3 py-2 text-xs font-medium transition-all whitespace-nowrap ${
+        className={`flex min-w-0 items-center justify-center gap-1.5 rounded-full px-2 py-2 text-xs font-medium transition-all whitespace-nowrap ${
           activeTab === 'settings'
             ? 'bg-white text-slate-900 shadow-lg'
             : 'bg-white/12 text-white/80 hover:bg-white/20'
@@ -904,7 +904,7 @@ export default function MiyikiChatPage() {
       `}</style>
       
       {/* Header */}
-      <header className="sticky top-0 z-50 flex h-16 items-center gap-3 bg-gradient-to-r from-primary via-primary to-primary px-3 shadow-lg">
+      <header className="sticky top-0 z-50 grid h-16 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 bg-gradient-to-r from-primary via-primary to-primary px-3 shadow-lg">
         {renderChatTabs()}
         <div className="flex shrink-0 items-center gap-2">
           <button

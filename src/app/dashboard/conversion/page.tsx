@@ -5,13 +5,26 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowRightLeft, Info, RefreshCw, ShieldCheck, TrendingUp } from "lucide-react";
+import { Banknote, Info, RefreshCw, ShieldCheck, TrendingUp, WalletCards } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { PinVerification } from '@/components/payment/PinVerification';
+import { auth, db } from '@/lib/firebase';
+import { collection, doc, increment, onSnapshot, runTransaction, serverTimestamp } from 'firebase/firestore';
 
-const currencies = ['CDF', 'USD', 'EUR'] as const;
+const currencies = ['CDF', 'USD', 'EUR', 'RMB', 'FCFA'] as const;
 type Currency = typeof currencies[number];
+
+const apiCurrencyMap: Record<Currency, string> = {
+  CDF: 'CDF',
+  USD: 'USD',
+  EUR: 'EUR',
+  RMB: 'CNY',
+  FCFA: 'XAF',
+};
+
+type CurrencyWallets = Record<string, { balance?: number; currency?: string; updatedAt?: unknown }>;
 
 function isCurrency(value: string): value is Currency {
   return currencies.includes(value as Currency);
@@ -39,7 +52,7 @@ export default function ConversionPage() {
   const { toast } = useToast();
   const [fromAmount, setFromAmount] = useState('');
   const [toAmount, setToAmount] = useState('');
-  const [fromCurrency, setFromCurrency] = useState<Currency>('CDF');
+  const [fromCurrency] = useState<Currency>('CDF');
   const [toCurrency, setToCurrency] = useState<Currency>('USD');
   const [rate, setRate] = useState<number | null>(null);
   const [baseRates, setBaseRates] = useState<Record<Currency, number> | null>(null);
@@ -47,7 +60,12 @@ export default function ConversionPage() {
   const [ratesError, setRatesError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [showPinDialog, setShowPinDialog] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [currencyWallets, setCurrencyWallets] = useState<CurrencyWallets>({});
+
+  const destinationCurrencies = currencies.filter((currency) => currency !== 'CDF');
 
   const fetchLiveRates = async () => {
     setIsLoadingRates(true);
@@ -56,7 +74,7 @@ export default function ConversionPage() {
       const response = await fetch('https://api.exchangerate-api.com/v4/latest/CDF');
       if (!response.ok) throw new Error('Taux indisponibles');
       const data = await response.json();
-      if (!data?.rates?.USD || !data?.rates?.EUR) {
+      if (!data?.rates?.USD || !data?.rates?.EUR || !data?.rates?.CNY || !data?.rates?.XAF) {
         throw new Error('Taux incomplets');
       }
 
@@ -64,6 +82,8 @@ export default function ConversionPage() {
         CDF: 1,
         USD: Number(data.rates.USD),
         EUR: Number(data.rates.EUR),
+        RMB: Number(data.rates.CNY),
+        FCFA: Number(data.rates.XAF),
       });
       setLastUpdated(new Date().toLocaleString('fr-FR'));
     } catch (error) {
@@ -77,6 +97,17 @@ export default function ConversionPage() {
 
   useEffect(() => {
     void fetchLiveRates();
+  }, []);
+
+  useEffect(() => {
+    const currentUser = auth.currentUser;
+    if (!currentUser) return;
+
+    return onSnapshot(doc(db, 'users', currentUser.uid), (snapshot) => {
+      const data = snapshot.data();
+      setWalletBalance(Number(data?.walletBalance || 0));
+      setCurrencyWallets((data?.currencyWallets || {}) as CurrencyWallets);
+    });
   }, []);
 
   useEffect(() => {
@@ -99,12 +130,6 @@ export default function ConversionPage() {
     calculateConversion();
   }, [baseRates, fromAmount, fromCurrency, toCurrency]);
 
-  const handleSwapCurrencies = () => {
-    const tempCurrency = fromCurrency;
-    setFromCurrency(toCurrency);
-    setToCurrency(tempCurrency);
-  };
-
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     if (/^\d*\.?\d*$/.test(value)) {
@@ -112,12 +137,94 @@ export default function ConversionPage() {
     }
   }
 
-  const handleFromCurrencyChange = (value: string) => {
-    if (isCurrency(value)) setFromCurrency(value);
-  };
-
   const handleToCurrencyChange = (value: string) => {
     if (isCurrency(value)) setToCurrency(value);
+  };
+
+  const executeConversion = async () => {
+    const currentUser = auth.currentUser;
+    const sourceAmount = Number(fromAmount);
+    const targetAmount = Number(toAmount);
+    if (!currentUser) {
+      toast({ variant: 'destructive', title: 'Connexion requise', description: 'Connectez-vous avant de convertir.' });
+      return;
+    }
+    if (!sourceAmount || !targetAmount || sourceAmount <= 0 || targetAmount <= 0 || fromCurrency === toCurrency) {
+      toast({ variant: 'destructive', title: 'Conversion invalide', description: 'Vérifiez le montant et les devises.' });
+      return;
+    }
+
+    setIsConverting(true);
+    try {
+      const serviceFee = Number((sourceAmount * 0.01).toFixed(2));
+      const totalDebit = Number((sourceAmount + serviceFee).toFixed(2));
+      const userRef = doc(db, 'users', currentUser.uid);
+      const transactionRef = doc(collection(db, 'users', currentUser.uid, 'transactions'));
+
+      await runTransaction(db, async (tx) => {
+        const userSnap = await tx.get(userRef);
+        if (!userSnap.exists()) throw new Error('missing-user');
+        const data = userSnap.data();
+        const currencyWallets = (data.currencyWallets || {}) as Record<string, { balance?: number }>;
+        const sourceBalance = fromCurrency === 'CDF'
+          ? Number(data.walletBalance || 0)
+          : Number(currencyWallets[fromCurrency]?.balance || 0);
+
+        if (sourceBalance < totalDebit) throw new Error('insufficient');
+
+        const updates: Record<string, any> = {
+          updatedAt: serverTimestamp(),
+        };
+
+        if (fromCurrency === 'CDF') {
+          updates.walletBalance = increment(-totalDebit);
+        } else {
+          updates[`currencyWallets.${fromCurrency}.balance`] = increment(-totalDebit);
+          updates[`currencyWallets.${fromCurrency}.updatedAt`] = serverTimestamp();
+        }
+
+        if (toCurrency === 'CDF') {
+          updates.walletBalance = increment(targetAmount);
+        } else {
+          updates[`currencyWallets.${toCurrency}.balance`] = increment(targetAmount);
+          updates[`currencyWallets.${toCurrency}.currency`] = toCurrency;
+          updates[`currencyWallets.${toCurrency}.updatedAt`] = serverTimestamp();
+        }
+
+        tx.update(userRef, updates);
+        tx.set(transactionRef, {
+          type: 'currency_conversion',
+          status: 'completed',
+          amount: sourceAmount,
+          currency: fromCurrency,
+          targetAmount,
+          targetCurrency: toCurrency,
+          serviceFee,
+          exchangeRate: rate,
+          rateSource: 'exchange-rate-api',
+          description: `Conversion ${sourceAmount} ${fromCurrency} vers ${targetAmount} ${toCurrency}`,
+          previousBalance: sourceBalance,
+          newBalance: sourceBalance - totalDebit,
+          timestamp: serverTimestamp(),
+          createdAt: new Date().toISOString(),
+        });
+      });
+
+      setShowConfirmDialog(false);
+      setFromAmount('');
+      setToAmount('');
+      toast({
+        title: 'Conversion effectuée',
+        description: `${targetAmount.toLocaleString('fr-FR', { maximumFractionDigits: 2 })} ${toCurrency} ajoutés au mini portefeuille ${toCurrency}.`,
+      });
+    } catch (error: any) {
+      const description = error?.message === 'insufficient'
+        ? `Solde insuffisant dans le portefeuille ${fromCurrency}.`
+        : 'La conversion n’a pas pu être finalisée.';
+      toast({ variant: 'destructive', title: 'Conversion refusée', description });
+    } finally {
+      setIsConverting(false);
+    }
   };
 
   return (
@@ -132,10 +239,10 @@ export default function ConversionPage() {
             <div className="min-w-0">
               <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/70">Marché des devises</p>
               <h1 className="font-headline text-xl font-black text-white sm:text-2xl">
-                Conversion de Devise
+                Bureau de change
               </h1>
               <p className="mt-1 max-w-xl text-xs leading-5 text-white/78 sm:text-sm">
-                Calculez vos conversions avec des taux réels chargés en direct.
+                Convertissez le solde principal vers vos mini portefeuilles devises.
               </p>
             </div>
           </div>
@@ -157,9 +264,9 @@ export default function ConversionPage() {
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#009058]/10">
               <MarketRateIcon className="h-6 w-6" />
             </span>
-            Convertisseur
+            Bureau de change
           </CardTitle>
-          <CardDescription>Effectuez vos conversions avec le dernier taux réel chargé.</CardDescription>
+          <CardDescription>L’argent quitte le portefeuille principal et entre dans le portefeuille de la devise choisie.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4 p-4">
           {ratesError && (
@@ -171,8 +278,8 @@ export default function ConversionPage() {
           )}
           
           <div className="flex flex-col gap-2">
-             <label className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Vous envoyez</label>
-            <div className="flex gap-2">
+             <label className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Portefeuille principal à convertir</label>
+            <div className="grid gap-2 sm:grid-cols-[1fr_130px]">
               <Input
                 type="text"
                 value={fromAmount}
@@ -180,30 +287,24 @@ export default function ConversionPage() {
                 className="h-14 flex-1 rounded-xl border-[#009058]/20 bg-[#f7faf8] text-2xl font-black focus-visible:ring-[#009058]"
                 placeholder="0.00"
               />
-              <Select value={fromCurrency} onValueChange={handleFromCurrencyChange}>
-                <SelectTrigger className="h-14 w-[120px] rounded-xl border-[#009058]/20 font-semibold">
-                  <SelectValue placeholder="Devise" />
-                </SelectTrigger>
-                <SelectContent>
-                  {currencies.map((currency) => (
-                    <SelectItem key={currency} value={currency}>{currency}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex h-14 items-center justify-center rounded-xl border border-[#009058]/20 bg-white px-3 font-black text-[#009058]">
+                CDF
+              </div>
             </div>
+            <p className="text-xs font-semibold text-muted-foreground">Disponible : {walletBalance.toLocaleString('fr-FR')} CDF</p>
           </div>
 
-          <div className="flex items-center justify-center my-4">
+          <div className="flex items-center justify-center my-4 gap-3">
              <div className="flex-1 border-t border-[#009058]/15"></div>
-             <Button variant="ghost" size="icon" onClick={handleSwapCurrencies} className="mx-2 rounded-full border border-[#009058]/20 bg-white text-[#009058] shadow-sm hover:bg-[#009058]/5">
-                <ArrowRightLeft className="h-5 w-5"/>
-             </Button>
+             <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#009058]/20 bg-white text-[#009058] shadow-sm">
+                <Banknote className="h-5 w-5"/>
+             </div>
              <div className="flex-1 border-t border-[#009058]/15"></div>
           </div>
 
            <div className="flex flex-col gap-2">
-             <label className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Le bénéficiaire reçoit</label>
-            <div className="flex gap-2">
+             <label className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Mini portefeuille à créditer</label>
+            <div className="grid gap-2 sm:grid-cols-[1fr_130px]">
               <Input
                 type="text"
                 value={toAmount}
@@ -216,11 +317,19 @@ export default function ConversionPage() {
                   <SelectValue placeholder="Devise" />
                 </SelectTrigger>
                 <SelectContent>
-                  {currencies.map((currency) => (
+                  {destinationCurrencies.map((currency) => (
                     <SelectItem key={currency} value={currency}>{currency}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <p className="rounded-xl bg-[#f7faf8] px-3 py-2 text-xs font-semibold text-muted-foreground">
+                Solde actuel {toCurrency} : <span className="font-black text-[#009058]">{Number(currencyWallets[toCurrency]?.balance || 0).toLocaleString('fr-FR', { maximumFractionDigits: 2 })}</span>
+              </p>
+              <p className="rounded-xl bg-[#f7faf8] px-3 py-2 text-xs font-semibold text-muted-foreground">
+                Après conversion : <span className="font-black text-[#009058]">{(Number(currencyWallets[toCurrency]?.balance || 0) + Number(toAmount || 0)).toLocaleString('fr-FR', { maximumFractionDigits: 2 })} {toCurrency}</span>
+              </p>
             </div>
           </div>
 
@@ -264,7 +373,7 @@ export default function ConversionPage() {
                 <ShieldCheck className="h-4 w-4 text-[#009058]"/>
                 <AlertTitle className="text-xs font-semibold text-[#009058]">Information</AlertTitle>
                 <AlertDescription>
-                    Seuls les taux réels chargés depuis le service de change sont affichés. Les frais de service de 1% sont présentés séparément.
+                    Cette opération convertit le solde principal CDF vers le mini portefeuille de la devise choisie. Les frais de service de 1% sont débités du portefeuille principal.
                 </AlertDescription>
             </Alert>
         </CardFooter>
@@ -274,20 +383,20 @@ export default function ConversionPage() {
       <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
         <DialogContent className="rounded-2xl">
           <DialogHeader>
-            <DialogTitle className="text-[#009058]">Prévisualisation de la conversion</DialogTitle>
+            <DialogTitle className="text-[#009058]">Prévisualisation du bureau de change</DialogTitle>
             <DialogDescription>
-              Vérifiez les détails calculés avec le taux réel actuellement chargé.
+              Vérifiez le débit du portefeuille principal et le crédit du mini portefeuille devise.
             </DialogDescription>
           </DialogHeader>
           {rate !== null && (
             <div className="space-y-4 py-4">
               <div className="space-y-2 rounded-2xl bg-[#f7faf8] p-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Vous convertissez :</span>
+                  <span className="text-muted-foreground">Débit portefeuille principal :</span>
                   <span className="font-bold text-lg">{fromAmount} {fromCurrency}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Vous recevrez :</span>
+                  <span className="text-muted-foreground">Crédit mini portefeuille {toCurrency} :</span>
                   <span className="font-bold text-lg text-[#009058]">{toAmount} {toCurrency}</span>
                 </div>
                 <div className="flex justify-between items-center pt-2 border-t">
@@ -307,23 +416,28 @@ export default function ConversionPage() {
             </Button>
             <Button 
               className="bg-[#009058] hover:bg-[#009058]"
-              onClick={async () => {
-                setIsConverting(true);
-                setIsConverting(false);
-                setShowConfirmDialog(false);
-                
-                toast({
-                  title: "Conversion prévisualisée",
-                  description: `Montant calculé: ${fromAmount} ${fromCurrency} ≈ ${toAmount} ${toCurrency}.`,
-                });
-              }}
+              onClick={() => setShowPinDialog(true)}
               disabled={isConverting}
             >
-              Fermer la prévisualisation
+              Confirmer la conversion
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <PinVerification
+        isOpen={showPinDialog}
+        onClose={() => setShowPinDialog(false)}
+        onSuccess={() => {
+          setShowPinDialog(false);
+          void executeConversion();
+        }}
+        purpose="payment"
+        paymentDetails={{
+          recipient: `Bureau de change ${toCurrency}`,
+          amount: fromAmount,
+          currency: fromCurrency,
+        }}
+      />
     </div>
     </div>
   );

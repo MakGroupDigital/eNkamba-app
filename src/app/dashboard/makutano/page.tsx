@@ -458,15 +458,16 @@ export default function MakutanoPage() {
   const postRefs = useRef<Record<string, HTMLElement | null>>({});
   const viewedPostTimersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const recordedVisiblePostsRef = useRef<Set<string>>(new Set());
+  const scrollFrameRef = useRef<number | null>(null);
+  const topChromeHiddenRef = useRef(false);
+  const lastFeedExtensionRef = useRef(0);
 
   const filteredPosts = useMemo(
     () => posts
       .filter((post) => !post.authorId || !blockedProfileIds.has(post.authorId))
       .filter((post) => post.category === activeTab || activeTab === 'Accueil')
-      .map((post) => ({ post, score: scorePostForUser(post, recommendationProfile) }))
-      .sort((a, b) => b.score - a.score || getPostTimestamp(b.post.createdAt) - getPostTimestamp(a.post.createdAt))
-      .map(({ post }) => post),
-    [posts, activeTab, recommendationProfile, blockedProfileIds]
+      .sort((a, b) => getPostTimestamp(b.createdAt) - getPostTimestamp(a.createdAt)),
+    [posts, activeTab, blockedProfileIds]
   );
 
   const visibleStories = useMemo(
@@ -542,7 +543,7 @@ export default function MakutanoPage() {
     for (let round = 0; round < recommendationRounds; round += 1) {
       if (suggestedUsers.length > 0) items.push({ type: 'people', key: `tail-people-${round}` });
       if (storyOffers.length > 0) {
-        const offer = storyOffers[(round + storyOfferOffset) % storyOffers.length];
+        const offer = storyOffers[round % storyOffers.length];
         items.push({ type: 'product', offer, key: `tail-product-${offer.id}-${round}` });
       }
       if (nearbyPlaces.length > 0) {
@@ -551,7 +552,7 @@ export default function MakutanoPage() {
     }
 
     return items;
-  }, [feedRounds, filteredPosts, nearbyPlaces.length, storyOfferOffset, storyOffers, suggestedUsers.length]);
+  }, [feedRounds, filteredPosts, nearbyPlaces.length, storyOffers, suggestedUsers.length]);
 
   const recommendationStorageKey = `${RECOMMENDATION_STORAGE_PREFIX}:${user?.uid || 'anonymous'}`;
   const postIdsKey = useMemo(() => posts.map((post) => post.id).join('|'), [posts]);
@@ -868,6 +869,15 @@ export default function MakutanoPage() {
   useEffect(() => {
     if (fullscreenMedia) setActiveMediaPostId(null);
   }, [fullscreenMedia]);
+
+  useEffect(() => {
+    return () => {
+      if (scrollFrameRef.current) {
+        window.cancelAnimationFrame(scrollFrameRef.current);
+        scrollFrameRef.current = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const root = mainFeedRef.current;
@@ -1187,12 +1197,29 @@ export default function MakutanoPage() {
   const handleFeedScroll = () => {
     const root = mainFeedRef.current;
     if (!root) return;
-    setIsTopChromeHidden(root.scrollTop > 18);
-    const remaining = root.scrollHeight - root.scrollTop - root.clientHeight;
-    if (remaining < 900) {
-      setPostLimit((current) => Math.min(current + 30, 300));
-      setFeedRounds((current) => Math.min(current + 2, 30));
-    }
+
+    if (scrollFrameRef.current) return;
+    scrollFrameRef.current = window.requestAnimationFrame(() => {
+      scrollFrameRef.current = null;
+      const feed = mainFeedRef.current;
+      if (!feed) return;
+
+      const nextHidden = topChromeHiddenRef.current
+        ? feed.scrollTop > 48
+        : feed.scrollTop > 140;
+
+      if (nextHidden !== topChromeHiddenRef.current) {
+        topChromeHiddenRef.current = nextHidden;
+        setIsTopChromeHidden(nextHidden);
+      }
+
+      const remaining = feed.scrollHeight - feed.scrollTop - feed.clientHeight;
+      if (remaining < 900 && Date.now() - lastFeedExtensionRef.current > 900) {
+        lastFeedExtensionRef.current = Date.now();
+        setPostLimit((current) => Math.min(current + 30, 300));
+        setFeedRounds((current) => Math.min(current + 2, 30));
+      }
+    });
   };
 
   return (
@@ -1204,9 +1231,9 @@ export default function MakutanoPage() {
         )}
       >
       <header className="w-full bg-transparent px-3 pt-[calc(env(safe-area-inset-top)+0.65rem)]">
-        <div className="mx-auto flex max-w-xl items-center gap-2 rounded-full border border-white/70 bg-white/90 px-2 py-2 shadow-[0_14px_38px_rgba(28,96,64,0.18)] backdrop-blur-xl">
+        <div className="mx-auto grid max-w-xl grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-full border border-white/70 bg-white/90 px-2 py-2 shadow-[0_14px_38px_rgba(28,96,64,0.18)] backdrop-blur-xl">
           <nav
-            className="flex min-w-0 flex-1 gap-1.5 overflow-x-auto pr-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+            className="grid min-w-0 grid-cols-5 items-center gap-1 pr-1"
             aria-label="Navigation Makutano"
           >
             {navItems.map(item => {
@@ -1218,10 +1245,10 @@ export default function MakutanoPage() {
                     key={item.name}
                     type="button"
                     onClick={() => router.push(item.link)}
-                    className="flex h-12 items-center gap-2.5 whitespace-nowrap rounded-full px-3.5 text-xs font-bold text-[#009058] transition hover:bg-[#009058]/10 hover:text-[#009058]"
+                    className="flex h-12 min-w-0 flex-col items-center justify-center gap-0.5 rounded-full px-1 text-[10px] font-bold leading-none text-[#009058] transition hover:bg-[#009058]/10 hover:text-[#009058] sm:flex-row sm:gap-2 sm:px-3 sm:text-xs"
                   >
-                    <IconComponent size={28} className="h-7 w-7" />
-                    <span>{item.name}</span>
+                    <IconComponent size={24} className="h-6 w-6 shrink-0 sm:h-7 sm:w-7" />
+                    <span className="max-w-full truncate">{item.name}</span>
                   </button>
                 );
               }
@@ -1235,14 +1262,14 @@ export default function MakutanoPage() {
                     recordCategoryPreference(item.name as Post['category']);
                   }}
                   className={cn(
-                    'flex h-12 items-center gap-2.5 whitespace-nowrap rounded-full px-3.5 text-xs font-bold transition',
+                    'flex h-12 min-w-0 flex-col items-center justify-center gap-0.5 rounded-full px-1 text-[10px] font-bold leading-none transition sm:flex-row sm:gap-2 sm:px-3 sm:text-xs',
                     activeTab === item.name
                       ? 'bg-[#009058] text-white shadow-[0_8px_18px_rgba(50,187,120,0.24)]'
                       : 'text-[#009058] hover:bg-[#009058]/10 hover:text-[#009058]'
                   )}
                 >
-                  <IconComponent size={28} className="h-7 w-7" />
-                  <span>{item.name}</span>
+                  <IconComponent size={24} className="h-6 w-6 shrink-0 sm:h-7 sm:w-7" />
+                  <span className="max-w-full truncate">{item.name}</span>
                 </button>
               );
             })}
@@ -1384,7 +1411,7 @@ export default function MakutanoPage() {
       <main
         ref={mainFeedRef}
         onScroll={handleFeedScroll}
-        className="min-h-0 flex-1 overflow-y-auto scroll-smooth bg-[#f5f7f6] px-0 pb-24 pt-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] sm:px-4"
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain scroll-auto bg-[#f5f7f6] px-0 pb-24 pt-3 [-webkit-overflow-scrolling:touch] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] sm:px-4"
       >
         {isLoadingPosts ? (
           <div className="flex h-full items-center justify-center text-muted-foreground">
@@ -1608,12 +1635,13 @@ export default function MakutanoPage() {
                   <div className="flex items-center justify-between border-t border-[#edf3ef] pt-2">
                     <div className="flex items-center gap-2">
                       <button
+                        type="button"
                         onClick={(e) => {
                           e.stopPropagation();
                           void handleLike(post.id);
                         }}
                         className={cn(
-                          'flex h-9 items-center gap-2 rounded-full px-3 text-sm font-semibold transition-all',
+                          'touch-manipulation flex h-9 items-center gap-2 rounded-full px-3 text-sm font-semibold transition-all',
                           post.isLiked
                             ? 'bg-[#009058] text-white shadow-sm'
                             : 'bg-primary/5 text-muted-foreground hover:bg-primary/10 hover:text-[#009058]'
@@ -1624,11 +1652,12 @@ export default function MakutanoPage() {
                       </button>
 
                       <button
+                        type="button"
                         onClick={(e) => {
                           e.stopPropagation();
                           void handleComment(post.id);
                         }}
-                        className="flex h-9 items-center gap-2 rounded-full bg-primary/5 px-3 text-sm font-semibold text-muted-foreground transition-colors hover:bg-primary/10 hover:text-[#009058]"
+                        className="touch-manipulation flex h-9 items-center gap-2 rounded-full bg-primary/5 px-3 text-sm font-semibold text-muted-foreground transition-colors hover:bg-primary/10 hover:text-[#009058]"
                       >
                         <MakutanoCommentIcon size={18} />
                         <span>{post.comments}</span>
@@ -1636,11 +1665,12 @@ export default function MakutanoPage() {
                     </div>
 
                     <button
+                      type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleShare(post.id);
                       }}
-                      className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/5 text-muted-foreground transition-colors hover:bg-primary/10 hover:text-[#009058]"
+                      className="touch-manipulation flex h-9 w-9 items-center justify-center rounded-full bg-primary/5 text-muted-foreground transition-colors hover:bg-primary/10 hover:text-[#009058]"
                       aria-label="Partager"
                     >
                       <MakutanoShareIcon size={18} />
