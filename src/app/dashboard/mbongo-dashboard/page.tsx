@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { QrCode, ArrowLeftRight, TrendingUp, Wallet, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
 import { cn } from "@/lib/utils";
@@ -22,6 +23,7 @@ const DEFAULT_COPY: DashboardCopy = {
   payReceive: 'Payer/Recevoir',
   invest: 'Investir',
   wallet: 'Portefeuille',
+  facePaie: 'FacePaie',
   aiAssistant: 'Assistant Financier IA',
   aiAssistantText: 'Analysez votre historique pour détecter des anomalies et obtenir des recommandations.',
   generateReport: 'Générer un rapport',
@@ -58,6 +60,7 @@ const LOCAL_LANGUAGE_COPY: Record<string, Partial<DashboardCopy>> = {
     payReceive: 'Payer/Recevoir',
     invest: 'Investir',
     wallet: 'Portefeuille',
+    facePaie: 'FacePaie',
     aiAssistant: 'Assistant Financier IA',
     aiAssistantText: DEFAULT_COPY.aiAssistantText,
     generateReport: 'Générer un rapport',
@@ -66,30 +69,75 @@ const LOCAL_LANGUAGE_COPY: Record<string, Partial<DashboardCopy>> = {
   },
 };
 
+function MbongoActionImageIcon({
+  src,
+  className,
+}: {
+  src: string;
+  className?: string;
+  strokeWidth?: number;
+}) {
+  return (
+    <Image
+      src={src}
+      alt=""
+      width={64}
+      height={64}
+      className={cn("h-11 w-11 object-contain sm:h-14 sm:w-14", className)}
+    />
+  );
+}
+
+function ScannerActionIcon(props: { className?: string; strokeWidth?: number }) {
+  return <MbongoActionImageIcon src="/mbongo-scanner-icon.svg" {...props} />;
+}
+
+function PayReceiveActionIcon(props: { className?: string; strokeWidth?: number }) {
+  return <MbongoActionImageIcon src="/mbongo-pay-receive-icon.svg" {...props} />;
+}
+
+function InvestActionIcon(props: { className?: string; strokeWidth?: number }) {
+  return <MbongoActionImageIcon src="/mbongo-invest-icon.svg" {...props} />;
+}
+
+function WalletActionIcon(props: { className?: string; strokeWidth?: number }) {
+  return <MbongoActionImageIcon src="/mbongo-wallet-icon.svg" {...props} />;
+}
+
+function FacePaieIcon(props: { className?: string; strokeWidth?: number }) {
+  return <MbongoActionImageIcon src="/facepaie-icon.svg" {...props} />;
+}
+
 const quickActions = [
   { 
-    icon: QrCode,
+    icon: ScannerActionIcon,
     labelKey: 'scanner',
     href: '/dashboard/scanner-simple',
     aliases: ['qr', 'qrcode', 'code qr', 'scan', 'scanner paiement']
   },
   { 
-    icon: ArrowLeftRight,
+    icon: PayReceiveActionIcon,
     labelKey: 'payReceive',
     href: '/dashboard/pay-receive',
     aliases: ['payer', 'recevoir', 'envoyer argent', 'transfert', 'retrait']
   },
   { 
-    icon: TrendingUp,
+    icon: InvestActionIcon,
     labelKey: 'invest',
     href: '/dashboard/invest',
     aliases: ['investissement', 'placement', 'rendement']
   },
   { 
-    icon: Wallet,
+    icon: WalletActionIcon,
     labelKey: 'wallet',
     href: '/dashboard/wallet',
     aliases: ['solde', 'portemonnaie', 'compte', 'historique']
+  },
+  {
+    icon: FacePaieIcon,
+    labelKey: 'facePaie',
+    href: '/dashboard/facepaie',
+    aliases: ['facepaie', 'face paie', 'paiement visage', 'visage', 'biometrie', 'biométrie']
   },
 ];
 
@@ -301,15 +349,16 @@ export default function MbongoDashboard() {
       />
       <div className="min-h-screen bg-white pt-24 animate-in fade-in duration-500">
         <main className="container mx-auto max-w-5xl space-y-5 px-4 pb-8 pt-2">
-          <div className="grid grid-cols-4 gap-3 sm:gap-6">
+          <div className="grid grid-cols-5 gap-2 sm:gap-6">
             {filteredQuickActions.map((action) => {
               const IconComponent = action.icon;
+              const label = copy[action.labelKey] || DEFAULT_COPY[action.labelKey] || action.labelKey;
               return (
                 <Link key={action.labelKey} href={action.href} className="group flex flex-col items-center gap-2.5">
-                  <div className="flex h-[76px] w-[76px] items-center justify-center rounded-full bg-[#0A8B46] text-white shadow-xl shadow-[#0A8B46]/20 transition-all duration-300 hover:scale-105 sm:h-24 sm:w-24">
-                    <IconComponent className="h-11 w-11 text-white sm:h-14 sm:w-14" strokeWidth={2.4} />
+                  <div className="flex h-[62px] w-[62px] items-center justify-center rounded-full bg-[#0A8B46] text-white shadow-xl shadow-[#0A8B46]/20 transition-all duration-300 hover:scale-105 sm:h-24 sm:w-24">
+                    <IconComponent className="h-9 w-9 text-white sm:h-14 sm:w-14" strokeWidth={2.4} />
                   </div>
-                  <p className="text-center text-[12px] font-black leading-tight text-slate-800 sm:text-sm">{copy[action.labelKey]}</p>
+                  <p className="text-center text-[12px] font-black leading-tight text-slate-800 sm:text-sm">{label}</p>
                 </Link>
               );
             })}

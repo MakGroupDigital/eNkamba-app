@@ -15,7 +15,7 @@ interface PinVerificationProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  purpose?: 'payment' | 'balance';
+  purpose?: 'payment' | 'balance' | 'facepaie';
   paymentDetails?: {
     recipient: string;
     amount: string;
@@ -24,7 +24,7 @@ interface PinVerificationProps {
 }
 
 export function PinVerification({ isOpen, onClose, onSuccess, purpose = 'payment', paymentDetails }: PinVerificationProps) {
-  const { user } = useAuth();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const { toast } = useToast();
   
   const [pin, setPin] = useState('');
@@ -37,6 +37,30 @@ export function PinVerification({ isOpen, onClose, onSuccess, purpose = 'payment
   const [attempts, setAttempts] = useState(0);
   const [mounted, setMounted] = useState(false);
   const maxAttempts = 3;
+  const purposeLabel =
+    purpose === 'balance'
+      ? 'Entrez votre code PIN pour afficher votre solde'
+      : purpose === 'facepaie'
+        ? 'Entrez votre code PIN pour configurer FacePaie'
+        : 'Entrez votre code PIN pour confirmer le paiement';
+  const successDescription =
+    purpose === 'balance'
+      ? 'Affichage du solde autorisé.'
+      : purpose === 'facepaie'
+        ? 'Configuration FacePaie autorisée.'
+        : 'Confirmation du paiement...';
+  const failureDescription =
+    purpose === 'balance'
+      ? 'Affichage du solde refusé pour des raisons de sécurité'
+      : purpose === 'facepaie'
+        ? 'Configuration FacePaie refusée pour des raisons de sécurité'
+        : 'Paiement annulé pour des raisons de sécurité';
+  const confirmLabel =
+    purpose === 'balance'
+      ? 'Afficher le solde'
+      : purpose === 'facepaie'
+        ? 'Configurer FacePaie'
+        : 'Confirmer le paiement';
 
   // Gérer le montage du composant
   useEffect(() => {
@@ -50,7 +74,10 @@ export function PinVerification({ isOpen, onClose, onSuccess, purpose = 'payment
   }, [isOpen]);
 
   const checkPinExists = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      setHasPin(null);
+      return;
+    }
     
     try {
       const pinDoc = await getDoc(doc(db, 'users', user.uid, 'security', 'pin'));
@@ -69,8 +96,24 @@ export function PinVerification({ isOpen, onClose, onSuccess, purpose = 'payment
   }, [user, toast]);
 
   useEffect(() => {
-    if (isOpen && user && mounted) {
+    if (isOpen && mounted && isAuthLoading) {
+      setHasPin(null);
+      return;
+    }
+
+    if (isOpen && mounted && user) {
       checkPinExists();
+    }
+
+    if (isOpen && mounted && !isAuthLoading && !user) {
+      setHasPin(false);
+      toast({
+        variant: 'destructive',
+        title: 'Session requise',
+        description: 'Connectez-vous pour continuer.',
+      });
+      onClose();
+      return;
     }
     
     // Reset les états quand le dialog se ferme
@@ -80,7 +123,7 @@ export function PinVerification({ isOpen, onClose, onSuccess, purpose = 'payment
       setAttempts(0);
       setHasPin(null);
     }
-  }, [isOpen, user, mounted, checkPinExists]);
+  }, [isOpen, user, mounted, isAuthLoading, checkPinExists, onClose, toast]);
 
   const createPin = async () => {
     if (!user) return;
@@ -173,7 +216,7 @@ export function PinVerification({ isOpen, onClose, onSuccess, purpose = 'payment
       if (hashedPin === storedPin) {
         toast({
           title: 'Code PIN vérifié ! ✅',
-          description: purpose === 'balance' ? 'Affichage du solde autorisé.' : 'Confirmation du paiement...',
+          description: successDescription,
           className: 'bg-primary text-white border-none',
         });
         
@@ -191,7 +234,7 @@ export function PinVerification({ isOpen, onClose, onSuccess, purpose = 'payment
           toast({
             variant: 'destructive',
             title: 'Trop de tentatives',
-            description: purpose === 'balance' ? 'Affichage du solde refusé pour des raisons de sécurité' : 'Paiement annulé pour des raisons de sécurité',
+            description: failureDescription,
           });
           setPin('');
           setAttempts(0);
@@ -240,7 +283,7 @@ export function PinVerification({ isOpen, onClose, onSuccess, purpose = 'payment
           <DialogDescription>
             {hasPin === false 
               ? 'Créez un code PIN à 4 chiffres pour sécuriser vos opérations'
-              : purpose === 'balance' ? 'Entrez votre code PIN pour afficher votre solde' : 'Entrez votre code PIN pour confirmer le paiement'
+              : purposeLabel
             }
           </DialogDescription>
         </DialogHeader>
@@ -264,7 +307,7 @@ export function PinVerification({ isOpen, onClose, onSuccess, purpose = 'payment
             </div>
           )}
 
-          {hasPin === null ? (
+          {isAuthLoading || hasPin === null ? (
             <div className="flex justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#009058]"></div>
             </div>
@@ -409,7 +452,7 @@ export function PinVerification({ isOpen, onClose, onSuccess, purpose = 'payment
               disabled={isVerifying || pin.length !== 4}
               className="bg-[#009058] hover:bg-[#009058]"
             >
-              {isVerifying ? 'Vérification...' : purpose === 'balance' ? 'Afficher le solde' : 'Confirmer le paiement'}
+              {isVerifying ? 'Vérification...' : confirmLabel}
             </Button>
           )}
         </DialogFooter>

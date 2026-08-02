@@ -1,0 +1,20 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="facepaie-icon-bg" x1="40" y1="22" x2="224" y2="226" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#79D63E"/>
+      <stop offset="0.5" stop-color="#0A8B46"/>
+      <stop offset="1" stop-color="#25543A"/>
+    </linearGradient>
+  </defs>
+  <rect x="24" y="24" width="208" height="208" rx="46" fill="url(#facepaie-icon-bg)"/>
+  <path d="M62 74V52H84" stroke="white" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M172 52H194V74" stroke="white" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M194 182V204H172" stroke="white" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M84 204H62V182" stroke="white" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M128 80C94 80 75 108 75 140C75 175 98 198 128 198C158 198 181 175 181 140C181 108 162 80 128 80Z" stroke="white" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M90 125C107 121 118 112 126 96C140 116 157 124 177 125" stroke="white" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M103 147C110 143 118 143 125 147" stroke="white" stroke-width="9" stroke-linecap="round"/>
+  <path d="M151 147C158 143 166 143 173 147" stroke="white" stroke-width="9" stroke-linecap="round"/>
+  <path d="M112 176C122 184 136 184 146 176" stroke="white" stroke-width="9" stroke-linecap="round"/>
+  <path d="M96 226C115 242 142 242 160 226" stroke="#0A8B46" stroke-width="11" stroke-linecap="round"/>
+</svg>

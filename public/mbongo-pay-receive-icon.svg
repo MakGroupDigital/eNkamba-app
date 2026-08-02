@@ -1,0 +1,18 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="pay-receive-bg" x1="38" y1="26" x2="222" y2="226" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#79D63E"/>
+      <stop offset="0.5" stop-color="#0A8B46"/>
+      <stop offset="1" stop-color="#25543A"/>
+    </linearGradient>
+  </defs>
+  <rect x="24" y="24" width="208" height="208" rx="46" fill="url(#pay-receive-bg)"/>
+  <path d="M79 93H167" stroke="white" stroke-width="13" stroke-linecap="round"/>
+  <path d="M145 72L168 93L145 114" stroke="white" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M177 163H89" stroke="white" stroke-width="13" stroke-linecap="round"/>
+  <path d="M111 142L88 163L111 184" stroke="white" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="128" cy="128" r="31" fill="white" fill-opacity="0.18" stroke="white" stroke-width="9"/>
+  <path d="M128 109V148" stroke="white" stroke-width="9" stroke-linecap="round"/>
+  <path d="M139 119C136 112 124 110 120 117C116 125 126 130 134 135C143 141 138 151 128 151C120 151 115 147 113 142" stroke="white" stroke-width="8" stroke-linecap="round"/>
+  <path d="M96 218H160" stroke="#0A8B46" stroke-width="11" stroke-linecap="round"/>
+</svg>
