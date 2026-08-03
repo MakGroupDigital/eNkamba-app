@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { deleteDoc, doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 
 import DashboardHeader from '@/components/dashboard/dashboard-header';
 import { PinVerification } from '@/components/payment/PinVerification';
@@ -11,9 +11,22 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { db } from '@/lib/firebase';
 
-type FacePaieSetupStep = 'intro' | 'consent' | 'capture' | 'saving' | 'done';
+type FacePaieSetupStep = 'intro' | 'consent' | 'capture' | 'saving' | 'done' | 'dashboard';
 type FaceGuideStep = 'center' | 'left' | 'right' | 'up';
 type FaceGuideStatus = 'loading' | 'searching' | 'adjust' | 'valid' | 'blocked';
+type FacePaieProfile = {
+  enabled?: boolean;
+  provider?: string;
+  comprefaceSubject?: string;
+  frameCount?: number;
+  emergencyPhone?: string;
+  transactionAlerts?: boolean;
+  requirePinFallback?: boolean;
+  allowMerchantFacePaie?: boolean;
+  livenessVerified?: boolean;
+  updatedAt?: any;
+  createdAt?: any;
+};
 
 const FACEPAIE_GUIDE_STEPS: Array<{ id: FaceGuideStep; label: string; short: string }> = [
   { id: 'center', label: 'Regardez droit devant la caméra.', short: 'Face' },
@@ -67,6 +80,55 @@ function InstantFlowVisual() {
   );
 }
 
+function FacePaieDashboardIcon({ type }: { type: 'face' | 'phone' | 'shield' | 'bell' | 'merchant' | 'delete' }) {
+  const danger = type === 'delete';
+  const bg = danger ? '#fee2e2' : '#e8f7ef';
+  const fg = danger ? '#dc2626' : '#0A8B46';
+  return (
+    <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl" style={{ backgroundColor: bg }}>
+      <svg width="25" height="25" viewBox="0 0 25 25" fill="none" aria-hidden="true">
+        {type === 'face' && (
+          <>
+            <path d="M5.2 9.2V6.4c0-.8.6-1.4 1.4-1.4h2.8M19.8 9.2V6.4c0-.8-.6-1.4-1.4-1.4h-2.8M5.2 15.8v2.8c0 .8.6 1.4 1.4 1.4h2.8M19.8 15.8v2.8c0 .8-.6 1.4-1.4 1.4h-2.8" stroke={fg} strokeWidth="2.1" strokeLinecap="round" />
+            <path d="M12.5 7.3c-3.4 0-5.8 2.5-5.8 5.7 0 3.1 2.4 5.3 5.8 5.3s5.8-2.2 5.8-5.3c0-3.2-2.4-5.7-5.8-5.7Z" stroke={fg} strokeWidth="2.1" />
+            <path d="M9.8 14.4c1.4 1 4 1 5.4 0" stroke={fg} strokeWidth="2.1" strokeLinecap="round" />
+          </>
+        )}
+        {type === 'phone' && (
+          <>
+            <path d="M9 4.5h7c.9 0 1.6.7 1.6 1.6v12.8c0 .9-.7 1.6-1.6 1.6H9c-.9 0-1.6-.7-1.6-1.6V6.1c0-.9.7-1.6 1.6-1.6Z" stroke={fg} strokeWidth="2.1" />
+            <path d="M11 7h3M12.5 17.9h.1" stroke={fg} strokeWidth="2.4" strokeLinecap="round" />
+          </>
+        )}
+        {type === 'shield' && (
+          <>
+            <path d="M12.5 4.3l7 2.7v4.9c0 4.8-3 7.8-7 9.5-4-1.7-7-4.7-7-9.5V7l7-2.7Z" stroke={fg} strokeWidth="2.1" strokeLinejoin="round" />
+            <path d="M9.5 12.7l2.1 2.1 4.2-5" stroke={fg} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+          </>
+        )}
+        {type === 'bell' && (
+          <>
+            <path d="M18.3 15.3H6.7l1.2-2V10c0-2.7 1.8-4.8 4.6-4.8s4.6 2.1 4.6 4.8v3.3l1.2 2Z" stroke={fg} strokeWidth="2.1" strokeLinejoin="round" />
+            <path d="M10.7 18.1c.8 1.3 2.8 1.3 3.6 0" stroke={fg} strokeWidth="2.1" strokeLinecap="round" />
+          </>
+        )}
+        {type === 'merchant' && (
+          <>
+            <path d="M5 10.2l1-4.4h13l1 4.4c-.7 1.3-2.4 1.4-3.3.2-.9 1.2-2.6 1.2-3.5 0-.9 1.2-2.6 1.2-3.5 0-.9 1.2-2.6 1.1-3.3-.2Z" stroke={fg} strokeWidth="2.1" strokeLinejoin="round" />
+            <path d="M7.2 11.6v7.2h10.6v-7.2M11 18.7v-4h3v4" stroke={fg} strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" />
+          </>
+        )}
+        {type === 'delete' && (
+          <>
+            <path d="M6.5 7.5h12M10 7.5V5.8h5v1.7M8 10l.7 9h7.6l.7-9" stroke={fg} strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M11 12.2v4.4M14 12.2v4.4" stroke={fg} strokeWidth="2.1" strokeLinecap="round" />
+          </>
+        )}
+      </svg>
+    </span>
+  );
+}
+
 export default function FacePaiePage() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -77,6 +139,7 @@ export default function FacePaiePage() {
   const challengeStepsRef = useRef(FACEPAIE_GUIDE_STEPS);
   const livenessFramesRef = useRef<string[]>([]);
   const isAssessingFrameRef = useRef(false);
+  const isEnrollmentRunningRef = useRef(false);
   const [pinOpen, setPinOpen] = useState(false);
   const [setupStep, setSetupStep] = useState<FacePaieSetupStep>('intro');
   const [cameraError, setCameraError] = useState('');
@@ -91,6 +154,15 @@ export default function FacePaiePage() {
   const [isFaceReady, setIsFaceReady] = useState(false);
   const [challengeSteps, setChallengeSteps] = useState(FACEPAIE_GUIDE_STEPS);
   const [capturedFrameCount, setCapturedFrameCount] = useState(0);
+  const [faceProfile, setFaceProfile] = useState<FacePaieProfile | null>(null);
+  const [isProfileLoading, setIsProfileLoading] = useState(true);
+  const [emergencyPhone, setEmergencyPhone] = useState('');
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+  const [settings, setSettings] = useState({
+    transactionAlerts: true,
+    requirePinFallback: true,
+    allowMerchantFacePaie: true,
+  });
 
   const benefits = [
     {
@@ -110,6 +182,48 @@ export default function FacePaiePage() {
     },
   ];
 
+  useEffect(() => {
+    let mounted = true;
+
+    const loadFacePaieProfile = async () => {
+      if (!user?.uid) {
+        if (mounted) setIsProfileLoading(false);
+        return;
+      }
+
+      try {
+        const profileRef = doc(db, 'users', user.uid, 'security', 'facepaie');
+        const profileSnap = await getDoc(profileRef);
+        if (!mounted) return;
+
+        if (profileSnap.exists() && profileSnap.data()?.enabled) {
+          const profile = profileSnap.data() as FacePaieProfile;
+          setFaceProfile(profile);
+          setEmergencyPhone(profile.emergencyPhone || '');
+          setSettings({
+            transactionAlerts: profile.transactionAlerts ?? true,
+            requirePinFallback: profile.requirePinFallback ?? true,
+            allowMerchantFacePaie: profile.allowMerchantFacePaie ?? true,
+          });
+          setSetupStep('dashboard');
+          setInstruction('FacePaie est actif sur votre compte.');
+        } else {
+          setFaceProfile(null);
+        }
+      } catch (error) {
+        console.error('Erreur chargement FacePaie:', error);
+      } finally {
+        if (mounted) setIsProfileLoading(false);
+      }
+    };
+
+    void loadFacePaieProfile();
+
+    return () => {
+      mounted = false;
+    };
+  }, [user?.uid]);
+
   const resetFaceGuide = useCallback(() => {
     const movementSteps = FACEPAIE_GUIDE_STEPS.filter((step) => step.id !== 'center');
     const shuffledMovements = [...movementSteps].sort(() => Math.random() - 0.5);
@@ -121,6 +235,7 @@ export default function FacePaiePage() {
     challengeStepsRef.current = nextChallenge;
     livenessFramesRef.current = [];
     isAssessingFrameRef.current = false;
+    isEnrollmentRunningRef.current = false;
     stableFramesRef.current = 0;
     guideStepIndexRef.current = 0;
     setChallengeSteps(nextChallenge);
@@ -366,6 +481,8 @@ export default function FacePaiePage() {
   }, [isVideoReady, setupStep]);
 
   const captureFace = async () => {
+    if (isEnrollmentRunningRef.current || setupStep === 'saving') return;
+
     if (!user) {
       toast({
         variant: 'destructive',
@@ -388,6 +505,7 @@ export default function FacePaiePage() {
 
     setCameraError('');
     setInstruction('Envoi sécurisé vers FacePaie...');
+    isEnrollmentRunningRef.current = true;
 
     try {
       setSetupStep('saving');
@@ -423,8 +541,26 @@ export default function FacePaiePage() {
         createdAt: serverTimestamp(),
       }, { merge: true });
 
+      const nextProfile: FacePaieProfile = {
+        ...(faceProfile || {}),
+        enabled: true,
+        provider: 'compreface',
+        comprefaceSubject: compreface.subject,
+        comprefaceImages: compreface.images || [],
+        templateVersion: 'facepaie-v3-compreface-video-challenge',
+        livenessMode: 'active-video-challenge',
+        livenessVerified: true,
+        livenessGuide: challengeStepsRef.current.map((step) => step.id),
+        frameCount: frames.length,
+        transactionAlerts: settings.transactionAlerts,
+        requirePinFallback: settings.requirePinFallback,
+        allowMerchantFacePaie: settings.allowMerchantFacePaie,
+        emergencyPhone,
+      } as FacePaieProfile;
+
+      setFaceProfile(nextProfile);
       stopCamera();
-      setSetupStep('done');
+      setSetupStep('dashboard');
       setInstruction('FacePaie est configuré sur votre compte.');
       toast({
         title: 'FacePaie activé',
@@ -432,18 +568,122 @@ export default function FacePaiePage() {
         className: 'bg-primary text-white border-none',
       });
     } catch (error: any) {
+      isEnrollmentRunningRef.current = false;
       setSetupStep('capture');
       setInstruction('Réessayez avec le visage bien éclairé et centré.');
       setCameraError(error?.message || "Impossible d'enregistrer FacePaie.");
     }
   };
 
+  useEffect(() => {
+    if (setupStep !== 'capture' || !isFaceReady || capturedFrameCount < 3) return;
+    if (isEnrollmentRunningRef.current) return;
+
+    const timeout = window.setTimeout(() => {
+      void captureFace();
+    }, 450);
+
+    return () => window.clearTimeout(timeout);
+  }, [capturedFrameCount, isFaceReady, setupStep]);
+
+  const saveFacePaieSettings = async (nextSettings = settings, nextPhone = emergencyPhone) => {
+    if (!user?.uid) {
+      toast({
+        variant: 'destructive',
+        title: 'Session requise',
+        description: 'Connectez-vous pour modifier FacePaie.',
+      });
+      return;
+    }
+
+    setIsSavingSettings(true);
+    try {
+      const cleanPhone = nextPhone.trim();
+      await setDoc(doc(db, 'users', user.uid, 'security', 'facepaie'), {
+        emergencyPhone: cleanPhone,
+        transactionAlerts: nextSettings.transactionAlerts,
+        requirePinFallback: nextSettings.requirePinFallback,
+        allowMerchantFacePaie: nextSettings.allowMerchantFacePaie,
+        updatedAt: serverTimestamp(),
+      }, { merge: true });
+
+      setEmergencyPhone(cleanPhone);
+      setSettings(nextSettings);
+      setFaceProfile((profile) => ({
+        ...(profile || {}),
+        emergencyPhone: cleanPhone,
+        transactionAlerts: nextSettings.transactionAlerts,
+        requirePinFallback: nextSettings.requirePinFallback,
+        allowMerchantFacePaie: nextSettings.allowMerchantFacePaie,
+      }));
+      toast({
+        title: 'Paramètres enregistrés',
+        description: 'Vos préférences FacePaie sont à jour.',
+        className: 'bg-primary text-white border-none',
+      });
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Erreur FacePaie',
+        description: error?.message || "Impossible d'enregistrer les paramètres.",
+      });
+    } finally {
+      setIsSavingSettings(false);
+    }
+  };
+
+  const toggleFacePaieSetting = (key: keyof typeof settings) => {
+    const nextSettings = {
+      ...settings,
+      [key]: !settings[key],
+    };
+    setSettings(nextSettings);
+    void saveFacePaieSettings(nextSettings, emergencyPhone);
+  };
+
+  const updateFacePaieFace = () => {
+    setPinOpen(true);
+  };
+
+  const deleteFacePaieProfile = async () => {
+    if (!user?.uid) return;
+    const confirmed = window.confirm('Supprimer FacePaie de ce compte ? Vous devrez réenregistrer votre visage pour l’utiliser à nouveau.');
+    if (!confirmed) return;
+
+    setIsSavingSettings(true);
+    try {
+      await deleteDoc(doc(db, 'users', user.uid, 'security', 'facepaie'));
+      setFaceProfile(null);
+      setEmergencyPhone('');
+      setSettings({
+        transactionAlerts: true,
+        requirePinFallback: true,
+        allowMerchantFacePaie: true,
+      });
+      resetFaceGuide();
+      setSetupStep('intro');
+      setInstruction('Confirmez votre PIN pour commencer.');
+      toast({
+        title: 'FacePaie supprimé',
+        description: 'Votre profil FacePaie a été retiré de ce compte.',
+      });
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Suppression impossible',
+        description: error?.message || 'Réessayez dans quelques instants.',
+      });
+    } finally {
+      setIsSavingSettings(false);
+    }
+  };
+
   const resetSetup = () => {
     stopCamera();
     resetFaceGuide();
-    setSetupStep('intro');
+    setSetupStep(faceProfile?.enabled ? 'dashboard' : 'intro');
     setCameraError('');
-    setInstruction('Confirmez votre PIN pour commencer.');
+    setInstruction(faceProfile?.enabled ? 'FacePaie est actif sur votre compte.' : 'Confirmez votre PIN pour commencer.');
   };
 
   const isSetupActive = setupStep !== 'intro';
@@ -471,7 +711,147 @@ export default function FacePaiePage() {
           <section className="relative flex flex-1 flex-col justify-between overflow-hidden rounded-[2rem] bg-[#0A8B46] p-5 text-white shadow-2xl shadow-[#0A8B46]/20">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_84%_16%,rgba(255,255,255,0.24),transparent_32%),linear-gradient(145deg,rgba(255,255,255,0.12),transparent_48%)]" />
             <div className="pointer-events-none absolute -bottom-24 -right-20 h-64 w-64 rounded-full border border-white/12" />
-            {!isSetupActive ? (
+            {isProfileLoading ? (
+              <div className="relative flex min-h-[28rem] flex-col items-center justify-center text-center">
+                <div className="h-11 w-11 animate-spin rounded-full border-2 border-white/25 border-t-white" />
+                <p className="mt-4 text-sm font-black text-white/80">Chargement FacePaie...</p>
+              </div>
+            ) : setupStep === 'dashboard' ? (
+              <div className="relative flex min-h-full flex-col gap-4">
+                <div className="flex items-center gap-3 rounded-[1.6rem] border border-white/14 bg-white/12 p-3 backdrop-blur">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-[1.35rem] bg-white p-2 shadow-lg shadow-black/10">
+                    <Image src="/facepaie-icon.svg" alt="FacePaie" width={56} height={56} className="h-full w-full object-contain" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/64">Profil actif</p>
+                    <h2 className="truncate text-xl font-black leading-tight">Mon FacePaie</h2>
+                    <p className="mt-1 text-xs font-bold leading-5 text-white/70">
+                      Paiement par visage prêt pour les opérations autorisées.
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-[#0A8B46]">
+                    Actif
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2">
+                  <article className="rounded-2xl bg-white/12 p-3 text-center backdrop-blur">
+                    <p className="text-[10px] font-black uppercase tracking-[0.14em] text-white/58">Analyse</p>
+                    <p className="mt-1 text-2xl font-black">100%</p>
+                    <p className="text-[10px] font-bold text-white/62">validée</p>
+                  </article>
+                  <article className="rounded-2xl bg-white/12 p-3 text-center backdrop-blur">
+                    <p className="text-[10px] font-black uppercase tracking-[0.14em] text-white/58">Images</p>
+                    <p className="mt-1 text-2xl font-black">{faceProfile?.frameCount || 4}</p>
+                    <p className="text-[10px] font-bold text-white/62">frames</p>
+                  </article>
+                  <article className="rounded-2xl bg-white/12 p-3 text-center backdrop-blur">
+                    <p className="text-[10px] font-black uppercase tracking-[0.14em] text-white/58">Secours</p>
+                    <p className="mt-1 text-2xl font-black">{emergencyPhone ? 'OK' : '-'}</p>
+                    <p className="text-[10px] font-bold text-white/62">numéro</p>
+                  </article>
+                </div>
+
+                <div className="rounded-[1.55rem] bg-white p-3 text-slate-950 shadow-xl shadow-black/10">
+                  <p className="px-1 text-[11px] font-black uppercase tracking-[0.18em] text-[#0A8B46]">Actions FacePaie</p>
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={updateFacePaieFace}
+                      className="flex items-center gap-3 rounded-2xl border border-[#0A8B46]/10 bg-[#0A8B46]/5 p-3 text-left transition active:scale-[0.98]"
+                    >
+                      <FacePaieDashboardIcon type="face" />
+                      <span className="min-w-0">
+                        <span className="block text-sm font-black">Mettre à jour</span>
+                        <span className="block text-[10px] font-bold text-slate-500">Reprendre le visage</span>
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void deleteFacePaieProfile()}
+                      disabled={isSavingSettings}
+                      className="flex items-center gap-3 rounded-2xl border border-red-100 bg-red-50 p-3 text-left transition active:scale-[0.98] disabled:opacity-60"
+                    >
+                      <FacePaieDashboardIcon type="delete" />
+                      <span className="min-w-0">
+                        <span className="block text-sm font-black text-red-600">Supprimer</span>
+                        <span className="block text-[10px] font-bold text-red-400">Désactiver FacePaie</span>
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="rounded-[1.55rem] bg-white p-3 text-slate-950 shadow-xl shadow-black/10">
+                  <div className="flex items-center gap-3">
+                    <FacePaieDashboardIcon type="phone" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-black">Numéro de secours</p>
+                      <p className="text-[11px] font-bold leading-4 text-slate-500">Utilisé si une validation supplémentaire est demandée.</p>
+                    </div>
+                  </div>
+                  <div className="mt-3 flex gap-2">
+                    <input
+                      value={emergencyPhone}
+                      onChange={(event) => setEmergencyPhone(event.target.value)}
+                      inputMode="tel"
+                      placeholder="+243..."
+                      className="h-12 min-w-0 flex-1 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-bold text-slate-950 outline-none transition focus:border-[#0A8B46] focus:bg-white"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => void saveFacePaieSettings(settings, emergencyPhone)}
+                      disabled={isSavingSettings}
+                      className="h-12 rounded-2xl bg-[#0A8B46] px-4 text-xs font-black text-white shadow-lg shadow-[#0A8B46]/20 disabled:opacity-60"
+                    >
+                      {isSavingSettings ? '...' : 'OK'}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="rounded-[1.55rem] bg-white p-3 text-slate-950 shadow-xl shadow-black/10">
+                  <p className="px-1 text-[11px] font-black uppercase tracking-[0.18em] text-[#0A8B46]">Paramètres</p>
+                  <div className="mt-3 space-y-2">
+                    {[
+                      {
+                        key: 'transactionAlerts' as const,
+                        icon: 'bell' as const,
+                        title: 'Alertes de transaction',
+                        text: 'Notifier chaque usage FacePaie.',
+                      },
+                      {
+                        key: 'requirePinFallback' as const,
+                        icon: 'shield' as const,
+                        title: 'PIN de secours',
+                        text: 'Garder une validation alternative.',
+                      },
+                      {
+                        key: 'allowMerchantFacePaie' as const,
+                        icon: 'merchant' as const,
+                        title: 'Paiement commerçant',
+                        text: 'Autoriser les points de vente FacePaie.',
+                      },
+                    ].map((item) => (
+                      <button
+                        key={item.key}
+                        type="button"
+                        onClick={() => toggleFacePaieSetting(item.key)}
+                        disabled={isSavingSettings}
+                        className="flex w-full items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-3 text-left transition active:scale-[0.99] disabled:opacity-60"
+                      >
+                        <FacePaieDashboardIcon type={item.icon} />
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-sm font-black">{item.title}</span>
+                          <span className="block text-[11px] font-bold leading-4 text-slate-500">{item.text}</span>
+                        </span>
+                        <span className={`relative h-7 w-12 rounded-full p-1 transition ${settings[item.key] ? 'bg-[#0A8B46]' : 'bg-slate-300'}`}>
+                          <span className={`block h-5 w-5 rounded-full bg-white shadow transition ${settings[item.key] ? 'translate-x-5' : 'translate-x-0'}`} />
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : !isSetupActive ? (
               <>
                 <div className="relative flex flex-col items-center text-center">
                   <div className="flex h-28 w-28 items-center justify-center rounded-[1.8rem] bg-white p-3 shadow-xl shadow-black/10">

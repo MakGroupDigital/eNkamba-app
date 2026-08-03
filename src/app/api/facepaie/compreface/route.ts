@@ -18,9 +18,13 @@ function getCompreFaceConfig() {
     process.env.COMPREFACE_DETECTION_API_KEY ||
     process.env.FACEPAIE_COMPREFACE_DETECTION_API_KEY ||
     recognitionApiKey;
+  const verificationApiKey =
+    process.env.COMPREFACE_VERIFY_API_KEY ||
+    process.env.FACEPAIE_COMPREFACE_VERIFY_API_KEY ||
+    recognitionApiKey;
   const threshold = Number(process.env.COMPREFACE_FACE_THRESHOLD || '0.82');
 
-  return { baseUrl, recognitionApiKey, detectionApiKey, threshold };
+  return { baseUrl, recognitionApiKey, detectionApiKey, verificationApiKey, threshold };
 }
 
 function normalizeSubject(userId: string) {
