@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { createElement, useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { enkambaRealtime, getRealtimeUrl, type RealtimeStatus } from '@/lib/realtime-client';
 import { useToast } from '@/hooks/use-toast';
+import { ToastAction, type ToastActionElement } from '@/components/ui/toast';
 
 function getAppFromPath(pathname: string) {
   if (pathname.includes('/miyiki-chat')) return 'Chat';
@@ -72,11 +73,7 @@ export function useRealtimeNotifications() {
         title,
         description: message,
         action: actionUrl
-          ? {
-              altText: 'Ouvrir',
-              onClick: () => router.push(actionUrl),
-              children: 'Ouvrir',
-            } as any
+          ? (createElement(ToastAction, { altText: 'Ouvrir', onClick: () => router.push(actionUrl) }, 'Ouvrir') as unknown as ToastActionElement)
           : undefined,
       });
     });
@@ -88,11 +85,7 @@ export function useRealtimeNotifications() {
         title: `Appel ${callType}`,
         description: `${String(payload.fromName || 'Un contact')} vous appelle`,
         action: actionUrl
-          ? {
-              altText: 'Répondre',
-              onClick: () => router.push(actionUrl),
-              children: 'Répondre',
-            } as any
+          ? (createElement(ToastAction, { altText: 'Répondre', onClick: () => router.push(actionUrl) }, 'Répondre') as unknown as ToastActionElement)
           : undefined,
       });
     });
