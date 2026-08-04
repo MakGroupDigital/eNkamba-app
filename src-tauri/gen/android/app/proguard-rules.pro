@@ -22,3 +22,7 @@
 -keepclassmembers class io.enkamba.app.MainActivity$EkambaGoogleBridge {
     @android.webkit.JavascriptInterface <methods>;
 }
+
+-keepclassmembers class io.enkamba.app.MainActivity$EnkambaPushBridge {
+    @android.webkit.JavascriptInterface <methods>;
+}

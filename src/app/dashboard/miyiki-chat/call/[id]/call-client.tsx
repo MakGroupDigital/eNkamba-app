@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Mic, MicOff, Video, VideoOff, PhoneOff, Camera } from 'lucide-react';
+import { Expand, Mic, MicOff, RefreshCw, Video, VideoOff, PhoneOff, Camera } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertTitle } from '@/components/ui/alert';
 import { useAuth } from '@/hooks/useAuth';
@@ -57,6 +57,9 @@ export default function CallClient() {
   const [callId, setCallId] = useState<string>(incomingCallId);
   const [contact, setContact] = useState<{ uid: string; name: string; avatar?: string } | null>(null);
   const [remoteReady, setRemoteReady] = useState(false);
+  const [cameraFacingMode, setCameraFacingMode] = useState<'user' | 'environment'>('user');
+  const [primaryView, setPrimaryView] = useState<'remote' | 'local'>('remote');
+  const [isSwitchingCamera, setIsSwitchingCamera] = useState(false);
 
   const isIncoming = useMemo(() => Boolean(incomingCallId), [incomingCallId]);
 
@@ -123,16 +126,35 @@ export default function CallClient() {
     remoteReadyRef.current = remoteReady;
   }, [remoteReady]);
 
+  const attachLocalStream = useCallback(async (stream: MediaStream) => {
+    streamRef.current = stream;
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject = stream;
+      await localVideoRef.current.play().catch(() => undefined);
+    }
+  }, []);
+
+  const getInitialMediaStream = useCallback(async () => {
+    return navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: { ideal: 'user' },
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+      },
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+      },
+    });
+  }, []);
+
   useEffect(() => {
     const getMediaPermissions = async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-        streamRef.current = stream;
+        const stream = await getInitialMediaStream();
         setHasPermission(true);
-        if (localVideoRef.current) {
-          localVideoRef.current.srcObject = stream;
-          void localVideoRef.current.play().catch(() => undefined);
-        }
+        await attachLocalStream(stream);
       } catch (error) {
         console.error('Error accessing media devices:', error);
         setHasPermission(false);
@@ -156,7 +178,7 @@ export default function CallClient() {
       pcRef.current = null;
       remoteStreamRef.current = null;
     };
-  }, [toast]);
+  }, [attachLocalStream, getInitialMediaStream, toast]);
 
   useEffect(() => {
     if (hasPermission && callStatus === 'in_call') {
@@ -178,6 +200,52 @@ export default function CallClient() {
       track.enabled = !isCameraOff;
     });
   }, [isCameraOff]);
+
+  const switchCamera = useCallback(async () => {
+    if (!hasPermission || isSwitchingCamera) return;
+    if (!navigator.mediaDevices?.getUserMedia) return;
+
+    const nextFacingMode = cameraFacingMode === 'user' ? 'environment' : 'user';
+    setIsSwitchingCamera(true);
+
+    try {
+      const newVideoStream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: { ideal: nextFacingMode },
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+        audio: false,
+      });
+
+      const newVideoTrack = newVideoStream.getVideoTracks()[0];
+      if (!newVideoTrack) throw new Error('Camera indisponible.');
+      newVideoTrack.enabled = !isCameraOff;
+
+      const currentStream = streamRef.current;
+      const currentAudioTracks = currentStream?.getAudioTracks() || [];
+      currentStream?.getVideoTracks().forEach((track) => track.stop());
+
+      const nextStream = new MediaStream([...currentAudioTracks, newVideoTrack]);
+      await attachLocalStream(nextStream);
+
+      const sender = pcRef.current?.getSenders().find((item) => item.track?.kind === 'video');
+      if (sender) {
+        await sender.replaceTrack(newVideoTrack);
+      }
+
+      setCameraFacingMode(nextFacingMode);
+    } catch (error) {
+      console.error('Erreur bascule camera:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Camera indisponible',
+        description: "Impossible de basculer vers l'autre camera sur cet appareil.",
+      });
+    } finally {
+      setIsSwitchingCamera(false);
+    }
+  }, [attachLocalStream, cameraFacingMode, hasPermission, isCameraOff, isSwitchingCamera, toast]);
 
   useEffect(() => {
     const loadContactFromConversation = async () => {
@@ -559,11 +627,26 @@ export default function CallClient() {
     return `${minutes}:${remainingSeconds}`;
   };
 
+  const localVideoClassName = `h-full w-full object-cover ${cameraFacingMode === 'user' ? 'scale-x-[-1]' : ''}`;
+  const showLocalAsPrimary = primaryView === 'local';
+
   return (
     <div className="fixed inset-0 z-[220] flex w-full flex-col overflow-hidden bg-black text-white">
       <div className="absolute inset-0">
-        <video ref={remoteVideoRef} autoPlay playsInline className="h-full w-full object-cover" />
-        {!remoteReady && (
+        <video
+          ref={remoteVideoRef}
+          autoPlay
+          playsInline
+          className={showLocalAsPrimary ? 'pointer-events-none absolute h-px w-px opacity-0' : 'h-full w-full object-cover'}
+        />
+        <video
+          ref={localVideoRef}
+          autoPlay
+          playsInline
+          muted
+          className={showLocalAsPrimary ? localVideoClassName : 'pointer-events-none absolute h-px w-px opacity-0'}
+        />
+        {(!remoteReady && !showLocalAsPrimary) && (
           <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-[#FFA500]">
             <div className="absolute inset-0 bg-black/35 backdrop-blur-[2px]" />
             <div className="pointer-events-none absolute -top-24 left-1/2 h-56 w-[min(620px,90vw)] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(255,165,0,0.45),transparent)] blur-2xl" />
@@ -607,11 +690,51 @@ export default function CallClient() {
         )}
       </div>
 
-      {!isIncoming && (
-        <div className="absolute right-4 top-4 h-48 w-32 overflow-hidden rounded-2xl border border-white/15 bg-black/30 shadow-[0_18px_45px_rgba(0,0,0,0.35)] backdrop-blur">
-          <video ref={localVideoRef} autoPlay playsInline muted className="h-full w-full object-cover" />
-        </div>
-      )}
+      <button
+        type="button"
+        onClick={() => setPrimaryView((current) => (current === 'remote' ? 'local' : 'remote'))}
+        className="absolute right-4 top-4 h-48 w-32 overflow-hidden rounded-2xl border border-white/15 bg-black/30 text-left shadow-[0_18px_45px_rgba(0,0,0,0.35)] backdrop-blur transition active:scale-95"
+      >
+        {showLocalAsPrimary ? (
+          remoteReady ? (
+            <video
+              autoPlay
+              playsInline
+              muted
+              ref={(node) => {
+                if (node && remoteStreamRef.current && node.srcObject !== remoteStreamRef.current) {
+                  node.srcObject = remoteStreamRef.current;
+                  void node.play().catch(() => undefined);
+                }
+              }}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-white/10">
+              <Avatar className="h-14 w-14 border border-white/30">
+                <AvatarImage src={contact?.avatar} />
+                <AvatarFallback>{contact?.name?.charAt(0) || 'U'}</AvatarFallback>
+              </Avatar>
+            </div>
+          )
+        ) : (
+          <video
+            autoPlay
+            playsInline
+            muted
+            ref={(node) => {
+              if (node && streamRef.current && node.srcObject !== streamRef.current) {
+                node.srcObject = streamRef.current;
+                void node.play().catch(() => undefined);
+              }
+            }}
+            className={localVideoClassName}
+          />
+        )}
+        <span className="absolute bottom-2 right-2 rounded-full bg-black/45 p-1.5 backdrop-blur">
+          <Expand className="h-3.5 w-3.5" />
+        </span>
+      </button>
 
       <div className="absolute bottom-10 left-1/2 z-10 flex -translate-x-1/2 items-center gap-4 rounded-full border border-white/10 bg-black/40 p-4 shadow-[0_18px_45px_rgba(0,0,0,0.25)] backdrop-blur-xl">
         <Button
@@ -631,6 +754,16 @@ export default function CallClient() {
           disabled={!hasPermission}
         >
           {isCameraOff ? <VideoOff /> : <Video />}
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-14 w-14 rounded-full bg-white/15 hover:bg-white/25"
+          onClick={switchCamera}
+          disabled={!hasPermission || isSwitchingCamera || isCameraOff}
+          title={cameraFacingMode === 'user' ? 'Camera arriere' : 'Camera selfie'}
+        >
+          <RefreshCw className={isSwitchingCamera ? 'animate-spin' : ''} />
         </Button>
         <Button
           size="icon"

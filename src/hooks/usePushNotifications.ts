@@ -7,6 +7,19 @@ type PushPlatform = 'web' | 'android' | 'ios';
 
 const savePushTokenFn = httpsCallable(functions, 'savePushToken');
 
+declare global {
+  interface Window {
+    eNkambaNativePush?: {
+      isAvailable?: () => boolean;
+      getToken?: (requestId: string) => void;
+    };
+    __eNkambaNativePushTokenResolve?: (
+      requestId: string,
+      payload: { success?: boolean; token?: string; error?: string }
+    ) => void;
+  }
+}
+
 async function saveToken(token: string, platform: PushPlatform) {
   if (!token) return;
   try {
@@ -124,6 +137,50 @@ async function setupNativePush() {
   };
 }
 
+async function setupTauriAndroidPush() {
+  if (typeof window === 'undefined') return null;
+  const bridge = window.eNkambaNativePush;
+  if (!bridge?.getToken || bridge.isAvailable?.() === false) return null;
+  const requestNativeToken = bridge.getToken.bind(bridge);
+
+  const requestId = `push-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const token = await new Promise<string>((resolve, reject) => {
+    const timeout = window.setTimeout(() => {
+      if (window.__eNkambaNativePushTokenResolve === resolver) {
+        delete window.__eNkambaNativePushTokenResolve;
+      }
+      reject(new Error('Token push natif expire.'));
+    }, 15000);
+
+    const previousResolver = window.__eNkambaNativePushTokenResolve;
+    const resolver = (responseRequestId: string, payload: { success?: boolean; token?: string; error?: string }) => {
+      if (responseRequestId !== requestId) {
+        previousResolver?.(responseRequestId, payload);
+        return;
+      }
+
+      window.clearTimeout(timeout);
+      if (previousResolver) {
+        window.__eNkambaNativePushTokenResolve = previousResolver;
+      } else {
+        delete window.__eNkambaNativePushTokenResolve;
+      }
+
+      if (payload.success && payload.token) {
+        resolve(payload.token);
+      } else {
+        reject(new Error(payload.error || 'Token push natif indisponible.'));
+      }
+    };
+
+    window.__eNkambaNativePushTokenResolve = resolver;
+    requestNativeToken(requestId);
+  });
+
+  await saveToken(token, 'android');
+  return () => {};
+}
+
 export function usePushNotifications() {
   const { user } = useAuth();
   const initializedRef = useRef(false);
@@ -134,6 +191,12 @@ export function usePushNotifications() {
 
     let cleanup: undefined | (() => void | Promise<void>);
     (async () => {
+      const tauriCleanup = await setupTauriAndroidPush();
+      if (tauriCleanup) {
+        cleanup = tauriCleanup;
+        return;
+      }
+
       const isNative = Boolean((window as any)?.Capacitor?.isNativePlatform?.());
       cleanup = isNative ? await setupNativePush() : await setupWebPush();
     })().catch((error) => {
