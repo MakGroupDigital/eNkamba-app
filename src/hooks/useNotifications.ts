@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { db } from '@/lib/firebase';
 import { collection, query, where, onSnapshot, updateDoc, doc, Timestamp } from 'firebase/firestore';
 import { useAuth } from '@/hooks/useAuth';
+import { enkambaRealtime } from '@/lib/realtime-client';
 
 export interface Notification {
   id: string;
@@ -106,11 +107,18 @@ export function useNotifications() {
         read: true,
         readAt: Timestamp.now(),
       });
+      const notification = allNotifications.find((item) => item.id === notificationId);
+      if (notification?.senderId) {
+        enkambaRealtime.sendReliable('notification:read', {
+          toUid: notification.senderId,
+          notificationId,
+        }, { dedupeKey: `read:${notificationId}:${user.uid}` });
+      }
       console.log('Notification marquée comme lue:', notificationId);
     } catch (error) {
       console.error('Erreur marquage notification:', error);
     }
-  }, [user]);
+  }, [user, allNotifications]);
 
   // Marquer une notification comme acquittée (pour les transferts reçus)
   const acknowledgeNotification = useCallback(async (notificationId: string) => {
@@ -124,11 +132,18 @@ export function useNotifications() {
         read: true,
         readAt: Timestamp.now(),
       });
+      const notification = allNotifications.find((item) => item.id === notificationId);
+      if (notification?.senderId) {
+        enkambaRealtime.sendReliable('notification:read', {
+          toUid: notification.senderId,
+          notificationId,
+        }, { dedupeKey: `ack:${notificationId}:${user.uid}` });
+      }
       console.log('Notification acquittée:', notificationId);
     } catch (error) {
       console.error('Erreur acquittement notification:', error);
     }
-  }, [user]);
+  }, [user, allNotifications]);
 
   // Obtenir les notifications non acquittées (pour afficher le modal)
   const unacknowledgedNotifications = notifications.filter(

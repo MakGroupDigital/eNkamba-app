@@ -10,6 +10,15 @@ const maxPayloadBytes = Number(process.env.MAX_PAYLOAD_BYTES || 16 * 1024);
 const clients = new Map();
 const userSockets = new Map();
 const conversationRooms = new Map();
+const stats = {
+  startedAt: now(),
+  framesIn: 0,
+  framesOut: 0,
+  notificationsSent: 0,
+  callsSent: 0,
+  acksSent: 0,
+  errors: 0,
+};
 
 function now() {
   return Date.now();
@@ -33,17 +42,21 @@ function publicUser(client) {
 
 function send(client, type, payload = {}) {
   if (!client?.socket || client.socket.readyState !== client.socket.OPEN) return;
+  stats.framesOut += 1;
   client.socket.send(JSON.stringify({ type, payload, ts: now() }));
 }
 
 function broadcastToUser(uid, type, payload, exceptSocketId) {
   const socketIds = userSockets.get(uid);
-  if (!socketIds) return;
+  if (!socketIds) return 0;
 
+  let delivered = 0;
   for (const socketId of socketIds) {
     if (socketId === exceptSocketId) continue;
     send(clients.get(socketId), type, payload);
+    delivered += 1;
   }
+  return delivered;
 }
 
 function broadcastToRoom(roomId, type, payload, exceptSocketId) {
@@ -138,7 +151,9 @@ function handleAuth(client, payload) {
 }
 
 function handleMessage(client, raw) {
+  stats.framesIn += 1;
   if (Buffer.byteLength(raw) > maxPayloadBytes) {
+    stats.errors += 1;
     send(client, 'error', { message: 'Message temps réel trop volumineux.' });
     return;
   }
@@ -147,13 +162,27 @@ function handleMessage(client, raw) {
   try {
     message = JSON.parse(raw);
   } catch {
+    stats.errors += 1;
     send(client, 'error', { message: 'Message temps réel invalide.' });
     return;
   }
 
   const type = safeText(message?.type, 80);
   const payload = message?.payload || {};
+  const clientMessageId = safeText(message?.clientMessageId || payload?.clientMessageId, 120);
   client.lastSeenAt = now();
+
+  const ack = (status, extra = {}) => {
+    if (!clientMessageId) return;
+    stats.acksSent += 1;
+    send(client, 'server:ack', {
+      clientMessageId,
+      type,
+      status,
+      at: now(),
+      ...extra,
+    });
+  };
 
   switch (type) {
     case 'auth':
@@ -189,32 +218,62 @@ function handleMessage(client, raw) {
     }
     case 'notification:realtime': {
       const toUid = safeText(payload?.toUid, 128);
-      if (!toUid || !client.uid) return;
-      broadcastToUser(toUid, 'notification:realtime', {
+      if (!toUid || !client.uid) {
+        ack('rejected', { reason: 'invalid_recipient' });
+        return;
+      }
+      const deliveredSockets = broadcastToUser(toUid, 'notification:realtime', {
+        notificationId: safeText(payload?.notificationId || clientMessageId, 120),
         fromUid: client.uid,
         title: safeText(payload?.title, 120),
         message: safeText(payload?.message, 240),
         actionUrl: safeText(payload?.actionUrl, 240),
         notificationType: safeText(payload?.notificationType, 80),
+        priority: safeText(payload?.priority || 'normal', 24),
+        entityId: safeText(payload?.entityId, 120),
         at: now(),
       });
+      stats.notificationsSent += 1;
+      ack(deliveredSockets > 0 ? 'delivered' : 'queued', { toUid, deliveredSockets });
       break;
     }
     case 'call:ringing': {
       const toUid = safeText(payload?.toUid, 128);
-      if (!toUid || !client.uid) return;
-      broadcastToUser(toUid, 'call:ringing', {
+      if (!toUid || !client.uid) {
+        ack('rejected', { reason: 'invalid_recipient' });
+        return;
+      }
+      const deliveredSockets = broadcastToUser(toUid, 'call:ringing', {
+        notificationId: safeText(payload?.notificationId || clientMessageId, 120),
         fromUid: client.uid,
         fromName: client.name,
         conversationId: safeText(payload?.conversationId, 120),
         callId: safeText(payload?.callId, 120),
         callType: payload?.callType === 'audio' ? 'audio' : 'video',
         actionUrl: safeText(payload?.actionUrl, 240),
+        priority: 'critical',
         at: now(),
       });
+      stats.callsSent += 1;
+      ack(deliveredSockets > 0 ? 'delivered' : 'queued', { toUid, deliveredSockets });
+      break;
+    }
+    case 'notification:read': {
+      const toUid = safeText(payload?.toUid, 128);
+      if (!toUid || !client.uid) {
+        ack('rejected', { reason: 'invalid_recipient' });
+        return;
+      }
+      const deliveredSockets = broadcastToUser(toUid, 'notification:read', {
+        notificationId: safeText(payload?.notificationId, 120),
+        readerUid: client.uid,
+        at: now(),
+      });
+      ack('delivered', { toUid, deliveredSockets });
       break;
     }
     default:
+      stats.errors += 1;
       send(client, 'error', { message: 'Type temps réel non reconnu.' });
   }
 }
@@ -228,6 +287,7 @@ const server = http.createServer((req, res) => {
       connectedSockets: clients.size,
       rooms: conversationRooms.size,
       uptime: process.uptime(),
+      stats,
     });
     res.writeHead(200, { 'content-type': 'application/json' });
     res.end(body);

@@ -463,7 +463,7 @@ export default function CallClient() {
 
     try {
       const actionUrl = `/dashboard/miyiki-chat/call/${conversationId}?callId=${newCallId}`;
-      enkambaRealtime.send('call:ringing', {
+      enkambaRealtime.ringCall({
         toUid: contact.uid,
         conversationId,
         callId: newCallId,

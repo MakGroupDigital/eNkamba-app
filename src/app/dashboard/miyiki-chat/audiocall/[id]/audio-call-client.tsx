@@ -376,7 +376,7 @@ export default function AudioCallClient() {
 
     try {
       const actionUrl = `/dashboard/miyiki-chat/audiocall/${conversationId}?callId=${newCallId}`;
-      enkambaRealtime.send('call:ringing', {
+      enkambaRealtime.ringCall({
         toUid: contact.uid,
         conversationId,
         callId: newCallId,
