@@ -6,6 +6,8 @@ import android.os.Bundle
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -15,6 +17,7 @@ class MainActivity : TauriActivity() {
   private var webViewRef: WebView? = null
   private var pendingGoogleRequestId: String? = null
   private lateinit var googleSignInClient: GoogleSignInClient
+  private lateinit var googleSignInLauncher: ActivityResultLauncher<Intent>
 
   override fun onCreate(savedInstanceState: Bundle?) {
     enableEdgeToEdge()
@@ -24,6 +27,9 @@ class MainActivity : TauriActivity() {
       .requestProfile()
       .build()
     googleSignInClient = GoogleSignIn.getClient(this, options)
+    googleSignInLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+      handleGoogleSignInResult(result.resultCode, result.data)
+    }
     super.onCreate(savedInstanceState)
   }
 
@@ -41,17 +47,30 @@ class MainActivity : TauriActivity() {
     fun signIn(requestId: String) {
       runOnUiThread {
         pendingGoogleRequestId = requestId
-        googleSignInClient.signOut().addOnCompleteListener {
-          startActivityForResult(googleSignInClient.signInIntent, GOOGLE_SIGN_IN_REQUEST_CODE)
+        try {
+          googleSignInClient.signOut().addOnCompleteListener {
+            try {
+              googleSignInLauncher.launch(googleSignInClient.signInIntent)
+            } catch (error: Exception) {
+              pendingGoogleRequestId = null
+              resolveGoogleSignIn(requestId, JSONObject().apply {
+                put("success", false)
+                put("error", error.message ?: "Impossible d'ouvrir Google sur cet appareil.")
+              })
+            }
+          }
+        } catch (error: Exception) {
+          pendingGoogleRequestId = null
+          resolveGoogleSignIn(requestId, JSONObject().apply {
+            put("success", false)
+            put("error", error.message ?: "Connexion Google native impossible.")
+          })
         }
       }
     }
   }
 
-  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-    super.onActivityResult(requestCode, resultCode, data)
-    if (requestCode != GOOGLE_SIGN_IN_REQUEST_CODE) return
-
+  private fun handleGoogleSignInResult(resultCode: Int, data: Intent?) {
     val requestId = pendingGoogleRequestId ?: return
     pendingGoogleRequestId = null
 
@@ -93,13 +112,14 @@ class MainActivity : TauriActivity() {
     val script = """
       window.__eNkambaNativeGoogleAuthResolve &&
       window.__eNkambaNativeGoogleAuthResolve(${JSONObject.quote(requestId)}, ${payload});
+      document.dispatchEvent(new CustomEvent('enkamba-native-google-auth', {
+        detail: { requestId: ${JSONObject.quote(requestId)}, payload: ${payload} }
+      }));
     """.trimIndent()
     runOnUiThread {
-      webViewRef?.evaluateJavascript(script, null)
+      webViewRef?.post {
+        webViewRef?.evaluateJavascript(script, null)
+      }
     }
-  }
-
-  companion object {
-    private const val GOOGLE_SIGN_IN_REQUEST_CODE = 8821
   }
 }

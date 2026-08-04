@@ -23,6 +23,11 @@ declare global {
   }
 }
 
+type NativeGoogleAuthEvent = CustomEvent<{
+  requestId: string;
+  payload: NativeGoogleResult;
+}>;
+
 export function useCapacitorGoogleAuth() {
   const [isNative, setIsNative] = useState(false);
 
@@ -110,9 +115,19 @@ export function useCapacitorGoogleAuth() {
 
 const pendingResolvers: Record<string, (payload: NativeGoogleResult) => void> = {};
 
+const resolveNativeGoogleAuth = (requestId: string, payload: NativeGoogleResult) => {
+  pendingResolvers[requestId]?.(payload);
+  delete pendingResolvers[requestId];
+};
+
 if (typeof window !== 'undefined') {
   window.__eNkambaNativeGoogleAuthResolve = (requestId, payload) => {
-    pendingResolvers[requestId]?.(payload);
-    delete pendingResolvers[requestId];
+    resolveNativeGoogleAuth(requestId, payload);
   };
+
+  document.addEventListener('enkamba-native-google-auth', ((event: NativeGoogleAuthEvent) => {
+    const detail = event.detail;
+    if (!detail?.requestId || !detail.payload) return;
+    resolveNativeGoogleAuth(detail.requestId, detail.payload);
+  }) as EventListener);
 }
