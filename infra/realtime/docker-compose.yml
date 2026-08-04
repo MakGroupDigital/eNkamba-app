@@ -1,0 +1,35 @@
+services:
+  realtime:
+    build: .
+    container_name: enkamba-realtime
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 8787
+      HEARTBEAT_MS: 25000
+      PRESENCE_TTL_MS: 45000
+    networks:
+      - realtime
+
+  caddy:
+    image: caddy:2.8-alpine
+    container_name: enkamba-realtime-caddy
+    restart: unless-stopped
+    depends_on:
+      - realtime
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - realtime
+
+networks:
+  realtime:
+
+volumes:
+  caddy_data:
+  caddy_config:

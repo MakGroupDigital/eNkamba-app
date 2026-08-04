@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { useFirestoreConversations } from '@/hooks/useFirestoreConversations';
 import { useAuth } from '@/hooks/useAuth';
 import { useChatSettings } from '@/hooks/useChatSettings';
+import { useChatRealtime } from '@/hooks/useChatRealtime';
 import { ChatNavIcon, EnkambaAIIcon } from '@/components/icons/service-icons';
 import { LocationMessage } from '@/components/chat/LocationMessage';
 import { FileMessage } from '@/components/chat/FileMessage';
@@ -133,6 +134,7 @@ export default function ConversationClient() {
     const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
     const videoPreviewRef = useRef<HTMLVideoElement>(null);
     const audioContextRef = useRef<AudioContext | null>(null);
+    const { typingUsers, sendTyping, stopTyping } = useChatRealtime(conversationId, currentUser?.uid);
 
     useEffect(() => {
         window.dispatchEvent(
@@ -778,6 +780,7 @@ export default function ConversationClient() {
 
         const messageText = inputValue;
         setInputValue('');
+        stopTyping();
         setIsSending(true);
 
         try {
@@ -2278,6 +2281,14 @@ export default function ConversationClient() {
                     />
                 )}
 
+                {typingUsers.length > 0 && (
+                    <div className="px-12 text-[11px] font-medium text-primary/80">
+                        {typingUsers.length === 1
+                            ? `${typingUsers[0].name} écrit...`
+                            : `${typingUsers.length} personnes écrivent...`}
+                    </div>
+                )}
+
                 {/* Main Input Area */}
                 {!recordingBlob && (
                     <div className="flex gap-2 items-end">
@@ -2315,7 +2326,15 @@ export default function ConversationClient() {
                             ref={textAreaRef}
                             placeholder="Écrivez votre message..."
                             value={inputValue}
-                            onChange={(e) => setInputValue(e.target.value)}
+                            onChange={(e) => {
+                                setInputValue(e.target.value);
+                                if (e.target.value.trim()) {
+                                    sendTyping();
+                                } else {
+                                    stopTyping();
+                                }
+                            }}
+                            onBlur={stopTyping}
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' && !e.shiftKey) {
                                     e.preventDefault();

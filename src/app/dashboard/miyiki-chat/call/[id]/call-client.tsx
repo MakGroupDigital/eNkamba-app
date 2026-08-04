@@ -11,6 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useFirestoreConversations } from '@/hooks/useFirestoreConversations';
 import { useCallFeedback } from '@/hooks/useCallFeedback';
 import { attachRemoteStream, closePeerResources, getRtcConfiguration, hasTurnServerConfigured } from '@/lib/webrtc';
+import { enkambaRealtime } from '@/lib/realtime-client';
 import {
   addDoc,
   collection,
@@ -393,11 +394,20 @@ export default function CallClient() {
     } as any);
 
     try {
+      const actionUrl = `/dashboard/miyiki-chat/call/${conversationId}?callId=${newCallId}`;
+      enkambaRealtime.send('call:ringing', {
+        toUid: contact.uid,
+        conversationId,
+        callId: newCallId,
+        callType: 'video',
+        actionUrl,
+      });
+
       await addDoc(collection(db, 'users', contact.uid, 'notifications'), {
         type: 'incoming_call',
         title: 'Appel video',
         message: `${user.displayName || 'Quelqu’un'} vous appelle`,
-        actionUrl: `/dashboard/miyiki-chat/call/${conversationId}?callId=${newCallId}`,
+        actionUrl,
         read: false,
         callId: newCallId,
         callType: 'video',

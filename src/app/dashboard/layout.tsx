@@ -8,6 +8,7 @@ import AuthGuard from '@/components/auth-guard';
 import { ModuleKycGate } from '@/components/module-kyc-gate';
 import { TransferNotificationModal } from '@/components/transfer-notification-modal';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { useRealtimeNotifications } from '@/hooks/useRealtimeNotifications';
 import { ChevronRight } from 'lucide-react';
 import { GlobalLocationBar } from '@/components/dashboard/global-location-bar';
 // import { useSupabaseNotifications } from '@/hooks/useSupabaseNotifications'; // Disabled - Supabase realtime not needed
@@ -22,6 +23,7 @@ export default function DashboardLayout({
   const [activeTab, setActiveTab] = useState('Chat');
   const [hideHubNavigation, setHideHubNavigation] = useState(false);
   usePushNotifications();
+  useRealtimeNotifications();
   // useSupabaseNotifications(); // Disabled - Supabase realtime not needed
 
   useEffect(() => {
