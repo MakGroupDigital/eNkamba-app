@@ -47,6 +47,8 @@ next-env.d.ts
 *.keystore
 keystore.properties
 !keystore.properties.example
+google-services*.json
+!src-tauri/gen/android/app/google-services.json
 
 # IDE
 .idea
