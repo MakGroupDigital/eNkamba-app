@@ -19,7 +19,11 @@
     "cap:sync": "npx cap sync",
     "cap:open:android": "npx cap open android",
     "cap:build:android": "npm run build:capacitor && npx cap open android",
-    "apk:release": "bash scripts/build-native-apk.sh"
+    "apk:release": "bash scripts/build-native-apk.sh",
+    "tauri": "tauri",
+    "tauri:android:init": "tauri android init",
+    "tauri:android:apk": "tauri android build --apk --target aarch64 armv7",
+    "tauri:android:apk:all": "tauri android build --apk"
   },
   "dependencies": {
     "@capacitor-community/contacts": "^7.1.0",
@@ -65,6 +69,7 @@
     "@radix-ui/react-toast": "^1.2.6",
     "@radix-ui/react-tooltip": "^1.1.8",
     "@supabase/supabase-js": "^2.98.0",
+    "@tauri-apps/api": "^2.11.1",
     "@tavily/core": "^0.7.1",
     "axios": "^1.13.3",
     "cheerio": "^1.2.0",
@@ -101,6 +106,7 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@tauri-apps/cli": "^2.11.4",
     "@types/jspdf": "^2.0.0",
     "@types/leaflet": "^1.9.21",
     "@types/node": "^20",
