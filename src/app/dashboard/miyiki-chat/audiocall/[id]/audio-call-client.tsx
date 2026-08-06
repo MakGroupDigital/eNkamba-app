@@ -341,7 +341,7 @@ export default function AudioCallClient() {
       } catch {}
 
       finalizeRemoteEnd();
-    }, 18000);
+    }, 45000);
   };
 
   const startOutgoingCall = async () => {

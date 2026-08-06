@@ -21,6 +21,7 @@ class MainActivity : TauriActivity() {
   private var webViewRef: WebView? = null
   private var pendingGoogleRequestId: String? = null
   private var pendingNotificationUrl: String? = null
+  private var pendingNativeCallAccess: String? = null
   private lateinit var googleSignInClient: GoogleSignInClient
   private lateinit var googleSignInLauncher: ActivityResultLauncher<Intent>
 
@@ -51,6 +52,7 @@ class MainActivity : TauriActivity() {
     webViewRef = webView
     webView.addJavascriptInterface(EkambaGoogleBridge(), "eNkambaNativeGoogle")
     webView.addJavascriptInterface(EnkambaPushBridge(), "eNkambaNativePush")
+    webView.addJavascriptInterface(EnkambaLaunchBridge(), "eNkambaNativeLaunch")
     consumePendingNotificationUrl()
   }
 
@@ -106,6 +108,16 @@ class MainActivity : TauriActivity() {
             resolveNativePushToken(requestId, payload)
           }
       }
+    }
+  }
+
+  inner class EnkambaLaunchBridge {
+    @JavascriptInterface
+    fun getPendingCallAccess(): String = pendingNativeCallAccess.orEmpty()
+
+    @JavascriptInterface
+    fun clearPendingCallAccess() {
+      pendingNativeCallAccess = null
     }
   }
 
@@ -187,6 +199,15 @@ class MainActivity : TauriActivity() {
       fromData.startsWith("enkamba://open/") -> fromData.removePrefix("enkamba://open")
       else -> pendingNotificationUrl
     }
+    val target = pendingNotificationUrl.orEmpty()
+    val isCallRoute = target.startsWith("/dashboard/miyiki-chat/call/") ||
+      target.startsWith("/dashboard/miyiki-chat/audiocall/")
+    if (isCallRoute) {
+      pendingNativeCallAccess = JSONObject().apply {
+        put("target", target)
+        put("expiresAt", System.currentTimeMillis() + 120000)
+      }.toString()
+    }
   }
 
   private fun consumePendingNotificationUrl() {
@@ -197,15 +218,13 @@ class MainActivity : TauriActivity() {
       target.startsWith("/dashboard/miyiki-chat/audiocall/")
 
     val script = """
-      window.setTimeout(function () {
-        if (${if (isCallRoute) "true" else "false"}) {
-          window.sessionStorage.setItem('enkamba-native-call-access', JSON.stringify({
-            target: ${JSONObject.quote(target)},
-            expiresAt: Date.now() + 120000
-          }));
-        }
-        window.location.href = ${JSONObject.quote(target)};
-      }, 250);
+      if (${if (isCallRoute) "true" else "false"}) {
+        window.sessionStorage.setItem('enkamba-native-call-access', JSON.stringify({
+          target: ${JSONObject.quote(target)},
+          expiresAt: Date.now() + 120000
+        }));
+      }
+      window.location.replace(${JSONObject.quote(target)});
     """.trimIndent()
     runOnUiThread {
       webViewRef?.post {

@@ -6,22 +6,48 @@ type NativeCallAccess = {
   expiresAt: number;
 };
 
+declare global {
+  interface Window {
+    eNkambaNativeLaunch?: {
+      getPendingCallAccess?: () => string;
+      clearPendingCallAccess?: () => void;
+    };
+  }
+}
+
 export function isCallRoute(pathname?: string | null) {
   return Boolean(pathname && CALL_ROUTE_PATTERN.test(pathname));
 }
 
-export function hasNativeCallAccess(pathname?: string | null) {
-  if (typeof window === 'undefined' || !isCallRoute(pathname)) return false;
+function parseAccess(raw?: string | null): NativeCallAccess | null {
+  if (!raw) return null;
 
   try {
-    const raw = window.sessionStorage.getItem(NATIVE_CALL_ACCESS_KEY);
     const data = raw ? (JSON.parse(raw) as NativeCallAccess) : null;
-    if (!data || data.expiresAt < Date.now()) {
-      window.sessionStorage.removeItem(NATIVE_CALL_ACCESS_KEY);
-      return false;
-    }
-    return isCallRoute(data.target);
+    if (!data || data.expiresAt < Date.now() || !isCallRoute(data.target)) return null;
+    return data;
   } catch {
-    return false;
+    return null;
   }
+}
+
+export function getNativeCallAccess(): NativeCallAccess | null {
+  if (typeof window === 'undefined') return null;
+
+  const fromSession = parseAccess(window.sessionStorage.getItem(NATIVE_CALL_ACCESS_KEY));
+  if (fromSession) return fromSession;
+
+  const fromBridge = parseAccess(window.eNkambaNativeLaunch?.getPendingCallAccess?.());
+  if (fromBridge) {
+    window.sessionStorage.setItem(NATIVE_CALL_ACCESS_KEY, JSON.stringify(fromBridge));
+    return fromBridge;
+  }
+
+  return null;
+}
+
+export function hasNativeCallAccess(pathname?: string | null) {
+  const access = getNativeCallAccess();
+  if (!access) return false;
+  return !pathname || isCallRoute(pathname) || access.target !== '';
 }

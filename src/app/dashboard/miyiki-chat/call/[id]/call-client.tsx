@@ -428,7 +428,7 @@ export default function CallClient() {
       } catch {}
 
       finalizeRemoteEnd();
-    }, 18000);
+    }, 45000);
   };
 
   const startOutgoingCall = async () => {

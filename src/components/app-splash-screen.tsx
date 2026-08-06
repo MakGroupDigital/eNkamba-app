@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react";
 
 import { ResponsiveSplashBackground } from "@/components/shared/responsive-splash-background";
+import { hasNativeCallAccess } from "@/lib/native-call-access";
 
 const SPLASH_DURATION_MS = 1800;
 const SPLASH_FADE_MS = 320;
 
 export function AppSplashScreen() {
-  const [visible, setVisible] = useState(true);
-  const [mounted, setMounted] = useState(true);
+  const [visible, setVisible] = useState(() => !hasNativeCallAccess());
+  const [mounted, setMounted] = useState(() => !hasNativeCallAccess());
 
   useEffect(() => {
     const hideTimer = window.setTimeout(() => {
