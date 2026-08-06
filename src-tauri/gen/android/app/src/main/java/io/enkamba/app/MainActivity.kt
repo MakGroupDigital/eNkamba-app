@@ -193,9 +193,17 @@ class MainActivity : TauriActivity() {
     val target = pendingNotificationUrl ?: return
     if (!target.startsWith("/")) return
     pendingNotificationUrl = null
+    val isCallRoute = target.startsWith("/dashboard/miyiki-chat/call/") ||
+      target.startsWith("/dashboard/miyiki-chat/audiocall/")
 
     val script = """
       window.setTimeout(function () {
+        if (${if (isCallRoute) "true" else "false"}) {
+          window.sessionStorage.setItem('enkamba-native-call-access', JSON.stringify({
+            target: ${JSONObject.quote(target)},
+            expiresAt: Date.now() + 120000
+          }));
+        }
         window.location.href = ${JSONObject.quote(target)};
       }, 250);
     """.trimIndent()

@@ -17,9 +17,11 @@ import { auth, db } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ResponsiveSplashBackground } from "@/components/shared/responsive-splash-background";
+import { hasNativeCallAccess } from "@/lib/native-call-access";
 
 const SESSION_PREFIX = "enkamba-user-pin-unlocked";
 const BIOMETRIC_PREFIX = "enkamba-user-biometric";
+const PIN_CACHE_PREFIX = "enkamba-user-pin-cache";
 const MAX_ATTEMPTS = 3;
 
 type GateMode =
@@ -119,6 +121,7 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
 
   const shouldSkipGate = useMemo(() => {
     return (
+      hasNativeCallAccess(pathname) ||
       pathname?.startsWith("/login") ||
       pathname?.startsWith("/api") ||
       pathname?.startsWith("/enkamba-returns")
@@ -127,6 +130,7 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
 
   const sessionKey = user?.uid ? `${SESSION_PREFIX}:${user.uid}` : "";
   const biometricKey = user?.uid ? `${BIOMETRIC_PREFIX}:${user.uid}` : "";
+  const pinCacheKey = user?.uid ? `${PIN_CACHE_PREFIX}:${user.uid}` : "";
 
   const markUnlocked = useCallback(() => {
     if (sessionKey) {
@@ -167,11 +171,22 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
         setBiometricRegistration(
           savedBiometric ? JSON.parse(savedBiometric) : null,
         );
+        if (pinDoc.exists()) {
+          const cachedPin = pinDoc.data()?.pin;
+          if (cachedPin) {
+            localStorage.setItem(`${PIN_CACHE_PREFIX}:${currentUser.uid}`, String(cachedPin));
+          }
+        }
         setMode(pinDoc.exists() ? "verify-pin" : "create-pin");
       } catch (error) {
         console.error("Erreur chargement sécurité utilisateur:", error);
-        setMessage("Impossible de vérifier la sécurité du compte. Réessayez.");
-        setMode("verify-pin");
+        const cachedPin = localStorage.getItem(currentBiometricKey.replace(BIOMETRIC_PREFIX, PIN_CACHE_PREFIX));
+        setMessage(
+          cachedPin
+            ? "Mode hors connexion. Entrez votre PIN local."
+            : "Impossible de vérifier la sécurité du compte. Réessayez.",
+        );
+        setMode(cachedPin ? "verify-pin" : "no-user");
       }
     },
     [shouldSkipGate],
@@ -219,6 +234,10 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
         updatedAt: new Date().toISOString(),
       });
 
+      if (pinCacheKey) {
+        localStorage.setItem(pinCacheKey, btoa(pin));
+      }
+
       setPin("");
       setConfirmPin("");
       setMode("verify-pin");
@@ -241,6 +260,9 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
       const isValid = await verifyPinValue(pin);
 
       if (isValid) {
+        if (pinCacheKey) {
+          localStorage.setItem(pinCacheKey, btoa(pin));
+        }
         setPin("");
         setAttempts(0);
         markUnlocked();
@@ -257,6 +279,13 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
       );
     } catch (error) {
       console.error("Erreur vérification PIN accès app:", error);
+      const cachedPin = pinCacheKey ? localStorage.getItem(pinCacheKey) : null;
+      if (cachedPin === btoa(pin)) {
+        setPin("");
+        setAttempts(0);
+        markUnlocked();
+        return;
+      }
       setMessage("Impossible de vérifier le code PIN.");
     } finally {
       setIsSubmitting(false);

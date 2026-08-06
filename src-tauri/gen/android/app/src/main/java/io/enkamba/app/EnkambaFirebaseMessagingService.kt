@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.media.AudioAttributes
+import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
@@ -50,7 +51,7 @@ class EnkambaFirebaseMessagingService : FirebaseMessagingService() {
     val largeIcon = BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher)
 
     val notificationBuilder = NotificationCompat.Builder(this, channelId)
-      .setSmallIcon(R.mipmap.ic_launcher)
+      .setSmallIcon(R.drawable.ic_notification_enkamba)
       .setLargeIcon(largeIcon)
       .setContentTitle(title)
       .setContentText(body)
@@ -108,7 +109,7 @@ class EnkambaFirebaseMessagingService : FirebaseMessagingService() {
         .addAction(android.R.drawable.ic_menu_call, "Accepter", acceptIntent)
     } else {
       notificationBuilder
-        .setSound(android.provider.Settings.System.DEFAULT_NOTIFICATION_URI)
+        .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
         .setAutoCancel(true)
     }
 
@@ -135,7 +136,7 @@ class EnkambaFirebaseMessagingService : FirebaseMessagingService() {
       enableVibration(true)
       vibrationPattern = if (isCall) longArrayOf(0, 300, 150, 300, 150, 500) else longArrayOf(0, 180)
       setSound(
-        android.provider.Settings.System.DEFAULT_NOTIFICATION_URI,
+        RingtoneManager.getDefaultUri(if (isCall) RingtoneManager.TYPE_RINGTONE else RingtoneManager.TYPE_NOTIFICATION),
         AudioAttributes.Builder()
           .setUsage(if (isCall) AudioAttributes.USAGE_NOTIFICATION_RINGTONE else AudioAttributes.USAGE_NOTIFICATION)
           .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
@@ -156,7 +157,7 @@ class EnkambaFirebaseMessagingService : FirebaseMessagingService() {
   }
 
   companion object {
-    const val CALL_CHANNEL_ID = "enkamba_calls"
-    const val GENERAL_CHANNEL_ID = "enkamba_general"
+    const val CALL_CHANNEL_ID = "enkamba_calls_v2"
+    const val GENERAL_CHANNEL_ID = "enkamba_messages_v2"
   }
 }

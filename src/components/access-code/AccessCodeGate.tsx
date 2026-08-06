@@ -2,15 +2,22 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 import { useAccessCode } from '@/hooks/useAccessCode';
 import { Loader2, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 import { ResponsiveSplashBackground } from '@/components/shared/responsive-splash-background';
+import { hasNativeCallAccess } from '@/lib/native-call-access';
 
 export function AccessCodeGate({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
   const { isVerified, isLoading, error, verifyCode } = useAccessCode();
   const [code, setCode] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCode, setShowCode] = useState(false);
+
+  if (hasNativeCallAccess(pathname)) {
+    return <>{children}</>;
+  }
 
   if (isLoading) {
     return (
