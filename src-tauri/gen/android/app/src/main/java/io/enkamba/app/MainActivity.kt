@@ -179,9 +179,11 @@ class MainActivity : TauriActivity() {
 
   private fun captureNotificationIntent(intent: Intent?) {
     val fromExtra = intent?.getStringExtra("enkamba_action_url").orEmpty()
+    val fromActionUrl = intent?.getStringExtra("actionUrl").orEmpty()
     val fromData = intent?.data?.toString().orEmpty()
     pendingNotificationUrl = when {
       fromExtra.startsWith("/") -> fromExtra
+      fromActionUrl.startsWith("/") -> fromActionUrl
       fromData.startsWith("enkamba://open/") -> fromData.removePrefix("enkamba://open")
       else -> pendingNotificationUrl
     }

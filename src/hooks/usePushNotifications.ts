@@ -22,11 +22,17 @@ declare global {
 
 async function saveToken(token: string, platform: PushPlatform) {
   if (!token) return;
-  try {
-    await savePushTokenFn({ token, platform });
-  } catch (error) {
-    console.error('Erreur enregistrement token push:', error);
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      await savePushTokenFn({ token, platform });
+      return;
+    } catch (error) {
+      lastError = error;
+      await new Promise((resolve) => window.setTimeout(resolve, attempt * 900));
+    }
   }
+  console.error('Erreur enregistrement token push:', lastError);
 }
 
 async function setupWebPush() {
@@ -183,11 +189,11 @@ async function setupTauriAndroidPush() {
 
 export function usePushNotifications() {
   const { user } = useAuth();
-  const initializedRef = useRef(false);
+  const initializedUserRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!user || initializedRef.current) return;
-    initializedRef.current = true;
+    if (!user || initializedUserRef.current === user.uid) return;
+    initializedUserRef.current = user.uid;
 
     let cleanup: undefined | (() => void | Promise<void>);
     (async () => {
@@ -200,6 +206,7 @@ export function usePushNotifications() {
       const isNative = Boolean((window as any)?.Capacitor?.isNativePlatform?.());
       cleanup = isNative ? await setupNativePush() : await setupWebPush();
     })().catch((error) => {
+      initializedUserRef.current = null;
       console.error('Initialisation push échouée:', error);
     });
 

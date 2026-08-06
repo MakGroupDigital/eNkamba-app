@@ -131,16 +131,27 @@ exports.onUserNotificationCreated = functions.firestore
     await relayToSupabase(userId, notificationId, notif);
     const tokensSnap = await db.collection('users').doc(userId).collection('pushTokens').get();
     const tokenDocs = tokensSnap.docs.filter((doc) => Boolean(doc.data().token));
-    const tokens = tokenDocs.map((doc) => String(doc.data().token));
-    if (!tokens.length) {
+    const tokenRecords = tokenDocs.map((doc) => {
+        const data = doc.data();
+        return {
+            ref: doc.ref,
+            token: String(data.token),
+            platform: String(data.platform || 'web'),
+        };
+    });
+    if (!tokenRecords.length) {
         return null;
     }
     const title = String(notif.title || 'eNkamba');
     const body = String(notif.message || 'Vous avez une nouvelle notification');
     const actionUrl = String(notif.actionUrl || '/dashboard');
+    const notificationType = String(notif.type || 'system');
+    const isCallNotification = notificationType === 'incoming_call';
     const dataPayload = {
         notificationId,
-        type: String(notif.type || 'system'),
+        type: notificationType,
+        title,
+        body,
         actionUrl,
     };
     if (notif.transactionId) {
@@ -149,40 +160,78 @@ exports.onUserNotificationCreated = functions.firestore
     if (notif.requestId) {
         dataPayload.requestId = String(notif.requestId);
     }
-    const sendResult = await admin.messaging().sendEachForMulticast({
-        tokens,
-        notification: { title, body },
-        data: dataPayload,
-        android: {
-            priority: 'high',
-            notification: {
-                channelId: 'enkamba_general',
-            },
-        },
-        webpush: {
-            headers: { Urgency: 'high' },
-            fcmOptions: actionUrl.startsWith('http') ? { link: actionUrl } : undefined,
-            notification: {
-                title,
-                body,
-                icon: '/enkamba-logo.png',
-                badge: '/favicon.png',
-                data: { actionUrl },
-            },
-        },
-    });
+    if (notif.callId) {
+        dataPayload.callId = String(notif.callId);
+    }
+    if (notif.callType) {
+        dataPayload.callType = String(notif.callType);
+    }
+    if (notif.conversationId) {
+        dataPayload.conversationId = String(notif.conversationId);
+    }
     const invalidCodes = new Set([
         'messaging/registration-token-not-registered',
         'messaging/invalid-registration-token',
     ]);
     const cleanupTasks = [];
-    sendResult.responses.forEach((response, index) => {
-        if (response.success || !response.error)
+    const sendToRecords = async (records, message) => {
+        if (!records.length)
             return;
-        if (!invalidCodes.has(response.error.code))
-            return;
-        cleanupTasks.push(tokenDocs[index].ref.delete());
-    });
+        const sendResult = await admin.messaging().sendEachForMulticast({
+            tokens: records.map((record) => record.token),
+            ...message,
+        });
+        sendResult.responses.forEach((response, index) => {
+            if (response.success || !response.error)
+                return;
+            if (!invalidCodes.has(response.error.code))
+                return;
+            cleanupTasks.push(records[index].ref.delete());
+        });
+    };
+    const androidRecords = tokenRecords.filter((record) => record.platform === 'android');
+    const iosRecords = tokenRecords.filter((record) => record.platform === 'ios');
+    const webRecords = tokenRecords.filter((record) => record.platform !== 'android' && record.platform !== 'ios');
+    await Promise.all([
+        sendToRecords(androidRecords, {
+            data: dataPayload,
+            android: {
+                priority: 'high',
+            },
+        }),
+        sendToRecords(iosRecords, {
+            notification: { title, body },
+            data: dataPayload,
+            apns: {
+                headers: {
+                    'apns-priority': '10',
+                },
+                payload: {
+                    aps: {
+                        sound: 'default',
+                        contentAvailable: true,
+                    },
+                },
+            },
+        }),
+        sendToRecords(webRecords, {
+            notification: { title, body },
+            data: dataPayload,
+            webpush: {
+                headers: { Urgency: 'high' },
+                fcmOptions: actionUrl.startsWith('http') ? { link: actionUrl } : undefined,
+                notification: {
+                    title,
+                    body,
+                    icon: '/enkamba-logo.png',
+                    badge: '/favicon.png',
+                    data: { actionUrl },
+                    requireInteraction: isCallNotification,
+                    vibrate: isCallNotification ? [300, 150, 300, 150, 300] : undefined,
+                },
+            },
+        }),
+    ]);
     if (cleanupTasks.length) {
         await Promise.all(cleanupTasks);
     }
