@@ -12,6 +12,7 @@ import { useFirestoreConversations } from '@/hooks/useFirestoreConversations';
 import { useCallFeedback } from '@/hooks/useCallFeedback';
 import { attachRemoteStream, closePeerResources, getRtcConfiguration, hasTurnServerConfigured } from '@/lib/webrtc';
 import { enkambaRealtime } from '@/lib/realtime-client';
+import { clearNativeCallAccess } from '@/lib/native-call-access';
 import {
   addDoc,
   collection,
@@ -45,6 +46,7 @@ export default function CallClient() {
   const searchParams = useSearchParams();
   const conversationId = (params?.id as string) || '';
   const incomingCallId = searchParams?.get('callId') || '';
+  const nativeAccepted = searchParams?.get('nativeAccepted') === '1';
   const { user } = useAuth();
   const { sendMessage } = useFirestoreConversations();
   const { toast } = useToast();
@@ -596,6 +598,9 @@ export default function CallClient() {
 
     if (isIncoming) {
       if (!incomingCallId || callStatus !== 'init') return;
+      if (nativeAccepted) {
+        window.setTimeout(() => clearNativeCallAccess(), 1200);
+      }
       void joinIncomingCall(incomingCallId).catch((error) => {
         console.error(error);
         toast({ variant: 'destructive', title: 'Appel impossible', description: "Impossible de rejoindre l'appel." });
@@ -610,7 +615,7 @@ export default function CallClient() {
       toast({ variant: 'destructive', title: 'Appel impossible', description: "Impossible de demarrer l'appel." });
       setCallStatus('ended');
     });
-  }, [callStatus, contact, conversationId, hasPermission, incomingCallId, isIncoming, toast, user?.uid]);
+  }, [callStatus, contact, conversationId, hasPermission, incomingCallId, isIncoming, nativeAccepted, toast, user?.uid]);
 
   const handleEndCall = async () => {
     try {

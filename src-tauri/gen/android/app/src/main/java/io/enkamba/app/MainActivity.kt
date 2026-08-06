@@ -214,14 +214,15 @@ class MainActivity : TauriActivity() {
     val target = pendingNotificationUrl ?: return
     if (!target.startsWith("/")) return
     pendingNotificationUrl = null
-    val destination = "https://www.enkamba.io$target"
     val isCallRoute = target.startsWith("/dashboard/miyiki-chat/call/") ||
       target.startsWith("/dashboard/miyiki-chat/audiocall/")
+    val targetWithNativeState = if (isCallRoute) appendQueryParam(target, "nativeAccepted", "1") else target
+    val destination = "https://www.enkamba.io$targetWithNativeState"
 
     val script = """
       if (${if (isCallRoute) "true" else "false"}) {
         window.sessionStorage.setItem('enkamba-native-call-access', JSON.stringify({
-          target: ${JSONObject.quote(target)},
+          target: ${JSONObject.quote(targetWithNativeState)},
           expiresAt: Date.now() + 120000
         }));
       }
@@ -232,6 +233,11 @@ class MainActivity : TauriActivity() {
         webViewRef?.evaluateJavascript(script, null)
       }
     }
+  }
+
+  private fun appendQueryParam(path: String, key: String, value: String): String {
+    val separator = if (path.contains("?")) "&" else "?"
+    return "$path$separator$key=$value"
   }
 
   private fun requestNotificationPermissionIfNeeded() {

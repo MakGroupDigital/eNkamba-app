@@ -8,6 +8,7 @@ import { Phone, PhoneOff, Video } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useCallFeedback } from '@/hooks/useCallFeedback';
 import { db } from '@/lib/firebase';
+import { getNativeAcceptedCallId } from '@/lib/native-call-access';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 
@@ -48,6 +49,7 @@ export function GlobalCallOverlay() {
           const data: any = callDoc.data() || {};
           if (data.status !== 'ringing') return null;
           if (!data.conversationId || !data.fromUid) return null;
+          if (getNativeAcceptedCallId() === callDoc.id) return null;
 
           let fromName = 'Appel entrant';
           let fromAvatar = '';

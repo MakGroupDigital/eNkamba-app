@@ -12,6 +12,7 @@ import { GlobalAutoTranslator } from "@/components/translation/GlobalAutoTransla
 import { UserPinAccessGate } from "@/components/security/UserPinAccessGate";
 import { AdminTelemetryAgent } from "@/components/admin/admin-telemetry-agent";
 import { AppSplashScreen } from "@/components/app-splash-screen";
+import { AppServiceWorkerRegistrar } from "@/components/app-service-worker-registrar";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://enkamba.app"),
@@ -83,6 +84,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AppSplashScreen />
+          <AppServiceWorkerRegistrar />
           <CurrencyInitializer />
           <UserPinAccessGate>
             <AccessCodeGate>

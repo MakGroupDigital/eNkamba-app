@@ -330,9 +330,9 @@
             </button>
           </div>
 
-          <h1 class="headline">Votre espace reste accessible.</h1>
+          <h1 class="headline">eNkamba se prepare.</h1>
           <p class="sub">
-            L'application affiche une version locale quand le serveur ou Internet est indisponible, puis revient automatiquement sur vos donnees en ligne.
+            Nous ouvrons votre espace prioritaire. Si le reseau est absent, les pages deja consultees restent disponibles en lecture.
           </p>
 
           <div class="actions">
@@ -346,7 +346,7 @@
           <div>
             <strong>Mode hors connexion</strong>
             <p>
-              Les interfaces principales restent visibles. Les paiements, appels, messages, synchronisations et donnees temps reel reprendront avec Internet.
+              Les pages deja ouvertes en ligne restent disponibles. Les paiements, appels, messages et synchronisations reprendront avec Internet.
             </p>
           </div>
         </div>
@@ -391,7 +391,7 @@
         </section>
 
         <div class="footer" id="footerText">
-          La reprise en ligne est automatique. Gardez l'application ouverte si vous attendez un appel ou une notification.
+          eNkamba reprend automatiquement le dernier espace utile des que la connexion est disponible.
         </div>
       </section>
     </main>
@@ -407,6 +407,20 @@
         const statusButton = document.getElementById("statusButton");
         const forceOffline = new URLSearchParams(window.location.search).get("offline") === "1";
         let stayOffline = forceOffline;
+
+        function getNativeCallTarget() {
+          try {
+            const raw = window.eNkambaNativeLaunch?.getPendingCallAccess?.();
+            if (!raw) return "";
+            const payload = JSON.parse(raw);
+            if (!payload || payload.expiresAt < Date.now()) return "";
+            const target = String(payload.target || "");
+            if (!target.startsWith("/dashboard/miyiki-chat/")) return "";
+            return target;
+          } catch (_) {
+            return "";
+          }
+        }
 
         function setStatus() {
           const online = window.navigator.onLine;
@@ -428,6 +442,11 @@
 
         function maybeOpenOnline() {
           setStatus();
+          const nativeCallTarget = getNativeCallTarget();
+          if (nativeCallTarget && window.navigator.onLine) {
+            openOnline(nativeCallTarget);
+            return;
+          }
           if (window.navigator.onLine && !stayOffline) {
             window.setTimeout(function () {
               openOnline("/");

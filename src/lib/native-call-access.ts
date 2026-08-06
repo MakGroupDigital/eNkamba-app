@@ -51,3 +51,22 @@ export function hasNativeCallAccess(pathname?: string | null) {
   if (!access) return false;
   return !pathname || isCallRoute(pathname) || access.target !== '';
 }
+
+export function getNativeAcceptedCallId(): string | null {
+  const access = getNativeCallAccess();
+  if (!access?.target) return null;
+
+  try {
+    const url = new URL(access.target, 'https://www.enkamba.io');
+    if (url.searchParams.get('nativeAccepted') !== '1') return null;
+    return url.searchParams.get('callId');
+  } catch {
+    return null;
+  }
+}
+
+export function clearNativeCallAccess() {
+  if (typeof window === 'undefined') return;
+  window.sessionStorage.removeItem(NATIVE_CALL_ACCESS_KEY);
+  window.eNkambaNativeLaunch?.clearPendingCallAccess?.();
+}

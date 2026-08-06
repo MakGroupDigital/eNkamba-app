@@ -211,7 +211,7 @@ export default function OnboardingPage() {
   const IconComponent = currentSlideData.icon;
   const Decoration0 = currentSlideData.decorations[0].icon;
   const Decoration1 = currentSlideData.decorations[1].icon;
-  const Decoration2 = currentSlideData.decorations[2].icon;
+  const Decoration2 = currentSlideData.decorations[2]?.icon || currentSlideData.decorations[0].icon;
 
   return (
     <div
