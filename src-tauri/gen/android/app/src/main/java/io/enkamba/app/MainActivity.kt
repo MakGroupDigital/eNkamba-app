@@ -214,6 +214,7 @@ class MainActivity : TauriActivity() {
     val target = pendingNotificationUrl ?: return
     if (!target.startsWith("/")) return
     pendingNotificationUrl = null
+    val destination = "https://www.enkamba.io$target"
     val isCallRoute = target.startsWith("/dashboard/miyiki-chat/call/") ||
       target.startsWith("/dashboard/miyiki-chat/audiocall/")
 
@@ -224,7 +225,7 @@ class MainActivity : TauriActivity() {
           expiresAt: Date.now() + 120000
         }));
       }
-      window.location.replace(${JSONObject.quote(target)});
+      window.location.replace(${JSONObject.quote(destination)});
     """.trimIndent()
     runOnUiThread {
       webViewRef?.post {
