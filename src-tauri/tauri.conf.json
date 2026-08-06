@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "eNkamba",
-  "version": "1.3.5",
+  "version": "1.3.6",
   "identifier": "io.enkamba.app",
   "build": {
     "frontendDist": "../tauri-dist",
@@ -35,7 +35,7 @@
     ],
     "android": {
       "minSdkVersion": 24,
-      "versionCode": 11,
+      "versionCode": 12,
       "debugApplicationIdSuffix": ".debug"
     }
   }

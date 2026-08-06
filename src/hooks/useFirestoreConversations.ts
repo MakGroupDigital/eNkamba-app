@@ -328,6 +328,42 @@ export function useFirestoreConversations() {
             [`lastReadAtByUid.${currentUser.uid}`]: serverTimestamp(),
             ...unreadUpdates,
           });
+
+          if (messageType !== 'call' && recipientIds.length > 0) {
+            const senderName = currentUser.displayName || currentUser.email || 'Un contact';
+            const notificationMessage =
+              messageType === 'text'
+                ? messagePreview
+                : messageType === 'voice'
+                  ? 'Message vocal'
+                  : messageType === 'video'
+                    ? 'Vidéo reçue'
+                    : messageType === 'file'
+                      ? 'Fichier reçu'
+                      : messageType === 'location'
+                        ? 'Localisation partagée'
+                        : messageType === 'money'
+                          ? 'Transaction envoyée'
+                          : messagePreview;
+
+            await Promise.all(
+              recipientIds.map((recipientId) =>
+                addDoc(collection(db, 'users', recipientId, 'notifications'), {
+                  type: 'chat_message',
+                  title: senderName,
+                  message: notificationMessage,
+                  actionUrl: `/dashboard/miyiki-chat/${conversationId}`,
+                  read: false,
+                  senderId: currentUser.uid,
+                  senderName,
+                  conversationId,
+                  messageType,
+                  timestamp: serverTimestamp(),
+                  createdAt: serverTimestamp(),
+                } as any)
+              )
+            );
+          }
         } catch (updateErr) {
           console.warn('Mise à jour conversation (non critique):', updateErr);
         }

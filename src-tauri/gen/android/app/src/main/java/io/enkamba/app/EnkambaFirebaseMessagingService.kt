@@ -5,6 +5,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.media.AudioAttributes
 import android.net.Uri
 import android.os.Build
@@ -31,9 +32,13 @@ class EnkambaFirebaseMessagingService : FirebaseMessagingService() {
       ?: if (isCall) "Appel entrant" else "Nouvelle notification"
 
     val actionUrl = data["actionUrl"].orEmpty()
+    val callId = data["callId"].orEmpty()
+    val callType = data["callType"].orEmpty()
+    val notificationId = if (isCall && callId.isNotBlank()) callId.hashCode() else System.currentTimeMillis().toInt()
     val intent = Intent(this, MainActivity::class.java).apply {
       flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
       putExtra("enkamba_action_url", actionUrl)
+      putExtra("actionUrl", actionUrl)
       if (actionUrl.startsWith("/")) {
         setData(Uri.parse("enkamba://open$actionUrl"))
       }
@@ -41,10 +46,12 @@ class EnkambaFirebaseMessagingService : FirebaseMessagingService() {
 
     val pendingIntentFlags = PendingIntent.FLAG_UPDATE_CURRENT or
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
-    val pendingIntent = PendingIntent.getActivity(this, 7301, intent, pendingIntentFlags)
+    val pendingIntent = PendingIntent.getActivity(this, notificationId, intent, pendingIntentFlags)
+    val largeIcon = BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher)
 
-    val notification = NotificationCompat.Builder(this, channelId)
+    val notificationBuilder = NotificationCompat.Builder(this, channelId)
       .setSmallIcon(R.mipmap.ic_launcher)
+      .setLargeIcon(largeIcon)
       .setContentTitle(title)
       .setContentText(body)
       .setStyle(NotificationCompat.BigTextStyle().bigText(body))
@@ -53,11 +60,60 @@ class EnkambaFirebaseMessagingService : FirebaseMessagingService() {
       .setPriority(if (isCall) NotificationCompat.PRIORITY_MAX else NotificationCompat.PRIORITY_HIGH)
       .setCategory(if (isCall) NotificationCompat.CATEGORY_CALL else NotificationCompat.CATEGORY_MESSAGE)
       .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-      .setVibrate(if (isCall) longArrayOf(0, 300, 150, 300, 150, 500) else longArrayOf(0, 180))
-      .build()
+      .setColor(0xFF0A8B46.toInt())
+      .setVibrate(if (isCall) longArrayOf(0, 300, 150, 300, 150, 500) else longArrayOf(0, 180, 80, 180))
+
+    if (isCall) {
+      val callScreenIntent = Intent(this, IncomingCallActivity::class.java).apply {
+        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+        putExtra("title", title)
+        putExtra("body", body)
+        putExtra("actionUrl", actionUrl)
+        putExtra("callId", callId)
+        putExtra("callType", callType)
+        putExtra("notificationId", notificationId)
+      }
+      val fullScreenIntent = PendingIntent.getActivity(
+        this,
+        notificationId + 101,
+        callScreenIntent,
+        pendingIntentFlags
+      )
+      val acceptIntent = PendingIntent.getBroadcast(
+        this,
+        notificationId + 201,
+        callActionIntent(IncomingCallActionReceiver.ACTION_ACCEPT_CALL, actionUrl, callId, notificationId),
+        pendingIntentFlags
+      )
+      val declineIntent = PendingIntent.getBroadcast(
+        this,
+        notificationId + 202,
+        callActionIntent(IncomingCallActionReceiver.ACTION_DECLINE_CALL, actionUrl, callId, notificationId),
+        pendingIntentFlags
+      )
+      val busyIntent = PendingIntent.getBroadcast(
+        this,
+        notificationId + 203,
+        callActionIntent(IncomingCallActionReceiver.ACTION_BUSY_CALL, actionUrl, callId, notificationId),
+        pendingIntentFlags
+      )
+
+      notificationBuilder
+        .setFullScreenIntent(fullScreenIntent, true)
+        .setOngoing(true)
+        .setTimeoutAfter(60000)
+        .setColorized(true)
+        .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Refuser", declineIntent)
+        .addAction(android.R.drawable.ic_dialog_alert, "Occupé", busyIntent)
+        .addAction(android.R.drawable.ic_menu_call, "Accepter", acceptIntent)
+    } else {
+      notificationBuilder
+        .setSound(android.provider.Settings.System.DEFAULT_NOTIFICATION_URI)
+        .setAutoCancel(true)
+    }
 
     val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-    notificationManager.notify(data["callId"]?.hashCode() ?: System.currentTimeMillis().toInt(), notification)
+    notificationManager.notify(notificationId, notificationBuilder.build())
   }
 
   override fun onNewToken(token: String) {
@@ -88,6 +144,15 @@ class EnkambaFirebaseMessagingService : FirebaseMessagingService() {
     }
 
     notificationManager.createNotificationChannel(channel)
+  }
+
+  private fun callActionIntent(action: String, actionUrl: String, callId: String, notificationId: Int): Intent {
+    return Intent(this, IncomingCallActionReceiver::class.java).apply {
+      this.action = action
+      putExtra("actionUrl", actionUrl)
+      putExtra("callId", callId)
+      putExtra("notificationId", notificationId)
+    }
   }
 
   companion object {
