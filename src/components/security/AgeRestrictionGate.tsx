@@ -7,6 +7,9 @@ import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { calculateAgeFromDateOfBirth, isUnderMinimumAge } from '@/lib/age-policy';
+import { isEnkambaNativeRuntime } from '@/lib/native-runtime';
+
+const NATIVE_PROFILE_COMPLETED_PREFIX = 'enkamba-native-profile-completed';
 
 export function AgeRestrictionGate({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -39,6 +42,14 @@ export function AgeRestrictionGate({ children }: { children: React.ReactNode }) 
     const hasUsableName = Boolean((profile.fullName || profile.displayName || profile.name || '').trim());
     const hasUsername = Boolean((profile.username || '').trim());
     const hasContactEmail = Boolean((profile.email || user.email || '').trim());
+    const isNativeRuntime = isEnkambaNativeRuntime();
+    const nativeProfileCompleted = Boolean(
+      profile.profileCompleted ||
+      (typeof window !== 'undefined' &&
+        window.localStorage.getItem(`${NATIVE_PROFILE_COMPLETED_PREFIX}:${user.uid}`) === 'true')
+    );
+
+    if (isNativeRuntime && nativeProfileCompleted) return;
 
     if (isPhoneAccount && (!hasUsableName || !hasUsername || !hasContactEmail)) {
       router.replace('/complete-profile');

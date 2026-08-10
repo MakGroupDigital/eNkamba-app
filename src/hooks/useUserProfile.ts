@@ -20,6 +20,7 @@ export interface UserProfile {
   locationLabel?: string;
   ageRestrictionStatus?: string;
   ageRestrictionReason?: string;
+  profileCompleted?: boolean;
   profileImage?: string;
   photoURL?: string;
   kycStatus?: string;
@@ -140,6 +141,7 @@ export function useUserProfile() {
                 locationLabel: updatedData?.locationLabel,
                 ageRestrictionStatus: updatedData?.ageRestrictionStatus,
                 ageRestrictionReason: updatedData?.ageRestrictionReason,
+                profileCompleted: Boolean(updatedData?.profileCompleted),
                 profileImage: updatedData?.profileImage || user.photoURL || undefined,
                 kycStatus: updatedData?.kycStatus,
                 kycCompletedAt: updatedData?.kycCompletedAt,
@@ -167,6 +169,7 @@ export function useUserProfile() {
                 locationLabel: userData.locationLabel,
                 ageRestrictionStatus: userData.ageRestrictionStatus,
                 ageRestrictionReason: userData.ageRestrictionReason,
+                profileCompleted: Boolean(userData.profileCompleted),
                 profileImage: userData.profileImage || user.photoURL || undefined,
                 kycStatus: userData.kycStatus,
                 kycCompletedAt: userData.kycCompletedAt,

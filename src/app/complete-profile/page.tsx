@@ -16,6 +16,9 @@ import { ProfilePhotoCropper } from '@/components/profile/profile-photo-cropper'
 import { auth } from '@/lib/firebase';
 import { getDashboardLocationOrDefault } from '@/lib/dashboard-location';
 import { ENKAMBA_MINIMUM_AGE, calculateAgeFromDateOfBirth } from '@/lib/age-policy';
+import { isEnkambaNativeRuntime } from '@/lib/native-runtime';
+
+const NATIVE_PROFILE_COMPLETED_PREFIX = 'enkamba-native-profile-completed';
 
 export default function CompleteProfilePage() {
   const router = useRouter();
@@ -54,6 +57,9 @@ export default function CompleteProfilePage() {
         const username = data.username || data.name || '';
 
         if (data.profileCompleted && fullName && username) {
+          if (isEnkambaNativeRuntime()) {
+            localStorage.setItem(`${NATIVE_PROFILE_COMPLETED_PREFIX}:${user.uid}`, 'true');
+          }
           router.replace('/dashboard/miyiki-chat');
           return;
         }
@@ -241,6 +247,10 @@ export default function CompleteProfilePage() {
           phone: form.phone.trim(),
           ...(nextProfileImage ? { profileImage: nextProfileImage, photoURL: nextProfileImage } : {}),
         }));
+      }
+
+      if (isEnkambaNativeRuntime()) {
+        localStorage.setItem(`${NATIVE_PROFILE_COMPLETED_PREFIX}:${user.uid}`, 'true');
       }
 
       toast({
