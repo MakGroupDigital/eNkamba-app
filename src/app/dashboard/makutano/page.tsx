@@ -49,6 +49,7 @@ interface Post {
   text: string;
   mediaUrl: string;
   mediaType: 'image' | 'video' | 'audio';
+  mediaItems?: Array<{ url: string; type: 'image' | 'video' | 'audio' }>;
   likes: number;
   comments: number;
   isLiked: boolean;
@@ -427,6 +428,69 @@ function MakutanoVideoPlayer({ src, isActive = false }: { src: string; isActive?
   );
 }
 
+function MakutanoMediaStage({
+  post,
+  isActive,
+  onFullscreen,
+}: {
+  post: Post;
+  isActive: boolean;
+  onFullscreen: (media: FullscreenMedia) => void;
+}) {
+  const mediaItems = post.mediaItems?.length
+    ? post.mediaItems
+    : post.mediaUrl
+      ? [{ url: post.mediaUrl, type: post.mediaType }]
+      : [];
+
+  if (mediaItems.length === 0) {
+    return (
+      <div className="flex h-[min(56dvh,420px)] w-full items-center justify-center bg-primary/10">
+        <p className="text-sm font-medium text-[#009058]">Média indisponible</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative overflow-hidden bg-slate-950">
+      <div className="flex snap-x snap-mandatory overflow-x-auto overscroll-x-contain scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {mediaItems.map((media, index) => (
+          <div key={`${media.url}-${index}`} className="relative h-[min(56dvh,430px)] w-full shrink-0 snap-center bg-slate-950 sm:h-[min(62dvh,520px)]">
+            {media.type === 'audio' ? (
+              <MakutanoAudioPlayer src={media.url} isActive={isActive && index === 0} />
+            ) : media.type === 'video' ? (
+              <MakutanoVideoPlayer src={media.url} isActive={isActive && index === 0} />
+            ) : (
+              <img
+                src={media.url}
+                alt={post.text || `Publication ${index + 1}`}
+                className="h-full w-full object-contain"
+                loading="lazy"
+                draggable={false}
+              />
+            )}
+            <button
+              type="button"
+              onClick={() => onFullscreen({ src: media.url, type: media.type, label: post.text || `Publication de ${post.author.name}` })}
+              className="absolute right-3 top-3 rounded-full bg-black/55 px-3 py-1.5 text-xs font-bold text-white shadow-lg backdrop-blur transition hover:bg-black/70"
+              aria-label="Afficher en plein écran"
+            >
+              Plein écran
+            </button>
+          </div>
+        ))}
+      </div>
+      {mediaItems.length > 1 && (
+        <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5 rounded-full bg-black/45 px-2 py-1.5 backdrop-blur">
+          {mediaItems.map((_, index) => (
+            <span key={index} className="h-1.5 w-1.5 rounded-full bg-white/90" />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function MakutanoPage() {
   const { toast } = useToast();
   const router = useRouter();
@@ -760,7 +824,18 @@ export default function MakutanoPage() {
       (snapshot) => {
         const loadedPosts: Post[] = snapshot.docs.map((docSnapshot) => {
           const data = docSnapshot.data() as any;
-          const mediaUrl = data.mediaUrl || data.image || '';
+          const rawMediaItems = Array.isArray(data.mediaItems) ? data.mediaItems : [];
+          const normalizedMediaItems = rawMediaItems
+            .map((item: any) => {
+              const url = String(item?.url || item?.secureUrl || item?.mediaUrl || '').trim();
+              if (!url) return null;
+              const type = item?.type === 'video' || item?.type === 'audio' || item?.type === 'image'
+                ? item.type
+                : inferMediaType(url);
+              return { url, type };
+            })
+            .filter(Boolean) as Array<{ url: string; type: 'image' | 'video' | 'audio' }>;
+          const mediaUrl = data.mediaUrl || data.image || normalizedMediaItems[0]?.url || '';
           const category = postCategories.includes(data.category) ? data.category : 'Accueil';
 
           return {
@@ -774,7 +849,8 @@ export default function MakutanoPage() {
             authorId: data.authorId || data.author?.id || '',
             text: data.text || data.caption || '',
             mediaUrl,
-            mediaType: data.mediaType || inferMediaType(mediaUrl),
+            mediaType: data.mediaType || normalizedMediaItems[0]?.type || inferMediaType(mediaUrl),
+            mediaItems: normalizedMediaItems.length ? normalizedMediaItems : undefined,
             likes: Number(data.likes || 0),
             comments: Number(data.comments || 0),
             isLiked: false,
@@ -927,7 +1003,12 @@ export default function MakutanoPage() {
         if (!postId) return;
 
         const post = filteredPosts.find((item) => item.id === postId);
-        if (!post?.mediaUrl || (post.mediaType !== 'audio' && post.mediaType !== 'video')) {
+        const firstPlayable = post?.mediaItems?.find((item) => item.type === 'audio' || item.type === 'video');
+        if (!post?.mediaUrl && !firstPlayable) {
+          setActiveMediaPostId(null);
+          return;
+        }
+        if (!firstPlayable && post?.mediaType !== 'audio' && post?.mediaType !== 'video') {
           setActiveMediaPostId(null);
           return;
         }
@@ -1209,8 +1290,8 @@ export default function MakutanoPage() {
       if (!feed) return;
 
       const nextHidden = topChromeHiddenRef.current
-        ? feed.scrollTop > 48
-        : feed.scrollTop > 140;
+        ? feed.scrollTop > 120
+        : feed.scrollTop > 280;
 
       if (nextHidden !== topChromeHiddenRef.current) {
         topChromeHiddenRef.current = nextHidden;
@@ -1230,8 +1311,8 @@ export default function MakutanoPage() {
     <div className="flex h-[calc(100dvh-2.5rem)] min-h-0 flex-col overflow-hidden bg-[#f5f7f6]">
       <div
         className={cn(
-          'relative z-50 w-full overflow-hidden bg-white/0 transition-[max-height,opacity,transform] duration-300 ease-out',
-          isTopChromeHidden ? 'max-h-0 -translate-y-6 opacity-0' : 'max-h-[18rem] translate-y-0 opacity-100'
+          'relative z-50 w-full shrink-0 overflow-hidden bg-white/0 transition-[opacity,transform] duration-200 ease-out',
+          isTopChromeHidden ? 'pointer-events-none absolute inset-x-0 top-0 -translate-y-full opacity-0' : 'translate-y-0 opacity-100'
         )}
       >
       <header className="w-full bg-transparent px-3 pt-[calc(env(safe-area-inset-top)+0.65rem)]">
@@ -1415,7 +1496,7 @@ export default function MakutanoPage() {
       <main
         ref={mainFeedRef}
         onScroll={handleFeedScroll}
-        className="min-h-0 flex-1 overflow-y-auto overscroll-contain scroll-auto bg-[#f5f7f6] px-0 pb-24 pt-3 [-webkit-overflow-scrolling:touch] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] sm:px-4"
+        className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain scroll-auto bg-[#f5f7f6] px-0 pb-24 pt-2 [-webkit-overflow-scrolling:touch] [touch-action:pan-y] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] sm:px-4"
       >
         {isLoadingPosts ? (
           <div className="flex h-full items-center justify-center text-muted-foreground">
@@ -1426,7 +1507,7 @@ export default function MakutanoPage() {
             <p className="text-sm">Préparation des recommandations...</p>
           </div>
         ) : (
-          <div className="mx-auto max-w-xl space-y-3 sm:space-y-4">
+          <div className="mx-auto max-w-xl space-y-2.5 sm:space-y-3">
             {feedItems.map((item) => {
               if (item.type === 'people') {
                 return (
@@ -1595,40 +1676,11 @@ export default function MakutanoPage() {
                 </div>
 
                 {/* Média */}
-                <div className="relative overflow-hidden bg-slate-950">
-                  {post.mediaUrl ? (
-                    post.mediaType === 'audio' ? (
-                      <div className="aspect-[4/5] max-h-[68dvh] w-full">
-                        <MakutanoAudioPlayer src={post.mediaUrl} isActive={activeMediaPostId === post.id} />
-                      </div>
-                    ) : post.mediaType === 'video' ? (
-                      <div className="aspect-[4/5] max-h-[68dvh] w-full sm:aspect-video">
-                        <MakutanoVideoPlayer src={post.mediaUrl} isActive={activeMediaPostId === post.id} />
-                      </div>
-                    ) : (
-                      <img
-                        src={post.mediaUrl}
-                        alt={post.text}
-                        className="max-h-[68dvh] w-full bg-slate-950 object-contain"
-                        loading="lazy"
-                      />
-                    )
-                  ) : (
-                    <div className="flex h-72 w-full items-center justify-center bg-primary/10">
-                      <p className="text-sm font-medium text-[#009058]">Média indisponible</p>
-                    </div>
-                  )}
-                  {post.mediaUrl && (
-                    <button
-                      type="button"
-                      onClick={() => openFullscreenMedia({ src: post.mediaUrl, type: post.mediaType, label: post.text || `Publication de ${post.author.name}` })}
-                      className="absolute right-3 top-3 rounded-full bg-black/55 px-3 py-1.5 text-xs font-bold text-white shadow-lg backdrop-blur transition hover:bg-black/70"
-                      aria-label="Afficher en plein écran"
-                    >
-                      Plein écran
-                    </button>
-                  )}
-                </div>
+                <MakutanoMediaStage
+                  post={post}
+                  isActive={activeMediaPostId === post.id}
+                  onFullscreen={openFullscreenMedia}
+                />
 
                 <div className="flex-shrink-0 space-y-2 px-3.5 py-3">
                   {/* Texte du post */}

@@ -117,7 +117,7 @@ export function GlobalCallOverlay() {
     if (!incomingCall) return;
     const routeBase = incomingCall.callType === 'audio' ? 'audiocall' : 'call';
     setIncomingCall(null);
-    router.push(`/dashboard/miyiki-chat/${routeBase}/${incomingCall.conversationId}?callId=${incomingCall.id}&webAccepted=1`);
+    router.push(`/dashboard/miyiki-chat/${routeBase}/${incomingCall.conversationId}?callId=${incomingCall.id}&nativeAccepted=1`);
   };
 
   const declineCall = async () => {

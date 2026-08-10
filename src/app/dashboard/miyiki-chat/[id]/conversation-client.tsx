@@ -25,6 +25,7 @@ import { GroupSettingsDialog } from '@/components/group-settings-dialog';
 import { CHAT_WALLPAPERS, createCustomChatWallpaperId, getChatWallpaper, isCustomChatWallpaper } from '@/lib/chat-wallpapers';
 import { EnkambaSmartKeyboard } from '@/components/chat/EnkambaSmartKeyboard';
 import type { EnkambaKeyboardItem } from '@/lib/enkamba-keyboard';
+import { getNativeAcceptedCallId } from '@/lib/native-call-access';
 
 type IncomingCallDoc = {
     id: string;
@@ -264,6 +265,7 @@ export default function ConversationClient() {
                 const data: any = d.data() || {};
                 if (data?.conversationId !== conversationId) return;
                 if (data?.status !== 'ringing') return;
+                if (getNativeAcceptedCallId() === d.id) return;
                 const createdAtMs = data?.createdAt?.toMillis?.() || 0;
                 const callType: 'audio' | 'video' = data?.callType === 'audio' ? 'audio' : 'video';
                 const fromUid = String(data?.fromUid || '');

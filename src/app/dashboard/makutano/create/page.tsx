@@ -77,8 +77,10 @@ export default function MakutanoCreatePage() {
   const [mediaType, setMediaType] = useState<MediaType>('image');
   const [externalMediaUrl, setExternalMediaUrl] = useState('');
   const [pickedFile, setPickedFile] = useState<File | null>(null);
+  const [pickedPhotoFiles, setPickedPhotoFiles] = useState<File[]>([]);
   const [fileInputAccept, setFileInputAccept] = useState('image/*,video/*,audio/*');
   const [previewUrl, setPreviewUrl] = useState('');
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [isPublishing, setIsPublishing] = useState(false);
   const [hasDraft, setHasDraft] = useState(false);
   const [lastAutoSavedAt, setLastAutoSavedAt] = useState<number | null>(null);
@@ -106,7 +108,7 @@ export default function MakutanoCreatePage() {
   const rafRef = useRef<number | null>(null);
   const lastAutoSavedSignatureRef = useRef('');
 
-  const hasAnyMedia = useMemo(() => Boolean(pickedFile || externalMediaUrl.trim()), [pickedFile, externalMediaUrl]);
+  const hasAnyMedia = useMemo(() => Boolean(pickedFile || pickedPhotoFiles.length > 0 || externalMediaUrl.trim()), [pickedFile, pickedPhotoFiles.length, externalMediaUrl]);
   const activeStepIndex = stepItems.findIndex((item) => item.id === activeStep);
   const canGoToDetails = hasAnyMedia;
   const canGoToPublish = hasAnyMedia && Boolean(text.trim()) && Boolean(category);
@@ -296,15 +298,43 @@ export default function MakutanoCreatePage() {
     setFileInputAccept(accept);
     if (nextMediaType) setMediaType(nextMediaType);
     fileInputRef.current?.setAttribute('accept', accept);
+    if (nextMediaType === 'image') {
+      fileInputRef.current?.setAttribute('multiple', 'true');
+    } else {
+      fileInputRef.current?.removeAttribute('multiple');
+    }
     fileInputRef.current?.click();
   };
 
   const onFilePicked = (event: { target: { files: FileList | null } }) => {
-    const file = event.target.files?.[0];
+    const files = Array.from(event.target.files || []);
+    const file = files[0];
     if (!file) return;
+    const nextType = detectMediaTypeFromName(file.name);
+    if (nextType === 'image') {
+      const imageFiles = files.filter((item) => item.type.startsWith('image/')).slice(0, 10);
+      const urls = imageFiles.map((item) => URL.createObjectURL(item));
+      previewUrls.forEach((url) => {
+        if (url.startsWith('blob:')) URL.revokeObjectURL(url);
+      });
+      if (previewUrl.startsWith('blob:')) URL.revokeObjectURL(previewUrl);
+      setPickedPhotoFiles(imageFiles);
+      setPickedFile(imageFiles[0] || null);
+      setExternalMediaUrl('');
+      setMediaType('image');
+      setPreviewUrls(urls);
+      setPreviewUrl(urls[0] || '');
+      setActiveStep('details');
+      return;
+    }
+    previewUrls.forEach((url) => {
+      if (url.startsWith('blob:')) URL.revokeObjectURL(url);
+    });
+    setPickedPhotoFiles([]);
     setPickedFile(file);
     setExternalMediaUrl('');
-    setMediaType(detectMediaTypeFromName(file.name));
+    setMediaType(nextType);
+    setPreviewUrls([]);
     setPreviewUrl(URL.createObjectURL(file));
     setActiveStep('details');
   };
@@ -357,10 +387,16 @@ export default function MakutanoCreatePage() {
     canvas.toBlob((blob) => {
       if (!blob) return;
       const file = new File([blob], `makutano-photo-${Date.now()}.jpg`, { type: 'image/jpeg' });
+      previewUrls.forEach((url) => {
+        if (url.startsWith('blob:')) URL.revokeObjectURL(url);
+      });
       setPickedFile(file);
+      setPickedPhotoFiles([file]);
       setExternalMediaUrl('');
       setMediaType('image');
-      setPreviewUrl(URL.createObjectURL(blob));
+      const url = URL.createObjectURL(blob);
+      setPreviewUrls([url]);
+      setPreviewUrl(url);
       closeCamera();
       setActiveStep('details');
     }, 'image/jpeg', 0.92);
@@ -377,7 +413,9 @@ export default function MakutanoCreatePage() {
       const blob = new Blob(videoChunksRef.current, { type: 'video/webm' });
       const file = new File([blob], `makutano-video-${Date.now()}.webm`, { type: 'video/webm' });
       setPickedFile(file);
+      setPickedPhotoFiles([]);
       setExternalMediaUrl('');
+      setPreviewUrls([]);
       setPreviewUrl(URL.createObjectURL(blob));
       setIsVideoRecording(false);
       cameraStream.getTracks().forEach((t) => t.stop());
@@ -441,7 +479,9 @@ export default function MakutanoCreatePage() {
       const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
       const file = new File([blob], `makutano-audio-${Date.now()}.webm`, { type: 'audio/webm' });
       setPickedFile(file);
+      setPickedPhotoFiles([]);
       setExternalMediaUrl('');
+      setPreviewUrls([]);
       setPreviewUrl(URL.createObjectURL(blob));
       setIsAudioRecording(false);
       stream.getTracks().forEach((t) => t.stop());
@@ -478,14 +518,24 @@ export default function MakutanoCreatePage() {
     audioRecorderRef.current?.stop();
   };
 
-  const uploadToStorage = async (): Promise<string> => {
+  const uploadToStorage = async (): Promise<{ mediaUrl: string; mediaItems?: Array<{ url: string; type: MediaType }> }> => {
+    if (mediaType === 'image' && pickedPhotoFiles.length > 0) {
+      const uploads = await Promise.all(
+        pickedPhotoFiles.map(async (file) => {
+          const uploadResult = await uploadToCloudinary(file, 'image');
+          return { url: uploadResult.secureUrl, type: 'image' as MediaType };
+        })
+      );
+      return { mediaUrl: uploads[0]?.url || '', mediaItems: uploads };
+    }
+
     if (pickedFile) {
       // Utiliser la même fonction que les stories pour l'upload Cloudinary
       const resourceType = mediaType === 'image' ? 'image' : mediaType === 'video' ? 'video' : 'raw';
       const uploadResult = await uploadToCloudinary(pickedFile, resourceType);
-      return uploadResult.secureUrl;
+      return { mediaUrl: uploadResult.secureUrl, mediaItems: [{ url: uploadResult.secureUrl, type: mediaType }] };
     }
-    return externalMediaUrl.trim();
+    return { mediaUrl: externalMediaUrl.trim(), mediaItems: externalMediaUrl.trim() ? [{ url: externalMediaUrl.trim(), type: mediaType }] : undefined };
   };
 
   const publishPost = async () => {
@@ -516,7 +566,7 @@ export default function MakutanoCreatePage() {
 
     setIsPublishing(true);
     try {
-      const mediaUrl = await uploadToStorage();
+      const { mediaUrl, mediaItems } = await uploadToStorage();
       const postLocation = {
         label: location.label,
         quartier: location.quartier || '',
@@ -531,6 +581,7 @@ export default function MakutanoCreatePage() {
         text: text.trim(),
         mediaUrl,
         mediaType,
+        mediaItems: mediaItems || [],
         category,
         likes: 0,
         comments: 0,
@@ -565,9 +616,14 @@ export default function MakutanoCreatePage() {
 
   const clearSelectedMedia = () => {
     if (previewUrl.startsWith('blob:')) URL.revokeObjectURL(previewUrl);
+    previewUrls.forEach((url) => {
+      if (url.startsWith('blob:')) URL.revokeObjectURL(url);
+    });
     setPickedFile(null);
+    setPickedPhotoFiles([]);
     setExternalMediaUrl('');
     setPreviewUrl('');
+    setPreviewUrls([]);
     setPreviewCurrentTime(0);
     setPreviewDuration(0);
     setIsPreviewPlaying(false);
@@ -598,6 +654,21 @@ export default function MakutanoCreatePage() {
     if (!previewUrl) return null;
 
     const previewHeight = compact ? 'h-40' : 'h-[21rem]';
+
+    if (mediaType === 'image' && previewUrls.length > 1) {
+      return (
+        <div className={cn('flex snap-x snap-mandatory gap-2 overflow-x-auto rounded-[1.65rem] bg-[#e8f6ef] p-2 shadow-inner [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden', compact ? 'h-40' : 'h-[21rem]')}>
+          {previewUrls.map((url, index) => (
+            <div key={url} className="relative h-full w-[88%] shrink-0 snap-center overflow-hidden rounded-[1.25rem] bg-white sm:w-[72%]">
+              <img src={url} alt={`Aperçu média ${index + 1}`} className="h-full w-full object-cover" />
+              <span className="absolute left-2 top-2 rounded-full bg-black/55 px-2 py-1 text-[10px] font-black text-white">
+                {index + 1}/{previewUrls.length}
+              </span>
+            </div>
+          ))}
+        </div>
+      );
+    }
 
     if (mediaType === 'video') {
       return (

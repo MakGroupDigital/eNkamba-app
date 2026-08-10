@@ -4,7 +4,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, limit, onSnapshot, query, serverTimestamp, setDoc, where } from 'firebase/firestore';
-import { ArrowLeft, Ban, Grid3X3, Heart, MapPin, MessageCircle, PlayCircle, Send, ShieldAlert, UserCheck } from 'lucide-react';
+import { ArrowLeft, Ban, Grid3X3, Heart, MapPin, MessageCircle, MoreHorizontal, PlayCircle, Send, ShieldAlert, UserCheck } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { db } from '@/lib/firebase';
@@ -26,6 +26,7 @@ type PublicPost = {
   text: string;
   mediaUrl: string;
   mediaType: 'image' | 'video' | 'audio';
+  mediaItems?: Array<{ url: string; type: 'image' | 'video' | 'audio' }>;
   likes: number;
   comments: number;
   category: string;
@@ -66,6 +67,7 @@ export default function MakutanoPublicProfilePage() {
   const [isFollowLoading, setIsFollowLoading] = useState(false);
   const [isChatOpening, setIsChatOpening] = useState(false);
   const [socialCounts, setSocialCounts] = useState({ followers: 0, following: 0, friends: 0 });
+  const [showMoreActions, setShowMoreActions] = useState(false);
   const [relationshipControl, setRelationshipControl] = useState({
     restricted: false,
     blocked: false,
@@ -110,12 +112,24 @@ export default function MakutanoPublicProfilePage() {
               snapshot.docs
                 .map((postDoc) => {
                   const postData = postDoc.data() as any;
-                  const mediaUrl = postData.mediaUrl || postData.image || '';
+                  const rawMediaItems = Array.isArray(postData.mediaItems) ? postData.mediaItems : [];
+                  const mediaItems = rawMediaItems
+                    .map((item: any) => {
+                      const url = String(item?.url || item?.secureUrl || item?.mediaUrl || '').trim();
+                      if (!url) return null;
+                      const type = item?.type === 'video' || item?.type === 'audio' || item?.type === 'image'
+                        ? item.type
+                        : inferMediaType(url);
+                      return { url, type };
+                    })
+                    .filter(Boolean) as Array<{ url: string; type: 'image' | 'video' | 'audio' }>;
+                  const mediaUrl = postData.mediaUrl || postData.image || mediaItems[0]?.url || '';
                   return {
                     id: postDoc.id,
                     text: postData.text || postData.caption || '',
                     mediaUrl,
-                    mediaType: postData.mediaType || inferMediaType(mediaUrl),
+                    mediaType: postData.mediaType || mediaItems[0]?.type || inferMediaType(mediaUrl),
+                    mediaItems: mediaItems.length ? mediaItems : undefined,
                     likes: Number(postData.likes || 0),
                     comments: Number(postData.comments || 0),
                     category: postData.category || 'Accueil',
@@ -453,12 +467,12 @@ export default function MakutanoPublicProfilePage() {
             <p className="mt-5 max-w-2xl text-sm leading-6 text-muted-foreground">{publicUser.bio}</p>
 
             {!isOwnProfile && (
-              <div className="mt-5 grid gap-2 sm:max-w-xl sm:grid-cols-2">
+              <div className="mt-5 flex flex-wrap items-center gap-2">
                 <Button
                   type="button"
                   onClick={() => void handleFollow()}
                   disabled={!canInteract || isFollowLoading}
-                  className={`h-11 rounded-2xl font-black shadow-sm ${
+                  className={`h-11 rounded-full px-5 font-black shadow-sm ${
                     isFollowing
                       ? 'bg-primary/10 text-[#009058] hover:bg-primary/20'
                       : 'bg-[#009058] text-white hover:bg-[#009058]'
@@ -467,41 +481,56 @@ export default function MakutanoPublicProfilePage() {
                   <UserCheck className="mr-2 h-4 w-4" />
                   {isFollowLoading ? '...' : isFollowing ? 'Suivi' : 'Suivre'}
                 </Button>
+                <div className="rounded-full bg-white px-4 py-2 text-sm font-black text-slate-900 ring-1 ring-[#009058]/15">
+                  {socialCounts.followers.toLocaleString('fr-FR')} abonnés
+                </div>
                 <Button
                   type="button"
                   onClick={() => void handleOpenChat()}
                   disabled={!canInteract || isChatOpening}
-                  className="h-11 rounded-2xl bg-primary font-black text-white shadow-sm hover:bg-[#009058]"
+                  className="h-11 rounded-full bg-white px-4 font-black text-[#009058] shadow-sm ring-1 ring-[#009058]/20 hover:bg-primary/5"
                 >
                   <Send className="mr-2 h-4 w-4" />
                   {isChatOpening ? 'Ouverture...' : 'Écrire'}
                 </Button>
-                <Button
-                  type="button"
-                  onClick={() => void updateRelationshipControl({ restricted: !relationshipControl.restricted })}
-                  disabled={!user?.uid || relationshipControl.blocked || relationshipControl.blockedByTarget || relationshipControl.isLoading}
-                  className={`h-11 rounded-2xl font-black shadow-sm ${
-                    relationshipControl.restricted
-                      ? 'bg-[#FFA500]/15 text-[#FFA500] hover:bg-[#FFA500]/20'
-                      : 'bg-white text-foreground ring-1 ring-[#009058] hover:bg-primary/5'
-                  }`}
-                >
-                  <ShieldAlert className="mr-2 h-4 w-4" />
-                  {relationshipControl.restricted ? 'Restreint' : 'Restreindre'}
-                </Button>
-                <Button
-                  type="button"
-                  onClick={() => void updateRelationshipControl({ blocked: !relationshipControl.blocked })}
-                  disabled={!user?.uid || relationshipControl.blockedByTarget || relationshipControl.isLoading}
-                  className={`h-11 rounded-2xl font-black shadow-sm ${
-                    relationshipControl.blocked
-                      ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                      : 'bg-white text-red-700 ring-1 ring-red-100 hover:bg-red-50'
-                  }`}
-                >
-                  <Ban className="mr-2 h-4 w-4" />
-                  {relationshipControl.blocked ? 'Débloquer' : 'Bloquer'}
-                </Button>
+                <div className="relative">
+                  <Button
+                    type="button"
+                    onClick={() => setShowMoreActions((current) => !current)}
+                    className="h-11 w-11 rounded-full bg-white p-0 text-slate-700 shadow-sm ring-1 ring-slate-200 hover:bg-slate-50"
+                    aria-label="Plus d'actions"
+                  >
+                    <MoreHorizontal className="h-5 w-5" />
+                  </Button>
+                  {showMoreActions && (
+                    <div className="absolute right-0 top-12 z-20 w-52 overflow-hidden rounded-2xl border border-slate-100 bg-white p-1.5 text-left shadow-2xl">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowMoreActions(false);
+                          void updateRelationshipControl({ restricted: !relationshipControl.restricted });
+                        }}
+                        disabled={!user?.uid || relationshipControl.blocked || relationshipControl.blockedByTarget || relationshipControl.isLoading}
+                        className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-bold text-slate-700 hover:bg-primary/5 disabled:opacity-50"
+                      >
+                        <ShieldAlert className="h-4 w-4 text-[#FFA500]" />
+                        {relationshipControl.restricted ? 'Retirer restriction' : 'Restreindre'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowMoreActions(false);
+                          void updateRelationshipControl({ blocked: !relationshipControl.blocked });
+                        }}
+                        disabled={!user?.uid || relationshipControl.blockedByTarget || relationshipControl.isLoading}
+                        className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-bold text-red-700 hover:bg-red-50 disabled:opacity-50"
+                      >
+                        <Ban className="h-4 w-4" />
+                        {relationshipControl.blocked ? 'Débloquer' : 'Bloquer'}
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
@@ -514,7 +543,6 @@ export default function MakutanoPublicProfilePage() {
             )}
 
             <div className="mt-5 grid grid-cols-3 gap-2 sm:max-w-md">
-              <StatPill value={socialCounts.followers} label="Abonnés" />
               <StatPill value={socialCounts.following} label="Suivis" />
               <StatPill value={socialCounts.friends} label="Amis" />
               <StatPill value={stats.posts} label="Posts" />
@@ -551,9 +579,9 @@ export default function MakutanoPublicProfilePage() {
                 onClick={() => setSelectedPost(post)}
                 className="group relative aspect-[4/5] overflow-hidden rounded-[22px] bg-primary/10 text-left shadow-sm ring-1 ring-[#009058] transition hover:-translate-y-0.5 hover:shadow-xl"
               >
-                {post.mediaUrl ? (
+                {(post.mediaItems?.[0]?.url || post.mediaUrl) ? (
                   post.mediaType === 'video' ? (
-                    <video src={post.mediaUrl} className="h-full w-full object-cover" muted playsInline preload="metadata" />
+                    <video src={post.mediaItems?.[0]?.url || post.mediaUrl} className="h-full w-full object-cover" muted playsInline preload="metadata" />
                   ) : post.mediaType === 'audio' ? (
                     <div className="flex h-full w-full flex-col justify-between bg-[#009058] p-4 text-white">
                       <PlayCircle className="h-9 w-9" />
@@ -563,7 +591,14 @@ export default function MakutanoPublicProfilePage() {
                       </div>
                     </div>
                   ) : (
-                    <img src={post.mediaUrl} alt={post.text || 'Publication'} className="h-full w-full object-cover" loading="lazy" />
+                    <>
+                      <img src={post.mediaItems?.[0]?.url || post.mediaUrl} alt={post.text || 'Publication'} className="h-full w-full object-cover" loading="lazy" />
+                      {(post.mediaItems?.length || 0) > 1 && (
+                        <span className="absolute right-2 top-2 rounded-full bg-black/55 px-2 py-1 text-[10px] font-black text-white">
+                          {post.mediaItems?.length} photos
+                        </span>
+                      )}
+                    </>
                   )
                 ) : (
                   <div className="flex h-full w-full items-center justify-center p-4 text-center text-sm font-bold text-[#009058]">
@@ -599,18 +634,18 @@ export default function MakutanoPublicProfilePage() {
               </button>
             </div>
 
-            <div className="max-h-[70vh] bg-black">
-              {selectedPost.mediaUrl ? (
-                selectedPost.mediaType === 'video' ? (
-                  <video src={selectedPost.mediaUrl} controls autoPlay className="max-h-[70vh] w-full object-contain" />
-                ) : selectedPost.mediaType === 'audio' ? (
-                  <div className="flex min-h-[260px] items-center justify-center bg-[#009058] p-6">
-                    <audio src={selectedPost.mediaUrl} controls autoPlay className="w-full max-w-xl" />
+            <div className="flex max-h-[70vh] snap-x snap-mandatory overflow-x-auto bg-black [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {(selectedPost.mediaItems?.length ? selectedPost.mediaItems : selectedPost.mediaUrl ? [{ url: selectedPost.mediaUrl, type: selectedPost.mediaType }] : []).map((media, index) => (
+                media.type === 'video' ? (
+                  <video key={`${media.url}-${index}`} src={media.url} controls autoPlay={index === 0} className="max-h-[70vh] w-full shrink-0 snap-center object-contain" />
+                ) : media.type === 'audio' ? (
+                  <div key={`${media.url}-${index}`} className="flex min-h-[260px] w-full shrink-0 snap-center items-center justify-center bg-[#009058] p-6">
+                    <audio src={media.url} controls autoPlay={index === 0} className="w-full max-w-xl" />
                   </div>
                 ) : (
-                  <img src={selectedPost.mediaUrl} alt={selectedPost.text || 'Publication'} className="max-h-[70vh] w-full object-contain" />
+                  <img key={`${media.url}-${index}`} src={media.url} alt={selectedPost.text || 'Publication'} className="max-h-[70vh] w-full shrink-0 snap-center object-contain" />
                 )
-              ) : null}
+              ))}
             </div>
 
             <div className="space-y-3 p-4">
