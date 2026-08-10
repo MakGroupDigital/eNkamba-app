@@ -5,7 +5,6 @@ import "./globals.css";
 import "leaflet/dist/leaflet.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { PendingPaymentWatcher } from "@/components/wallet/pending-payment-watcher";
-import { AccessCodeGate } from "@/components/access-code/AccessCodeGate";
 import { GlobalCallOverlay } from "@/components/chat/global-call-overlay";
 import { CurrencyInitializer } from "@/components/currency/CurrencyInitializer";
 import { GlobalAutoTranslator } from "@/components/translation/GlobalAutoTranslator";
@@ -87,13 +86,11 @@ export default function RootLayout({
           <AppServiceWorkerRegistrar />
           <CurrencyInitializer />
           <UserPinAccessGate>
-            <AccessCodeGate>
-              <GlobalAutoTranslator />
-              <AdminTelemetryAgent />
-              {children}
-              <GlobalCallOverlay />
-              <PendingPaymentWatcher />
-            </AccessCodeGate>
+            <GlobalAutoTranslator />
+            <AdminTelemetryAgent />
+            {children}
+            <GlobalCallOverlay />
+            <PendingPaymentWatcher />
           </UserPinAccessGate>
           <Toaster />
         </ThemeProvider>

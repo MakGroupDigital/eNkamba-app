@@ -75,20 +75,30 @@ export function useRealtimeNotifications() {
       return true;
     };
 
-    const showSystemNotification = (title: string, message: string, actionUrl: string, isCall = false) => {
+    const showSystemNotification = (
+      title: string,
+      message: string,
+      actionUrl: string,
+      isCall = false,
+      notificationId = ''
+    ) => {
       if (typeof window === 'undefined') return;
       if (document.visibilityState === 'visible') return;
       if (!('Notification' in window) || Notification.permission !== 'granted') return;
+      const targetUrl = isCall && actionUrl ? `${actionUrl}${actionUrl.includes('?') ? '&' : '?'}webAccepted=1` : actionUrl;
       const notification = new Notification(title, {
         body: message,
         icon: '/enkamba-logo.png',
         badge: '/favicon.png',
+        tag: notificationId || actionUrl || title,
+        renotify: isCall,
         requireInteraction: isCall,
-        data: { actionUrl },
-      } as NotificationOptions & { requireInteraction?: boolean });
+        data: { actionUrl: targetUrl },
+        vibrate: isCall ? [300, 150, 300, 150, 300] : [180, 80, 180],
+      } as NotificationOptions & { renotify?: boolean; requireInteraction?: boolean; vibrate?: number[] });
       notification.onclick = () => {
         window.focus();
-        if (actionUrl) router.push(actionUrl);
+        if (targetUrl) router.push(targetUrl);
         notification.close();
       };
     };
@@ -106,7 +116,7 @@ export function useRealtimeNotifications() {
           ? (createElement(ToastAction, { altText: 'Ouvrir', onClick: () => router.push(actionUrl) }, 'Ouvrir') as unknown as ToastActionElement)
           : undefined,
       });
-      showSystemNotification(title, message, actionUrl);
+      showSystemNotification(title, message, actionUrl, false, String(payload.notificationId || ''));
     });
 
     const unsubscribeCall = enkambaRealtime.subscribe('call:ringing', (payload) => {
@@ -123,7 +133,7 @@ export function useRealtimeNotifications() {
           ? (createElement(ToastAction, { altText: 'Répondre', onClick: () => router.push(actionUrl) }, 'Répondre') as unknown as ToastActionElement)
           : undefined,
       });
-      showSystemNotification(title, message, actionUrl, true);
+      showSystemNotification(title, message, actionUrl, true, String(payload.callId || ''));
     });
 
     return () => {

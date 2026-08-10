@@ -37,6 +37,15 @@ export function GlobalCallOverlay() {
   useCallFeedback(Boolean(incomingCall) && !isOnCallScreen, 'incoming', true);
 
   useEffect(() => {
+    if (!incomingCall || isOnCallScreen || typeof document === 'undefined') return;
+    const previousTitle = document.title;
+    document.title = `Appel entrant - ${incomingCall.fromName}`;
+    return () => {
+      document.title = previousTitle;
+    };
+  }, [incomingCall, isOnCallScreen]);
+
+  useEffect(() => {
     if (!user?.uid) {
       setIncomingCall(null);
       return;
@@ -50,6 +59,8 @@ export function GlobalCallOverlay() {
           if (data.status !== 'ringing') return null;
           if (!data.conversationId || !data.fromUid) return null;
           if (getNativeAcceptedCallId() === callDoc.id) return null;
+          const createdAtMs = data.createdAt?.toMillis?.() || 0;
+          if (createdAtMs && Date.now() - createdAtMs > 70000) return null;
 
           let fromName = 'Appel entrant';
           let fromAvatar = '';
@@ -77,7 +88,7 @@ export function GlobalCallOverlay() {
             fromUid: String(data.fromUid),
             fromName: String(fromName),
             fromAvatar: fromAvatar || undefined,
-            createdAtMs: data.createdAt?.toMillis?.() || 0,
+            createdAtMs,
           } satisfies IncomingCallOverlay;
         })
       );
@@ -106,7 +117,7 @@ export function GlobalCallOverlay() {
     if (!incomingCall) return;
     const routeBase = incomingCall.callType === 'audio' ? 'audiocall' : 'call';
     setIncomingCall(null);
-    router.push(`/dashboard/miyiki-chat/${routeBase}/${incomingCall.conversationId}?callId=${incomingCall.id}`);
+    router.push(`/dashboard/miyiki-chat/${routeBase}/${incomingCall.conversationId}?callId=${incomingCall.id}&webAccepted=1`);
   };
 
   const declineCall = async () => {

@@ -1,14 +1,20 @@
 /* eslint-disable no-undef */
-const ENKAMBA_CACHE = 'enkamba-app-cache-v1';
-const ENKAMBA_STATIC_CACHE = 'enkamba-static-cache-v1';
+const ENKAMBA_CACHE = 'enkamba-app-cache-v2';
+const ENKAMBA_STATIC_CACHE = 'enkamba-static-cache-v2';
 const APP_SHELL_URLS = [
   '/',
   '/dashboard/miyiki-chat',
+  '/dashboard/miyiki-chat/new',
   '/dashboard/mbongo-dashboard',
+  '/dashboard/wallet',
+  '/dashboard/pay-receive',
+  '/dashboard/scanner-simple',
   '/dashboard/nkampa',
+  '/dashboard/nkampa/orders',
   '/dashboard/ugavi',
   '/dashboard/makutano',
   '/dashboard/ai/chat',
+  '/dashboard/settings',
   '/enkamba-logo.png',
   '/favicon.png',
   '/site.webmanifest',
@@ -105,17 +111,65 @@ messaging.onBackgroundMessage((payload) => {
   const title = payload.notification?.title || 'eNkamba';
   const body = payload.notification?.body || 'Nouvelle notification';
   const actionUrl = payload?.data?.actionUrl || '/dashboard';
+  const isCall = payload?.data?.type === 'incoming_call';
+  const callId = payload?.data?.callId || '';
+  const conversationId = payload?.data?.conversationId || '';
+  const callType = payload?.data?.callType || '';
 
   self.registration.showNotification(title, {
     body,
     icon: '/enkamba-logo.png',
     badge: '/favicon.png',
-    data: { actionUrl },
+    tag: isCall && callId ? `enkamba-call-${callId}` : payload?.data?.notificationId || actionUrl,
+    renotify: isCall,
+    requireInteraction: isCall,
+    vibrate: isCall ? [300, 150, 300, 150, 300] : [180, 80, 180],
+    actions: isCall
+      ? [
+          { action: 'answer', title: 'Répondre' },
+          { action: 'decline', title: 'Refuser' },
+        ]
+      : [{ action: 'open', title: 'Ouvrir' }],
+    data: { ...(payload?.data || {}), actionUrl, callId, conversationId, callType },
   });
 });
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const actionUrl = event.notification?.data?.actionUrl || '/dashboard';
-  event.waitUntil(clients.openWindow(actionUrl));
+  const data = event.notification?.data || {};
+  const actionUrl = data.actionUrl || '/dashboard';
+  const isCall = data.type === 'incoming_call';
+
+  let targetUrl = actionUrl;
+  if (isCall && event.action !== 'decline') {
+    const separator = actionUrl.includes('?') ? '&' : '?';
+    targetUrl = `${actionUrl}${separator}webAccepted=1`;
+  }
+
+  if (isCall && event.action === 'decline' && data.callId) {
+    const params = new URLSearchParams({
+      action: 'decline',
+      callId: data.callId,
+      conversationId: data.conversationId || '',
+      callType: data.callType || '',
+    });
+    targetUrl = `/dashboard/miyiki-chat/call-action?${params.toString()}`;
+  }
+
+  event.waitUntil(
+    clients
+      .matchAll({ type: 'window', includeUncontrolled: true })
+      .then((clientList) => {
+        const absoluteTarget = new URL(targetUrl, self.location.origin).href;
+        for (const client of clientList) {
+          if ('focus' in client && new URL(client.url).origin === self.location.origin) {
+            if ('navigate' in client && client.url !== absoluteTarget) {
+              return client.navigate(absoluteTarget).then((navigatedClient) => navigatedClient?.focus());
+            }
+            return client.focus();
+          }
+        }
+        return clients.openWindow(targetUrl);
+      })
+  );
 });

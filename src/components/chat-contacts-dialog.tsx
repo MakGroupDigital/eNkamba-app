@@ -24,6 +24,19 @@ interface DeviceContact {
   email?: string;
 }
 
+declare global {
+  interface Window {
+    eNkambaNativeContacts?: {
+      isAvailable?: () => boolean;
+      getContacts?: (requestId: string) => void;
+    };
+    __eNkambaNativeContactsResolve?: (
+      requestId: string,
+      payload: { success?: boolean; contacts?: DeviceContact[]; error?: string }
+    ) => void;
+  }
+}
+
 export function ChatContactsDialog({ open, onOpenChange }: ChatContactsDialogProps) {
 
 
@@ -39,6 +52,7 @@ export function ChatContactsDialog({ open, onOpenChange }: ChatContactsDialogPro
   const [isImportingVcf, setIsImportingVcf] = useState(false);
   const [showQRScanner, setShowQRScanner] = useState(false);
   const vcfInputRef = useRef<HTMLInputElement>(null);
+  const autoImportAttemptedRef = useRef(false);
 
   // Ajouter un contact
   const handleAddContact = useCallback(async () => {
@@ -127,6 +141,59 @@ export function ChatContactsDialog({ open, onOpenChange }: ChatContactsDialogPro
         email: c.email?.[0]?.trim() || undefined,
       }))
       .filter((c) => c.name && c.phoneNumber);
+  }, []);
+
+  const importTauriAndroidContacts = useCallback(async (): Promise<DeviceContact[]> => {
+    const bridge = window.eNkambaNativeContacts;
+    if (!bridge?.getContacts || bridge.isAvailable?.() === false) {
+      return [];
+    }
+    const getNativeContacts = bridge.getContacts.bind(bridge);
+
+    const requestId = `contacts-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    return new Promise<DeviceContact[]>((resolve, reject) => {
+      const timeout = window.setTimeout(() => {
+        if (window.__eNkambaNativeContactsResolve === resolver) {
+          delete window.__eNkambaNativeContactsResolve;
+        }
+        reject(new Error('Import contacts natif expire.'));
+      }, 20000);
+
+      const previousResolver = window.__eNkambaNativeContactsResolve;
+      const resolver = (
+        responseRequestId: string,
+        payload: { success?: boolean; contacts?: DeviceContact[]; error?: string }
+      ) => {
+        if (responseRequestId !== requestId) {
+          previousResolver?.(responseRequestId, payload);
+          return;
+        }
+
+        window.clearTimeout(timeout);
+        if (previousResolver) {
+          window.__eNkambaNativeContactsResolve = previousResolver;
+        } else {
+          delete window.__eNkambaNativeContactsResolve;
+        }
+
+        if (payload.success) {
+          resolve(
+            (payload.contacts || [])
+              .map((contact) => ({
+                name: contact.name?.trim() || contact.phoneNumber?.trim() || '',
+                phoneNumber: contact.phoneNumber?.trim() || '',
+                email: contact.email?.trim() || undefined,
+              }))
+              .filter((contact) => contact.name && contact.phoneNumber)
+          );
+        } else {
+          reject(new Error(payload.error || 'Contacts natifs indisponibles.'));
+        }
+      };
+
+      window.__eNkambaNativeContactsResolve = resolver;
+      getNativeContacts(requestId);
+    });
   }, []);
 
   const importCapacitorContacts = useCallback(async (): Promise<DeviceContact[]> => {
@@ -233,11 +300,17 @@ export function ChatContactsDialog({ open, onOpenChange }: ChatContactsDialogPro
   const handleImportDeviceContacts = useCallback(async () => {
     setIsImportingDeviceContacts(true);
     try {
-      const webContacts = await importWebContacts();
-      const contactsFromDevice = webContacts.length > 0 ? webContacts : await importCapacitorContacts();
+      const tauriContacts = await importTauriAndroidContacts().catch(() => []);
+      const webContacts = tauriContacts.length > 0 ? [] : await importWebContacts();
+      const contactsFromDevice =
+        tauriContacts.length > 0
+          ? tauriContacts
+          : webContacts.length > 0
+            ? webContacts
+            : await importCapacitorContacts();
 
       if (contactsFromDevice.length === 0) {
-        alert("Accès direct aux contacts non supporté sur ce navigateur/PWA. Sur iOS/Android PWA, utilisez 'Importer fichier .vcf' comme relais.");
+        alert("Aucun contact n'a été récupéré. Vous pouvez aussi importer un fichier .vcf.");
         return;
       }
 
@@ -253,7 +326,14 @@ export function ChatContactsDialog({ open, onOpenChange }: ChatContactsDialogPro
     } finally {
       setIsImportingDeviceContacts(false);
     }
-  }, [importWebContacts, importCapacitorContacts, persistImportedContacts]);
+  }, [importTauriAndroidContacts, importWebContacts, importCapacitorContacts, persistImportedContacts]);
+
+  useEffect(() => {
+    if (!open || autoImportAttemptedRef.current || contacts.length > 0) return;
+    autoImportAttemptedRef.current = true;
+    if (typeof window === 'undefined' || !window.eNkambaNativeContacts?.getContacts) return;
+    void handleImportDeviceContacts();
+  }, [contacts.length, handleImportDeviceContacts, open]);
 
   // Inviter un contact non eNkamba
   const handleSendInvitation = useCallback((contact: any) => {

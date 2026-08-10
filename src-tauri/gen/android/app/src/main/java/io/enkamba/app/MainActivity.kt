@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.provider.ContactsContract
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import androidx.activity.enableEdgeToEdge
@@ -15,11 +16,13 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.messaging.FirebaseMessaging
+import org.json.JSONArray
 import org.json.JSONObject
 
 class MainActivity : TauriActivity() {
   private var webViewRef: WebView? = null
   private var pendingGoogleRequestId: String? = null
+  private var pendingContactsRequestId: String? = null
   private var pendingNotificationUrl: String? = null
   private var pendingNativeCallAccess: String? = null
   private lateinit var googleSignInClient: GoogleSignInClient
@@ -53,6 +56,7 @@ class MainActivity : TauriActivity() {
     webView.addJavascriptInterface(EkambaGoogleBridge(), "eNkambaNativeGoogle")
     webView.addJavascriptInterface(EnkambaPushBridge(), "eNkambaNativePush")
     webView.addJavascriptInterface(EnkambaLaunchBridge(), "eNkambaNativeLaunch")
+    webView.addJavascriptInterface(EnkambaContactsBridge(), "eNkambaNativeContacts")
     consumePendingNotificationUrl()
   }
 
@@ -118,6 +122,24 @@ class MainActivity : TauriActivity() {
     @JavascriptInterface
     fun clearPendingCallAccess() {
       pendingNativeCallAccess = null
+    }
+  }
+
+  inner class EnkambaContactsBridge {
+    @JavascriptInterface
+    fun isAvailable(): Boolean = true
+
+    @JavascriptInterface
+    fun getContacts(requestId: String) {
+      runOnUiThread {
+        if (checkSelfPermission(Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
+          resolveNativeContacts(requestId, buildContactsPayload())
+          return@runOnUiThread
+        }
+
+        pendingContactsRequestId = requestId
+        requestPermissions(arrayOf(Manifest.permission.READ_CONTACTS), CONTACTS_PERMISSION_REQUEST)
+      }
     }
   }
 
@@ -189,6 +211,90 @@ class MainActivity : TauriActivity() {
     }
   }
 
+  private fun resolveNativeContacts(requestId: String, payload: JSONObject) {
+    val script = """
+      window.__eNkambaNativeContactsResolve &&
+      window.__eNkambaNativeContactsResolve(${JSONObject.quote(requestId)}, ${payload});
+      document.dispatchEvent(new CustomEvent('enkamba-native-contacts', {
+        detail: { requestId: ${JSONObject.quote(requestId)}, payload: ${payload} }
+      }));
+    """.trimIndent()
+    runOnUiThread {
+      webViewRef?.post {
+        webViewRef?.evaluateJavascript(script, null)
+      }
+    }
+  }
+
+  private fun buildContactsPayload(): JSONObject {
+    val contacts = JSONArray()
+    val seenPhones = mutableSetOf<String>()
+    val projection = arrayOf(
+      ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+      ContactsContract.CommonDataKinds.Phone.NUMBER,
+      ContactsContract.CommonDataKinds.Phone.CONTACT_ID
+    )
+
+    try {
+      contentResolver.query(
+        ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+        projection,
+        null,
+        null,
+        "${ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} ASC"
+      )?.use { cursor ->
+        val nameIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
+        val phoneIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
+        val idIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.CONTACT_ID)
+
+        while (cursor.moveToNext()) {
+          val phone = cursor.getString(phoneIndex).orEmpty().trim()
+          if (phone.isBlank()) continue
+          val phoneKey = phone.replace(Regex("\\D"), "")
+          if (phoneKey.isBlank() || seenPhones.contains(phoneKey)) continue
+          seenPhones.add(phoneKey)
+
+          contacts.put(JSONObject().apply {
+            put("id", cursor.getString(idIndex).orEmpty())
+            put("name", cursor.getString(nameIndex).orEmpty().ifBlank { phone })
+            put("phoneNumber", phone)
+            put("email", "")
+          })
+        }
+      }
+    } catch (error: Exception) {
+      return JSONObject().apply {
+        put("success", false)
+        put("error", error.message ?: "Lecture des contacts impossible.")
+        put("contacts", contacts)
+      }
+    }
+
+    return JSONObject().apply {
+      put("success", true)
+      put("contacts", contacts)
+    }
+  }
+
+  override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+    super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+    if (requestCode == CONTACTS_PERMISSION_REQUEST) {
+      val requestId = pendingContactsRequestId ?: return
+      pendingContactsRequestId = null
+      val granted = grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
+      if (granted) {
+        resolveNativeContacts(requestId, buildContactsPayload())
+      } else {
+        resolveNativeContacts(requestId, JSONObject().apply {
+          put("success", false)
+          put("error", "Acces aux contacts refuse.")
+          put("contacts", JSONArray())
+        })
+      }
+    }
+  }
+
   private fun captureNotificationIntent(intent: Intent?) {
     val fromExtra = intent?.getStringExtra("enkamba_action_url").orEmpty()
     val fromActionUrl = intent?.getStringExtra("actionUrl").orEmpty()
@@ -244,5 +350,9 @@ class MainActivity : TauriActivity() {
     if (Build.VERSION.SDK_INT < 33) return
     if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) return
     requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 7302)
+  }
+
+  companion object {
+    private const val CONTACTS_PERMISSION_REQUEST = 7303
   }
 }

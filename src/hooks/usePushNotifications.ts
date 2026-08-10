@@ -74,16 +74,42 @@ async function setupWebPush() {
     if (Notification.permission !== 'granted') return;
     const title = payload.notification?.title || 'eNkamba';
     const body = payload.notification?.body || 'Nouvelle notification';
-    const isCallNotification = payload.data?.type === 'incoming_call';
-    const notificationOptions: NotificationOptions & { vibrate?: number[] } = {
+    const data = payload.data || {};
+    const actionUrl = data.actionUrl || '/dashboard';
+    const isCallNotification = data.type === 'incoming_call';
+    const callId = data.callId || '';
+    type RichNotificationOptions = NotificationOptions & {
+      actions?: Array<{ action: string; title: string }>;
+      renotify?: boolean;
+      vibrate?: number[];
+    };
+    const notificationOptions: RichNotificationOptions = {
       body,
       icon: '/enkamba-logo.png',
       badge: '/favicon.png',
-      data: payload.data || {},
+      data,
+      tag: isCallNotification && callId ? `enkamba-call-${callId}` : actionUrl,
+      renotify: isCallNotification,
       requireInteraction: isCallNotification,
-      vibrate: isCallNotification ? [300, 150, 300, 150, 300] : undefined,
+      vibrate: isCallNotification ? [300, 150, 300, 150, 300] : [180, 80, 180],
+      actions: isCallNotification
+        ? [
+            { action: 'answer', title: 'Répondre' },
+            { action: 'decline', title: 'Refuser' },
+          ]
+        : undefined,
     };
-    new Notification(title, notificationOptions);
+    const notification = new Notification(title, notificationOptions);
+    notification.onclick = () => {
+      window.focus();
+      if (isCallNotification && actionUrl) {
+        const separator = actionUrl.includes('?') ? '&' : '?';
+        window.location.href = `${actionUrl}${separator}webAccepted=1`;
+      } else if (actionUrl) {
+        window.location.href = actionUrl;
+      }
+      notification.close();
+    };
   });
 
   return () => unsubscribe();
