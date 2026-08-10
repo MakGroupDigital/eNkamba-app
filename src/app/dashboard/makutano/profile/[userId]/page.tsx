@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { VerifiedAccountBadge } from '@/components/verified-account-badge';
 
 type PublicUser = {
   id: string;
@@ -17,6 +18,7 @@ type PublicUser = {
   avatar: string;
   location: string;
   bio: string;
+  verified?: boolean;
 };
 
 type PublicPost = {
@@ -92,6 +94,7 @@ export default function MakutanoPublicProfilePage() {
           avatar: data.profileImage || data.photoURL || data.profilePhotoUrl || data.kyc?.profileImage || '',
           location: data.city || data.country || data.location || 'Makutano',
           bio: data.bio || data.about || 'Profil public Makutano.',
+          verified: data.kycStatus === 'verified',
         });
 
         const postsQuery = query(
@@ -432,7 +435,10 @@ export default function MakutanoPublicProfilePage() {
                   </AvatarFallback>
                 </Avatar>
                 <div className="min-w-0 pb-1">
-                  <h1 className="truncate text-2xl font-black tracking-tight sm:text-3xl">{publicUser.name}</h1>
+	                  <h1 className="flex min-w-0 items-center gap-2 text-2xl font-black tracking-tight sm:text-3xl">
+	                    <span className="truncate">{publicUser.name}</span>
+	                    <VerifiedAccountBadge verified={publicUser.verified} label />
+	                  </h1>
                   <p className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-muted-foreground">
                     <MapPin className="h-4 w-4 text-[#009058]" />
                     {publicUser.location}

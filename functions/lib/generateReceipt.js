@@ -55,8 +55,8 @@ exports.generateReceiptPDF = functions.https.onCall(async (data, context) => {
     }
     try {
         const db = admin.firestore();
-        // Récupérer la transaction
-        const transactionDoc = await db.collection('users').doc(userId)
+        // Récupérer la transaction depuis le wallet
+        const transactionDoc = await db.collection('wallets').doc(userId)
             .collection('transactions').doc(transactionId).get();
         if (!transactionDoc.exists) {
             throw new functions.https.HttpsError('not-found', 'Transaction non trouvée');
@@ -185,6 +185,14 @@ exports.generateReceiptPDF = functions.https.onCall(async (data, context) => {
         doc.text(`Description: ${transaction.description}`);
         if (transaction.transferMethod) {
             doc.text(`Méthode: ${transaction.transferMethod.charAt(0).toUpperCase() + transaction.transferMethod.slice(1)}`);
+        }
+        // Numéro de suivi pour les commandes e-commerce
+        if (transaction.type === 'ecommerce_purchase' && transaction.metadata?.trackingNumber) {
+            doc.moveDown(0.3);
+            doc.fontSize(10).font('Helvetica-Bold').fillColor('#32BB78');
+            doc.text(`🔍 Numéro de suivi: ${transaction.metadata.trackingNumber}`);
+            doc.fontSize(8).font('Helvetica').fillColor('#666666');
+            doc.text('Utilisez ce numéro pour suivre votre colis', { indent: 20 });
         }
         doc.moveDown(0.5);
         // ===== LIGNE DE SÉPARATION =====

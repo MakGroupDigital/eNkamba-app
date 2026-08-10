@@ -33,6 +33,8 @@ import { useNkampaStore } from '@/hooks/useNkampaStore';
 import { getBusinessDashboardPath, getBusinessStatusLabel } from '@/lib/business-routing';
 import { ContactQRCode } from '@/components/settings/ContactQRCode';
 import { AgentRelaySection } from '@/components/agent-relay/AgentRelaySection';
+import { VerifiedAccountBadge } from '@/components/verified-account-badge';
+import { calculateAgeFromDateOfBirth } from '@/lib/age-policy';
 import {
   SettingsPageIcon,
   UserProfileIcon,
@@ -223,6 +225,8 @@ export default function SettingsPage() {
   const nkampaStoreDescription = hasCheckedNkampaStore && nkampaStore
     ? `Accéder à ${nkampaStore.storeName || 'votre boutique Nkampa'}.`
     : 'Créer ou demander une boutique pour vendre sur Nkampa.';
+  const isProfileVerified = isKycCompleted || profile?.kycStatus === 'verified';
+  const calculatedProfileAge = calculateAgeFromDateOfBirth(profile?.dateOfBirth);
 
   return (
     <div className="container mx-auto max-w-4xl p-4 space-y-6 animate-in fade-in duration-500">
@@ -274,12 +278,15 @@ export default function SettingsPage() {
                   <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-primary border-2 border-white" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-xl font-bold font-headline">{userData.name}</p>
+                  <p className="flex min-w-0 items-center gap-2 text-xl font-bold font-headline">
+                    <span className="truncate">{userData.name}</span>
+                    <VerifiedAccountBadge verified={isProfileVerified} label />
+                  </p>
                   <p className="text-muted-foreground">{userData.email}</p>
                   {userData.phone && (
                     <p className="text-sm text-muted-foreground mt-1">{userData.phone}</p>
                   )}
-                  {isKycCompleted && (
+                  {isProfileVerified && (
                     <p className="text-xs text-primary mt-1 flex items-center gap-1">
                       <CheckCircle2 size={14} />
                       Profil vérifié
@@ -324,6 +331,12 @@ export default function SettingsPage() {
                       <div>
                         <p className="text-sm font-semibold text-muted-foreground">Date de naissance</p>
                         <p className="text-base font-medium">{profile.dateOfBirth}</p>
+                      </div>
+                    )}
+                    {calculatedProfileAge !== null && (
+                      <div>
+                        <p className="text-sm font-semibold text-muted-foreground">Âge</p>
+                        <p className="text-base font-medium">{calculatedProfileAge} ans</p>
                       </div>
                     )}
                     {profile.country && (
@@ -411,11 +424,11 @@ export default function SettingsPage() {
               </Link>
             </Button>
           )}
-          {!isKycCompleted && (
+          {!isProfileVerified && (
             <Button variant="ghost" className="gap-2 w-full text-muted-foreground" asChild>
               <Link href="/kyc">
                 <Shield size={18} />
-                Vérification KYC (Optionnel)
+                Vérification KYC
               </Link>
             </Button>
           )}

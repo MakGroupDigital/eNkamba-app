@@ -534,11 +534,12 @@ export default function MakutanoCreatePage() {
         category,
         likes: 0,
         comments: 0,
-        author: {
-          name: profile?.fullName || profile?.name || user?.displayName || 'Utilisateur eNkamba',
-          location: postLocation.label,
-          avatar: profile?.profileImage || user?.photoURL || '',
-        },
+	        author: {
+	          name: profile?.fullName || profile?.name || user?.displayName || 'Utilisateur eNkamba',
+	          location: postLocation.label,
+	          avatar: profile?.profileImage || user?.photoURL || '',
+	          verified: profile?.kycStatus === 'verified',
+	        },
         authorLocation: postLocation.label,
         location: postLocation,
         authorId: user?.uid || null,

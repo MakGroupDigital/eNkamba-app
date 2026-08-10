@@ -11,6 +11,7 @@ import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { useRealtimeNotifications } from '@/hooks/useRealtimeNotifications';
 import { ChevronRight } from 'lucide-react';
 import { GlobalLocationBar } from '@/components/dashboard/global-location-bar';
+import { AgeRestrictionGate } from '@/components/security/AgeRestrictionGate';
 // import { useSupabaseNotifications } from '@/hooks/useSupabaseNotifications'; // Disabled - Supabase realtime not needed
 
 export default function DashboardLayout({
@@ -104,7 +105,8 @@ export default function DashboardLayout({
   return (
     <AuthGuard>
       <ModuleKycGate>
-        <div className="flex h-dvh overflow-hidden flex-col bg-background">
+        <AgeRestrictionGate>
+          <div className="flex h-dvh overflow-hidden flex-col bg-background">
           {!isCallPage && <GlobalLocationBar />}
           <main className={isCallPage ? 'fixed inset-0 z-[200] overflow-hidden bg-black' : isUgaviHome ? 'min-h-0 flex-1 touch-none overflow-hidden overscroll-none pb-0' : isChatSubpage || isAiPage ? 'min-h-0 flex-1 overflow-hidden pb-0' : 'flex-grow overflow-y-auto pb-40'}>
             {children}
@@ -131,7 +133,8 @@ export default function DashboardLayout({
           
           {/* Modal de notification de transfert reçu */}
           <TransferNotificationModal />
-        </div>
+          </div>
+        </AgeRestrictionGate>
       </ModuleKycGate>
     </AuthGuard>
   );

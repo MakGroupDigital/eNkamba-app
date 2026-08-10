@@ -11,9 +11,15 @@ export interface UserProfile {
   phoneNumber?: string;
   fullName?: string;
   name?: string;
+  username?: string;
   displayName?: string;
   dateOfBirth?: string;
+  age?: number;
   country?: string;
+  location?: string;
+  locationLabel?: string;
+  ageRestrictionStatus?: string;
+  ageRestrictionReason?: string;
   profileImage?: string;
   photoURL?: string;
   kycStatus?: string;
@@ -126,9 +132,15 @@ export function useUserProfile() {
                 phoneNumber: updatedData?.phoneNumber,
                 fullName: updatedData?.fullName || user.displayName || '',
                 name: updatedData?.name,
+                username: updatedData?.username,
                 dateOfBirth: updatedData?.dateOfBirth,
+                age: updatedData?.age,
                 country: updatedData?.country,
-                profileImage: user.photoURL || updatedData?.profileImage,
+                location: updatedData?.location,
+                locationLabel: updatedData?.locationLabel,
+                ageRestrictionStatus: updatedData?.ageRestrictionStatus,
+                ageRestrictionReason: updatedData?.ageRestrictionReason,
+                profileImage: updatedData?.profileImage || user.photoURL || undefined,
                 kycStatus: updatedData?.kycStatus,
                 kycCompletedAt: updatedData?.kycCompletedAt,
                 accountNumber: updatedData?.accountNumber,
@@ -147,9 +159,15 @@ export function useUserProfile() {
                 phoneNumber: userData.phoneNumber,
                 fullName: userData.fullName || user.displayName || '',
                 name: userData.name,
+                username: userData.username,
                 dateOfBirth: userData.dateOfBirth,
+                age: userData.age,
                 country: userData.country,
-                profileImage: user.photoURL || userData.profileImage,
+                location: userData.location,
+                locationLabel: userData.locationLabel,
+                ageRestrictionStatus: userData.ageRestrictionStatus,
+                ageRestrictionReason: userData.ageRestrictionReason,
+                profileImage: userData.profileImage || user.photoURL || undefined,
                 kycStatus: userData.kycStatus,
                 kycCompletedAt: userData.kycCompletedAt,
                 accountNumber: userData.accountNumber,

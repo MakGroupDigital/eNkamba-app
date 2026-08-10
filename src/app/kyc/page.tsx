@@ -13,7 +13,9 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { UserCheck, Upload, Camera, Ticket, Loader2, CheckCircle, Smartphone, Building2, ArrowLeft, Check, CreditCard, Globe } from 'lucide-react';
+import { uploadToCloudinary } from '@/lib/cloudinary-upload';
+import { ENKAMBA_MINIMUM_AGE, calculateAgeFromDateOfBirth } from '@/lib/age-policy';
+import { UserCheck, Upload, Camera, Ticket, Loader2, CheckCircle, Smartphone, Building2, ArrowLeft, Check, CreditCard, Globe, AlertCircle } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 type Step = 'identity' | 'selfie' | 'referral' | 'linkAccount' | 'completed';
@@ -135,13 +137,16 @@ const getInitialProgress = (): KycProgress => {
 
 export default function KycPage() {
   const router = useRouter();
-  const { completeKyc, isKycCompleted, isLoading: kycLoading } = useKycStatus();
+  const { toast } = useToast();
+  const { completeKyc, isKycCompleted, kycStatus, isLoading: kycLoading } = useKycStatus();
   const [isHydrated, setIsHydrated] = useState(false);
   const [progress, setProgress] = useState<KycProgress>(getInitialProgress);
   const [step, setStep] = useState<Step>('identity');
   const [idFront, setIdFront] = useState<File | null>(null);
   const [idBack, setIdBack] = useState<File | null>(null);
   const [selfie, setSelfie] = useState<string | null>(null);
+  const [faceAssessment, setFaceAssessment] = useState<any>(null);
+  const [isAssessingFace, setIsAssessingFace] = useState(false);
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -152,6 +157,7 @@ export default function KycPage() {
   const [fullName, setFullName] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [country, setCountry] = useState('CD');
+  const calculatedAge = calculateAgeFromDateOfBirth(dateOfBirth);
 
   // États pour Mobile Money Dialog
   const [mobileMoneyOpen, setMobileMoneyOpen] = useState(false);
@@ -187,7 +193,14 @@ export default function KycPage() {
       console.log('KYC déjà complété, redirection vers dashboard');
       router.push('/dashboard');
     }
-  }, [isKycCompleted, router]);
+    if (kycStatus.status === 'in_review') {
+      toast({
+        title: 'KYC en cours de vérification',
+        description: 'Votre dossier est déjà soumis. Vous serez notifié après validation.',
+      });
+      router.push('/dashboard');
+    }
+  }, [isKycCompleted, kycStatus.status, router, toast]);
 
   // Hydrater depuis localStorage au montage
   useEffect(() => {
@@ -441,7 +454,73 @@ export default function KycPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  const { toast } = useToast();
+  const dataUrlToFile = (dataUrl: string, filename: string) => {
+    const [header, base64] = dataUrl.split(',');
+    const mime = header.match(/data:(.*?);base64/)?.[1] || 'image/jpeg';
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i += 1) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return new File([bytes], filename, { type: mime });
+  };
+
+  const assessSelfieForKyc = useCallback(async (frame: string) => {
+    setIsAssessingFace(true);
+    try {
+      const response = await fetch('/api/kyc/compreface', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ frame }),
+      });
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok || !payload?.success) {
+        if (payload?.missingConfig) {
+          const manualAssessment = {
+            provider: 'manual_review_required',
+            accepted: false,
+            confidence: 0,
+            reason: 'Contrôle visage indisponible',
+            instruction: 'Le dossier sera contrôlé manuellement.',
+          };
+          setFaceAssessment(manualAssessment);
+          toast({
+            title: 'Contrôle manuel',
+            description: 'Le service visage est indisponible. Votre dossier passera en revue manuelle.',
+          });
+          return manualAssessment;
+        }
+        throw new Error(payload?.error || 'Contrôle visage KYC indisponible.');
+      }
+
+      setFaceAssessment(payload);
+      if (!payload.accepted) {
+        toast({
+          variant: 'destructive',
+          title: 'Selfie non accepté',
+          description: payload.instruction || 'Reprenez une photo plus claire.',
+        });
+      }
+      return payload;
+    } catch (error: any) {
+      const failedAssessment = {
+        provider: 'manual_review_required',
+        accepted: false,
+        confidence: 0,
+        reason: error?.message || 'Contrôle visage indisponible',
+        instruction: 'Le dossier sera contrôlé manuellement.',
+      };
+      setFaceAssessment(failedAssessment);
+      toast({
+        title: 'Contrôle manuel',
+        description: 'Le contrôle visage n’a pas répondu. Votre dossier passera en revue manuelle.',
+      });
+      return failedAssessment;
+    } finally {
+      setIsAssessingFace(false);
+    }
+  }, [toast]);
 
   const stepsConfig = {
     identity: { progress: 25, title: "Pièce d'Identité" },
@@ -536,7 +615,7 @@ export default function KycPage() {
     };
   }, [stopCamera]);
 
-  const handleTakePhoto = () => {
+  const handleTakePhoto = async () => {
     if (videoRef.current && canvasRef.current && cameraReady) {
       const video = videoRef.current;
       const canvas = canvasRef.current;
@@ -555,11 +634,13 @@ export default function KycPage() {
       const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
       setSelfie(dataUrl);
       stopCamera();
+      await assessSelfieForKyc(dataUrl);
     }
   };
 
   const handleRetakePhoto = () => {
     setSelfie(null);
+    setFaceAssessment(null);
     setCameraError(null);
     // La caméra redémarrera automatiquement via useEffect
   };
@@ -576,6 +657,15 @@ export default function KycPage() {
           });
           return;
         }
+        if (calculatedAge !== null && calculatedAge < ENKAMBA_MINIMUM_AGE) {
+          toast({
+            variant: 'destructive',
+            title: 'Âge non autorisé',
+            description: `eNkamba est réservé aux utilisateurs de ${ENKAMBA_MINIMUM_AGE} ans ou plus.`,
+          });
+          router.push('/age-restricted');
+          return;
+        }
         if (!idFront || !idBack) {
           toast({ 
             variant: 'destructive', 
@@ -589,6 +679,14 @@ export default function KycPage() {
         break;
       case 'selfie':
         if (selfie) {
+          if (faceAssessment && faceAssessment.accepted === false && faceAssessment.provider !== 'manual_review_required') {
+            toast({
+              variant: 'destructive',
+              title: 'Selfie à reprendre',
+              description: faceAssessment.instruction || 'Le visage n’a pas été validé.',
+            });
+            return;
+          }
           stopCamera();
           saveProgress({ selfieTaken: true });
           completeStep('selfie');
@@ -621,19 +719,28 @@ export default function KycPage() {
           toast({ variant: 'destructive', title: 'Erreur', description: 'Veuillez entrer votre date de naissance.' });
           return;
         }
+        if (calculatedAge !== null && calculatedAge < ENKAMBA_MINIMUM_AGE) {
+          toast({
+            variant: 'destructive',
+            title: 'Âge non autorisé',
+            description: `eNkamba est réservé aux utilisateurs de ${ENKAMBA_MINIMUM_AGE} ans ou plus.`,
+          });
+          router.push('/age-restricted');
+          return;
+        }
         if (!country || !country.trim()) {
           toast({ variant: 'destructive', title: 'Erreur', description: 'Veuillez sélectionner votre pays.' });
           return;
         }
-        if (!progress.idFrontUploaded) {
+        if (!idFront) {
           toast({ variant: 'destructive', title: 'Erreur', description: 'Veuillez uploader le recto de votre pièce d\'identité.' });
           return;
         }
-        if (!progress.idBackUploaded) {
+        if (!idBack) {
           toast({ variant: 'destructive', title: 'Erreur', description: 'Veuillez uploader le verso de votre pièce d\'identité.' });
           return;
         }
-        if (!progress.selfieTaken) {
+        if (!selfie) {
           toast({ variant: 'destructive', title: 'Erreur', description: 'Veuillez prendre un selfie.' });
           return;
         }
@@ -641,13 +748,22 @@ export default function KycPage() {
         setIsLoading(true);
         setTimeout(async () => {
           try {
-            // Utiliser les données du formulaire
+            const [idFrontUpload, idBackUpload, selfieUpload] = await Promise.all([
+              uploadToCloudinary(idFront, 'image'),
+              uploadToCloudinary(idBack, 'image'),
+              uploadToCloudinary(dataUrlToFile(selfie, `kyc-selfie-${Date.now()}.jpg`), 'image'),
+            ]);
+
             const kycData = {
               identityType,
               identityNumber,
               fullName,
               dateOfBirth,
               country,
+              idFrontUrl: idFrontUpload.secureUrl,
+              idBackUrl: idBackUpload.secureUrl,
+              selfieUrl: selfieUpload.secureUrl,
+              faceAssessment,
               linkedAccount: mobileMoneyLinked ? {
                 type: 'mobile_money' as const,
                 operator: mobileMoneyData.operator,
@@ -671,8 +787,10 @@ export default function KycPage() {
               // Nettoyer le localStorage après complétion totale
               localStorage.removeItem(KYC_STORAGE_KEY);
               
-              // Rediriger immédiatement vers le dashboard
-              // Ne pas attendre, rediriger tout de suite
+              toast({
+                title: 'Dossier KYC soumis',
+                description: 'Votre identité est en cours de vérification.',
+              });
               router.push('/dashboard');
             }
           } catch (error: any) {
@@ -780,6 +898,11 @@ export default function KycPage() {
                     value={dateOfBirth}
                     onChange={(e) => setDateOfBirth(e.target.value)}
                   />
+                  {calculatedAge !== null && (
+                    <p className={`text-xs font-semibold ${calculatedAge < ENKAMBA_MINIMUM_AGE ? 'text-red-600' : 'text-primary'}`}>
+                      Âge calculé : {calculatedAge} ans
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -905,14 +1028,40 @@ export default function KycPage() {
             </div>
             
             <canvas ref={canvasRef} className="hidden" />
+
+            {isAssessingFace && (
+              <Alert className="bg-primary/5 border-primary/20">
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                <AlertTitle className="text-primary">Contrôle du visage</AlertTitle>
+                <AlertDescription>
+                  Analyse du selfie KYC en cours...
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {faceAssessment && !isAssessingFace && (
+              <Alert className={faceAssessment.accepted ? 'bg-primary/5 border-primary/20' : 'bg-[#FFA500]/10 border-[#FFA500]/30'}>
+                {faceAssessment.accepted ? (
+                  <CheckCircle className="h-4 w-4 text-primary" />
+                ) : (
+                  <AlertCircle className="h-4 w-4 text-[#FFA500]" />
+                )}
+                <AlertTitle className={faceAssessment.accepted ? 'text-primary' : 'text-[#FFA500]'}>
+                  {faceAssessment.accepted ? 'Selfie validé' : 'Revue manuelle'}
+                </AlertTitle>
+                <AlertDescription>
+                  {faceAssessment.instruction || faceAssessment.reason || 'Votre selfie sera contrôlé avec votre dossier.'}
+                </AlertDescription>
+              </Alert>
+            )}
             
             {!selfie ? (
               <Button
                 className="w-full"
                 onClick={handleTakePhoto}
-                disabled={!cameraReady}
+                disabled={!cameraReady || isAssessingFace}
               >
-                <Camera className="mr-2 h-4 w-4" />
+                {isAssessingFace ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Camera className="mr-2 h-4 w-4" />}
                 Prendre la photo
               </Button>
             ) : (

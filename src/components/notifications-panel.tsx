@@ -1,6 +1,6 @@
 'use client';
 
-import { Bell, X, CheckCircle2, AlertCircle, Info } from 'lucide-react';
+import { Bell, X, CheckCircle2, AlertCircle, Info, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -20,6 +20,8 @@ export function NotificationsPanel() {
         return <AlertCircle className="w-5 h-5 text-blue-600" />;
       case 'payment_request':
         return <Info className="w-5 h-5 text-[#FFA500]" />;
+      case 'kyc_required':
+        return <ShieldCheck className="w-5 h-5 text-primary" />;
       case 'BUSINESS_APPROVED':
         return <CheckCircle2 className="w-5 h-5 text-primary" />;
       case 'BUSINESS_REJECTED':
@@ -37,6 +39,8 @@ export function NotificationsPanel() {
         return 'bg-blue-50 border-blue-200';
       case 'payment_request':
         return 'bg-[#FFA500]/10 border-[#FFA500]/30';
+      case 'kyc_required':
+        return 'bg-primary/5 border-primary/20';
       case 'BUSINESS_APPROVED':
         return 'bg-primary/5 border-primary/20';
       case 'BUSINESS_REJECTED':

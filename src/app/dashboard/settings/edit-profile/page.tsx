@@ -10,10 +10,14 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useAuth } from '@/hooks/useAuth';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { ArrowLeft, Loader2, Upload } from 'lucide-react';
+import { ArrowLeft, Loader2, LocateFixed, Mail, Upload, UserRound } from 'lucide-react';
 import Link from 'next/link';
+import { uploadToCloudinary } from '@/lib/cloudinary-upload';
+import { getDashboardLocationOrDefault } from '@/lib/dashboard-location';
+import { ENKAMBA_MINIMUM_AGE, calculateAgeFromDateOfBirth } from '@/lib/age-policy';
+import { ProfilePhotoCropper } from '@/components/profile/profile-photo-cropper';
 
 export default function EditProfilePage() {
   const router = useRouter();
@@ -24,21 +28,33 @@ export default function EditProfilePage() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [photoToCrop, setPhotoToCrop] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     fullName: '',
+    username: '',
+    email: '',
     phone: '',
     dateOfBirth: '',
+    age: '',
     country: '',
+    locationLabel: '',
   });
+  const calculatedAge = calculateAgeFromDateOfBirth(formData.dateOfBirth);
 
   // Charger les données du profil
   useEffect(() => {
     if (profile) {
       setFormData({
         fullName: profile.fullName || '',
+        username: profile.username || profile.name || '',
+        email: profile.email || '',
         phone: profile.phone || '',
         dateOfBirth: profile.dateOfBirth || '',
+        age: profile.dateOfBirth
+          ? String(calculateAgeFromDateOfBirth(profile.dateOfBirth) ?? '')
+          : profile.age ? String(profile.age) : '',
         country: profile.country || '',
+        locationLabel: profile.locationLabel || profile.location || '',
       });
       // Charger l'image existante du profil
       if (profile.profileImage) {
@@ -75,7 +91,10 @@ export default function EditProfilePage() {
     const reader = new FileReader();
     reader.onload = (event) => {
       const result = event.target?.result as string;
-      setProfileImage(result);
+      setPhotoToCrop(result);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     };
     reader.readAsDataURL(file);
   };
@@ -85,6 +104,7 @@ export default function EditProfilePage() {
     setFormData(prev => ({
       ...prev,
       [name]: value,
+      ...(name === 'dateOfBirth' ? { age: String(calculateAgeFromDateOfBirth(value) ?? '') } : {}),
     }));
   };
 
@@ -103,32 +123,55 @@ export default function EditProfilePage() {
     setIsLoading(true);
 
     try {
+      const nextAge = calculateAgeFromDateOfBirth(formData.dateOfBirth);
+      if (nextAge !== null && nextAge < ENKAMBA_MINIMUM_AGE) {
+        await setDoc(doc(db, 'users', user.uid), {
+          dateOfBirth: formData.dateOfBirth,
+          age: nextAge,
+          ageRestrictionStatus: 'blocked_under_16',
+          ageRestrictionReason: 'date_of_birth_under_minimum',
+          ageRestrictionUpdatedAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        }, { merge: true });
+        router.push('/age-restricted');
+        return;
+      }
+
       const userRef = doc(db, 'users', user.uid);
+      let nextProfileImage = profileImage || '';
+
+      if (nextProfileImage.startsWith('data:image/')) {
+        const imageFile = await fetch(nextProfileImage)
+          .then((response) => response.blob())
+          .then((blob) => new File([blob], `profile-${user.uid}-${Date.now()}.jpg`, { type: blob.type || 'image/jpeg' }));
+        const uploaded = await uploadToCloudinary(imageFile, 'image');
+        nextProfileImage = uploaded.secureUrl;
+      }
       
       // Préparer les données à enregistrer
       const updateData: any = {
-        fullName: formData.fullName,
-        name: formData.fullName,
-        phone: formData.phone,
-        phoneNumber: formData.phone,
+        fullName: formData.fullName.trim(),
+        name: formData.fullName.trim() || formData.username.trim(),
+        username: formData.username.trim(),
+        displayName: formData.fullName.trim() || formData.username.trim(),
+        email: formData.email.trim(),
+        contactEmail: formData.email.trim(),
+        phone: formData.phone.trim(),
+        phoneNumber: formData.phone.trim(),
         dateOfBirth: formData.dateOfBirth,
-        country: formData.country,
-        updatedAt: new Date(),
+        age: nextAge,
+        country: formData.country.trim(),
+        locationLabel: formData.locationLabel.trim(),
+        location: formData.locationLabel.trim(),
+        profileCompleted: Boolean(formData.fullName.trim() && formData.username.trim()),
+        profileCompletedAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       };
 
       // Ajouter l'image si elle existe
-      if (profileImage) {
-        updateData.profileImage = profileImage;
-        updateData.photoURL = profileImage;
-      }
-
-      // Mettre à jour aussi dans kyc.identity si nécessaire
-      if (formData.fullName || formData.dateOfBirth || formData.country) {
-        updateData['kyc.identity'] = {
-          fullName: formData.fullName,
-          dateOfBirth: formData.dateOfBirth,
-          country: formData.country,
-        };
+      if (nextProfileImage) {
+        updateData.profileImage = nextProfileImage;
+        updateData.photoURL = nextProfileImage;
       }
 
       // Enregistrer dans Firestore avec merge pour ne pas écraser les autres champs
@@ -154,6 +197,15 @@ export default function EditProfilePage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleUseCurrentLocation = () => {
+    const location = getDashboardLocationOrDefault();
+    setFormData(prev => ({
+      ...prev,
+      locationLabel: location.label,
+      country: prev.country || location.pays || '',
+    }));
   };
 
   if (profileLoading) {
@@ -241,6 +293,37 @@ export default function EditProfilePage() {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="username">Nom d&apos;utilisateur</Label>
+              <div className="relative">
+                <UserRound className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="username"
+                  name="username"
+                  value={formData.username}
+                  onChange={handleInputChange}
+                  placeholder="ex: charmant"
+                  className="pl-10"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  placeholder="nom@exemple.com"
+                  className="pl-10"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="phone">Téléphone</Label>
               <Input
                 id="phone"
@@ -264,6 +347,24 @@ export default function EditProfilePage() {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="age">Âge</Label>
+              <Input
+                id="age"
+                name="age"
+                type="number"
+                value={calculatedAge ?? ''}
+                readOnly
+                placeholder="Calculé automatiquement"
+                className="bg-muted/60"
+              />
+              {calculatedAge !== null && calculatedAge < ENKAMBA_MINIMUM_AGE && (
+                <p className="text-xs font-semibold text-red-600">
+                  L’accès eNkamba est réservé aux utilisateurs de {ENKAMBA_MINIMUM_AGE} ans ou plus.
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="country">Pays</Label>
               <Input
                 id="country"
@@ -272,6 +373,23 @@ export default function EditProfilePage() {
                 onChange={handleInputChange}
                 placeholder="Votre pays"
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="locationLabel">Localisation</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="locationLabel"
+                  name="locationLabel"
+                  value={formData.locationLabel}
+                  onChange={handleInputChange}
+                  placeholder="Ville, commune, pays"
+                />
+                <Button type="button" variant="outline" onClick={handleUseCurrentLocation} className="shrink-0 gap-2">
+                  <LocateFixed className="h-4 w-4" />
+                  Utiliser
+                </Button>
+              </div>
             </div>
 
             <div className="flex gap-3 pt-4">
@@ -301,6 +419,15 @@ export default function EditProfilePage() {
           </form>
         </CardContent>
       </Card>
+
+      <ProfilePhotoCropper
+        open={Boolean(photoToCrop)}
+        imageSrc={photoToCrop}
+        onOpenChange={(open) => {
+          if (!open) setPhotoToCrop(null);
+        }}
+        onConfirm={(croppedImage) => setProfileImage(croppedImage)}
+      />
     </div>
   );
 }

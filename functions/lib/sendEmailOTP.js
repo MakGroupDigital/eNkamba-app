@@ -48,31 +48,65 @@ const transporter = nodemailer.createTransport({
         pass: process.env.EMAIL_PASSWORD,
     },
 });
+const ENKAMBA_MINIMUM_AGE = 16;
+function calculateAgeFromDateOfBirth(dateOfBirth) {
+    const birthDate = new Date(dateOfBirth);
+    if (Number.isNaN(birthDate.getTime()))
+        return null;
+    const now = new Date();
+    let age = now.getFullYear() - birthDate.getFullYear();
+    const monthDifference = now.getMonth() - birthDate.getMonth();
+    const dayDifference = now.getDate() - birthDate.getDate();
+    if (monthDifference < 0 || (monthDifference === 0 && dayDifference < 0)) {
+        age -= 1;
+    }
+    return age;
+}
 /**
  * Cloud Function pour créer ou mettre à jour le profil utilisateur
  * Appelée après la vérification du code OTP
  */
 exports.createOrUpdateUserProfile = functions.https.onCall(async (data, context) => {
-    const { email } = data;
+    const { email = '', phoneNumber = '' } = data;
     // Vérifier que l'utilisateur est authentifié
     if (!context.auth) {
         throw new functions.https.HttpsError('unauthenticated', 'Utilisateur non authentifié');
     }
-    // Valider l'email
-    if (!email || !email.trim()) {
-        throw new functions.https.HttpsError('invalid-argument', 'Email requis');
+    // Valider au moins un identifiant de connexion
+    if (!email.trim() && !phoneNumber.trim()) {
+        throw new functions.https.HttpsError('invalid-argument', 'Email ou numéro de téléphone requis');
     }
     try {
         const db = admin.firestore();
         const userRef = db.collection('users').doc(context.auth.uid);
+        const userSnap = await userRef.get();
+        const existingUser = userSnap.exists ? userSnap.data() || {} : {};
+        const kycStatus = existingUser.kycStatus || 'not_started';
+        const shouldSendKycPrompt = kycStatus !== 'verified' && !existingUser.kycPromptSentAt;
         // Créer ou mettre à jour le document utilisateur
         await userRef.set({
-            email,
+            ...(email.trim() ? { email } : {}),
+            ...(phoneNumber.trim() ? { phoneNumber, phone: phoneNumber } : {}),
             uid: context.auth.uid,
-            createdAt: admin.firestore.FieldValue.serverTimestamp(),
-            kycStatus: 'not_started',
+            ...(!userSnap.exists ? { createdAt: admin.firestore.FieldValue.serverTimestamp() } : {}),
+            kycStatus,
             lastLogin: admin.firestore.FieldValue.serverTimestamp(),
+            ...(shouldSendKycPrompt ? { kycPromptSentAt: admin.firestore.FieldValue.serverTimestamp() } : {}),
         }, { merge: true });
+        if (shouldSendKycPrompt) {
+            await userRef.collection('notifications').add({
+                type: 'kyc_required',
+                title: 'Vérifiez votre identité',
+                message: 'Complétez la vérification KYC pour sécuriser votre compte et débloquer toutes les opérations sensibles.',
+                actionLabel: 'Commencer la vérification',
+                actionUrl: '/kyc',
+                icon: 'shield-check',
+                read: false,
+                acknowledged: false,
+                timestamp: admin.firestore.FieldValue.serverTimestamp(),
+                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+        }
         return {
             success: true,
             message: 'Profil utilisateur créé/mis à jour',
@@ -276,7 +310,7 @@ exports.verifyEmailOTP = functions.https.onCall(async (data, context) => {
  * Stocke les données KYC dans Firestore et met à jour le statut utilisateur
  */
 exports.completeKyc = functions.https.onCall(async (data, context) => {
-    const { userId, identityType, identityNumber, fullName, dateOfBirth, country, linkedAccount } = data;
+    const { userId, identityType, identityNumber, fullName, dateOfBirth, country, idFrontUrl, idBackUrl, selfieUrl, faceAssessment, linkedAccount } = data;
     // Vérifier que l'utilisateur est authentifié
     if (!context.auth) {
         throw new functions.https.HttpsError('unauthenticated', 'Utilisateur non authentifié');
@@ -301,49 +335,95 @@ exports.completeKyc = functions.https.onCall(async (data, context) => {
     if (!country || !country.trim()) {
         throw new functions.https.HttpsError('invalid-argument', 'Pays requis');
     }
+    const calculatedAge = calculateAgeFromDateOfBirth(dateOfBirth);
+    if (calculatedAge === null) {
+        throw new functions.https.HttpsError('invalid-argument', 'Date de naissance invalide');
+    }
     try {
         const db = admin.firestore();
         const userRef = db.collection('users').doc(userId);
-        // Préparer les données KYC
+        if (calculatedAge < ENKAMBA_MINIMUM_AGE) {
+            await userRef.set({
+                dateOfBirth,
+                age: calculatedAge,
+                ageRestrictionStatus: 'blocked_under_16',
+                ageRestrictionReason: 'date_of_birth_under_minimum',
+                ageRestrictionUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            }, { merge: true });
+            throw new functions.https.HttpsError('failed-precondition', `eNkamba est réservé aux utilisateurs de ${ENKAMBA_MINIMUM_AGE} ans ou plus`);
+        }
+        const submissionRef = db.collection('kycSubmissions').doc(userId);
+        // Préparer les données KYC. La validation finale doit rester contrôlée.
         const kycData = {
             kyc: {
-                status: 'verified',
-                completedAt: admin.firestore.FieldValue.serverTimestamp(),
+                status: 'in_review',
+                submittedAt: admin.firestore.FieldValue.serverTimestamp(),
                 identity: {
                     type: identityType,
-                    number: identityNumber,
+                    numberLast4: identityNumber.slice(-4),
                     fullName,
                     dateOfBirth,
                     country,
                 },
+                documents: {
+                    idFrontUrl: idFrontUrl || null,
+                    idBackUrl: idBackUrl || null,
+                    selfieUrl: selfieUrl || null,
+                },
+                faceAssessment: faceAssessment || null,
                 linkedAccount: linkedAccount || null,
             },
             // Mettre à jour le statut utilisateur
-            kycStatus: 'verified',
-            kycCompletedAt: admin.firestore.FieldValue.serverTimestamp(),
+            kycStatus: 'in_review',
+            age: calculatedAge,
+            kycSubmittedAt: admin.firestore.FieldValue.serverTimestamp(),
         };
         // Sauvegarder dans Firestore
         await userRef.set(kycData, { merge: true });
+        await submissionRef.set({
+            userId,
+            status: 'in_review',
+            identityType,
+            identityNumberLast4: identityNumber.slice(-4),
+            fullName,
+            dateOfBirth,
+            age: calculatedAge,
+            country,
+            documents: {
+                idFrontUrl: idFrontUrl || null,
+                idBackUrl: idBackUrl || null,
+                selfieUrl: selfieUrl || null,
+            },
+            faceAssessment: faceAssessment || null,
+            linkedAccount: linkedAccount || null,
+            submittedAt: admin.firestore.FieldValue.serverTimestamp(),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
         // Créer un document séparé pour les données KYC sensibles (optionnel, pour audit)
         const kycAuditRef = db.collection('kycAudits').doc();
         await kycAuditRef.set({
             userId,
-            status: 'verified',
+            status: 'in_review',
             identityType,
             identityNumber: identityNumber.slice(-4), // Stocker seulement les 4 derniers chiffres
             fullName,
             country,
-            completedAt: admin.firestore.FieldValue.serverTimestamp(),
+            faceAccepted: faceAssessment?.accepted ?? null,
+            submittedAt: admin.firestore.FieldValue.serverTimestamp(),
             linkedAccountType: linkedAccount?.type || null,
         });
         return {
             success: true,
-            message: 'Vérification KYC complétée avec succès',
-            kycStatus: 'verified',
+            message: 'Dossier KYC soumis avec succès',
+            kycStatus: 'in_review',
         };
     }
     catch (error) {
         console.error('Erreur complétude KYC:', error);
+        if (error instanceof functions.https.HttpsError) {
+            throw error;
+        }
         throw new functions.https.HttpsError('internal', 'Erreur lors de la sauvegarde des données KYC');
     }
 });
@@ -476,6 +556,7 @@ exports.getKycStatus = functions.https.onCall(async (data, context) => {
             kycStatus: userData.kycStatus || 'not_started',
             isCompleted: userData.kycStatus === 'verified',
             completedAt: userData.kycCompletedAt || null,
+            submittedAt: userData.kycSubmittedAt || userData.kyc?.submittedAt || null,
             identity: userData.kyc?.identity ? {
                 type: userData.kyc.identity.type,
                 fullName: userData.kyc.identity.fullName,

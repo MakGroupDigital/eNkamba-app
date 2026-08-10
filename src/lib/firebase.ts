@@ -4,14 +4,13 @@ import { getFirestore } from "firebase/firestore";
 import { getFunctions } from "firebase/functions";
 import { getStorage } from "firebase/storage";
 
-// Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyDRhWbrpB1Ss4njot7GYO-CZdkvJtZXGyI",
-  authDomain: "studio-1153706651-6032b.firebaseapp.com",
-  projectId: "studio-1153706651-6032b",
-  storageBucket: "studio-1153706651-6032b.firebasestorage.app",
-  messagingSenderId: "60114170881",
-  appId: "1:60114170881:web:7805087264e18745ef3c00",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyDRhWbrpB1Ss4njot7GYO-CZdkvJtZXGyI",
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "studio-1153706651-6032b.firebaseapp.com",
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "studio-1153706651-6032b",
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "studio-1153706651-6032b.firebasestorage.app",
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "60114170881",
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:60114170881:web:7805087264e18745ef3c00",
 };
 
 // Initialize Firebase app (singleton)

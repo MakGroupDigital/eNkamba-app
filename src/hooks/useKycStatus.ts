@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { httpsCallable } from 'firebase/functions';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { functions, db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -10,8 +10,10 @@ const KYC_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 export interface KycStatus {
   isCompleted: boolean;
+  status?: 'not_started' | 'pending' | 'in_review' | 'verified' | 'rejected';
   currentStep?: string;
   completedAt?: number;
+  submittedAt?: number;
 }
 
 export function useKycStatus() {
@@ -69,7 +71,9 @@ export function useKycStatus() {
 
           const newStatus: KycStatus = {
             isCompleted: data.isCompleted || false,
+            status: data.kycStatus || (data.isCompleted ? 'verified' : 'not_started'),
             completedAt: data.completedAt,
+            submittedAt: data.submittedAt,
           };
 
           setKycStatus(newStatus);
@@ -91,7 +95,9 @@ export function useKycStatus() {
               const userData = userDoc.data();
               const newStatus: KycStatus = {
                 isCompleted: userData.kycStatus === 'verified',
+                status: userData.kycStatus || 'not_started',
                 completedAt: userData.kycCompletedAt?.toMillis?.() || undefined,
+                submittedAt: userData.kycSubmittedAt?.toMillis?.() || undefined,
               };
               setKycStatus(newStatus);
               
@@ -143,6 +149,10 @@ export function useKycStatus() {
     fullName: string;
     dateOfBirth: string;
     country: string;
+    idFrontUrl?: string;
+    idBackUrl?: string;
+    selfieUrl?: string;
+    faceAssessment?: any;
     linkedAccount?: any;
   }) => {
     try {
@@ -153,24 +163,73 @@ export function useKycStatus() {
       setIsLoading(true);
       setError(null);
 
-      // Appeler la Cloud Function pour compléter le KYC
-      const completeKycFn = httpsCallable(functions, 'completeKyc');
-      const result = await completeKycFn({
-        userId: user.uid,
-        ...kycData,
-      });
+      let data: any = null;
 
-      const data = result.data as any;
+      try {
+        const completeKycFn = httpsCallable(functions, 'completeKyc');
+        const result = await completeKycFn({
+          userId: user.uid,
+          ...kycData,
+        });
+        data = result.data as any;
+        if (!data.success) {
+          throw new Error(data.message || 'Erreur lors de la soumission KYC');
+        }
+      } catch (functionError: any) {
+        console.warn('Cloud Function KYC non disponible, fallback Firestore:', functionError?.message);
+        await setDoc(doc(db, 'users', user.uid), {
+          kycStatus: 'in_review',
+          kycSubmittedAt: serverTimestamp(),
+          kyc: {
+            status: 'in_review',
+            submittedAt: serverTimestamp(),
+            identity: {
+              type: kycData.identityType,
+              numberLast4: kycData.identityNumber.slice(-4),
+              fullName: kycData.fullName,
+              dateOfBirth: kycData.dateOfBirth,
+              country: kycData.country,
+            },
+            documents: {
+              idFrontUrl: kycData.idFrontUrl || null,
+              idBackUrl: kycData.idBackUrl || null,
+              selfieUrl: kycData.selfieUrl || null,
+            },
+            faceAssessment: kycData.faceAssessment || null,
+            linkedAccount: kycData.linkedAccount || null,
+          },
+        }, { merge: true });
 
-      // Vérifier que la Cloud Function a réussi AVANT de mettre à jour le statut local
-      if (!data.success) {
-        throw new Error(data.message || 'Erreur lors de la vérification KYC');
+        await setDoc(doc(db, 'kycSubmissions', user.uid), {
+          userId: user.uid,
+          status: 'in_review',
+          identityType: kycData.identityType,
+          identityNumberLast4: kycData.identityNumber.slice(-4),
+          fullName: kycData.fullName,
+          dateOfBirth: kycData.dateOfBirth,
+          country: kycData.country,
+          documents: {
+            idFrontUrl: kycData.idFrontUrl || null,
+            idBackUrl: kycData.idBackUrl || null,
+            selfieUrl: kycData.selfieUrl || null,
+          },
+          faceAssessment: kycData.faceAssessment || null,
+          linkedAccount: kycData.linkedAccount || null,
+          submittedAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        }, { merge: true });
+
+        data = {
+          success: true,
+          message: 'Dossier KYC soumis avec succès',
+          kycStatus: 'in_review',
+        };
       }
 
-      // Mettre à jour le statut local SEULEMENT si la Cloud Function a réussi
       const newStatus: KycStatus = {
-        isCompleted: true,
-        completedAt: Date.now(),
+        isCompleted: data.kycStatus === 'verified',
+        status: data.kycStatus || 'in_review',
+        submittedAt: Date.now(),
       };
 
       setKycStatus(newStatus);
@@ -188,6 +247,7 @@ export function useKycStatus() {
       return {
         success: true,
         message: data.message,
+        kycStatus: data.kycStatus || 'in_review',
       };
     } catch (err: any) {
       console.error('Erreur complétude KYC:', err);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -25,7 +25,7 @@ import {
   signInAnonymously
 } from "firebase/auth";
 import { httpsCallable } from "firebase/functions";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { collection, doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, functions, db } from "@/lib/firebase";
 
 // Authentification Email (Custom/Simulated in Dev)
@@ -56,6 +56,27 @@ interface Country {
 
 type LoginMethod = "SELECT" | "EMAIL" | "PHONE" | "OTP_EMAIL" | "OTP_PHONE";
 
+function normalizePhoneForFirebase(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  const hasPlus = trimmed.startsWith("+");
+  const digits = trimmed.replace(/\D/g, "");
+  return digits ? `${hasPlus ? "+" : ""}${digits}` : "";
+}
+
+function getPhoneAuthErrorMessage(error: any) {
+  const code = String(error?.code || "");
+  if (code === "auth/invalid-phone-number") return "Le numéro doit être au format international, exemple +243990000000.";
+  if (code === "auth/missing-phone-number") return "Veuillez entrer un numéro de téléphone.";
+  if (code === "auth/too-many-requests") return "Trop de tentatives. Patientez quelques minutes avant de réessayer.";
+  if (code === "auth/quota-exceeded") return "Le quota SMS Firebase est atteint pour le moment.";
+  if (code === "auth/captcha-check-failed") return "La vérification de sécurité a échoué. Réessayez.";
+  if (code === "auth/app-not-authorized") return "Le domaine ou l'application n'est pas autorisé dans Firebase Authentication.";
+  if (code === "auth/invalid-app-credential") return "Firebase refuse la vérification reCAPTCHA de cette adresse. Vérifiez les domaines autorisés et testez aussi avec http://127.0.0.1:9002.";
+  if (code === "auth/operation-not-allowed") return "La connexion par téléphone n'est pas activée dans Firebase Authentication.";
+  return error?.message || "Impossible d'envoyer le SMS de vérification.";
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
@@ -74,26 +95,49 @@ export default function LoginPage() {
 
   // Refs
   const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
+  const recaptchaRenderPromiseRef = useRef<Promise<RecaptchaVerifier | null> | null>(null);
 
   // Helper: Créer ou mettre à jour le profil utilisateur avec fallback Firestore
-  const createOrUpdateProfile = async (userId: string, userEmail: string) => {
+  const createOrUpdateProfile = async (userId: string, userEmail: string, userPhone = "") => {
     try {
       // Essayer d'abord avec Cloud Function
       const createUserProfileFn = httpsCallable(functions, 'createOrUpdateUserProfile');
-      await createUserProfileFn({ email: userEmail });
+      await createUserProfileFn({ email: userEmail, phoneNumber: userPhone });
       console.log("Profil utilisateur créé avec succès via Cloud Function");
     } catch (err: any) {
       console.warn("Erreur Cloud Function, utilisation du fallback Firestore:", err.message);
       
       // Fallback: Créer directement dans Firestore
       try {
+        const userRef = doc(db, 'users', userId);
+        const userSnap = await getDoc(userRef);
+        const existingUser = userSnap.exists() ? userSnap.data() : null;
+        const shouldSendKycPrompt = existingUser?.kycStatus !== 'verified' && !existingUser?.kycPromptSentAt;
+
         await setDoc(doc(db, 'users', userId), {
           email: userEmail,
+          ...(userPhone ? { phoneNumber: userPhone, phone: userPhone } : {}),
           uid: userId,
-          createdAt: serverTimestamp(),
-          kycStatus: 'not_started',
+          ...(!userSnap.exists() ? { createdAt: serverTimestamp() } : {}),
+          kycStatus: existingUser?.kycStatus || 'not_started',
           lastLogin: serverTimestamp(),
+          ...(shouldSendKycPrompt ? { kycPromptSentAt: serverTimestamp() } : {}),
         }, { merge: true });
+
+        if (shouldSendKycPrompt) {
+          await setDoc(doc(collection(db, 'users', userId, 'notifications')), {
+            type: 'kyc_required',
+            title: 'Vérifiez votre identité',
+            message: 'Complétez la vérification KYC pour sécuriser votre compte et débloquer toutes les opérations sensibles.',
+            actionLabel: 'Commencer la vérification',
+            actionUrl: '/kyc',
+            icon: 'shield-check',
+            read: false,
+            acknowledged: false,
+            timestamp: serverTimestamp(),
+            createdAt: serverTimestamp(),
+          });
+        }
         console.log("Profil utilisateur créé avec succès via Firestore");
       } catch (firestoreErr: any) {
         console.error("Erreur création profil Firestore:", firestoreErr);
@@ -102,33 +146,80 @@ export default function LoginPage() {
     }
   };
 
-  // Initialiser reCAPTCHA pour le téléphone
-  useEffect(() => {
-    if (!window.recaptchaVerifier && method === "PHONE") {
-      try {
-        auth.languageCode = 'fr'; // Définir la langue en français
-
-        const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-          'size': 'invisible', // Mode invisible pour une meilleure UX
-          'callback': () => {
-            // reCAPTCHA solved
-            console.log("reCAPTCHA résolu");
-          },
-          'expired-callback': () => {
-            toast({
-              variant: "destructive",
-              title: "Expiration",
-              description: "Le reCAPTCHA a expiré, veuillez réessayer."
-            });
-          }
-        });
-        window.recaptchaVerifier = verifier;
-        recaptchaVerifierRef.current = verifier;
-      } catch (error) {
-        console.error("Erreur init reCAPTCHA:", error);
+  const clearRecaptchaVerifier = useCallback(() => {
+    try {
+      recaptchaVerifierRef.current?.clear();
+    } catch {}
+    recaptchaVerifierRef.current = null;
+    recaptchaRenderPromiseRef.current = null;
+    if (typeof window !== "undefined") {
+      window.recaptchaVerifier = undefined;
+      const container = document.getElementById("recaptcha-container");
+      if (container?.parentNode) {
+        const freshContainer = container.cloneNode(false);
+        container.parentNode.replaceChild(freshContainer, container);
       }
     }
-  }, [method, toast]);
+  }, []);
+
+  const ensureRecaptchaVerifier = useCallback(async () => {
+    if (typeof window === "undefined") return null;
+    if (window.recaptchaVerifier) return window.recaptchaVerifier;
+    if (recaptchaRenderPromiseRef.current) return recaptchaRenderPromiseRef.current;
+
+    auth.languageCode = "fr";
+
+    recaptchaRenderPromiseRef.current = (async () => {
+      const existingContainer = document.getElementById("recaptcha-container");
+      if (existingContainer?.parentNode) {
+        const freshContainer = existingContainer.cloneNode(false);
+        existingContainer.parentNode.replaceChild(freshContainer, existingContainer);
+      }
+
+      const verifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+        size: "invisible",
+        callback: () => {
+          console.log("reCAPTCHA résolu");
+        },
+        "expired-callback": () => {
+          clearRecaptchaVerifier();
+          toast({
+            variant: "destructive",
+            title: "Expiration",
+            description: "La vérification de sécurité a expiré, veuillez réessayer.",
+          });
+        },
+      });
+
+      await verifier.render();
+      window.recaptchaVerifier = verifier;
+      recaptchaVerifierRef.current = verifier;
+      return verifier;
+    })();
+
+    try {
+      return await recaptchaRenderPromiseRef.current;
+    } catch (error) {
+      clearRecaptchaVerifier();
+      throw error;
+    }
+  }, [clearRecaptchaVerifier, toast]);
+
+  // Initialiser reCAPTCHA pour le téléphone
+  useEffect(() => {
+    if (method !== "PHONE") {
+      clearRecaptchaVerifier();
+      return;
+    }
+
+    void ensureRecaptchaVerifier().catch((error) => {
+      console.error("Erreur init reCAPTCHA:", error);
+    });
+  }, [clearRecaptchaVerifier, ensureRecaptchaVerifier, method]);
+
+  useEffect(() => {
+    return () => clearRecaptchaVerifier();
+  }, [clearRecaptchaVerifier]);
 
   // --- HANDLERS ---
 
@@ -302,20 +393,23 @@ export default function LoginPage() {
   // 4. Phone Login (Start)
   const handlePhoneSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!phone) return;
+    const normalizedPhone = normalizePhoneForFirebase(phone);
+    if (!normalizedPhone) return;
 
     setIsLoading(true);
     try {
-      if (!window.recaptchaVerifier) {
+      const verifier = await ensureRecaptchaVerifier();
+      if (!verifier) {
         throw new Error("reCAPTCHA non initialisé");
       }
 
-      const confirmation = await signInWithPhoneNumber(auth, phone, window.recaptchaVerifier);
+      const confirmation = await signInWithPhoneNumber(auth, normalizedPhone, verifier);
       setConfirmationResult(confirmation);
+      setPhone(normalizedPhone);
 
       toast({
         title: "SMS envoyé !",
-        description: "Vérifiez vos messages.",
+        description: `Vérifiez les messages envoyés au ${normalizedPhone}.`,
       });
 
       setMethod("OTP_PHONE");
@@ -324,13 +418,9 @@ export default function LoginPage() {
       toast({
         variant: "destructive",
         title: "Erreur",
-        description: error.message
+        description: getPhoneAuthErrorMessage(error)
       });
-      // Reset captcha if needed
-      if (window.recaptchaVerifier) {
-        window.recaptchaVerifier.clear();
-        window.recaptchaVerifier = undefined; // Force re-init next time
-      }
+      clearRecaptchaVerifier();
     } finally {
       setIsLoading(false);
     }
@@ -346,7 +436,12 @@ export default function LoginPage() {
       const result = await confirmationResult.confirm(otpCode);
 
       // Créer le profil utilisateur dans Firestore
-      await createOrUpdateProfile(result.user.uid, result.user.email || phone);
+      await createOrUpdateProfile(result.user.uid, result.user.email || "", normalizePhoneForFirebase(phone));
+      localStorage.setItem("enkamba_user", JSON.stringify({
+        phone: normalizePhoneForFirebase(phone),
+        name: normalizePhoneForFirebase(phone),
+        provider: "phone",
+      }));
 
       toast({
         title: "Connexion réussie",
@@ -354,7 +449,7 @@ export default function LoginPage() {
         className: "bg-[#009058] text-white border-none",
       });
 
-      router.push("/dashboard/miyiki-chat");
+      router.push("/complete-profile");
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -680,6 +775,15 @@ export default function LoginPage() {
 
         {/* Footer */}
         <div className="w-full max-w-sm text-center">
+          <div className="mb-3 flex items-center justify-center gap-3 text-[11px] font-semibold text-white/70">
+            <Link href="/enkamba-terms" className="hover:text-white">
+              Conditions
+            </Link>
+            <span className="h-1 w-1 rounded-full bg-white/40" />
+            <Link href="/enkamba-privacy" className="hover:text-white">
+              Confidentialité
+            </Link>
+          </div>
           <p className="text-white/50 text-xs">
             eNkamba.io &copy; 2026<br />
             Global solution et services sarl
@@ -692,7 +796,7 @@ export default function LoginPage() {
 
       {/* Global Type Helper for Recaptcha */}
       <script dangerouslySetInnerHTML={{
-        __html: `window.recaptchaVerifier = null;`
+        __html: `window.recaptchaVerifier = window.recaptchaVerifier || undefined;`
       }} />
     </div>
   );
@@ -701,6 +805,6 @@ export default function LoginPage() {
 // Add types for window
 declare global {
   interface Window {
-    recaptchaVerifier: RecaptchaVerifier | undefined;
+    recaptchaVerifier?: RecaptchaVerifier;
   }
 }

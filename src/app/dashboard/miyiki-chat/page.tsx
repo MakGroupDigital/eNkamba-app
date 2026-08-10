@@ -21,6 +21,7 @@ import { useStories } from '@/hooks/useStories';
 import { useChatSettings } from '@/hooks/useChatSettings';
 import { useNotifications, type Notification } from '@/hooks/useNotifications';
 import { ChatContactsDialog } from '@/components/chat-contacts-dialog';
+import { VerifiedAccountBadge } from '@/components/verified-account-badge';
 import { StartChatEmptyState } from '@/components/start-chat-empty-state';
 import { StoriesOnboarding } from '@/components/stories/StoriesOnboarding';
 import { StoryViewer } from '@/components/stories/StoryViewer';
@@ -924,9 +925,10 @@ export default function MiyikiChatPage() {
                 {profileDisplayName.charAt(0) || 'U'}
               </AvatarFallback>
             </Avatar>
-            {/* Indicateur de connexion */}
-            <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-primary border-2 border-white"></div>
-          </button>
+	            {/* Indicateur de connexion */}
+	            <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-primary border-2 border-white"></div>
+	            <VerifiedAccountBadge verified={profile?.kycStatus === 'verified'} className="absolute -top-1 -right-1 bg-white px-0.5 py-0 text-primary shadow-sm" />
+	          </button>
         </div>
       </header>
 

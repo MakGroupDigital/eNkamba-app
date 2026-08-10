@@ -445,43 +445,40 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
     <main className="relative isolate min-h-screen overflow-hidden px-4 py-8 text-foreground">
       <ResponsiveSplashBackground />
       <section className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-md items-center justify-center">
-        <div className="w-full space-y-7 rounded-[2rem] border border-white/35 bg-white/90 p-6 shadow-2xl shadow-black/18 backdrop-blur-xl sm:p-8">
-          {/* Logo avec effet flottant */}
-          <div className="flex justify-center">
-            <div className="relative animate-float">
-              <div className="absolute inset-0 rounded-full bg-primary/20 blur-2xl"></div>
-              <div className="relative h-28 w-28 overflow-hidden rounded-full bg-primary shadow-2xl ring-4 ring-white/60">
+        <div className="w-full">
+          <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-primary p-5 shadow-[0_28px_90px_rgba(0,0,0,0.34)] sm:p-6">
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[radial-gradient(circle_at_20%_0%,rgba(255,165,0,0.22),transparent_34%),radial-gradient(circle_at_85%_0%,rgba(255,255,255,0.16),transparent_30%)]" />
+
+            <div className="relative mb-5 flex items-center gap-3">
+              <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full bg-primary shadow-lg ring-1 ring-white/45 [clip-path:circle(50%_at_50%_50%)]">
                 <Image
-                  src="/enkamba-logo.png"
+                  src="/vraielogo.png"
                   alt="eNkamba"
-                  width={112}
-                  height={112}
-                  className="h-full w-full scale-[1.42] rounded-full object-cover [clip-path:circle(50%_at_50%_50%)]"
+                  width={56}
+                  height={56}
+                  className="block h-full w-full rounded-full object-cover [clip-path:circle(50%_at_50%_50%)]"
                   priority
                 />
               </div>
+              <div className="min-w-0">
+                <p className="text-xl font-bold text-white">
+                  {isCreateMode ? "Créer un PIN" : "Bienvenue"}
+                </p>
+                <p className="mt-1 text-sm font-medium text-white/76">
+                  {isCreateMode
+                    ? "Définissez un code personnel pour protéger votre espace."
+                    : "Confirmez votre identité pour ouvrir eNkamba."}
+                </p>
+              </div>
             </div>
-          </div>
 
-          {/* Titre minimaliste */}
-          <div className="text-center space-y-2">
-            <h2 className="text-2xl font-bold text-gray-950">
-              {isCreateMode ? "Créer un PIN" : "Bienvenue"}
-            </h2>
-            <p className="text-sm font-medium text-gray-600 max-w-xs mx-auto">
-              {isCreateMode
-                ? "Sécurisez votre compte avec un code à 4 chiffres"
-                : "Confirmez votre identité pour continuer"}
-            </p>
-          </div>
-
-          {mode === "loading" ? (
-            <div className="flex flex-col items-center gap-3 py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-sm text-gray-500">Vérification...</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
+            {mode === "loading" ? (
+              <div className="relative flex flex-col items-center gap-3 py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-white" />
+                <p className="text-sm text-white/75">Vérification...</p>
+              </div>
+            ) : (
+              <div className="relative space-y-4">
               {/* Bouton biométrique minimaliste */}
               {!isCreateMode &&
                 biometricRegistration &&
@@ -490,7 +487,7 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
                     type="button"
                     onClick={() => void handleBiometricUnlock()}
                     disabled={isBiometricBusy}
-                    className="group relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-primary to-primary/90 p-6 text-white shadow-lg transition-all hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+                    className="group relative w-full overflow-hidden rounded-2xl border border-white/16 bg-white/10 p-5 text-white shadow-lg transition-all hover:scale-[1.01] hover:bg-white/14 active:scale-[0.98] disabled:opacity-50"
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                     <div className="relative flex flex-col items-center gap-2">
@@ -519,7 +516,7 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
                       maxLength={4}
                       onChange={(event) => handlePinInput(event.target.value)}
                       placeholder="••••"
-                      className="h-16 rounded-2xl border-2 border-gray-200 bg-white text-center text-3xl font-bold tracking-[0.5em] text-gray-900 placeholder:text-gray-300 focus:border-primary focus:ring-0 focus-visible:ring-0 transition-colors"
+                      className="h-16 rounded-2xl border border-white/65 bg-white text-center text-3xl font-bold tracking-[0.5em] text-gray-950 shadow-inner shadow-black/5 placeholder:text-gray-300 focus:border-[#FFA500] focus:ring-0 focus-visible:ring-0 transition-colors"
                       autoFocus
                     />
                     <button
@@ -537,7 +534,7 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
                       )}
                     </button>
                   </div>
-                  <p className="text-xs text-center text-gray-400">
+                  <p className="text-xs text-center text-white/65">
                     {isCreateMode ? "Entrez 4 chiffres" : "Entrez votre PIN"}
                   </p>
                 </div>
@@ -556,13 +553,13 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
                           handleConfirmPinInput(event.target.value)
                         }
                         placeholder="••••"
-                        className="h-16 rounded-2xl border-2 border-gray-200 bg-white text-center text-3xl font-bold tracking-[0.5em] text-gray-900 placeholder:text-gray-300 focus:border-primary focus:ring-0 focus-visible:ring-0 transition-colors"
+                        className="h-16 rounded-2xl border border-white/65 bg-white text-center text-3xl font-bold tracking-[0.5em] text-gray-950 shadow-inner shadow-black/5 placeholder:text-gray-300 focus:border-[#FFA500] focus:ring-0 focus-visible:ring-0 transition-colors"
                       />
                     </div>
                     {pin.length === 4 &&
                       confirmPin.length === 4 &&
                       pin === confirmPin && (
-                        <div className="flex items-center justify-center gap-2 text-sm text-primary">
+                        <div className="flex items-center justify-center gap-2 text-sm text-white">
                           <CheckCircle2 className="h-4 w-4" />
                           <span>Correspondance validée</span>
                         </div>
@@ -581,7 +578,7 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
                 <Button
                   type="submit"
                   disabled={!canSubmit || isSubmitting}
-                  className="h-14 w-full rounded-2xl bg-gray-900 text-white font-medium hover:bg-gray-800 transition-all shadow-lg hover:shadow-xl active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="h-14 w-full rounded-2xl bg-white font-semibold text-primary shadow-lg shadow-black/18 transition-all hover:bg-white/92 hover:shadow-xl active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {isSubmitting ? (
                     <Loader2 className="h-5 w-5 animate-spin" />
@@ -599,7 +596,7 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
                     type="button"
                     onClick={() => void handleRegisterBiometric()}
                     disabled={isBiometricBusy}
-                    className="w-full flex items-center justify-center gap-2 rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50 hover:border-gray-300 active:scale-[0.98] disabled:opacity-50"
+                    className="w-full flex items-center justify-center gap-2 rounded-2xl border border-white/16 bg-white/10 px-4 py-3 text-sm font-medium text-white transition hover:bg-white/14 active:scale-[0.98] disabled:opacity-50"
                   >
                     {isBiometricBusy ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -611,27 +608,14 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
                 )}
 
               {/* Note de sécurité minimaliste */}
-              <p className="text-center text-xs text-gray-400 max-w-xs mx-auto">
+              <p className="text-center text-xs text-white/62 max-w-xs mx-auto">
                 Vos données biométriques restent sécurisées sur cet appareil
               </p>
-            </div>
-          )}
+              </div>
+            )}
+          </div>
         </div>
       </section>
-
-      <style jsx global>{`
-        @keyframes float {
-          0%, 100% {
-            transform: translateY(0px);
-          }
-          50% {
-            transform: translateY(-10px);
-          }
-        }
-        .animate-float {
-          animation: float 3s ease-in-out infinite;
-        }
-      `}</style>
     </main>
   );
 }

@@ -17,6 +17,7 @@ import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, increment, limit, 
 import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import { StoryViewer } from '@/components/stories/StoryViewer';
+import { VerifiedAccountBadge } from '@/components/verified-account-badge';
 import {
   MakutanoAudioIcon,
   MakutanoBookIcon,
@@ -43,7 +44,7 @@ const navItems = [
 
 interface Post {
   id: string;
-  author: { name: string; location: string; avatar: string };
+  author: { name: string; location: string; avatar: string; verified?: boolean };
   authorId?: string;
   text: string;
   mediaUrl: string;
@@ -92,6 +93,7 @@ type DiscoverUser = {
   avatar: string;
   location: string;
   bio: string;
+  verified?: boolean;
 };
 
 type NearbyPlace = {
@@ -593,6 +595,7 @@ export default function MakutanoPage() {
               avatar: data.profileImage || data.photoURL || data.profilePhotoUrl || data.kyc?.profileImage || '',
               location: data.city || data.country || data.location || 'Makutano',
               bio: data.bio || data.about || 'Profil public eNkamba',
+              verified: data.kycStatus === 'verified',
             };
           })
           .filter((item) => item.id !== user?.uid && !blockedProfileIds.has(item.id))
@@ -765,8 +768,9 @@ export default function MakutanoPage() {
             author: {
               name: data.author?.name || data.authorName || 'Utilisateur eNkamba',
               location: data.author?.location || data.authorLocation || 'RDC',
-              avatar: data.author?.avatar || data.authorAvatar || 'https://picsum.photos/seed/default-user/40/40',
-            },
+	              avatar: data.author?.avatar || data.authorAvatar || 'https://picsum.photos/seed/default-user/40/40',
+	              verified: Boolean(data.author?.verified || data.authorVerified),
+	            },
             authorId: data.authorId || data.author?.id || '',
             text: data.text || data.caption || '',
             mediaUrl,
@@ -1449,9 +1453,10 @@ export default function MakutanoPage() {
                                   {suggestedUser.name.charAt(0)}
                                 </AvatarFallback>
                               </Avatar>
-                              <p className="mx-auto mt-2 min-h-[2rem] max-w-[7.25rem] whitespace-normal break-words text-center text-xs font-black leading-4 text-slate-900 line-clamp-2">
-                                {suggestedUser.name}
-                              </p>
+	                              <p className="mx-auto mt-2 flex min-h-[2rem] max-w-[7.25rem] items-start justify-center gap-1 whitespace-normal break-words text-center text-xs font-black leading-4 text-slate-900 line-clamp-2">
+	                                <span>{suggestedUser.name}</span>
+	                                <VerifiedAccountBadge verified={suggestedUser.verified} />
+	                              </p>
                               <p className="line-clamp-1 text-[10px] font-semibold text-slate-500">{suggestedUser.location}</p>
                             </button>
                             <button
@@ -1562,7 +1567,10 @@ export default function MakutanoPage() {
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-foreground hover:text-[#009058]">{post.author.name}</p>
+	                      <p className="flex min-w-0 items-center gap-1.5 text-sm font-semibold text-foreground hover:text-[#009058]">
+	                        <span className="truncate">{post.author.name}</span>
+	                        <VerifiedAccountBadge verified={post.author.verified} />
+	                      </p>
                       <p className="truncate text-xs text-muted-foreground">{post.author.location || 'Makutano'}</p>
                     </div>
                   </button>

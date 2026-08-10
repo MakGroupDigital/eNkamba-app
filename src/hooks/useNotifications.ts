@@ -8,7 +8,7 @@ import { enkambaRealtime } from '@/lib/realtime-client';
 
 export interface Notification {
   id: string;
-  type: 'transfer_received' | 'transfer_sent' | 'payment_request' | 'system' | 'incoming_call' | 'BUSINESS_APPROVED' | 'BUSINESS_REJECTED';
+  type: 'transfer_received' | 'transfer_sent' | 'payment_request' | 'system' | 'incoming_call' | 'kyc_required' | 'BUSINESS_APPROVED' | 'BUSINESS_REJECTED';
   title: string;
   message: string;
   amount?: number;
