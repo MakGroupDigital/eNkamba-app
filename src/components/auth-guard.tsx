@@ -1,16 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import Image from "next/image";
+import { hasNativeCallAccess } from "@/lib/native-call-access";
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
     const router = useRouter();
+    const pathname = usePathname();
     const [isLoading, setIsLoading] = useState(true);
+    const shouldSkipForNativeCall = hasNativeCallAccess(pathname);
 
     useEffect(() => {
+        if (shouldSkipForNativeCall) {
+            setIsLoading(false);
+            return;
+        }
+
         // 1. Vérifier le stockage local (Email Auth simulé en dev)
         const storedUser = localStorage.getItem("enkamba_user");
         if (storedUser) {
@@ -42,7 +50,11 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         });
 
         return () => unsubscribe();
-    }, [router]);
+    }, [router, shouldSkipForNativeCall]);
+
+    if (shouldSkipForNativeCall) {
+        return <>{children}</>;
+    }
 
     if (isLoading) {
         return (

@@ -176,15 +176,29 @@ class IncomingCallActivity : AppCompatActivity() {
   }
 
   private fun openCall(actionUrl: String) {
+    val targetUrl = appendNativeAcceptedForCall(actionUrl)
     val openIntent = Intent(this, MainActivity::class.java).apply {
-      flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-      putExtra("enkamba_action_url", actionUrl)
-      if (actionUrl.startsWith("/")) {
-        data = Uri.parse("enkamba://open$actionUrl")
+      flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+        Intent.FLAG_ACTIVITY_CLEAR_TOP or
+        Intent.FLAG_ACTIVITY_SINGLE_TOP or
+        Intent.FLAG_ACTIVITY_NO_ANIMATION
+      putExtra("enkamba_action_url", targetUrl)
+      putExtra("enkamba_native_call_accepted", true)
+      if (targetUrl.startsWith("/")) {
+        data = Uri.parse("enkamba://open$targetUrl")
       }
     }
     startActivity(openIntent)
     finish()
+  }
+
+  private fun appendNativeAcceptedForCall(path: String): String {
+    if (path.isBlank() || path.contains("nativeAccepted=1")) return path
+    val isCallRoute = path.startsWith("/dashboard/miyiki-chat/call/") ||
+      path.startsWith("/dashboard/miyiki-chat/audiocall/")
+    if (!isCallRoute) return path
+    val separator = if (path.contains("?")) "&" else "?"
+    return "${path}${separator}nativeAccepted=1"
   }
 
   private fun closeCallNotification(notificationId: Int) {

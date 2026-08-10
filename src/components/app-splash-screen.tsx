@@ -13,6 +13,12 @@ export function AppSplashScreen() {
   const [mounted, setMounted] = useState(() => !hasNativeCallAccess());
 
   useEffect(() => {
+    if (hasNativeCallAccess()) {
+      setVisible(false);
+      setMounted(false);
+      return;
+    }
+
     const hideTimer = window.setTimeout(() => {
       setVisible(false);
     }, SPLASH_DURATION_MS);

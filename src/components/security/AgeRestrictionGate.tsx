@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { calculateAgeFromDateOfBirth, isUnderMinimumAge } from '@/lib/age-policy';
 import { isEnkambaNativeRuntime } from '@/lib/native-runtime';
+import { hasNativeCallAccess } from '@/lib/native-call-access';
 
 const NATIVE_PROFILE_COMPLETED_PREFIX = 'enkamba-native-profile-completed';
 
@@ -16,8 +17,10 @@ export function AgeRestrictionGate({ children }: { children: React.ReactNode }) 
   const pathname = usePathname() || '';
   const { user } = useAuth();
   const { profile, isLoading } = useUserProfile();
+  const isNativeCallRoute = hasNativeCallAccess(pathname);
 
   useEffect(() => {
+    if (isNativeCallRoute) return;
     if (isLoading || !user?.uid || !profile?.dateOfBirth) return;
     if (pathname.startsWith('/age-restricted')) return;
     if (!isUnderMinimumAge(profile.dateOfBirth)) return;
@@ -31,9 +34,10 @@ export function AgeRestrictionGate({ children }: { children: React.ReactNode }) 
       updatedAt: serverTimestamp(),
     }, { merge: true });
     router.replace('/age-restricted');
-  }, [isLoading, pathname, profile?.dateOfBirth, router, user?.uid]);
+  }, [isLoading, isNativeCallRoute, pathname, profile?.dateOfBirth, router, user?.uid]);
 
   useEffect(() => {
+    if (isNativeCallRoute) return;
     if (isLoading || !user?.uid || !profile) return;
     if (pathname.startsWith('/complete-profile') || pathname.startsWith('/age-restricted')) return;
 
@@ -54,7 +58,7 @@ export function AgeRestrictionGate({ children }: { children: React.ReactNode }) 
     if (isPhoneAccount && (!hasUsableName || !hasUsername || !hasContactEmail)) {
       router.replace('/complete-profile');
     }
-  }, [isLoading, pathname, profile, router, user?.email, user?.phoneNumber, user?.uid]);
+  }, [isLoading, isNativeCallRoute, pathname, profile, router, user?.email, user?.phoneNumber, user?.uid]);
 
   return <>{children}</>;
 }

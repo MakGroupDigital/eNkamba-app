@@ -2,11 +2,14 @@ package io.enkamba.app
 
 import android.Manifest
 import android.app.Activity
+import android.app.KeyguardManager
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.provider.ContactsContract
+import android.view.WindowManager
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import androidx.activity.enableEdgeToEdge
@@ -31,6 +34,7 @@ class MainActivity : TauriActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     enableEdgeToEdge()
     captureNotificationIntent(intent)
+    pendingNotificationUrl?.let { prepareCallWindowIfNeeded(it) }
     val options = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
       .requestIdToken("60114170881-1h775tgj6rlku54t07dv2m12b47io2u3.apps.googleusercontent.com")
       .requestEmail()
@@ -47,6 +51,7 @@ class MainActivity : TauriActivity() {
     super.onNewIntent(intent)
     setIntent(intent)
     captureNotificationIntent(intent)
+    pendingNotificationUrl?.let { prepareCallWindowIfNeeded(it) }
     consumePendingNotificationUrl()
   }
 
@@ -299,20 +304,20 @@ class MainActivity : TauriActivity() {
     val fromExtra = intent?.getStringExtra("enkamba_action_url").orEmpty()
     val fromActionUrl = intent?.getStringExtra("actionUrl").orEmpty()
     val fromData = intent?.data?.toString().orEmpty()
-    pendingNotificationUrl = when {
+    val resolvedTarget = when {
       fromExtra.startsWith("/") -> fromExtra
       fromActionUrl.startsWith("/") -> fromActionUrl
       fromData.startsWith("enkamba://open/") -> fromData.removePrefix("enkamba://open")
       else -> pendingNotificationUrl
     }
+
+    pendingNotificationUrl = resolvedTarget?.let { target ->
+      if (isCallRoute(target)) appendNativeAcceptedForCall(target) else target
+    }
+
     val target = pendingNotificationUrl.orEmpty()
-    val isCallRoute = target.startsWith("/dashboard/miyiki-chat/call/") ||
-      target.startsWith("/dashboard/miyiki-chat/audiocall/")
-    if (isCallRoute) {
-      pendingNativeCallAccess = JSONObject().apply {
-        put("target", target)
-        put("expiresAt", System.currentTimeMillis() + 120000)
-      }.toString()
+    if (isCallRoute(target)) {
+      setPendingNativeCallAccess(target)
     }
   }
 
@@ -320,23 +325,70 @@ class MainActivity : TauriActivity() {
     val target = pendingNotificationUrl ?: return
     if (!target.startsWith("/")) return
     pendingNotificationUrl = null
-    val isCallRoute = target.startsWith("/dashboard/miyiki-chat/call/") ||
-      target.startsWith("/dashboard/miyiki-chat/audiocall/")
-    val targetWithNativeState = if (isCallRoute) appendQueryParam(target, "nativeAccepted", "1") else target
+    val isCallRoute = isCallRoute(target)
+    val targetWithNativeState = if (isCallRoute) appendNativeAcceptedForCall(target) else target
     val destination = "https://www.enkamba.io$targetWithNativeState"
 
-    val script = """
-      if (${if (isCallRoute) "true" else "false"}) {
-        window.sessionStorage.setItem('enkamba-native-call-access', JSON.stringify({
-          target: ${JSONObject.quote(targetWithNativeState)},
-          expiresAt: Date.now() + 120000
-        }));
+    if (isCallRoute) {
+      setPendingNativeCallAccess(targetWithNativeState)
+      prepareCallWindowIfNeeded(targetWithNativeState)
+      runOnUiThread {
+        webViewRef?.post {
+          webViewRef?.loadUrl(destination)
+        }
       }
+      return
+    }
+
+    val script = """
       window.location.replace(${JSONObject.quote(destination)});
     """.trimIndent()
     runOnUiThread {
       webViewRef?.post {
         webViewRef?.evaluateJavascript(script, null)
+      }
+    }
+  }
+
+  private fun isCallRoute(target: String): Boolean {
+    return target.startsWith("/dashboard/miyiki-chat/call/") ||
+      target.startsWith("/dashboard/miyiki-chat/audiocall/")
+  }
+
+  private fun appendNativeAcceptedForCall(path: String): String {
+    if (!isCallRoute(path) || path.contains("nativeAccepted=1")) return path
+    return appendQueryParam(path, "nativeAccepted", "1")
+  }
+
+  private fun setPendingNativeCallAccess(target: String) {
+    pendingNativeCallAccess = JSONObject().apply {
+      put("target", appendNativeAcceptedForCall(target))
+      put("expiresAt", System.currentTimeMillis() + 120000)
+    }.toString()
+  }
+
+  private fun prepareCallWindowIfNeeded(target: String) {
+    if (!isCallRoute(target)) return
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+      setShowWhenLocked(true)
+      setTurnScreenOn(true)
+    } else {
+      @Suppress("DEPRECATION")
+      window.addFlags(
+        WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+          WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
+          WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
+          WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD
+      )
+    }
+
+    window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      runCatching {
+        val keyguardManager = getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
+        keyguardManager?.requestDismissKeyguard(this, null)
       }
     }
   }
