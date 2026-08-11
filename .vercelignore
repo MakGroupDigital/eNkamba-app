@@ -1,0 +1,6 @@
+# Android release artifacts are delivered outside the web deployment.
+enkamba-v*.apk
+*.apk
+src-tauri/target/
+src-tauri/gen/
+.next/
