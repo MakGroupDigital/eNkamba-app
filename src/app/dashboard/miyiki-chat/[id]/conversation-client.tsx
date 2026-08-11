@@ -26,6 +26,7 @@ import { CHAT_WALLPAPERS, createCustomChatWallpaperId, getChatWallpaper, isCusto
 import { EnkambaSmartKeyboard } from '@/components/chat/EnkambaSmartKeyboard';
 import type { EnkambaKeyboardItem } from '@/lib/enkamba-keyboard';
 import { getNativeAcceptedCallId } from '@/lib/native-call-access';
+import { hasNativeCallEngine, startNativeChatCall } from '@/lib/native-calls';
 
 type IncomingCallDoc = {
     id: string;
@@ -310,6 +311,20 @@ export default function ConversationClient() {
             await updateDoc(doc(db, 'calls', callId), { status: 'missed', endedAt: serverTimestamp() } as any);
         } catch {}
     }, [incomingCall]);
+
+    const startConversationCall = useCallback(async (callType: 'audio' | 'video') => {
+        if (!conversationId || !contact?.id) return;
+
+        if (hasNativeCallEngine()) {
+            const result = await startNativeChatCall(conversationId, String(contact.id), callType);
+            if (result.success) return;
+            alert(result.error || "L'appel Android ne peut pas etre lance pour le moment.");
+            return;
+        }
+
+        const routeBase = callType === 'audio' ? 'audiocall' : 'call';
+        router.push(`/dashboard/miyiki-chat/${routeBase}/${conversationId}`);
+    }, [contact?.id, conversationId, router]);
 
     // Charger les infos de la conversation et du contact
     useEffect(() => {
@@ -811,6 +826,7 @@ export default function ConversationClient() {
         } catch (error) {
             console.error('Erreur envoi message:', error);
             setInputValue(messageText); // Restaurer le message en cas d'erreur
+            alert(error instanceof Error ? error.message : "Le message n'a pas pu etre envoye.");
         } finally {
             setIsSending(false);
         }
@@ -860,6 +876,7 @@ export default function ConversationClient() {
             setShowSmartKeyboard(false);
         } catch (error) {
             console.error('Erreur envoi clavier eNkamba:', error);
+            alert(error instanceof Error ? error.message : "L'element n'a pas pu etre envoye.");
         } finally {
             setIsSending(false);
         }
@@ -1074,6 +1091,7 @@ export default function ConversationClient() {
             console.error('Erreur envoi enregistrement:', error);
             setIsSending(false);
             setSendingProgress(0);
+            alert(error instanceof Error ? error.message : "L'enregistrement n'a pas pu etre envoye.");
         }
     };
     const handleShareLocation = async () => {
@@ -1318,6 +1336,7 @@ export default function ConversationClient() {
             }, 500);
         } catch (error) {
             console.error('Erreur envoi fichier:', error);
+            alert(error instanceof Error ? error.message : "Le fichier n'a pas pu etre envoye.");
         } finally {
             clearInterval(progressInterval);
             setIsSending(false);
@@ -1414,16 +1433,24 @@ export default function ConversationClient() {
                     {/* Call Buttons - Only for individual conversations */}
                     {!isGroup && (
                         <>
-                            <Link href={`/dashboard/miyiki-chat/audiocall/${conversationId}`}>
-                                <Button size="icon" variant="ghost" className="text-white hover:bg-white/20" title="Appel audio">
-                                    <Phone className="h-5 w-5" />
-                                </Button>
-                            </Link>
-                            <Link href={`/dashboard/miyiki-chat/call/${conversationId}`}>
-                                <Button size="icon" variant="ghost" className="text-white hover:bg-white/20" title="Appel vidéo">
-                                    <Video className="h-5 w-5" />
-                                </Button>
-                            </Link>
+                            <Button
+                                size="icon"
+                                variant="ghost"
+                                className="text-white hover:bg-white/20"
+                                title="Appel audio"
+                                onClick={() => void startConversationCall('audio')}
+                            >
+                                <Phone className="h-5 w-5" />
+                            </Button>
+                            <Button
+                                size="icon"
+                                variant="ghost"
+                                className="text-white hover:bg-white/20"
+                                title="Appel vidéo"
+                                onClick={() => void startConversationCall('video')}
+                            >
+                                <Video className="h-5 w-5" />
+                            </Button>
                         </>
                     )}
                 </div>

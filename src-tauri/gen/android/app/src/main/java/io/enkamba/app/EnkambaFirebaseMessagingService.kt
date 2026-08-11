@@ -83,19 +83,19 @@ class EnkambaFirebaseMessagingService : FirebaseMessagingService() {
       val acceptIntent = PendingIntent.getBroadcast(
         this,
         notificationId + 201,
-        callActionIntent(IncomingCallActionReceiver.ACTION_ACCEPT_CALL, actionUrl, callId, notificationId),
+        callActionIntent(IncomingCallActionReceiver.ACTION_ACCEPT_CALL, actionUrl, callId, callType, notificationId),
         pendingIntentFlags
       )
       val declineIntent = PendingIntent.getBroadcast(
         this,
         notificationId + 202,
-        callActionIntent(IncomingCallActionReceiver.ACTION_DECLINE_CALL, actionUrl, callId, notificationId),
+        callActionIntent(IncomingCallActionReceiver.ACTION_DECLINE_CALL, actionUrl, callId, callType, notificationId),
         pendingIntentFlags
       )
       val busyIntent = PendingIntent.getBroadcast(
         this,
         notificationId + 203,
-        callActionIntent(IncomingCallActionReceiver.ACTION_BUSY_CALL, actionUrl, callId, notificationId),
+        callActionIntent(IncomingCallActionReceiver.ACTION_BUSY_CALL, actionUrl, callId, callType, notificationId),
         pendingIntentFlags
       )
 
@@ -147,11 +147,12 @@ class EnkambaFirebaseMessagingService : FirebaseMessagingService() {
     notificationManager.createNotificationChannel(channel)
   }
 
-  private fun callActionIntent(action: String, actionUrl: String, callId: String, notificationId: Int): Intent {
+  private fun callActionIntent(action: String, actionUrl: String, callId: String, callType: String, notificationId: Int): Intent {
     return Intent(this, IncomingCallActionReceiver::class.java).apply {
       this.action = action
       putExtra("actionUrl", actionUrl)
       putExtra("callId", callId)
+      putExtra("callType", callType)
       putExtra("notificationId", notificationId)
     }
   }

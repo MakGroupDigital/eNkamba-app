@@ -8,7 +8,6 @@ import android.content.IntentFilter
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
@@ -19,6 +18,8 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
 
 class IncomingCallActivity : AppCompatActivity() {
   private val dismissedReceiver = object : BroadcastReceiver() {
@@ -46,11 +47,10 @@ class IncomingCallActivity : AppCompatActivity() {
     val body = intent.getStringExtra("body").orEmpty().ifBlank { "Appel entrant" }
     val callType = intent.getStringExtra("callType").orEmpty().ifBlank { "video" }
     val callId = intent.getStringExtra("callId").orEmpty()
-    val actionUrl = intent.getStringExtra("actionUrl").orEmpty()
     val notificationId = intent.getIntExtra("notificationId", callId.hashCode())
 
     registerReceiverCompat()
-    setContentView(buildLayout(title, body, callType, actionUrl, notificationId))
+    setContentView(buildLayout(title, body, callType, notificationId))
   }
 
   override fun onDestroy() {
@@ -62,7 +62,6 @@ class IncomingCallActivity : AppCompatActivity() {
     title: String,
     body: String,
     callType: String,
-    actionUrl: String,
     notificationId: Int
   ): View {
     val root = LinearLayout(this).apply {
@@ -133,15 +132,17 @@ class IncomingCallActivity : AppCompatActivity() {
 
     controls.addView(actionButton("Refuser", Color.rgb(239, 68, 68)) {
       closeCallNotification(notificationId)
+      updateCallStatus("missed")
       finish()
     })
     controls.addView(actionButton("Occupé", Color.rgb(242, 140, 40)) {
       closeCallNotification(notificationId)
+      updateCallStatus("busy")
       finish()
     })
     controls.addView(actionButton("Accepter", Color.rgb(10, 139, 70)) {
       closeCallNotification(notificationId)
-      openCall(actionUrl)
+      openCall()
     })
 
     root.addView(controls, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
@@ -175,35 +176,35 @@ class IncomingCallActivity : AppCompatActivity() {
     }
   }
 
-  private fun openCall(actionUrl: String) {
-    val targetUrl = appendNativeAcceptedForCall(actionUrl)
-    val openIntent = Intent(this, MainActivity::class.java).apply {
+  private fun openCall() {
+    val openIntent = NativeCallActivity.incomingIntent(
+      this,
+      intent.getStringExtra("callId").orEmpty(),
+      intent.getStringExtra("callType").orEmpty()
+    ).apply {
       flags = Intent.FLAG_ACTIVITY_NEW_TASK or
         Intent.FLAG_ACTIVITY_CLEAR_TOP or
         Intent.FLAG_ACTIVITY_SINGLE_TOP or
         Intent.FLAG_ACTIVITY_NO_ANIMATION
-      putExtra("enkamba_action_url", targetUrl)
-      putExtra("enkamba_native_call_accepted", true)
-      if (targetUrl.startsWith("/")) {
-        data = Uri.parse("enkamba://open$targetUrl")
-      }
     }
     startActivity(openIntent)
     finish()
   }
 
-  private fun appendNativeAcceptedForCall(path: String): String {
-    if (path.isBlank() || path.contains("nativeAccepted=1")) return path
-    val isCallRoute = path.startsWith("/dashboard/miyiki-chat/call/") ||
-      path.startsWith("/dashboard/miyiki-chat/audiocall/")
-    if (!isCallRoute) return path
-    val separator = if (path.contains("?")) "&" else "?"
-    return "${path}${separator}nativeAccepted=1"
-  }
-
   private fun closeCallNotification(notificationId: Int) {
     val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     notificationManager.cancel(notificationId)
+  }
+
+  private fun updateCallStatus(status: String) {
+    val callId = intent.getStringExtra("callId").orEmpty()
+    if (callId.isBlank()) return
+    FirebaseFirestore.getInstance().collection("calls").document(callId).update(
+      mapOf(
+        "status" to status,
+        "endedAt" to FieldValue.serverTimestamp()
+      )
+    )
   }
 
   private fun registerReceiverCompat() {

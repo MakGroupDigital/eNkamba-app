@@ -31,8 +31,39 @@ function parseAccess(raw?: string | null): NativeCallAccess | null {
   }
 }
 
+function getAcceptedCallAccessFromLocation(): NativeCallAccess | null {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const url = new URL(window.location.href);
+    const callId = url.searchParams.get('callId');
+    const wasAcceptedNatively = url.searchParams.get('nativeAccepted') === '1';
+    const hasNativeBridge = Boolean(window.eNkambaNativeLaunch?.getPendingCallAccess);
+
+    if (!hasNativeBridge || !wasAcceptedNatively || !callId || !isCallRoute(url.pathname)) {
+      return null;
+    }
+
+    return {
+      target: `${url.pathname}${url.search}`,
+      // The URL is only used during the transition to the call screen.
+      expiresAt: Date.now() + 120_000,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export function getNativeCallAccess(): NativeCallAccess | null {
   if (typeof window === 'undefined') return null;
+
+  // When Android opens the exact call URL, this check is available before any
+  // asynchronous bridge or application state has finished restoring.
+  const fromLocation = getAcceptedCallAccessFromLocation();
+  if (fromLocation) {
+    window.sessionStorage.setItem(NATIVE_CALL_ACCESS_KEY, JSON.stringify(fromLocation));
+    return fromLocation;
+  }
 
   const fromSession = parseAccess(window.sessionStorage.getItem(NATIVE_CALL_ACCESS_KEY));
   if (fromSession) return fromSession;

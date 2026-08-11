@@ -12,6 +12,7 @@ import { UserPinAccessGate } from "@/components/security/UserPinAccessGate";
 import { AdminTelemetryAgent } from "@/components/admin/admin-telemetry-agent";
 import { AppSplashScreen } from "@/components/app-splash-screen";
 import { AppServiceWorkerRegistrar } from "@/components/app-service-worker-registrar";
+import { NativeFirebaseSessionBridge } from "@/components/native-firebase-session-bridge";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://enkamba.app"),
@@ -84,6 +85,7 @@ export default function RootLayout({
         >
           <AppSplashScreen />
           <AppServiceWorkerRegistrar />
+          <NativeFirebaseSessionBridge />
           <CurrencyInitializer />
           <UserPinAccessGate>
             <GlobalAutoTranslator />

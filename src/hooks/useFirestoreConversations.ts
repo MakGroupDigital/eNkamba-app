@@ -81,6 +81,29 @@ function getPhoneLookupCandidates(phone: string): string[] {
   return Array.from(candidates).filter(Boolean);
 }
 
+function sanitizeMessageMetadata(value: unknown): unknown {
+  if (value === undefined) return undefined;
+  if (value === null || typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => sanitizeMessageMetadata(item))
+      .filter((item) => item !== undefined);
+  }
+
+  if (typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>)
+        .map(([key, item]) => [key, sanitizeMessageMetadata(item)] as const)
+        .filter(([, item]) => item !== undefined)
+    );
+  }
+
+  return undefined;
+}
+
 export function useFirestoreConversations() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -280,27 +303,22 @@ export function useFirestoreConversations() {
         const messageData: any = {
           senderId: currentUser.uid,
           senderName: currentUser.displayName || 'Utilisateur',
-          senderPhoto: currentUser.photoURL || undefined,
           text: text || `[${messageType}]`,
           messageType,
           timestamp: serverTimestamp(),
           isRead: false,
         };
+        if (currentUser.photoURL) {
+          messageData.senderPhoto = currentUser.photoURL;
+        }
 
         // Ajouter metadata seulement si défini et valide
         if (metadata && typeof metadata === 'object') {
           // Nettoyer metadata pour ne garder que les données sérialisables
           const cleanMetadata: any = {};
           for (const [key, value] of Object.entries(metadata)) {
-            // Ne garder que les types sérialisables (y compris les objets imbriqués)
-            if (value === null || typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
-              cleanMetadata[key] = value;
-            } else if (Array.isArray(value) && value.every(v => typeof v === 'string' || typeof v === 'number')) {
-              cleanMetadata[key] = value;
-            } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-              // Permettre les objets imbriqués (comme repliedMessage)
-              cleanMetadata[key] = value;
-            }
+            const sanitizedValue = sanitizeMessageMetadata(value);
+            if (sanitizedValue !== undefined) cleanMetadata[key] = sanitizedValue;
           }
           if (Object.keys(cleanMetadata).length > 0) {
             messageData.metadata = cleanMetadata;

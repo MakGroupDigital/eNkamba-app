@@ -18,6 +18,21 @@ declare global {
       getPendingCallAccess?: () => string;
       clearPendingCallAccess?: () => void;
     };
+    eNkambaNativeFirebase?: {
+      isAvailable?: () => boolean;
+      signInWithCustomToken?: (requestId: string, token: string) => void;
+      signOut?: () => void;
+    };
+    eNkambaNativeCalls?: {
+      isAvailable?: () => boolean;
+      startCall?: (
+        requestId: string,
+        conversationId: string,
+        recipientUid: string,
+        callType: 'audio' | 'video'
+      ) => void;
+      answerIncomingCall?: (requestId: string, callId: string, callType: 'audio' | 'video') => void;
+    };
     Capacitor?: {
       isNativePlatform?: () => boolean;
     };
@@ -32,6 +47,8 @@ export function isEnkambaNativeRuntime() {
       window.eNkambaNativePush?.isAvailable?.() ||
       window.eNkambaNativeContacts?.isAvailable?.() ||
       window.eNkambaNativeLaunch?.getPendingCallAccess ||
+      window.eNkambaNativeFirebase?.isAvailable?.() ||
+      window.eNkambaNativeCalls?.isAvailable?.() ||
       window.Capacitor?.isNativePlatform?.()
   );
 }

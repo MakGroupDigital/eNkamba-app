@@ -18,11 +18,15 @@ import androidx.activity.result.contract.ActivityResultContracts
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.messaging.FirebaseMessaging
 import org.json.JSONArray
 import org.json.JSONObject
 
 class MainActivity : TauriActivity() {
+  private val nativeCallPreferences by lazy {
+    getSharedPreferences("enkamba_native_call", Context.MODE_PRIVATE)
+  }
   private var webViewRef: WebView? = null
   private var pendingGoogleRequestId: String? = null
   private var pendingContactsRequestId: String? = null
@@ -62,6 +66,8 @@ class MainActivity : TauriActivity() {
     webView.addJavascriptInterface(EnkambaPushBridge(), "eNkambaNativePush")
     webView.addJavascriptInterface(EnkambaLaunchBridge(), "eNkambaNativeLaunch")
     webView.addJavascriptInterface(EnkambaContactsBridge(), "eNkambaNativeContacts")
+    webView.addJavascriptInterface(EnkambaFirebaseBridge(), "eNkambaNativeFirebase")
+    webView.addJavascriptInterface(EnkambaCallBridge(), "eNkambaNativeCalls")
     consumePendingNotificationUrl()
   }
 
@@ -122,11 +128,15 @@ class MainActivity : TauriActivity() {
 
   inner class EnkambaLaunchBridge {
     @JavascriptInterface
-    fun getPendingCallAccess(): String = pendingNativeCallAccess.orEmpty()
+    fun getPendingCallAccess(): String =
+      pendingNativeCallAccess
+        ?: nativeCallPreferences.getString(PENDING_NATIVE_CALL_ACCESS_KEY, "")
+        ?: ""
 
     @JavascriptInterface
     fun clearPendingCallAccess() {
       pendingNativeCallAccess = null
+      nativeCallPreferences.edit().remove(PENDING_NATIVE_CALL_ACCESS_KEY).apply()
     }
   }
 
@@ -144,6 +154,80 @@ class MainActivity : TauriActivity() {
 
         pendingContactsRequestId = requestId
         requestPermissions(arrayOf(Manifest.permission.READ_CONTACTS), CONTACTS_PERMISSION_REQUEST)
+      }
+    }
+  }
+
+  inner class EnkambaFirebaseBridge {
+    @JavascriptInterface
+    fun isAvailable(): Boolean = true
+
+    @JavascriptInterface
+    fun signInWithCustomToken(requestId: String, token: String) {
+      runOnUiThread {
+        if (token.isBlank()) {
+          resolveNativeFirebaseAuth(requestId, false, "Jeton Firebase Android manquant.")
+          return@runOnUiThread
+        }
+
+        FirebaseAuth.getInstance().signInWithCustomToken(token)
+          .addOnCompleteListener { task ->
+            resolveNativeFirebaseAuth(
+              requestId,
+              task.isSuccessful,
+              task.exception?.message.orEmpty()
+            )
+          }
+      }
+    }
+
+    @JavascriptInterface
+    fun signOut() {
+      FirebaseAuth.getInstance().signOut()
+    }
+  }
+
+  inner class EnkambaCallBridge {
+    @JavascriptInterface
+    fun isAvailable(): Boolean = true
+
+    @JavascriptInterface
+    fun startCall(requestId: String, conversationId: String, recipientUid: String, callType: String) {
+      runOnUiThread {
+        if (FirebaseAuth.getInstance().currentUser == null) {
+          resolveNativeCallStart(requestId, false, "Session Android en cours de synchronisation.")
+          return@runOnUiThread
+        }
+        if (conversationId.isBlank() || recipientUid.isBlank()) {
+          resolveNativeCallStart(requestId, false, "Destinataire d'appel invalide.")
+          return@runOnUiThread
+        }
+        try {
+          startActivity(NativeCallActivity.outgoingIntent(this@MainActivity, conversationId, recipientUid, callType))
+          resolveNativeCallStart(requestId, true, "")
+        } catch (error: Exception) {
+          resolveNativeCallStart(requestId, false, error.message ?: "Impossible de lancer l'appel natif.")
+        }
+      }
+    }
+
+    @JavascriptInterface
+    fun answerIncomingCall(requestId: String, callId: String, callType: String) {
+      runOnUiThread {
+        if (FirebaseAuth.getInstance().currentUser == null) {
+          resolveNativeCallStart(requestId, false, "Session Android en cours de synchronisation.")
+          return@runOnUiThread
+        }
+        if (callId.isBlank()) {
+          resolveNativeCallStart(requestId, false, "Reference d'appel invalide.")
+          return@runOnUiThread
+        }
+        try {
+          startActivity(NativeCallActivity.incomingIntent(this@MainActivity, callId, callType))
+          resolveNativeCallStart(requestId, true, "")
+        } catch (error: Exception) {
+          resolveNativeCallStart(requestId, false, error.message ?: "Impossible de repondre a l'appel.")
+        }
       }
     }
   }
@@ -228,6 +312,34 @@ class MainActivity : TauriActivity() {
       webViewRef?.post {
         webViewRef?.evaluateJavascript(script, null)
       }
+    }
+  }
+
+  private fun resolveNativeFirebaseAuth(requestId: String, success: Boolean, error: String) {
+    val payload = JSONObject().apply {
+      put("success", success)
+      if (error.isNotBlank()) put("error", error)
+    }
+    val script = """
+      window.__eNkambaNativeFirebaseAuthResolve &&
+      window.__eNkambaNativeFirebaseAuthResolve(${JSONObject.quote(requestId)}, ${payload});
+    """.trimIndent()
+    runOnUiThread {
+      webViewRef?.post { webViewRef?.evaluateJavascript(script, null) }
+    }
+  }
+
+  private fun resolveNativeCallStart(requestId: String, success: Boolean, error: String) {
+    val payload = JSONObject().apply {
+      put("success", success)
+      if (error.isNotBlank()) put("error", error)
+    }
+    val script = """
+      window.__eNkambaNativeCallResolve &&
+      window.__eNkambaNativeCallResolve(${JSONObject.quote(requestId)}, ${payload});
+    """.trimIndent()
+    runOnUiThread {
+      webViewRef?.post { webViewRef?.evaluateJavascript(script, null) }
     }
   }
 
@@ -361,10 +473,12 @@ class MainActivity : TauriActivity() {
   }
 
   private fun setPendingNativeCallAccess(target: String) {
-    pendingNativeCallAccess = JSONObject().apply {
+    val access = JSONObject().apply {
       put("target", appendNativeAcceptedForCall(target))
       put("expiresAt", System.currentTimeMillis() + 120000)
     }.toString()
+    pendingNativeCallAccess = access
+    nativeCallPreferences.edit().putString(PENDING_NATIVE_CALL_ACCESS_KEY, access).apply()
   }
 
   private fun prepareCallWindowIfNeeded(target: String) {
@@ -406,5 +520,6 @@ class MainActivity : TauriActivity() {
 
   companion object {
     private const val CONTACTS_PERMISSION_REQUEST = 7303
+    private const val PENDING_NATIVE_CALL_ACCESS_KEY = "pending_call_access"
   }
 }

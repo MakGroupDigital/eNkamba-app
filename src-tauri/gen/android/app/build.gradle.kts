@@ -1,5 +1,16 @@
 import java.util.Properties
 
+fun readEnvValue(name: String): String {
+    val env = Properties()
+    val envFile = rootProject.file("../../../.env")
+    if (envFile.exists()) {
+        envFile.inputStream().use { env.load(it) }
+    }
+    return env.getProperty(name, System.getenv(name) ?: "")
+}
+
+fun buildConfigString(value: String): String = "\"${value.replace("\\", "\\\\").replace("\"", "\\\"")}\""
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -24,6 +35,11 @@ android {
         targetSdk = 36
         versionCode = tauriProperties.getProperty("tauri.android.versionCode", "1").toInt()
         versionName = tauriProperties.getProperty("tauri.android.versionName", "1.0")
+        buildConfigField("String", "NATIVE_WEBRTC_TURN_HOST", buildConfigString(readEnvValue("NEXT_PUBLIC_WEBRTC_TURN_HOST")))
+        buildConfigField("String", "NATIVE_WEBRTC_TURN_USERNAME", buildConfigString(readEnvValue("NEXT_PUBLIC_WEBRTC_TURN_USERNAME")))
+        buildConfigField("String", "NATIVE_WEBRTC_TURN_PASSWORD", buildConfigString(readEnvValue("NEXT_PUBLIC_WEBRTC_TURN_PASSWORD")))
+        buildConfigField("String", "NATIVE_WEBRTC_TURN_PORT", buildConfigString(readEnvValue("NEXT_PUBLIC_WEBRTC_TURN_PORT")))
+        buildConfigField("String", "NATIVE_WEBRTC_TURNS_PORT", buildConfigString(readEnvValue("NEXT_PUBLIC_WEBRTC_TURNS_PORT")))
     }
     signingConfigs {
         create("release") {
@@ -80,7 +96,11 @@ dependencies {
     implementation("com.google.android.material:material:1.12.0")
     implementation("androidx.lifecycle:lifecycle-process:2.10.0")
     implementation("com.google.android.gms:play-services-auth:21.4.0")
+    // Versions compatibles avec le compilateur Kotlin utilise par le projet Tauri.
+    implementation("com.google.firebase:firebase-auth:22.3.1")
+    implementation("com.google.firebase:firebase-firestore:24.11.1")
     implementation("com.google.firebase:firebase-messaging:24.1.2")
+    implementation("io.getstream:stream-webrtc-android:1.3.10")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.4")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.0")

@@ -1,19 +1,30 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { usePathname } from "next/navigation";
 
 import { ResponsiveSplashBackground } from "@/components/shared/responsive-splash-background";
-import { hasNativeCallAccess } from "@/lib/native-call-access";
+import { hasNativeCallAccess, isCallRoute } from "@/lib/native-call-access";
 
 const SPLASH_DURATION_MS = 1800;
 const SPLASH_FADE_MS = 320;
 
 export function AppSplashScreen() {
-  const [visible, setVisible] = useState(() => !hasNativeCallAccess());
-  const [mounted, setMounted] = useState(() => !hasNativeCallAccess());
+  const pathname = usePathname();
+  const isNativeAcceptedCallRoute = useMemo(
+    () => {
+      if (typeof window === "undefined" || !isCallRoute(pathname)) return false;
+      const params = new URLSearchParams(window.location.search);
+      return params.get("nativeAccepted") === "1" && Boolean(params.get("callId"));
+    },
+    [pathname],
+  );
+  const shouldSkipSplash = isNativeAcceptedCallRoute || hasNativeCallAccess(pathname);
+  const [visible, setVisible] = useState(() => !shouldSkipSplash);
+  const [mounted, setMounted] = useState(() => !shouldSkipSplash);
 
   useEffect(() => {
-    if (hasNativeCallAccess()) {
+    if (shouldSkipSplash) {
       setVisible(false);
       setMounted(false);
       return;
@@ -31,7 +42,7 @@ export function AppSplashScreen() {
       window.clearTimeout(hideTimer);
       window.clearTimeout(unmountTimer);
     };
-  }, []);
+  }, [shouldSkipSplash]);
 
   if (!mounted) {
     return null;

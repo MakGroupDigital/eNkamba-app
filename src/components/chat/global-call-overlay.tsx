@@ -8,9 +8,10 @@ import { Phone, PhoneOff, Video } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useCallFeedback } from '@/hooks/useCallFeedback';
 import { db } from '@/lib/firebase';
-import { getNativeAcceptedCallId } from '@/lib/native-call-access';
+import { getNativeAcceptedCallId, hasNativeCallAccess } from '@/lib/native-call-access';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { answerNativeChatCall, hasNativeCallEngine } from '@/lib/native-calls';
 
 type IncomingCallOverlay = {
   id: string;
@@ -33,17 +34,18 @@ export function GlobalCallOverlay() {
     () => pathname.includes('/dashboard/miyiki-chat/audiocall/') || pathname.includes('/dashboard/miyiki-chat/call/'),
     [pathname]
   );
+  const isNativeCallTransition = hasNativeCallAccess(pathname);
 
-  useCallFeedback(Boolean(incomingCall) && !isOnCallScreen, 'incoming', true);
+  useCallFeedback(Boolean(incomingCall) && !isOnCallScreen && !isNativeCallTransition, 'incoming', true);
 
   useEffect(() => {
-    if (!incomingCall || isOnCallScreen || typeof document === 'undefined') return;
+    if (!incomingCall || isOnCallScreen || isNativeCallTransition || typeof document === 'undefined') return;
     const previousTitle = document.title;
     document.title = `Appel entrant - ${incomingCall.fromName}`;
     return () => {
       document.title = previousTitle;
     };
-  }, [incomingCall, isOnCallScreen]);
+  }, [incomingCall, isNativeCallTransition, isOnCallScreen]);
 
   useEffect(() => {
     if (!user?.uid) {
@@ -58,7 +60,7 @@ export function GlobalCallOverlay() {
           const data: any = callDoc.data() || {};
           if (data.status !== 'ringing') return null;
           if (!data.conversationId || !data.fromUid) return null;
-          if (getNativeAcceptedCallId() === callDoc.id) return null;
+          if (getNativeAcceptedCallId() === callDoc.id || hasNativeCallAccess(pathname)) return null;
           const createdAtMs = data.createdAt?.toMillis?.() || 0;
           if (createdAtMs && Date.now() - createdAtMs > 70000) return null;
 
@@ -111,10 +113,20 @@ export function GlobalCallOverlay() {
     });
 
     return () => unsubscribe();
-  }, [user?.uid]);
+  }, [pathname, user?.uid]);
 
   const acceptCall = () => {
     if (!incomingCall) return;
+    if (hasNativeCallEngine()) {
+      const acceptedCall = incomingCall;
+      setIncomingCall(null);
+      void answerNativeChatCall(acceptedCall.id, acceptedCall.callType).then((result) => {
+        if (!result.success) {
+          setIncomingCall(acceptedCall);
+        }
+      });
+      return;
+    }
     const routeBase = incomingCall.callType === 'audio' ? 'audiocall' : 'call';
     setIncomingCall(null);
     router.push(`/dashboard/miyiki-chat/${routeBase}/${incomingCall.conversationId}?callId=${incomingCall.id}&nativeAccepted=1`);
@@ -132,7 +144,7 @@ export function GlobalCallOverlay() {
     } catch {}
   };
 
-  if (!incomingCall || isOnCallScreen) {
+  if (!incomingCall || isOnCallScreen || isNativeCallTransition) {
     return null;
   }
 
