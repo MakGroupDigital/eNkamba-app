@@ -8,6 +8,8 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.provider.ContactsContract
 import android.view.WindowManager
 import android.webkit.JavascriptInterface
@@ -19,6 +21,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.messaging.FirebaseMessaging
 import org.json.JSONArray
 import org.json.JSONObject
@@ -32,8 +35,16 @@ class MainActivity : TauriActivity() {
   private var pendingContactsRequestId: String? = null
   private var pendingNotificationUrl: String? = null
   private var pendingNativeCallAccess: String? = null
+  private val nativeSessionHandler = Handler(Looper.getMainLooper())
   private lateinit var googleSignInClient: GoogleSignInClient
   private lateinit var googleSignInLauncher: ActivityResultLauncher<Intent>
+  private val nativeSessionBootstrap = object : Runnable {
+    override fun run() {
+      if (FirebaseAuth.getInstance().currentUser != null) return
+      bootstrapNativeFirebaseSession()
+      nativeSessionHandler.postDelayed(this, NATIVE_SESSION_RETRY_MS)
+    }
+  }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     enableEdgeToEdge()
@@ -68,7 +79,13 @@ class MainActivity : TauriActivity() {
     webView.addJavascriptInterface(EnkambaContactsBridge(), "eNkambaNativeContacts")
     webView.addJavascriptInterface(EnkambaFirebaseBridge(), "eNkambaNativeFirebase")
     webView.addJavascriptInterface(EnkambaCallBridge(), "eNkambaNativeCalls")
+    startNativeFirebaseSessionBootstrap()
     consumePendingNotificationUrl()
+  }
+
+  override fun onDestroy() {
+    nativeSessionHandler.removeCallbacksAndMessages(null)
+    super.onDestroy()
   }
 
   inner class EkambaGoogleBridge {
@@ -172,6 +189,7 @@ class MainActivity : TauriActivity() {
 
         FirebaseAuth.getInstance().signInWithCustomToken(token)
           .addOnCompleteListener { task ->
+            if (task.isSuccessful) stopNativeFirebaseSessionBootstrap()
             resolveNativeFirebaseAuth(
               requestId,
               task.isSuccessful,
@@ -184,6 +202,7 @@ class MainActivity : TauriActivity() {
     @JavascriptInterface
     fun signOut() {
       FirebaseAuth.getInstance().signOut()
+      startNativeFirebaseSessionBootstrap()
     }
   }
 
@@ -255,13 +274,20 @@ class MainActivity : TauriActivity() {
         return
       }
 
-      resolveGoogleSignIn(requestId, JSONObject().apply {
-        put("success", true)
-        put("idToken", idToken)
-        put("email", account.email ?: "")
-        put("displayName", account.displayName ?: "")
-        put("photoUrl", account.photoUrl?.toString() ?: "")
-      })
+      // Google est deja natif a ce stade: ouvrir aussi Firebase Android ici
+      // evite toute course avec la WebView pour les futurs appels entrants.
+      FirebaseAuth.getInstance()
+        .signInWithCredential(GoogleAuthProvider.getCredential(idToken, null))
+        .addOnCompleteListener { task ->
+          if (task.isSuccessful) stopNativeFirebaseSessionBootstrap()
+          resolveGoogleSignIn(requestId, JSONObject().apply {
+            put("success", true)
+            put("idToken", idToken)
+            put("email", account.email ?: "")
+            put("displayName", account.displayName ?: "")
+            put("photoUrl", account.photoUrl?.toString() ?: "")
+          })
+        }
     } catch (error: Exception) {
       resolveGoogleSignIn(requestId, JSONObject().apply {
         put("success", false)
@@ -341,6 +367,68 @@ class MainActivity : TauriActivity() {
     runOnUiThread {
       webViewRef?.post { webViewRef?.evaluateJavascript(script, null) }
     }
+  }
+
+  private fun startNativeFirebaseSessionBootstrap() {
+    nativeSessionHandler.removeCallbacks(nativeSessionBootstrap)
+    if (FirebaseAuth.getInstance().currentUser == null) {
+      nativeSessionHandler.postDelayed(nativeSessionBootstrap, NATIVE_SESSION_INITIAL_DELAY_MS)
+    }
+  }
+
+  private fun stopNativeFirebaseSessionBootstrap() {
+    nativeSessionHandler.removeCallbacks(nativeSessionBootstrap)
+  }
+
+  private fun bootstrapNativeFirebaseSession() {
+    val webView = webViewRef ?: return
+    val script = """
+      (async function () {
+        try {
+          if (!window.__eNkambaNativeSessionSync && !window.__eNkambaNativeSessionSyncSetup) {
+            window.__eNkambaNativeSessionSyncSetup = true;
+            try {
+              const modules = await Promise.all([
+                import('https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js'),
+                import('https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js')
+              ]);
+              const appSdk = modules[0];
+              const authSdk = modules[1];
+              const config = {
+                apiKey: 'AIzaSyDRhWbrpB1Ss4njot7GYO-CZdkvJtZXGyI',
+                authDomain: 'studio-1153706651-6032b.firebaseapp.com',
+                projectId: 'studio-1153706651-6032b',
+                appId: '1:60114170881:web:7805087264e18745ef3c00'
+              };
+              const app = appSdk.getApps().length ? appSdk.getApp() : appSdk.initializeApp(config);
+              const auth = authSdk.getAuth(app);
+              window.__eNkambaNativeSessionSync = async function () {
+                const user = auth.currentUser;
+                if (!user || !window.eNkambaNativeFirebase || !window.eNkambaNativeFirebase.signInWithCustomToken) return;
+                const idToken = await user.getIdToken();
+                const response = await fetch('/api/mobile-auth/tauri-custom-token/', {
+                  method: 'POST',
+                  headers: { Authorization: 'Bearer ' + idToken }
+                });
+                const payload = await response.json().catch(function () { return {}; });
+                if (response.ok && payload.customToken) {
+                  window.eNkambaNativeFirebase.signInWithCustomToken('native-bootstrap', payload.customToken);
+                }
+              };
+              authSdk.onAuthStateChanged(auth, function (user) {
+                if (user && window.__eNkambaNativeSessionSync) window.__eNkambaNativeSessionSync();
+              });
+            } finally {
+              window.__eNkambaNativeSessionSyncSetup = false;
+            }
+          }
+          await window.__eNkambaNativeSessionSync();
+        } catch (error) {
+          console.warn('eNkamba native session sync failed', error);
+        }
+      })();
+    """.trimIndent()
+    webView.post { webView.evaluateJavascript(script, null) }
   }
 
   private fun buildContactsPayload(): JSONObject {
@@ -521,5 +609,7 @@ class MainActivity : TauriActivity() {
   companion object {
     private const val CONTACTS_PERMISSION_REQUEST = 7303
     private const val PENDING_NATIVE_CALL_ACCESS_KEY = "pending_call_access"
+    private const val NATIVE_SESSION_INITIAL_DELAY_MS = 1_000L
+    private const val NATIVE_SESSION_RETRY_MS = 4_000L
   }
 }
