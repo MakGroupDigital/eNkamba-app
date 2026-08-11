@@ -61,21 +61,30 @@ if (typeof window !== 'undefined') {
 export function NativeFirebaseSessionBridge() {
   const { user } = useAuth();
   const syncedSessionRef = useRef<string>('');
+  const syncingSessionRef = useRef(false);
 
   useEffect(() => {
     if (!user) {
       syncedSessionRef.current = '';
+      syncingSessionRef.current = false;
       window.eNkambaNativeFirebase?.signOut?.();
       return;
     }
 
-    if (!isEnkambaNativeRuntime() || !window.eNkambaNativeFirebase?.signInWithCustomToken) return;
-
     let cancelled = false;
+    let retryTimer: number | undefined;
     const sessionKey = `${user.uid}:${user.metadata.lastSignInTime || ''}`;
-    if (syncedSessionRef.current === sessionKey) return;
+    const syncSession = async () => {
+      if (cancelled || syncedSessionRef.current === sessionKey || syncingSessionRef.current) return;
 
-    void (async () => {
+      // La WebView peut devenir interactive avant que MainActivity n'injecte les ponts Android.
+      // On attend ce pont au lieu de laisser la session native vide pour les appels entrants.
+      if (!isEnkambaNativeRuntime() || !window.eNkambaNativeFirebase?.signInWithCustomToken) {
+        retryTimer = window.setTimeout(() => void syncSession(), 700);
+        return;
+      }
+
+      syncingSessionRef.current = true;
       try {
         const idToken = await user.getIdToken();
         const response = await fetch('/api/mobile-auth/tauri-custom-token', {
@@ -94,14 +103,22 @@ export function NativeFirebaseSessionBridge() {
           syncedSessionRef.current = sessionKey;
         } else if (nativeResult.error) {
           console.warn('Session Firebase Android non synchronisee:', nativeResult.error);
+          retryTimer = window.setTimeout(() => void syncSession(), 2_500);
         }
       } catch (error) {
         console.warn('Synchronisation Firebase Android impossible:', error);
+        retryTimer = window.setTimeout(() => void syncSession(), 2_500);
+      } finally {
+        syncingSessionRef.current = false;
       }
-    })();
+    };
+
+    void syncSession();
 
     return () => {
       cancelled = true;
+      if (retryTimer) window.clearTimeout(retryTimer);
+      syncingSessionRef.current = false;
     };
   }, [user]);
 

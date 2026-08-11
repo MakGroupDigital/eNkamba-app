@@ -7,6 +7,8 @@ import android.content.pm.PackageManager
 import android.media.AudioManager
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
@@ -77,6 +79,18 @@ class NativeCallActivity : AppCompatActivity() {
   private var localOfferCreated = false
   private var localAnswerCreated = false
   private var finishedCall = false
+  private var callStarted = false
+  private var authStateListener: FirebaseAuth.AuthStateListener? = null
+  private val authHandler = Handler(Looper.getMainLooper())
+  private val authSessionTimeout = Runnable {
+    val hasSession = firebaseAuth.currentUser != null
+    clearAuthSessionWaiter()
+    if (hasSession) {
+      startNativeCall()
+    } else {
+      showFailure("Session mobile indisponible.")
+    }
+  }
   private val queuedCandidates = mutableListOf<IceCandidate>()
 
   private lateinit var nameView: TextView
@@ -100,6 +114,7 @@ class NativeCallActivity : AppCompatActivity() {
   }
 
   override fun onDestroy() {
+    clearAuthSessionWaiter()
     stopCallResources()
     super.onDestroy()
   }
@@ -150,10 +165,13 @@ class NativeCallActivity : AppCompatActivity() {
   }
 
   private fun startNativeCall() {
+    if (finishedCall || callStarted) return
     if (firebaseAuth.currentUser == null) {
-      showFailure("Session mobile indisponible. Ouvrez eNkamba une fois puis reessayez.")
+      waitForNativeFirebaseSession()
       return
     }
+    clearAuthSessionWaiter()
+    callStarted = true
     initialiseWebRtc()
     if (isIncoming) {
       if (callId.isBlank()) {
@@ -168,6 +186,26 @@ class NativeCallActivity : AppCompatActivity() {
       }
       createOutgoingCall()
     }
+  }
+
+  private fun waitForNativeFirebaseSession() {
+    if (authStateListener != null) return
+    updateStatus("Connexion securisee...")
+    val listener = FirebaseAuth.AuthStateListener { auth ->
+      if (auth.currentUser != null && !finishedCall) {
+        clearAuthSessionWaiter()
+        startNativeCall()
+      }
+    }
+    authStateListener = listener
+    firebaseAuth.addAuthStateListener(listener)
+    authHandler.postDelayed(authSessionTimeout, AUTH_SESSION_WAIT_MS)
+  }
+
+  private fun clearAuthSessionWaiter() {
+    authHandler.removeCallbacks(authSessionTimeout)
+    authStateListener?.let { firebaseAuth.removeAuthStateListener(it) }
+    authStateListener = null
   }
 
   private fun initialiseWebRtc() {
@@ -586,6 +624,7 @@ class NativeCallActivity : AppCompatActivity() {
   }
 
   private fun showFailure(message: String) {
+    clearAuthSessionWaiter()
     updateStatus(message)
     statusView.postDelayed({ finishCall("ended") }, 2500)
   }
@@ -707,6 +746,7 @@ class NativeCallActivity : AppCompatActivity() {
     const val EXTRA_CONVERSATION_ID = "native_call_conversation_id"
     const val EXTRA_RECIPIENT_UID = "native_call_recipient_uid"
     private const val MEDIA_PERMISSION_REQUEST = 7601
+    private const val AUTH_SESSION_WAIT_MS = 8_000L
 
     fun incomingIntent(context: Context, callId: String, callType: String): Intent {
       return Intent(context, NativeCallActivity::class.java).apply {
