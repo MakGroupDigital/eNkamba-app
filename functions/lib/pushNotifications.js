@@ -195,9 +195,25 @@ exports.onUserNotificationCreated = functions.firestore
     const androidRecords = tokenRecords.filter((record) => record.platform === 'android');
     const iosRecords = tokenRecords.filter((record) => record.platform === 'ios');
     const webRecords = tokenRecords.filter((record) => record.platform !== 'android' && record.platform !== 'ios');
+    // Un appel peut etre accepte alors que la WebView Android est fermee. Le jeton
+    // est transmis uniquement au terminal Android du destinataire pour ouvrir une
+    // session Firebase native avant la lecture du signalement WebRTC.
+    const androidDataPayload = { ...dataPayload };
+    if (isCallNotification && androidRecords.length) {
+        try {
+            androidDataPayload.nativeAuthToken = await admin.auth().createCustomToken(userId, {
+                purpose: 'native_call',
+                callId: String(notif.callId || ''),
+            });
+        }
+        catch (error) {
+            // L'appel reste livrable pour les sessions Android deja actives.
+            console.error('Creation du jeton natif d appel echouee:', error);
+        }
+    }
     await Promise.all([
         sendToRecords(androidRecords, {
-            data: dataPayload,
+            data: androidDataPayload,
             android: {
                 priority: 'high',
             },

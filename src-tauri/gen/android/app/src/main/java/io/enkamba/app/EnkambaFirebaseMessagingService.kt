@@ -36,6 +36,7 @@ class EnkambaFirebaseMessagingService : FirebaseMessagingService() {
     val callId = data["callId"].orEmpty()
     val callType = data["callType"].orEmpty()
     val recipientUid = data["toUid"].orEmpty()
+    val nativeAuthToken = data["nativeAuthToken"].orEmpty()
     val notificationId = if (isCall && callId.isNotBlank()) callId.hashCode() else System.currentTimeMillis().toInt()
     val intent = Intent(this, MainActivity::class.java).apply {
       flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
@@ -74,6 +75,7 @@ class EnkambaFirebaseMessagingService : FirebaseMessagingService() {
         putExtra("callId", callId)
         putExtra("callType", callType)
         putExtra("recipientUid", recipientUid)
+        putExtra("nativeAuthToken", nativeAuthToken)
         putExtra("notificationId", notificationId)
       }
       val fullScreenIntent = PendingIntent.getActivity(
@@ -85,19 +87,19 @@ class EnkambaFirebaseMessagingService : FirebaseMessagingService() {
       val acceptIntent = PendingIntent.getBroadcast(
         this,
         notificationId + 201,
-        callActionIntent(IncomingCallActionReceiver.ACTION_ACCEPT_CALL, actionUrl, callId, callType, recipientUid, notificationId),
+        callActionIntent(IncomingCallActionReceiver.ACTION_ACCEPT_CALL, actionUrl, callId, callType, recipientUid, nativeAuthToken, notificationId),
         pendingIntentFlags
       )
       val declineIntent = PendingIntent.getBroadcast(
         this,
         notificationId + 202,
-        callActionIntent(IncomingCallActionReceiver.ACTION_DECLINE_CALL, actionUrl, callId, callType, recipientUid, notificationId),
+        callActionIntent(IncomingCallActionReceiver.ACTION_DECLINE_CALL, actionUrl, callId, callType, recipientUid, nativeAuthToken, notificationId),
         pendingIntentFlags
       )
       val busyIntent = PendingIntent.getBroadcast(
         this,
         notificationId + 203,
-        callActionIntent(IncomingCallActionReceiver.ACTION_BUSY_CALL, actionUrl, callId, callType, recipientUid, notificationId),
+        callActionIntent(IncomingCallActionReceiver.ACTION_BUSY_CALL, actionUrl, callId, callType, recipientUid, nativeAuthToken, notificationId),
         pendingIntentFlags
       )
 
@@ -155,6 +157,7 @@ class EnkambaFirebaseMessagingService : FirebaseMessagingService() {
     callId: String,
     callType: String,
     recipientUid: String,
+    nativeAuthToken: String,
     notificationId: Int
   ): Intent {
     return Intent(this, IncomingCallActionReceiver::class.java).apply {
@@ -163,6 +166,7 @@ class EnkambaFirebaseMessagingService : FirebaseMessagingService() {
       putExtra("callId", callId)
       putExtra("callType", callType)
       putExtra("recipientUid", recipientUid)
+      putExtra("nativeAuthToken", nativeAuthToken)
       putExtra("notificationId", notificationId)
     }
   }

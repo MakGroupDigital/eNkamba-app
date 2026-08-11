@@ -9,6 +9,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
@@ -60,6 +61,7 @@ class NativeCallActivity : AppCompatActivity() {
   private var callId = ""
   private var conversationId = ""
   private var recipientUid = ""
+  private var nativeAuthToken = ""
   private var callReference: DocumentReference? = null
   private var callListener: ListenerRegistration? = null
   private var candidateListener: ListenerRegistration? = null
@@ -109,6 +111,7 @@ class NativeCallActivity : AppCompatActivity() {
     callId = intent.getStringExtra(EXTRA_CALL_ID).orEmpty()
     conversationId = intent.getStringExtra(EXTRA_CONVERSATION_ID).orEmpty()
     recipientUid = intent.getStringExtra(EXTRA_RECIPIENT_UID).orEmpty()
+    nativeAuthToken = intent.getStringExtra(EXTRA_NATIVE_AUTH_TOKEN).orEmpty()
     setContentView(buildLayout())
     requestMediaAndStart()
   }
@@ -166,6 +169,10 @@ class NativeCallActivity : AppCompatActivity() {
 
   private fun startNativeCall() {
     if (finishedCall || callStarted) return
+    if (isIncoming && nativeAuthToken.isNotBlank() && firebaseAuth.currentUser?.uid != recipientUid) {
+      authenticateIncomingCall()
+      return
+    }
     // Un appel entrant est declenche par le push FCM cible du destinataire. La WebView
     // n'existe pas toujours a cet instant, donc la synchronisation Firebase ne doit pas
     // bloquer l'activite native. Les appels sortants gardent la session obligatoire.
@@ -189,6 +196,19 @@ class NativeCallActivity : AppCompatActivity() {
       }
       createOutgoingCall()
     }
+  }
+
+  private fun authenticateIncomingCall() {
+    updateStatus("Connexion securisee...")
+    val token = nativeAuthToken
+    // Le jeton est a usage unique; apres tentative on evite toute boucle de connexion.
+    nativeAuthToken = ""
+    firebaseAuth.signInWithCustomToken(token)
+      .addOnSuccessListener { startNativeCall() }
+      .addOnFailureListener { error ->
+        Log.e(LOG_TAG, "Native call Firebase authentication failed", error)
+        showFailure("Connexion securisee impossible.")
+      }
   }
 
   private fun waitForNativeFirebaseSession() {
@@ -400,7 +420,10 @@ class NativeCallActivity : AppCompatActivity() {
       loadParticipantName(snapshot.getString("fromUid").orEmpty(), "Appel entrant")
       reference.update("receivedAt", FieldValue.serverTimestamp())
       listenToCall(reference, "callee")
-    }.addOnFailureListener { showFailure("Impossible de rejoindre l'appel.") }
+    }.addOnFailureListener { error ->
+      Log.e(LOG_TAG, "Incoming call Firestore lookup failed for $callId", error)
+      showFailure("Impossible de rejoindre l'appel.")
+    }
   }
 
   private fun createOffer(reference: DocumentReference) {
@@ -751,15 +774,24 @@ class NativeCallActivity : AppCompatActivity() {
     const val EXTRA_IS_INCOMING = "native_call_incoming"
     const val EXTRA_CONVERSATION_ID = "native_call_conversation_id"
     const val EXTRA_RECIPIENT_UID = "native_call_recipient_uid"
+    const val EXTRA_NATIVE_AUTH_TOKEN = "native_call_auth_token"
     private const val MEDIA_PERMISSION_REQUEST = 7601
     private const val AUTH_SESSION_WAIT_MS = 8_000L
+    private const val LOG_TAG = "eNkambaNativeCall"
 
-    fun incomingIntent(context: Context, callId: String, callType: String, recipientUid: String = ""): Intent {
+    fun incomingIntent(
+      context: Context,
+      callId: String,
+      callType: String,
+      recipientUid: String = "",
+      nativeAuthToken: String = ""
+    ): Intent {
       return Intent(context, NativeCallActivity::class.java).apply {
         flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
         putExtra(EXTRA_CALL_ID, callId)
         putExtra(EXTRA_CALL_TYPE, callType)
         putExtra(EXTRA_RECIPIENT_UID, recipientUid)
+        putExtra(EXTRA_NATIVE_AUTH_TOKEN, nativeAuthToken)
         putExtra(EXTRA_IS_INCOMING, true)
       }
     }

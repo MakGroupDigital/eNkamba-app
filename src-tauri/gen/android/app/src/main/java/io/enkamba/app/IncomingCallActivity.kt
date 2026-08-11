@@ -181,7 +181,8 @@ class IncomingCallActivity : AppCompatActivity() {
       this,
       intent.getStringExtra("callId").orEmpty(),
       intent.getStringExtra("callType").orEmpty(),
-      intent.getStringExtra("recipientUid").orEmpty()
+      intent.getStringExtra("recipientUid").orEmpty(),
+      intent.getStringExtra("nativeAuthToken").orEmpty()
     ).apply {
       flags = Intent.FLAG_ACTIVITY_NEW_TASK or
         Intent.FLAG_ACTIVITY_CLEAR_TOP or
