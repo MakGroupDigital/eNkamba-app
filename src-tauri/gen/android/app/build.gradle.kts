@@ -99,7 +99,7 @@ dependencies {
     // Versions compatibles avec le compilateur Kotlin utilise par le projet Tauri.
     implementation("com.google.firebase:firebase-auth:22.3.1")
     implementation("com.google.firebase:firebase-firestore:24.11.1")
-    implementation("com.google.firebase:firebase-messaging:24.1.2")
+    implementation("com.google.firebase:firebase-messaging:23.4.1")
     implementation("io.getstream:stream-webrtc-android:1.3.10")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.4")
