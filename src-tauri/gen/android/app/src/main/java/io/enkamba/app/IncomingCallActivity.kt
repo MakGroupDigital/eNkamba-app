@@ -180,7 +180,8 @@ class IncomingCallActivity : AppCompatActivity() {
     val openIntent = NativeCallActivity.incomingIntent(
       this,
       intent.getStringExtra("callId").orEmpty(),
-      intent.getStringExtra("callType").orEmpty()
+      intent.getStringExtra("callType").orEmpty(),
+      intent.getStringExtra("recipientUid").orEmpty()
     ).apply {
       flags = Intent.FLAG_ACTIVITY_NEW_TASK or
         Intent.FLAG_ACTIVITY_CLEAR_TOP or

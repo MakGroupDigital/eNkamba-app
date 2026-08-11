@@ -150,6 +150,9 @@ export const onUserNotificationCreated = functions.firestore
       title,
       body,
       actionUrl,
+      // La notification FCM est ciblee vers ce compte. Android s'en sert pour
+      // verifier l'appel entrant meme lorsque la WebView est encore fermee.
+      toUid: userId,
     };
 
     if (notif.transactionId) {

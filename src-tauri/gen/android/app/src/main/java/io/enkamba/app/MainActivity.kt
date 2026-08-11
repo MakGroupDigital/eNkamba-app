@@ -242,7 +242,14 @@ class MainActivity : TauriActivity() {
           return@runOnUiThread
         }
         try {
-          startActivity(NativeCallActivity.incomingIntent(this@MainActivity, callId, callType))
+          startActivity(
+            NativeCallActivity.incomingIntent(
+              this@MainActivity,
+              callId,
+              callType,
+              FirebaseAuth.getInstance().currentUser?.uid.orEmpty()
+            )
+          )
           resolveNativeCallStart(requestId, true, "")
         } catch (error: Exception) {
           resolveNativeCallStart(requestId, false, error.message ?: "Impossible de repondre a l'appel.")

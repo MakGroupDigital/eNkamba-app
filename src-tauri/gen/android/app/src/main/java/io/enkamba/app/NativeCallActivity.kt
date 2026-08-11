@@ -166,7 +166,10 @@ class NativeCallActivity : AppCompatActivity() {
 
   private fun startNativeCall() {
     if (finishedCall || callStarted) return
-    if (firebaseAuth.currentUser == null) {
+    // Un appel entrant est declenche par le push FCM cible du destinataire. La WebView
+    // n'existe pas toujours a cet instant, donc la synchronisation Firebase ne doit pas
+    // bloquer l'activite native. Les appels sortants gardent la session obligatoire.
+    if (!isIncoming && firebaseAuth.currentUser == null) {
       waitForNativeFirebaseSession()
       return
     }
@@ -385,8 +388,11 @@ class NativeCallActivity : AppCompatActivity() {
         showFailure("Cet appel n'est plus disponible.")
         return@addOnSuccessListener
       }
-      val currentUid = firebaseAuth.currentUser?.uid.orEmpty()
-      if (snapshot.getString("toUid") != currentUid || snapshot.getString("status") !in listOf("ringing", "accepted")) {
+      val targetUid = recipientUid.ifBlank { firebaseAuth.currentUser?.uid.orEmpty() }
+      if (
+        snapshot.getString("status") !in listOf("ringing", "accepted") ||
+        (targetUid.isNotBlank() && snapshot.getString("toUid") != targetUid)
+      ) {
         showFailure("Cet appel n'est plus disponible.")
         return@addOnSuccessListener
       }
@@ -748,11 +754,12 @@ class NativeCallActivity : AppCompatActivity() {
     private const val MEDIA_PERMISSION_REQUEST = 7601
     private const val AUTH_SESSION_WAIT_MS = 8_000L
 
-    fun incomingIntent(context: Context, callId: String, callType: String): Intent {
+    fun incomingIntent(context: Context, callId: String, callType: String, recipientUid: String = ""): Intent {
       return Intent(context, NativeCallActivity::class.java).apply {
         flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
         putExtra(EXTRA_CALL_ID, callId)
         putExtra(EXTRA_CALL_TYPE, callType)
+        putExtra(EXTRA_RECIPIENT_UID, recipientUid)
         putExtra(EXTRA_IS_INCOMING, true)
       }
     }
