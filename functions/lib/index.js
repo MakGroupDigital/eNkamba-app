@@ -28,4 +28,5 @@ __exportStar(require("./savingsManagement"), exports);
 __exportStar(require("./addFunds"), exports);
 __exportStar(require("./withdrawFunds"), exports);
 __exportStar(require("./pushNotifications"), exports);
+__exportStar(require("./churchPay"), exports);
 //# sourceMappingURL=index.js.map
