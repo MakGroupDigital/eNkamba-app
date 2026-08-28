@@ -31,7 +31,7 @@ export function StartChatEmptyState({ onStartChat, isLoading = false }: StartCha
             Commencer la discussion
           </h2>
           <p className="text-muted-foreground">
-            Connectez-vous avec vos amis et votre famille sur eNkamba
+            Connectez-vous avec vos amis et votre famille sur Kenz
           </p>
         </div>
 
@@ -73,7 +73,7 @@ export function StartChatEmptyState({ onStartChat, isLoading = false }: StartCha
             Vous aurez besoin d'accéder à vos contacts pour continuer
           </p>
           <p className="text-xs text-muted-foreground flex items-center justify-center gap-1">
-            <span>Tu peux aussi discuter avec eNkamba.ai, notre assistant intelligent</span>
+            <span>Tu peux aussi discuter avec Kenz.ai, notre assistant intelligent</span>
             <AINavIcon size={14} className="text-primary" />
           </p>
         </div>

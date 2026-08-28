@@ -245,7 +245,7 @@ export default function BecomeSellerPage() {
                 <Store className="w-10 h-10 text-primary" />
               </div>
               <h2 className="text-3xl font-bold text-gray-900">
-                Vendez vos produits sur eNkamba
+                Vendez vos produits sur Kenz
               </h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">
                 Rejoignez notre marketplace et développez votre business en ligne.
@@ -275,7 +275,7 @@ export default function BecomeSellerPage() {
                 </div>
                 <h3 className="font-bold text-lg">Paiements sécurisés</h3>
                 <p className="text-sm text-gray-600">
-                  Recevez vos paiements directement dans votre portefeuille eNkamba
+                  Recevez vos paiements directement dans votre portefeuille Kenz
                 </p>
               </CardContent>
             </Card>
@@ -510,12 +510,12 @@ export default function BecomeSellerPage() {
                 </div>
               </div>
             ) : (
-              <Card className="border-[#FFA500]/30 bg-[#FFA500]/10">
+              <Card className="border-[#F51B2B]/30 bg-[#F51B2B]/10">
                 <CardContent className="p-4 flex items-start gap-3">
-                  <Briefcase className="h-5 w-5 text-[#FFA500] mt-0.5" />
+                  <Briefcase className="h-5 w-5 text-[#F51B2B] mt-0.5" />
                   <div>
-                    <p className="text-sm font-semibold text-[#FFA500]">Boutique requise</p>
-                    <p className="text-xs text-[#FFA500] mt-1">Créez votre boutique Nkampa pour personnaliser l’ajout de produits.</p>
+                    <p className="text-sm font-semibold text-[#F51B2B]">Boutique requise</p>
+                    <p className="text-xs text-[#F51B2B] mt-1">Créez votre boutique Nkampa pour personnaliser l’ajout de produits.</p>
                     <Button size="sm" className="mt-3 bg-primary hover:bg-primary/90" onClick={() => router.push('/dashboard/nkampa/store')}>
                       Créer une boutique
                     </Button>

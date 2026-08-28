@@ -27,7 +27,7 @@ const ENKAMBA_SERVICE_CONTEXT: EnkambaServiceContext[] = [
     keywords: ['paiement', 'wallet', 'portefeuille', 'solde', 'maxicash', 'mobile money', 'retrait', 'qr paiement', 'transaction'],
     capabilities: [
       'consulter le portefeuille',
-      'payer avec eNkamba Pay ou MaxiCash selon configuration',
+      'payer avec Kenz Pay ou MaxiCash selon configuration',
       'consulter l’historique des transactions',
       'utiliser le QR code de paiement',
     ],
@@ -111,7 +111,7 @@ export function buildAiPlatformContext(message: string) {
   const services = getRelevantEnkambaServices(message);
 
   return [
-    '=== CONTEXTE DES SERVICES RÉELS eNKAMBA ===',
+    '=== CONTEXTE DES SERVICES RÉELS KENZ ===',
     ...services.map((service, index) => {
       const capabilities = service.capabilities.map((capability) => `- ${capability}`).join('\n');
       return `${index + 1}. ${service.name} (${service.route})\n${capabilities}`;

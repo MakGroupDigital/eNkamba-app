@@ -21,7 +21,7 @@ export default function GlobalError({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: 'linear-gradient(135deg, #f5f5f5 0%, #009058 100%)',
+          background: 'linear-gradient(135deg, #f5f5f5 0%, #073B9A 100%)',
           padding: '20px',
           fontFamily: 'system-ui, -apple-system, sans-serif'
         }}>
@@ -39,7 +39,7 @@ export default function GlobalError({
               width: '80px',
               height: '80px',
               margin: '0 auto 24px',
-              background: 'linear-gradient(135deg, #009058 0%, #009058 100%)',
+              background: 'linear-gradient(135deg, #073B9A 0%, #073B9A 100%)',
               borderRadius: '50%',
               display: 'flex',
               alignItems: 'center',
@@ -67,7 +67,7 @@ export default function GlobalError({
               marginBottom: '24px',
               lineHeight: '1.6'
             }}>
-              Une erreur critique s'est produite dans l'application eNkamba. 
+              Une erreur critique s'est produite dans l'application Kenz.
               Nous nous excusons pour la gêne occasionnée.
             </p>
 
@@ -109,7 +109,7 @@ export default function GlobalError({
               <button
                 onClick={reset}
                 style={{
-                  background: 'linear-gradient(135deg, #009058 0%, #009058 100%)',
+                  background: 'linear-gradient(135deg, #073B9A 0%, #073B9A 100%)',
                   color: 'white',
                   border: 'none',
                   borderRadius: '8px',
@@ -130,8 +130,8 @@ export default function GlobalError({
                 onClick={() => window.location.href = '/dashboard'}
                 style={{
                   background: 'white',
-                  color: '#009058',
-                  border: '2px solid #009058',
+                  color: '#073B9A',
+                  border: '2px solid #073B9A',
                   borderRadius: '8px',
                   padding: '14px 24px',
                   fontSize: '16px',
@@ -141,12 +141,12 @@ export default function GlobalError({
                   width: '100%'
                 }}
                 onMouseOver={(e) => {
-                  e.currentTarget.style.background = '#009058';
+                  e.currentTarget.style.background = '#073B9A';
                   e.currentTarget.style.color = 'white';
                 }}
                 onMouseOut={(e) => {
                   e.currentTarget.style.background = 'white';
-                  e.currentTarget.style.color = '#009058';
+                  e.currentTarget.style.color = '#073B9A';
                 }}
               >
                 🏠 Retour au tableau de bord
@@ -181,17 +181,17 @@ export default function GlobalError({
             <div style={{
               marginTop: '24px',
               padding: '16px',
-              background: '#009058',
+              background: '#073B9A',
               borderRadius: '8px',
-              border: '1px solid #009058'
+              border: '1px solid #073B9A'
             }}>
               <p style={{
                 fontSize: '12px',
-                color: '#009058',
+                color: '#073B9A',
                 margin: '0',
                 lineHeight: '1.5'
               }}>
-                💡 Si le problème persiste, veuillez contacter le support eNkamba 
+                💡 Si le problème persiste, veuillez contacter le support Kenz
                 en mentionnant l'ID d'erreur ci-dessus.
               </p>
             </div>

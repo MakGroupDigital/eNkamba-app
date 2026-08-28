@@ -99,8 +99,8 @@ export default function AgentOpsCreditPage() {
                   {balance.toLocaleString('fr-FR')} CDF
                 </div>
               </div>
-              <div className="h-12 w-12 rounded-2xl bg-[#009058]/10 flex items-center justify-center">
-                <Wallet className="text-[#009058]" />
+              <div className="h-12 w-12 rounded-2xl bg-[#073B9A]/10 flex items-center justify-center">
+                <Wallet className="text-[#073B9A]" />
               </div>
             </div>
           </CardContent>
@@ -119,8 +119,8 @@ export default function AgentOpsCreditPage() {
                   }}
                   className="rounded-2xl border border-gray-200 bg-white p-4 hover:shadow-md hover:border-gray-300 transition-all text-left"
                 >
-                  <div className="h-12 w-12 rounded-2xl bg-[#009058]/10 flex items-center justify-center">
-                    <Phone className="text-[#009058]" />
+                  <div className="h-12 w-12 rounded-2xl bg-[#073B9A]/10 flex items-center justify-center">
+                    <Phone className="text-[#073B9A]" />
                   </div>
                   <div className="mt-3 font-semibold text-gray-900">WonyaPay</div>
                   <div className="text-xs text-gray-600 mt-1">Mobile Money</div>
@@ -194,7 +194,7 @@ export default function AgentOpsCreditPage() {
 
               <Button
                 onClick={() => setStep('confirm')}
-                className="w-full h-12 rounded-xl bg-[#009058] hover:bg-[#009058] text-white"
+                className="w-full h-12 rounded-xl bg-[#073B9A] hover:bg-[#073B9A] text-white"
               >
                 Continuer
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -226,7 +226,7 @@ export default function AgentOpsCreditPage() {
                 <Button
                   onClick={handleConfirm}
                   disabled={isLoading}
-                  className="h-12 rounded-xl bg-[#009058] hover:bg-[#009058] text-white"
+                  className="h-12 rounded-xl bg-[#073B9A] hover:bg-[#073B9A] text-white"
                 >
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Confirmer'}
                 </Button>

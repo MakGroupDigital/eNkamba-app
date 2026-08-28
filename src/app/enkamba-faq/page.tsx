@@ -11,11 +11,11 @@ export default function EnkambaFAQPage() {
 
   const faqs = [
     {
-      question: 'Qu\'est-ce que la plateforme eNKAMBA?',
-      answer: 'eNKAMBA est une plateforme ecommerce innovante développée par Guangzhou eNKAMBA International Company CO., Ltd. Elle permet aux établissements et partenaires commerciaux de vendre leurs produits en ligne avec une portée mondiale.',
+      question: 'Qu\'est-ce que la plateforme KENZ?',
+      answer: 'KENZ est une plateforme ecommerce innovante développée par Guangzhou KENZ International Company CO., Ltd. Elle permet aux établissements et partenaires commerciaux de vendre leurs produits en ligne avec une portée mondiale.',
     },
     {
-      question: 'Comment devenir partenaire eNKAMBA?',
+      question: 'Comment devenir partenaire KENZ?',
       answer: 'Pour devenir partenaire, contactez notre équipe commerciale. Nous proposons différents types de partenariats: Détaillant, Grossiste, Producteur et Fournisseur. Chaque type offre des avantages spécifiques adaptés à votre activité.',
     },
     {
@@ -24,7 +24,7 @@ export default function EnkambaFAQPage() {
     },
     {
       question: 'Comment fonctionne le système de paiement?',
-      answer: 'eNKAMBA propose un système de paiement sécurisé avec plusieurs options: cartes de crédit, virements bancaires, portefeuilles numériques et paiements mobiles. Les paiements sont traités en temps réel.',
+      answer: 'KENZ propose un système de paiement sécurisé avec plusieurs options: cartes de crédit, virements bancaires, portefeuilles numériques et paiements mobiles. Les paiements sont traités en temps réel.',
     },
     {
       question: 'Quel est le délai de livraison?',
@@ -40,7 +40,7 @@ export default function EnkambaFAQPage() {
     },
     {
       question: 'Comment puis-je augmenter mes ventes?',
-      answer: 'eNKAMBA propose des outils marketing intégrés: promotions, publicités ciblées, programmes de fidélité et analytics détaillées pour optimiser vos ventes.',
+      answer: 'KENZ propose des outils marketing intégrés: promotions, publicités ciblées, programmes de fidélité et analytics détaillées pour optimiser vos ventes.',
     },
   ];
 
@@ -59,7 +59,7 @@ export default function EnkambaFAQPage() {
               <ArrowLeft className="w-5 h-5" />
             </Button>
           </Link>
-          <h1 className="text-2xl font-bold">Questions Fréquemment Posées - eNKAMBA</h1>
+          <h1 className="text-2xl font-bold">Questions Fréquemment Posées - KENZ</h1>
         </div>
       </div>
 
@@ -97,7 +97,7 @@ export default function EnkambaFAQPage() {
           <CardContent className="p-8 text-center">
             <h2 className="text-2xl font-bold mb-3">Vous n\'avez pas trouvé votre réponse?</h2>
             <p className="text-gray-600 mb-6">
-              Notre équipe de support eNKAMBA est disponible 24/7 pour vous aider.
+              Notre équipe de support KENZ est disponible 24/7 pour vous aider.
             </p>
             <a href="mailto:support@enkamba.com">
               <Button className="bg-primary hover:bg-primary/90">

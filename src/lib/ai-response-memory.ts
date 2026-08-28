@@ -217,7 +217,7 @@ export function buildAiResponseMemoryContext(entries: AiResponseMemoryEntry[]) {
   if (entries.length === 0) return '';
 
   return [
-    '=== MÉMOIRE APPRENANTE eNKAMBA AI ===',
+    '=== MÉMOIRE APPRENANTE KENZ AI ===',
     'Ces exemples proviennent de réponses déjà validées. Utilise-les seulement si la question actuelle est proche.',
     ...entries.map((entry, index) => {
       return [

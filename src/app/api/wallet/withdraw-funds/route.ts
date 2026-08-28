@@ -162,7 +162,7 @@ export async function POST(request: NextRequest) {
           Devise: withdrawCurrency,
           Action: 'B2C',
           MobileMoney: normalizedPhoneNumber,
-          Motif: 'Retrait portefeuille eNkamba',
+          Motif: 'Retrait portefeuille Kenz',
         };
 
         const wonyaResponse = await fetch(`${config.baseUrl}/payment`, {
@@ -284,7 +284,7 @@ export async function POST(request: NextRequest) {
       };
 
       if (withdrawalMethod === 'agent') {
-        description = `Retrait Agent eNkamba - ${agentIdentifier}`;
+        description = `Retrait Agent Kenz - ${agentIdentifier}`;
         transactionData.agentIdentifier = agentIdentifier;
       } else if (withdrawalMethod === 'card') {
         description = `Retrait vers carte **** ${cardNumber?.slice(-4)}`;

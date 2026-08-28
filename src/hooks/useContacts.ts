@@ -23,7 +23,7 @@ export interface ContactsState {
 const CONTACTS_STORAGE_KEY = 'enkamba_contacts_cache';
 const PERMISSION_STORAGE_KEY = 'enkamba_contacts_permission';
 
-// Simulated eNkamba users (in production, this would come from Firebase)
+// Simulated Kenz users (in production, this would come from Firebase)
 const ENKAMBA_USERS = [
   { phoneNumber: '+243812345678', name: 'Jean Dupont', referralCode: 'JEAN123' },
   { phoneNumber: '+243987654321', name: 'Marie Martin', referralCode: 'MARIE456' },
@@ -224,7 +224,7 @@ export function useContacts() {
     }
   }, [loadFirestoreContacts]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Traiter les contacts pour identifier ceux sur eNkamba
+  // Traiter les contacts pour identifier ceux sur Kenz
   const processContacts = (rawContacts: any[]) => {
     const all: Contact[] = [];
     const enkamba: Contact[] = [];
@@ -288,7 +288,7 @@ export function useContacts() {
   // Envoyer une invitation SMS
   const sendInvitation = useCallback(async (contact: Contact, referralCode: string) => {
     try {
-      const message = `Rejoins-moi sur eNkamba ! 🚀\n\nCode d'invitation: ${referralCode}\n\nTélécharge l'app et crée ton compte avec ce code pour nous connecter directement.\n\nhttps://enkamba.io/join?ref=${referralCode}`;
+      const message = `Rejoins-moi sur Kenz ! 🚀\n\nCode d'invitation: ${referralCode}\n\nTélécharge l'app et crée ton compte avec ce code pour nous connecter directement.\n\nhttps://enkamba.io/join?ref=${referralCode}`;
 
       // Ouvrir l'app SMS native
       const smsUrl = `sms:${contact.phoneNumber}?body=${encodeURIComponent(message)}`;

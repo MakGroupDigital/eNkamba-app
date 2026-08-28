@@ -32,19 +32,19 @@ function isCurrency(value: string): value is Currency {
 
 const ConversionFlowIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
   <svg viewBox="0 0 48 48" fill="none" className={className} aria-hidden="true">
-    <rect x="8" y="10" width="32" height="28" rx="8" fill="#009058" />
+    <rect x="8" y="10" width="32" height="28" rx="8" fill="#073B9A" />
     <path d="M17 20h14l-4-4M31 28H17l4 4" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-    <circle cx="35" cy="13" r="4" fill="#FFA500" />
-    <circle cx="13" cy="35" r="4" fill="#009058" />
+    <circle cx="35" cy="13" r="4" fill="#F51B2B" />
+    <circle cx="13" cy="35" r="4" fill="#073B9A" />
   </svg>
 );
 
 const MarketRateIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
   <svg viewBox="0 0 48 48" fill="none" className={className} aria-hidden="true">
-    <rect x="9" y="12" width="30" height="26" rx="8" fill="#009058" />
-    <path d="M16 30l6-7 5 4 6-9" stroke="#009058" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+    <rect x="9" y="12" width="30" height="26" rx="8" fill="#073B9A" />
+    <path d="M16 30l6-7 5 4 6-9" stroke="#073B9A" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
     <circle cx="16" cy="30" r="2.5" fill="white" />
-    <circle cx="33" cy="18" r="3" fill="#FFA500" />
+    <circle cx="33" cy="18" r="3" fill="#F51B2B" />
   </svg>
 );
 
@@ -228,9 +228,9 @@ export default function ConversionPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f7faf8]">
+    <div className="min-h-screen bg-[#FFFFFF]">
     <div className="container mx-auto max-w-3xl p-3 space-y-4 animate-in fade-in duration-500 sm:p-4">
-      <header className="overflow-hidden rounded-2xl bg-gradient-to-br from-[#009058] to-[#009058] p-4 text-white shadow-lg shadow-[#009058]/20">
+      <header className="overflow-hidden rounded-2xl bg-gradient-to-br from-[#073B9A] to-[#073B9A] p-4 text-white shadow-lg shadow-[#073B9A]/20">
         <div className="flex items-center justify-between gap-4">
           <div className="flex min-w-0 items-center gap-3">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/16 ring-1 ring-white/25">
@@ -250,7 +250,7 @@ export default function ConversionPage() {
             type="button"
             onClick={() => void fetchLiveRates()}
             disabled={isLoadingRates}
-            className="h-10 shrink-0 rounded-xl bg-white px-3 text-xs font-bold text-[#009058] hover:bg-white/90 sm:text-sm"
+            className="h-10 shrink-0 rounded-xl bg-white px-3 text-xs font-bold text-[#073B9A] hover:bg-white/90 sm:text-sm"
           >
             <RefreshCw className={`mr-1.5 h-4 w-4 ${isLoadingRates ? 'animate-spin' : ''}`} />
             Actualiser
@@ -258,10 +258,10 @@ export default function ConversionPage() {
         </div>
       </header>
       
-      <Card className="overflow-hidden border-[#009058]/10 bg-white shadow-sm">
-        <CardHeader className="border-b border-[#009058]/10 px-4 py-3">
-          <CardTitle className="font-headline flex items-center gap-2 text-lg text-[#009058]">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#009058]/10">
+      <Card className="overflow-hidden border-[#073B9A]/10 bg-white shadow-sm">
+        <CardHeader className="border-b border-[#073B9A]/10 px-4 py-3">
+          <CardTitle className="font-headline flex items-center gap-2 text-lg text-[#073B9A]">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#073B9A]/10">
               <MarketRateIcon className="h-6 w-6" />
             </span>
             Bureau de change
@@ -284,10 +284,10 @@ export default function ConversionPage() {
                 type="text"
                 value={fromAmount}
                 onChange={handleAmountChange}
-                className="h-14 flex-1 rounded-xl border-[#009058]/20 bg-[#f7faf8] text-2xl font-black focus-visible:ring-[#009058]"
+                className="h-14 flex-1 rounded-xl border-[#073B9A]/20 bg-[#FFFFFF] text-2xl font-black focus-visible:ring-[#073B9A]"
                 placeholder="0.00"
               />
-              <div className="flex h-14 items-center justify-center rounded-xl border border-[#009058]/20 bg-white px-3 font-black text-[#009058]">
+              <div className="flex h-14 items-center justify-center rounded-xl border border-[#073B9A]/20 bg-white px-3 font-black text-[#073B9A]">
                 CDF
               </div>
             </div>
@@ -295,11 +295,11 @@ export default function ConversionPage() {
           </div>
 
           <div className="flex items-center justify-center my-4 gap-3">
-             <div className="flex-1 border-t border-[#009058]/15"></div>
-             <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#009058]/20 bg-white text-[#009058] shadow-sm">
+             <div className="flex-1 border-t border-[#073B9A]/15"></div>
+             <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#073B9A]/20 bg-white text-[#073B9A] shadow-sm">
                 <Banknote className="h-5 w-5"/>
              </div>
-             <div className="flex-1 border-t border-[#009058]/15"></div>
+             <div className="flex-1 border-t border-[#073B9A]/15"></div>
           </div>
 
            <div className="flex flex-col gap-2">
@@ -309,11 +309,11 @@ export default function ConversionPage() {
                 type="text"
                 value={toAmount}
                 readOnly
-                className="h-14 flex-1 rounded-xl border-[#009058]/20 bg-[#009058]/5 text-2xl font-black text-[#009058]"
+                className="h-14 flex-1 rounded-xl border-[#073B9A]/20 bg-[#073B9A]/5 text-2xl font-black text-[#073B9A]"
                 placeholder="0.00"
               />
               <Select value={toCurrency} onValueChange={handleToCurrencyChange}>
-                <SelectTrigger className="h-14 w-[120px] rounded-xl border-[#009058]/20 font-semibold">
+                <SelectTrigger className="h-14 w-[120px] rounded-xl border-[#073B9A]/20 font-semibold">
                   <SelectValue placeholder="Devise" />
                 </SelectTrigger>
                 <SelectContent>
@@ -324,28 +324,28 @@ export default function ConversionPage() {
               </Select>
             </div>
             <div className="grid gap-2 sm:grid-cols-2">
-              <p className="rounded-xl bg-[#f7faf8] px-3 py-2 text-xs font-semibold text-muted-foreground">
-                Solde actuel {toCurrency} : <span className="font-black text-[#009058]">{Number(currencyWallets[toCurrency]?.balance || 0).toLocaleString('fr-FR', { maximumFractionDigits: 2 })}</span>
+              <p className="rounded-xl bg-[#FFFFFF] px-3 py-2 text-xs font-semibold text-muted-foreground">
+                Solde actuel {toCurrency} : <span className="font-black text-[#073B9A]">{Number(currencyWallets[toCurrency]?.balance || 0).toLocaleString('fr-FR', { maximumFractionDigits: 2 })}</span>
               </p>
-              <p className="rounded-xl bg-[#f7faf8] px-3 py-2 text-xs font-semibold text-muted-foreground">
-                Après conversion : <span className="font-black text-[#009058]">{(Number(currencyWallets[toCurrency]?.balance || 0) + Number(toAmount || 0)).toLocaleString('fr-FR', { maximumFractionDigits: 2 })} {toCurrency}</span>
+              <p className="rounded-xl bg-[#FFFFFF] px-3 py-2 text-xs font-semibold text-muted-foreground">
+                Après conversion : <span className="font-black text-[#073B9A]">{(Number(currencyWallets[toCurrency]?.balance || 0) + Number(toAmount || 0)).toLocaleString('fr-FR', { maximumFractionDigits: 2 })} {toCurrency}</span>
               </p>
             </div>
           </div>
 
             {rate !== null && (
-                <div className="rounded-2xl border border-[#009058]/10 bg-[#f7faf8] p-3 text-center text-sm font-medium text-[#009058]">
-                    <TrendingUp className="mx-auto mb-1 h-4 w-4 text-[#009058]" />
+                <div className="rounded-2xl border border-[#073B9A]/10 bg-[#FFFFFF] p-3 text-center text-sm font-medium text-[#073B9A]">
+                    <TrendingUp className="mx-auto mb-1 h-4 w-4 text-[#073B9A]" />
                     Taux réel chargé : 1 {fromCurrency} = {rate.toFixed(6)} {toCurrency}
                     {lastUpdated && <p className="mt-1 text-[11px] text-muted-foreground">Actualisé le {lastUpdated}</p>}
                 </div>
             )}
 
         </CardContent>
-        <CardFooter className="flex-col gap-4 border-t border-[#009058]/10 px-4 py-3">
+        <CardFooter className="flex-col gap-4 border-t border-[#073B9A]/10 px-4 py-3">
             <Button 
               size="lg" 
-              className="h-11 w-full rounded-xl bg-[#009058] font-bold hover:bg-[#009058]"
+              className="h-11 w-full rounded-xl bg-[#073B9A] font-bold hover:bg-[#073B9A]"
               onClick={() => {
                 if (!fromAmount || isNaN(parseFloat(fromAmount)) || parseFloat(fromAmount) <= 0) {
                   toast({
@@ -369,9 +369,9 @@ export default function ConversionPage() {
             >
                 Prévisualiser la conversion
             </Button>
-            <Alert variant="default" className="rounded-2xl border-[#009058]/20 bg-[#009058]/5 text-xs">
-                <ShieldCheck className="h-4 w-4 text-[#009058]"/>
-                <AlertTitle className="text-xs font-semibold text-[#009058]">Information</AlertTitle>
+            <Alert variant="default" className="rounded-2xl border-[#073B9A]/20 bg-[#073B9A]/5 text-xs">
+                <ShieldCheck className="h-4 w-4 text-[#073B9A]"/>
+                <AlertTitle className="text-xs font-semibold text-[#073B9A]">Information</AlertTitle>
                 <AlertDescription>
                     Cette opération convertit le solde principal CDF vers le mini portefeuille de la devise choisie. Les frais de service de 1% sont débités du portefeuille principal.
                 </AlertDescription>
@@ -383,21 +383,21 @@ export default function ConversionPage() {
       <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
         <DialogContent className="rounded-2xl">
           <DialogHeader>
-            <DialogTitle className="text-[#009058]">Prévisualisation du bureau de change</DialogTitle>
+            <DialogTitle className="text-[#073B9A]">Prévisualisation du bureau de change</DialogTitle>
             <DialogDescription>
               Vérifiez le débit du portefeuille principal et le crédit du mini portefeuille devise.
             </DialogDescription>
           </DialogHeader>
           {rate !== null && (
             <div className="space-y-4 py-4">
-              <div className="space-y-2 rounded-2xl bg-[#f7faf8] p-4">
+              <div className="space-y-2 rounded-2xl bg-[#FFFFFF] p-4">
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Débit portefeuille principal :</span>
                   <span className="font-bold text-lg">{fromAmount} {fromCurrency}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Crédit mini portefeuille {toCurrency} :</span>
-                  <span className="font-bold text-lg text-[#009058]">{toAmount} {toCurrency}</span>
+                  <span className="font-bold text-lg text-[#073B9A]">{toAmount} {toCurrency}</span>
                 </div>
                 <div className="flex justify-between items-center pt-2 border-t">
                   <span className="text-sm text-muted-foreground">Taux de change :</span>
@@ -415,7 +415,7 @@ export default function ConversionPage() {
               Annuler
             </Button>
             <Button 
-              className="bg-[#009058] hover:bg-[#009058]"
+              className="bg-[#073B9A] hover:bg-[#073B9A]"
               onClick={() => setShowPinDialog(true)}
               disabled={isConverting}
             >

@@ -125,7 +125,7 @@ export default function SchoolFeesPage() {
       school,
       student,
       paidBy: 'Parent/Tuteur', // À récupérer du profil utilisateur
-      paymentMethod: 'eNkambaPay Wallet',
+      paymentMethod: 'Kenz Pay Wallet',
     };
 
     setReceipt(newReceipt);
@@ -204,7 +204,7 @@ export default function SchoolFeesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-[#009058]/5 to-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-[#073B9A]/5 to-background">
       <div className="container mx-auto max-w-4xl p-4 space-y-6 animate-in fade-in duration-500">
         {/* Header */}
         <header className="flex items-center gap-4 pt-4">
@@ -214,7 +214,7 @@ export default function SchoolFeesPage() {
             </Link>
           </Button>
           <div className="flex-1">
-            <h1 className="font-headline text-2xl font-bold bg-gradient-to-r from-[#009058] to-[#009058] bg-clip-text text-transparent">
+            <h1 className="font-headline text-2xl font-bold bg-gradient-to-r from-[#073B9A] to-[#073B9A] bg-clip-text text-transparent">
               Paiement Frais Scolaires
             </h1>
             <p className="text-sm text-muted-foreground">Payez les frais scolaires en toute sécurité</p>
@@ -451,17 +451,17 @@ export default function SchoolFeesPage() {
         {/* Step: Reçu */}
         {step === 'receipt' && receipt && (
           <div className="space-y-6">
-            {/* Reçu moderne eNkambaPay */}
+            {/* Reçu moderne Kenz Pay */}
             <div ref={receiptRef} className="bg-white rounded-2xl shadow-2xl overflow-hidden">
               {/* Header avec dégradé */}
-              <div className="bg-gradient-to-r from-[#009058] to-[#009058] p-6 text-white">
+              <div className="bg-gradient-to-r from-[#073B9A] to-[#073B9A] p-6 text-white">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
-                      <Image src="/enkamba-logo.png" alt="eNkamba" width={32} height={32} />
+                      <Image src="/kenz-logo.png" alt="Kenz" width={32} height={32} />
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold">eNkambaPay</h2>
+                      <h2 className="text-2xl font-bold">Kenz Pay</h2>
                       <p className="text-sm opacity-90">Reçu de paiement</p>
                     </div>
                   </div>
@@ -567,7 +567,7 @@ export default function SchoolFeesPage() {
                     Ce reçu est généré électroniquement et ne nécessite pas de signature
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    eNkambaPay © {new Date().getFullYear()} - Tous droits réservés
+                    Kenz Pay © {new Date().getFullYear()} - Tous droits réservés
                   </p>
                   <p className="text-xs text-muted-foreground font-mono">
                     www.enkamba.cd

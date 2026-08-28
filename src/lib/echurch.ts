@@ -1,5 +1,5 @@
-export const ECHURCH_PRIMARY = '#0A8B46';
-export const ECHURCH_ORANGE = '#FF8A00';
+export const ECHURCH_PRIMARY = '#073B9A';
+export const ECHURCH_ORANGE = '#F51B2B';
 
 export type ChurchAccountStatus =
   | 'draft'

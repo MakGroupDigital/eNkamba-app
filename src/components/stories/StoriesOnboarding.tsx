@@ -59,11 +59,11 @@ export function StoriesOnboarding({ onClose }: StoriesOnboardingProps) {
       icon: Clock,
       title: 'Choisissez la durée',
       description: 'Contrôlez combien de temps votre story reste visible: 5s, 10s, 15s, 30s ou 1 minute',
-      gradient: 'from-[#FFA500] to-[#FFA500]',
+      gradient: 'from-[#F51B2B] to-[#F51B2B]',
       illustration: (
         <div className="relative w-32 h-32 mx-auto">
-          <div className="absolute inset-0 bg-[#FFA500] rounded-full rotate-45 opacity-20"></div>
-          <div className="absolute inset-0 bg-[#FFA500] rounded-full flex items-center justify-center">
+          <div className="absolute inset-0 bg-[#F51B2B] rounded-full rotate-45 opacity-20"></div>
+          <div className="absolute inset-0 bg-[#F51B2B] rounded-full flex items-center justify-center">
             <Clock size={48} className="text-white" />
           </div>
         </div>

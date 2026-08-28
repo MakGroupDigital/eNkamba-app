@@ -30,7 +30,7 @@ const slides = [
   {
     id: 1,
     module: "Bienvenue",
-    title: "Bienvenue sur eNkamba",
+    title: "Bienvenue sur Kenz",
     description:
       "L'écosystème digital tout-en-un pour gérer votre argent, communiquer, acheter et livrer. Tout ce dont vous avez besoin, en une seule application.",
     icon: null, // Logo à la place
@@ -119,8 +119,8 @@ const slides = [
   },
   {
     id: 7,
-    module: "eNkamba AI",
-    title: "eNkamba.ai",
+    module: "Kenz AI",
+    title: "Kenz.ai",
     description:
       "Votre assistant personnel intelligent. Analysez vos finances, détectez les anomalies, obtenez des recommandations personnalisées et générez des rapports détaillés.",
     icon: Bot,
@@ -183,7 +183,7 @@ export default function OnboardingPage() {
       <div
         className="min-h-screen flex items-center justify-center"
         style={{
-          background: "linear-gradient(to bottom right, #009058, #009058, #009058)",
+          background: "linear-gradient(to bottom right, #073B9A, #073B9A, #073B9A)",
         }}
       >
         <Loader2 className="w-8 h-8 animate-spin text-white" />
@@ -217,7 +217,7 @@ export default function OnboardingPage() {
     <div
       className="min-h-screen overflow-hidden relative"
       style={{
-        background: "linear-gradient(to bottom right, #009058, #009058, #009058)",
+        background: "linear-gradient(to bottom right, #073B9A, #073B9A, #073B9A)",
       }}
     >
       {/* Floating decorative circles */}
@@ -361,10 +361,10 @@ export default function OnboardingPage() {
                   transition={{ duration: 0.5, delay: 0.2 }}
                 >
                   {currentSlideData.isLogo ? (
-                    <div className="h-20 w-20 overflow-hidden rounded-full bg-[#009058] shadow-lg ring-2 ring-white/60">
+                    <div className="h-20 w-20 overflow-hidden rounded-full bg-[#073B9A] shadow-lg ring-2 ring-white/60">
                       <Image
-                        src="/enkamba-logo.png"
-                        alt="eNkamba Logo"
+                        src="/kenz-logo.png"
+                        alt="Kenz Logo"
                         width={80}
                         height={80}
                         className="h-full w-full scale-[1.42] rounded-full object-cover [clip-path:circle(50%_at_50%_50%)]"
@@ -373,7 +373,7 @@ export default function OnboardingPage() {
                   ) : (
                     <div className="rounded-2xl bg-white flex items-center justify-center shadow-lg p-4">
                       {IconComponent && (
-                        <IconComponent className="w-10 h-10 text-[#009058]" />
+                        <IconComponent className="w-10 h-10 text-[#073B9A]" />
                       )}
                     </div>
                   )}
@@ -387,7 +387,7 @@ export default function OnboardingPage() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.4, delay: 0.2 }}
               >
-                <span className="bg-white text-[#009058] text-xs font-bold px-4 py-1.5 rounded-full shadow-md">
+                <span className="bg-white text-[#073B9A] text-xs font-bold px-4 py-1.5 rounded-full shadow-md">
                   {currentSlideData.module}
                 </span>
               </motion.div>
@@ -453,7 +453,7 @@ export default function OnboardingPage() {
           {/* CTA Button */}
           {isLastSlide ? (
             <Link href="/login" className="block">
-              <Button className="w-full h-14 bg-white text-[#009058] hover:bg-white/90 rounded-full text-lg font-semibold shadow-lg border-0">
+              <Button className="w-full h-14 bg-white text-[#073B9A] hover:bg-white/90 rounded-full text-lg font-semibold shadow-lg border-0">
                 C&apos;est parti !
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>

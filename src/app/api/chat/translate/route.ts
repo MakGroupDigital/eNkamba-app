@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
     const response = await fetch(url, {
       signal: controller.signal,
       headers: {
-        'User-Agent': 'eNkamba-local-translation/1.0',
+        'User-Agent': 'Kenz-local-translation/1.0',
       },
     });
 

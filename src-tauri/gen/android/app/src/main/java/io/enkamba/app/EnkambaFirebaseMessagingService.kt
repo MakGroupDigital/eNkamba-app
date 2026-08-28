@@ -26,7 +26,7 @@ class EnkambaFirebaseMessagingService : FirebaseMessagingService() {
 
     val title = message.notification?.title
       ?: data["title"]
-      ?: if (isCall) "Appel eNkamba" else "eNkamba"
+      ?: if (isCall) "Appel Kenz" else "Kenz"
     val body = message.notification?.body
       ?: data["body"]
       ?: data["message"]
@@ -133,10 +133,10 @@ class EnkambaFirebaseMessagingService : FirebaseMessagingService() {
 
     val channel = NotificationChannel(
       channelId,
-      if (isCall) "eNkamba Appels" else "eNkamba General",
+      if (isCall) "Kenz Appels" else "Kenz General",
       if (isCall) NotificationManager.IMPORTANCE_HIGH else NotificationManager.IMPORTANCE_DEFAULT
     ).apply {
-      description = if (isCall) "Appels audio et video entrants" else "Notifications eNkamba"
+      description = if (isCall) "Appels audio et video entrants" else "Notifications Kenz"
       enableVibration(true)
       vibrationPattern = if (isCall) longArrayOf(0, 300, 150, 300, 150, 500) else longArrayOf(0, 180)
       setSound(

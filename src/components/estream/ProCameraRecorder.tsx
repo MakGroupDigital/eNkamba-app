@@ -231,14 +231,14 @@ export const ProCameraRecorder = ({ onClose, onPublish, isPublishing = false }: 
             placeholder="Titre de la vidéo..."
             value={videoTitle}
             onChange={(e) => setVideoTitle(e.target.value)}
-            className="w-full bg-gray-800 text-white px-4 py-2 rounded-lg outline-none focus:ring-2 focus:ring-[#009058] text-sm"
+            className="w-full bg-gray-800 text-white px-4 py-2 rounded-lg outline-none focus:ring-2 focus:ring-[#073B9A] text-sm"
           />
 
           <textarea
             placeholder="Description (optionnel)..."
             value={videoDescription}
             onChange={(e) => setVideoDescription(e.target.value)}
-            className="w-full bg-gray-800 text-white px-4 py-2 rounded-lg outline-none focus:ring-2 focus:ring-[#009058] text-sm resize-none h-20"
+            className="w-full bg-gray-800 text-white px-4 py-2 rounded-lg outline-none focus:ring-2 focus:ring-[#073B9A] text-sm resize-none h-20"
           />
 
           <div className="flex gap-2">
@@ -252,7 +252,7 @@ export const ProCameraRecorder = ({ onClose, onPublish, isPublishing = false }: 
             <button
               onClick={handlePublish}
               disabled={isPublishing || !videoTitle.trim()}
-              className="flex-1 bg-gradient-to-r from-[#009058] to-primary hover:from-[#009058] hover:to-primary disabled:opacity-50 text-white py-2 rounded-lg transition-all flex items-center justify-center gap-2 font-semibold text-sm"
+              className="flex-1 bg-gradient-to-r from-[#073B9A] to-primary hover:from-[#073B9A] hover:to-primary disabled:opacity-50 text-white py-2 rounded-lg transition-all flex items-center justify-center gap-2 font-semibold text-sm"
             >
               <Send size={16} />
               {isPublishing ? 'Publication...' : 'Publier'}
@@ -375,7 +375,7 @@ export const ProCameraRecorder = ({ onClose, onPublish, isPublishing = false }: 
 
               <button
                 onClick={() => setShowSettings(false)}
-                className="w-full bg-[#009058] hover:bg-[#009058] text-white py-2 rounded-lg transition-all font-semibold"
+                className="w-full bg-[#073B9A] hover:bg-[#073B9A] text-white py-2 rounded-lg transition-all font-semibold"
               >
                 Fermer
               </button>

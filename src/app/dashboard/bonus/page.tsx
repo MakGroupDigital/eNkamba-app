@@ -33,7 +33,7 @@ export default function BonusPage() {
       <Card>
         <CardHeader>
           <CardTitle className="font-headline">Bonus Disponibles</CardTitle>
-          <CardDescription>Profitez des avantages exclusifs de l'écosystème eNkamba.</CardDescription>
+          <CardDescription>Profitez des avantages exclusifs de l'écosystème Kenz.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {bonuses.map((bonus, index) => {

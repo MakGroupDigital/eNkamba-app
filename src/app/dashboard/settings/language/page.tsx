@@ -62,7 +62,7 @@ export default function LanguagePage() {
         <CardHeader>
           <CardTitle className="font-headline">Langue de l'application</CardTitle>
           <CardDescription>
-            Choisissez la langue dans laquelle vous souhaitez utiliser eNkamba.
+            Choisissez la langue dans laquelle vous souhaitez utiliser Kenz.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-2">

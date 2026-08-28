@@ -31,7 +31,7 @@ export default function CabinetPage() {
           <ArrowLeft size={20} />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold font-headline">Cabinet eNkamba</h1>
+          <h1 className="text-2xl font-bold font-headline">Cabinet Kenz</h1>
           <p className="text-sm text-muted-foreground">
             Ouvrez un cabinet de services financiers complet
           </p>
@@ -40,7 +40,7 @@ export default function CabinetPage() {
 
       {/* Hero Section */}
       <Card className="overflow-hidden">
-        <div className="bg-gradient-to-r from-[#009058] via-[#009058] to-[#009058] p-8 text-white">
+        <div className="bg-gradient-to-r from-[#073B9A] via-[#073B9A] to-[#073B9A] p-8 text-white">
           <div className="flex items-center gap-6">
             <div className="h-20 w-20 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
               <Store size={40} />
@@ -70,7 +70,7 @@ export default function CabinetPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Building size={24} className="text-[#FFA500]" />
+            <Building size={24} className="text-[#F51B2B]" />
             Services de cabinet complets
           </CardTitle>
         </CardHeader>
@@ -114,7 +114,7 @@ export default function CabinetPage() {
                 category: 'Commerce'
               }
             ].map((service, index) => (
-              <div key={index} className="p-4 rounded-xl border border-border hover:border-[#FFA500]/30 transition-colors">
+              <div key={index} className="p-4 rounded-xl border border-border hover:border-[#F51B2B]/30 transition-colors">
                 <div className="flex justify-between items-start mb-2">
                   <div>
                     <h3 className="font-semibold">{service.title}</h3>
@@ -122,7 +122,7 @@ export default function CabinetPage() {
                       {service.category}
                     </Badge>
                   </div>
-                  <Badge variant="secondary" className="text-xs bg-[#FFA500]/15 text-[#FFA500]">
+                  <Badge variant="secondary" className="text-xs bg-[#F51B2B]/15 text-[#F51B2B]">
                     {service.commission}
                   </Badge>
                 </div>
@@ -137,14 +137,14 @@ export default function CabinetPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <CheckCircle2 size={24} className="text-[#FFA500]" />
+            <CheckCircle2 size={24} className="text-[#F51B2B]" />
             Prérequis pour ouvrir un cabinet
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <h3 className="font-semibold mb-4 text-[#FFA500]">Prérequis obligatoires</h3>
+              <h3 className="font-semibold mb-4 text-[#F51B2B]">Prérequis obligatoires</h3>
               <div className="space-y-3">
                 {[
                   'Local commercial dédié (min. 20m²)',
@@ -154,7 +154,7 @@ export default function CabinetPage() {
                   'Formation certifiante (5 jours)'
                 ].map((req, index) => (
                   <div key={index} className="flex items-center gap-3">
-                    <CheckCircle2 size={16} className="text-[#FFA500] flex-shrink-0" />
+                    <CheckCircle2 size={16} className="text-[#F51B2B] flex-shrink-0" />
                     <span className="text-sm">{req}</span>
                   </div>
                 ))}
@@ -169,7 +169,7 @@ export default function CabinetPage() {
                   'Système de sécurité (caméras)',
                   'Connexion internet haut débit',
                   'Ordinateur + imprimante',
-                  'Signalétique eNkamba'
+                  'Signalétique Kenz'
                 ].map((eq, index) => (
                   <div key={index} className="flex items-center gap-3">
                     <div className="h-4 w-4 rounded-full border-2 border-primary flex items-center justify-center">
@@ -188,47 +188,47 @@ export default function CabinetPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <TrendingUp size={24} className="text-[#FFA500]" />
+            <TrendingUp size={24} className="text-[#F51B2B]" />
             Avantages du cabinet
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid md:grid-cols-3 gap-6">
-            <div className="text-center p-4 rounded-xl bg-[#FFA500]/10">
-              <div className="h-12 w-12 mx-auto mb-3 rounded-xl bg-[#FFA500]/15 flex items-center justify-center">
-                <Banknote size={24} className="text-[#FFA500]" />
+            <div className="text-center p-4 rounded-xl bg-[#F51B2B]/10">
+              <div className="h-12 w-12 mx-auto mb-3 rounded-xl bg-[#F51B2B]/15 flex items-center justify-center">
+                <Banknote size={24} className="text-[#F51B2B]" />
               </div>
               <h3 className="font-semibold mb-2">Revenus élevés</h3>
               <p className="text-sm text-muted-foreground mb-2">
                 Gagnez entre 300,000 et 1,000,000 FCFA par mois
               </p>
-              <Badge variant="secondary" className="bg-[#FFA500]/15 text-[#FFA500]">
+              <Badge variant="secondary" className="bg-[#F51B2B]/15 text-[#F51B2B]">
                 10-15% commission
               </Badge>
             </div>
             
-            <div className="text-center p-4 rounded-xl bg-[#FFA500]/10">
-              <div className="h-12 w-12 mx-auto mb-3 rounded-xl bg-[#FFA500]/15 flex items-center justify-center">
-                <Globe size={24} className="text-[#FFA500]" />
+            <div className="text-center p-4 rounded-xl bg-[#F51B2B]/10">
+              <div className="h-12 w-12 mx-auto mb-3 rounded-xl bg-[#F51B2B]/15 flex items-center justify-center">
+                <Globe size={24} className="text-[#F51B2B]" />
               </div>
               <h3 className="font-semibold mb-2">Marque reconnue</h3>
               <p className="text-sm text-muted-foreground mb-2">
-                Bénéficiez de la notoriété eNkamba
+                Bénéficiez de la notoriété Kenz
               </p>
-              <Badge variant="secondary" className="bg-[#FFA500]/15 text-[#FFA500]">
+              <Badge variant="secondary" className="bg-[#F51B2B]/15 text-[#F51B2B]">
                 Branding inclus
               </Badge>
             </div>
             
-            <div className="text-center p-4 rounded-xl bg-[#FFA500]/10">
-              <div className="h-12 w-12 mx-auto mb-3 rounded-xl bg-[#FFA500]/15 flex items-center justify-center">
-                <BarChart3 size={24} className="text-[#FFA500]" />
+            <div className="text-center p-4 rounded-xl bg-[#F51B2B]/10">
+              <div className="h-12 w-12 mx-auto mb-3 rounded-xl bg-[#F51B2B]/15 flex items-center justify-center">
+                <BarChart3 size={24} className="text-[#F51B2B]" />
               </div>
               <h3 className="font-semibold mb-2">Outils avancés</h3>
               <p className="text-sm text-muted-foreground mb-2">
                 Tableau de bord et analytics complets
               </p>
-              <Badge variant="secondary" className="bg-[#FFA500]/15 text-[#FFA500]">
+              <Badge variant="secondary" className="bg-[#F51B2B]/15 text-[#F51B2B]">
                 Pro dashboard
               </Badge>
             </div>
@@ -240,7 +240,7 @@ export default function CabinetPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <CreditCard size={24} className="text-[#FFA500]" />
+            <CreditCard size={24} className="text-[#F51B2B]" />
             Investissement requis
           </CardTitle>
         </CardHeader>
@@ -261,10 +261,10 @@ export default function CabinetPage() {
                   </div>
                 ))}
               </div>
-              <div className="p-4 rounded-xl bg-[#FFA500]/10 border border-[#FFA500]/30">
+              <div className="p-4 rounded-xl bg-[#F51B2B]/10 border border-[#F51B2B]/30">
                 <div className="flex justify-between items-center">
                   <span className="font-semibold">Total initial</span>
-                  <span className="text-lg font-bold text-[#FFA500]">950,000 FCFA</span>
+                  <span className="text-lg font-bold text-[#F51B2B]">950,000 FCFA</span>
                 </div>
               </div>
             </div>
@@ -311,7 +311,7 @@ export default function CabinetPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Clock size={24} className="text-[#FFA500]" />
+            <Clock size={24} className="text-[#F51B2B]" />
             Processus d\'ouverture
           </CardTitle>
         </CardHeader>
@@ -344,7 +344,7 @@ export default function CabinetPage() {
               }
             ].map((process, index) => (
               <div key={index} className="flex items-center gap-4 p-4 rounded-xl bg-muted/30">
-                <div className="h-10 w-10 rounded-full bg-[#FFA500] text-white flex items-center justify-center font-semibold">
+                <div className="h-10 w-10 rounded-full bg-[#F51B2B] text-white flex items-center justify-center font-semibold">
                   {process.step}
                 </div>
                 <div className="flex-1">
@@ -362,17 +362,17 @@ export default function CabinetPage() {
       <div className="text-center space-y-4">
         <Button 
           size="lg" 
-          className="w-full h-14 rounded-xl text-base font-semibold bg-gradient-to-r from-[#009058] to-[#009058] hover:from-[#009058] hover:to-[#009058] shadow-lg"
+          className="w-full h-14 rounded-xl text-base font-semibold bg-gradient-to-r from-[#073B9A] to-[#073B9A] hover:from-[#073B9A] hover:to-[#073B9A] shadow-lg"
           asChild
         >
           <Link href="/dashboard/agent-relay/application?type=cabinet">
             <Store size={20} className="mr-2" />
-            Ouvrir mon cabinet eNkamba
+            Ouvrir mon cabinet Kenz
           </Link>
         </Button>
         
         <p className="text-sm text-muted-foreground">
-          Besoin d'aide ? <Link href="/dashboard/settings/help" className="text-[#FFA500] hover:underline">Parlez à un conseiller</Link>
+          Besoin d'aide ? <Link href="/dashboard/settings/help" className="text-[#F51B2B] hover:underline">Parlez à un conseiller</Link>
         </p>
       </div>
     </div>

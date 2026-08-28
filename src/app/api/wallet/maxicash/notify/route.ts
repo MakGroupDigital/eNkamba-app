@@ -58,7 +58,7 @@ async function handleNotification(request: NextRequest) {
     if (!txSnap.exists()) throw new Error('Transaction de paiement introuvable.');
 
     const transaction = txSnap.data() as any;
-    const displayName = transaction.maxicash?.brand === 'maxicash' ? 'MaxiCash' : 'eNkambaPay';
+    const displayName = transaction.maxicash?.brand === 'maxicash' ? 'MaxiCash' : 'Kenz Pay';
     const currentBalance = Number(userSnap.data()?.walletBalance || 0);
     const amount = Number(transaction.amount || 0);
     const updateData = {

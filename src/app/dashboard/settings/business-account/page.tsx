@@ -269,7 +269,7 @@ const TRANSFER_AGENCY_REQUIRED_DOCUMENTS = [
   'Autorisation d’agence de transfert ou activité financière',
   'Adresse vérifiable du siège',
   'Justificatif compte bancaire ou wallet de règlement',
-  'Contrat eNKAMBA Pay signé',
+  'Contrat KENZ Pay signé',
 ];
 
 const TRANSFER_AGENCY_PAYOUT_MODES = [
@@ -314,7 +314,7 @@ const NATIONAL_AGENCY_VERIFICATION_METHODS = [
   'Appel vidéo',
   'Visite terrain',
   'Photos géolocalisées',
-  'Contrôle par agent eNKAMBA local',
+  'Contrôle par agent KENZ local',
   'Test colis pilote',
 ];
 
@@ -323,7 +323,7 @@ const NATIONAL_AGENCY_BADGES = [
   'Adresse confirmée',
   'Transport assuré',
   'Tracking actif',
-  'Certifiée eNKAMBA',
+  'Certifiée KENZ',
   'Agence Premium',
   'Sous observation',
 ];
@@ -344,7 +344,7 @@ const COMMERCE_REQUIRED_DOCUMENTS = [
   'Pièce d’identité du responsable',
   'RCCM ou document d’existence légale',
   'Document fiscal / NIF',
-  'Contrat vendeur ou fournisseur eNkamba',
+  'Contrat vendeur ou fournisseur Kenz',
   'Traçabilité produit ou fiche fournisseur',
   'Déclaration douanière si import/export',
 ];
@@ -395,7 +395,7 @@ const LOGISTICS_ROLE_PRESETS: Record<string, { title: string; badge: string; das
     title: 'Agence nationale',
     badge: 'National',
     dashboard: 'Inter-ville, dépôts, contrats, tracking obligatoire et fiabilité contrôlée.',
-    capabilities: ['Documents légaux', 'Contrat eNKAMBA', 'Tracking national obligatoire', 'Score fiabilité', 'Suspension automatique'],
+    capabilities: ['Documents légaux', 'Contrat KENZ', 'Tracking national obligatoire', 'Score fiabilité', 'Suspension automatique'],
   },
   INTERNATIONAL_AGENCY: {
     title: 'Agence internationale',
@@ -529,7 +529,7 @@ function UgaviBusinessIcon({ size = 28 }: { size?: number }) {
     <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="ugaviBizGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#009058" />
+          <stop offset="0%" stopColor="#073B9A" />
           <stop offset="100%" stopColor="#F97316" />
         </linearGradient>
       </defs>
@@ -1163,7 +1163,7 @@ export default function BusinessAccountPage() {
                       <p className="text-sm font-semibold text-primary">Vérification Agence Nationale</p>
                       <h4 className="text-lg font-bold text-slate-900">Fiabilité, contrat et tracking obligatoire</h4>
                       <p className="mt-1 text-sm text-slate-600">
-                        Une agence nationale ne sera pas visible tant que les documents, l’adresse, l’assurance et le contrat ne sont pas validés par eNKAMBA.
+                        Une agence nationale ne sera pas visible tant que les documents, l’adresse, l’assurance et le contrat ne sont pas validés par KENZ.
                       </p>
                     </div>
 
@@ -1290,7 +1290,7 @@ export default function BusinessAccountPage() {
                           onCheckedChange={(checked) => handleNationalAgencyComplianceChange('contractAccepted', Boolean(checked))}
                           disabled={isSubmitting}
                         />
-                        <span>Contrat eNKAMBA requis avant activation</span>
+                        <span>Contrat KENZ requis avant activation</span>
                       </label>
                       <label className="flex items-start gap-2 rounded-xl border border-slate-200 p-3 text-sm">
                         <Checkbox
@@ -1372,7 +1372,7 @@ export default function BusinessAccountPage() {
                         <p className="text-sm font-semibold text-primary">Création Agence</p>
                         <h4 className="text-lg font-bold text-slate-900">Compte agence de transfert d’argent</h4>
                         <p className="mt-1 text-sm text-slate-600">
-                          Parcours en cinq étapes avec activation après vérification eNKAMBA Pay.
+                          Parcours en cinq étapes avec activation après vérification KENZ Pay.
                         </p>
                       </div>
                       <div className="rounded-2xl bg-primary px-4 py-2 text-center text-white shadow-sm">
@@ -1418,7 +1418,7 @@ export default function BusinessAccountPage() {
                               onCheckedChange={(checked) => handleTransferAgencyComplianceChange('contractAccepted', Boolean(checked))}
                               disabled={isSubmitting}
                             />
-                            Contrat agence eNKAMBA Pay obligatoire
+                            Contrat agence KENZ Pay obligatoire
                           </label>
                           <label className="flex items-start gap-2">
                             <Checkbox
@@ -1447,7 +1447,7 @@ export default function BusinessAccountPage() {
                           id="agencySettlementWallet"
                           value={formData.transferAgencyCompliance.settlementWallet}
                           onChange={(event) => handleTransferAgencyComplianceChange('settlementWallet', event.target.value)}
-                          placeholder="Ex : wallet eNKAMBA Pay, compte bancaire ou caisse principale"
+                          placeholder="Ex : wallet KENZ Pay, compte bancaire ou caisse principale"
                           disabled={isSubmitting}
                         />
                       </div>
@@ -1762,7 +1762,7 @@ export default function BusinessAccountPage() {
           </Link>
           <div>
             <h1 className="text-3xl font-bold">Compte entreprise</h1>
-            <p className="text-muted-foreground">Gérez votre accès professionnel eNkamba par modules.</p>
+            <p className="text-muted-foreground">Gérez votre accès professionnel Kenz par modules.</p>
           </div>
         </div>
 

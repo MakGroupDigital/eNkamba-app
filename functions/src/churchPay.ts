@@ -46,7 +46,7 @@ const categoryLabels: Record<ChurchPaymentCategory, string> = {
 const asOptionalString = (value: unknown) => typeof value === 'string' && value.trim() ? value.trim() : null;
 
 /**
- * Encaisse une contribution eChurch depuis le wallet eNkamba.
+ * Encaisse une contribution eChurch depuis le wallet Kenz.
  * Le mouvement de wallet et les écritures de l'Église sont créés dans une seule transaction Firestore.
  */
 export const processChurchPayment = functions.https.onCall(
@@ -105,7 +105,7 @@ export const processChurchPayment = functions.https.onCall(
       const payer = payerSnapshot.data()!;
       const payerBalance = Number(payer.walletBalance || 0);
       if (payerBalance < amount) {
-        throw new functions.https.HttpsError('failed-precondition', 'Solde eNkamba Pay insuffisant.');
+        throw new functions.https.HttpsError('failed-precondition', 'Solde Kenz Pay insuffisant.');
       }
 
       const parishId = asOptionalString(data.parishId);
@@ -128,7 +128,7 @@ export const processChurchPayment = functions.https.onCall(
       const isAnonymous = Boolean(data.isAnonymous);
       const contributorName = isAnonymous
         ? null
-        : String(payer.fullName || payer.displayName || payer.name || context.auth?.token.name || 'Fidèle eNkamba');
+        : String(payer.fullName || payer.displayName || payer.name || context.auth?.token.name || 'Fidèle Kenz');
       const parishName = parishSnapshot?.data()?.name || null;
       const campaignName = campaignSnapshot?.data()?.name || null;
       const categoryLabel = categoryLabels[category];
@@ -165,7 +165,7 @@ export const processChurchPayment = functions.https.onCall(
         reference,
         receiptNumber,
         churchId,
-        churchName: String(church.name || 'Église eNkamba'),
+        churchName: String(church.name || 'Église Kenz'),
         parishId,
         parishName,
         campaignId,

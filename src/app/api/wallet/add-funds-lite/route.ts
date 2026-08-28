@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
       const config = getWonyaPayConfig();
       const normalizedPhoneNumber = normalizePhoneNumber(phoneNumber || '');
       const currency = wonyaDetails?.currency === 'USD' ? 'USD' : 'CDF';
-      const motif = wonyaDetails?.motif?.trim() || 'Depot portefeuille eNkamba';
+      const motif = wonyaDetails?.motif?.trim() || 'Depot portefeuille Kenz';
 
       if (!config.token || !config.refPartenaire) {
         return NextResponse.json(

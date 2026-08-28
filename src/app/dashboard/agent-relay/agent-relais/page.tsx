@@ -29,7 +29,7 @@ export default function AgentRelaisPage() {
           <ArrowLeft size={20} />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold font-headline">Agent Relais eNkamba</h1>
+          <h1 className="text-2xl font-bold font-headline">Agent Relais Kenz</h1>
           <p className="text-sm text-muted-foreground">
             Offrez des services financiers de base dans votre commerce
           </p>
@@ -77,7 +77,7 @@ export default function AgentRelaisPage() {
             {[
               {
                 title: 'Dépôt d\'argent',
-                description: 'Permettez à vos clients de déposer de l\'argent sur leur compte eNkamba',
+                description: 'Permettez à vos clients de déposer de l\'argent sur leur compte Kenz',
                 commission: '2-3%'
               },
               {
@@ -149,7 +149,7 @@ export default function AgentRelaisPage() {
             </div>
             
             <div>
-              <h3 className="font-semibold mb-4 text-[#FFA500]">Recommandations</h3>
+              <h3 className="font-semibold mb-4 text-[#F51B2B]">Recommandations</h3>
               <div className="space-y-3">
                 {[
                   'Avoir une clientèle régulière',
@@ -159,8 +159,8 @@ export default function AgentRelaisPage() {
                   'Parler les langues locales'
                 ].map((rec, index) => (
                   <div key={index} className="flex items-center gap-3">
-                    <div className="h-4 w-4 rounded-full border-2 border-[#FFA500] flex items-center justify-center">
-                      <div className="h-1.5 w-1.5 rounded-full bg-[#FFA500]" />
+                    <div className="h-4 w-4 rounded-full border-2 border-[#F51B2B] flex items-center justify-center">
+                      <div className="h-1.5 w-1.5 rounded-full bg-[#F51B2B]" />
                     </div>
                     <span className="text-sm">{rec}</span>
                   </div>

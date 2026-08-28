@@ -146,11 +146,11 @@ export function ContactsManagementPanel() {
         </Card>
       ) : (
         <>
-          {/* eNkamba Contacts */}
+          {/* Kenz Contacts */}
           {enkambaContacts.length > 0 && (
             <div className="space-y-3">
               <h3 className="text-lg font-semibold text-primary flex items-center gap-2">
-                Contacts eNkamba
+                Contacts Kenz
                 <Badge variant="secondary">{enkambaContacts.length}</Badge>
               </h3>
               <div className="grid gap-3">
@@ -178,7 +178,7 @@ export function ContactsManagementPanel() {
                             )}
                           </div>
                         </div>
-                        <Badge className="bg-primary">Sur eNkamba</Badge>
+                        <Badge className="bg-primary">Sur Kenz</Badge>
                         <div className="flex gap-2 ml-4">
                           <Button
                             size="sm"
@@ -204,7 +204,7 @@ export function ContactsManagementPanel() {
             </div>
           )}
 
-          {/* Non-eNkamba Contacts */}
+          {/* Non-Kenz Contacts */}
           {nonEnkambaContacts.length > 0 && (
             <div className="space-y-3">
               <h3 className="text-lg font-semibold text-muted-foreground flex items-center gap-2">

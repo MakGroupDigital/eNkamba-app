@@ -49,9 +49,9 @@ const healthSections = [
 
 export default function HealthPage() {
   return (
-    <div className="min-h-screen bg-[#009058]">
+    <div className="min-h-screen bg-[#073B9A]">
       <div className="mx-auto max-w-4xl space-y-5 p-4">
-        <header className="rounded-[1.75rem] bg-[#009058] p-5 text-white shadow-lg shadow-[#009058]/20">
+        <header className="rounded-[1.75rem] bg-[#073B9A] p-5 text-white shadow-lg shadow-[#073B9A]/20">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/18">
               <HealthIcon size={32} />
@@ -63,10 +63,10 @@ export default function HealthPage() {
           </div>
         </header>
 
-        <Card className="overflow-hidden rounded-2xl border-[#009058]">
-          <CardHeader className="bg-gradient-to-r from-[#009058]/10 to-transparent">
+        <Card className="overflow-hidden rounded-2xl border-[#073B9A]">
+          <CardHeader className="bg-gradient-to-r from-[#073B9A]/10 to-transparent">
             <CardTitle className="font-headline flex items-center gap-2 text-foreground">
-              <span className="h-2 w-2 rounded-full bg-[#009058]" />
+              <span className="h-2 w-2 rounded-full bg-[#073B9A]" />
               Services santé
             </CardTitle>
           </CardHeader>
@@ -78,7 +78,7 @@ export default function HealthPage() {
                   <Link
                     href={section.href}
                     key={section.title}
-                    className="group flex min-h-[132px] flex-col items-center justify-center gap-2 rounded-xl border border-border/50 bg-gradient-to-br from-background to-muted/30 p-4 text-center text-sm font-medium text-foreground transition-all duration-300 hover:scale-[1.02] hover:border-[#009058]/30 hover:shadow-md"
+                    className="group flex min-h-[132px] flex-col items-center justify-center gap-2 rounded-xl border border-border/50 bg-gradient-to-br from-background to-muted/30 p-4 text-center text-sm font-medium text-foreground transition-all duration-300 hover:scale-[1.02] hover:border-[#073B9A]/30 hover:shadow-md"
                   >
                     <div className="transition-transform duration-300 group-hover:scale-110">
                       <IconComponent size={38} />
@@ -92,7 +92,7 @@ export default function HealthPage() {
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl border-[#009058]">
+        <Card className="rounded-2xl border-[#073B9A]">
           <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-3">
               <div className="mt-0.5">
@@ -103,7 +103,7 @@ export default function HealthPage() {
                 <p className="text-sm text-muted-foreground">La localisation permettra d’afficher les structures médicales les plus proches.</p>
               </div>
             </div>
-            <Button className="rounded-full bg-[#009058] hover:bg-[#009058]">
+            <Button className="rounded-full bg-[#073B9A] hover:bg-[#073B9A]">
               <MapPin className="mr-2 h-4 w-4" />
               Activer la position
             </Button>

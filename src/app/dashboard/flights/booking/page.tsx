@@ -199,7 +199,7 @@ function FlightBookingContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-[#009058]/5 to-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-[#073B9A]/5 to-background">
       <div className="container mx-auto max-w-6xl p-4 space-y-6 animate-in fade-in duration-500">
         <header className="flex items-center gap-4 pt-4">
           <Button variant="ghost" size="icon" onClick={() => {
@@ -386,7 +386,7 @@ function FlightBookingContent() {
                   </Button>
 
                   <p className="text-xs text-center text-muted-foreground">
-                    Paiement sécurisé via eNkambaPay
+                    Paiement sécurisé via Kenz Pay
                   </p>
                 </CardContent>
               </Card>
@@ -413,10 +413,10 @@ function FlightBookingContent() {
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
-                      <Image src="/enkamba-logo.png" alt="eNkamba" width={32} height={32} />
+                      <Image src="/kenz-logo.png" alt="Kenz" width={32} height={32} />
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold">eNkambaPay</h2>
+                      <h2 className="text-2xl font-bold">Kenz Pay</h2>
                       <p className="text-sm opacity-90">Billet électronique</p>
                     </div>
                   </div>
@@ -545,7 +545,7 @@ function FlightBookingContent() {
                     Présentez ce billet à l'enregistrement. Arrivez à l'aéroport 3 heures avant le départ pour les vols internationaux.
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    eNkambaPay © {new Date().getFullYear()} - Tous droits réservés
+                    Kenz Pay © {new Date().getFullYear()} - Tous droits réservés
                   </p>
                 </div>
               </div>

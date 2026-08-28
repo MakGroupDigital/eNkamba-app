@@ -94,7 +94,7 @@ export default function AgentRelayOnboardingPage() {
             </div>
             <div>
               <h2 className="text-2xl font-bold font-headline mb-4">
-                Bienvenue dans le programme Agent Relais eNkamba
+                Bienvenue dans le programme Agent Relais Kenz
               </h2>
               <p className="text-muted-foreground mb-6">
                 Rejoignez notre réseau de plus de 2,500 agents et développez votre activité 
@@ -164,12 +164,12 @@ export default function AgentRelayOnboardingPage() {
               ))}
             </div>
             
-            <div className="bg-[#FFA500]/10 border border-[#FFA500]/30 rounded-xl p-4">
+            <div className="bg-[#F51B2B]/10 border border-[#F51B2B]/30 rounded-xl p-4">
               <div className="flex items-start gap-3">
-                <Shield size={20} className="text-[#FFA500] flex-shrink-0 mt-0.5" />
+                <Shield size={20} className="text-[#F51B2B] flex-shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="font-semibold text-[#FFA500] mb-1">Important</h4>
-                  <p className="text-sm text-[#FFA500]">
+                  <h4 className="font-semibold text-[#F51B2B] mb-1">Important</h4>
+                  <p className="text-sm text-[#F51B2B]">
                     Tous les agents doivent respecter la réglementation locale et 
                     les politiques anti-blanchiment d\'argent.
                   </p>
@@ -205,14 +205,14 @@ export default function AgentRelayOnboardingPage() {
                   description: 'Cabinet de services financiers complet',
                   commission: '10-15%',
                   investment: 'Moyen',
-                  color: 'from-[#009058] to-[#009058]'
+                  color: 'from-[#073B9A] to-[#073B9A]'
                 },
                 {
                   type: 'Point de Service',
                   description: 'Services intégrés à votre activité',
                   commission: '3-8%',
                   investment: 'Aucun',
-                  color: 'from-[#009058] to-[#009058]'
+                  color: 'from-[#073B9A] to-[#073B9A]'
                 }
               ].map((option, index) => (
                 <div key={index} className="p-4 rounded-xl border border-border hover:border-primary/30 transition-colors cursor-pointer">
@@ -289,7 +289,7 @@ export default function AgentRelayOnboardingPage() {
               </h2>
               <p className="text-muted-foreground mb-6">
                 Vous avez maintenant toutes les informations nécessaires pour 
-                démarrer votre candidature d\'agent relais eNkamba.
+                démarrer votre candidature d\'agent relais Kenz.
               </p>
             </div>
             

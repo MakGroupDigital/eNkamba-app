@@ -210,7 +210,7 @@ export const withdrawFundsFromWallet = functions.https.onCall(
         transactionData.provider = provider;
         transactionData.providerName = providerName;
       } else if (withdrawalMethod === 'agent') {
-        description = `Retrait chez agent eNkamba - ${agentLocation}`;
+        description = `Retrait chez agent Kenz - ${agentLocation}`;
         transactionData.agentCode = agentCode;
         transactionData.agentLocation = agentLocation;
         transactionData.agentId = agentId;

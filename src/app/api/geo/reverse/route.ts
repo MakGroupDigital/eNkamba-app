@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
       headers: {
         Accept: 'application/json',
         'Accept-Language': 'fr',
-        'User-Agent': 'eNkamba location reverse geocoder contact@enkamba.app',
+        'User-Agent': 'Kenz location reverse geocoder contact@enkamba.app',
       },
       next: { revalidate: 1800 },
     });

@@ -1,6 +1,6 @@
 /**
  * Icônes modernes pour nKampa
- * Style: Moderne, minimaliste avec dégradés eNkamba
+ * Style: Moderne, minimaliste avec dégradés Kenz
  */
 
 import React from 'react';
@@ -10,8 +10,8 @@ export const TruckDeliveryIcon = ({ className = "w-6 h-6" }: { className?: strin
   <svg viewBox="0 0 24 24" fill="none" className={className}>
     <defs>
       <linearGradient id="truckGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#009058" />
-        <stop offset="100%" stopColor="#009058" />
+        <stop offset="0%" stopColor="#073B9A" />
+        <stop offset="100%" stopColor="#073B9A" />
       </linearGradient>
     </defs>
     {/* Camion */}
@@ -73,8 +73,8 @@ export const WalletPayIcon = ({ className = "w-6 h-6" }: { className?: string })
   <svg viewBox="0 0 24 24" fill="none" className={className}>
     <defs>
       <linearGradient id="walletGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#009058" />
-        <stop offset="100%" stopColor="#009058" />
+        <stop offset="0%" stopColor="#073B9A" />
+        <stop offset="100%" stopColor="#073B9A" />
       </linearGradient>
     </defs>
     {/* Portefeuille */}
@@ -84,7 +84,7 @@ export const WalletPayIcon = ({ className = "w-6 h-6" }: { className?: string })
     <path d="M2 10h20" stroke="url(#walletGradient)" strokeWidth="2" />
     {/* Carte */}
     <rect x="16" y="13" width="4" height="3" rx="0.5" fill="url(#walletGradient)" />
-    {/* Logo eNkamba */}
+    {/* Logo Kenz */}
     <circle cx="7" cy="15" r="2" fill="url(#walletGradient)" opacity="0.3" />
     <path d="M6 15h2" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
   </svg>
@@ -95,7 +95,7 @@ export const MobileMoneyIcon = ({ className = "w-6 h-6" }: { className?: string 
     <defs>
       <linearGradient id="mobileGradient" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="#f59e0b" />
-        <stop offset="100%" stopColor="#FFA500" />
+        <stop offset="100%" stopColor="#F51B2B" />
       </linearGradient>
     </defs>
     {/* Téléphone */}
@@ -135,8 +135,8 @@ export const CashOnDeliveryIcon = ({ className = "w-6 h-6" }: { className?: stri
   <svg viewBox="0 0 24 24" fill="none" className={className}>
     <defs>
       <linearGradient id="cashGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#009058" />
-        <stop offset="100%" stopColor="#009058" />
+        <stop offset="0%" stopColor="#073B9A" />
+        <stop offset="100%" stopColor="#073B9A" />
       </linearGradient>
     </defs>
     {/* Boîte de livraison */}
@@ -155,8 +155,8 @@ export const VerifiedBadgeIcon = ({ className = "w-4 h-4" }: { className?: strin
   <svg viewBox="0 0 24 24" fill="none" className={className}>
     <defs>
       <linearGradient id="verifiedGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#009058" />
-        <stop offset="100%" stopColor="#009058" />
+        <stop offset="0%" stopColor="#073B9A" />
+        <stop offset="100%" stopColor="#073B9A" />
       </linearGradient>
     </defs>
     <circle cx="12" cy="12" r="10" fill="url(#verifiedGradient)" />

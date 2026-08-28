@@ -35,7 +35,7 @@ export function ContactsPermissionDialog({
           </div>
           <DialogTitle className="text-center">Accéder à vos contacts</DialogTitle>
           <DialogDescription className="text-center">
-            eNkamba a besoin d'accéder à vos contacts pour vous montrer qui utilise déjà l'app et vous permettre d'inviter vos amis.
+            Kenz a besoin d'accéder à vos contacts pour vous montrer qui utilise déjà l'app et vous permettre d'inviter vos amis.
           </DialogDescription>
         </DialogHeader>
 
@@ -46,7 +46,7 @@ export function ContactsPermissionDialog({
                 <span className="text-white text-xs">✓</span>
               </div>
               <div>
-                <p className="font-medium text-sm text-blue-900">Voir qui utilise eNkamba</p>
+                <p className="font-medium text-sm text-blue-900">Voir qui utilise Kenz</p>
                 <p className="text-xs text-blue-700">Identifiez vos contacts déjà sur l'app</p>
               </div>
             </div>
@@ -70,11 +70,11 @@ export function ContactsPermissionDialog({
             </div>
           </div>
 
-          <div className="bg-[#FFA500]/10 border border-[#FFA500]/30 rounded-lg p-3 flex gap-3">
-            <div className="h-5 w-5 rounded-full bg-[#FFA500] flex items-center justify-center flex-shrink-0 mt-0.5">
+          <div className="bg-[#F51B2B]/10 border border-[#F51B2B]/30 rounded-lg p-3 flex gap-3">
+            <div className="h-5 w-5 rounded-full bg-[#F51B2B] flex items-center justify-center flex-shrink-0 mt-0.5">
               <span className="text-white text-xs">!</span>
             </div>
-            <p className="text-xs text-[#FFA500]">
+            <p className="text-xs text-[#F51B2B]">
               Vous pouvez modifier cette permission à tout moment dans les paramètres de votre appareil.
             </p>
           </div>

@@ -6,20 +6,20 @@
 
 @layer base {
   :root {
-    --enkamba-primary-green: #009058;
-    --enkamba-active-green: #009058;
-    --enkamba-card-green: #009058;
-    --enkamba-accent-green: #009058;
-    --enkamba-orange: #FFA500;
-    --enkamba-soft-green-bg: #E8F6F1;
-    --enkamba-page-bg: #FCFDFC;
-    --enkamba-text-primary: #1B2026;
-    --enkamba-text-secondary: #477063;
-    --enkamba-border-light: #E9F0ED;
+    --enkamba-primary-green: #073B9A;
+    --enkamba-active-green: #073B9A;
+    --enkamba-card-green: #073B9A;
+    --enkamba-accent-green: #073B9A;
+    --enkamba-orange: #F51B2B;
+    --enkamba-soft-green-bg: #F2F6FF;
+    --enkamba-page-bg: #FFFFFF;
+    --enkamba-text-primary: #10223F;
+    --enkamba-text-secondary: #475569;
+    --enkamba-border-light: #DCE6F8;
     --enkamba-white: #FFFFFF;
-    --enkamba-gradient-card-header: linear-gradient(135deg, #009058 0%, #009058 55%, #009058 100%);
-    --enkamba-gradient-round-button: linear-gradient(145deg, #009058 0%, #009058 70%, #009058 100%);
-    --enkamba-gradient-ai-button: linear-gradient(145deg, #009058 0%, #009058 100%);
+    --enkamba-gradient-card-header: #073B9A;
+    --enkamba-gradient-round-button: #073B9A;
+    --enkamba-gradient-ai-button: #073B9A;
     --enkamba-font-family: Inter, Poppins, Roboto, sans-serif;
     --enkamba-title-size: 22px;
     --enkamba-section-title-size: 14px;
@@ -30,7 +30,7 @@
     --enkamba-weight-normal: 500;
     --enkamba-card-radius: 18px;
     --enkamba-small-card-radius: 10px;
-    --enkamba-card-shadow: 0 6px 18px rgba(0,144,88, 0.16);
+    --enkamba-card-shadow: 0 6px 18px rgba(7, 59, 154, 0.16);
     --enkamba-service-card-shadow: 0 3px 12px rgba(27, 32, 38, 0.08);
     --enkamba-top-action-container: 72px;
     --enkamba-top-action-icon: 34px;
@@ -43,74 +43,74 @@
     --enkamba-ai-letter: 32px;
     --enkamba-ai-badge: 22px;
 
-    --background: 120 20% 99%; /* #FCFDFC */
-    --foreground: 213 17% 13%; /* #1B2026 */
+    --background: 0 0% 100%; /* #FFFFFF */
+    --foreground: 218 60% 16%; /* #10223F */
     --card: 0 0% 100%; /* #FFFFFF */
-    --card-foreground: 213 17% 13%;
+    --card-foreground: 218 60% 16%;
     --popover: 0 0% 100%;
-    --popover-foreground: 213 17% 13%;
-    --primary: 157 100% 28%; /* #009058 */
+    --popover-foreground: 218 60% 16%;
+    --primary: 219 91% 32%; /* #073B9A */
     --primary-foreground: 0 0% 100%;
-    --secondary: 159 44% 94%; /* #E8F6F1 */
-    --secondary-foreground: 213 17% 13%;
-    --muted: 159 44% 94%;
-    --muted-foreground: 161 22% 36%; /* #477063 */
-    --accent: 157 100% 28%; /* #009058 */
+    --secondary: 220 100% 97%; /* #F2F6FF */
+    --secondary-foreground: 218 60% 16%;
+    --muted: 220 100% 97%;
+    --muted-foreground: 215 19% 35%; /* #475569 */
+    --accent: 356 92% 53%; /* #F51B2B */
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 154 19% 93%; /* #E9F0ED */
-    --input: 154 19% 93%;
-    --ring: 157 100% 28%;
-    --chart-1: 157 100% 28%;
-    --chart-2: 157 100% 28%;
-    --chart-3: 157 100% 28%;
-    --chart-4: 157 100% 28%;
-    --chart-5: 161 22% 36%;
+    --border: 216 56% 92%; /* #DCE6F8 */
+    --input: 216 56% 92%;
+    --ring: 219 91% 32%;
+    --chart-1: 219 91% 32%;
+    --chart-2: 356 92% 53%;
+    --chart-3: 219 91% 32%;
+    --chart-4: 356 92% 53%;
+    --chart-5: 215 19% 35%;
     --radius: 1.125rem;
-    --sidebar-background: 120 20% 99%;
-    --sidebar-foreground: 213 17% 13%;
-    --sidebar-primary: 157 100% 28%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 218 60% 16%;
+    --sidebar-primary: 219 91% 32%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 159 44% 94%;
-    --sidebar-accent-foreground: 157 100% 28%;
-    --sidebar-border: 154 19% 93%;
-    --sidebar-ring: 157 100% 28%;
+    --sidebar-accent: 220 100% 97%;
+    --sidebar-accent-foreground: 219 91% 32%;
+    --sidebar-border: 216 56% 92%;
+    --sidebar-ring: 219 91% 32%;
   }
  
   .dark {
-    --background: 159 48% 9%;
+    --background: 219 80% 10%;
     --foreground: 0 0% 100%;
-    --card: 159 42% 12%;
+    --card: 219 63% 14%;
     --card-foreground: 0 0% 100%;
-    --popover: 159 48% 9%;
+    --popover: 219 80% 10%;
     --popover-foreground: 0 0% 100%;
-    --primary: 157 100% 28%;
+    --primary: 219 91% 48%;
     --primary-foreground: 0 0% 100%;
     --secondary: 240 4% 16%;
     --secondary-foreground: 0 0% 98%;
     --muted: 240 4% 16%;
-    --muted-foreground: 150 10% 78%;
-    --accent: 157 100% 28%;
+    --muted-foreground: 215 28% 78%;
+    --accent: 356 92% 58%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
     --border: 240 4% 16%;
     --input: 240 4% 16%;
-    --ring: 157 100% 28%;
-    --chart-1: 157 100% 28%;
-    --chart-2: 157 100% 28%;
-    --chart-3: 157 100% 28%;
-    --chart-4: 157 100% 28%;
-    --chart-5: 161 22% 36%;
-    --sidebar-background: 240 5.9% 10%;
+    --ring: 219 91% 48%;
+    --chart-1: 219 91% 48%;
+    --chart-2: 356 92% 58%;
+    --chart-3: 219 91% 48%;
+    --chart-4: 356 92% 58%;
+    --chart-5: 215 28% 78%;
+    --sidebar-background: 219 80% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 157 100% 28%;
+    --sidebar-primary: 219 91% 48%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 240 3.7% 15.9%;
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 157 100% 28%;
+    --sidebar-ring: 219 91% 48%;
   }
 }
  
@@ -255,7 +255,7 @@
   .text-zinc-500,
   .text-neutral-400,
   .text-neutral-500 {
-    color: hsl(161 22% 36%) !important;
+    color: hsl(215 19% 35%) !important;
   }
 
   .text-gray-600,
@@ -304,22 +304,22 @@
   width: 100%;
   height: 100%;
   font-family: var(--enkamba-font-family);
-  background: #F7FAF8;
+  background: #FFFFFF;
 }
 
 .leaflet-control-zoom {
   overflow: hidden;
-  border: 1px solid rgba(0, 144, 88, 0.14) !important;
+  border: 1px solid rgba(7, 59, 154, 0.14) !important;
   border-radius: 8px !important;
   background: rgba(255, 255, 255, 0.94) !important;
-  box-shadow: 0 18px 45px rgba(0, 144, 88, 0.12) !important;
+  box-shadow: 0 18px 45px rgba(7, 59, 154, 0.12) !important;
   backdrop-filter: blur(16px);
 }
 
 .leaflet-control-zoom a {
   border: 0 !important;
   background: transparent !important;
-  color: #009058 !important;
+  color: #073B9A !important;
 }
 
 .leaflet-control-attribution {
@@ -330,7 +330,7 @@
 }
 
 .leaflet-control-attribution a {
-  color: #009058 !important;
+  color: #073B9A !important;
 }
 
 .enkamba-live-marker {
@@ -354,32 +354,32 @@
   height: 13px;
   width: 13px;
   border: 2px solid white;
-  background: #009058;
-  box-shadow: 0 0 0 4px rgba(0, 144, 88, 0.22), 0 0 26px rgba(0, 144, 88, 0.9);
+  background: #073B9A;
+  box-shadow: 0 0 0 4px rgba(7, 59, 154, 0.22), 0 0 26px rgba(7, 59, 154, 0.9);
 }
 
 .enkamba-live-marker__pulse {
   height: 13px;
   width: 13px;
-  background: rgba(0, 144, 88, 0.44);
+  background: rgba(7, 59, 154, 0.44);
   animation: enkamba-admin-pulse 1.75s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
 
 .enkamba-live-marker--active .enkamba-live-marker__dot {
-  background: #FFA500;
-  box-shadow: 0 0 0 5px rgba(255, 165, 0, 0.24), 0 0 30px rgba(255, 165, 0, 0.92);
+  background: #F51B2B;
+  box-shadow: 0 0 0 5px rgba(245, 27, 43, 0.24), 0 0 30px rgba(245, 27, 43, 0.92);
 }
 
 .enkamba-live-marker--active .enkamba-live-marker__pulse {
-  background: rgba(255, 165, 0, 0.48);
+  background: rgba(245, 27, 43, 0.48);
 }
 
 .enkamba-admin-leaflet-popup .leaflet-popup-content-wrapper {
   overflow: hidden;
-  border: 1px solid rgba(0, 144, 88, 0.14);
+  border: 1px solid rgba(7, 59, 154, 0.14);
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 24px 60px rgba(0, 144, 88, 0.18);
+  box-shadow: 0 24px 60px rgba(7, 59, 154, 0.18);
   color: #1B2026;
   backdrop-filter: blur(18px);
 }
@@ -410,7 +410,7 @@
   flex-shrink: 0;
   place-items: center;
   border-radius: 9999px;
-  background: #009058;
+  background: #073B9A;
   color: white;
   font-weight: 900;
 }
@@ -428,7 +428,7 @@
 }
 
 .enkamba-admin-popup__name:hover {
-  color: #FFA500;
+  color: #F51B2B;
 }
 
 .enkamba-admin-popup p {

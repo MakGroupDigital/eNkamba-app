@@ -255,7 +255,7 @@ export default function CompleteProfilePage() {
 
       toast({
         title: 'Profil complété',
-        description: 'Votre espace eNkamba est prêt.',
+        description: 'Votre espace Kenz est prêt.',
         className: 'bg-primary text-white border-none',
       });
       router.replace('/dashboard/miyiki-chat');
@@ -284,7 +284,7 @@ export default function CompleteProfilePage() {
       <div className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-md flex-col justify-center">
         <div className="mb-6 flex flex-col items-center text-center">
           <div className="mb-4 h-20 w-20 overflow-hidden rounded-full bg-primary shadow-2xl ring-2 ring-white/40">
-            <Image src="/enkamba-logo.png" alt="eNkamba" width={96} height={96} className="h-full w-full scale-[1.42] rounded-full object-cover" />
+            <Image src="/kenz-logo.png" alt="Kenz" width={96} height={96} className="h-full w-full scale-[1.42] rounded-full object-cover" />
           </div>
           <h1 className="text-2xl font-black">Complétez votre profil</h1>
           <p className="mt-2 text-sm font-medium text-white/75">
@@ -371,8 +371,8 @@ export default function CompleteProfilePage() {
             </div>
 
             {calculatedAge !== null && calculatedAge < ENKAMBA_MINIMUM_AGE && (
-              <p className="rounded-2xl bg-[#FFA500]/15 px-3 py-2 text-xs font-bold text-white">
-                eNkamba est réservé aux utilisateurs de {ENKAMBA_MINIMUM_AGE} ans ou plus.
+              <p className="rounded-2xl bg-[#F51B2B]/15 px-3 py-2 text-xs font-bold text-white">
+                Kenz est réservé aux utilisateurs de {ENKAMBA_MINIMUM_AGE} ans ou plus.
               </p>
             )}
 

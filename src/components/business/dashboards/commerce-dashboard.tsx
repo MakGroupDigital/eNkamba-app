@@ -21,6 +21,7 @@ import {
   TrackingIcon,
 } from '@/components/icons/nkampa-ecommerce-icons';
 import { ProductIcon } from '@/components/icons/nkampa-category-icons';
+import { KenzDataLoader } from '@/components/shared/kenz-data-loader';
 
 interface CommerceDashboardProps {
   businessUser: BusinessUser;
@@ -72,8 +73,8 @@ export function CommerceDashboard({ businessUser }: CommerceDashboardProps) {
   ];
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(50,187,120,0.14),transparent_34%),linear-gradient(180deg,rgba(50,187,120,0.05)_0%,rgba(50,187,120,0.08)_54%,rgba(50,187,120,0.04)_100%)] pb-24 text-foreground">
-      <div className="sticky top-0 z-30 rounded-b-[32px] bg-gradient-to-r from-[#009058] via-[#009058] to-[#009058] px-4 pb-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] text-white shadow-lg shadow-[#009058]/20">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(7, 59, 154,0.14),transparent_34%),linear-gradient(180deg,rgba(7, 59, 154,0.05)_0%,rgba(7, 59, 154,0.08)_54%,rgba(7, 59, 154,0.04)_100%)] pb-24 text-foreground">
+      <div className="sticky top-0 z-30 rounded-b-[32px] bg-gradient-to-r from-[#073B9A] via-[#073B9A] to-[#073B9A] px-4 pb-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] text-white shadow-lg shadow-[#073B9A]/20">
         <div className="mx-auto max-w-5xl">
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
@@ -114,7 +115,7 @@ export function CommerceDashboard({ businessUser }: CommerceDashboardProps) {
       </div>
 
       <div className="mx-auto max-w-5xl space-y-5 px-4 py-5">
-        <section className="overflow-hidden rounded-3xl border border-[#009058] bg-white shadow-sm">
+        <section className="overflow-hidden rounded-3xl border border-[#073B9A] bg-white shadow-sm">
           <div className="flex gap-2 overflow-x-auto p-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {tabs.map(({ id, label, icon: Icon }) => (
               <button
@@ -122,8 +123,8 @@ export function CommerceDashboard({ businessUser }: CommerceDashboardProps) {
                 onClick={() => setActiveTab(id)}
                 className={`flex min-w-fit items-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold transition ${
                   activeTab === id
-                    ? 'bg-[#009058] text-white shadow-md shadow-[#009058]/20'
-                    : 'bg-primary/5 text-muted-foreground hover:bg-primary/10 hover:text-[#009058]'
+                    ? 'bg-[#073B9A] text-white shadow-md shadow-[#073B9A]/20'
+                    : 'bg-primary/5 text-muted-foreground hover:bg-primary/10 hover:text-[#073B9A]'
                 }`}
               >
                 <Icon size={34} className="h-[34px] w-[34px]" />
@@ -168,7 +169,7 @@ function CommerceOverview({ productCount }: { productCount: number }) {
         const colorClasses = {
           blue: 'bg-[#eff6ff] text-[#1d4ed8] border-[#bfdbfe]',
           yellow: 'bg-[#fffbeb] text-[#92400e] border-[#fde68a]',
-          green: 'bg-[#009058] text-[#009058] border-[#009058]',
+          green: 'bg-[#073B9A] text-[#073B9A] border-[#073B9A]',
           red: 'bg-[#fef2f2] text-[#b91c1c] border-[#fecaca]',
         };
         return (
@@ -206,7 +207,7 @@ function CommerceProducts({
     const url = `${window.location.origin}/shop/${storeSlug}/product/${product.id}`;
     try {
       if (navigator.share) {
-        await navigator.share({ title: product.name || 'Produit eNkamba', url });
+        await navigator.share({ title: product.name || 'Produit Kenz', url });
       } else {
         await navigator.clipboard.writeText(url);
         toast({ title: 'Lien copié', description: 'Lien du produit copié.', className: 'bg-primary text-white border-none' });
@@ -222,7 +223,7 @@ function CommerceProducts({
   };
 
   return (
-    <div className="rounded-3xl border border-[#009058] bg-white p-5 shadow-sm">
+    <div className="rounded-3xl border border-[#073B9A] bg-white p-5 shadow-sm">
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-xl font-black text-foreground">Gestion du Catalogue</h2>
@@ -231,14 +232,14 @@ function CommerceProducts({
         <button
           type="button"
           onClick={onAdd}
-          className="rounded-2xl bg-[#009058] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#009058]"
+          className="rounded-2xl bg-[#073B9A] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#073B9A]"
         >
           + Ajouter un produit
         </button>
       </div>
       {isLoading ? (
-        <div className="rounded-3xl border border-dashed border-[#009058]/30 bg-[#009058]/5 px-5 py-12 text-center text-sm font-bold text-muted-foreground">
-          Chargement du catalogue...
+        <div className="rounded-3xl border border-dashed border-[#073B9A]/30 bg-[#073B9A]/5 px-5 py-10">
+          <KenzDataLoader size="sm" label="Chargement du catalogue..." className="text-foreground" />
         </div>
       ) : products.length === 0 ? (
         <EmptyCommerceState icon={B2BProductIcon} title="Aucun produit pour le moment" text="Votre catalogue commerce pro apparaîtra ici dès que vous publiez vos premiers articles." />
@@ -256,7 +257,7 @@ function CommerceProducts({
                   router.push(`/dashboard/business-pro/commerce/product/${product.id}`);
                 }
               }}
-              className="overflow-hidden rounded-[24px] border border-slate-200 bg-white text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[#009058]/40 hover:shadow-md"
+              className="overflow-hidden rounded-[24px] border border-slate-200 bg-white text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[#073B9A]/40 hover:shadow-md"
             >
               <div className="relative aspect-square bg-slate-100">
                 <Image
@@ -266,13 +267,13 @@ function CommerceProducts({
                   className="object-cover"
                   sizes="(max-width: 768px) 50vw, 240px"
                 />
-                <span className="absolute left-2 top-2 rounded-full bg-white/95 px-2 py-1 text-[10px] font-black text-[#009058] shadow">
+                <span className="absolute left-2 top-2 rounded-full bg-white/95 px-2 py-1 text-[10px] font-black text-[#073B9A] shadow">
                   {product.businessAudience || product.category || 'COMMERCE'}
                 </span>
               </div>
               <div className="space-y-1.5 p-3">
                 <p className="line-clamp-2 text-sm font-black text-slate-950">{product.name}</p>
-                <p className="text-sm font-black text-[#009058]">
+                <p className="text-sm font-black text-[#073B9A]">
                   {Number(product.price || 0).toLocaleString('fr-FR')} {product.currency || 'CDF'}
                 </p>
                 <p className="line-clamp-1 text-[11px] font-semibold text-slate-500">
@@ -284,7 +285,7 @@ function CommerceProducts({
                   <p className="text-[11px] font-bold text-slate-600">Service / digital</p>
                 )}
                 <div className="mt-2 grid grid-cols-2 gap-2">
-                  <span className="inline-flex items-center justify-center gap-1 rounded-xl bg-[#009058]/10 px-2 py-2 text-[11px] font-black text-[#009058]">
+                  <span className="inline-flex items-center justify-center gap-1 rounded-xl bg-[#073B9A]/10 px-2 py-2 text-[11px] font-black text-[#073B9A]">
                     <BarChart3 className="h-3.5 w-3.5" />
                     Stats
                   </span>
@@ -319,7 +320,7 @@ function CommerceProducts({
 
 function CommerceOrders() {
   return (
-    <div className="rounded-3xl border border-[#009058] bg-white p-5 shadow-sm">
+    <div className="rounded-3xl border border-[#073B9A] bg-white p-5 shadow-sm">
       <h2 className="mb-1 text-xl font-black text-foreground">Gestion des Commandes</h2>
       <p className="mb-6 text-sm text-muted-foreground">Préparation, paiement, livraison et suivi client.</p>
       <EmptyCommerceState icon={TrackingIcon} title="Aucune commande pour le moment" text="Les commandes Nkampa apparaîtront dans cette section." />
@@ -329,17 +330,17 @@ function CommerceOrders() {
 
 function CommerceMarketing() {
   return (
-    <div className="rounded-3xl border border-[#009058] bg-white p-5 shadow-sm">
+    <div className="rounded-3xl border border-[#073B9A] bg-white p-5 shadow-sm">
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-xl font-black text-foreground">Promotions & Coupons</h2>
           <p className="text-sm text-muted-foreground">Animez les offres, réductions et campagnes boutique.</p>
         </div>
-        <button className="rounded-2xl bg-[#FFA500] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#FFA500]">
+        <button className="rounded-2xl bg-[#F51B2B] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#F51B2B]">
           + Créer une promo
         </button>
       </div>
-      <EmptyCommerceState icon={PriceIcon} title="Aucune promotion pour le moment" text="Créez une offre pour la pousser dans l’écosystème eNkamba." />
+      <EmptyCommerceState icon={PriceIcon} title="Aucune promotion pour le moment" text="Créez une offre pour la pousser dans l’écosystème Kenz." />
     </div>
   );
 }
@@ -363,7 +364,7 @@ function EmptyCommerceState({
   text: string;
 }) {
   return (
-    <div className="rounded-3xl border border-dashed border-[#009058] bg-[#009058] px-5 py-12 text-center">
+    <div className="rounded-3xl border border-dashed border-[#073B9A] bg-[#073B9A] px-5 py-12 text-center">
       <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-3xl bg-white shadow-sm">
         <Icon size={48} />
       </div>

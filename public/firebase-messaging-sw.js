@@ -1,6 +1,7 @@
 /* eslint-disable no-undef */
-const ENKAMBA_CACHE = 'enkamba-app-cache-v2';
-const ENKAMBA_STATIC_CACHE = 'enkamba-static-cache-v2';
+const KENZ_CACHE = 'kenz-app-cache-v2';
+const KENZ_STATIC_CACHE = 'kenz-static-cache-v2';
+const IS_LOCAL_DEVELOPMENT = ['localhost', '127.0.0.1', '::1'].includes(self.location.hostname);
 const APP_SHELL_URLS = [
   '/',
   '/dashboard/miyiki-chat',
@@ -15,7 +16,7 @@ const APP_SHELL_URLS = [
   '/dashboard/makutano',
   '/dashboard/ai/chat',
   '/dashboard/settings',
-  '/enkamba-logo.png',
+  '/kenz-logo.png',
   '/favicon.png',
   '/site.webmanifest',
 ];
@@ -35,9 +36,14 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 self.addEventListener('install', (event) => {
+  if (IS_LOCAL_DEVELOPMENT) {
+    event.waitUntil(self.skipWaiting());
+    return;
+  }
+
   event.waitUntil(
     caches
-      .open(ENKAMBA_STATIC_CACHE)
+      .open(KENZ_STATIC_CACHE)
       .then((cache) => cache.addAll(APP_SHELL_URLS))
       .catch(() => undefined)
       .then(() => self.skipWaiting())
@@ -51,7 +57,7 @@ self.addEventListener('activate', (event) => {
       .then((keys) =>
         Promise.all(
           keys
-            .filter((key) => key.startsWith('enkamba-') && key !== ENKAMBA_CACHE && key !== ENKAMBA_STATIC_CACHE)
+            .filter((key) => (key.startsWith('enkamba-') || key.startsWith('kenz-')) && key !== KENZ_CACHE && key !== KENZ_STATIC_CACHE)
             .map((key) => caches.delete(key))
         )
       )
@@ -61,12 +67,15 @@ self.addEventListener('activate', (event) => {
 
 async function cacheResponse(request, response) {
   if (!response || response.status !== 200 || response.type === 'opaque') return response;
-  const cache = await caches.open(ENKAMBA_CACHE);
+  const cache = await caches.open(KENZ_CACHE);
   await cache.put(request, response.clone());
   return response;
 }
 
 self.addEventListener('fetch', (event) => {
+  // Le serveur de développement doit toujours fournir le HTML et les bundles récents.
+  if (IS_LOCAL_DEVELOPMENT) return;
+
   const request = event.request;
   if (request.method !== 'GET') return;
 
@@ -79,7 +88,7 @@ self.addEventListener('fetch', (event) => {
       fetch(request)
         .then((response) => cacheResponse(request, response))
         .catch(async () => {
-          const cache = await caches.open(ENKAMBA_CACHE);
+          const cache = await caches.open(KENZ_CACHE);
           return (
             (await cache.match(request)) ||
             (await cache.match('/dashboard/miyiki-chat')) ||
@@ -108,7 +117,7 @@ self.addEventListener('fetch', (event) => {
 });
 
 messaging.onBackgroundMessage((payload) => {
-  const title = payload.notification?.title || 'eNkamba';
+  const title = payload.notification?.title || 'Kenz';
   const body = payload.notification?.body || 'Nouvelle notification';
   const actionUrl = payload?.data?.actionUrl || '/dashboard';
   const isCall = payload?.data?.type === 'incoming_call';
@@ -118,9 +127,9 @@ messaging.onBackgroundMessage((payload) => {
 
   self.registration.showNotification(title, {
     body,
-    icon: '/enkamba-logo.png',
+    icon: '/kenz-logo.png',
     badge: '/favicon.png',
-    tag: isCall && callId ? `enkamba-call-${callId}` : payload?.data?.notificationId || actionUrl,
+    tag: isCall && callId ? `kenz-call-${callId}` : payload?.data?.notificationId || actionUrl,
     renotify: isCall,
     requireInteraction: isCall,
     vibrate: isCall ? [300, 150, 300, 150, 300] : [180, 80, 180],
