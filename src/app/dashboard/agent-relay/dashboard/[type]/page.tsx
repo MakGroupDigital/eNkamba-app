@@ -68,24 +68,24 @@ const typeThemes: Record<
   }
 > = {
   'agent-relais': {
-    gradient: 'from-[#009058] via-[#009058] to-[#009058]',
-    accent: '#009058',
-    accentSoft: 'bg-[#009058]/10',
-    accentText: 'text-[#009058]',
+    gradient: 'from-[#073B9A] via-[#073B9A] to-[#073B9A]',
+    accent: '#073B9A',
+    accentSoft: 'bg-[#073B9A]/10',
+    accentText: 'text-[#073B9A]',
     heroIcon: AgentIcon,
   },
   cabinet: {
-    gradient: 'from-[#009058] via-[#009058] to-[#009058]',
-    accent: '#009058',
-    accentSoft: 'bg-[#009058]/10',
-    accentText: 'text-[#009058]',
+    gradient: 'from-[#073B9A] via-[#073B9A] to-[#073B9A]',
+    accent: '#073B9A',
+    accentSoft: 'bg-[#073B9A]/10',
+    accentText: 'text-[#073B9A]',
     heroIcon: AgentIcon,
   },
   'point-service': {
-    gradient: 'from-[#009058] via-[#009058] to-[#009058]',
-    accent: '#009058',
-    accentSoft: 'bg-[#009058]/10',
-    accentText: 'text-[#009058]',
+    gradient: 'from-[#073B9A] via-[#073B9A] to-[#073B9A]',
+    accent: '#073B9A',
+    accentSoft: 'bg-[#073B9A]/10',
+    accentText: 'text-[#073B9A]',
     heroIcon: LogisticsNavIcon,
   },
 };
@@ -318,15 +318,15 @@ export default function AgentRelayTypeDashboardPage() {
             <div className="flex items-center gap-3">
               <div className="h-12 w-12 rounded-full bg-white/20 backdrop-blur-sm p-2 shadow-lg">
                 <Image
-                  src="/enkamba-logo.png"
-                  alt="eNkamba Logo"
+                  src="/kenz-logo.png"
+                  alt="Kenz Logo"
                   width={40}
                   height={40}
                   className="object-contain rounded-full"
                 />
               </div>
               <div className="text-left leading-tight">
-                <div className="text-white text-lg font-bold tracking-tight">eNkamba</div>
+                <div className="text-white text-lg font-bold tracking-tight">Kenz</div>
                 <div className="text-white/85 text-xs font-medium">{headerSubtitle}</div>
               </div>
             </div>

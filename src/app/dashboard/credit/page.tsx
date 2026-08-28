@@ -28,27 +28,27 @@ interface CreditOffer {
 
 const CreditBadgeIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
   <svg viewBox="0 0 48 48" fill="none" className={className} aria-hidden="true">
-    <rect x="7" y="13" width="34" height="24" rx="7" fill="#009058" />
+    <rect x="7" y="13" width="34" height="24" rx="7" fill="#073B9A" />
     <path d="M12 21h24" stroke="white" strokeWidth="3" strokeLinecap="round" opacity="0.85" />
     <rect x="13" y="27" width="10" height="5" rx="2" fill="white" opacity="0.9" />
-    <circle cx="33" cy="30" r="3" fill="#FFA500" />
-    <path d="M21 9h14a5 5 0 0 1 5 5v12" stroke="#009058" strokeWidth="3" strokeLinecap="round" opacity="0.35" />
+    <circle cx="33" cy="30" r="3" fill="#F51B2B" />
+    <path d="M21 9h14a5 5 0 0 1 5 5v12" stroke="#073B9A" strokeWidth="3" strokeLinecap="round" opacity="0.35" />
   </svg>
 );
 
 const ProjectCreditIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
   <svg viewBox="0 0 48 48" fill="none" className={className} aria-hidden="true">
-    <rect x="9" y="11" width="30" height="28" rx="8" fill="#009058" />
+    <rect x="9" y="11" width="30" height="28" rx="8" fill="#073B9A" />
     <path d="M16 31l6-6 4 4 7-9" stroke="white" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
-    <circle cx="17" cy="18" r="3" fill="#009058" />
-    <circle cx="31" cy="18" r="3" fill="#FFA500" />
-    <path d="M13 39h22" stroke="#009058" strokeWidth="3" strokeLinecap="round" opacity="0.75" />
+    <circle cx="17" cy="18" r="3" fill="#073B9A" />
+    <circle cx="31" cy="18" r="3" fill="#F51B2B" />
+    <path d="M13 39h22" stroke="#073B9A" strokeWidth="3" strokeLinecap="round" opacity="0.75" />
   </svg>
 );
 
 const EligibilityIcon = ({ className = "h-5 w-5" }: { className?: string }) => (
   <svg viewBox="0 0 40 40" fill="none" className={className} aria-hidden="true">
-    <path d="M20 5l12 5v8c0 8-5 13-12 17C13 31 8 26 8 18v-8l12-5Z" fill="#009058" />
+    <path d="M20 5l12 5v8c0 8-5 13-12 17C13 31 8 26 8 18v-8l12-5Z" fill="#073B9A" />
     <path d="M14 20l4 4 8-9" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
@@ -148,10 +148,10 @@ export default function CreditPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f7faf8]">
+    <div className="min-h-screen bg-[#FFFFFF]">
     <div className="container mx-auto max-w-4xl p-3 space-y-4 animate-in fade-in duration-500 sm:p-4">
       {/* Header */}
-      <header className="overflow-hidden rounded-2xl bg-gradient-to-br from-[#009058] to-[#009058] p-4 text-white shadow-lg shadow-[#009058]/20">
+      <header className="overflow-hidden rounded-2xl bg-gradient-to-br from-[#073B9A] to-[#073B9A] p-4 text-white shadow-lg shadow-[#073B9A]/20">
         <div className="flex items-center justify-between gap-4">
           <div className="flex min-w-0 items-center gap-3">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/16 ring-1 ring-white/25">
@@ -163,7 +163,7 @@ export default function CreditPage() {
                 Crédit Mbongo.io
               </h1>
               <p className="mt-1 max-w-xl text-xs leading-5 text-white/78 sm:text-sm">
-                Simulez, vérifiez votre éligibilité et financez vos projets depuis votre activité eNkamba.
+                Simulez, vérifiez votre éligibilité et financez vos projets depuis votre activité Kenz.
               </p>
             </div>
           </div>
@@ -175,10 +175,10 @@ export default function CreditPage() {
       </header>
 
       {/* Main Credit Request Card */}
-      <Card className="overflow-hidden border-[#009058]/10 bg-white shadow-sm">
-        <CardHeader className="border-b border-[#009058]/10 bg-white px-4 py-3">
-          <CardTitle className="font-headline flex items-center gap-2 text-lg text-[#009058]">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#009058]/10 text-[#009058]">
+      <Card className="overflow-hidden border-[#073B9A]/10 bg-white shadow-sm">
+        <CardHeader className="border-b border-[#073B9A]/10 bg-white px-4 py-3">
+          <CardTitle className="font-headline flex items-center gap-2 text-lg text-[#073B9A]">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#073B9A]/10 text-[#073B9A]">
               <Landmark className="h-5 w-5" />
             </span>
             Demander un crédit
@@ -196,10 +196,10 @@ export default function CreditPage() {
                   placeholder="Ex: 625000"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className="h-12 flex-1 rounded-xl border-[#009058]/20 bg-[#f7faf8] text-lg font-bold focus-visible:ring-[#009058]"
+                  className="h-12 flex-1 rounded-xl border-[#073B9A]/20 bg-[#FFFFFF] text-lg font-bold focus-visible:ring-[#073B9A]"
                 />
                 <Select value={currency} onValueChange={(value) => setCurrency(value as Currency)}>
-                  <SelectTrigger className="h-12 w-[100px] rounded-xl border-[#009058]/20 bg-white font-semibold">
+                  <SelectTrigger className="h-12 w-[100px] rounded-xl border-[#073B9A]/20 bg-white font-semibold">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -216,7 +216,7 @@ export default function CreditPage() {
               )}
             </div>
             <Button
-              className="h-11 w-full rounded-xl bg-[#009058] font-bold text-white hover:bg-[#009058]"
+              className="h-11 w-full rounded-xl bg-[#073B9A] font-bold text-white hover:bg-[#073B9A]"
               size="lg"
               onClick={checkEligibility}
               disabled={!amount || isChecking}
@@ -228,13 +228,13 @@ export default function CreditPage() {
             {isEligible !== null && (
               <Alert variant={isEligible ? "default" : "destructive"} className={cn(
                 "animate-in fade-in-up rounded-2xl",
-                isEligible && "border-[#009058]/20 bg-[#009058]/5 dark:bg-primary/20"
+                isEligible && "border-[#073B9A]/20 bg-[#073B9A]/5 dark:bg-primary/20"
               )}>
                 {isEligible ? (
                   <>
-                    <CheckCircle2 className="h-4 w-4 text-[#009058]" />
-                    <AlertTitle className="text-[#009058] dark:text-primary">Éligible</AlertTitle>
-                    <AlertDescription className="text-[#009058] dark:text-primary">
+                    <CheckCircle2 className="h-4 w-4 text-[#073B9A]" />
+                    <AlertTitle className="text-[#073B9A] dark:text-primary">Éligible</AlertTitle>
+                    <AlertDescription className="text-[#073B9A] dark:text-primary">
                       Vous êtes éligible pour ce montant ! Choisissez une offre ci-dessous pour continuer.
                     </AlertDescription>
                   </>
@@ -252,39 +252,39 @@ export default function CreditPage() {
           </div>
 
           <div className="space-y-3">
-            <Alert variant="default" className="rounded-2xl border-[#009058]/20 bg-[#009058]/5">
+            <Alert variant="default" className="rounded-2xl border-[#073B9A]/20 bg-[#073B9A]/5">
               <EligibilityIcon className="h-4 w-4" />
-              <AlertTitle className="font-headline text-[#009058]">Condition d'Éligibilité</AlertTitle>
+              <AlertTitle className="font-headline text-[#073B9A]">Condition d'Éligibilité</AlertTitle>
               <AlertDescription className="text-sm">
                 Pour être éligible à un crédit, le volume total de vos transactions (dépôts, envois, paiements) sur votre compte Mbongo.io doit être d'au moins <strong>80% du montant</strong> que vous souhaitez emprunter.
               </AlertDescription>
             </Alert>
             <div className="grid grid-cols-2 gap-2">
-              <div className="rounded-2xl border border-[#009058]/10 bg-[#f7faf8] p-3">
-                <ShieldCheck className="mb-2 h-5 w-5 text-[#009058]" />
-                <p className="text-xs font-bold text-[#009058]">Analyse IA</p>
+              <div className="rounded-2xl border border-[#073B9A]/10 bg-[#FFFFFF] p-3">
+                <ShieldCheck className="mb-2 h-5 w-5 text-[#073B9A]" />
+                <p className="text-xs font-bold text-[#073B9A]">Analyse IA</p>
                 <p className="mt-1 text-[11px] leading-4 text-muted-foreground">Activité et capacité vérifiées.</p>
               </div>
-              <div className="rounded-2xl border border-[#009058]/10 bg-[#f7faf8] p-3">
-                <WalletCards className="mb-2 h-5 w-5 text-[#FFA500]" />
-                <p className="text-xs font-bold text-[#009058]">Décaissement</p>
+              <div className="rounded-2xl border border-[#073B9A]/10 bg-[#FFFFFF] p-3">
+                <WalletCards className="mb-2 h-5 w-5 text-[#F51B2B]" />
+                <p className="text-xs font-bold text-[#073B9A]">Décaissement</p>
                 <p className="mt-1 text-[11px] leading-4 text-muted-foreground">Versement vers wallet.</p>
               </div>
             </div>
           </div>
         </CardContent>
-        <CardFooter className="border-t border-[#009058]/10 px-4 py-3">
-          <p className="text-xs text-muted-foreground">Les demandes sont évaluées par notre IA en fonction de votre activité sur l'écosystème eNkamba. La décision est généralement instantanée.</p>
+        <CardFooter className="border-t border-[#073B9A]/10 px-4 py-3">
+          <p className="text-xs text-muted-foreground">Les demandes sont évaluées par notre IA en fonction de votre activité sur l'écosystème Kenz. La décision est généralement instantanée.</p>
         </CardFooter>
       </Card>
 
       {/* Simulation Result */}
       {simulation && selectedOffer && (
-        <Card className="animate-in fade-in-up overflow-hidden border-[#009058]/30 bg-white shadow-sm">
-          <CardHeader className="bg-[#009058]/5 px-4 py-3">
-            <CardTitle className="font-headline flex items-center gap-2 text-[#009058]">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#009058]/10">
-                <Calculator className="h-5 w-5 text-[#009058]" />
+        <Card className="animate-in fade-in-up overflow-hidden border-[#073B9A]/30 bg-white shadow-sm">
+          <CardHeader className="bg-[#073B9A]/5 px-4 py-3">
+            <CardTitle className="font-headline flex items-center gap-2 text-[#073B9A]">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#073B9A]/10">
+                <Calculator className="h-5 w-5 text-[#073B9A]" />
               </span>
               Simulation de Remboursement
             </CardTitle>
@@ -292,30 +292,30 @@ export default function CreditPage() {
           </CardHeader>
           <CardContent className="space-y-4 p-4">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              <div className="rounded-2xl border border-[#009058]/10 bg-card p-3">
+              <div className="rounded-2xl border border-[#073B9A]/10 bg-card p-3">
                 <p className="text-sm text-muted-foreground mb-1">Montant emprunté</p>
                 <p className="text-xl font-bold">{formatCurrency(parseFloat(amount) || 0, currency)}</p>
               </div>
-              <div className="rounded-2xl border border-[#FFA500]/30 bg-[#FFA500]/10 p-3">
+              <div className="rounded-2xl border border-[#F51B2B]/30 bg-[#F51B2B]/10 p-3">
                 <p className="text-sm text-muted-foreground mb-1">Intérêts totaux</p>
-                <p className="text-xl font-bold text-[#FFA500]">
+                <p className="text-xl font-bold text-[#F51B2B]">
                   {formatCurrency(simulation.totalInterest, selectedOffer.currency)}
                 </p>
               </div>
-              <div className="rounded-2xl border border-[#009058]/20 bg-[#009058]/5 p-3">
+              <div className="rounded-2xl border border-[#073B9A]/20 bg-[#073B9A]/5 p-3">
                 <p className="text-sm text-muted-foreground mb-1">Montant total</p>
-                <p className="text-xl font-bold text-[#009058]">
+                <p className="text-xl font-bold text-[#073B9A]">
                   {formatCurrency(simulation.totalAmount, selectedOffer.currency)}
                 </p>
               </div>
             </div>
-            <div className="rounded-2xl border border-[#009058]/20 bg-gradient-to-r from-[#009058]/10 to-[#009058]/5 p-4">
+            <div className="rounded-2xl border border-[#073B9A]/20 bg-gradient-to-r from-[#073B9A]/10 to-[#073B9A]/5 p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-[#009058]" />
+                  <Clock className="h-5 w-5 text-[#073B9A]" />
                   <span className="font-semibold">Paiement mensuel</span>
                 </div>
-                <p className="text-2xl font-bold text-[#009058]">
+                <p className="text-2xl font-bold text-[#073B9A]">
                   {formatCurrency(simulation.monthlyPayment, selectedOffer.currency)}
                 </p>
               </div>
@@ -326,7 +326,7 @@ export default function CreditPage() {
             {isEligible && (
               <Button
                 size="lg"
-                className="h-11 w-full rounded-xl bg-[#009058] font-bold hover:bg-[#009058]"
+                className="h-11 w-full rounded-xl bg-[#073B9A] font-bold hover:bg-[#073B9A]"
                 onClick={() => setShowConfirmDialog(true)}
               >
                 Demander ce crédit <ArrowRight className="ml-2 h-4 w-4" />
@@ -339,42 +339,42 @@ export default function CreditPage() {
       {/* Credit Offers */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="font-headline text-lg font-bold text-[#009058]">Nos offres de crédit</h2>
-          <Badge className="rounded-full bg-[#009058]/10 text-[#009058] hover:bg-[#009058]/10">2 offres</Badge>
+          <h2 className="font-headline text-lg font-bold text-[#073B9A]">Nos offres de crédit</h2>
+          <Badge className="rounded-full bg-[#073B9A]/10 text-[#073B9A] hover:bg-[#073B9A]/10">2 offres</Badge>
         </div>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           {creditOffers.map((offer) => (
             <Card
               key={offer.id}
               className={cn(
-                "cursor-pointer overflow-hidden border-[#009058]/10 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md",
-                selectedOffer?.id === offer.id && "border-[#009058] shadow-md ring-1 ring-[#009058]/20"
+                "cursor-pointer overflow-hidden border-[#073B9A]/10 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md",
+                selectedOffer?.id === offer.id && "border-[#073B9A] shadow-md ring-1 ring-[#073B9A]/20"
               )}
               onClick={() => handleOfferSelect(offer)}
             >
               <CardHeader className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#009058]/10">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#073B9A]/10">
                       {offer.id === 'project' ? <ProjectCreditIcon className="h-8 w-8" /> : <CreditBadgeIcon className="h-8 w-8" />}
                     </div>
-                    <CardTitle className="text-base text-[#009058]">
+                    <CardTitle className="text-base text-[#073B9A]">
                       {offer.name}
                     </CardTitle>
                   </div>
                   {selectedOffer?.id === offer.id && (
-                    <Badge className="bg-[#009058]">Sélectionné</Badge>
+                    <Badge className="bg-[#073B9A]">Sélectionné</Badge>
                   )}
                 </div>
                 <CardDescription className="leading-5">{offer.description}</CardDescription>
                 <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
-                  <span className="rounded-xl bg-[#f7faf8] px-2 py-2 font-semibold text-[#009058]">Max {formatCurrency(offer.maxAmount, offer.currency)}</span>
-                  <span className="rounded-xl bg-[#f7faf8] px-2 py-2 font-semibold text-[#009058]">{offer.duration} jours</span>
-                  <span className="rounded-xl bg-[#009058]/10 px-2 py-2 font-bold text-[#009058]">{offer.interestRate}% annuel</span>
+                  <span className="rounded-xl bg-[#FFFFFF] px-2 py-2 font-semibold text-[#073B9A]">Max {formatCurrency(offer.maxAmount, offer.currency)}</span>
+                  <span className="rounded-xl bg-[#FFFFFF] px-2 py-2 font-semibold text-[#073B9A]">{offer.duration} jours</span>
+                  <span className="rounded-xl bg-[#073B9A]/10 px-2 py-2 font-bold text-[#073B9A]">{offer.interestRate}% annuel</span>
                 </div>
               </CardHeader>
               <CardFooter className="px-4 pb-4 pt-0">
-                <Button variant="outline" className="h-10 w-full rounded-xl border-[#009058]/25 text-[#009058] hover:bg-[#009058]/5" onClick={() => handleOfferSelect(offer)}>
+                <Button variant="outline" className="h-10 w-full rounded-xl border-[#073B9A]/25 text-[#073B9A] hover:bg-[#073B9A]/5" onClick={() => handleOfferSelect(offer)}>
                   {offer.id === 'project' ? 'Faire une simulation' : 'Demander maintenant'}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -414,16 +414,16 @@ export default function CreditPage() {
                 </div>
                 <div className="flex justify-between pt-2 border-t">
                   <span className="text-sm font-semibold">Paiement mensuel :</span>
-                  <span className="font-bold text-[#009058]">{formatCurrency(simulation.monthlyPayment, selectedOffer.currency)}</span>
+                  <span className="font-bold text-[#073B9A]">{formatCurrency(simulation.monthlyPayment, selectedOffer.currency)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm font-semibold">Montant total à rembourser :</span>
-                  <span className="font-bold text-[#009058]">{formatCurrency(simulation.totalAmount, selectedOffer.currency)}</span>
+                  <span className="font-bold text-[#073B9A]">{formatCurrency(simulation.totalAmount, selectedOffer.currency)}</span>
                 </div>
               </div>
-              <Alert variant="default" className="rounded-2xl border-[#009058]/20 bg-[#009058]/5">
-                <Info className="h-4 w-4 text-[#009058]" />
-                <AlertTitle className="text-sm font-semibold text-[#009058]">Information</AlertTitle>
+              <Alert variant="default" className="rounded-2xl border-[#073B9A]/20 bg-[#073B9A]/5">
+                <Info className="h-4 w-4 text-[#073B9A]" />
+                <AlertTitle className="text-sm font-semibold text-[#073B9A]">Information</AlertTitle>
                 <AlertDescription className="text-xs">
                   Si votre demande est approuvée, le montant sera débloqué directement dans votre portefeuille Mbongo dans les 24 heures.
                 </AlertDescription>
@@ -439,7 +439,7 @@ export default function CreditPage() {
               Annuler
             </Button>
             <Button
-              className="bg-[#009058] hover:bg-[#009058]"
+              className="bg-[#073B9A] hover:bg-[#073B9A]"
               onClick={async () => {
                 setIsSubmitting(true);
 

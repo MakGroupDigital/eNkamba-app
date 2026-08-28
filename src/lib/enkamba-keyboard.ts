@@ -10,7 +10,7 @@ export type EnkambaKeyboardItem = {
 };
 
 const stickerLabels = [
-  ['safe-pay', 'Paiement securise', 'Paiement confirme avec eNkamba'],
+  ['safe-pay', 'Paiement securise', 'Paiement confirme avec Kenz'],
   ['fast-ugavi', 'Ugavi rapide', 'Livraison lancee'],
   ['makutano-love', 'Makutano love', 'Je valide ton post'],
   ['market-deal', 'Bon marche', 'Bonne affaire trouvee'],
@@ -19,7 +19,7 @@ const stickerLabels = [
   ['cash-out', 'Retrait pret', 'Retrait disponible'],
   ['qr-scan', 'Scan propre', 'QR scanne avec succes'],
   ['support-live', 'Support present', 'Support client disponible'],
-  ['verified', 'Verifie', 'Profil verifie eNkamba'],
+  ['verified', 'Verifie', 'Profil verifie Kenz'],
   ['premium', 'Premium', 'Service premium'],
   ['local-deal', 'Proche de vous', 'Offre proche de vous'],
   ['track-on', 'Tracking actif', 'Suivi active'],
@@ -28,7 +28,7 @@ const stickerLabels = [
   ['wallet-rich', 'Wallet actif', 'Portefeuille operationnel'],
   ['team-work', 'Equipe solide', 'On avance ensemble'],
   ['thank-you', 'Merci', 'Merci beaucoup'],
-  ['welcome', 'Bienvenue', 'Bienvenue sur eNkamba'],
+  ['welcome', 'Bienvenue', 'Bienvenue sur Kenz'],
   ['done', 'C est fait', 'Operation terminee'],
   ['in-progress', 'En cours', 'Traitement en cours'],
   ['urgent', 'Urgent', 'Priorite urgente'],
@@ -53,11 +53,11 @@ const stickerLabels = [
 ];
 
 const iconLabels = [
-  ['pay', 'Payer', 'Paiement eNkamba'],
+  ['pay', 'Payer', 'Paiement Kenz'],
   ['send', 'Envoyer', 'Envoyer maintenant'],
   ['receive', 'Recevoir', 'Reception ouverte'],
   ['wallet', 'Wallet', 'Portefeuille'],
-  ['card', 'Carte', 'Carte eNkamba'],
+  ['card', 'Carte', 'Carte Kenz'],
   ['scan', 'Scanner', 'Scanner QR'],
   ['chat', 'Chat', 'Discussion'],
   ['call', 'Appel', 'Appel rapide'],
@@ -69,7 +69,7 @@ const iconLabels = [
   ['plane', 'Avion', 'Transport aerien'],
   ['train', 'Train', 'Transport train'],
   ['bike', 'Moto', 'Livreur moto'],
-  ['shop', 'Marche', 'Marche eNkamba'],
+  ['shop', 'Marche', 'Marche Kenz'],
   ['store', 'Boutique', 'Boutique'],
   ['supplier', 'Fournisseur', 'Fournisseur'],
   ['factory', 'Entreprise', 'Entreprise'],
@@ -96,7 +96,7 @@ const iconLabels = [
 ];
 
 const enbimojiLabels = [
-  ['smile', 'Sourire', 'Heureux avec eNkamba'],
+  ['smile', 'Sourire', 'Heureux avec Kenz'],
   ['respect', 'Respect', 'Respect'],
   ['force', 'Force', 'On avance'],
   ['deal', 'Deal', 'Deal conclu'],
@@ -113,7 +113,7 @@ const enbimojiLabels = [
   ['creator', 'Createur', 'Creation'],
   ['farmer', 'Producteur', 'Producteur'],
   ['driver', 'Chauffeur', 'Chauffeur'],
-  ['agent', 'Agent', 'Agent eNkamba'],
+  ['agent', 'Agent', 'Agent Kenz'],
   ['client', 'Client', 'Client heureux'],
   ['family', 'Famille', 'Famille'],
   ['diaspora', 'Diaspora', 'Diaspora connectee'],
@@ -136,7 +136,7 @@ const enbimojiLabels = [
   ['bye', 'A plus', 'A plus'],
   ['wait', 'Patience', 'Un instant'],
   ['launch', 'Lance', 'On lance'],
-  ['trust', 'Confiance', 'Confiance eNkamba'],
+  ['trust', 'Confiance', 'Confiance Kenz'],
   ['verified-face', 'Verifie', 'Profil fiable'],
   ['seller-smile', 'Vendeur', 'Vendeur serieux'],
   ['buyer-smile', 'Acheteur', 'Acheteur confirme'],

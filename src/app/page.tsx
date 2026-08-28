@@ -2,9 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
-
 import { ENKAMBA_AUTH_SESSION_KEY, useAuth } from "@/hooks/useAuth";
+import { KenzDataLoader } from "@/components/shared/kenz-data-loader";
 
 export default function RootPage() {
   const router = useRouter();
@@ -36,7 +35,7 @@ export default function RootPage() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-primary text-white">
-      <Loader2 className="h-8 w-8 animate-spin" />
+      <KenzDataLoader size="lg" label="Ouverture de Kenz..." />
     </main>
   );
 }

@@ -29,7 +29,7 @@ export default function AgentRelayStatusPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 size={48} className="animate-spin text-[#009058] mx-auto mb-4" />
+          <Loader2 size={48} className="animate-spin text-[#073B9A] mx-auto mb-4" />
           <p className="text-gray-600">Chargement...</p>
         </div>
       </div>
@@ -41,7 +41,7 @@ export default function AgentRelayStatusPage() {
     return (
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
-        <div className="bg-gradient-to-r from-[#009058] via-[#009058] to-[#009058] px-4 py-6">
+        <div className="bg-gradient-to-r from-[#073B9A] via-[#073B9A] to-[#073B9A] px-4 py-6">
           <div className="flex items-center justify-between">
             <Button 
               variant="ghost" 
@@ -55,14 +55,14 @@ export default function AgentRelayStatusPage() {
             <div className="flex items-center gap-3">
               <div className="h-16 w-16 rounded-full bg-white/20 backdrop-blur-sm p-2 shadow-lg">
                 <Image 
-                  src="/enkamba-logo.png" 
-                  alt="eNkamba Logo" 
+                  src="/kenz-logo.png"
+                  alt="Kenz Logo"
                   width={48} 
                   height={48}
                   className="object-contain rounded-full"
                 />
               </div>
-              <span className="text-white text-xl font-bold tracking-tight">eNkamba-Pay</span>
+              <span className="text-white text-xl font-bold tracking-tight">Kenz-Pay</span>
             </div>
             
             <div className="w-10" />
@@ -83,7 +83,7 @@ export default function AgentRelayStatusPage() {
             </p>
             <Button
               onClick={() => router.push('/dashboard/agent-relay')}
-              className="bg-[#009058] hover:bg-[#009058] text-white"
+              className="bg-[#073B9A] hover:bg-[#073B9A] text-white"
             >
               Commencer une demande
             </Button>
@@ -103,9 +103,9 @@ export default function AgentRelayStatusPage() {
       case 'in_progress':
         return {
           icon: Clock,
-          color: 'text-[#FFA500]',
-          bgColor: 'bg-[#FFA500]/10',
-          borderColor: 'border-[#FFA500]/30',
+          color: 'text-[#F51B2B]',
+          bgColor: 'bg-[#F51B2B]/10',
+          borderColor: 'border-[#F51B2B]/30',
           title: 'Inscription en cours',
           description: 'Complétez votre inscription pour soumettre votre demande.'
         };
@@ -145,7 +145,7 @@ export default function AgentRelayStatusPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#009058] via-[#009058] to-[#009058] px-4 py-6">
+      <div className="bg-gradient-to-r from-[#073B9A] via-[#073B9A] to-[#073B9A] px-4 py-6">
         <div className="flex items-center justify-between">
           <Button 
             variant="ghost" 
@@ -159,14 +159,14 @@ export default function AgentRelayStatusPage() {
           <div className="flex items-center gap-3">
             <div className="h-16 w-16 rounded-full bg-white/20 backdrop-blur-sm p-2 shadow-lg">
               <Image 
-                src="/enkamba-logo.png" 
-                alt="eNkamba Logo" 
+                src="/kenz-logo.png"
+                alt="Kenz Logo"
                 width={48} 
                 height={48}
                 className="object-contain rounded-full"
               />
             </div>
-            <span className="text-white text-xl font-bold tracking-tight">eNkamba-Pay</span>
+            <span className="text-white text-xl font-bold tracking-tight">Kenz-Pay</span>
           </div>
           
           <div className="w-10" />
@@ -198,8 +198,8 @@ export default function AgentRelayStatusPage() {
           
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-[#009058]/10 flex items-center justify-center">
-                <FileText size={20} className="text-[#009058]" />
+              <div className="h-10 w-10 rounded-lg bg-[#073B9A]/10 flex items-center justify-center">
+                <FileText size={20} className="text-[#073B9A]" />
               </div>
               <div>
                 <p className="text-sm text-gray-600">Type d'agent</p>
@@ -211,8 +211,8 @@ export default function AgentRelayStatusPage() {
 
             {application.fullName && (
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-[#009058]/10 flex items-center justify-center">
-                  <User size={20} className="text-[#009058]" />
+                <div className="h-10 w-10 rounded-lg bg-[#073B9A]/10 flex items-center justify-center">
+                  <User size={20} className="text-[#073B9A]" />
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Nom complet</p>
@@ -223,8 +223,8 @@ export default function AgentRelayStatusPage() {
 
             {application.phoneNumber && (
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-[#009058]/10 flex items-center justify-center">
-                  <Phone size={20} className="text-[#009058]" />
+                <div className="h-10 w-10 rounded-lg bg-[#073B9A]/10 flex items-center justify-center">
+                  <Phone size={20} className="text-[#073B9A]" />
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Téléphone</p>
@@ -235,8 +235,8 @@ export default function AgentRelayStatusPage() {
 
             {application.submittedAt && (
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-[#009058]/10 flex items-center justify-center">
-                  <Clock size={20} className="text-[#009058]" />
+                <div className="h-10 w-10 rounded-lg bg-[#073B9A]/10 flex items-center justify-center">
+                  <Clock size={20} className="text-[#073B9A]" />
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Date de soumission</p>
@@ -258,7 +258,7 @@ export default function AgentRelayStatusPage() {
           {status === 'in_progress' && (
             <Button
               onClick={() => router.push(`/dashboard/agent-relay/signup?type=${application.agentType}`)}
-              className="w-full h-12 bg-[#009058] hover:bg-[#009058] text-white rounded-xl"
+              className="w-full h-12 bg-[#073B9A] hover:bg-[#073B9A] text-white rounded-xl"
             >
               Continuer l'inscription
             </Button>
@@ -267,7 +267,7 @@ export default function AgentRelayStatusPage() {
           {status === 'rejected' && (
             <Button
               onClick={() => router.push('/dashboard/agent-relay')}
-              className="w-full h-12 bg-[#009058] hover:bg-[#009058] text-white rounded-xl"
+              className="w-full h-12 bg-[#073B9A] hover:bg-[#073B9A] text-white rounded-xl"
             >
               Soumettre une nouvelle demande
             </Button>
@@ -286,7 +286,7 @@ export default function AgentRelayStatusPage() {
         <div className="mt-8 p-4 rounded-xl bg-gray-100 border border-gray-200">
           <p className="text-sm text-gray-600 text-center">
             Besoin d'aide ? Contactez notre support à{' '}
-            <a href="mailto:support@enkamba.com" className="text-[#009058] font-medium hover:underline">
+            <a href="mailto:support@enkamba.com" className="text-[#073B9A] font-medium hover:underline">
               support@enkamba.com
             </a>
           </p>

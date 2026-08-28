@@ -875,7 +875,7 @@ export default function ConversationClient() {
             setReplyingTo(null);
             setShowSmartKeyboard(false);
         } catch (error) {
-            console.error('Erreur envoi clavier eNkamba:', error);
+            console.error('Erreur envoi clavier Kenz:', error);
             alert(error instanceof Error ? error.message : "L'element n'a pas pu etre envoye.");
         } finally {
             setIsSending(false);
@@ -1218,7 +1218,7 @@ export default function ConversationClient() {
 
     const reportConversation = async () => {
         if (!currentUser?.uid || !conversationId) return;
-        const confirmed = window.confirm('Signaler cette discussion à l’équipe eNkamba ?');
+        const confirmed = window.confirm('Signaler cette discussion à l’équipe Kenz ?');
         if (!confirmed) return;
 
         try {
@@ -1476,7 +1476,7 @@ export default function ConversationClient() {
 
             {/* Incoming call banner */}
             {incomingCall && !isGroup && (
-                <div className="flex items-center justify-between gap-3 px-4 py-3 bg-gradient-to-r from-primary via-primary to-[#FFA500] text-white shadow-md flex-shrink-0">
+                <div className="flex items-center justify-between gap-3 px-4 py-3 bg-gradient-to-r from-primary via-primary to-[#F51B2B] text-white shadow-md flex-shrink-0">
                     <div className="flex items-center gap-3 min-w-0">
                         <Avatar className="h-9 w-9 border border-white/30">
                             {contact?.avatar ? (
@@ -2086,9 +2086,9 @@ export default function ConversationClient() {
                 
                 {/* Edit Preview */}
                 {editingMessage && (
-                    <div className={`border-l-4 border-[#FFA500] rounded-lg p-3 bg-[#FFA500]/10 dark:bg-[#FFA500]/20 flex items-start justify-between`}>
+                    <div className={`border-l-4 border-[#F51B2B] rounded-lg p-3 bg-[#F51B2B]/10 dark:bg-[#F51B2B]/20 flex items-start justify-between`}>
                         <div className="flex-1 min-w-0">
-                            <p className="text-xs font-semibold text-[#FFA500] dark:text-[#FFA500] mb-1">Modification du message</p>
+                            <p className="text-xs font-semibold text-[#F51B2B] dark:text-[#F51B2B] mb-1">Modification du message</p>
                             <p className="text-sm truncate text-muted-foreground">
                                 {editingMessage.text?.substring(0, 50)}
                             </p>
@@ -2270,7 +2270,7 @@ export default function ConversationClient() {
                             disabled={isSending}
                         >
                             <EnkambaAIIcon className="h-4 w-4" size={16} />
-                            eNkamba AI
+                            Kenz AI
                         </Button>
                         <Button
                             size="sm"
@@ -2345,7 +2345,7 @@ export default function ConversationClient() {
                                 requestAnimationFrame(() => textAreaRef.current?.focus());
                             }}
                             disabled={isSending || isRecording || (!isGroup && relationshipControl.blocked)}
-                            title="eNbimoji eNkamba"
+                            title="eNbimoji Kenz"
                         >
                             <SmilePlus className="h-4 w-4" />
                         </Button>

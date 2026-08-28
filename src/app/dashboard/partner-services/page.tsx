@@ -30,7 +30,7 @@ interface Service {
 const mockServices: Service[] = [
   {
     id: 'esim',
-    name: 'eSIM-eNkamba',
+    name: 'eSIM-Kenz',
     category: 'Télécommunication',
     description: 'Numéro virtuel RDC (+243 07...) - Activation instantanée',
     price: 1000,
@@ -39,7 +39,7 @@ const mockServices: Service[] = [
     reviews: 1247,
     icon: '📱',
     status: 'active',
-    provider: 'eNkamba Telecom',
+    provider: 'Kenz Telecom',
   },
   {
     id: '1',

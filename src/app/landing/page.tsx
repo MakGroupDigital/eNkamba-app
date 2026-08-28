@@ -415,7 +415,7 @@ export default function LandingPage() {
           <div className="container text-center">
             <div className="bg-gradient-to-r from-primary to-primary rounded-2xl p-8 md:p-12 lg:p-16 text-primary-foreground shadow-2xl">
               <div className="space-y-4 max-w-2xl mx-auto">
-                  <h2 className="font-headline text-3xl font-bold tracking-tighter sm:text-4xl">Rejoignez l'écosystème eNkamba</h2>
+                  <h2 className="font-headline text-3xl font-bold tracking-tighter sm:text-4xl">Rejoignez l'écosystème Kenz</h2>
                   <p className="md:text-lg">
                     Un seul compte vous donne accès à un monde de services digitaux innovants. N'attendez plus pour prendre votre avenir financier en main.
                   </p>

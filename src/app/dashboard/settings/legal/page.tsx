@@ -8,7 +8,7 @@ import Link from 'next/link';
 const legalDocuments = [
   {
     title: "Conditions d'utilisation",
-    description: "Les termes et conditions d'utilisation de la plateforme eNkamba",
+    description: "Les termes et conditions d'utilisation de la plateforme Kenz",
     lastUpdated: "15 janvier 2024",
   },
   {
@@ -23,12 +23,12 @@ const legalDocuments = [
   },
   {
     title: "Mentions légales",
-    description: "Informations légales sur eNkamba et ses services",
+    description: "Informations légales sur Kenz et ses services",
     lastUpdated: "15 janvier 2024",
   },
   {
     title: "CGV - Conditions Générales de Vente",
-    description: "Conditions générales de vente pour les services eNkamba",
+    description: "Conditions générales de vente pour les services Kenz",
     lastUpdated: "15 janvier 2024",
   },
   {

@@ -16,7 +16,7 @@ export default function PayPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-[#009058]/5 to-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-[#073B9A]/5 to-background">
       <div className="container mx-auto max-w-2xl p-4 space-y-6 animate-in fade-in duration-500">
         {/* Header */}
         <header className="flex items-center gap-4 pt-4">
@@ -26,7 +26,7 @@ export default function PayPage() {
             </Link>
           </Button>
           <div>
-            <h1 className="font-headline text-3xl font-bold bg-gradient-to-r from-[#009058] to-[#009058] bg-clip-text text-transparent">
+            <h1 className="font-headline text-3xl font-bold bg-gradient-to-r from-[#073B9A] to-[#073B9A] bg-clip-text text-transparent">
               Payer
             </h1>
             <p className="text-sm text-muted-foreground">Utilisez le portefeuille unifié</p>

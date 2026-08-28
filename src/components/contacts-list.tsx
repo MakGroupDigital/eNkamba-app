@@ -60,7 +60,7 @@ export function ContactsList({
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="enkamba" className="flex items-center gap-2">
             <ChatNavIcon size={16} />
-            <span>Sur eNkamba ({enkambaContacts.length})</span>
+            <span>Sur Kenz ({enkambaContacts.length})</span>
           </TabsTrigger>
           <TabsTrigger value="invite" className="flex items-center gap-2">
             <SocialNavIcon size={16} />
@@ -68,12 +68,12 @@ export function ContactsList({
           </TabsTrigger>
         </TabsList>
 
-        {/* Contacts sur eNkamba */}
+        {/* Contacts sur Kenz */}
         <TabsContent value="enkamba" className="space-y-2">
           {enkambaContacts.length === 0 ? (
             <div className="text-center py-8">
               <ChatNavIcon size={32} className="text-muted-foreground mx-auto mb-2 opacity-50" />
-              <p className="text-muted-foreground">Aucun contact sur eNkamba</p>
+              <p className="text-muted-foreground">Aucun contact sur Kenz</p>
               <p className="text-xs text-muted-foreground mt-1">
                 Invitez vos amis pour commencer à discuter
               </p>
@@ -111,7 +111,7 @@ export function ContactsList({
           {nonEnkambaContacts.length === 0 ? (
             <div className="text-center py-8">
               <SocialNavIcon size={32} className="text-muted-foreground mx-auto mb-2 opacity-50" />
-              <p className="text-muted-foreground">Tous vos contacts sont sur eNkamba !</p>
+              <p className="text-muted-foreground">Tous vos contacts sont sur Kenz !</p>
               <p className="text-xs text-muted-foreground mt-1">
                 Vous êtes bien connecté 🎉
               </p>

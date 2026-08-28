@@ -30,7 +30,7 @@ export function SavedCardsSection() {
   const getCardColor = (cardType: string) => {
     return cardType === 'visa' 
       ? 'from-blue-600 to-blue-400' 
-      : 'from-red-600 to-[#FFA500]';
+      : 'from-red-600 to-[#F51B2B]';
   };
 
   return (
@@ -40,7 +40,7 @@ export function SavedCardsSection() {
           <CardTitle className="font-headline text-xl">Mes Cartes</CardTitle>
           <Button
             onClick={() => setIsDialogOpen(true)}
-            className="bg-[#009058] hover:bg-[#009058] gap-2"
+            className="bg-[#073B9A] hover:bg-[#073B9A] gap-2"
             size="sm"
           >
             <Plus className="w-4 h-4" />
@@ -55,7 +55,7 @@ export function SavedCardsSection() {
               <p className="text-muted-foreground mb-4">Aucune carte enregistrée</p>
               <Button
                 onClick={() => setIsDialogOpen(true)}
-                className="bg-[#009058] hover:bg-[#009058]"
+                className="bg-[#073B9A] hover:bg-[#073B9A]"
               >
                 Ajouter votre première carte
               </Button>

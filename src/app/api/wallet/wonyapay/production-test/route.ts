@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
       Devise: currency,
       Action: 'C2B',
       MobileMoney: phoneNumber,
-      Motif: 'Test production eNkamba'
+      Motif: 'Test production Kenz'
     };
     
     return NextResponse.json({

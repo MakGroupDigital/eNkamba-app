@@ -15,7 +15,7 @@ export default function MasoloFloatingButton({ onOpenChange }: MasoloFloatingBut
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         className="relative h-16 w-16 cursor-pointer"
-        aria-label="Ouvrir eNkamba.AI"
+        aria-label="Ouvrir Kenz.AI"
       >
         {/* Cercle extérieur animé - Glow */}
         <motion.div
@@ -28,7 +28,7 @@ export default function MasoloFloatingButton({ onOpenChange }: MasoloFloatingBut
             repeat: Infinity,
             ease: "easeInOut"
           }}
-          className="absolute inset-0 rounded-full bg-[#009058] blur-xl"
+          className="absolute inset-0 rounded-full bg-[#073B9A] blur-xl"
         />
         
         {/* Cercle intermédiaire - Anneau rotatif */}
@@ -44,9 +44,9 @@ export default function MasoloFloatingButton({ onOpenChange }: MasoloFloatingBut
             background: `conic-gradient(
               from 0deg,
               transparent 0deg,
-              #009058 90deg,
+              #073B9A 90deg,
               transparent 180deg,
-              #009058 270deg,
+              #073B9A 270deg,
               transparent 360deg
             )`,
             padding: '2px',
@@ -59,10 +59,10 @@ export default function MasoloFloatingButton({ onOpenChange }: MasoloFloatingBut
         <motion.div
           className={cn(
             "absolute inset-1 rounded-full",
-            "bg-gradient-to-br from-[#009058] via-[#009058] to-[#009058]",
+            "bg-gradient-to-br from-[#073B9A] via-[#073B9A] to-[#073B9A]",
             "flex items-center justify-center",
-            "shadow-2xl shadow-[#009058]/50",
-            "border-2 border-[#009058]/30"
+            "shadow-2xl shadow-[#073B9A]/50",
+            "border-2 border-[#073B9A]/30"
           )}
         >
           {/* Effet de brillance */}
@@ -115,7 +115,7 @@ export default function MasoloFloatingButton({ onOpenChange }: MasoloFloatingBut
           className={cn(
             "absolute -bottom-1 -right-1",
             "h-6 w-6 rounded-full",
-            "bg-gradient-to-br from-[#009058] to-[#009058]",
+            "bg-gradient-to-br from-[#073B9A] to-[#073B9A]",
             "flex items-center justify-center",
             "border-2 border-background",
             "shadow-lg"
@@ -135,7 +135,7 @@ export default function MasoloFloatingButton({ onOpenChange }: MasoloFloatingBut
             repeat: Infinity,
             ease: "easeOut"
           }}
-          className="absolute inset-0 rounded-full border-2 border-[#009058]"
+          className="absolute inset-0 rounded-full border-2 border-[#073B9A]"
         />
       </motion.div>
     </Link>

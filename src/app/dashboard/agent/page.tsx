@@ -28,10 +28,10 @@ const agentTypeLabels: Record<string, string> = {
 
 const AgentGatewayIcon = ({ className = 'h-6 w-6' }: { className?: string }) => (
   <svg viewBox="0 0 48 48" fill="none" className={className} aria-hidden="true">
-    <circle cx="24" cy="24" r="18" fill="#009058" />
+    <circle cx="24" cy="24" r="18" fill="#073B9A" />
     <path d="M15 25h18M27 18l7 7-7 7" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-    <circle cx="16" cy="15" r="4" fill="#FFA500" />
-    <circle cx="33" cy="35" r="4" fill="#009058" />
+    <circle cx="16" cy="15" r="4" fill="#F51B2B" />
+    <circle cx="33" cy="35" r="4" fill="#073B9A" />
   </svg>
 );
 
@@ -98,7 +98,7 @@ export default function AgentPage() {
 
     return {
       badge: 'Création',
-      title: 'Devenir Agent eNkamba-Pay',
+      title: 'Devenir Agent Kenz-Pay',
       description: 'Aucun compte agent actif n’a été trouvé. Vous allez être redirigé vers la création de compte agent.',
       actionLabel: 'Créer mon compte agent',
       icon: UserPlus,
@@ -131,10 +131,10 @@ export default function AgentPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#f7faf8]">
+      <div className="min-h-screen bg-[#FFFFFF]">
         <div className="container mx-auto flex min-h-[70vh] max-w-4xl items-center justify-center p-4">
           <div className="text-center">
-            <Loader2 className="mx-auto mb-3 h-10 w-10 animate-spin text-[#009058]" />
+            <Loader2 className="mx-auto mb-3 h-10 w-10 animate-spin text-[#073B9A]" />
             <p className="text-sm font-semibold text-muted-foreground">Vérification de votre compte agent...</p>
           </div>
         </div>
@@ -143,7 +143,7 @@ export default function AgentPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f7faf8]">
+    <div className="min-h-screen bg-[#FFFFFF]">
       <style>{`
         @keyframes gateway-float {
           0%, 100% { transform: translateY(0); }
@@ -161,7 +161,7 @@ export default function AgentPage() {
           position: absolute;
           inset: -14px;
           border-radius: 999px;
-          border: 1px solid rgba(50,187,120,0.35);
+          border: 1px solid rgba(7, 59, 154,0.35);
           animation: gateway-pulse 2s ease-out infinite;
         }
         .gateway-pulse::after { animation-delay: 0.8s; }
@@ -170,7 +170,7 @@ export default function AgentPage() {
       <div className="container mx-auto max-w-4xl p-3 sm:p-4">
         <Card className="overflow-hidden border-0 bg-white shadow-sm">
           <CardContent className="p-0">
-            <div className="relative overflow-hidden bg-gradient-to-br from-[#009058] to-[#009058] px-4 py-6 text-white">
+            <div className="relative overflow-hidden bg-gradient-to-br from-[#073B9A] to-[#073B9A] px-4 py-6 text-white">
               <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,rgba(255,255,255,0.24),transparent_34%,rgba(0,0,0,0.08))]" />
               <div className="relative flex flex-col items-center gap-4 text-center">
                 <div className="gateway-pulse gateway-float relative flex h-20 w-20 items-center justify-center rounded-3xl bg-white/16 ring-1 ring-white/25">
@@ -187,29 +187,29 @@ export default function AgentPage() {
             </div>
 
             <div className="grid gap-4 p-4 md:grid-cols-[1.2fr_0.8fr]">
-              <div className="rounded-2xl border border-[#009058]/10 bg-[#f7faf8] p-4">
+              <div className="rounded-2xl border border-[#073B9A]/10 bg-[#FFFFFF] p-4">
                 <div className="mb-4 flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#009058]/10">
-                    <StatusIcon className={`h-5 w-5 ${view.tone === 'red' ? 'text-red-600' : view.tone === 'orange' ? 'text-[#FFA500]' : 'text-[#009058]'}`} />
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#073B9A]/10">
+                    <StatusIcon className={`h-5 w-5 ${view.tone === 'red' ? 'text-red-600' : view.tone === 'orange' ? 'text-[#F51B2B]' : 'text-[#073B9A]'}`} />
                   </div>
                   <div>
                     <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">Destination</p>
-                    <p className="font-bold text-[#009058]">{destination}</p>
+                    <p className="font-bold text-[#073B9A]">{destination}</p>
                   </div>
                 </div>
 
-                <div className="h-2 overflow-hidden rounded-full bg-[#009058]/10">
+                <div className="h-2 overflow-hidden rounded-full bg-[#073B9A]/10">
                   <div
-                    className="h-full rounded-full bg-[#009058] transition-all duration-700"
+                    className="h-full rounded-full bg-[#073B9A] transition-all duration-700"
                     style={{ width: `${Math.min(100, Math.max(8, progress))}%` }}
                   />
                 </div>
                 <p className="mt-3 text-sm text-muted-foreground">
-                  Redirection automatique dans <span className="font-black text-[#009058]">{remainingSeconds}</span> seconde{remainingSeconds > 1 ? 's' : ''}.
+                  Redirection automatique dans <span className="font-black text-[#073B9A]">{remainingSeconds}</span> seconde{remainingSeconds > 1 ? 's' : ''}.
                 </p>
 
                 <Button
-                  className="mt-4 h-11 w-full rounded-xl bg-[#009058] font-bold hover:bg-[#009058]"
+                  className="mt-4 h-11 w-full rounded-xl bg-[#073B9A] font-bold hover:bg-[#073B9A]"
                   onClick={() => router.replace(destination)}
                 >
                   {view.actionLabel}
@@ -218,29 +218,29 @@ export default function AgentPage() {
               </div>
 
               <div className="space-y-3">
-                <div className="rounded-2xl border border-[#009058]/10 bg-white p-4 shadow-sm">
-                  <ShieldCheck className="mb-2 h-5 w-5 text-[#009058]" />
-                  <p className="text-sm font-bold text-[#009058]">Statut vérifié</p>
+                <div className="rounded-2xl border border-[#073B9A]/10 bg-white p-4 shadow-sm">
+                  <ShieldCheck className="mb-2 h-5 w-5 text-[#073B9A]" />
+                  <p className="text-sm font-bold text-[#073B9A]">Statut vérifié</p>
                   <p className="mt-1 text-xs leading-5 text-muted-foreground">
                     Lecture directe du dossier `agentRelayApplications`.
                   </p>
                 </div>
 
-                <div className="rounded-2xl border border-[#009058]/10 bg-white p-4 shadow-sm">
+                <div className="rounded-2xl border border-[#073B9A]/10 bg-white p-4 shadow-sm">
                   {hasApprovedPaymentBusiness ? (
                     <>
-                      <Building2 className="mb-2 h-5 w-5 text-[#009058]" />
-                      <p className="text-sm font-bold text-[#009058]">Compte entreprise paiement lié</p>
+                      <Building2 className="mb-2 h-5 w-5 text-[#073B9A]" />
+                      <p className="text-sm font-bold text-[#073B9A]">Compte entreprise paiement lié</p>
                       <p className="mt-1 text-xs leading-5 text-muted-foreground">
                         {businessUser?.businessName || 'Compte entreprise'} est approuvé côté module paiement.
                       </p>
                     </>
                   ) : (
                     <>
-                      <Store className="mb-2 h-5 w-5 text-[#FFA500]" />
-                      <p className="text-sm font-bold text-[#009058]">Compte agent dédié</p>
+                      <Store className="mb-2 h-5 w-5 text-[#F51B2B]" />
+                      <p className="text-sm font-bold text-[#073B9A]">Compte agent dédié</p>
                       <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                        Le compte agent se crée via le parcours Agent Relais eNkamba-Pay.
+                        Le compte agent se crée via le parcours Agent Relais Kenz-Pay.
                       </p>
                     </>
                   )}

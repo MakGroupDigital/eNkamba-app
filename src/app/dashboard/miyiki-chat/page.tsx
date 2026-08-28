@@ -144,7 +144,7 @@ export default function MiyikiChatPage() {
   const profileAvatar = profile?.profileImage || undefined;
   const contactQRCodeUserData = profile
     ? {
-        name: profile.fullName || profile.name || profile.displayName || 'Utilisateur eNkamba',
+        name: profile.fullName || profile.name || profile.displayName || 'Utilisateur Kenz',
         email: profile.email || '',
         phone: profile.phone || profile.phoneNumber,
         uid: profile.uid,
@@ -575,7 +575,7 @@ export default function MiyikiChatPage() {
                     {!notification.read && <Badge className="text-xs">Nouveau</Badge>}
                   </div>
                   <p className="text-sm text-muted-foreground truncate">
-                    {notification.message || notification.senderName || 'Notification eNkamba'}
+                    {notification.message || notification.senderName || 'Notification Kenz'}
                   </p>
                   {notification.amount && (
                     <p className="text-xs font-semibold text-primary mt-1">

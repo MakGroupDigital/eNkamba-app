@@ -1,12 +1,12 @@
 <svg width="720" height="420" viewBox="0 0 720 420" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="facepaie-icon-gradient" x1="170" y1="40" x2="410" y2="280" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#79D63E"/>
-      <stop offset="0.48" stop-color="#0A8B46"/>
-      <stop offset="1" stop-color="#25543A"/>
+      <stop stop-color="#F51B2B"/>
+      <stop offset="0.48" stop-color="#073B9A"/>
+      <stop offset="1" stop-color="#073B9A"/>
     </linearGradient>
     <filter id="facepaie-shadow" x="126" y="18" width="328" height="328" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#0A8B46" flood-opacity="0.22"/>
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#073B9A" flood-opacity="0.22"/>
     </filter>
   </defs>
 
@@ -24,11 +24,11 @@
     <path d="M279 211C291 219 307 219 319 211" stroke="white" stroke-width="10" stroke-linecap="round"/>
   </g>
 
-  <path d="M267 296C286 313 320 313 339 296" stroke="#0A8B46" stroke-width="13" stroke-linecap="round"/>
-  <path d="M249 326C279 352 327 352 357 326" stroke="#0A8B46" stroke-width="13" stroke-linecap="round"/>
+  <path d="M267 296C286 313 320 313 339 296" stroke="#073B9A" stroke-width="13" stroke-linecap="round"/>
+  <path d="M249 326C279 352 327 352 357 326" stroke="#073B9A" stroke-width="13" stroke-linecap="round"/>
 
   <text x="90" y="374" font-family="Inter, Arial, sans-serif" font-size="68" font-weight="900" letter-spacing="-2">
-    <tspan fill="#101820">Face</tspan><tspan fill="#0A8B46">Paie</tspan>
+    <tspan fill="#101820">Face</tspan><tspan fill="#073B9A">Paie</tspan>
   </text>
-  <text x="98" y="406" font-family="Inter, Arial, sans-serif" font-size="17" font-weight="800" letter-spacing="7" fill="#0A8B46">RAPIDE . SIMPLE . SÉCURISÉ</text>
+  <text x="98" y="406" font-family="Inter, Arial, sans-serif" font-size="17" font-weight="800" letter-spacing="7" fill="#073B9A">RAPIDE . SIMPLE . SÉCURISÉ</text>
 </svg>

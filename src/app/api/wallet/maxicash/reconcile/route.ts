@@ -185,7 +185,7 @@ export async function POST(request: NextRequest) {
             ...updateData,
             status: 'completed',
             newBalance,
-            description: `Dépôt eNkambaPay confirmé via ${freshTxData?.maxicash?.partnerLabel || txData?.maxicash?.partnerLabel || 'MaxiCash'}`,
+            description: `Dépôt Kenz Pay confirmé via ${freshTxData?.maxicash?.partnerLabel || txData?.maxicash?.partnerLabel || 'MaxiCash'}`,
             completedAt: new Date().toISOString(),
             creditedAt: new Date().toISOString(),
             'maxicash.completionVerified': true,
@@ -227,7 +227,7 @@ export async function POST(request: NextRequest) {
             ...updateData,
             status: 'pending',
             newBalance,
-            description: `Dépôt eNkambaPay en attente de confirmation via ${freshTxData?.maxicash?.partnerLabel || txData?.maxicash?.partnerLabel || 'MaxiCash'}`,
+            description: `Dépôt Kenz Pay en attente de confirmation via ${freshTxData?.maxicash?.partnerLabel || txData?.maxicash?.partnerLabel || 'MaxiCash'}`,
             'maxicash.creditReversedAt': new Date().toISOString(),
             'maxicash.creditReversalReason': 'provider_completion_not_confirmed',
           });
@@ -243,7 +243,7 @@ export async function POST(request: NextRequest) {
           await updateDoc(txDoc.ref, {
             ...updateData,
             status: 'failed',
-            description: `Échec eNkambaPay: ${getMaxiCashErrorMessage(statusPayload, 'Paiement refusé')}`,
+            description: `Échec Kenz Pay: ${getMaxiCashErrorMessage(statusPayload, 'Paiement refusé')}`,
             failedAt: new Date().toISOString(),
           });
           failed += 1;
@@ -255,7 +255,7 @@ export async function POST(request: NextRequest) {
           await updateDoc(txDoc.ref, {
             ...updateData,
             status: 'pending',
-            description: txData?.description || 'Dépôt eNkambaPay en attente de confirmation',
+            description: txData?.description || 'Dépôt Kenz Pay en attente de confirmation',
           });
           continue;
         }
@@ -263,7 +263,7 @@ export async function POST(request: NextRequest) {
         await updateDoc(txDoc.ref, {
           ...updateData,
           status: 'failed',
-          description: `Échec eNkambaPay: ${getMaxiCashErrorMessage(statusPayload, 'Paiement refusé')}`,
+          description: `Échec Kenz Pay: ${getMaxiCashErrorMessage(statusPayload, 'Paiement refusé')}`,
           failedAt: new Date().toISOString(),
         });
         failed += 1;

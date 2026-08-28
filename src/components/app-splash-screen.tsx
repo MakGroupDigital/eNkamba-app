@@ -50,7 +50,7 @@ export function AppSplashScreen() {
 
   return (
     <div
-      className={`fixed inset-0 z-[9999] bg-[#0A8B46] transition-opacity duration-300 ${
+      className={`fixed inset-0 z-[9999] bg-[#073B9A] transition-opacity duration-300 ${
         visible ? "opacity-100" : "pointer-events-none opacity-0"
       }`}
       aria-hidden={!visible}

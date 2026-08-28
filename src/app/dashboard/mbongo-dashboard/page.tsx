@@ -37,7 +37,7 @@ const DEFAULT_COPY: DashboardCopy = {
   agentAccount: 'Compte Agent',
   linkAccount: 'Lier un compte',
   bonus: 'Bonus',
-  esim: 'eSIM-eNkamba',
+  esim: 'eSIM-Kenz',
   tax: 'Taxe et Impôt',
   regideso: 'Regideso',
   canal: 'Canal+',
@@ -355,7 +355,7 @@ export default function MbongoDashboard() {
               const label = copy[action.labelKey] || DEFAULT_COPY[action.labelKey] || action.labelKey;
               return (
                 <Link key={action.labelKey} href={action.href} className="group flex flex-col items-center gap-2.5">
-                  <div className="flex h-[62px] w-[62px] items-center justify-center rounded-full bg-[#0A8B46] text-white shadow-xl shadow-[#0A8B46]/20 transition-all duration-300 hover:scale-105 sm:h-24 sm:w-24">
+                  <div className="relative flex h-[62px] w-[62px] items-center justify-center rounded-full border border-[#073B9A]/15 bg-white text-white shadow-xl shadow-[#073B9A]/15 transition-all duration-300 hover:scale-105 sm:h-24 sm:w-24">
                     <IconComponent className="h-9 w-9 text-white sm:h-14 sm:w-14" strokeWidth={2.4} />
                   </div>
                   <p className="text-center text-[12px] font-black leading-tight text-slate-800 sm:text-sm">{label}</p>
@@ -365,7 +365,7 @@ export default function MbongoDashboard() {
           </div>
 
           <section className="space-y-4">
-            <div className="relative flex min-h-[118px] items-center justify-between overflow-hidden rounded-2xl bg-[#0A8B46] px-6 py-5 text-white shadow-xl shadow-[#0A8B46]/20">
+            <div className="relative flex min-h-[118px] items-center justify-between overflow-hidden rounded-2xl border-l-4 border-[#F51B2B] bg-[#073B9A] px-6 py-5 text-white shadow-xl shadow-[#073B9A]/20">
               <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_86%_20%,rgba(255,255,255,0.16),transparent_34%)]" />
               <Link href="/dashboard/wallet" className="relative min-w-0 flex-1">
                 <p className="text-[11px] font-black uppercase tracking-[0.22em] text-white/75">Solde principal</p>
@@ -384,18 +384,18 @@ export default function MbongoDashboard() {
                 {isBiometricChecking ? (
                   <Loader2 className="h-7 w-7 animate-spin" />
                 ) : isBalanceVisible ? (
-                  <Eye className="h-7 w-7" />
+                  <Eye className="h-7 w-7 text-[#F51B2B]" />
                 ) : (
-                  <EyeOff className="h-7 w-7" />
+                  <EyeOff className="h-7 w-7 text-[#F51B2B]" />
                 )}
               </button>
             </div>
 
             <div>
               <div className="mb-3 flex items-center justify-center gap-4">
-                <span className="h-px w-14 bg-[#0A8B46]/20" />
-                <p className="text-center text-[12px] font-black uppercase tracking-[0.22em] text-[#0A8B46]">Autres devises</p>
-                <span className="h-px w-14 bg-[#0A8B46]/20" />
+                <span className="h-px w-14 bg-[#073B9A]/20" />
+                <p className="text-center text-[12px] font-black uppercase tracking-[0.22em] text-[#073B9A]">Autres devises</p>
+                <span className="h-px w-14 bg-[#F51B2B]/45" />
               </div>
               <div className="grid grid-cols-4 gap-2">
                 {[
@@ -404,7 +404,7 @@ export default function MbongoDashboard() {
                   { code: 'RMB', symbol: '¥', estimated: walletBalance * dailyRates.CNY },
                   { code: 'FCFA', symbol: 'FCFA', estimated: walletBalance * dailyRates.XAF },
                 ].map((item) => (
-                  <Link key={item.code} href="/dashboard/conversion" className="relative min-h-[74px] overflow-hidden rounded-xl bg-[#0A8B46] p-2.5 text-white shadow-md shadow-[#0A8B46]/12 transition hover:-translate-y-0.5 hover:shadow-lg">
+                  <Link key={item.code} href="/dashboard/conversion" className="relative min-h-[74px] overflow-hidden rounded-xl bg-[#073B9A] p-2.5 text-white shadow-md shadow-[#073B9A]/12 transition hover:-translate-y-0.5 hover:shadow-lg">
                     <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(145deg,rgba(255,255,255,0.14),transparent_58%)]" />
                     <div className="relative flex items-start justify-between gap-1">
                       <p className="text-sm font-black">{item.code}</p>
@@ -424,10 +424,10 @@ export default function MbongoDashboard() {
             </div>
           </section>
 
-          <Card className="overflow-hidden rounded-3xl border-[#0A8B46]/10 bg-white shadow-xl shadow-black/5">
+          <Card className="overflow-hidden rounded-3xl border-[#073B9A]/10 bg-white shadow-xl shadow-black/5">
             <CardHeader className="px-5 pb-2 pt-5">
               <CardTitle className="font-headline flex items-center gap-2 text-2xl text-slate-950">
-                <span className="h-3 w-3 rounded-full bg-[#0A8B46]" />
+                <span className="h-3 w-3 rounded-full bg-[#F51B2B]" />
                 {copy.financialServices}
                 {isTranslating && <span className="text-xs font-normal text-muted-foreground">...</span>}
               </CardTitle>
@@ -437,8 +437,8 @@ export default function MbongoDashboard() {
               {filteredFinancialServices.map(service => {
                 const IconComponent = service.icon;
                 return (
-                  <Link href={service.href} key={service.labelKey} className="flex flex-col items-center gap-2 text-sm font-semibold text-slate-950 transition-all hover:text-[#0A8B46] group">
-                    <div className={cn("mbongo-service-icon flex h-[82px] w-full max-w-[92px] items-center justify-center overflow-visible rounded-2xl bg-white", "border border-[#0A8B46]/10 shadow-sm group-hover:shadow-md group-hover:scale-[1.02] transition-all duration-300")}>
+                  <Link href={service.href} key={service.labelKey} className="flex flex-col items-center gap-2 text-sm font-semibold text-slate-950 transition-all hover:text-[#073B9A] group">
+                    <div className={cn("mbongo-service-icon flex h-[82px] w-full max-w-[92px] items-center justify-center overflow-visible rounded-2xl bg-white", "border border-[#073B9A]/10 shadow-sm group-hover:shadow-md group-hover:scale-[1.02] transition-all duration-300")}>
                       <IconComponent size={58} className="h-[58px] w-[58px]" />
                     </div>
                     <span className="text-center text-[12px] font-bold leading-tight">{copy[service.labelKey]}</span>
@@ -449,10 +449,10 @@ export default function MbongoDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="overflow-hidden rounded-3xl border-[#0A8B46]/10 bg-white shadow-xl shadow-black/5">
+          <Card className="overflow-hidden rounded-3xl border-[#073B9A]/10 bg-white shadow-xl shadow-black/5">
             <CardHeader className="px-5 pb-2 pt-5">
               <CardTitle className="font-headline flex items-center gap-2 text-xl text-slate-950">
-                <span className="h-3 w-3 rounded-full bg-[#0A8B46]" />
+                <span className="h-3 w-3 rounded-full bg-[#F51B2B]" />
                 {copy.billsServices}
               </CardTitle>
             </CardHeader>
@@ -461,7 +461,7 @@ export default function MbongoDashboard() {
               {filteredBills.map(bill => {
                 const IconComponent = bill.icon;
                 return (
-                  <Link href={bill.href} key={bill.labelKey} className={cn("flex min-h-[118px] flex-col items-center justify-center gap-2.5 rounded-2xl p-3 text-center", "bg-white border border-[#0A8B46]/10", "text-sm font-semibold text-slate-950", "hover:shadow-md hover:scale-[1.02] transition-all duration-300", "group")}>
+                  <Link href={bill.href} key={bill.labelKey} className={cn("flex min-h-[118px] flex-col items-center justify-center gap-2.5 rounded-2xl p-3 text-center", "bg-white border border-[#073B9A]/10", "text-sm font-semibold text-slate-950", "hover:shadow-md hover:scale-[1.02] transition-all duration-300", "group")}>
                     <div className="mbongo-service-icon group-hover:scale-105 transition-transform duration-300">
                       <IconComponent size={62} className="h-[62px] w-[62px]" />
                     </div>
@@ -471,7 +471,7 @@ export default function MbongoDashboard() {
               })}
               </div>
               {hasSearchQuery && !hasSearchResults && (
-                <div className="mt-4 rounded-2xl border border-dashed border-[#0A8B46]/20 bg-[#0A8B46]/5 px-4 py-5 text-center">
+                <div className="mt-4 rounded-2xl border border-dashed border-[#073B9A]/20 bg-[#073B9A]/5 px-4 py-5 text-center">
                   <p className="text-sm font-black text-slate-900">Aucun service trouvé</p>
                   <p className="mt-1 text-xs font-semibold text-slate-500">Essayez avec paiement, tontine, bureau de change, facture ou QR.</p>
                 </div>
@@ -490,31 +490,6 @@ export default function MbongoDashboard() {
             currency: 'CDF',
           }}
         />
-        <style jsx global>{`
-          .mbongo-service-icon svg [fill='#FFA500'] {
-            fill: #0A8B46 !important;
-          }
-
-          .mbongo-service-icon svg [stroke='#FFA500'] {
-            stroke: #0A8B46 !important;
-          }
-
-          .mbongo-service-icon svg [stop-color='#FFA500'] {
-            stop-color: #0A8B46 !important;
-          }
-
-          .mbongo-service-icon svg [fill='#009058'],
-          .mbongo-service-icon svg [fill='#25543A'],
-          .mbongo-service-icon svg [fill='#479B67'] {
-            fill: #0A8B46 !important;
-          }
-
-          .mbongo-service-icon svg [stroke='#009058'],
-          .mbongo-service-icon svg [stroke='#25543A'],
-          .mbongo-service-icon svg [stroke='#479B67'] {
-            stroke: #0A8B46 !important;
-          }
-        `}</style>
       </div>
     </>
   );

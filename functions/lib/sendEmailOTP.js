@@ -164,7 +164,7 @@ export const sendEmailOTP = functions.https.onCall(
       await transporter.sendMail({
         from: process.env.EMAIL_USER,
         to: email,
-        subject: 'Votre code de vérification eNkamba',
+        subject: 'Votre code de vérification Kenz',
         html: `
           <!DOCTYPE html>
           <html>
@@ -174,7 +174,7 @@ export const sendEmailOTP = functions.https.onCall(
                 body { font-family: Arial, sans-serif; background-color: #f5f5f5; }
                 .container { max-width: 600px; margin: 0 auto; background-color: white; padding: 40px; border-radius: 8px; }
                 .header { text-align: center; margin-bottom: 30px; }
-                .logo { font-size: 24px; font-weight: bold; color: #32BB78; }
+                .logo { font-size: 24px; font-weight: bold; color: #073B9A; }
                 .content { text-align: center; }
                 .code-box {
                   background-color: #f0f0f0;
@@ -184,7 +184,7 @@ export const sendEmailOTP = functions.https.onCall(
                   font-size: 32px;
                   font-weight: bold;
                   letter-spacing: 5px;
-                  color: #32BB78;
+                  color: #073B9A;
                   font-family: monospace;
                 }
                 .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #999; }
@@ -194,17 +194,17 @@ export const sendEmailOTP = functions.https.onCall(
             <body>
               <div class="container">
                 <div class="header">
-                  <div class="logo">eNkamba</div>
+                  <div class="logo">Kenz</div>
                 </div>
                 <div class="content">
                   <h2>Vérification de votre email</h2>
                   <p>Voici votre code de vérification:</p>
                   <div class="code-box">${otp}</div>
                   <p>Ce code expire dans 10 minutes.</p>
-                  <p class="warning">⚠️ Ne partagez ce code avec personne. eNkamba ne vous demandera jamais ce code par email ou SMS.</p>
+                  <p class="warning">⚠️ Ne partagez ce code avec personne. Kenz ne vous demandera jamais ce code par email ou SMS.</p>
                 </div>
                 <div class="footer">
-                  <p>© 2026 eNkamba. Tous droits réservés.</p>
+                  <p>© 2026 Kenz. Tous droits réservés.</p>
                 </div>
               </div>
             </body>
@@ -351,7 +351,7 @@ exports.completeKyc = functions.https.onCall(async (data, context) => {
                 ageRestrictionUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
                 updatedAt: admin.firestore.FieldValue.serverTimestamp(),
             }, { merge: true });
-            throw new functions.https.HttpsError('failed-precondition', `eNkamba est réservé aux utilisateurs de ${ENKAMBA_MINIMUM_AGE} ans ou plus`);
+            throw new functions.https.HttpsError('failed-precondition', `Kenz est réservé aux utilisateurs de ${ENKAMBA_MINIMUM_AGE} ans ou plus`);
         }
         const submissionRef = db.collection('kycSubmissions').doc(userId);
         // Préparer les données KYC. La validation finale doit rester contrôlée.

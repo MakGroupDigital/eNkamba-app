@@ -27,7 +27,7 @@ export default function AgentRelaySuccessPage() {
             Candidature envoyée avec succès !
           </h1>
           <p className="text-white/90 text-lg">
-            Votre dossier de candidature Agent Relais eNkamba a été reçu et est en cours de traitement.
+            Votre dossier de candidature Agent Relais Kenz a été reçu et est en cours de traitement.
           </p>
         </div>
       </Card>
@@ -138,9 +138,9 @@ export default function AgentRelaySuccessPage() {
             </div>
             
             <div className="grid md:grid-cols-2 gap-4">
-              <div className="p-4 rounded-xl bg-[#FFA500]/10 border border-[#FFA500]/30">
-                <h4 className="font-semibold text-[#FFA500] mb-2">Documents manquants ?</h4>
-                <p className="text-sm text-[#FFA500]">
+              <div className="p-4 rounded-xl bg-[#F51B2B]/10 border border-[#F51B2B]/30">
+                <h4 className="font-semibold text-[#F51B2B] mb-2">Documents manquants ?</h4>
+                <p className="text-sm text-[#F51B2B]">
                   Si des documents sont manquants, nous vous contacterons par email 
                   avec les instructions pour les compléter.
                 </p>
@@ -216,7 +216,7 @@ export default function AgentRelaySuccessPage() {
       {/* Footer Message */}
       <div className="text-center py-6">
         <p className="text-sm text-muted-foreground">
-          Merci de votre intérêt pour le programme Agent Relais eNkamba. 
+          Merci de votre intérêt pour le programme Agent Relais Kenz.
           Nous sommes impatients de vous accueillir dans notre réseau !
         </p>
       </div>

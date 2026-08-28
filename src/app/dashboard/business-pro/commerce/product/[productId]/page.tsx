@@ -139,7 +139,7 @@ export default function CommerceProductStatsPage({
     if (!product || !publicUrl) return;
     try {
       if (navigator.share) {
-        await navigator.share({ title: product.name || 'Produit eNkamba', url: publicUrl });
+        await navigator.share({ title: product.name || 'Produit Kenz', url: publicUrl });
       } else {
         await navigator.clipboard.writeText(publicUrl);
         toast({ title: 'Lien copié', description: 'Lien public du produit copié.', className: 'bg-primary text-white border-none' });
@@ -181,7 +181,7 @@ export default function CommerceProductStatsPage({
 
         const balance = Number(freshUserSnap.data()?.walletBalance || 0);
         if (balance < pack.amount) {
-          throw new Error('Solde eNkamba insuffisant pour sponsoriser ce produit.');
+          throw new Error('Solde Kenz insuffisant pour sponsoriser ce produit.');
         }
 
         tx.update(userRef, {
@@ -300,7 +300,7 @@ export default function CommerceProductStatsPage({
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge className="rounded-full bg-primary text-white hover:bg-primary">{product.businessAudience || product.category || 'COMMERCE'}</Badge>
                   {isSponsored ? (
-                    <Badge className="rounded-full bg-[#FFA500]/100 text-white hover:bg-[#FFA500]/100">
+                    <Badge className="rounded-full bg-[#F51B2B]/100 text-white hover:bg-[#F51B2B]/100">
                       Sponsorisé jusqu’au {sponsoredUntil?.toLocaleDateString('fr-FR')}
                     </Badge>
                   ) : (
@@ -331,7 +331,7 @@ export default function CommerceProductStatsPage({
           <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-xl font-black text-slate-950">Sponsoriser ce produit</h2>
-              <p className="text-sm font-semibold text-slate-600">Paiement direct via wallet eNkamba. Solde: {formatMoney(walletBalance)}</p>
+              <p className="text-sm font-semibold text-slate-600">Paiement direct via wallet Kenz. Solde: {formatMoney(walletBalance)}</p>
             </div>
             <Megaphone className="h-8 w-8 text-primary" />
           </div>

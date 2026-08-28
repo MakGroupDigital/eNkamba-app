@@ -102,7 +102,7 @@ const modules: ModuleItem[] = [
     description: 'Messagerie, appels, groupes, stories et transferts contextuels.',
     href: '/dashboard/miyiki-chat',
     icon: MessageCircle,
-    color: '#009058',
+    color: '#073B9A',
     submodules: ['Conversations', 'Groupes', 'Appels audio/video', 'Stories', 'Partage localisation'],
   },
   {
@@ -111,7 +111,7 @@ const modules: ModuleItem[] = [
     description: 'Wallet, QR, transferts, factures, epargne, credit et agents.',
     href: '/dashboard/mbongo-dashboard',
     icon: CircleDollarSign,
-    color: '#009058',
+    color: '#073B9A',
     submodules: ['Portefeuille', 'Payer/recevoir', 'Historique', 'Epargne', 'Tontine', 'Factures'],
   },
   {
@@ -120,7 +120,7 @@ const modules: ModuleItem[] = [
     description: 'Marketplace, boutiques, paniers, commandes et portail vendeurs.',
     href: '/dashboard/nkampa',
     icon: ShoppingBag,
-    color: '#FFA500',
+    color: '#F51B2B',
     submodules: ['Catalogue', 'Boutiques', 'Panier', 'Commandes', 'Seller portal', 'Roles business'],
   },
   {
@@ -129,7 +129,7 @@ const modules: ModuleItem[] = [
     description: 'Expedition, tracking colis, flotte, relais et paiements logistiques.',
     href: '/dashboard/ugavi',
     icon: Truck,
-    color: '#009058',
+    color: '#073B9A',
     submodules: ['Tracking', 'Expeditions', 'Fleet', 'Agent relais', 'Scan colis', 'Livraisons'],
   },
   {
@@ -173,7 +173,7 @@ const modules: ModuleItem[] = [
 const accessPolicies = [
   { label: 'Super admin', value: 'Controle total', icon: ShieldCheck, color: 'text-primary' },
   { label: 'Operations', value: 'Modules + support', icon: SlidersHorizontal, color: 'text-primary' },
-  { label: 'Finance', value: 'Wallet + conformité', icon: Landmark, color: 'text-[#FFA500]' },
+  { label: 'Finance', value: 'Wallet + conformité', icon: Landmark, color: 'text-[#F51B2B]' },
   { label: 'Support', value: 'Lecture + assistance', icon: UserCog, color: 'text-violet-600' },
 ];
 
@@ -345,7 +345,7 @@ export default function AdminDashboardPage() {
         value: formatCount(counts.businessPending),
         trend: 'En attente',
         icon: Clock3,
-        tone: 'bg-[#FFA500]/100/10 text-[#FFA500]',
+        tone: 'bg-[#F51B2B]/100/10 text-[#F51B2B]',
       },
       {
         label: 'Comptes actifs',
@@ -429,15 +429,15 @@ export default function AdminDashboardPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#F7FAF8] text-slate-950">
+    <main className="min-h-screen bg-[#FFFFFF] text-slate-950">
       <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-5 sm:px-6 lg:px-8">
         <GlobalSurveillanceMap />
 
         <header className="flex flex-col gap-4 rounded-[8px] border border-primary/10 bg-white px-4 py-4 shadow-sm md:flex-row md:items-center md:justify-between">
           <div>
-            <div className="flex items-center gap-2 text-sm font-semibold text-[#009058]">
+            <div className="flex items-center gap-2 text-sm font-semibold text-[#073B9A]">
               <ShieldCheck className="h-4 w-4" />
-              Module Admin eNkamba
+              Module Admin Kenz
             </div>
             <h1 className="mt-1 font-headline text-2xl font-bold tracking-normal md:text-4xl">
               Centre de controle de l'ecosysteme
@@ -454,7 +454,7 @@ export default function AdminDashboardPage() {
                 Numeros comptes
               </Link>
             </Button>
-            <Button asChild className="gap-2 bg-[#009058] hover:bg-[#009058]">
+            <Button asChild className="gap-2 bg-[#073B9A] hover:bg-[#073B9A]">
               <Link href="/admin/business-requests">
                 <FileCheck2 className="h-4 w-4" />
                 Demandes business
@@ -491,7 +491,7 @@ export default function AdminDashboardPage() {
                 Le dashboard garde l'essentiel. Les fonctions de surveillance avancee sont dans leurs pages dediees.
               </p>
             </div>
-            <Badge className="w-fit bg-[#009058] hover:bg-[#009058]">Pages dediees</Badge>
+            <Badge className="w-fit bg-[#073B9A] hover:bg-[#073B9A]">Pages dediees</Badge>
           </div>
 
           <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
@@ -499,18 +499,18 @@ export default function AdminDashboardPage() {
               { title: 'Infrastructure', text: 'Carte mondiale, serveurs modules, pare-feu, agents et points GPS.', href: '/admin/infrastructure', icon: Server, tone: 'bg-primary/5 text-primary' },
               { title: 'Logs erreurs', text: 'Erreur exacte, module, page, utilisateur, copie et partage.', href: '/admin/logs', icon: Bug, tone: 'bg-red-50 text-red-700' },
               { title: 'Cyber intelligence', text: 'Actions utilisateurs, temps passe, IP, localisation et pages.', href: '/admin/cyber', icon: Fingerprint, tone: 'bg-sky-50 text-sky-700' },
-              { title: 'Attaques', text: 'Signaux suspects, faille probable, methode et contre-mesure.', href: '/admin/attacks', icon: ShieldAlert, tone: 'bg-[#FFA500]/10 text-[#FFA500]' },
+              { title: 'Attaques', text: 'Signaux suspects, faille probable, methode et contre-mesure.', href: '/admin/attacks', icon: ShieldAlert, tone: 'bg-[#F51B2B]/10 text-[#F51B2B]' },
               { title: 'Rapports', text: 'Exports CSV, rapport operationnel, audit et donnees de supervision.', href: '/admin/reports', icon: FileText, tone: 'bg-slate-100 text-slate-800' },
             ].map((item) => {
               const Icon = item.icon;
               return (
-                <Link key={item.href} href={item.href} className="group rounded-[8px] border border-slate-200 p-4 transition hover:border-[#009058]/50 hover:shadow-md">
+                <Link key={item.href} href={item.href} className="group rounded-[8px] border border-slate-200 p-4 transition hover:border-[#073B9A]/50 hover:shadow-md">
                   <div className={cn('flex h-11 w-11 items-center justify-center rounded-[8px]', item.tone)}>
                     <Icon className="h-5 w-5" />
                   </div>
                   <h3 className="mt-3 font-bold">{item.title}</h3>
                   <p className="mt-1 text-sm leading-6 text-slate-500">{item.text}</p>
-                  <span className="mt-4 flex items-center gap-1 text-sm font-semibold text-[#009058]">
+                  <span className="mt-4 flex items-center gap-1 text-sm font-semibold text-[#073B9A]">
                     Ouvrir
                     <ChevronRight className="h-4 w-4 transition group-hover:translate-x-1" />
                   </span>
@@ -525,7 +525,7 @@ export default function AdminDashboardPage() {
             <Card className="rounded-[8px] border-primary/10 shadow-sm">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-lg">
-                  <KeyRound className="h-5 w-5 text-[#009058]" />
+                  <KeyRound className="h-5 w-5 text-[#073B9A]" />
                   Acces et roles
                 </CardTitle>
               </CardHeader>
@@ -551,7 +551,7 @@ export default function AdminDashboardPage() {
             <Card className="rounded-[8px] border-primary/10 shadow-sm">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-lg">
-                  <Users className="h-5 w-5 text-[#009058]" />
+                  <Users className="h-5 w-5 text-[#073B9A]" />
                   Types de comptes
                 </CardTitle>
               </CardHeader>
@@ -578,7 +578,7 @@ export default function AdminDashboardPage() {
           <Card className="rounded-[8px] border-primary/10 shadow-sm xl:col-span-2">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-lg">
-                <LockKeyhole className="h-5 w-5 text-[#009058]" />
+                <LockKeyhole className="h-5 w-5 text-[#073B9A]" />
                 Mot de passe global d'acces
               </CardTitle>
               <p className="text-sm text-slate-500">
@@ -592,7 +592,7 @@ export default function AdminDashboardPage() {
                     <p className="text-sm font-semibold text-primary">Version active</p>
                     <p className="mt-1 font-mono text-xs text-primary">{accessVersion || 'Fallback environnement'}</p>
                   </div>
-                  <Badge className="w-fit bg-[#009058] hover:bg-[#009058]">Propagation globale</Badge>
+                  <Badge className="w-fit bg-[#073B9A] hover:bg-[#073B9A]">Propagation globale</Badge>
                 </div>
               </div>
 
@@ -615,7 +615,7 @@ export default function AdminDashboardPage() {
                   </button>
                 </div>
                 <Button
-                  className="gap-2 bg-[#009058] hover:bg-[#009058]"
+                  className="gap-2 bg-[#073B9A] hover:bg-[#073B9A]"
                   onClick={handleSaveAccessCode}
                   disabled={isSavingAccessCode}
                 >
@@ -673,7 +673,7 @@ export default function AdminDashboardPage() {
                 ].map((user) => (
                   <div key={user.name} className="flex items-center justify-between rounded-[8px] border border-slate-200 p-3">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#009058]/10 text-[#009058]">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#073B9A]/10 text-[#073B9A]">
                         <Users className="h-5 w-5" />
                       </div>
                       <div>
@@ -716,7 +716,7 @@ export default function AdminDashboardPage() {
                 <h2 className="font-headline text-xl font-bold">Modules et sous-modules</h2>
                 <p className="mt-1 text-sm text-slate-500">Vue de controle par domaine fonctionnel.</p>
               </div>
-              <Badge className="w-fit bg-[#009058] hover:bg-[#009058]">
+              <Badge className="w-fit bg-[#073B9A] hover:bg-[#073B9A]">
                 Donnees temps reel
               </Badge>
             </div>
@@ -729,7 +729,7 @@ export default function AdminDashboardPage() {
                   <Link
                     key={module.name}
                     href={module.href}
-                    className="group rounded-[8px] border border-slate-200 p-4 transition hover:border-[#009058]/50 hover:shadow-md"
+                    className="group rounded-[8px] border border-slate-200 p-4 transition hover:border-[#073B9A]/50 hover:shadow-md"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-3">
@@ -744,7 +744,7 @@ export default function AdminDashboardPage() {
                           <p className="text-xs text-slate-500">{module.label}</p>
                         </div>
                       </div>
-                      <ChevronRight className="h-5 w-5 text-slate-300 transition group-hover:translate-x-1 group-hover:text-[#009058]" />
+                      <ChevronRight className="h-5 w-5 text-slate-300 transition group-hover:translate-x-1 group-hover:text-[#073B9A]" />
                     </div>
                     <p className="mt-3 text-sm leading-6 text-slate-600">{module.description}</p>
                     <div className="mt-4 flex items-center justify-between text-xs">
@@ -790,7 +790,7 @@ export default function AdminDashboardPage() {
             const Icon = item.icon;
             return (
               <div key={item.title} className="rounded-[8px] border border-primary/10 bg-white p-4 shadow-sm">
-                <Icon className="h-5 w-5 text-[#009058]" />
+                <Icon className="h-5 w-5 text-[#073B9A]" />
                 <h3 className="mt-3 font-bold">{item.title}</h3>
                 <p className="mt-1 text-sm leading-6 text-slate-500">{item.text}</p>
               </div>

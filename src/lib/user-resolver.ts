@@ -1,6 +1,6 @@
 /**
  * Utilitaire de résolution d'identité utilisateur multi-critères
- * Recherche un utilisateur par email, numéro eNkamba, numéro de carte ou téléphone
+ * Recherche un utilisateur par email, numéro Kenz, numéro de carte ou téléphone
  */
 
 import { db } from '@/lib/firebase';
@@ -16,7 +16,7 @@ export interface ResolvedUser {
  * Recherche un utilisateur par n'importe quel identifiant
  * Essaie dans l'ordre: email, accountNumber, cardNumber, phoneNumber
  * 
- * @param identifier - L'identifiant à rechercher (peut être email, numéro eNkamba, carte ou téléphone)
+ * @param identifier - L'identifiant à rechercher (peut être email, numéro Kenz, carte ou téléphone)
  * @returns ResolvedUser si trouvé, null sinon
  */
 export async function resolveUserByIdentifier(identifier: string): Promise<ResolvedUser | null> {
@@ -62,7 +62,7 @@ export async function resolveUserByIdentifier(identifier: string): Promise<Resol
     }
   }
 
-  // 2. Recherche par numéro eNkamba (si commence par ENK)
+  // 2. Recherche par numéro Kenz (si commence par ENK)
   if (cleanIdentifier.toUpperCase().startsWith('ENK')) {
     try {
       console.log('[user-resolver] Recherche par accountNumber:', cleanIdentifier.toUpperCase());
@@ -90,7 +90,7 @@ export async function resolveUserByIdentifier(identifier: string): Promise<Resol
       for (const userDoc of allUsersSnapshot.docs) {
         const userData = userDoc.data();
         
-        // Générer le numéro eNkamba pour cet utilisateur
+        // Générer le numéro Kenz pour cet utilisateur
         const hash = userDoc.id.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
         const generatedEnkNumber = `ENK${String(hash).padStart(12, '0')}`;
         
@@ -115,7 +115,7 @@ export async function resolveUserByIdentifier(identifier: string): Promise<Resol
         }
       }
       
-      console.log('[user-resolver] Aucun utilisateur trouvé avec ce numéro eNkamba');
+      console.log('[user-resolver] Aucun utilisateur trouvé avec ce numéro Kenz');
     } catch (error) {
       console.error('[user-resolver] Erreur recherche par accountNumber:', error);
     }
@@ -239,7 +239,7 @@ export function isValidIdentifier(identifier: string): boolean {
     return true;
   }
 
-  // Numéro eNkamba
+  // Numéro Kenz
   if (clean.toUpperCase().startsWith('ENK') && clean.length >= 15) {
     return true;
   }

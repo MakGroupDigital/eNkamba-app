@@ -1,6 +1,6 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "eNkamba",
+  "productName": "Kenz",
   "version": "1.4.11",
   "identifier": "io.enkamba.app",
   "build": {
@@ -12,7 +12,7 @@
     "windows": [
       {
         "url": "https://www.enkamba.io",
-        "title": "eNkamba",
+        "title": "Kenz",
         "width": 800,
         "height": 600,
         "resizable": true,

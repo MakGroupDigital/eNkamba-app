@@ -234,7 +234,7 @@ export function useFirestoreContacts() {
     return null;
   }, [getPhoneCandidates]);
 
-  // Vérifier le statut d'un contact: 'own' (son propre compte), 'enkamba' (utilisateur eNkamba), ou 'invite' (à inviter)
+  // Vérifier le statut d'un contact: 'own' (son propre compte), 'enkamba' (utilisateur Kenz), ou 'invite' (à inviter)
   // Version synchrone pour les vérifications rapides
   const getContactStatusSync = useCallback((phoneNumber: string, email?: string): ContactStatusResult => {
     // 1. Vérifier si c'est le propre numéro/email de l'utilisateur
@@ -289,7 +289,7 @@ export function useFirestoreContacts() {
     return result;
   }, [currentUser, normalizePhoneNumber, findUserInFirestore]);
 
-  // Vérifier si un contact est sur eNkamba (legacy - version synchrone rapide)
+  // Vérifier si un contact est sur Kenz (legacy - version synchrone rapide)
   const checkIfOnEnkamba = useCallback((phoneNumber: string, email?: string): { isOnEnkamba: boolean; referralCode?: string } => {
     const statusInfo = getContactStatusSync(phoneNumber, email);
     return {
@@ -397,12 +397,12 @@ export function useFirestoreContacts() {
     }
   }, [currentUser]);
 
-  // Obtenir les contacts sur eNkamba
+  // Obtenir les contacts sur Kenz
   const getEnkambaContacts = useCallback(() => {
     return state.contacts.filter(c => c.isOnEnkamba);
   }, [state.contacts]);
 
-  // Obtenir les contacts non sur eNkamba
+  // Obtenir les contacts non sur Kenz
   const getNonEnkambaContacts = useCallback(() => {
     return state.contacts.filter(c => !c.isOnEnkamba);
   }, [state.contacts]);
