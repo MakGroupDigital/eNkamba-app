@@ -1,6 +1,6 @@
 /* eslint-disable no-undef */
-const KENZ_CACHE = 'kenz-app-cache-v2';
-const KENZ_STATIC_CACHE = 'kenz-static-cache-v2';
+const KENZ_CACHE = 'kenz-app-cache-v3';
+const KENZ_STATIC_CACHE = 'kenz-static-cache-v3';
 const IS_LOCAL_DEVELOPMENT = ['localhost', '127.0.0.1', '::1'].includes(self.location.hostname);
 const APP_SHELL_URLS = [
   '/',
@@ -82,6 +82,8 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith('/api/')) return;
+  // Business screens now belong to the separate portal, never to the client offline cache.
+  if (/^\/dashboard\/(?:business-pro|agent-relay|agent|echurch|nkampa\/store|settings\/business-account)(?:\/|$)/.test(url.pathname) || /^\/dashboard\/nkampa\/seller\/?$/.test(url.pathname)) return;
 
   if (request.mode === 'navigate') {
     event.respondWith(

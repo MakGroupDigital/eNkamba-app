@@ -45,7 +45,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useNkampaCart } from '@/hooks/useNkampaCart';
 import { useWalletBalance } from '@/hooks/useWalletBalance';
 import { FloatingCart } from '@/components/nkampa/FloatingCart';
-import { useNkampaStore } from '@/hooks/useNkampaStore';
 import { useNkampaStores } from '@/hooks/useNkampaStores';
 
 // Catégories principales avec icônes modernes
@@ -537,7 +536,6 @@ export default function NkampaPage() {
   const { stores: publicStores } = useNkampaStores({ statuses: ['active', 'approved'] });
   const { balance, isLoading: balanceLoading } = useWalletBalance();
   const { cart, isOpen, setIsOpen, addToCart, removeFromCart, updateQuantity, total, itemCount } = useNkampaCart();
-  const { store: myStore, hasChecked: hasStoreChecked } = useNkampaStore(user?.uid);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [showCheckout, setShowCheckout] = useState(false);
@@ -1107,13 +1105,10 @@ export default function NkampaPage() {
 
       {/* Navigation marche */}
       <div className="relative z-40 px-4 pt-1">
-        <div className="mx-auto grid max-w-7xl grid-cols-3 items-center border-b border-primary/10">
+        <div className="mx-auto grid max-w-7xl grid-cols-2 items-center border-b border-primary/10">
           {[
             { href: '/dashboard/nkampa/orders', label: 'Commandes' },
             { href: '/dashboard/nkampa/favorites', label: 'Favoris' },
-            hasStoreChecked && myStore
-              ? { href: '/dashboard/nkampa/store/dashboard', label: 'Ma boutique' }
-              : { href: '/dashboard/nkampa/store', label: 'Créer boutique' },
           ].map((item, index) => {
             const isActive = pathname === item.href;
             return (
@@ -1124,7 +1119,7 @@ export default function NkampaPage() {
                   isActive
                     ? 'text-primary'
                     : 'text-muted-foreground hover:text-foreground'
-                } ${index === 0 ? 'justify-self-start' : index === 1 ? 'justify-self-center' : 'justify-self-end'}`}
+                } ${index === 0 ? 'justify-self-start' : 'justify-self-end'}`}
               >
                 <span>{item.label}</span>
                 {isActive && (

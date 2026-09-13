@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input';
 import { PinVerification } from '@/components/payment/PinVerification';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { useBusinessStatus } from '@/hooks/useBusinessStatus';
 import { addDoc, collection, doc, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { buildUgaviStatusEntry } from '@/lib/ugavi-requests';
@@ -599,7 +598,6 @@ export default function UgaviPage() {
   const searchParams = useSearchParams();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { businessUser } = useBusinessStatus();
   const mapGestureRef = useRef<{
     pointers: Map<number, { x: number; y: number }>;
     pinchDistance: number | null;
@@ -1565,13 +1563,6 @@ export default function UgaviPage() {
     setNationalDepositCode(null);
   };
 
-  const openBusinessArea = () => {
-    if (businessUser?.status === 'APPROVED') {
-      router.push('/dashboard/business-pro?module=LOGISTICS');
-      return;
-    }
-    router.push('/dashboard/settings/business-account');
-  };
 
   const buildExpressTrackingNumber = () => {
     const origin = pickupLocation.slice(0, 3).toUpperCase().replace(/[^A-Z]/g, '') || 'KIN';
@@ -1996,15 +1987,7 @@ export default function UgaviPage() {
             Ugavi
           </p>
         </div>
-        <Button
-          type="button"
-          size="sm"
-          variant="secondary"
-          onClick={openBusinessArea}
-          className="rounded-full bg-white/90 text-slate-800 shadow-lg backdrop-blur hover:bg-white"
-        >
-          Business
-        </Button>
+
       </header>
 
       <div className="absolute right-4 top-24 z-30 flex flex-col gap-2">

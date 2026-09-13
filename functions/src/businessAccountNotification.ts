@@ -5,7 +5,7 @@ const db = admin.firestore();
 
 /**
  * Trigger: When business_requests document is updated
- * Action: Create notification for user when status changes to APPROVED
+ * Action: Create notification for user when a request becomes usable.
  */
 export const onBusinessAccountApproved = functions.firestore
   .document('business_requests/{requestId}')
@@ -13,8 +13,8 @@ export const onBusinessAccountApproved = functions.firestore
     const before = change.before.data();
     const after = change.after.data();
 
-    // Check if status changed to APPROVED
-    if (before.status !== 'APPROVED' && after.status === 'APPROVED') {
+    const usableStatuses = ['APPROVED', 'VERIFIED'];
+    if (!usableStatuses.includes(before.status) && usableStatuses.includes(after.status)) {
       const userId = after.userId;
       const businessName = after.businessName;
       const businessType = after.type;
@@ -36,7 +36,7 @@ export const onBusinessAccountApproved = functions.firestore
           businessType,
           businessId: context.params.requestId,
           icon: '🟢',
-          actionUrl: '/dashboard/business-pro',
+          actionUrl: `/dashboard/business-pro?module=${encodeURIComponent(businessType || '')}&businessId=${encodeURIComponent(context.params.requestId)}`,
           actionLabel: 'Accéder à mon Espace Pro',
           read: false,
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -72,7 +72,7 @@ export const onBusinessAccountApproved = functions.firestore
           businessName,
           rejectionReason,
           icon: '🔴',
-          actionUrl: '/dashboard/settings/business-account',
+          actionUrl: `/dashboard/settings/business-account?businessId=${encodeURIComponent(context.params.requestId)}`,
           actionLabel: 'Modifier et renvoyer',
           read: false,
           createdAt: admin.firestore.FieldValue.serverTimestamp(),

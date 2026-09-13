@@ -114,11 +114,7 @@ export default function ShopRedirectClient({ params }: { params: Promise<{ store
               <Badge className="rounded-full border border-white/20 bg-white/90 px-3 py-1 text-[#073B9A]">
                 {isApproved ? 'Boutique vérifiée' : 'En attente'}
               </Badge>
-              {isOwner ? (
-                <Button asChild className="rounded-2xl bg-white text-[#073B9A] hover:bg-white/90">
-                  <Link href="/dashboard/nkampa/store/dashboard">Gérer</Link>
-                </Button>
-              ) : null}
+
             </div>
 
             <div className="absolute bottom-5 left-4 right-4">

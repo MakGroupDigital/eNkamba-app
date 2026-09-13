@@ -147,7 +147,6 @@ const financialServices = [
   { icon: TontineIcon, labelKey: 'tontine', href: '/dashboard/tontine', aliases: ['ristourne', 'cotisation', 'groupe'] },
   { icon: ConversionIcon, labelKey: 'conversion', href: '/dashboard/conversion', aliases: ['bureau de change', 'devise', 'usd', 'eur', 'rmb', 'fcfa', 'changer argent'] },
   { icon: ReferralIcon, labelKey: 'referral', href: '/dashboard/referral', aliases: ['inviter', 'parrain', 'commission'] },
-  { icon: AgentIcon, labelKey: 'agentAccount', href: '/dashboard/agent', aliases: ['agent', 'compte agent', 'cash in', 'cash out'] },
   { icon: LinkAccountIcon, labelKey: 'linkAccount', href: '/dashboard/link-account', aliases: ['banque', 'lier banque', 'compte bancaire'] },
   { icon: BonusIcon, labelKey: 'bonus', href: '/dashboard/bonus', aliases: ['recompense', 'cadeau', 'promotion'] },
 ];
@@ -161,7 +160,6 @@ const bills = [
   { icon: SchoolIcon, labelKey: 'schoolFees', href: '/dashboard/school-fees', aliases: ['ecole', 'scolarite', 'frais scolaire'] },
   { icon: HealthIcon, labelKey: 'health', href: '/dashboard/health', aliases: ['hopital', 'clinique', 'medical'] },
   { icon: FiveGoIcon, labelKey: 'fivego', href: '/dashboard/5go', aliases: ['transport', 'mobilite', 'course'] },
-  { icon: EChurchIcon, labelKey: 'echurch', href: '/dashboard/echurch', aliases: ['eglise', 'offrande', 'don'] },
   { icon: EventIcon, labelKey: 'events', href: '/dashboard/events', aliases: ['evenement', 'ticket', 'billet'] },
   { icon: PhoneCreditIcon, labelKey: 'phoneCredit', href: '/dashboard/pay-bill?type=phone', aliases: ['airtime', 'telephone', 'unite', 'credit appel'] },
   { icon: InsuranceIcon, labelKey: 'insurance', href: '/dashboard/insurance', aliases: ['assurer', 'protection'] },
