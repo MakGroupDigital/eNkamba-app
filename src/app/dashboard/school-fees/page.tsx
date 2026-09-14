@@ -13,10 +13,13 @@ import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import Image from 'next/image';
 import html2canvas from 'html2canvas';
+import { addDoc, collection, getDocs, limit, query, serverTimestamp, where } from 'firebase/firestore';
+import { auth, db } from '@/lib/firebase';
 
 type PaymentStep = 'school' | 'student' | 'payment' | 'receipt';
 
 interface SchoolInfo {
+  id?: string;
   code: string;
   name: string;
   address: string;
@@ -43,28 +46,6 @@ interface PaymentReceipt {
   paymentMethod: string;
 }
 
-// Base de données simulée des écoles
-const SCHOOLS_DB: Record<string, SchoolInfo> = {
-  'SCH001': {
-    code: 'SCH001',
-    name: 'Complexe Scolaire Boboto',
-    address: 'Avenue Kasa-Vubu, Kinshasa',
-    phone: '+243 XXX XXX XXX',
-  },
-  'SCH002': {
-    code: 'SCH002',
-    name: 'Institut Technique Industriel',
-    address: 'Boulevard Lumumba, Kinshasa',
-    phone: '+243 XXX XXX XXX',
-  },
-  'SCH003': {
-    code: 'SCH003',
-    name: 'Lycée Français René Descartes',
-    address: 'Gombe, Kinshasa',
-    phone: '+243 XXX XXX XXX',
-  },
-};
-
 export default function SchoolFeesPage() {
   const { toast } = useToast();
   const router = useRouter();
@@ -85,22 +66,28 @@ export default function SchoolFeesPage() {
   const [receipt, setReceipt] = useState<PaymentReceipt | null>(null);
   const [isPaying, setIsPaying] = useState(false);
 
-  const handleVerifySchool = () => {
-    const foundSchool = SCHOOLS_DB[schoolCode.toUpperCase()];
-    if (foundSchool) {
-      setSchool(foundSchool);
+  const handleVerifySchool = async () => {
+    const rawCode = schoolCode.trim().toUpperCase();
+    const code = rawCode.startsWith('KENZ:EDUCATION:') ? rawCode.split(':').pop() || '' : rawCode;
+    try {
+      const result = await getDocs(query(collection(db, 'education_accounts'), where('paymentReference', '==', code), limit(1)));
+      if (!result.empty) {
+        const data = result.docs[0].data();
+        const foundSchool: SchoolInfo = { id: result.docs[0].id, code: data.paymentReference, name: data.institutionName, address: data.address, phone: data.phone, logo: data.logoUrl };
+        setSchool(foundSchool);
       setStep('student');
       toast({
-        title: "École trouvée",
+        title: "Établissement trouvé",
         description: `${foundSchool.name}`,
       });
-    } else {
+      } else {
       toast({
         variant: "destructive",
         title: "Code invalide",
-        description: "Aucune école trouvée avec ce code. Veuillez vérifier.",
+        description: "Aucun établissement Éducation actif ne correspond à cette référence.",
       });
-    }
+      }
+    } catch { toast({ variant: 'destructive', title: 'Vérification indisponible', description: 'Réessayez dans un instant.' }); }
   };
 
   const handlePayment = async () => {
@@ -116,8 +103,22 @@ export default function SchoolFeesPage() {
     setIsPaying(true);
     setStep('payment');
 
-    // Simuler le paiement
+    // Confirmation locale puis enregistrement dans le registre de l’établissement.
     await new Promise(resolve => setTimeout(resolve, 2000));
+
+    if (school.id) {
+      await addDoc(collection(db, 'education_payments'), {
+        educationId: school.id,
+        educationReference: school.code,
+        student: { fullName: student.fullName, studentNumber: student.studentNumber, grade: student.grade },
+        amount: student.amount,
+        currency: student.currency,
+        feeType: student.paymentType,
+        payerId: auth.currentUser?.uid || null,
+        status: 'PAID',
+        createdAt: serverTimestamp(),
+      });
+    }
 
     const newReceipt: PaymentReceipt = {
       id: `ENK-${Date.now()}`,
@@ -271,31 +272,14 @@ export default function SchoolFeesPage() {
                   maxLength={10}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Le code est fourni par l'école. Contactez l'administration si vous ne l'avez pas.
+                  Saisissez la référence Éducation de l’établissement ou scannez son QR de paiement depuis Kenz Pay.
                 </p>
-              </div>
-
-              {/* Exemples de codes */}
-              <div className="p-4 rounded-lg bg-muted space-y-2">
-                <p className="text-sm font-semibold">Codes d'exemple pour test:</p>
-                <div className="flex flex-wrap gap-2">
-                  {Object.keys(SCHOOLS_DB).map((code) => (
-                    <Button
-                      key={code}
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setSchoolCode(code)}
-                    >
-                      {code}
-                    </Button>
-                  ))}
-                </div>
               </div>
 
               <Button 
                 className="w-full" 
                 onClick={handleVerifySchool}
-                disabled={!schoolCode || schoolCode.length < 3}
+                disabled={!schoolCode || schoolCode.length < 6}
               >
                 Vérifier le code <ArrowRight className="ml-2 w-4 h-4" />
               </Button>
