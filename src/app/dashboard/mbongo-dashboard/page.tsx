@@ -38,7 +38,7 @@ const DEFAULT_COPY: DashboardCopy = {
   linkAccount: 'Lier un compte',
   bonus: 'Bonus',
   esim: 'eSIM-Kenz',
-  tax: 'Taxe et Impôt',
+  tax: 'DRC Gouv',
   regideso: 'Regideso',
   canal: 'Canal+',
   academicFees: 'Frais Académiques',
@@ -142,6 +142,7 @@ const quickActions = [
 ];
 
 const financialServices = [
+  { icon: TaxIcon, labelKey: 'tax', href: '/dashboard/drc-gouv', aliases: ['drc gouv', 'impot', 'impôts', 'taxe', 'taxes', 'declaration', 'fiscalite', 'dgi', 'douane'] },
   { icon: SavingsIcon, labelKey: 'savings', href: '/dashboard/savings', aliases: ['epargner', 'argent de cote'] },
   { icon: CreditIcon, labelKey: 'credit', href: '/dashboard/credit', aliases: ['pret', 'emprunt', 'microcredit'] },
   { icon: TontineIcon, labelKey: 'tontine', href: '/dashboard/tontine', aliases: ['ristourne', 'cotisation', 'groupe'] },
@@ -153,7 +154,6 @@ const financialServices = [
 
 const bills = [
   { icon: ESimIcon, labelKey: 'esim', href: '/dashboard/partner-services', aliases: ['sim', 'internet', 'data'] },
-  { icon: TaxIcon, labelKey: 'tax', href: '/dashboard/tax-declaration', aliases: ['impot', 'declaration', 'fiscalite'] },
   { icon: WaterIcon, labelKey: 'regideso', href: '/dashboard/pay-bill?type=water', aliases: ['eau', 'facture eau'] },
   { icon: TvIcon, labelKey: 'canal', href: '/dashboard/pay-bill?type=tv', aliases: ['television', 'tv', 'abonnement'] },
   { icon: AcademicIcon, labelKey: 'academicFees', href: '/dashboard/academic-fees', aliases: ['universite', 'academique', 'etudiant'] },
