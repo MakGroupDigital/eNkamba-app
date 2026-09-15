@@ -3,10 +3,11 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { ArrowLeft, ArrowUpRight, Download, ExternalLink, FileCheck2, Info, Printer, Save, Trash2 } from 'lucide-react';
-import { DrcCustomsIcon, DrcDgiIcon, DrcRevenueIcon, DrcTaxFileIcon, DrcTaxHistoryIcon, DrcTaxIdIcon } from '@/components/icons/service-icons';
+import { ArrowRight, ArrowUpRight, Download, ExternalLink, FileCheck2, Info, Menu, Printer, Save, Trash2 } from 'lucide-react';
+import { DrcCustomsIcon, DrcDgiIcon, DrcProvinceIcon, DrcRevenueIcon, DrcTaxFileIcon, DrcTaxHistoryIcon, DrcTaxIdIcon, DrcTaxPaymentIcon, DrcTradeIcon } from '@/components/icons/service-icons';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { Sheet, SheetClose, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
 type ServiceKey = 'nif' | 'customs' | 'invoice' | 'revenue' | 'claims';
 type FieldDef = { key: string; label: string; type?: 'text' | 'date' | 'email' | 'tel' | 'number' | 'textarea' | 'select'; options?: string[]; required?: boolean; wide?: boolean; placeholder?: string };
@@ -18,6 +19,35 @@ const SERVICES: Record<ServiceKey, { title: string; subtitle: string; Icon: type
   invoice: { title: 'Facture normalisée', subtitle: 'Vérifiez un document DGI ou identifiez le dispositif homologué nécessaire à son émission.', Icon: DrcRevenueIcon, officialUrl: 'https://dgi.gouv.cd/verifier-un-document-authentification-qr-n/', officialLabel: 'Ouvrir l’authentificateur DGI', note: 'Kenz ne peut pas émettre une facture normalisée : elle doit être produite par un DEF raccordé à la DGI ou un SFE homologué. La vérification d’authenticité est faite par le service officiel.' },
   revenue: { title: 'Suivre une recette non fiscale', subtitle: 'Consignez les informations de la note officielle et retrouvez les étapes du recouvrement.', Icon: DrcRevenueIcon, officialUrl: 'https://logirad.dgrad.cd/registre-note-perception', officialLabel: 'Ouvrir LOGIRAD DGRAD', note: 'Une note de perception officielle est émise par l’ordonnateur compétent après contrôle. Le paiement se fait au compte du receveur du Trésor et donne lieu à un acquit libératoire; Kenz ne prélève pas ces fonds.' },
   claims: { title: 'Reçus et réclamations', subtitle: 'Vérifiez un document DGI ou préparez une réclamation écrite relative à une recette non fiscale.', Icon: DrcTaxHistoryIcon, officialUrl: 'https://dgi.gouv.cd/verifier-un-document-authentification-qr-n/', officialLabel: 'Vérifier un document DGI', note: 'Le brouillon de réclamation reste sur cet appareil. Il n’est pas transmis à la DGRAD; imprimez-le, signez-le et déposez-le auprès de l’autorité compétente avec les pièces requises.' },
+};
+
+type NavigationItem = { label: string; detail: string; href: string; Icon: typeof DrcDgiIcon; external?: boolean };
+const serviceNavigation: Record<ServiceKey, NavigationItem[]> = {
+  nif: [
+    { label: 'Déclaration fiscale', detail: 'Préparer et suivre un dossier DGI', href: '/dashboard/tax-declaration', Icon: DrcTaxPaymentIcon },
+    { label: 'Dossier douanier', detail: 'Préparer une importation ou exportation', href: '/dashboard/drc-gouv/service/customs', Icon: DrcTradeIcon },
+    { label: 'Portail e-NIF', detail: 'Poursuivre la démarche officielle', href: SERVICES.nif.officialUrl, Icon: DrcDgiIcon, external: true },
+  ],
+  customs: [
+    { label: 'Dossier NIF', detail: 'Préparer les informations du contribuable', href: '/dashboard/drc-gouv/service/nif', Icon: DrcTaxIdIcon },
+    { label: 'Recettes non fiscales', detail: 'Suivre une note de perception', href: '/dashboard/drc-gouv/service/revenue', Icon: DrcRevenueIcon },
+    { label: 'SYDONIAWorld', detail: 'Déclaration douanière officielle', href: SERVICES.customs.officialUrl, Icon: DrcCustomsIcon, external: true },
+  ],
+  invoice: [
+    { label: 'Déclaration fiscale', detail: 'Ouvrir le parcours DGI', href: '/dashboard/tax-declaration', Icon: DrcTaxPaymentIcon },
+    { label: 'Dossier douanier', detail: 'Importer ou exporter des marchandises', href: '/dashboard/drc-gouv/service/customs', Icon: DrcTradeIcon },
+    { label: 'Vérificateur DGI', detail: 'Authentifier un document officiel', href: SERVICES.invoice.officialUrl, Icon: DrcTaxHistoryIcon, external: true },
+  ],
+  revenue: [
+    { label: 'Réclamation DGRAD', detail: 'Préparer un recours écrit', href: '/dashboard/drc-gouv/service/claims', Icon: DrcTaxFileIcon },
+    { label: 'Déclaration fiscale', detail: 'Accéder au parcours DGI', href: '/dashboard/tax-declaration', Icon: DrcTaxPaymentIcon },
+    { label: 'LOGIRAD', detail: 'Registre officiel des notes', href: SERVICES.revenue.officialUrl, Icon: DrcRevenueIcon, external: true },
+  ],
+  claims: [
+    { label: 'Recettes non fiscales', detail: 'Suivre une note DGRAD', href: '/dashboard/drc-gouv/service/revenue', Icon: DrcRevenueIcon },
+    { label: 'Déclaration fiscale', detail: 'Accéder au parcours DGI', href: '/dashboard/tax-declaration', Icon: DrcTaxPaymentIcon },
+    { label: 'Vérificateur DGI', detail: 'Authentifier un document officiel', href: SERVICES.claims.officialUrl, Icon: DrcTaxHistoryIcon, external: true },
+  ],
 };
 
 const nifPersonFields: FieldDef[] = [
@@ -88,6 +118,7 @@ export default function DrcGovernmentServicePage() {
   const slug = routeSlug && routeSlug in SERVICES ? routeSlug as ServiceKey : undefined;
   const storageKey = slug ?? 'nif';
   const service = slug ? SERVICES[slug] : undefined;
+  const navigationItems = slug ? serviceNavigation[slug] : [];
   const { user } = useAuth();
   const { toast } = useToast();
   const [personType, setPersonType] = useState<'physical' | 'legal'>('physical');
@@ -146,7 +177,27 @@ export default function DrcGovernmentServicePage() {
   const fileSet = slug === 'customs' ? ['Facture commerciale', 'Liste de colisage', 'Titre de transport (B/L, AWB ou LVI)', 'Certificat d’origine (si applicable)', 'Permis / autorisation sectorielle (si applicable)', 'Preuve de valeur / contrat de vente (si demandé)'] : slug === 'nif' ? (personType === 'physical' ? ['Pièce d’identité valide', 'Justificatif d’adresse', 'Éléments sur l’activité'] : ['RCCM ou agrément', 'Statuts / acte constitutif', 'Identification nationale', 'Pièce du représentant légal', 'Justificatif du siège']) : slug === 'claims' ? ['Copie de la note de perception / extrait de rôle', 'Preuve de paiement de la partie non contestée', 'Pièces étayant les motifs', 'Mandat signé si représentation'] : [];
 
   return <main className="min-h-screen bg-[#f6f8fc] px-4 pb-28 pt-5 text-[#122448] sm:px-6 lg:px-8"><div className="mx-auto max-w-5xl">
-    <Link href="/dashboard/drc-gouv" className="mb-4 inline-flex items-center gap-2 text-sm font-bold text-[#073B9A]"><ArrowLeft size={17}/>DRC Gouv</Link>
+    <div className="mb-4 flex items-center gap-3">
+      <Sheet>
+        <SheetTrigger asChild><button type="button" aria-label="Ouvrir la navigation DRC Gouv" title="Navigation DRC Gouv" className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-[#073B9A]/10 bg-white text-[#073B9A] shadow-sm transition hover:bg-[#edf3ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#073B9A]"><Menu size={21}/></button></SheetTrigger>
+        <SheetContent side="left" className="w-[min(86vw,360px)] border-r border-[#073B9A]/10 bg-[#f7f9ff] p-0 text-[#122448]">
+          <SheetHeader className="border-b border-[#073B9A]/10 bg-white px-5 py-6 pr-14 text-left">
+            <SheetTitle className="flex items-center gap-3 text-left"><span className="grid h-11 w-11 place-items-center rounded-xl bg-[#edf3ff]"><DrcProvinceIcon size={30}/></span><span>DRC Gouv<span className="mt-0.5 block text-xs font-semibold text-slate-500">Services publics · Kenz</span></span></SheetTitle>
+            <SheetDescription className="sr-only">Accès au portail et aux démarches administratives associées.</SheetDescription>
+          </SheetHeader>
+          <nav className="space-y-2 p-4" aria-label="Navigation des services DRC Gouv">
+            <SheetClose asChild><Link href="/dashboard/drc-gouv" className="mb-4 flex items-center gap-3 rounded-xl bg-[#073B9A] px-4 py-3.5 text-sm font-extrabold text-white shadow-sm"><DrcProvinceIcon size={24}/><span>Accueil du portail<small className="mt-0.5 block text-xs font-medium text-white/75">Tous les services publics</small></span><ArrowRight className="ml-auto" size={17}/></Link></SheetClose>
+            <p className="px-2 pb-1 pt-2 text-[10px] font-black tracking-[.16em] text-[#073B9A]">ACCÈS LIÉS À CE SERVICE</p>
+            {navigationItems.map(item => {
+              const content = <><span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[#edf3ff]"><item.Icon size={27}/></span><span className="min-w-0 flex-1"><strong className="block text-sm">{item.label}</strong><small className="mt-0.5 block text-xs text-slate-500">{item.detail}</small></span>{item.external && <ExternalLink size={15} className="shrink-0 text-[#073B9A]"/>}</>;
+              return item.external ? <SheetClose asChild key={item.label}><a href={item.href} target="_blank" rel="noreferrer" className="flex items-center gap-3 rounded-xl px-2 py-2.5 transition hover:bg-white">{content}</a></SheetClose> : <SheetClose asChild key={item.label}><Link href={item.href} className="flex items-center gap-3 rounded-xl px-2 py-2.5 transition hover:bg-white">{content}</Link></SheetClose>;
+            })}
+          </nav>
+          <div className="absolute inset-x-4 bottom-5 rounded-xl border border-[#073B9A]/10 bg-white p-3 text-xs text-slate-500"><span className="font-bold text-[#073B9A]">Service ouvert</span><span className="mt-1 block">{service.title}</span></div>
+        </SheetContent>
+      </Sheet>
+      <div className="min-w-0"><span className="block text-[10px] font-black tracking-[.16em] text-[#073B9A]">DRC GOUV</span><span className="block truncate text-sm font-bold text-slate-700">{service.title}</span></div>
+    </div>
     <header className="flex flex-wrap items-start justify-between gap-4 rounded-3xl bg-white p-5 shadow-sm ring-1 ring-[#073B9A]/10 sm:p-7"><div className="flex min-w-0 items-start gap-4"><span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-[#edf3ff]"><service.Icon size={36}/></span><div><span className="text-[11px] font-black tracking-[.16em] text-[#073B9A]">KENZ · DRC GOUV</span><h1 className="mt-1 text-2xl font-black sm:text-3xl">{service.title}</h1><p className="mt-2 max-w-2xl text-sm leading-5 text-slate-600">{service.subtitle}</p></div></div><a href={service.officialUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-[#073B9A] px-4 py-3 text-sm font-extrabold text-white">{service.officialLabel}<ArrowUpRight size={17}/></a></header>
     <section className="mt-4 flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-5 text-amber-950"><Info size={21} className="mt-0.5 shrink-0"/><div><strong>Parcours officiel</strong><p className="mt-1">{service.note}</p></div></section>
 
