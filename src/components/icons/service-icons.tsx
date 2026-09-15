@@ -295,6 +295,76 @@ export const TaxIcon = ({ className, size = 24 }: IconProps) => (
   </svg>
 );
 
+// DRC Gouv - icons reserved for public financial services inside Kenz.
+export const DrcDgiIcon = ({ className, size = 24 }: IconProps) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={cn('', className)}>
+    <path d="M9 41V17L24 7L39 17V41H9Z" fill="#073B9A"/><path d="M6 18H42" stroke="#F51B2B" strokeWidth="4" strokeLinecap="round"/><path d="M15 22V35M24 22V35M33 22V35" stroke="#fff" strokeWidth="3" strokeLinecap="round"/><path d="M8 41H40" stroke="#073B9A" strokeWidth="5" strokeLinecap="round"/><circle cx="38" cy="10" r="6" fill="#F51B2B"/><path d="M38 7V13M35 10H41" stroke="#fff" strokeWidth="2" strokeLinecap="round"/>
+  </svg>
+);
+
+export const DrcCustomsIcon = ({ className, size = 24 }: IconProps) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={cn('', className)}>
+    <path d="M7 19L24 9L41 19V39H7V19Z" fill="#073B9A"/><path d="M4 20H44" stroke="#F51B2B" strokeWidth="4" strokeLinecap="round"/><path d="M16 24H32M16 30H28" stroke="#fff" strokeWidth="3" strokeLinecap="round"/><path d="M24 4V12M20 8H28" stroke="#F51B2B" strokeWidth="3" strokeLinecap="round"/><path d="M35 31L38 34L43 27" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+export const DrcRevenueIcon = ({ className, size = 24 }: IconProps) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={cn('', className)}>
+    <rect x="8" y="8" width="32" height="34" rx="5" fill="#073B9A"/><path d="M15 18H33M15 25H27M15 32H24" stroke="#fff" strokeWidth="3" strokeLinecap="round"/><circle cx="35" cy="35" r="8" fill="#F51B2B"/><path d="M35 30V40M31 33H38" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"/>
+  </svg>
+);
+
+export const DrcProvinceIcon = ({ className, size = 24 }: IconProps) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={cn('', className)}>
+    <path d="M8 10L22 5L39 12L35 25L42 35L28 43L17 37L6 28L11 20L8 10Z" fill="#eaf2ff" stroke="#073B9A" strokeWidth="3" strokeLinejoin="round"/><path d="M24 13C19.6 13 16 16.5 16 21C16 27.5 24 35 24 35C24 35 32 27.5 32 21C32 16.5 28.4 13 24 13Z" fill="#F51B2B"/><circle cx="24" cy="21" r="3" fill="#fff"/>
+  </svg>
+);
+
+export const DrcTradeIcon = ({ className, size = 24 }: IconProps) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={cn('', className)}>
+    <path d="M6 20H33V38H6V20Z" fill="#073B9A"/><path d="M6 25H33M15 20V38M24 20V38" stroke="#fff" strokeWidth="2" strokeOpacity=".7"/><path d="M33 25H39L43 30V38H33V25Z" fill="#F51B2B"/><circle cx="15" cy="40" r="4" fill="#073B9A" stroke="#fff" strokeWidth="2"/><circle cx="36" cy="40" r="4" fill="#073B9A" stroke="#fff" strokeWidth="2"/><path d="M29 8H42M38 4L42 8L38 12" stroke="#F51B2B" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+export const DrcMinistryIcon = ({ className, size = 24 }: IconProps) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={cn('', className)}>
+    <path d="M7 19L24 8L41 19H7Z" fill="#F51B2B"/><path d="M10 20H38V40H10V20Z" fill="#073B9A"/><path d="M16 24V35M24 24V35M32 24V35" stroke="#fff" strokeWidth="3" strokeLinecap="round"/><path d="M6 41H42" stroke="#073B9A" strokeWidth="5" strokeLinecap="round"/><circle cx="24" cy="5" r="3" fill="#F51B2B"/>
+  </svg>
+);
+
+export const DrcTaxFileIcon = ({ className, size = 24 }: IconProps) => (
+  <svg className={className} width={size} height={size} viewBox="0 0 48 48" fill="none" aria-hidden="true">
+    <path d="M11 5h18l9 9v28H11V5Z" fill="#EAF1FF" stroke="#073B9A" strokeWidth="2.5" strokeLinejoin="round" />
+    <path d="M29 5v10h9M17 23h15M17 29h15M17 35h9" stroke="#073B9A" strokeWidth="2.5" strokeLinecap="round" />
+    <path d="m31 34 3 3 7-8" stroke="#F51B2B" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+export const DrcTaxPaymentIcon = ({ className, size = 24 }: IconProps) => (
+  <svg className={className} width={size} height={size} viewBox="0 0 48 48" fill="none" aria-hidden="true">
+    <rect x="5" y="10" width="38" height="28" rx="7" fill="#EAF1FF" stroke="#073B9A" strokeWidth="2.5" />
+    <path d="M5 18h38" stroke="#073B9A" strokeWidth="2.5" />
+    <path d="M13 29h10" stroke="#073B9A" strokeWidth="3" strokeLinecap="round" />
+    <circle cx="34" cy="29" r="4" fill="#F51B2B" />
+  </svg>
+);
+
+export const DrcTaxHistoryIcon = ({ className, size = 24 }: IconProps) => (
+  <svg className={className} width={size} height={size} viewBox="0 0 48 48" fill="none" aria-hidden="true">
+    <path d="M8 12h31v29H8z" fill="#EAF1FF" stroke="#073B9A" strokeWidth="2.5" strokeLinejoin="round" />
+    <path d="M15 20h17M15 26h17M15 32h10" stroke="#073B9A" strokeWidth="2.5" strokeLinecap="round" />
+    <path d="M13 6h24v6H13z" fill="#F51B2B" />
+  </svg>
+);
+
+export const DrcTaxIdIcon = ({ className, size = 24 }: IconProps) => (
+  <svg className={className} width={size} height={size} viewBox="0 0 48 48" fill="none" aria-hidden="true">
+    <rect x="5" y="9" width="38" height="30" rx="7" fill="#EAF1FF" stroke="#073B9A" strokeWidth="2.5" />
+    <circle cx="17" cy="22" r="5" fill="#073B9A" />
+    <path d="M9 34c1-5 4-7 8-7s7 2 8 7M29 20h9M29 26h9M29 32h6" stroke="#F51B2B" strokeWidth="2.5" strokeLinecap="round" />
+  </svg>
+);
+
 // Yango - Voiture stylisée
 export const YangoIcon = ({ className, size = 24 }: IconProps) => (
   <svg
