@@ -14,7 +14,7 @@ import { useAuth } from '@/hooks/useAuth';
 interface PinVerificationProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (pin?: string) => void;
   purpose?: 'payment' | 'balance' | 'facepaie';
   paymentDetails?: {
     recipient: string;
@@ -165,11 +165,12 @@ export function PinVerification({ isOpen, onClose, onSuccess, purpose = 'payment
       });
 
       setHasPin(true);
+      const verifiedPin = pin;
       setPin('');
       setConfirmPin('');
-      
+
       setTimeout(() => {
-        onSuccess();
+        onSuccess(verifiedPin);
       }, 500);
     } catch (error) {
       console.error('Erreur création PIN:', error);
@@ -220,11 +221,12 @@ export function PinVerification({ isOpen, onClose, onSuccess, purpose = 'payment
           className: 'bg-primary text-white border-none',
         });
         
+        const verifiedPin = pin;
         setPin('');
         setAttempts(0);
         
         setTimeout(() => {
-          onSuccess();
+          onSuccess(verifiedPin);
         }, 500);
       } else {
         const newAttempts = attempts + 1;

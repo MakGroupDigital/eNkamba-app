@@ -20,6 +20,7 @@ import {
   Fingerprint,
   FileCheck2,
   FileText,
+  GraduationCap,
   KeyRound,
   Landmark,
   Layers3,
@@ -460,6 +461,12 @@ export default function AdminDashboardPage() {
                 Demandes business
               </Link>
             </Button>
+            <Button asChild variant="outline" className="gap-2">
+              <Link href="/admin/education-accounts">
+                <GraduationCap className="h-4 w-4" />
+                Dossiers Éducation
+              </Link>
+            </Button>
           </div>
         </header>
 
@@ -699,6 +706,12 @@ export default function AdminDashboardPage() {
                 <Button asChild variant="outline" className="justify-between">
                   <Link href="/admin/business-requests">
                     Valider les comptes entreprise
+                    <ChevronRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" className="justify-between">
+                  <Link href="/admin/education-accounts">
+                    Valider les établissements Éducation
                     <ChevronRight className="h-4 w-4" />
                   </Link>
                 </Button>

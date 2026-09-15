@@ -3,6 +3,7 @@ import { BUSINESS_PORTAL_ORIGIN, BUSINESS_ROUTE_ROOTS } from './src/lib/business
 
 const nextConfig: NextConfig = {
   /* config options here */
+  distDir: process.env.NEXT_DIST_DIR || '.next',
   // Mode serveur pour Capacitor - charge depuis URL de production
   // output: 'export', // Désactivé car incompatible avec les routes API
   trailingSlash: true,
