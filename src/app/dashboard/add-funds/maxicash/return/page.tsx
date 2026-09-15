@@ -16,7 +16,7 @@ function PaymentReturnContent() {
   const userId = params?.get('userId') || '';
   const transactionId = params?.get('transactionId') || '';
   const brand = params?.get('brand') === 'maxicash' ? 'maxicash' : 'enkambapay';
-  const displayName = brand === 'maxicash' ? 'MaxiCash' : 'eNkambaPay';
+  const displayName = brand === 'maxicash' ? 'MaxiCash' : 'Kenz Pay';
 
   useEffect(() => {
     const finalize = async () => {
@@ -45,17 +45,17 @@ function PaymentReturnContent() {
   }, [displayName, params, status, transactionId, userId]);
 
   const icon =
-    state === 'loading' ? <Loader2 className="h-14 w-14 animate-spin text-[#009058]" /> :
-    state === 'completed' ? <CheckCircle2 className="h-14 w-14 text-[#009058]" /> :
+    state === 'loading' ? <Loader2 className="h-14 w-14 animate-spin text-[#073B9A]" /> :
+    state === 'completed' ? <CheckCircle2 className="h-14 w-14 text-[#073B9A]" /> :
     <AlertCircle className="h-14 w-14 text-red-600" />;
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-[#009058]/5 to-background p-4">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-[#073B9A]/5 to-background p-4">
       <Card className="w-full max-w-md">
         <CardContent className="space-y-6 p-6 text-center">
           <div className="flex items-center justify-center gap-2">
-            {brand === 'enkambapay' && <Image src="/enkamba-logo.png" alt="" width={34} height={34} className="h-9 w-9 object-contain" />}
-            <span className="text-lg font-semibold text-[#009058]">{displayName}</span>
+            {brand === 'enkambapay' && <Image src="/kenz-logo.png" alt="" width={34} height={34} className="h-9 w-9 object-contain" />}
+            <span className="text-lg font-semibold text-[#073B9A]">{displayName}</span>
           </div>
           <div className="flex justify-center">{icon}</div>
           <div>
@@ -70,7 +70,7 @@ function PaymentReturnContent() {
                   : 'Le paiement a été annulé, refusé ou reste non confirmé.'}
             </p>
           </div>
-          <Button className="w-full bg-[#009058] hover:bg-[#009058]" onClick={() => router.push('/dashboard/wallet')}>
+          <Button className="w-full bg-[#073B9A] hover:bg-[#073B9A]" onClick={() => router.push('/dashboard/wallet')}>
             Retour au portefeuille
           </Button>
         </CardContent>
@@ -81,7 +81,7 @@ function PaymentReturnContent() {
 
 export default function PaymentReturnPage() {
   return (
-    <Suspense fallback={<div className="grid min-h-screen place-items-center"><Loader2 className="h-8 w-8 animate-spin text-[#009058]" /></div>}>
+    <Suspense fallback={<div className="grid min-h-screen place-items-center"><Loader2 className="h-8 w-8 animate-spin text-[#073B9A]" /></div>}>
       <PaymentReturnContent />
     </Suspense>
   );

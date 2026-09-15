@@ -13,7 +13,7 @@ const faqs = [
     category: "Compte",
     questions: [
       {
-        q: "Comment créer un compte eNkamba ?",
+        q: "Comment créer un compte Kenz ?",
         a: "Pour créer un compte, rendez-vous sur la page d'inscription et remplissez le formulaire avec vos informations. Vous pouvez ensuite compléter la vérification KYC de manière optionnelle pour des fonctionnalités avancées.",
       },
       {
@@ -31,7 +31,7 @@ const faqs = [
       },
       {
         q: "Quelles devises sont supportées ?",
-        a: "eNkamba supporte toutes les devises principales, avec conversion automatique. Les devises principales sont CDF, USD et EUR.",
+        a: "Kenz supporte toutes les devises principales, avec conversion automatique. Les devises principales sont CDF, USD et EUR.",
       },
     ],
   },
@@ -40,7 +40,7 @@ const faqs = [
     questions: [
       {
         q: "Mon compte est-il sécurisé ?",
-        a: "Oui, eNkamba utilise un chiffrement de niveau bancaire et des protocoles de sécurité avancés pour protéger vos données et transactions.",
+        a: "Oui, Kenz utilise un chiffrement de niveau bancaire et des protocoles de sécurité avancés pour protéger vos données et transactions.",
       },
       {
         q: "Comment activer l'authentification à deux facteurs ?",

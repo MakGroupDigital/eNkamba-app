@@ -246,7 +246,7 @@ export default function InsurancePage() {
       company: selectedCompany,
       offer: selectedOffer,
       customer,
-      paymentMethod: 'eNkambaPay Wallet',
+      paymentMethod: 'Kenz Pay Wallet',
     };
 
     setReceipt(newReceipt);
@@ -323,7 +323,7 @@ export default function InsurancePage() {
     : [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-[#009058]/5 to-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-[#073B9A]/5 to-background">
       <div className="container mx-auto max-w-4xl p-4 space-y-6 animate-in fade-in duration-500">
         <header className="flex items-center gap-4 pt-4">
           <Button variant="ghost" size="icon" asChild>
@@ -332,7 +332,7 @@ export default function InsurancePage() {
             </Link>
           </Button>
           <div className="flex-1">
-            <h1 className="font-headline text-2xl font-bold bg-gradient-to-r from-[#009058] to-[#009058] bg-clip-text text-transparent">
+            <h1 className="font-headline text-2xl font-bold bg-gradient-to-r from-[#073B9A] to-[#073B9A] bg-clip-text text-transparent">
               Assurance
             </h1>
             <p className="text-sm text-muted-foreground">Souscrivez à une assurance en quelques clics</p>
@@ -520,14 +520,14 @@ export default function InsurancePage() {
         {step === 'receipt' && receipt && (
           <div className="space-y-6">
             <div ref={receiptRef} className="bg-white rounded-2xl shadow-2xl overflow-hidden">
-              <div className="bg-gradient-to-r from-[#009058] to-[#009058] p-6 text-white">
+              <div className="bg-gradient-to-r from-[#073B9A] to-[#073B9A] p-6 text-white">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
-                      <Image src="/enkamba-logo.png" alt="eNkamba" width={32} height={32} />
+                      <Image src="/kenz-logo.png" alt="Kenz" width={32} height={32} />
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold">eNkambaPay</h2>
+                      <h2 className="text-2xl font-bold">Kenz Pay</h2>
                       <p className="text-sm opacity-90">Reçu d'assurance</p>
                     </div>
                   </div>
@@ -625,7 +625,7 @@ export default function InsurancePage() {
                     Ce reçu confirme votre souscription. Vous recevrez votre police d'assurance par email.
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    eNkambaPay © {new Date().getFullYear()} - Tous droits réservés
+                    Kenz Pay © {new Date().getFullYear()} - Tous droits réservés
                   </p>
                 </div>
               </div>

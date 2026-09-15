@@ -200,7 +200,7 @@ export async function POST(request: NextRequest) {
           Devise: currency as 'CDF' | 'USD',
           Action: 'C2B', // Collection (client vers business)
           MobileMoney: normalizedPhone,
-          Motif: motif || 'Dépôt portefeuille eNkamba'
+          Motif: motif || 'Dépôt portefeuille Kenz'
         };
 
         // Exécution de la transaction WonyaPay

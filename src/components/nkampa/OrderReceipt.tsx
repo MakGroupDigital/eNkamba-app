@@ -66,7 +66,7 @@ export function OrderReceipt({ order, onClose, primaryActionLabel, onPrimaryActi
 
         if (navigator.share && navigator.canShare({ files: [file] })) {
           await navigator.share({
-            title: 'Reçu de commande eNkamba',
+            title: 'Reçu de commande Kenz',
             text: `Reçu de commande - ${order.orderId}`,
             files: [file],
           });
@@ -91,15 +91,15 @@ export function OrderReceipt({ order, onClose, primaryActionLabel, onPrimaryActi
               <div className="flex min-w-0 items-center gap-3">
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white sm:h-12 sm:w-12">
                   <Image
-                    src="/enkamba-logo.png"
-                    alt="eNkamba"
+                    src="/kenz-logo.png"
+                    alt="Kenz"
                     width={40}
                     height={40}
                     className="object-contain"
                   />
                 </div>
                 <div className="min-w-0">
-                  <h2 className="truncate text-xl font-black sm:text-2xl">eNkamba Shop</h2>
+                  <h2 className="truncate text-xl font-black sm:text-2xl">Kenz Shop</h2>
                   <p className="text-sm opacity-90">Reçu de commande</p>
                 </div>
               </div>
@@ -246,7 +246,7 @@ export function OrderReceipt({ order, onClose, primaryActionLabel, onPrimaryActi
           {/* Footer */}
           <div className="bg-gray-50 p-4 text-center sm:p-6">
             <p className="text-xs text-muted-foreground">
-              Merci pour votre achat sur eNkamba Shop
+              Merci pour votre achat sur Kenz Shop
             </p>
             <p className="text-xs text-muted-foreground mt-1">
               Pour toute question, contactez le vendeur via la messagerie
@@ -275,7 +275,7 @@ export function OrderReceipt({ order, onClose, primaryActionLabel, onPrimaryActi
           {primaryActionLabel && onPrimaryAction && (
             <Button
               onClick={onPrimaryAction}
-              className="col-span-2 min-w-0 flex-1 bg-[#FFA500]/100 text-xs hover:bg-[#FFA500] sm:col-span-1 sm:text-sm"
+              className="col-span-2 min-w-0 flex-1 bg-[#F51B2B]/100 text-xs hover:bg-[#F51B2B] sm:col-span-1 sm:text-sm"
             >
               {primaryActionLabel}
             </Button>

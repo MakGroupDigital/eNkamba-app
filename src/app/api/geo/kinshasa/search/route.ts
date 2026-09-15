@@ -121,7 +121,7 @@ export async function GET(request: NextRequest) {
     const response = await fetch(url, {
       headers: {
         Accept: 'application/json',
-        'User-Agent': 'eNkamba Ugavi geocoder contact@enkamba.app',
+        'User-Agent': 'Kenz Ugavi geocoder contact@enkamba.app',
       },
       next: { revalidate: 86400 },
     });

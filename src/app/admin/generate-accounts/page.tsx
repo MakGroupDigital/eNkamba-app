@@ -51,7 +51,7 @@ export default function GenerateAccountsPage() {
     <div className="container mx-auto p-8 max-w-4xl">
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Générer les Numéros de Compte eNkamba</CardTitle>
+          <CardTitle className="text-2xl">Générer les Numéros de Compte Kenz</CardTitle>
           <p className="text-muted-foreground">
             Cette page permet de générer automatiquement les numéros de compte (accountNumber) 
             pour tous les utilisateurs qui n'en ont pas encore.
@@ -81,7 +81,7 @@ export default function GenerateAccountsPage() {
               onClick={handleGenerate}
               disabled={isGenerating}
               size="lg"
-              className="bg-[#009058] hover:bg-[#009058] gap-2"
+              className="bg-[#073B9A] hover:bg-[#073B9A] gap-2"
             >
               {isGenerating ? (
                 <>

@@ -223,7 +223,7 @@ export function useContactsImport() {
 
       toast({
         title: 'Import réussi',
-        description: `${imported} contacts importés, ${matched} sur eNkamba`,
+        description: `${imported} contacts importés, ${matched} sur Kenz`,
         className: 'bg-primary text-white border-none',
       });
 

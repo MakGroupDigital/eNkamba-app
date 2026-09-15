@@ -253,7 +253,7 @@ export async function processWonyaPayTransaction(
         Devise: payload.Devise,
         Action: payload.Action,
         MobileMoney: payload.MobileMoney,
-        Motif: payload.Motif || 'Transaction eNkamba'
+        Motif: payload.Motif || 'Transaction Kenz'
       });
 
       const response = await fetch(`${config.baseUrl}/payment`, {

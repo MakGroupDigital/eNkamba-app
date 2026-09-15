@@ -359,7 +359,7 @@ export default function EditProfilePage() {
               />
               {calculatedAge !== null && calculatedAge < ENKAMBA_MINIMUM_AGE && (
                 <p className="text-xs font-semibold text-red-600">
-                  L’accès eNkamba est réservé aux utilisateurs de {ENKAMBA_MINIMUM_AGE} ans ou plus.
+                  L’accès Kenz est réservé aux utilisateurs de {ENKAMBA_MINIMUM_AGE} ans ou plus.
                 </p>
               )}
             </div>

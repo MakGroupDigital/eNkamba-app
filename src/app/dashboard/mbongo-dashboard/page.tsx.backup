@@ -54,7 +54,7 @@ export default function MbongoDashboard() {
     if (profile?.uid) {
       const hash = profile.uid.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
       const accountNum = `ENK${String(hash).padStart(12, '0')}`;
-      const fullName = profile.name || profile.fullName || 'eNkamba User';
+      const fullName = profile.name || profile.fullName || 'Kenz User';
       const email = profile.email || '';
       
       setAccountNumber(accountNum);
@@ -70,7 +70,7 @@ export default function MbongoDashboard() {
           light: '#ffffff',
         },
       }).then((qrImageUrl) => {
-        // Ajouter le logo officiel eNkamba au centre du QR code
+        // Ajouter le logo officiel Kenz au centre du QR code
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
@@ -102,7 +102,7 @@ export default function MbongoDashboard() {
             const finalQrCode = canvas.toDataURL();
             setQrCode(finalQrCode);
           };
-          logoImg.src = '/enkamba-logo.png';
+          logoImg.src = '/kenz-logo.png';
         };
         qrImage.src = qrImageUrl;
       });
@@ -125,8 +125,8 @@ export default function MbongoDashboard() {
       
       if (navigator.share) {
         await navigator.share({
-          title: 'Mon QR Code eNkamba',
-          text: `Mon compte eNkamba: ${accountNumber}`,
+          title: 'Mon QR Code Kenz',
+          text: `Mon compte Kenz: ${accountNumber}`,
           files: [file],
         });
       } else {

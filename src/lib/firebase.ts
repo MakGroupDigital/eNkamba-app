@@ -1,4 +1,4 @@
-import { initializeApp } from "firebase/app";
+import { getApp, getApps, initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getFunctions } from "firebase/functions";
@@ -13,8 +13,9 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:60114170881:web:7805087264e18745ef3c00",
 };
 
-// Initialize Firebase app (singleton)
-export const app = initializeApp(firebaseConfig);
+// Reuse the default app when a server route already loaded Firebase in the same process.
+// This keeps Next.js route collection from attempting a second default initialization.
+export const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
 // Firebase Auth instance
 export const auth = getAuth(app);

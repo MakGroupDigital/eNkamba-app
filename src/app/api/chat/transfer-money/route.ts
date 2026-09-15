@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
       
       if (!resolvedUser) {
         return NextResponse.json(
-          { message: 'Destinataire non trouvé. Vérifiez le numéro de téléphone, email ou numéro eNkamba.' },
+          { message: 'Destinataire non trouvé. Vérifiez le numéro de téléphone, email ou numéro Kenz.' },
           { status: 404 }
         );
       }

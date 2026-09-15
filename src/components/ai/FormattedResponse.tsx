@@ -119,7 +119,7 @@ export function FormattedResponse({
 
   const handleExportExcel = () => {
     const ws = XLSX.utils.aoa_to_sheet([
-      ['eNkamba AI Response'],
+      ['Kenz AI Response'],
       [],
       ...displayedContent.split('\n').map((line) => [line]),
     ]);

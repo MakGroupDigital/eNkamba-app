@@ -59,7 +59,7 @@ function normalizeActivity(id: string, data: any): LiveUserPoint | null {
   return {
     id,
     userId: String(data.userId || data.uid || id),
-    userName: String(data.userName || data.displayName || data.userEmail || 'Utilisateur eNkamba'),
+    userName: String(data.userName || data.displayName || data.userEmail || 'Utilisateur Kenz'),
     userEmail: data.userEmail || data.email || null,
     module: data.module || null,
     path: data.path || null,
@@ -241,18 +241,18 @@ export function GlobalSurveillanceMap() {
     <section className="overflow-hidden rounded-[8px] border border-primary/10 bg-white text-slate-950 shadow-sm">
       <div className="space-y-4 p-4">
         <header className="grid gap-3 lg:grid-cols-[1fr_auto] lg:items-start">
-          <div className="rounded-[8px] border border-primary/10 bg-[#F7FAF8] p-4">
+          <div className="rounded-[8px] border border-primary/10 bg-[#FFFFFF] p-4">
             <div className="flex flex-wrap items-center gap-2">
               <Badge className="bg-primary hover:bg-primary">
                 <Globe2 className="mr-1 h-3.5 w-3.5" />
                 Carte live
               </Badge>
-              <Badge className={streamStatus === 'connecte' ? 'bg-primary hover:bg-primary' : streamStatus === 'erreur' ? 'bg-red-500 hover:bg-red-500' : 'bg-[#FFA500] hover:bg-[#FFA500]'}>
+              <Badge className={streamStatus === 'connecte' ? 'bg-primary hover:bg-primary' : streamStatus === 'erreur' ? 'bg-red-500 hover:bg-red-500' : 'bg-[#F51B2B] hover:bg-[#F51B2B]'}>
                 {streamStatus}
               </Badge>
             </div>
 
-            <h2 className="mt-3 font-headline text-2xl font-black md:text-3xl">Centre d'administration global eNkamba</h2>
+            <h2 className="mt-3 font-headline text-2xl font-black md:text-3xl">Centre d'administration global Kenz</h2>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">Centre de contrôle GPS en temps réel.</p>
           </div>
 
@@ -262,8 +262,8 @@ export function GlobalSurveillanceMap() {
               <p className="mt-1 text-2xl font-black">{points.length}</p>
               <p className="text-[11px] font-semibold text-slate-500">connectés</p>
             </div>
-            <div className="rounded-[8px] border border-[#FFA500]/25 bg-[#FFA500]/10 p-3">
-              <Activity className="h-5 w-5 text-[#FFA500]" />
+            <div className="rounded-[8px] border border-[#F51B2B]/25 bg-[#F51B2B]/10 p-3">
+              <Activity className="h-5 w-5 text-[#F51B2B]" />
               <p className="mt-1 text-2xl font-black">{moduleStats.length}</p>
               <p className="text-[11px] font-semibold text-slate-500">modules</p>
             </div>
@@ -276,7 +276,7 @@ export function GlobalSurveillanceMap() {
         </header>
 
         <div className="relative min-h-[620px] overflow-hidden rounded-[8px] border border-primary/10 bg-white">
-          <div ref={mapContainerRef} className="absolute inset-0 z-0 bg-[#F7FAF8]" />
+          <div ref={mapContainerRef} className="absolute inset-0 z-0 bg-[#FFFFFF]" />
           <div className="pointer-events-none absolute inset-0 z-10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0)_60%)]" />
           <div className="absolute left-4 top-4 z-20 rounded-full border border-primary/10 bg-white/95 px-4 py-2 text-sm font-black text-primary shadow-lg shadow-primary/10">
             {points.length} connectés
@@ -298,7 +298,7 @@ export function GlobalSurveillanceMap() {
         </div>
 
         <div className="grid gap-4 lg:grid-cols-[1fr_1.25fr]">
-          <aside className="rounded-[8px] border border-primary/10 bg-[#F7FAF8] p-4">
+          <aside className="rounded-[8px] border border-primary/10 bg-[#FFFFFF] p-4">
             <div className="mb-3 flex items-center justify-between">
               <p className="text-sm font-black">Modules actifs</p>
               <Wifi className="h-4 w-4 text-primary" />
@@ -320,13 +320,13 @@ export function GlobalSurveillanceMap() {
                     <MapPin className="h-4 w-4 shrink-0 text-primary" />
                     <span className="truncate font-semibold">{module}</span>
                   </span>
-                  <Badge className="bg-[#FFA500]/15 text-[#FFA500] hover:bg-[#FFA500]/15">{count}</Badge>
+                  <Badge className="bg-[#F51B2B]/15 text-[#F51B2B] hover:bg-[#F51B2B]/15">{count}</Badge>
                 </button>
               ))}
             </div>
           </aside>
 
-          <aside className="rounded-[8px] border border-primary/10 bg-[#F7FAF8] p-4">
+          <aside className="rounded-[8px] border border-primary/10 bg-[#FFFFFF] p-4">
             <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
               <div className="min-w-0">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Utilisateur sélectionné</p>
@@ -373,7 +373,7 @@ export function GlobalSurveillanceMap() {
           </aside>
         </div>
 
-        <div className="rounded-[8px] border border-primary/10 bg-[#F7FAF8] px-4 py-3 text-center text-xs font-semibold text-slate-500">
+        <div className="rounded-[8px] border border-primary/10 bg-[#FFFFFF] px-4 py-3 text-center text-xs font-semibold text-slate-500">
           Survolez un point pour voir le nom. Cliquez pour ouvrir le profil utilisateur.
         </div>
       </div>

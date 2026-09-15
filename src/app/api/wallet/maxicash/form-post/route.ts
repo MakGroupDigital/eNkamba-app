@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     const email = String(formData.get('email') || '');
     const brand = String(formData.get('brand') || 'enkambapay') === 'maxicash' ? 'maxicash' : 'enkambapay';
     const isMaxiCashBrand = brand === 'maxicash';
-    const displayName = isMaxiCashBrand ? 'MaxiCash' : 'eNkambaPay';
+    const displayName = isMaxiCashBrand ? 'MaxiCash' : 'Kenz Pay';
 
     if (!userId || !amount || amount <= 0) {
       return new NextResponse(`Paramètres ${displayName} invalides.`, { status: 400 });
@@ -159,20 +159,20 @@ export async function POST(request: NextRequest) {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Ouverture ${escapeHtml(displayName)}</title>
     <style>
-      body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:0;min-height:100vh;display:grid;place-items:center;background:#f7fbf9;color:#009058}
-      .box{width:min(420px,calc(100vw - 32px));border:1px solid #d7eee4;border-radius:12px;background:#fff;padding:24px;text-align:center;box-shadow:0 12px 30px rgba(11,110,79,.08)}
+      body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:0;min-height:100vh;display:grid;place-items:center;background:#FFFFFF;color:#073B9A}
+      .box{width:min(420px,calc(100vw - 32px));border:1px solid #DCE6F8;border-radius:12px;background:#fff;padding:24px;text-align:center;box-shadow:0 12px 30px rgba(11,110,79,.08)}
       .brand{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px}
       .brand img{width:42px;height:42px;object-fit:contain}
       .brand strong{font-size:22px}
-      .spinner{width:34px;height:34px;border:4px solid #d7eee4;border-top-color:#009058;border-radius:50%;margin:0 auto 16px;animation:spin .9s linear infinite}
+      .spinner{width:34px;height:34px;border:4px solid #DCE6F8;border-top-color:#073B9A;border-radius:50%;margin:0 auto 16px;animation:spin .9s linear infinite}
       @keyframes spin{to{transform:rotate(360deg)}}
-      button{margin-top:14px;border:0;border-radius:8px;background:#009058;color:white;font-weight:700;padding:10px 14px}
+      button{margin-top:14px;border:0;border-radius:8px;background:#073B9A;color:white;font-weight:700;padding:10px 14px}
     </style>
   </head>
   <body>
     <div class="box">
       <div class="brand">
-        ${isMaxiCashBrand ? '' : '<img src="/enkamba-logo.png" alt="">'}
+        ${isMaxiCashBrand ? '' : '<img src="/kenz-logo.png" alt="">'}
         <strong>${escapeHtml(displayName)}</strong>
       </div>
       <div class="spinner"></div>

@@ -6,20 +6,20 @@
 
 @layer base {
   :root {
-    --enkamba-primary-green: #009058;
-    --enkamba-active-green: #009058;
-    --enkamba-card-green: #009058;
-    --enkamba-accent-green: #009058;
-    --enkamba-orange: #FFA500;
-    --enkamba-soft-green-bg: #E8F6F1;
-    --enkamba-page-bg: #FCFDFC;
-    --enkamba-text-primary: #1B2026;
-    --enkamba-text-secondary: #477063;
-    --enkamba-border-light: #E9F0ED;
+    --enkamba-primary-green: #073B9A;
+    --enkamba-active-green: #073B9A;
+    --enkamba-card-green: #073B9A;
+    --enkamba-accent-green: #073B9A;
+    --enkamba-orange: #F51B2B;
+    --enkamba-soft-green-bg: #F2F6FF;
+    --enkamba-page-bg: #FFFFFF;
+    --enkamba-text-primary: #10223F;
+    --enkamba-text-secondary: #475569;
+    --enkamba-border-light: #DCE6F8;
     --enkamba-white: #FFFFFF;
-    --enkamba-gradient-card-header: linear-gradient(135deg, #009058 0%, #009058 55%, #009058 100%);
-    --enkamba-gradient-round-button: linear-gradient(145deg, #009058 0%, #009058 70%, #009058 100%);
-    --enkamba-gradient-ai-button: linear-gradient(145deg, #009058 0%, #009058 100%);
+    --enkamba-gradient-card-header: #073B9A;
+    --enkamba-gradient-round-button: #073B9A;
+    --enkamba-gradient-ai-button: #073B9A;
     --enkamba-font-family: Inter, Poppins, Roboto, sans-serif;
     --enkamba-title-size: 22px;
     --enkamba-section-title-size: 14px;
@@ -30,7 +30,7 @@
     --enkamba-weight-normal: 500;
     --enkamba-card-radius: 18px;
     --enkamba-small-card-radius: 10px;
-    --enkamba-card-shadow: 0 6px 18px rgba(0,144,88, 0.16);
+    --enkamba-card-shadow: 0 6px 18px rgba(7, 59, 154, 0.16);
     --enkamba-service-card-shadow: 0 3px 12px rgba(27, 32, 38, 0.08);
     --enkamba-top-action-container: 72px;
     --enkamba-top-action-icon: 34px;
@@ -43,74 +43,74 @@
     --enkamba-ai-letter: 32px;
     --enkamba-ai-badge: 22px;
 
-    --background: 120 20% 99%; /* #FCFDFC */
-    --foreground: 213 17% 13%; /* #1B2026 */
+    --background: 0 0% 100%; /* #FFFFFF */
+    --foreground: 218 60% 16%; /* #10223F */
     --card: 0 0% 100%; /* #FFFFFF */
-    --card-foreground: 213 17% 13%;
+    --card-foreground: 218 60% 16%;
     --popover: 0 0% 100%;
-    --popover-foreground: 213 17% 13%;
-    --primary: 157 100% 28%; /* #009058 */
+    --popover-foreground: 218 60% 16%;
+    --primary: 219 91% 32%; /* #073B9A */
     --primary-foreground: 0 0% 100%;
-    --secondary: 159 44% 94%; /* #E8F6F1 */
-    --secondary-foreground: 213 17% 13%;
-    --muted: 159 44% 94%;
-    --muted-foreground: 161 22% 36%; /* #477063 */
-    --accent: 157 100% 28%; /* #009058 */
+    --secondary: 220 100% 97%; /* #F2F6FF */
+    --secondary-foreground: 218 60% 16%;
+    --muted: 220 100% 97%;
+    --muted-foreground: 215 19% 35%; /* #475569 */
+    --accent: 356 92% 53%; /* #F51B2B */
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 154 19% 93%; /* #E9F0ED */
-    --input: 154 19% 93%;
-    --ring: 157 100% 28%;
-    --chart-1: 157 100% 28%;
-    --chart-2: 157 100% 28%;
-    --chart-3: 157 100% 28%;
-    --chart-4: 157 100% 28%;
-    --chart-5: 161 22% 36%;
+    --border: 216 56% 92%; /* #DCE6F8 */
+    --input: 216 56% 92%;
+    --ring: 219 91% 32%;
+    --chart-1: 219 91% 32%;
+    --chart-2: 356 92% 53%;
+    --chart-3: 219 91% 32%;
+    --chart-4: 356 92% 53%;
+    --chart-5: 215 19% 35%;
     --radius: 1.125rem;
-    --sidebar-background: 120 20% 99%;
-    --sidebar-foreground: 213 17% 13%;
-    --sidebar-primary: 157 100% 28%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 218 60% 16%;
+    --sidebar-primary: 219 91% 32%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 159 44% 94%;
-    --sidebar-accent-foreground: 157 100% 28%;
-    --sidebar-border: 154 19% 93%;
-    --sidebar-ring: 157 100% 28%;
+    --sidebar-accent: 220 100% 97%;
+    --sidebar-accent-foreground: 219 91% 32%;
+    --sidebar-border: 216 56% 92%;
+    --sidebar-ring: 219 91% 32%;
   }
  
   .dark {
-    --background: 159 48% 9%;
+    --background: 219 80% 10%;
     --foreground: 0 0% 100%;
-    --card: 159 42% 12%;
+    --card: 219 63% 14%;
     --card-foreground: 0 0% 100%;
-    --popover: 159 48% 9%;
+    --popover: 219 80% 10%;
     --popover-foreground: 0 0% 100%;
-    --primary: 157 100% 28%;
+    --primary: 219 91% 48%;
     --primary-foreground: 0 0% 100%;
     --secondary: 240 4% 16%;
     --secondary-foreground: 0 0% 98%;
     --muted: 240 4% 16%;
-    --muted-foreground: 150 10% 78%;
-    --accent: 157 100% 28%;
+    --muted-foreground: 215 28% 78%;
+    --accent: 356 92% 58%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
     --border: 240 4% 16%;
     --input: 240 4% 16%;
-    --ring: 157 100% 28%;
-    --chart-1: 157 100% 28%;
-    --chart-2: 157 100% 28%;
-    --chart-3: 157 100% 28%;
-    --chart-4: 157 100% 28%;
-    --chart-5: 161 22% 36%;
-    --sidebar-background: 240 5.9% 10%;
+    --ring: 219 91% 48%;
+    --chart-1: 219 91% 48%;
+    --chart-2: 356 92% 58%;
+    --chart-3: 219 91% 48%;
+    --chart-4: 356 92% 58%;
+    --chart-5: 215 28% 78%;
+    --sidebar-background: 219 80% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 157 100% 28%;
+    --sidebar-primary: 219 91% 48%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 240 3.7% 15.9%;
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 157 100% 28%;
+    --sidebar-ring: 219 91% 48%;
   }
 }
  
@@ -255,7 +255,7 @@
   .text-zinc-500,
   .text-neutral-400,
   .text-neutral-500 {
-    color: hsl(161 22% 36%) !important;
+    color: hsl(215 19% 35%) !important;
   }
 
   .text-gray-600,
@@ -304,22 +304,22 @@
   width: 100%;
   height: 100%;
   font-family: var(--enkamba-font-family);
-  background: #F7FAF8;
+  background: #FFFFFF;
 }
 
 .leaflet-control-zoom {
   overflow: hidden;
-  border: 1px solid rgba(0, 144, 88, 0.14) !important;
+  border: 1px solid rgba(7, 59, 154, 0.14) !important;
   border-radius: 8px !important;
   background: rgba(255, 255, 255, 0.94) !important;
-  box-shadow: 0 18px 45px rgba(0, 144, 88, 0.12) !important;
+  box-shadow: 0 18px 45px rgba(7, 59, 154, 0.12) !important;
   backdrop-filter: blur(16px);
 }
 
 .leaflet-control-zoom a {
   border: 0 !important;
   background: transparent !important;
-  color: #009058 !important;
+  color: #073B9A !important;
 }
 
 .leaflet-control-attribution {
@@ -330,7 +330,7 @@
 }
 
 .leaflet-control-attribution a {
-  color: #009058 !important;
+  color: #073B9A !important;
 }
 
 .enkamba-live-marker {
@@ -354,32 +354,32 @@
   height: 13px;
   width: 13px;
   border: 2px solid white;
-  background: #009058;
-  box-shadow: 0 0 0 4px rgba(0, 144, 88, 0.22), 0 0 26px rgba(0, 144, 88, 0.9);
+  background: #073B9A;
+  box-shadow: 0 0 0 4px rgba(7, 59, 154, 0.22), 0 0 26px rgba(7, 59, 154, 0.9);
 }
 
 .enkamba-live-marker__pulse {
   height: 13px;
   width: 13px;
-  background: rgba(0, 144, 88, 0.44);
+  background: rgba(7, 59, 154, 0.44);
   animation: enkamba-admin-pulse 1.75s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
 
 .enkamba-live-marker--active .enkamba-live-marker__dot {
-  background: #FFA500;
-  box-shadow: 0 0 0 5px rgba(255, 165, 0, 0.24), 0 0 30px rgba(255, 165, 0, 0.92);
+  background: #F51B2B;
+  box-shadow: 0 0 0 5px rgba(245, 27, 43, 0.24), 0 0 30px rgba(245, 27, 43, 0.92);
 }
 
 .enkamba-live-marker--active .enkamba-live-marker__pulse {
-  background: rgba(255, 165, 0, 0.48);
+  background: rgba(245, 27, 43, 0.48);
 }
 
 .enkamba-admin-leaflet-popup .leaflet-popup-content-wrapper {
   overflow: hidden;
-  border: 1px solid rgba(0, 144, 88, 0.14);
+  border: 1px solid rgba(7, 59, 154, 0.14);
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 24px 60px rgba(0, 144, 88, 0.18);
+  box-shadow: 0 24px 60px rgba(7, 59, 154, 0.18);
   color: #1B2026;
   backdrop-filter: blur(18px);
 }
@@ -410,7 +410,7 @@
   flex-shrink: 0;
   place-items: center;
   border-radius: 9999px;
-  background: #009058;
+  background: #073B9A;
   color: white;
   font-weight: 900;
 }
@@ -428,7 +428,7 @@
 }
 
 .enkamba-admin-popup__name:hover {
-  color: #FFA500;
+  color: #F51B2B;
 }
 
 .enkamba-admin-popup p {
@@ -468,3 +468,41 @@
 .animate-shimmer {
   animation: shimmer 2s infinite;
 }
+
+/* DRC Gouv: government financial services portal. */
+.drc-gouv-hero {
+  position: relative;
+  display: grid;
+  min-height: 262px;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 28px;
+  overflow: hidden;
+  padding: 32px 36px;
+  border: 1px solid rgba(7, 59, 154, 0.12);
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 14px 32px rgba(7, 59, 154, 0.08);
+}
+.drc-gouv-hero::after {
+  position: absolute;
+  right: -70px;
+  bottom: -110px;
+  width: 310px;
+  height: 210px;
+  border: 18px solid #f51b2b;
+  border-top-color: #f5c400;
+  border-left-color: transparent;
+  border-radius: 50%;
+  content: '';
+  transform: rotate(-17deg);
+}
+.drc-gouv-kicker { display: block; color: #073b9a; font-size: 11px; font-weight: 900; letter-spacing: .16em; }
+.drc-gouv-hero h1 { max-width: 570px; margin: 9px 0 8px; color: #071e55; font-size: clamp(26px, 3.6vw, 42px); font-weight: 900; letter-spacing: 0; line-height: 1.12; }
+.drc-gouv-hero > div > p { max-width: 560px; color: #526b96; font-size: 15px; font-weight: 600; line-height: 1.5; }
+.drc-gouv-province { position: relative; z-index: 2; display: grid; grid-template-columns: 24px minmax(130px, .8fr) minmax(180px, 1fr); align-items: center; gap: 11px; max-width: 630px; margin-top: 22px; padding: 11px 14px; border: 1px solid rgba(7, 59, 154, .12); border-radius: 12px; background: #fff; }.drc-gouv-province > svg { color: #073b9a; }.drc-gouv-province strong,.drc-gouv-province small { display: block; }.drc-gouv-province strong { color: #071e55; font-size: 12px; font-weight: 850; }.drc-gouv-province small { margin-top: 2px; color: #61779d; font-size: 10px; line-height: 1.3; }.drc-gouv-province select { min-width: 0; height: 39px; padding: 0 10px; border: 1px solid rgba(7, 59, 154, .14); border-radius: 9px; background: #f8faff; color: #073b9a; font-size: 12px; font-weight: 750; outline-color: #073b9a; }
+.drc-gouv-map { position: relative; min-height: 190px; z-index: 1; align-self: center; border: 2px solid #87b8ff; clip-path: polygon(12% 19%, 31% 4%, 52% 11%, 74% 2%, 91% 22%, 82% 44%, 94% 66%, 69% 86%, 50% 79%, 30% 94%, 8% 75%, 17% 52%, 3% 35%); background: #edf5ff; }.drc-gouv-map-grid { position: absolute; inset: 0; background-image: linear-gradient(28deg,transparent 48%,#6ea7f555 49%,#6ea7f555 51%,transparent 52%),linear-gradient(130deg,transparent 48%,#6ea7f555 49%,#6ea7f555 51%,transparent 52%); background-size: 90px 72px; }.drc-gouv-node { position: absolute; display: grid; width: 45px; height: 45px; place-items: center; border: 3px solid #fff; border-radius: 50%; background: #073b9a; box-shadow: 0 5px 12px #073b9a35; color: #fff; }.drc-gouv-node svg { width: 22px; }.drc-gouv-node.one { top: 21%; left: 31%; }.drc-gouv-node.two { top: 18%; right: 27%; background: #f5c400; }.drc-gouv-node.three { bottom: 22%; left: 38%; background: #0a69d8; }.drc-gouv-node.four { right: 18%; bottom: 17%; background: #f51b2b; }
+.drc-gouv-stat { display: grid; min-height: 112px; grid-template-columns: 46px 1fr; gap: 2px 12px; align-items: center; padding: 17px; border: 1px solid rgba(7, 59, 154, .1); border-radius: 16px; background: #fff; box-shadow: 0 7px 17px rgba(7, 59, 154, .05); }.drc-gouv-stat > svg { grid-row: span 2; width: 43px; height: 43px; padding: 10px; border-radius: 13px; background: #edf4ff; color: #073b9a; }.drc-gouv-stat:nth-child(2) > svg { background: #fff7dc; color: #cd9300; }.drc-gouv-stat:nth-child(4) > svg { background: #fff0f2; color: #f51b2b; }.drc-gouv-stat span { align-self: end; color: #60769c; font-size: 11px; font-weight: 700; }.drc-gouv-stat strong { align-self: start; color: #071e55; font-size: 27px; font-weight: 900; }
+.drc-gouv-administration { min-height: 162px; display: grid; grid-template-rows: auto 1fr; align-content: start; gap: 12px; padding: 17px; border: 1px solid rgba(7, 59, 154, .1); border-radius: 17px; background: #fff; text-align: left; transition: transform .18s, box-shadow .18s, border-color .18s; }.drc-gouv-administration:hover { border-color: #073b9a; box-shadow: 0 12px 23px rgba(7,59,154,.11); transform: translateY(-2px); }.drc-gouv-administration .drc-gouv-icon { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 12px; background: #edf4ff; color: #073b9a; }.drc-gouv-administration .drc-gouv-icon svg { width: 25px; }.drc-gouv-administration > span:nth-child(2) strong,.drc-gouv-administration > span:nth-child(2) small { display: block; }.drc-gouv-administration strong { color: #071e55; font-size: 14px; font-weight: 900; }.drc-gouv-administration small { min-height: 30px; margin-top: 4px; color: #61779d; font-size: 10px; font-weight: 650; line-height: 1.38; }.drc-gouv-administration > svg { align-self: end; justify-self: end; color: #073b9a; }
+.drc-gouv-import { padding: 25px; border: 1px solid rgba(7, 59, 154, .1); border-radius: 20px; background: linear-gradient(135deg, #fff 0%, #eef5ff 100%); box-shadow: 0 8px 19px rgba(7,59,154,.06); }.drc-gouv-import h2 { margin: 7px 0 5px; font-size: 25px; font-weight: 900; }.drc-gouv-import p { max-width: 520px; color: #60769c; font-size: 13px; font-weight: 600; line-height: 1.45; }.drc-gouv-import-steps { display: flex; align-items: center; justify-content: space-between; gap: 9px; margin-top: 22px; padding: 13px; border-radius: 12px; background: #fff; color: #49628b; font-size: 11px; font-weight: 750; }.drc-gouv-import-steps span { display: inline-flex; align-items: center; gap: 7px; }.drc-gouv-import-steps b { width: 21px; height: 21px; display: grid; place-items: center; border-radius: 50%; background: #073b9a; color: #fff; font-size: 10px; }.drc-gouv-import-steps > svg { width: 16px; color: #8ba4ca; }
+.drc-gouv-essential { width: 100%; display: grid; grid-template-columns: 34px minmax(0, 1fr) 18px; align-items: center; gap: 11px; padding: 12px 0; text-align: left; }.drc-gouv-essential:hover strong { color: #073b9a; }.drc-gouv-essential .drc-gouv-icon { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 9px; background: #edf4ff; color: #073b9a; }.drc-gouv-essential .drc-gouv-icon svg { width: 18px; }.drc-gouv-essential strong,.drc-gouv-essential small { display: block; }.drc-gouv-essential strong { color: #071e55; font-size: 12px; font-weight: 850; }.drc-gouv-essential small { margin-top: 2px; color: #687da0; font-size: 10px; font-weight: 600; line-height: 1.25; }.drc-gouv-essential > svg { width: 17px; color: #073b9a; }
+@media (max-width: 760px) { .drc-gouv-hero { min-height: 0; grid-template-columns: 1fr; padding: 25px 20px; border-radius: 18px; }.drc-gouv-hero::after { width: 220px; height: 140px; right: -90px; bottom: -78px; border-width: 11px; }.drc-gouv-hero h1 { max-width: 290px; font-size: 29px; }.drc-gouv-hero > div > p { max-width: 310px; font-size: 13px; }.drc-gouv-province { grid-template-columns: 22px minmax(0,1fr); max-width: none; margin-top: 17px; }.drc-gouv-province select { grid-column: 1 / -1; }.drc-gouv-map { position: absolute; width: 145px; min-height: 118px; right: 8px; top: 30px; opacity: .55; }.drc-gouv-node { width: 31px; height: 31px; border-width: 2px; }.drc-gouv-node svg { width: 15px; }.drc-gouv-stat { min-height: 92px; grid-template-columns: 38px 1fr; padding: 12px; }.drc-gouv-stat > svg { width: 36px; height: 36px; padding: 8px; border-radius: 10px; }.drc-gouv-stat span { font-size: 9px; }.drc-gouv-stat strong { font-size: 22px; }.drc-gouv-administration { min-height: 137px; padding: 13px; border-radius: 14px; }.drc-gouv-administration small { min-height: 36px; font-size: 9px; }.drc-gouv-administration strong { font-size: 12px; }.drc-gouv-import { padding: 19px; }.drc-gouv-import h2 { font-size: 21px; }.drc-gouv-import-steps { align-items: flex-start; flex-direction: column; gap: 9px; }.drc-gouv-import-steps > svg { display: none; } }

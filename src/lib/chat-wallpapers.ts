@@ -32,33 +32,33 @@ function imageBackground(url: string) {
 export const CHAT_WALLPAPERS: ChatWallpaper[] = [
   {
     id: 'chatfond1',
-    label: 'Chat eNkamba',
+    label: 'Chat Kenz',
     previewClass: 'bg-[url("/chatfond1.jpeg")] bg-cover bg-center',
     backgroundImage: imageBackground('/chatfond1.jpeg'),
   },
   {
     id: 'fondchat',
-    label: 'eNkamba',
+    label: 'Kenz',
     previewClass: 'bg-[url("/fondchat.jpeg")] bg-cover bg-center',
     backgroundImage: imageBackground('/fondchat.jpeg'),
   },
   {
     id: 'clean',
     label: 'Clair',
-    previewClass: 'bg-[radial-gradient(circle_at_top,rgba(50,187,120,0.22),transparent_42%),linear-gradient(135deg,#ffffff,#f8fafc)]',
-    backgroundImage: 'radial-gradient(circle at top, rgba(50,187,120,0.16), transparent 42%), linear-gradient(135deg, #ffffff, #f8fafc)',
+    previewClass: 'bg-[radial-gradient(circle_at_top,rgba(7, 59, 154,0.22),transparent_42%),linear-gradient(135deg,#ffffff,#f8fafc)]',
+    backgroundImage: 'radial-gradient(circle at top, rgba(7, 59, 154,0.16), transparent 42%), linear-gradient(135deg, #ffffff, #f8fafc)',
   },
   {
     id: 'soft-primary',
-    label: 'Vert doux',
-    previewClass: 'bg-[linear-gradient(135deg,rgba(50,187,120,0.22),rgba(255,255,255,0.95))]',
-    backgroundImage: 'linear-gradient(135deg, rgba(50,187,120,0.18), rgba(255,255,255,0.94))',
+    label: 'Bleu doux',
+    previewClass: 'bg-[linear-gradient(135deg,rgba(7, 59, 154,0.22),rgba(255,255,255,0.95))]',
+    backgroundImage: 'linear-gradient(135deg, rgba(7, 59, 154,0.18), rgba(255,255,255,0.94))',
   },
   {
     id: 'dark-primary',
-    label: 'Vert nuit',
-    previewClass: 'bg-[radial-gradient(circle_at_top,rgba(50,187,120,0.42),transparent_45%),linear-gradient(135deg,#0b1710,#10231a)]',
-    backgroundImage: 'radial-gradient(circle at top, rgba(50,187,120,0.32), transparent 45%), linear-gradient(135deg, #0b1710, #10231a)',
+    label: 'Bleu nuit',
+    previewClass: 'bg-[radial-gradient(circle_at_top,rgba(7, 59, 154,0.42),transparent_45%),linear-gradient(135deg,#073B9A,#073B9A)]',
+    backgroundImage: 'radial-gradient(circle at top, rgba(7, 59, 154,0.32), transparent 45%), linear-gradient(135deg, #073B9A, #073B9A)',
   },
 ];
 

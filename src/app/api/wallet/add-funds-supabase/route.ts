@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
           Devise: currency as 'CDF' | 'USD',
           Action: 'C2B', // Collection (client vers business)
           MobileMoney: normalizedPhone,
-          Motif: motif || 'Dépôt portefeuille eNkamba (Supabase)'
+          Motif: motif || 'Dépôt portefeuille Kenz (Supabase)'
         };
 
         // Créer d'abord une transaction pending

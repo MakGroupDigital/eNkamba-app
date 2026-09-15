@@ -42,6 +42,7 @@ import { addDoc, arrayUnion, collection, doc, getDocs, limit, onSnapshot, query,
 import { db } from '@/lib/firebase';
 import { uploadToCloudinary } from '@/lib/cloudinary-upload';
 import { useDashboardLocation } from '@/hooks/useDashboardLocation';
+import { KenzDataLoader } from '@/components/shared/kenz-data-loader';
 import {
   UGAVI_STATUS_LABELS,
   UGAVI_SCAN_LABELS,
@@ -449,8 +450,8 @@ export function LogisticsDashboard({ businessUser }: LogisticsDashboardProps) {
   ];
 
   return (
-    <div className="min-h-screen bg-[#f7fbf9] pb-24 text-slate-950">
-      <div className="sticky top-0 z-30 bg-primary text-white shadow-[0_14px_34px_rgba(50,187,120,0.28)]">
+    <div className="min-h-screen bg-[#FFFFFF] pb-24 text-slate-950">
+      <div className="sticky top-0 z-30 bg-primary text-white shadow-[0_14px_34px_rgba(7, 59, 154,0.28)]">
         <div className="mx-auto flex h-16 max-w-5xl items-center justify-between gap-3 px-4">
           <button type="button" className="flex min-w-0 items-center gap-2 rounded-full bg-white/10 px-2.5 py-2 text-left ring-1 ring-white/12">
             <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/16">
@@ -569,7 +570,7 @@ function LogisticsSideDrawer({
       <aside
         className={`absolute left-0 top-0 flex h-full w-[min(88vw,390px)] flex-col overflow-hidden bg-white shadow-[26px_0_70px_rgba(15,23,42,0.18)] transition-transform duration-300 ${open ? 'translate-x-0' : '-translate-x-full'}`}
       >
-        <div className="h-1.5 bg-[linear-gradient(90deg,#009058_0%,#009058_42%,#f59e0b_72%,#e11d48_100%)]" />
+        <div className="h-1.5 bg-[linear-gradient(90deg,#073B9A_0%,#073B9A_42%,#f59e0b_72%,#e11d48_100%)]" />
 
         <header className="flex items-center justify-between gap-4 border-b border-slate-100 px-5 py-5">
           <div className="flex min-w-0 items-center gap-3">
@@ -658,7 +659,7 @@ function LogisticsHubCard({
             <UgaviIcon size={86} className="h-[86px] w-[86px]" />
           </div>
           <div className="min-w-0 pt-1">
-            <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#009058]">UGAVI BUSINESS</p>
+            <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#073B9A]">UGAVI BUSINESS</p>
             <h1 className="mt-1 line-clamp-2 text-[1.55rem] font-black leading-[1.05] tracking-tight text-white sm:text-3xl">
               {businessName || 'FIVE GOO Logistics Hub'}
             </h1>
@@ -669,7 +670,7 @@ function LogisticsHubCard({
           </div>
         </div>
         <span className="hidden shrink-0 items-center gap-2 rounded-2xl bg-white/10 px-3 py-2 text-sm font-black text-white ring-1 ring-white/12 sm:inline-flex">
-          <span className="h-2.5 w-2.5 rounded-full bg-[#009058]" />
+          <span className="h-2.5 w-2.5 rounded-full bg-[#073B9A]" />
           Hub actif
         </span>
       </div>
@@ -684,7 +685,7 @@ function LogisticsHubCard({
           Scanner QR
         </button>
         <span className="inline-flex items-center gap-2 rounded-2xl bg-white/10 px-3 py-2 text-xs font-bold text-white/85 ring-1 ring-white/12 sm:hidden">
-          <span className="h-2.5 w-2.5 rounded-full bg-[#009058]" />
+          <span className="h-2.5 w-2.5 rounded-full bg-[#073B9A]" />
           Hub actif
         </span>
       </div>
@@ -725,7 +726,7 @@ function LogisticsActionCard({
   onClick: () => void;
 }) {
   const tone = accent === 'orange'
-    ? 'bg-[#fff7ed] text-[#FFA500]'
+    ? 'bg-[#fff7ed] text-[#F51B2B]'
     : accent === 'slate'
       ? 'bg-slate-100 text-slate-700'
       : 'bg-primary/10 text-primary';
@@ -784,11 +785,11 @@ function generateBarcodeDataUrl(payload: string, label: string) {
     .map((bit, index) => {
       const width = bit === '1' ? 3 : 1;
       const x = 12 + index * 2;
-      return `<rect x="${x}" y="12" width="${width}" height="72" fill="#009058" />`;
+      return `<rect x="${x}" y="12" width="${width}" height="72" fill="#073B9A" />`;
     })
     .join('');
   const safeLabel = label.replace(/[<>&"]/g, '');
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="430" height="140" viewBox="0 0 430 140"><rect width="430" height="140" rx="16" fill="#ffffff"/><rect x="8" y="8" width="414" height="124" rx="12" fill="#009058" stroke="#009058"/>${bars}<text x="215" y="114" text-anchor="middle" font-family="monospace" font-size="18" font-weight="700" fill="#009058">${safeLabel}</text></svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="430" height="140" viewBox="0 0 430 140"><rect width="430" height="140" rx="16" fill="#ffffff"/><rect x="8" y="8" width="414" height="124" rx="12" fill="#073B9A" stroke="#073B9A"/>${bars}<text x="215" y="114" text-anchor="middle" font-family="monospace" font-size="18" font-weight="700" fill="#073B9A">${safeLabel}</text></svg>`;
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 
@@ -842,30 +843,30 @@ function buildMaritimeReceiptHtml(packageData: {
       <style>
         * { box-sizing: border-box; }
         body { margin: 0; padding: 24px; font-family: Arial, sans-serif; color: #0f172a; background: #f8fafc; }
-        .sheet { max-width: 860px; margin: 0 auto 22px; border: 1px solid #dbe7df; border-radius: 22px; background: #ffffff; overflow: hidden; }
-        .header { padding: 22px 26px; color: #ffffff; background: linear-gradient(135deg, #009058, #009058); }
+        .sheet { max-width: 860px; margin: 0 auto 22px; border: 1px solid #DCE6F8; border-radius: 22px; background: #ffffff; overflow: hidden; }
+        .header { padding: 22px 26px; color: #ffffff; background: linear-gradient(135deg, #073B9A, #073B9A); }
         .header h1 { margin: 0; font-size: 24px; letter-spacing: .02em; }
         .header p { margin: 7px 0 0; font-size: 13px; opacity: .9; }
         .content { padding: 22px 26px; }
         .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
         .box { border: 1px solid #e2e8f0; border-radius: 16px; padding: 14px; background: #fff; }
-        .box h2 { margin: 0 0 10px; font-size: 13px; color: #009058; text-transform: uppercase; letter-spacing: .08em; }
+        .box h2 { margin: 0 0 10px; font-size: 13px; color: #073B9A; text-transform: uppercase; letter-spacing: .08em; }
         .line { margin: 6px 0; font-size: 12px; line-height: 1.45; }
         .line strong { color: #111827; }
         table { width: 100%; border-collapse: collapse; font-size: 12px; }
         td { padding: 9px 10px; border-bottom: 1px solid #e2e8f0; }
-        td:last-child { text-align: right; font-weight: 800; color: #009058; }
-        .total td { background: #009058; font-size: 13px; font-weight: 900; }
+        td:last-child { text-align: right; font-weight: 800; color: #073B9A; }
+        .total td { background: #073B9A; font-size: 13px; font-weight: 900; }
         .signatures { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 18px; }
         .signature { min-height: 70px; border: 1px dashed #94a3b8; border-radius: 14px; padding: 10px; font-size: 11px; color: #475569; }
         .label-sheet { max-width: 560px; }
-        .label-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px; color: #ffffff; background: #009058; }
+        .label-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px; color: #ffffff; background: #073B9A; }
         .tracking { font-family: monospace; font-size: 18px; font-weight: 900; }
         .code-grid { display: grid; grid-template-columns: 170px 1fr; gap: 14px; align-items: center; }
         .qr { width: 160px; height: 160px; border: 1px solid #e2e8f0; border-radius: 16px; padding: 8px; background: #fff; }
         .barcode { width: 100%; max-height: 110px; object-fit: contain; border: 1px solid #e2e8f0; border-radius: 14px; padding: 8px; background: #fff; }
         .marks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
-        .mark { border: 1px solid #009058; border-radius: 12px; background: #009058; padding: 8px; font-size: 11px; font-weight: 800; color: #009058; }
+        .mark { border: 1px solid #073B9A; border-radius: 12px; background: #073B9A; padding: 8px; font-size: 11px; font-weight: 800; color: #073B9A; }
         .note { margin-top: 14px; border-radius: 14px; background: #f8fafc; padding: 12px; font-size: 11px; line-height: 1.5; color: #475569; }
         @media print {
           body { padding: 0; background: #fff; }
@@ -1384,7 +1385,7 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
       const qrCodeUrl = await (QRCode as any).toDataURL(qrPayload, {
         margin: 1,
         width: 220,
-        color: { dark: '#009058', light: '#ffffff' },
+        color: { dark: '#073B9A', light: '#ffffff' },
       });
 
       const requestDoc = await addDoc(collection(db, 'ugaviRequests'), {
@@ -1744,7 +1745,7 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
             <MetricCard label="Poids facture" value={`${quote.chargeableWeight.toFixed(2)} kg`} />
           </div>
 
-          <div className="rounded-2xl border border-[#FFA500]/20 bg-[#FFA500]/10 p-4">
+          <div className="rounded-2xl border border-[#F51B2B]/20 bg-[#F51B2B]/10 p-4">
             <div className="grid gap-3 md:grid-cols-3">
               <SelectField label="Devise facture" value={billingCurrency} onChange={setBillingCurrency} options={CURRENCIES.map((item) => ({ value: item, label: item }))} />
               <MetricCard label="Methode tarifaire" value={selectedTransport.method} />
@@ -1904,7 +1905,7 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
                 <button
                   type="button"
                   onClick={() => void openCamera()}
-                  className="mt-2 w-full rounded-xl bg-[#FFA500]/10 px-3 py-2 text-sm font-bold text-[#FFA500]"
+                  className="mt-2 w-full rounded-xl bg-[#F51B2B]/10 px-3 py-2 text-sm font-bold text-[#F51B2B]"
                 >
                   Reprendre la photo
                 </button>
@@ -1956,8 +1957,8 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
                   Telecharger QR
                 </button>
               </div>
-              <div className="rounded-xl border border-[#FFA500]/20 bg-white p-3 text-center">
-                <p className="mb-2 text-xs font-bold uppercase tracking-[0.14em] text-[#FFA500]">Code-barres</p>
+              <div className="rounded-xl border border-[#F51B2B]/20 bg-white p-3 text-center">
+                <p className="mb-2 text-xs font-bold uppercase tracking-[0.14em] text-[#F51B2B]">Code-barres</p>
                 <img
                   src={registeredPackage.barcodeUrl}
                   alt={`Barcode ${registeredPackage.trackingNumber}`}
@@ -1966,7 +1967,7 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
                 <button
                   type="button"
                   onClick={() => downloadDataUrl(registeredPackage.barcodeUrl, `${registeredPackage.trackingNumber}-barcode.svg`)}
-                  className="mt-3 w-full rounded-xl bg-[#FFA500]/10 px-3 py-2 text-xs font-bold text-[#FFA500]"
+                  className="mt-3 w-full rounded-xl bg-[#F51B2B]/10 px-3 py-2 text-xs font-bold text-[#F51B2B]"
                 >
                   Telecharger barcode
                 </button>
@@ -1983,7 +1984,7 @@ function AgencyPackageRegistration({ businessUser }: { businessUser: BusinessUse
               <button
                 type="button"
                 onClick={() => downloadPackageLabel(registeredPackage)}
-                className="rounded-xl bg-[#FFA500]/100 px-3 py-2 text-sm font-bold text-white"
+                className="rounded-xl bg-[#F51B2B]/100 px-3 py-2 text-sm font-bold text-white"
               >
                 Telecharger
               </button>
@@ -2174,7 +2175,7 @@ function LogisticsKpiCard({
   note: string;
   tone: 'green' | 'orange';
 }) {
-  const color = tone === 'orange' ? 'bg-[#fff7ed] text-[#FFA500]' : 'bg-primary/10 text-primary';
+  const color = tone === 'orange' ? 'bg-[#fff7ed] text-[#F51B2B]' : 'bg-primary/10 text-primary';
 
   return (
     <article className="min-h-[7.1rem] rounded-[1.25rem] bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.06)] ring-1 ring-slate-100">
@@ -2185,7 +2186,7 @@ function LogisticsKpiCard({
         <div className="min-w-0">
           <p className="line-clamp-2 text-xs font-bold leading-tight text-slate-700">{label}</p>
           <p className="mt-1 text-2xl font-black leading-tight text-slate-950">{value}</p>
-          <p className={`mt-1 text-xs font-bold ${tone === 'orange' ? 'text-[#FFA500]' : 'text-primary'}`}>{note}</p>
+          <p className={`mt-1 text-xs font-bold ${tone === 'orange' ? 'text-[#F51B2B]' : 'text-primary'}`}>{note}</p>
         </div>
       </div>
     </article>
@@ -2201,7 +2202,7 @@ function LogisticsRecentShipmentRow({ shipment }: { shipment: AgencyShipment }) 
       onClick={() => window.open(`/dashboard/ugavi/tracking?tracking=${encodeURIComponent(shipment.trackingNumber)}`, '_blank')}
       className="grid w-full grid-cols-[3rem_1fr_auto_auto] items-center gap-3 px-4 py-3 text-left transition hover:bg-slate-50"
     >
-      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[#fff7ed] text-[#FFA500]">
+      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[#fff7ed] text-[#F51B2B]">
         <Box className="h-7 w-7" />
       </span>
       <span className="min-w-0">
@@ -2235,14 +2236,14 @@ function getShipmentStatusMeta(status: UgaviLogisticsStatus) {
   const meta: Record<string, { label: string; className: string; dot: string }> = {
     registered: { label: 'En entrepôt', className: 'bg-primary/10 text-primary', dot: 'bg-primary' },
     assigned: { label: 'Prêt pour expédition', className: 'bg-blue-50 text-blue-700', dot: 'bg-blue-500' },
-    in_transit: { label: 'En transit', className: 'bg-[#fff7ed] text-[#FFA500]', dot: 'bg-[#f59e0b]' },
+    in_transit: { label: 'En transit', className: 'bg-[#fff7ed] text-[#F51B2B]', dot: 'bg-[#f59e0b]' },
     arrived_depot: { label: 'Arrivé dépôt', className: 'bg-primary/10 text-primary', dot: 'bg-primary' },
     out_for_delivery: { label: 'En livraison', className: 'bg-blue-50 text-blue-700', dot: 'bg-blue-500' },
     delivered: { label: 'Livré', className: 'bg-primary/10 text-primary', dot: 'bg-primary' },
     returned: { label: 'Retourné', className: 'bg-red-50 text-red-700', dot: 'bg-red-500' },
     blocked: { label: 'Incident', className: 'bg-red-50 text-red-700', dot: 'bg-red-500' },
     draft: { label: 'Brouillon', className: 'bg-slate-100 text-slate-600', dot: 'bg-slate-400' },
-    pending_payment: { label: 'Paiement attendu', className: 'bg-[#fff7ed] text-[#FFA500]', dot: 'bg-[#f59e0b]' },
+    pending_payment: { label: 'Paiement attendu', className: 'bg-[#fff7ed] text-[#F51B2B]', dot: 'bg-[#f59e0b]' },
     paid: { label: 'Payé', className: 'bg-primary/10 text-primary', dot: 'bg-primary' },
   };
 
@@ -2529,7 +2530,7 @@ function LogisticsFleet({ title, emptyState, businessUser, mode = 'fleet' }: { t
               type="button"
               onClick={addResource}
               disabled={isSavingResource}
-              className="h-11 rounded-xl bg-[#FFA500]/100 px-4 text-sm font-bold text-white"
+              className="h-11 rounded-xl bg-[#F51B2B]/100 px-4 text-sm font-bold text-white"
             >
               {isSavingResource ? '...' : 'Valider'}
             </button>
@@ -2598,7 +2599,7 @@ function LogisticsFleet({ title, emptyState, businessUser, mode = 'fleet' }: { t
           type="button"
           onClick={showZoneForm ? saveZone : () => setShowZoneForm(true)}
           disabled={isSavingZone}
-          className="mt-5 w-full rounded-xl bg-[#FFA500]/100 px-4 py-2 text-sm font-bold text-white"
+          className="mt-5 w-full rounded-xl bg-[#F51B2B]/100 px-4 py-2 text-sm font-bold text-white"
         >
           {showZoneForm ? (isSavingZone ? 'Sauvegarde...' : 'Sauvegarder la zone') : 'Configurer la zone'}
         </button>
@@ -2707,8 +2708,8 @@ function LogisticsShipments({
       </div>
 
       {isLoading ? (
-        <div className="mt-5 rounded-2xl bg-slate-50 p-8 text-center text-sm text-slate-500">
-          Chargement des colis...
+        <div className="mt-5 rounded-2xl bg-slate-50 p-8">
+          <KenzDataLoader size="sm" label="Chargement des colis..." className="text-slate-600" />
         </div>
       ) : filteredShipments.length ? (
         <div className="mt-5 grid gap-3">
@@ -2749,7 +2750,7 @@ function LogisticsShipments({
                   <button
                     type="button"
                     onClick={() => window.open(`/dashboard/ugavi/tracking?tracking=${encodeURIComponent(shipment.trackingNumber)}`, '_blank')}
-                    className="h-11 rounded-xl bg-[#FFA500]/100 px-4 text-sm font-bold text-white"
+                    className="h-11 rounded-xl bg-[#F51B2B]/100 px-4 text-sm font-bold text-white"
                   >
                     Suivre
                   </button>
@@ -3014,7 +3015,7 @@ function RelayScanner({ title, description, businessUser }: { title: string; des
 
   return (
     <div className="grid gap-5 lg:grid-cols-[0.85fr_1.15fr]">
-      <div className="rounded-2xl bg-gradient-to-br from-primary to-[#FFA500] p-6 text-white shadow-sm">
+      <div className="rounded-2xl bg-gradient-to-br from-primary to-[#F51B2B] p-6 text-white shadow-sm">
         <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white/10">
           <UgaviShareIcon size={48} />
         </div>

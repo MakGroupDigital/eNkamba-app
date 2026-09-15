@@ -1,0 +1,4 @@
+[submodule "kenz business"]
+	path = kenz business
+	url = https://github.com/MakGroupDigital/enkambabusiness.git
+	branch = main

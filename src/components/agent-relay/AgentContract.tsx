@@ -12,11 +12,11 @@ interface AgentContractProps {
 
 const contracts = {
   'agent-relais': {
-    title: 'Contrat Agent Relais eNkamba-Pay',
+    title: 'Contrat Agent Relais Kenz-Pay',
     sections: [
       {
         title: '1. Objet du Contrat',
-        content: 'Le présent contrat définit les conditions dans lesquelles vous, en tant qu\'Agent Relais eNkamba-Pay, êtes autorisé à effectuer des transactions financières pour le compte de clients utilisant la plateforme eNkamba-Pay.'
+        content: 'Le présent contrat définit les conditions dans lesquelles vous, en tant qu\'Agent Relais Kenz-Pay, êtes autorisé à effectuer des transactions financières pour le compte de clients utilisant la plateforme Kenz-Pay.'
       },
       {
         title: '2. Obligations de l\'Agent Relais',
@@ -42,11 +42,11 @@ Les commissions sont créditées instantanément sur votre compte agent.`
 • La sécurité de votre code PIN et de vos identifiants
 • Toute transaction effectuée depuis votre compte
 • Les erreurs de manipulation lors des transactions
-• Le respect des limites de transaction définies par eNkamba`
+• Le respect des limites de transaction définies par Kenz`
       },
       {
         title: '5. Durée et Résiliation',
-        content: 'Ce contrat est conclu pour une durée indéterminée. Chaque partie peut y mettre fin moyennant un préavis de 30 jours. eNkamba se réserve le droit de suspendre ou résilier le contrat en cas de manquement grave aux obligations.'
+        content: 'Ce contrat est conclu pour une durée indéterminée. Chaque partie peut y mettre fin moyennant un préavis de 30 jours. Kenz se réserve le droit de suspendre ou résilier le contrat en cas de manquement grave aux obligations.'
       },
       {
         title: '6. Confidentialité',
@@ -55,17 +55,17 @@ Les commissions sont créditées instantanément sur votre compte agent.`
     ]
   },
   'cabinet': {
-    title: 'Contrat Cabiniste eNkamba-Pay',
+    title: 'Contrat Cabiniste Kenz-Pay',
     sections: [
       {
         title: '1. Objet du Contrat',
-        content: 'Le présent contrat définit les conditions dans lesquelles vous, en tant que Cabiniste eNkamba-Pay, êtes autorisé à gérer un point de vente fixe pour effectuer des transactions financières pour le compte de clients utilisant la plateforme eNkamba-Pay.'
+        content: 'Le présent contrat définit les conditions dans lesquelles vous, en tant que Cabiniste Kenz-Pay, êtes autorisé à gérer un point de vente fixe pour effectuer des transactions financières pour le compte de clients utilisant la plateforme Kenz-Pay.'
       },
       {
         title: '2. Obligations du Cabiniste',
         content: `Vous vous engagez à :
 • Maintenir un point de vente fixe et identifiable
-• Afficher clairement votre statut de Cabiniste eNkamba-Pay
+• Afficher clairement votre statut de Cabiniste Kenz-Pay
 • Disposer d'un espace d'accueil approprié pour les clients
 • Maintenir un niveau de liquidité élevé (minimum 500,000 FC)
 • Former et superviser tout personnel assistant
@@ -88,7 +88,7 @@ Les commissions sont créditées instantanément sur votre compte cabinet.`
 • Une connexion internet stable
 • Un système de sécurité adéquat
 • Un coffre-fort pour la gestion des liquidités
-• Une signalétique eNkamba-Pay visible`
+• Une signalétique Kenz-Pay visible`
       },
       {
         title: '5. Responsabilités',
@@ -101,23 +101,23 @@ Les commissions sont créditées instantanément sur votre compte cabinet.`
       },
       {
         title: '6. Durée et Résiliation',
-        content: 'Ce contrat est conclu pour une durée de 2 ans renouvelable. Résiliation possible avec préavis de 60 jours. eNkamba peut résilier immédiatement en cas de manquement grave.'
+        content: 'Ce contrat est conclu pour une durée de 2 ans renouvelable. Résiliation possible avec préavis de 60 jours. Kenz peut résilier immédiatement en cas de manquement grave.'
       }
     ]
   },
   'point-service': {
-    title: 'Contrat Point de Service eNkamba-Pay',
+    title: 'Contrat Point de Service Kenz-Pay',
     sections: [
       {
         title: '1. Objet du Contrat',
-        content: 'Le présent contrat définit les conditions dans lesquelles vous, en tant que Point de Service eNkamba-Pay, êtes autorisé à offrir des services eNkamba dans votre commerce existant.'
+        content: 'Le présent contrat définit les conditions dans lesquelles vous, en tant que Point de Service Kenz-Pay, êtes autorisé à offrir des services Kenz dans votre commerce existant.'
       },
       {
         title: '2. Obligations du Point de Service',
         content: `Vous vous engagez à :
-• Intégrer les services eNkamba dans votre commerce existant
-• Afficher la signalétique eNkamba-Pay
-• Former votre personnel aux procédures eNkamba
+• Intégrer les services Kenz dans votre commerce existant
+• Afficher la signalétique Kenz-Pay
+• Former votre personnel aux procédures Kenz
 • Maintenir un niveau de liquidité minimum (200,000 FC)
 • Respecter les procédures de sécurité
 • Effectuer les transactions avec professionnalisme`
@@ -133,7 +133,7 @@ Les commissions sont créditées instantanément.`
       },
       {
         title: '4. Intégration dans votre Commerce',
-        content: `eNkamba-Pay s'intègre facilement dans votre activité :
+        content: `Kenz-Pay s'intègre facilement dans votre activité :
 • Pas besoin de local dédié
 • Formation rapide de votre personnel
 • Support technique disponible 24/7
@@ -146,8 +146,8 @@ Les commissions sont créditées instantanément.`
 • La sécurité de vos identifiants
 • Les transactions effectuées depuis votre compte
 • La formation de votre personnel
-• Le respect des procédures eNkamba
-• La gestion de votre trésorerie eNkamba`
+• Le respect des procédures Kenz
+• La gestion de votre trésorerie Kenz`
       },
       {
         title: '6. Durée et Résiliation',
@@ -175,8 +175,8 @@ export function AgentContract({ agentType, onAccept, onClose }: AgentContractPro
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-[#009058]/10 flex items-center justify-center">
-              <FileText size={20} className="text-[#009058]" />
+            <div className="h-10 w-10 rounded-lg bg-[#073B9A]/10 flex items-center justify-center">
+              <FileText size={20} className="text-[#073B9A]" />
             </div>
             <h2 className="text-xl font-bold text-gray-800">{contract.title}</h2>
           </div>
@@ -216,8 +216,8 @@ export function AgentContract({ agentType, onAccept, onClose }: AgentContractPro
 
         {/* Footer */}
         <div className="p-6 border-t border-gray-200 space-y-3">
-          <div className="flex items-start gap-3 p-3 rounded-lg bg-[#009058]/10">
-            <FileText size={16} className="text-[#009058] mt-0.5 flex-shrink-0" />
+          <div className="flex items-start gap-3 p-3 rounded-lg bg-[#073B9A]/10">
+            <FileText size={16} className="text-[#073B9A] mt-0.5 flex-shrink-0" />
             <p className="text-xs text-gray-700">
               En acceptant ce contrat, vous confirmez avoir lu et compris l'ensemble des termes et conditions.
             </p>
@@ -236,7 +236,7 @@ export function AgentContract({ agentType, onAccept, onClose }: AgentContractPro
               disabled={!hasScrolledToBottom}
               className={`flex-1 h-12 rounded-xl ${
                 hasScrolledToBottom
-                  ? 'bg-[#009058] hover:bg-[#009058]'
+                  ? 'bg-[#073B9A] hover:bg-[#073B9A]'
                   : 'bg-gray-300 cursor-not-allowed'
               }`}
             >
