@@ -1,11 +1,11 @@
 {
-  "name": "eNkamba - La vie simplifiée et meilleure",
-  "short_name": "eNkamba",
+  "name": "Kenz - La vie simplifiée et meilleure",
+  "short_name": "Kenz",
   "description": "Écosystème digital tout-en-un : finance, e-commerce, logistique, messagerie et réseau social",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#009058",
-  "theme_color": "#009058",
+  "background_color": "#FFFFFF",
+  "theme_color": "#073B9A",
   "icons": [
     {
       "src": "/favicon.png",

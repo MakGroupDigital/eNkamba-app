@@ -16,7 +16,6 @@ import { usePathname } from "next/navigation";
 import { auth, db } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ResponsiveSplashBackground } from "@/components/shared/responsive-splash-background";
 import { hasNativeCallAccess } from "@/lib/native-call-access";
 
 const SESSION_PREFIX = "enkamba-user-pin-unlocked";
@@ -75,16 +74,16 @@ function randomChallenge(): Uint8Array {
 function getStoredUserLabel(user: User | null): string {
   if (user?.email) return user.email;
   if (user?.phoneNumber) return user.phoneNumber;
-  if (typeof window === "undefined") return "Utilisateur eNkamba";
+  if (typeof window === "undefined") return "Utilisateur Kenz";
 
   try {
     const storedUser = localStorage.getItem("enkamba_user");
     const parsed = storedUser ? JSON.parse(storedUser) : null;
     return (
-      parsed?.email || parsed?.phone || parsed?.name || "Utilisateur eNkamba"
+      parsed?.email || parsed?.phone || parsed?.name || "Utilisateur Kenz"
     );
   } catch {
-    return "Utilisateur eNkamba";
+    return "Utilisateur Kenz";
   }
 }
 
@@ -117,7 +116,7 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
     useState<BiometricRegistration | null>(null);
   const [hasAutoPromptedBiometric, setHasAutoPromptedBiometric] =
     useState(false);
-  const [userLabel, setUserLabel] = useState("Utilisateur eNkamba");
+  const [userLabel, setUserLabel] = useState("Utilisateur Kenz");
 
   const shouldSkipGate = useMemo(() => {
     return (
@@ -302,7 +301,7 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
       const credential = (await navigator.credentials.create({
         publicKey: {
           challenge: randomChallenge(),
-          rp: { name: "eNkamba" },
+          rp: { name: "Kenz" },
           user: {
             id: new TextEncoder().encode(user.uid),
             name: getStoredUserLabel(user),
@@ -443,17 +442,17 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
 
   return (
     <main className="relative isolate min-h-screen overflow-hidden px-4 py-8 text-foreground">
-      <ResponsiveSplashBackground />
+      <div className="absolute inset-0 bg-[#073B9A]" aria-hidden="true" />
       <section className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-md items-center justify-center">
         <div className="w-full">
           <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-primary p-5 shadow-[0_28px_90px_rgba(0,0,0,0.34)] sm:p-6">
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[radial-gradient(circle_at_20%_0%,rgba(255,165,0,0.22),transparent_34%),radial-gradient(circle_at_85%_0%,rgba(255,255,255,0.16),transparent_30%)]" />
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[radial-gradient(circle_at_20%_0%,rgba(245, 27, 43,0.22),transparent_34%),radial-gradient(circle_at_85%_0%,rgba(255,255,255,0.16),transparent_30%)]" />
 
             <div className="relative mb-5 flex items-center gap-3">
               <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full bg-primary shadow-lg ring-1 ring-white/45 [clip-path:circle(50%_at_50%_50%)]">
                 <Image
-                  src="/vraielogo.png"
-                  alt="eNkamba"
+                  src="/kenz-logo.png"
+                  alt="Kenz"
                   width={56}
                   height={56}
                   className="block h-full w-full rounded-full object-cover [clip-path:circle(50%_at_50%_50%)]"
@@ -467,7 +466,7 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
                 <p className="mt-1 text-sm font-medium text-white/76">
                   {isCreateMode
                     ? "Définissez un code personnel pour protéger votre espace."
-                    : "Confirmez votre identité pour ouvrir eNkamba."}
+                    : "Confirmez votre identité pour ouvrir Kenz."}
                 </p>
               </div>
             </div>
@@ -516,7 +515,7 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
                       maxLength={4}
                       onChange={(event) => handlePinInput(event.target.value)}
                       placeholder="••••"
-                      className="h-16 rounded-2xl border border-white/65 bg-white text-center text-3xl font-bold tracking-[0.5em] text-gray-950 shadow-inner shadow-black/5 placeholder:text-gray-300 focus:border-[#FFA500] focus:ring-0 focus-visible:ring-0 transition-colors"
+                      className="h-16 rounded-2xl border border-white/65 bg-white text-center text-3xl font-bold tracking-[0.5em] text-gray-950 shadow-inner shadow-black/5 placeholder:text-gray-300 focus:border-[#F51B2B] focus:ring-0 focus-visible:ring-0 transition-colors"
                       autoFocus
                     />
                     <button
@@ -553,7 +552,7 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
                           handleConfirmPinInput(event.target.value)
                         }
                         placeholder="••••"
-                        className="h-16 rounded-2xl border border-white/65 bg-white text-center text-3xl font-bold tracking-[0.5em] text-gray-950 shadow-inner shadow-black/5 placeholder:text-gray-300 focus:border-[#FFA500] focus:ring-0 focus-visible:ring-0 transition-colors"
+                        className="h-16 rounded-2xl border border-white/65 bg-white text-center text-3xl font-bold tracking-[0.5em] text-gray-950 shadow-inner shadow-black/5 placeholder:text-gray-300 focus:border-[#F51B2B] focus:ring-0 focus-visible:ring-0 transition-colors"
                       />
                     </div>
                     {pin.length === 4 &&
@@ -569,8 +568,8 @@ export function UserPinAccessGate({ children }: { children: React.ReactNode }) {
 
                 {/* Message d'erreur minimaliste */}
                 {message && (
-                  <div className="rounded-xl bg-[#FFA500]/10 border border-[#FFA500]/30 p-3 text-center">
-                    <p className="text-sm text-[#FFA500]">{message}</p>
+                  <div className="rounded-xl bg-[#F51B2B]/10 border border-[#F51B2B]/30 p-3 text-center">
+                    <p className="text-sm text-[#F51B2B]">{message}</p>
                   </div>
                 )}
 

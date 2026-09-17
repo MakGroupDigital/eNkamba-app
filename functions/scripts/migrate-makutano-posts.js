@@ -67,7 +67,7 @@ function buildTargetPayload(data, sourceName, sourceDocId) {
   const mediaUrl = pickMediaUrl(data);
   const mediaType = inferMediaType(data.mediaType || data.type, mediaUrl, data.mimeType);
   const category = normalizeCategory(data.category || data.section || data.tab);
-  const authorName = data.author?.name || data.authorName || data.userName || 'Utilisateur eNkamba';
+  const authorName = data.author?.name || data.authorName || data.userName || 'Utilisateur Kenz';
   const authorLocation = data.author?.location || data.authorLocation || data.location || 'RDC';
   const authorAvatar = data.author?.avatar || data.authorAvatar || data.avatar || '';
 

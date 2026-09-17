@@ -11,7 +11,7 @@ export const SELLERS_DATA: Record<string, any> = {
     rating: 4.8,
     reviews: 234,
     verified: true,
-    badge: 'Certifié eNKAMBA',
+    badge: 'Certifié KENZ',
     phone: '+243 XXX XXX XXX',
     email: 'contact@kasang.cd',
     description: 'Kasang Elektronique est le leader en vente d\'électronique en RDC. Nous proposons les meilleurs produits avec garantie et service après-vente.',
@@ -30,7 +30,7 @@ export const SELLERS_DATA: Record<string, any> = {
     rating: 4.7,
     reviews: 156,
     verified: true,
-    badge: 'Certifié eNKAMBA',
+    badge: 'Certifié KENZ',
     phone: '+243 XXX XXX XXX',
     email: 'contact@goma.cd',
     description: 'Grossiste spécialisé dans la distribution de produits alimentaires et électroniques.',
@@ -78,7 +78,7 @@ export const PRODUCTS_DATA: Record<string, any> = {
     shipping: [
       { name: 'Enkamba Livraison', days: '3-4 jours', icon: '🚚', verified: true },
       { name: 'Diaspora Express', days: '5-7 jours', icon: '✈️', verified: true },
-      { name: 'eNKAMBA Logistics', days: '5-7 jours', icon: '🚢', verified: true },
+      { name: 'KENZ Logistics', days: '5-7 jours', icon: '🚢', verified: true },
     ],
     paymentMethods: [
       { name: 'eKAMBA Pay', icon: '💳' },

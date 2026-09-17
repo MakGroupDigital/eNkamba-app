@@ -45,7 +45,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useNkampaCart } from '@/hooks/useNkampaCart';
 import { useWalletBalance } from '@/hooks/useWalletBalance';
 import { FloatingCart } from '@/components/nkampa/FloatingCart';
-import { useNkampaStore } from '@/hooks/useNkampaStore';
 import { useNkampaStores } from '@/hooks/useNkampaStores';
 
 // Catégories principales avec icônes modernes
@@ -131,7 +130,7 @@ const PRODUCER_SUBCATEGORIES: SubcategoryOption[] = [
 const NKAMPA_IMAGE_PLACEHOLDER =
   'data:image/svg+xml;charset=utf-8,' +
   encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#009058"/><stop offset="1" stop-color="#009058"/></linearGradient></defs><rect width="900" height="420" fill="url(#g)"/><circle cx="720" cy="70" r="180" fill="#fff" opacity=".12"/><circle cx="120" cy="360" r="150" fill="#FFA500" opacity=".22"/></svg>`
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#073B9A"/><stop offset="1" stop-color="#073B9A"/></linearGradient></defs><rect width="900" height="420" fill="url(#g)"/><circle cx="720" cy="70" r="180" fill="#fff" opacity=".12"/><circle cx="120" cy="360" r="150" fill="#F51B2B" opacity=".22"/></svg>`
   );
 
 function optimizeMarketplaceImage(src?: string, width = 420, height = 420) {
@@ -184,7 +183,7 @@ type MarketplaceFilter = 'all' | 'verified' | 'delivery' | 'top' | 'bulk' | 'dea
 const MARKETPLACE_FILTERS: Array<{ id: MarketplaceFilter; label: string }> = [
   { id: 'all', label: 'Tout' },
   { id: 'verified', label: 'Vendeurs vérifiés' },
-  { id: 'delivery', label: 'Livraison eNKAMBA' },
+  { id: 'delivery', label: 'Livraison KENZ' },
   { id: 'top', label: 'Top ventes' },
   { id: 'bulk', label: 'Prix en gros' },
   { id: 'deals', label: 'Promotions' },
@@ -232,7 +231,7 @@ function hasDeliverySignal(product: any) {
 }
 
 function getDeliveryLabel(product: any) {
-  return product?.deliveryTime || product?.deliveryDelay || product?.estimatedDelivery || 'Livraison eNKAMBA';
+  return product?.deliveryTime || product?.deliveryDelay || product?.estimatedDelivery || 'Livraison KENZ';
 }
 
 function isProductFromVerifiedStore(product: any, verifiedStoreKeys: Set<string>) {
@@ -537,7 +536,6 @@ export default function NkampaPage() {
   const { stores: publicStores } = useNkampaStores({ statuses: ['active', 'approved'] });
   const { balance, isLoading: balanceLoading } = useWalletBalance();
   const { cart, isOpen, setIsOpen, addToCart, removeFromCart, updateQuantity, total, itemCount } = useNkampaCart();
-  const { store: myStore, hasChecked: hasStoreChecked } = useNkampaStore(user?.uid);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [showCheckout, setShowCheckout] = useState(false);
@@ -1017,7 +1015,7 @@ export default function NkampaPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(50,187,120,0.12),transparent_35%),linear-gradient(180deg,rgba(50,187,120,0.05)_0%,rgba(50,187,120,0.08)_52%,rgba(50,187,120,0.04)_100%)]">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(7, 59, 154,0.12),transparent_35%),linear-gradient(180deg,rgba(7, 59, 154,0.05)_0%,rgba(7, 59, 154,0.08)_52%,rgba(7, 59, 154,0.04)_100%)]">
       {/* Recherche marche */}
       <header className="sticky top-0 z-50 px-4 py-3">
         <div className="mx-auto max-w-5xl">
@@ -1107,13 +1105,10 @@ export default function NkampaPage() {
 
       {/* Navigation marche */}
       <div className="relative z-40 px-4 pt-1">
-        <div className="mx-auto grid max-w-7xl grid-cols-3 items-center border-b border-primary/10">
+        <div className="mx-auto grid max-w-7xl grid-cols-2 items-center border-b border-primary/10">
           {[
             { href: '/dashboard/nkampa/orders', label: 'Commandes' },
             { href: '/dashboard/nkampa/favorites', label: 'Favoris' },
-            hasStoreChecked && myStore
-              ? { href: '/dashboard/nkampa/store/dashboard', label: 'Ma boutique' }
-              : { href: '/dashboard/nkampa/store', label: 'Créer boutique' },
           ].map((item, index) => {
             const isActive = pathname === item.href;
             return (
@@ -1124,7 +1119,7 @@ export default function NkampaPage() {
                   isActive
                     ? 'text-primary'
                     : 'text-muted-foreground hover:text-foreground'
-                } ${index === 0 ? 'justify-self-start' : index === 1 ? 'justify-self-center' : 'justify-self-end'}`}
+                } ${index === 0 ? 'justify-self-start' : 'justify-self-end'}`}
               >
                 <span>{item.label}</span>
                 {isActive && (
@@ -1331,7 +1326,7 @@ export default function NkampaPage() {
               
               {/* Effet de lumière futuriste */}
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(16,185,129,0.3),transparent_50%)]" />
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(50,187,120,0.2),transparent_50%)]" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(7, 59, 154,0.2),transparent_50%)]" />
               
               {/* Contenu */}
               <div className="absolute inset-0 flex flex-col justify-between p-6">

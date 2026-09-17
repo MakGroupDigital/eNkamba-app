@@ -57,7 +57,7 @@ export default function EStreamPage() {
                   <div className="flex-1 space-y-1">
                     <h4 className="font-semibold text-foreground">Streaming Vidéo en Direct</h4>
                     <p className="text-sm text-muted-foreground">
-                      Diffusez vos moments en direct avec vos amis et la communauté eNkamba en temps réel
+                      Diffusez vos moments en direct avec vos amis et la communauté Kenz en temps réel
                     </p>
                   </div>
                 </div>

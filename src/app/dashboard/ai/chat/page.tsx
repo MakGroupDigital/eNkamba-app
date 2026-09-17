@@ -9,7 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { EnkambaAIIcon } from '@/components/icons/service-icons';
 
 const starterPrompts = [
-  'Aide-moi à comprendre eNkamba',
+  'Aide-moi à comprendre Kenz',
   'Prépare une stratégie commerciale',
   'Analyse une idée de business',
   'Explique un service de la plateforme',
@@ -33,8 +33,8 @@ function AiMark({ size = 68 }: { size?: number }) {
   return (
     <div className="relative grid place-items-center" style={{ width: size, height: size }}>
       <span className="absolute inset-0 rounded-full bg-primary/25 blur-2xl" />
-      <span className="absolute h-1/2 w-1/2 rounded-full bg-[#FFA500]/20 blur-xl" />
-      <EnkambaAIIcon size={size} className="relative drop-shadow-[0_0_24px_rgba(10,139,70,0.45)]" />
+      <span className="absolute h-1/2 w-1/2 rounded-full bg-[#F51B2B]/20 blur-xl" />
+      <EnkambaAIIcon size={size} className="relative drop-shadow-[0_0_24px_rgba(7, 59, 154,0.45)]" />
     </div>
   );
 }
@@ -48,12 +48,12 @@ function getLocalGreeting() {
 function AnimatedAiBackground() {
   return (
     <>
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_48%_72%,rgba(10,139,70,0.36),transparent_35%),radial-gradient(circle_at_82%_16%,rgba(255,165,0,0.16),transparent_28%),linear-gradient(180deg,#020403_0%,#050706_58%,#07180f_100%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_48%_72%,rgba(7, 59, 154,0.36),transparent_35%),radial-gradient(circle_at_82%_16%,rgba(245, 27, 43,0.16),transparent_28%),linear-gradient(180deg,#073B9A_0%,#073B9A_58%,#073B9A_100%)]" />
       <div className="pointer-events-none absolute -left-24 top-1/4 h-72 w-72 animate-pulse rounded-full bg-primary/20 blur-3xl" />
-      <div className="pointer-events-none absolute -right-20 bottom-24 h-80 w-80 animate-pulse rounded-full bg-[#FFA500]/12 blur-3xl [animation-delay:900ms]" />
+      <div className="pointer-events-none absolute -right-20 bottom-24 h-80 w-80 animate-pulse rounded-full bg-[#F51B2B]/12 blur-3xl [animation-delay:900ms]" />
       <div className="pointer-events-none absolute inset-x-8 bottom-20 h-44 rounded-[999px] bg-primary/18 blur-3xl" />
       <div className="pointer-events-none absolute left-[18%] top-[22%] h-2 w-2 animate-bounce rounded-full bg-white/40 [animation-duration:3.5s]" />
-      <div className="pointer-events-none absolute right-[24%] top-[36%] h-1.5 w-1.5 animate-bounce rounded-full bg-[#FFA500]/70 [animation-duration:4.2s]" />
+      <div className="pointer-events-none absolute right-[24%] top-[36%] h-1.5 w-1.5 animate-bounce rounded-full bg-[#F51B2B]/70 [animation-duration:4.2s]" />
       <div className="pointer-events-none absolute left-[55%] top-[18%] h-1 w-1 animate-pulse rounded-full bg-primary" />
     </>
   );
@@ -91,7 +91,7 @@ function AiSideMenu({
   return (
     <div className="fixed inset-0 z-50">
       <button className="absolute inset-0 bg-black/55 backdrop-blur-sm" onClick={onClose} aria-label="Fermer le menu" />
-      <aside className="relative h-full w-[86vw] max-w-sm border-r border-white/10 bg-[#050806]/95 p-4 text-white shadow-2xl">
+      <aside className="relative h-full w-[86vw] max-w-sm border-r border-white/10 bg-[#073B9A]/95 p-4 text-white shadow-2xl">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-[11px] font-black uppercase tracking-[0.24em] text-primary">Miyiki AI</p>
@@ -123,7 +123,7 @@ function AiSideMenu({
               {label === 'Assistant intelligent' ? (
                 <EnkambaAIIcon size={22} />
               ) : (
-                <Icon className="h-5 w-5 text-[#FFA500]" />
+                <Icon className="h-5 w-5 text-[#F51B2B]" />
               )}
               {label}
             </button>
@@ -304,7 +304,7 @@ export default function AiChatDefaultPage() {
                       active ? 'bg-primary text-white' : 'bg-white/7 text-white/70 hover:bg-white/12'
                     }`}
                   >
-                    <Icon className={`h-4 w-4 ${active ? 'text-white' : 'text-[#FFA500]'}`} />
+                    <Icon className={`h-4 w-4 ${active ? 'text-white' : 'text-[#F51B2B]'}`} />
                     {item.label}
                   </button>
                 );
@@ -325,7 +325,7 @@ export default function AiChatDefaultPage() {
               <SlidersHorizontal className="h-[18px] w-[18px]" />
             </button>
             <textarea
-              placeholder="Demander à eNkamba AI..."
+              placeholder="Demander à Kenz AI..."
               value={inputValue}
               onChange={(event) => setInputValue(event.target.value)}
               onKeyDown={(event) => {

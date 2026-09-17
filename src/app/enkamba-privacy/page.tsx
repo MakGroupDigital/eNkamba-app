@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 const sections = [
   {
     title: '1. Données collectées',
-    text: 'eNkamba peut collecter les informations de compte, téléphone, email, profil, localisation autorisée, KYC, documents, transactions, commandes, colis, messages, appels, appareils et journaux de sécurité.',
+    text: 'Kenz peut collecter les informations de compte, téléphone, email, profil, localisation autorisée, KYC, documents, transactions, commandes, colis, messages, appels, appareils et journaux de sécurité.',
   },
   {
     title: '2. Utilisation',
@@ -28,7 +28,7 @@ const sections = [
   },
   {
     title: '6. Partage contrôlé',
-    text: 'Certaines informations peuvent être partagées avec les partenaires nécessaires au service : paiement, livraison, agence, support, conformité ou obligation légale. eNkamba ne vend pas les données personnelles.',
+    text: 'Certaines informations peuvent être partagées avec les partenaires nécessaires au service : paiement, livraison, agence, support, conformité ou obligation légale. Kenz ne vend pas les données personnelles.',
   },
   {
     title: '7. Conservation',
@@ -51,7 +51,7 @@ export default function EnkambaPrivacyPage() {
             </Link>
           </Button>
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-primary">eNkamba</p>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-primary">Kenz</p>
             <h1 className="text-xl font-black">Politique de confidentialité</h1>
           </div>
         </div>
@@ -62,7 +62,7 @@ export default function EnkambaPrivacyPage() {
           <CardContent className="space-y-6 p-6 sm:p-8">
             <div className="rounded-2xl bg-primary p-5 text-white">
               <ShieldCheck className="mb-3 h-8 w-8" />
-              <h2 className="text-2xl font-black">Protection des données eNkamba</h2>
+              <h2 className="text-2xl font-black">Protection des données Kenz</h2>
               <p className="mt-2 text-sm text-white/80">
                 Cette politique explique comment la plateforme protège les informations utilisées par ses apps.
               </p>
@@ -78,7 +78,7 @@ export default function EnkambaPrivacyPage() {
             <section className="rounded-xl border bg-white p-4">
               <h3 className="text-base font-black">Contact confidentialité</h3>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                Pour toute demande liée aux données personnelles, utilisez le support intégré ou les canaux officiels eNkamba.
+                Pour toute demande liée aux données personnelles, utilisez le support intégré ou les canaux officiels Kenz.
               </p>
             </section>
           </CardContent>

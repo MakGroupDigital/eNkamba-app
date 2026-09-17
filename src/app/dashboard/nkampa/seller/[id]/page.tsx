@@ -89,7 +89,7 @@ export default function SellerPortalPage({ params }: { params: Promise<{ id: str
   const experience = [
     { year: '2015', title: 'Fondation de Kasang Elektronique', description: 'Début de l\'aventure avec une petite boutique' },
     { year: '2017', title: 'Expansion régionale', description: 'Ouverture de 3 nouvelles succursales' },
-    { year: '2019', title: 'Certification eNKAMBA', description: 'Obtention de la certification officielle' },
+    { year: '2019', title: 'Certification KENZ', description: 'Obtention de la certification officielle' },
     { year: '2023', title: 'Leader du marché', description: 'Devenir le leader en vente d\'électronique' },
   ];
 
@@ -134,7 +134,7 @@ export default function SellerPortalPage({ params }: { params: Promise<{ id: str
               if (navigator.share) {
                 navigator.share({
                   title: seller.name,
-                  text: `Découvrez la boutique ${seller.name} sur eNKAMBA`,
+                  text: `Découvrez la boutique ${seller.name} sur KENZ`,
                   url: storeLink,
                 }).catch(() => {
                   // Fallback to copy
@@ -635,10 +635,10 @@ export default function SellerPortalPage({ params }: { params: Promise<{ id: str
           </div>
           <div className="border-t border-gray-800 pt-8 space-y-4">
             <div className="text-center text-sm text-gray-400">
-              <p>&copy; 2024 {seller.name}. Tous droits réservés. | Propulsé par eNKAMBA</p>
+              <p>&copy; 2024 {seller.name}. Tous droits réservés. | Propulsé par KENZ</p>
             </div>
             <div className="text-center text-xs text-gray-500 space-y-1">
-              <p><strong>Guangzhou eNKAMBA International Company CO., Ltd</strong></p>
+              <p><strong>Guangzhou KENZ International Company CO., Ltd</strong></p>
               <p>Plateforme ecommerce pour partenaires établissements</p>
               <p>Email: support@enkamba.com | Tél: +33 (0)1 XX XX XX XX</p>
               <p>Adresse: Guangzhou, Chine</p>

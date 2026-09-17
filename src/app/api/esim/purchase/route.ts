@@ -25,7 +25,7 @@ const ESIM_PRICE = 1000; // CDF
 
 /**
  * POST /api/esim/purchase
- * Achète un eSIM-eNkamba
+ * Achète un eSIM-Kenz
  */
 export async function POST(request: NextRequest) {
   try {
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
       status: 'completed',
       previousBalance: currentBalance,
       newBalance: currentBalance - ESIM_PRICE,
-      description: `Achat eSIM-eNkamba: ${phoneNumber}`,
+      description: `Achat eSIM-Kenz: ${phoneNumber}`,
       timestamp: now,
       createdAt: now.toISOString(),
       esimId,

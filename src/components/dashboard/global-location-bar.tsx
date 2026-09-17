@@ -9,7 +9,7 @@ export function GlobalLocationBar() {
   const locationDetail = [location.quartier, location.ville, location.pays].filter(Boolean).join(' - ');
 
   return (
-    <div className="relative z-[70] border-b border-primary/30 bg-primary shadow-[0_8px_24px_rgba(50,187,120,0.22)] backdrop-blur-xl">
+    <div className="relative z-[70] border-b border-primary/30 bg-primary shadow-[0_8px_24px_rgba(7, 59, 154,0.22)] backdrop-blur-xl">
       <div className="mx-auto flex h-10 max-w-6xl items-center gap-2 px-3 text-[11px] text-white sm:px-4">
         <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/18 text-white ring-1 ring-white/25">
           <MapPin className="h-3.5 w-3.5" />

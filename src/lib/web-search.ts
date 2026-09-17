@@ -74,7 +74,7 @@ async function searchWithDuckDuckGoHtml(query: string): Promise<WebSearchResult[
       headers: {
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
         'Accept-Language': 'fr-FR,fr;q=0.9,en;q=0.7',
-        'User-Agent': 'Mozilla/5.0 (compatible; eNkambaAI/1.0; +https://enkamba.com)',
+        'User-Agent': 'Mozilla/5.0 (compatible; KenzAI/1.0)',
       },
     });
 

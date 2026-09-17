@@ -166,8 +166,8 @@ export function PaymentDashboard({ businessUser }: PaymentDashboardProps) {
   const quickActions = baseQuickActions;
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(50,187,120,0.14),transparent_34%),linear-gradient(180deg,rgba(50,187,120,0.05)_0%,rgba(50,187,120,0.08)_54%,rgba(50,187,120,0.04)_100%)] pb-24 text-foreground">
-      <div className="sticky top-0 z-30 rounded-b-[32px] bg-gradient-to-r from-[#009058] via-[#009058] to-[#009058] px-4 pb-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] text-white shadow-lg shadow-[#009058]/20">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(7, 59, 154,0.14),transparent_34%),linear-gradient(180deg,rgba(7, 59, 154,0.05)_0%,rgba(7, 59, 154,0.08)_54%,rgba(7, 59, 154,0.04)_100%)] pb-24 text-foreground">
+      <div className="sticky top-0 z-30 rounded-b-[32px] bg-gradient-to-r from-[#073B9A] via-[#073B9A] to-[#073B9A] px-4 pb-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] text-white shadow-lg shadow-[#073B9A]/20">
         <div className="mx-auto max-w-5xl">
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
@@ -210,7 +210,7 @@ export function PaymentDashboard({ businessUser }: PaymentDashboardProps) {
       </div>
 
       <div className="mx-auto max-w-5xl space-y-5 px-4 py-5">
-        <section className="overflow-hidden rounded-3xl border border-[#009058] bg-white shadow-sm">
+        <section className="overflow-hidden rounded-3xl border border-[#073B9A] bg-white shadow-sm">
           <div className="flex gap-2 overflow-x-auto p-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {activeTabs.map(({ id, label, icon: Icon }) => (
               <button
@@ -218,8 +218,8 @@ export function PaymentDashboard({ businessUser }: PaymentDashboardProps) {
                 onClick={() => setActiveTab(id)}
                 className={`flex min-w-fit items-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold transition ${
                   activeTab === id
-                    ? 'bg-[#009058] text-white shadow-md shadow-[#009058]/20'
-                    : 'bg-primary/5 text-muted-foreground hover:bg-primary/10 hover:text-[#009058]'
+                    ? 'bg-[#073B9A] text-white shadow-md shadow-[#073B9A]/20'
+                    : 'bg-primary/5 text-muted-foreground hover:bg-primary/10 hover:text-[#073B9A]'
                 }`}
               >
                 <Icon size={34} className="h-[34px] w-[34px]" />
@@ -480,7 +480,7 @@ function TransferAgencyBusinessDashboard({ businessUser }: { businessUser: Busin
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fbf9] text-slate-950">
+    <div className="min-h-screen bg-[#FFFFFF] text-slate-950">
       <div className="mx-auto flex min-h-screen max-w-[1440px]">
         <aside className="hidden w-[300px] shrink-0 bg-primary text-white lg:flex lg:flex-col">
           <div className="flex items-center gap-3 px-8 py-10">
@@ -690,7 +690,7 @@ function TransferAgencyContent({
         </div>
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(300px,0.8fr)]">
           <TransferAgencyPanel title="Carte des implantations" subtitle="Agences, bureaux et points de caisse.">
-            <div className="relative h-64 overflow-hidden rounded-3xl border border-primary/10 bg-[radial-gradient(circle_at_25%_28%,rgba(10,139,70,0.20),transparent_28%),radial-gradient(circle_at_70%_55%,rgba(255,165,0,0.16),transparent_24%),linear-gradient(135deg,#f8fbf9,#e9f7ef)]">
+            <div className="relative h-64 overflow-hidden rounded-3xl border border-primary/10 bg-[radial-gradient(circle_at_25%_28%,rgba(7, 59, 154,0.20),transparent_28%),radial-gradient(circle_at_70%_55%,rgba(245, 27, 43,0.16),transparent_24%),linear-gradient(135deg,#FFFFFF,#e9f7ef)]">
               {profile.offices.map((office, index) => (
                 <span
                   key={office.code}
@@ -922,9 +922,9 @@ function TransferAgencyTransfersTable({ transfers }: { transfers: PosTransfer[] 
               <td className="px-3 py-3 font-bold text-slate-700">{item.beneficiaryName}</td>
               <td className="px-3 py-3 font-semibold text-slate-500">{item.payoutCity || item.payoutOfficeCode}</td>
               <td className="px-3 py-3 font-black text-slate-950">{item.amount.toLocaleString('fr-FR')} {item.currency}</td>
-              <td className="px-3 py-3 font-black text-[#FFA500]">{item.fee.toLocaleString('fr-FR')} {item.currency}</td>
+              <td className="px-3 py-3 font-black text-[#F51B2B]">{item.fee.toLocaleString('fr-FR')} {item.currency}</td>
               <td className="px-3 py-3">
-                <span className={`rounded-full px-3 py-1 text-xs font-black ${item.status === 'paid' ? 'bg-primary text-white' : 'bg-[#FFA500]/15 text-[#B86B00]'}`}>
+                <span className={`rounded-full px-3 py-1 text-xs font-black ${item.status === 'paid' ? 'bg-primary text-white' : 'bg-[#F51B2B]/15 text-[#F51B2B]'}`}>
                   {item.status === 'paid' ? 'Payé' : item.status === 'available' ? 'En attente' : item.status}
                 </span>
               </td>
@@ -952,7 +952,7 @@ function TransferAgencySummary({ profile, completion, copyCode }: { profile: Tra
         </div>
         <div className="mt-5">
           <p className="text-xs font-bold text-slate-500">Statut</p>
-          <span className="mt-2 inline-flex rounded-xl bg-[#FFA500]/12 px-3 py-2 text-xs font-black text-[#B86B00]">
+          <span className="mt-2 inline-flex rounded-xl bg-[#F51B2B]/12 px-3 py-2 text-xs font-black text-[#F51B2B]">
             {profile.status === 'active' ? 'Actif' : profile.status === 'review' ? 'En vérification' : 'Brouillon'}
           </span>
         </div>
@@ -1063,7 +1063,7 @@ function PaymentAPI() {
             ['Webhooks', 'Non configurés'],
             ['Dernier appel', 'Aucun'],
           ].map(([label, value]) => (
-            <div key={label} className="flex items-center justify-between rounded-2xl bg-[#009058] px-4 py-3">
+            <div key={label} className="flex items-center justify-between rounded-2xl bg-[#073B9A] px-4 py-3">
               <span className="text-sm font-semibold text-muted-foreground">{label}</span>
               <span className="text-sm font-black text-foreground">{value}</span>
             </div>
@@ -1083,11 +1083,11 @@ function PaymentTokens() {
           { title: 'Token wallet', scope: 'Solde & mouvements', status: 'À générer' },
           { title: 'Token reporting', scope: 'Rapports & exports', status: 'À générer' },
         ].map((token) => (
-          <div key={token.title} className="rounded-3xl border border-[#009058] bg-[#009058] p-4">
+          <div key={token.title} className="rounded-3xl border border-[#073B9A] bg-[#073B9A] p-4">
             <SecurityIcon size={34} />
             <p className="mt-3 font-black text-foreground">{token.title}</p>
             <p className="mt-1 text-sm text-muted-foreground">{token.scope}</p>
-            <span className="mt-4 inline-flex rounded-full bg-white px-3 py-1 text-xs font-bold text-[#009058]">
+            <span className="mt-4 inline-flex rounded-full bg-white px-3 py-1 text-xs font-bold text-[#073B9A]">
               {token.status}
             </span>
           </div>
@@ -1106,13 +1106,13 @@ function PaymentGeneration() {
 
   return (
     <Panel title="Génération" subtitle="Génération locale de prévisualisation. La clé réelle doit être créée côté serveur sécurisé.">
-      <div className="rounded-3xl bg-[#009058] p-5 text-white">
+      <div className="rounded-3xl bg-[#073B9A] p-5 text-white">
         <p className="text-xs font-bold uppercase tracking-[0.16em] text-white/60">Nouvelle clé test</p>
         <code className="mt-3 block overflow-x-auto rounded-2xl bg-white/10 p-4 text-sm font-bold text-white">{generatedKey}</code>
         <div className="mt-4 grid gap-2 sm:grid-cols-3">
-          <button onClick={generateKey} className="rounded-2xl bg-[#009058] px-4 py-3 text-sm font-bold text-white">Générer</button>
-          <button className="rounded-2xl bg-white px-4 py-3 text-sm font-bold text-[#009058]">Copier</button>
-          <button className="rounded-2xl bg-[#FFA500] px-4 py-3 text-sm font-bold text-white">Révoquer</button>
+          <button onClick={generateKey} className="rounded-2xl bg-[#073B9A] px-4 py-3 text-sm font-bold text-white">Générer</button>
+          <button className="rounded-2xl bg-white px-4 py-3 text-sm font-bold text-[#073B9A]">Copier</button>
+          <button className="rounded-2xl bg-[#F51B2B] px-4 py-3 text-sm font-bold text-white">Révoquer</button>
         </div>
       </div>
     </Panel>
@@ -1129,7 +1129,7 @@ function PaymentIntegration() {
           ['Wallet business', 'Solde, commissions et mouvements.'],
           ['Webhooks', 'Notifications paiement réussi, échoué, remboursé.'],
         ].map(([title, text]) => (
-          <div key={title} className="rounded-3xl border border-[#009058] bg-white p-4">
+          <div key={title} className="rounded-3xl border border-[#073B9A] bg-white p-4">
             <LinkAccountIcon size={34} />
             <p className="mt-3 font-black text-foreground">{title}</p>
             <p className="mt-1 text-sm leading-6 text-muted-foreground">{text}</p>
@@ -1150,7 +1150,7 @@ function PaymentDocumentation() {
           ['Webhooks', 'Signature, retry, idempotence et événements.'],
           ['Sécurité', 'Rotation des secrets, scopes, tokens courts et logs.'],
         ].map(([title, text]) => (
-          <button key={title} className="flex w-full items-center justify-between gap-4 rounded-2xl bg-[#009058] px-4 py-4 text-left">
+          <button key={title} className="flex w-full items-center justify-between gap-4 rounded-2xl bg-[#073B9A] px-4 py-4 text-left">
             <span>
               <span className="block font-black text-foreground">{title}</span>
               <span className="mt-1 block text-sm text-muted-foreground">{text}</span>
@@ -1175,18 +1175,18 @@ function AgentBalance() {
   return (
     <div className="space-y-5">
       <div className="grid gap-3 md:grid-cols-2">
-        <div className="rounded-3xl bg-gradient-to-br from-[#009058] to-[#009058] p-6 text-white">
+        <div className="rounded-3xl bg-gradient-to-br from-[#073B9A] to-[#073B9A] p-6 text-white">
           <p className="text-sm font-bold text-white/70">Solde total</p>
           <p className="mt-2 text-4xl font-black">0 FC</p>
         </div>
-        <div className="rounded-3xl bg-[#FFA500] p-6 text-white">
+        <div className="rounded-3xl bg-[#F51B2B] p-6 text-white">
           <p className="text-sm font-bold text-white/70">Commissions gagnées</p>
           <p className="mt-2 text-4xl font-black">0 FC</p>
         </div>
       </div>
       <Panel title="Relevé du jour" subtitle="Synthèse des dépôts, retraits et net business.">
         {['Dépôts', 'Retraits', 'Net du jour'].map((item) => (
-          <div key={item} className="mb-3 flex items-center justify-between rounded-2xl bg-[#009058] px-4 py-3">
+          <div key={item} className="mb-3 flex items-center justify-between rounded-2xl bg-[#073B9A] px-4 py-3">
             <span className="text-sm font-bold text-muted-foreground">{item}</span>
             <span className="font-black text-foreground">0 FC</span>
           </div>
@@ -1214,8 +1214,8 @@ function printPaymentPosReceipt(transfer: PosTransfer, businessUser: BusinessUse
   const printedAt = new Date().toLocaleString('fr-FR');
   const code = type === 'send' ? transfer.clientCode : `${transfer.clientCode.slice(0, 4)}••••`;
   const html = `<!doctype html><html><head><meta charset="utf-8"/><title>${title}</title><style>
-  body{margin:0;background:#f8fafc;font-family:Arial,sans-serif;color:#0f172a}.ticket{width:80mm;margin:18px auto;background:#fff;border:1px solid #dbe7df;border-radius:14px;overflow:hidden}.head{padding:14px;background:#0A8B46;color:#fff;text-align:center}.brand{font-size:18px;font-weight:900}.sub{font-size:10px;opacity:.85}.body{padding:14px}h1{margin:0 0 10px;font-size:14px;color:#0A8B46;text-align:center}.dup{margin:0 auto 8px;width:fit-content;border:1px solid #f59e0b;border-radius:999px;padding:3px 8px;color:#b45309;font-size:10px;font-weight:900}.row{display:flex;justify-content:space-between;gap:10px;border-bottom:1px dashed #dbe7df;padding:7px 0;font-size:11px}.row span:last-child{text-align:right;font-weight:800}.code{margin:12px 0;border:2px solid #0A8B46;border-radius:12px;padding:10px;text-align:center;font-family:monospace;font-size:17px;font-weight:900;color:#0A8B46}.sign{margin-top:12px;min-height:44px;border:1px dashed #94a3b8;border-radius:10px;padding:8px;font-size:10px;color:#475569}.note{margin-top:10px;font-size:9px;line-height:1.45;color:#64748b;text-align:center}@media print{body{background:#fff}.ticket{margin:0;border-radius:0}}
-  </style></head><body><section class="ticket"><div class="head"><div class="brand">eNKAMBA POS</div><div class="sub">${businessUser.businessName || 'Agence de transfert'}</div></div><div class="body"><h1>${title}</h1>${duplicate ? '<div class="dup">DUPLICATA</div>' : ''}<div class="row"><span>Référence</span><span>${transfer.internalReference}</span></div><div class="row"><span>Code</span><span>${code}</span></div><div class="row"><span>Expéditeur</span><span>${maskPaymentValue(transfer.senderName)}</span></div><div class="row"><span>Bénéficiaire</span><span>${maskPaymentValue(transfer.beneficiaryName)}</span></div><div class="row"><span>Destination</span><span>${transfer.payoutCity}</span></div><div class="row"><span>Montant</span><span>${transfer.amount.toLocaleString('fr-FR')} ${transfer.currency}</span></div>${type === 'send' ? `<div class="row"><span>Frais 3%</span><span>${transfer.fee.toLocaleString('fr-FR')} ${transfer.currency}</span></div><div class="row"><span>Total</span><span>${transfer.totalCollected.toLocaleString('fr-FR')} ${transfer.currency}</span></div>` : ''}<div class="row"><span>Statut</span><span>${transfer.status === 'paid' ? 'Payé' : 'Disponible'}</span></div><div class="row"><span>Date</span><span>${printedAt}</span></div><div class="code">${code}</div><div class="sign">${type === 'send' ? 'Signature expéditeur' : 'Signature bénéficiaire'}<br/><br/></div><p class="note">Code unique à usage unique. Toute réimpression est journalisée.</p></div></section><script>window.onload=()=>window.print()</script></body></html>`;
+  body{margin:0;background:#f8fafc;font-family:Arial,sans-serif;color:#0f172a}.ticket{width:80mm;margin:18px auto;background:#fff;border:1px solid #DCE6F8;border-radius:14px;overflow:hidden}.head{padding:14px;background:#073B9A;color:#fff;text-align:center}.brand{font-size:18px;font-weight:900}.sub{font-size:10px;opacity:.85}.body{padding:14px}h1{margin:0 0 10px;font-size:14px;color:#073B9A;text-align:center}.dup{margin:0 auto 8px;width:fit-content;border:1px solid #f59e0b;border-radius:999px;padding:3px 8px;color:#b45309;font-size:10px;font-weight:900}.row{display:flex;justify-content:space-between;gap:10px;border-bottom:1px dashed #DCE6F8;padding:7px 0;font-size:11px}.row span:last-child{text-align:right;font-weight:800}.code{margin:12px 0;border:2px solid #073B9A;border-radius:12px;padding:10px;text-align:center;font-family:monospace;font-size:17px;font-weight:900;color:#073B9A}.sign{margin-top:12px;min-height:44px;border:1px dashed #94a3b8;border-radius:10px;padding:8px;font-size:10px;color:#475569}.note{margin-top:10px;font-size:9px;line-height:1.45;color:#64748b;text-align:center}@media print{body{background:#fff}.ticket{margin:0;border-radius:0}}
+  </style></head><body><section class="ticket"><div class="head"><div class="brand">KENZ POS</div><div class="sub">${businessUser.businessName || 'Agence de transfert'}</div></div><div class="body"><h1>${title}</h1>${duplicate ? '<div class="dup">DUPLICATA</div>' : ''}<div class="row"><span>Référence</span><span>${transfer.internalReference}</span></div><div class="row"><span>Code</span><span>${code}</span></div><div class="row"><span>Expéditeur</span><span>${maskPaymentValue(transfer.senderName)}</span></div><div class="row"><span>Bénéficiaire</span><span>${maskPaymentValue(transfer.beneficiaryName)}</span></div><div class="row"><span>Destination</span><span>${transfer.payoutCity}</span></div><div class="row"><span>Montant</span><span>${transfer.amount.toLocaleString('fr-FR')} ${transfer.currency}</span></div>${type === 'send' ? `<div class="row"><span>Frais 3%</span><span>${transfer.fee.toLocaleString('fr-FR')} ${transfer.currency}</span></div><div class="row"><span>Total</span><span>${transfer.totalCollected.toLocaleString('fr-FR')} ${transfer.currency}</span></div>` : ''}<div class="row"><span>Statut</span><span>${transfer.status === 'paid' ? 'Payé' : 'Disponible'}</span></div><div class="row"><span>Date</span><span>${printedAt}</span></div><div class="code">${code}</div><div class="sign">${type === 'send' ? 'Signature expéditeur' : 'Signature bénéficiaire'}<br/><br/></div><p class="note">Code unique à usage unique. Toute réimpression est journalisée.</p></div></section><script>window.onload=()=>window.print()</script></body></html>`;
   const printWindow = window.open('', '_blank', 'width=420,height=720');
   if (!printWindow) return;
   printWindow.document.write(html);
@@ -1442,7 +1442,7 @@ function PaymentPosTransferAgency({ businessUser, initialMode }: { businessUser:
         <PaymentMetricCard stat={{ label: 'Disponibles', value: String(transfers.filter((item) => item.status === 'available').length), icon: SecurityIcon, color: 'orange' }} />
       </div>
 
-      <section className="rounded-3xl border border-[#009058] bg-white p-4 shadow-sm">
+      <section className="rounded-3xl border border-[#073B9A] bg-white p-4 shadow-sm">
         <div className="grid grid-cols-4 gap-2">
           {([
             ['send', 'Envoyer'],
@@ -1450,7 +1450,7 @@ function PaymentPosTransferAgency({ businessUser, initialMode }: { businessUser:
             ['cash', 'Caisse'],
             ['history', 'Historique'],
           ] as Array<[PosMode, string]>).map(([id, label]) => (
-            <button key={id} type="button" onClick={() => setMode(id)} className={`h-10 rounded-2xl text-xs font-black ${mode === id ? 'bg-[#009058] text-white' : 'bg-primary/5 text-muted-foreground'}`}>{label}</button>
+            <button key={id} type="button" onClick={() => setMode(id)} className={`h-10 rounded-2xl text-xs font-black ${mode === id ? 'bg-[#073B9A] text-white' : 'bg-primary/5 text-muted-foreground'}`}>{label}</button>
           ))}
         </div>
       </section>
@@ -1458,8 +1458,8 @@ function PaymentPosTransferAgency({ businessUser, initialMode }: { businessUser:
       {mode === 'cash' && (
         <Panel title="Caisse agence" subtitle="Une caisse ouverte est obligatoire pour encaisser ou payer.">
           <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
-            <input value={openingBalance} onChange={(event) => setOpeningBalance(event.target.value)} disabled={Boolean(cashSessionId)} inputMode="decimal" className="h-12 rounded-2xl border border-[#009058] px-4 text-sm font-bold outline-none" placeholder="Solde initial" />
-            {cashSessionId ? <button onClick={closeCashSession} className="h-12 rounded-2xl bg-red-50 px-5 text-sm font-black text-red-700">Clôturer</button> : <button onClick={openCashSession} className="h-12 rounded-2xl bg-[#009058] px-5 text-sm font-black text-white">Ouvrir caisse</button>}
+            <input value={openingBalance} onChange={(event) => setOpeningBalance(event.target.value)} disabled={Boolean(cashSessionId)} inputMode="decimal" className="h-12 rounded-2xl border border-[#073B9A] px-4 text-sm font-bold outline-none" placeholder="Solde initial" />
+            {cashSessionId ? <button onClick={closeCashSession} className="h-12 rounded-2xl bg-red-50 px-5 text-sm font-black text-red-700">Clôturer</button> : <button onClick={openCashSession} className="h-12 rounded-2xl bg-[#073B9A] px-5 text-sm font-black text-white">Ouvrir caisse</button>}
           </div>
         </Panel>
       )}
@@ -1476,38 +1476,38 @@ function PaymentPosTransferAgency({ businessUser, initialMode }: { businessUser:
             <PaymentPosInput label="Ville de paiement" value={form.payoutCity} onChange={(v) => setForm({ ...form, payoutCity: v })} />
             <PaymentPosInput label="Bureau payeur" value={form.payoutOfficeCode} onChange={(v) => setForm({ ...form, payoutOfficeCode: v })} />
             <PaymentPosInput label="Montant" value={form.amount} onChange={(v) => setForm({ ...form, amount: v })} inputMode="decimal" />
-            <select value={form.currency} onChange={(event) => setForm({ ...form, currency: event.target.value })} className="h-11 rounded-2xl border border-[#009058] bg-white px-3 text-sm font-bold">{['USD', 'CDF', 'EUR', 'RMB'].map((currency) => <option key={currency}>{currency}</option>)}</select>
+            <select value={form.currency} onChange={(event) => setForm({ ...form, currency: event.target.value })} className="h-11 rounded-2xl border border-[#073B9A] bg-white px-3 text-sm font-bold">{['USD', 'CDF', 'EUR', 'RMB'].map((currency) => <option key={currency}>{currency}</option>)}</select>
             <PaymentPosInput label="Motif" value={form.reason} onChange={(v) => setForm({ ...form, reason: v })} />
             <PaymentPosInput label="Signature expéditeur" value={form.senderSignature} onChange={(v) => setForm({ ...form, senderSignature: v })} />
           </div>
           <div className="mt-4 grid grid-cols-3 gap-3 rounded-2xl bg-primary/5 p-4 text-center">
             <div><p className="text-xs font-bold text-muted-foreground">Montant</p><p className="font-black">{amount.toLocaleString('fr-FR')}</p></div>
-            <div><p className="text-xs font-bold text-muted-foreground">Frais 3%</p><p className="font-black text-[#FFA500]">{fee.toLocaleString('fr-FR')}</p></div>
-            <div><p className="text-xs font-bold text-muted-foreground">Total</p><p className="font-black text-[#009058]">{totalCollected.toLocaleString('fr-FR')}</p></div>
+            <div><p className="text-xs font-bold text-muted-foreground">Frais 3%</p><p className="font-black text-[#F51B2B]">{fee.toLocaleString('fr-FR')}</p></div>
+            <div><p className="text-xs font-bold text-muted-foreground">Total</p><p className="font-black text-[#073B9A]">{totalCollected.toLocaleString('fr-FR')}</p></div>
           </div>
-          <button disabled={isSaving} onClick={createTransfer} className="mt-4 h-12 w-full rounded-2xl bg-[#009058] text-sm font-black text-white disabled:opacity-60">{isSaving ? 'Traitement...' : 'Confirmer et imprimer'}</button>
+          <button disabled={isSaving} onClick={createTransfer} className="mt-4 h-12 w-full rounded-2xl bg-[#073B9A] text-sm font-black text-white disabled:opacity-60">{isSaving ? 'Traitement...' : 'Confirmer et imprimer'}</button>
         </Panel>
       )}
 
       {mode === 'payout' && (
         <Panel title="Paiement bénéficiaire" subtitle="Recherche par code sécurisé et téléphone bénéficiaire.">
           <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
-            <input value={lookupCode} onChange={(event) => setLookupCode(event.target.value)} className="h-12 rounded-2xl border border-[#009058] px-4 text-sm font-bold uppercase outline-none" placeholder="Code transfert" />
-            <input value={lookupPhone} onChange={(event) => setLookupPhone(event.target.value)} className="h-12 rounded-2xl border border-[#009058] px-4 text-sm font-bold outline-none" placeholder="Téléphone bénéficiaire" />
-            <button onClick={lookupTransfer} className="h-12 rounded-2xl bg-[#009058] px-5 text-sm font-black text-white">Rechercher</button>
+            <input value={lookupCode} onChange={(event) => setLookupCode(event.target.value)} className="h-12 rounded-2xl border border-[#073B9A] px-4 text-sm font-bold uppercase outline-none" placeholder="Code transfert" />
+            <input value={lookupPhone} onChange={(event) => setLookupPhone(event.target.value)} className="h-12 rounded-2xl border border-[#073B9A] px-4 text-sm font-bold outline-none" placeholder="Téléphone bénéficiaire" />
+            <button onClick={lookupTransfer} className="h-12 rounded-2xl bg-[#073B9A] px-5 text-sm font-black text-white">Rechercher</button>
           </div>
           {selectedTransfer && (
             <div className="mt-4 rounded-2xl bg-primary/5 p-4">
-              <p className="text-xs font-black uppercase text-[#009058]">{selectedTransfer.internalReference}</p>
+              <p className="text-xs font-black uppercase text-[#073B9A]">{selectedTransfer.internalReference}</p>
               <h3 className="mt-1 text-xl font-black">{selectedTransfer.amount.toLocaleString('fr-FR')} {selectedTransfer.currency}</h3>
               <p className="text-sm font-semibold text-muted-foreground">{maskPaymentValue(selectedTransfer.senderName)} → {selectedTransfer.beneficiaryName}</p>
               {selectedTransfer.status === 'available' && (
                 <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto]">
-                  <input value={form.beneficiarySignature} onChange={(event) => setForm({ ...form, beneficiarySignature: event.target.value })} className="h-12 rounded-2xl border border-[#009058] bg-white px-4 text-sm font-bold outline-none" placeholder="Signature bénéficiaire" />
-                  <button disabled={isSaving} onClick={payTransfer} className="h-12 rounded-2xl bg-[#009058] px-5 text-sm font-black text-white disabled:opacity-60">Payer et imprimer</button>
+                  <input value={form.beneficiarySignature} onChange={(event) => setForm({ ...form, beneficiarySignature: event.target.value })} className="h-12 rounded-2xl border border-[#073B9A] bg-white px-4 text-sm font-bold outline-none" placeholder="Signature bénéficiaire" />
+                  <button disabled={isSaving} onClick={payTransfer} className="h-12 rounded-2xl bg-[#073B9A] px-5 text-sm font-black text-white disabled:opacity-60">Payer et imprimer</button>
                 </div>
               )}
-              <button type="button" onClick={() => printPaymentPosReceipt(selectedTransfer, businessUser, selectedTransfer.status === 'paid' ? 'payout' : 'send', true)} className="mt-3 text-xs font-black text-[#009058]">Réimprimer duplicata</button>
+              <button type="button" onClick={() => printPaymentPosReceipt(selectedTransfer, businessUser, selectedTransfer.status === 'paid' ? 'payout' : 'send', true)} className="mt-3 text-xs font-black text-[#073B9A]">Réimprimer duplicata</button>
             </div>
           )}
         </Panel>
@@ -1515,7 +1515,7 @@ function PaymentPosTransferAgency({ businessUser, initialMode }: { businessUser:
 
       {mode === 'history' && (
         <Panel title="Historique POS" subtitle="Transferts, paiements et statuts de l’agence.">
-          <div className="space-y-2">{transfers.length === 0 ? <EmptyPaymentState icon={BusinessDashboardIcons.BarChart} text="Aucun transfert POS" /> : transfers.slice(0, 20).map((item) => (<button key={item.id} onClick={() => setSelectedTransfer(item)} className="flex w-full items-center justify-between gap-3 rounded-2xl bg-primary/5 p-3 text-left"><span><span className="block text-sm font-black">{item.internalReference}</span><span className="text-xs font-semibold text-muted-foreground">{maskPaymentValue(item.senderName)} → {item.beneficiaryName}</span></span><span className="text-right text-sm font-black text-[#009058]">{item.amount.toLocaleString('fr-FR')} {item.currency}<span className="block text-xs text-muted-foreground">{item.status}</span></span></button>))}</div>
+          <div className="space-y-2">{transfers.length === 0 ? <EmptyPaymentState icon={BusinessDashboardIcons.BarChart} text="Aucun transfert POS" /> : transfers.slice(0, 20).map((item) => (<button key={item.id} onClick={() => setSelectedTransfer(item)} className="flex w-full items-center justify-between gap-3 rounded-2xl bg-primary/5 p-3 text-left"><span><span className="block text-sm font-black">{item.internalReference}</span><span className="text-xs font-semibold text-muted-foreground">{maskPaymentValue(item.senderName)} → {item.beneficiaryName}</span></span><span className="text-right text-sm font-black text-[#073B9A]">{item.amount.toLocaleString('fr-FR')} {item.currency}<span className="block text-xs text-muted-foreground">{item.status}</span></span></button>))}</div>
         </Panel>
       )}
     </section>
@@ -1526,7 +1526,7 @@ function PaymentPosInput({ label, value, onChange, inputMode }: { label: string;
   return (
     <label className="space-y-1.5">
       <span className="text-xs font-black text-muted-foreground">{label}</span>
-      <input value={value} onChange={(event) => onChange(event.target.value)} inputMode={inputMode} className="h-11 w-full rounded-2xl border border-[#009058] bg-white px-3 text-sm font-bold outline-none focus:ring-4 focus:ring-primary/10" />
+      <input value={value} onChange={(event) => onChange(event.target.value)} inputMode={inputMode} className="h-11 w-full rounded-2xl border border-[#073B9A] bg-white px-3 text-sm font-bold outline-none focus:ring-4 focus:ring-primary/10" />
     </label>
   );
 }
@@ -1543,14 +1543,14 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-3xl border border-[#009058] bg-white p-5 shadow-sm">
+    <section className="rounded-3xl border border-[#073B9A] bg-white p-5 shadow-sm">
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-xl font-black text-foreground">{title}</h2>
           <p className="text-sm text-muted-foreground">{subtitle}</p>
         </div>
         {action && (
-          <button className="rounded-2xl bg-[#009058] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#009058]">
+          <button className="rounded-2xl bg-[#073B9A] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#073B9A]">
             {action}
           </button>
         )}
@@ -1562,13 +1562,13 @@ function Panel({
 
 function ApiCredential({ label, value, sensitive = false }: { label: string; value: string; sensitive?: boolean }) {
   return (
-    <div className="mb-3 rounded-2xl border border-[#009058] bg-[#009058] p-4">
+    <div className="mb-3 rounded-2xl border border-[#073B9A] bg-[#073B9A] p-4">
       <p className="mb-2 text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <code className="min-w-0 flex-1 overflow-x-auto rounded-xl bg-white p-3 text-sm font-bold text-foreground">
           {sensitive ? value.replace(/x/g, '•') : value}
         </code>
-        <button className="rounded-xl bg-white px-4 py-3 text-sm font-bold text-[#009058] ring-1 ring-[#009058]">Copier</button>
+        <button className="rounded-xl bg-white px-4 py-3 text-sm font-bold text-[#073B9A] ring-1 ring-[#073B9A]">Copier</button>
       </div>
     </div>
   );
@@ -1577,10 +1577,10 @@ function ApiCredential({ label, value, sensitive = false }: { label: string; val
 function PaymentMetricCard({ stat }: { stat: { label: string; value: string; icon: React.ComponentType<any>; color: string } }) {
   const Icon = stat.icon;
   const colorClasses = {
-    green: 'bg-[#009058] text-[#009058] border-[#009058]',
+    green: 'bg-[#073B9A] text-[#073B9A] border-[#073B9A]',
     blue: 'bg-[#eff6ff] text-[#1d4ed8] border-[#bfdbfe]',
-    emerald: 'bg-[#009058] text-[#009058] border-[#009058]',
-    orange: 'bg-[#fff7ed] text-[#FFA500] border-[#fed7aa]',
+    emerald: 'bg-[#073B9A] text-[#073B9A] border-[#073B9A]',
+    orange: 'bg-[#fff7ed] text-[#F51B2B] border-[#fed7aa]',
   };
   const className = colorClasses[stat.color as keyof typeof colorClasses] || colorClasses.green;
 
@@ -1610,9 +1610,9 @@ function PaymentPill({ label, value }: { label: string; value: string }) {
 
 function EmptyPaymentState({ icon: Icon, text }: { icon: React.ComponentType<any>; text: string }) {
   return (
-    <div className="rounded-3xl border border-dashed border-[#009058] bg-[#009058] px-5 py-12 text-center">
+    <div className="rounded-3xl border border-dashed border-[#073B9A] bg-[#073B9A] px-5 py-12 text-center">
       <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-3xl bg-white shadow-sm">
-        <Icon className="h-12 w-12 text-[#009058]" size={48} />
+        <Icon className="h-12 w-12 text-[#073B9A]" size={48} />
       </div>
       <p className="font-black text-foreground">{text}</p>
     </div>

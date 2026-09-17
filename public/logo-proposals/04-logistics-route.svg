@@ -1,29 +1,29 @@
 <svg width="960" height="360" viewBox="0 0 960 360" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
   <linearGradient id="gMain" x1="8" y1="8" x2="248" y2="248" gradientUnits="userSpaceOnUse">
-    <stop offset="0" stop-color="#0A8B46"/>
-    <stop offset="0.55" stop-color="#089961"/>
-    <stop offset="1" stop-color="#18A96E"/>
+    <stop offset="0" stop-color="#073B9A"/>
+    <stop offset="0.55" stop-color="#073B9A"/>
+    <stop offset="1" stop-color="#073B9A"/>
   </linearGradient>
   <linearGradient id="gDark" x1="32" y1="22" x2="220" y2="230" gradientUnits="userSpaceOnUse">
     <stop offset="0" stop-color="#0C6F3B"/>
-    <stop offset="1" stop-color="#0A8B46"/>
+    <stop offset="1" stop-color="#073B9A"/>
   </linearGradient>
   <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
-    <feDropShadow dx="0" dy="14" stdDeviation="14" flood-color="#0A8B46" flood-opacity="0.20"/>
+    <feDropShadow dx="0" dy="14" stdDeviation="14" flood-color="#073B9A" flood-opacity="0.20"/>
   </filter>
 </defs>
-  <rect width="960" height="360" rx="44" fill="#FCFDFC"/>
-  <rect x="30" y="30" width="900" height="300" rx="38" fill="white" stroke="#E9F0ED"/>
-  <g transform="translate(76 52)" filter="url(#shadow)"><rect width="256" height="256" rx="56" fill="#0A8B46"/>
+  <rect width="960" height="360" rx="44" fill="#FFFFFF"/>
+  <rect x="30" y="30" width="900" height="300" rx="38" fill="white" stroke="#DCE6F8"/>
+  <g transform="translate(76 52)" filter="url(#shadow)"><rect width="256" height="256" rx="56" fill="#073B9A"/>
       <path d="M58 178C82 102 152 86 204 62" stroke="white" stroke-width="18" stroke-linecap="round" stroke-dasharray="2 34"/>
       <path d="M74 152l54-30 54 30v52l-54 30-54-30v-52Z" fill="white"/>
-      <path d="M74 152l54 30 54-30M128 182v52" stroke="#0A8B46" stroke-width="10" stroke-linejoin="round"/>
-      <circle cx="204" cy="62" r="20" fill="#FFA500"/></g>
+      <path d="M74 152l54 30 54-30M128 182v52" stroke="#073B9A" stroke-width="10" stroke-linejoin="round"/>
+      <circle cx="204" cy="62" r="20" fill="#F51B2B"/></g>
   <g transform="translate(358 105)">
-    <text x="0" y="0" font-family="Inter, Poppins, Arial, sans-serif" font-size="62" font-weight="800" letter-spacing="-1" fill="#1B2026">eNKAMBA</text>
-    <text x="0" y="54" font-family="Inter, Poppins, Arial, sans-serif" font-size="22" font-weight="600" fill="#477063">Logistics Route</text>
-    <text x="0" y="96" font-family="Inter, Poppins, Arial, sans-serif" font-size="17" font-weight="500" fill="#477063">Un symbole de trajet, colis, hub et suivi temps reel.</text>
+    <text x="0" y="0" font-family="Inter, Poppins, Arial, sans-serif" font-size="62" font-weight="800" letter-spacing="-1" fill="#10223F">KENZ</text>
+    <text x="0" y="54" font-family="Inter, Poppins, Arial, sans-serif" font-size="22" font-weight="600" fill="#475569">Logistics Route</text>
+    <text x="0" y="96" font-family="Inter, Poppins, Arial, sans-serif" font-size="17" font-weight="500" fill="#475569">Un symbole de trajet, colis, hub et suivi temps reel.</text>
     
   </g>
 </svg>

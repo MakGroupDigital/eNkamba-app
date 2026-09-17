@@ -87,8 +87,8 @@ export default function OrdersPage() {
         <title>Reçu de Commande</title>
         <style>
           body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-          .header { background: #009058; color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-          .content { border: 2px solid #009058; padding: 30px; border-radius: 0 0 10px 10px; }
+          .header { background: #073B9A; color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+          .content { border: 2px solid #073B9A; padding: 30px; border-radius: 0 0 10px 10px; }
           .section { margin: 20px 0; }
           .label { color: #666; font-size: 14px; }
           .value { font-size: 16px; font-weight: bold; margin-top: 5px; }
@@ -96,7 +96,7 @@ export default function OrdersPage() {
           .footer { text-align: center; color: #666; margin-top: 30px; font-size: 12px; }
           .tracking { background: #e3f2fd; padding: 15px; border-radius: 8px; border-left: 4px solid #2196F3; }
           .qr-section { text-align: center; margin: 30px 0; padding: 20px; background: #f5f5f5; border-radius: 8px; }
-          .qr-section img { border: 3px solid #009058; border-radius: 8px; padding: 10px; background: white; }
+          .qr-section img { border: 3px solid #073B9A; border-radius: 8px; padding: 10px; background: white; }
           @media print {
             body { margin: 0; padding: 10px; }
             .no-print { display: none; }
@@ -105,7 +105,7 @@ export default function OrdersPage() {
       </head>
       <body>
         <div class="header">
-          <h1>eNkamba</h1>
+          <h1>Kenz</h1>
           <p>Reçu de Commande</p>
         </div>
         <div class="content">
@@ -149,7 +149,7 @@ export default function OrdersPage() {
           
           <div class="total">
             <div class="label">Total Payé</div>
-            <div class="value" style="color: #009058; font-size: 24px;">
+            <div class="value" style="color: #073B9A; font-size: 24px;">
               ${(order.totalPrice || order.totalAmount || 0).toLocaleString()} ${order.currency || 'CDF'}
             </div>
           </div>
@@ -161,7 +161,7 @@ export default function OrdersPage() {
           
           <div class="section">
             <div class="label">Méthode de Paiement</div>
-            <div class="value">Portefeuille eNkamba</div>
+            <div class="value">Portefeuille Kenz</div>
           </div>
 
           <div class="qr-section">
@@ -176,7 +176,7 @@ export default function OrdersPage() {
         <div class="footer">
           <p>Ce reçu est une preuve officielle de votre commande.</p>
           <p>Veuillez le conserver pour vos dossiers.</p>
-          <p style="margin-top: 20px;"><strong>eNkamba</strong> - La vie simplifiée et meilleure</p>
+          <p style="margin-top: 20px;"><strong>Kenz</strong> - La vie simplifiée et meilleure</p>
           <p>www.enkamba.io</p>
         </div>
       </body>
@@ -359,12 +359,12 @@ export default function OrdersPage() {
                   </div>
 
                   {order.deliveryOption === 'pickup' && order.pickupRoute?.enabled && (
-                    <div className="mb-2 rounded-lg border border-[#FFA500]/30 bg-[#FFA500]/10 p-2">
+                    <div className="mb-2 rounded-lg border border-[#F51B2B]/30 bg-[#F51B2B]/10 p-2">
                       <div className="flex items-center gap-2">
-                        <Route className="w-4 h-4 text-[#FFA500]" />
+                        <Route className="w-4 h-4 text-[#F51B2B]" />
                         <div className="flex-1">
-                          <p className="text-xs font-semibold text-[#FFA500]">Retrait en boutique</p>
-                          <p className="text-xs text-[#FFA500]">Itineraire disponible depuis cette commande</p>
+                          <p className="text-xs font-semibold text-[#F51B2B]">Retrait en boutique</p>
+                          <p className="text-xs text-[#F51B2B]">Itineraire disponible depuis cette commande</p>
                         </div>
                       </div>
                     </div>
@@ -505,7 +505,7 @@ export default function OrdersPage() {
                 <div className="bg-primary/5 p-4 rounded-lg border border-primary/20">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm text-gray-600">Méthode</span>
-                    <span className="font-semibold">Portefeuille eNkamba</span>
+                    <span className="font-semibold">Portefeuille Kenz</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Total payé</span>
@@ -637,7 +637,7 @@ export default function OrdersPage() {
                 )}
                 {selectedOrder.pickupRoute?.enabled && (
                   <Button
-                    className="flex-1 gap-2 bg-[#FFA500]/100 hover:bg-[#FFA500]"
+                    className="flex-1 gap-2 bg-[#F51B2B]/100 hover:bg-[#F51B2B]"
                     onClick={() => openPickupRoute(selectedOrder)}
                   >
                     <Route className="w-4 h-4" />

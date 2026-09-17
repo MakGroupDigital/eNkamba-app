@@ -82,7 +82,7 @@ export default function UgaviPayPage() {
               try {
                 const actorName = user.displayName || user.email || 'Client';
                 const timelineEntries = [
-                  buildUgaviStatusEntry('payment_confirmed', actorName, 'eNkambaPay', 'Paiement confirme'),
+                  buildUgaviStatusEntry('payment_confirmed', actorName, 'Kenz Pay', 'Paiement confirme'),
                   buildUgaviStatusEntry('registered', actorName, paymentPayload?.metadata?.senderAddress || 'Point de depart'),
                 ];
 

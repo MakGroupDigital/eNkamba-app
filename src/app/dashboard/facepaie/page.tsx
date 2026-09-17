@@ -38,8 +38,8 @@ const FACEPAIE_GUIDE_STEPS: Array<{ id: FaceGuideStep; label: string; short: str
 function FacePaieBackMark() {
   return (
     <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
-      <path d="M13.8 5.2L8 11l5.8 5.8" stroke="#0A8B46" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M9 11h8" stroke="#0A8B46" strokeWidth="2.6" strokeLinecap="round" />
+      <path d="M13.8 5.2L8 11l5.8 5.8" stroke="#073B9A" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M9 11h8" stroke="#073B9A" strokeWidth="2.6" strokeLinecap="round" />
     </svg>
   );
 }
@@ -47,7 +47,7 @@ function FacePaieBackMark() {
 function FaceScanVisual() {
   return (
     <svg width="64" height="64" viewBox="0 0 64 64" fill="none" aria-hidden="true">
-      <rect x="6" y="6" width="52" height="52" rx="16" fill="#0A8B46" />
+      <rect x="6" y="6" width="52" height="52" rx="16" fill="#073B9A" />
       <path d="M17 22v-6h7M47 22v-6h-7M17 42v6h7M47 42v6h-7" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
       <path d="M32 19c-9 0-15 7-15 16 0 8 6 14 15 14s15-6 15-14c0-9-6-16-15-16Z" stroke="white" strokeWidth="3.8" />
       <path d="M22 31c5-.8 8-3 10-7 4 5 8 7 13 7" stroke="white" strokeWidth="3.6" strokeLinecap="round" />
@@ -59,10 +59,10 @@ function FaceScanVisual() {
 function ProtectedPaymentVisual() {
   return (
     <svg width="64" height="64" viewBox="0 0 64 64" fill="none" aria-hidden="true">
-      <rect x="6" y="6" width="52" height="52" rx="16" fill="#0A8B46" />
+      <rect x="6" y="6" width="52" height="52" rx="16" fill="#073B9A" />
       <path d="M32 16l16 6v11c0 11-7 18-16 22-9-4-16-11-16-22V22l16-6Z" fill="white" fillOpacity=".16" stroke="white" strokeWidth="3.8" strokeLinejoin="round" />
       <path d="M24 34l6 6 12-14" stroke="white" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M20 52c7 5 17 5 24 0" stroke="#0A8B46" strokeWidth="4" strokeLinecap="round" />
+      <path d="M20 52c7 5 17 5 24 0" stroke="#073B9A" strokeWidth="4" strokeLinecap="round" />
     </svg>
   );
 }
@@ -70,7 +70,7 @@ function ProtectedPaymentVisual() {
 function InstantFlowVisual() {
   return (
     <svg width="64" height="64" viewBox="0 0 64 64" fill="none" aria-hidden="true">
-      <rect x="6" y="6" width="52" height="52" rx="16" fill="#0A8B46" />
+      <rect x="6" y="6" width="52" height="52" rx="16" fill="#073B9A" />
       <path d="M19 25h19" stroke="white" strokeWidth="4.5" strokeLinecap="round" />
       <path d="M34 18l8 7-8 7" stroke="white" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" />
       <path d="M45 39H26" stroke="white" strokeWidth="4.5" strokeLinecap="round" />
@@ -83,7 +83,7 @@ function InstantFlowVisual() {
 function FacePaieDashboardIcon({ type }: { type: 'face' | 'phone' | 'shield' | 'bell' | 'merchant' | 'delete' }) {
   const danger = type === 'delete';
   const bg = danger ? '#fee2e2' : '#e8f7ef';
-  const fg = danger ? '#dc2626' : '#0A8B46';
+  const fg = danger ? '#dc2626' : '#073B9A';
   return (
     <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl" style={{ backgroundColor: bg }}>
       <svg width="25" height="25" viewBox="0 0 25 25" fill="none" aria-hidden="true">
@@ -696,19 +696,19 @@ export default function FacePaiePage() {
           <div className="grid grid-cols-[44px_1fr_44px] items-center gap-3">
             <Link
               href="/dashboard/mbongo-dashboard"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#0A8B46]/15 bg-white text-[#0A8B46] shadow-sm transition hover:bg-[#0A8B46]/5"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#073B9A]/15 bg-white text-[#073B9A] shadow-sm transition hover:bg-[#073B9A]/5"
               aria-label="Retour"
             >
               <FacePaieBackMark />
             </Link>
             <div className="min-w-0 text-center">
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#0A8B46]">Mbongo</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#073B9A]">Mbongo</p>
               <h1 className="truncate text-lg font-black text-slate-950">FacePaie</h1>
             </div>
             <div aria-hidden="true" />
           </div>
 
-          <section className="relative flex flex-1 flex-col justify-between overflow-hidden rounded-[2rem] bg-[#0A8B46] p-5 text-white shadow-2xl shadow-[#0A8B46]/20">
+          <section className="relative flex flex-1 flex-col justify-between overflow-hidden rounded-[2rem] bg-[#073B9A] p-5 text-white shadow-2xl shadow-[#073B9A]/20">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_84%_16%,rgba(255,255,255,0.24),transparent_32%),linear-gradient(145deg,rgba(255,255,255,0.12),transparent_48%)]" />
             <div className="pointer-events-none absolute -bottom-24 -right-20 h-64 w-64 rounded-full border border-white/12" />
             {isProfileLoading ? (
@@ -729,7 +729,7 @@ export default function FacePaiePage() {
                       Paiement par visage prêt pour les opérations autorisées.
                     </p>
                   </div>
-                  <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-[#0A8B46]">
+                  <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-[#073B9A]">
                     Actif
                   </span>
                 </div>
@@ -753,12 +753,12 @@ export default function FacePaiePage() {
                 </div>
 
                 <div className="rounded-[1.55rem] bg-white p-3 text-slate-950 shadow-xl shadow-black/10">
-                  <p className="px-1 text-[11px] font-black uppercase tracking-[0.18em] text-[#0A8B46]">Actions FacePaie</p>
+                  <p className="px-1 text-[11px] font-black uppercase tracking-[0.18em] text-[#073B9A]">Actions FacePaie</p>
                   <div className="mt-3 grid grid-cols-2 gap-2">
                     <button
                       type="button"
                       onClick={updateFacePaieFace}
-                      className="flex items-center gap-3 rounded-2xl border border-[#0A8B46]/10 bg-[#0A8B46]/5 p-3 text-left transition active:scale-[0.98]"
+                      className="flex items-center gap-3 rounded-2xl border border-[#073B9A]/10 bg-[#073B9A]/5 p-3 text-left transition active:scale-[0.98]"
                     >
                       <FacePaieDashboardIcon type="face" />
                       <span className="min-w-0">
@@ -795,13 +795,13 @@ export default function FacePaiePage() {
                       onChange={(event) => setEmergencyPhone(event.target.value)}
                       inputMode="tel"
                       placeholder="+243..."
-                      className="h-12 min-w-0 flex-1 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-bold text-slate-950 outline-none transition focus:border-[#0A8B46] focus:bg-white"
+                      className="h-12 min-w-0 flex-1 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-bold text-slate-950 outline-none transition focus:border-[#073B9A] focus:bg-white"
                     />
                     <button
                       type="button"
                       onClick={() => void saveFacePaieSettings(settings, emergencyPhone)}
                       disabled={isSavingSettings}
-                      className="h-12 rounded-2xl bg-[#0A8B46] px-4 text-xs font-black text-white shadow-lg shadow-[#0A8B46]/20 disabled:opacity-60"
+                      className="h-12 rounded-2xl bg-[#073B9A] px-4 text-xs font-black text-white shadow-lg shadow-[#073B9A]/20 disabled:opacity-60"
                     >
                       {isSavingSettings ? '...' : 'OK'}
                     </button>
@@ -809,7 +809,7 @@ export default function FacePaiePage() {
                 </div>
 
                 <div className="rounded-[1.55rem] bg-white p-3 text-slate-950 shadow-xl shadow-black/10">
-                  <p className="px-1 text-[11px] font-black uppercase tracking-[0.18em] text-[#0A8B46]">Paramètres</p>
+                  <p className="px-1 text-[11px] font-black uppercase tracking-[0.18em] text-[#073B9A]">Paramètres</p>
                   <div className="mt-3 space-y-2">
                     {[
                       {
@@ -843,7 +843,7 @@ export default function FacePaiePage() {
                           <span className="block text-sm font-black">{item.title}</span>
                           <span className="block text-[11px] font-bold leading-4 text-slate-500">{item.text}</span>
                         </span>
-                        <span className={`relative h-7 w-12 rounded-full p-1 transition ${settings[item.key] ? 'bg-[#0A8B46]' : 'bg-slate-300'}`}>
+                        <span className={`relative h-7 w-12 rounded-full p-1 transition ${settings[item.key] ? 'bg-[#073B9A]' : 'bg-slate-300'}`}>
                           <span className={`block h-5 w-5 rounded-full bg-white shadow transition ${settings[item.key] ? 'translate-x-5' : 'translate-x-0'}`} />
                         </span>
                       </button>
@@ -900,7 +900,7 @@ export default function FacePaiePage() {
                   <button
                     type="button"
                     onClick={handleStartSetup}
-                    className="inline-flex h-14 w-full items-center justify-center rounded-2xl bg-white px-6 text-sm font-black text-[#0A8B46] shadow-xl shadow-black/10 transition hover:scale-[1.01] active:scale-[0.98]"
+                    className="inline-flex h-14 w-full items-center justify-center rounded-2xl bg-white px-6 text-sm font-black text-[#073B9A] shadow-xl shadow-black/10 transition hover:scale-[1.01] active:scale-[0.98]"
                   >
                     Commencer avec FacePaie
                   </button>
@@ -934,7 +934,7 @@ export default function FacePaiePage() {
                         type="button"
                         onClick={startCamera}
                         disabled={isCameraStarting}
-                        className="inline-flex h-12 w-full items-center justify-center rounded-2xl bg-white px-5 text-sm font-black text-[#0A8B46] shadow-lg transition active:scale-[0.98] disabled:opacity-70"
+                        className="inline-flex h-12 w-full items-center justify-center rounded-2xl bg-white px-5 text-sm font-black text-[#073B9A] shadow-lg transition active:scale-[0.98] disabled:opacity-70"
                       >
                         {isCameraStarting ? 'Ouverture camera...' : 'Ouvrir la camera'}
                       </button>
@@ -997,7 +997,7 @@ export default function FacePaiePage() {
                                 key={step.id}
                                 className={`rounded-xl px-2 py-1.5 text-center text-[9px] font-black ${
                                   isDone
-                                    ? 'bg-white text-[#0A8B46]'
+                                    ? 'bg-white text-[#073B9A]'
                                     : isCurrent
                                       ? 'bg-white/18 text-white'
                                       : 'bg-white/8 text-white/48'
@@ -1026,7 +1026,7 @@ export default function FacePaiePage() {
                         type="button"
                         onClick={captureFace}
                         disabled={setupStep === 'saving' || !isFaceReady}
-                        className="inline-flex h-12 w-full items-center justify-center rounded-2xl bg-white px-5 text-sm font-black text-[#0A8B46] shadow-lg transition active:scale-[0.98] disabled:opacity-70"
+                        className="inline-flex h-12 w-full items-center justify-center rounded-2xl bg-white px-5 text-sm font-black text-[#073B9A] shadow-lg transition active:scale-[0.98] disabled:opacity-70"
                       >
                         {setupStep === 'saving'
                           ? 'Enregistrement...'
@@ -1044,12 +1044,12 @@ export default function FacePaiePage() {
                       </div>
                       <p className="text-sm font-black">Configuration terminée</p>
                       <p className="text-xs font-bold leading-5 text-white/76">
-                        Votre profil FacePaie est lié à votre compte eNkamba. Les prochaines étapes d’utilisation seront ajoutées au flux de paiement.
+                        Votre profil FacePaie est lié à votre compte Kenz. Les prochaines étapes d’utilisation seront ajoutées au flux de paiement.
                       </p>
                       <button
                         type="button"
                         onClick={resetSetup}
-                        className="inline-flex h-12 w-full items-center justify-center rounded-2xl bg-white px-5 text-sm font-black text-[#0A8B46] shadow-lg transition active:scale-[0.98]"
+                        className="inline-flex h-12 w-full items-center justify-center rounded-2xl bg-white px-5 text-sm font-black text-[#073B9A] shadow-lg transition active:scale-[0.98]"
                       >
                         Terminer
                       </button>

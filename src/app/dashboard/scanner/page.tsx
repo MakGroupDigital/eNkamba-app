@@ -56,10 +56,10 @@ export default function ScannerPage() {
   const { profile } = useUserProfile();
   const { sendMoney } = useMoneyTransfer();
 
-  // Extraire et valider les données du QR code eNkamba
+  // Extraire et valider les données du QR code Kenz
   const parseQRData = (data: string): ScannedQRData | null => {
     try {
-      // Vérifier si c'est un format eNkamba valide
+      // Vérifier si c'est un format Kenz valide
       if (data.startsWith('ENK')) {
         // Format avec infos: ENK{accountNumber}|{fullName}|{email}|{uid}
         const parts = data.split('|');
@@ -82,11 +82,11 @@ export default function ScannerPage() {
             isValid: true,
           };
         } else if (parts.length === 1) {
-          // Format avec juste le compte eNkamba
+          // Format avec juste le compte Kenz
           const accountNum = parts[0];
           return {
             accountNumber: accountNum,
-            fullName: 'Compte eNkamba',
+            fullName: 'Compte Kenz',
             isValid: true,
           };
         }
@@ -140,11 +140,11 @@ export default function ScannerPage() {
             description: `Compte: ${qrData.accountNumber}`,
           });
         } else {
-          setScanError('QR code invalide. Ce n\'est pas un code eNkamba.');
+          setScanError('QR code invalide. Ce n\'est pas un code Kenz.');
           toast({
             variant: 'destructive',
             title: 'QR Code Invalide ❌',
-            description: 'Ce QR code n\'appartient pas à eNkamba.',
+            description: 'Ce QR code n\'appartient pas à Kenz.',
           });
         }
       }
@@ -311,11 +311,11 @@ export default function ScannerPage() {
                       description: `Destinataire: ${qrData.fullName}`,
                     });
                   } else {
-                    setScanError('QR code invalide. Ce n\'est pas un code eNkamba.');
+                    setScanError('QR code invalide. Ce n\'est pas un code Kenz.');
                     toast({
                       variant: 'destructive',
                       title: 'QR Code Invalide ❌',
-                      description: 'Ce QR code n\'appartient pas à eNkamba.',
+                      description: 'Ce QR code n\'appartient pas à Kenz.',
                     });
                   }
                 }, 500);
@@ -420,8 +420,8 @@ export default function ScannerPage() {
         }
         
         @keyframes glow {
-          0%, 100% { box-shadow: 0 0 5px rgba(50, 187, 120, 0.5); }
-          50% { box-shadow: 0 0 15px rgba(50, 187, 120, 0.8); }
+          0%, 100% { box-shadow: 0 0 5px rgba(7, 59, 154, 0.5); }
+          50% { box-shadow: 0 0 15px rgba(7, 59, 154, 0.8); }
         }
         
         .scan-animation {
@@ -448,7 +448,7 @@ export default function ScannerPage() {
           {viewMode === 'default' && (
             <div className="w-full max-w-sm flex flex-col items-center justify-center gap-4">
               <Button
-                className="w-full h-14 bg-gradient-to-r from-[#009058] to-primary hover:from-[#009058] hover:to-primary text-white font-bold text-base shadow-lg"
+                className="w-full h-14 bg-gradient-to-r from-[#073B9A] to-primary hover:from-[#073B9A] hover:to-primary text-white font-bold text-base shadow-lg"
                 onClick={() => {
                   setViewMode('camera-scan');
                   setIsScanning(true);
@@ -472,7 +472,7 @@ export default function ScannerPage() {
                   />
                   <div className="absolute inset-0 bg-black/30 flex flex-col items-center justify-center">
                     <div 
-                      className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#009058] to-transparent shadow-lg shadow-[#009058]"
+                      className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#073B9A] to-transparent shadow-lg shadow-[#073B9A]"
                       style={{
                         top: `${importProgress}%`,
                         transition: 'top 0.1s linear'
@@ -590,7 +590,7 @@ export default function ScannerPage() {
               ) : (
                 <>
                   <p className="text-destructive font-bold">❌ QR Code Invalide</p>
-                  <p className="text-sm text-muted-foreground">Ce n\'est pas un code eNkamba valide</p>
+                  <p className="text-sm text-muted-foreground">Ce n\'est pas un code Kenz valide</p>
                 </>
               )}
               

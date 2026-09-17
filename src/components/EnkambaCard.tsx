@@ -60,7 +60,7 @@ export default function EnkambaCard({
 
   return (
     <div 
-      className="relative w-[500px] h-[315px] rounded-2xl overflow-hidden shadow-2xl text-white font-sans shrink-0 bg-[#009058]"
+      className="relative w-[500px] h-[315px] rounded-2xl overflow-hidden shadow-2xl text-white font-sans shrink-0 bg-[#073B9A]"
       style={{
         boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.2), inset 0 0 0 1px rgba(255,255,255,0.1)'
       }}
@@ -76,8 +76,8 @@ export default function EnkambaCard({
           priority
         />
         {/* Green gradient overlays to match the card's specific lighting */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#009058]/80 via-[#009058]/40 to-[#009058]/90 mix-blend-overlay" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#009058] via-transparent to-[#009058]/50" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#073B9A]/80 via-[#073B9A]/40 to-[#073B9A]/90 mix-blend-overlay" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#073B9A] via-transparent to-[#073B9A]/50" />
       </div>
 
       {/* Content Container (z-10 to stay above background) */}
@@ -92,14 +92,14 @@ export default function EnkambaCard({
         <div className="absolute top-6 right-6 flex items-center gap-2">
           <div className="w-8 h-8 flex items-center justify-center overflow-hidden rounded">
             <Image 
-              src="/enkamba-logo.png" 
-              alt="eNkamba" 
+              src="/kenz-logo.png"
+              alt="Kenz"
               width={32} 
               height={32} 
               className="w-full h-full object-cover object-center"
             />
           </div>
-          <span className="text-2xl font-semibold tracking-wide text-white">eNkamba</span>
+          <span className="text-2xl font-semibold tracking-wide text-white">Kenz</span>
         </div>
 
         {/* EMV Chip */}

@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
     const currencyCode = String(body.currency || 'USD').trim().toUpperCase() as MaxiCashCurrencyCode;
 
     if (!userId || !amount || amount <= 0 || !telephone) {
-      return NextResponse.json({ error: 'Paramètres eNkambaPay invalides.' }, { status: 400 });
+      return NextResponse.json({ error: 'Paramètres Kenz Pay invalides.' }, { status: 400 });
     }
 
     if (!(partner in MAXICASH_PAY_TYPES)) {
@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
       status: 'pending',
       previousBalance: currentBalance,
       newBalance: currentBalance,
-      description: `Dépôt eNkambaPay initié via ${partnerLabel} (${amount} ${currencyCode})`,
+      description: `Dépôt Kenz Pay initié via ${partnerLabel} (${amount} ${currencyCode})`,
       timestamp: new Date(),
       createdAt: new Date().toISOString(),
       phoneNumber: telephone,
@@ -168,7 +168,7 @@ export async function POST(request: NextRequest) {
     const data = await response.json().catch(() => null);
     const responseStatus = extractMaxiCashStatus(data, data?.ResponseStatus);
     const providerTransactionId = data?.TransactionID || null;
-    const providerErrorMessage = getMaxiCashErrorMessage(data, 'Paiement eNkambaPay refusé.');
+    const providerErrorMessage = getMaxiCashErrorMessage(data, 'Paiement Kenz Pay refusé.');
 
     if (currencyCode === 'CDF') {
       console.info('MaxiCash CDF initiation response', {
@@ -189,7 +189,7 @@ export async function POST(request: NextRequest) {
         tx.update(transactionRef, {
           status: 'failed',
           failedAt: new Date().toISOString(),
-          description: `Échec eNkambaPay: ${providerErrorMessage}`,
+          description: `Échec Kenz Pay: ${providerErrorMessage}`,
           'maxicash.lastPayload': data,
           'maxicash.lastStatus': responseStatus || null,
           'maxicash.providerTransactionId': providerTransactionId,
@@ -197,7 +197,7 @@ export async function POST(request: NextRequest) {
       });
 
       return NextResponse.json(
-        { error: providerErrorMessage || 'eNkambaPay n’a pas pu initier le paiement.', providerResponse: data },
+        { error: providerErrorMessage || 'Kenz Pay n’a pas pu initier le paiement.', providerResponse: data },
         { status: 502 }
       );
     }
@@ -227,7 +227,7 @@ export async function POST(request: NextRequest) {
           completedAt: new Date().toISOString(),
           creditedAt: new Date().toISOString(),
           'maxicash.completionVerified': true,
-          description: `Dépôt eNkambaPay confirmé via ${partnerLabel}`,
+          description: `Dépôt Kenz Pay confirmé via ${partnerLabel}`,
         });
         return { transactionStatus: 'completed', newBalance };
       }
@@ -237,7 +237,7 @@ export async function POST(request: NextRequest) {
           ...updateData,
           status: 'failed',
           failedAt: new Date().toISOString(),
-          description: `Échec eNkambaPay: ${providerErrorMessage}`,
+          description: `Échec Kenz Pay: ${providerErrorMessage}`,
         });
         return { transactionStatus: 'failed', newBalance: freshBalance };
       }
@@ -245,7 +245,7 @@ export async function POST(request: NextRequest) {
       tx.update(transactionRef, {
         ...updateData,
         status: isPendingMaxiCashStatus(responseStatus) ? 'pending' : 'pending',
-        description: `Dépôt eNkambaPay en attente de confirmation via ${partnerLabel}`,
+        description: `Dépôt Kenz Pay en attente de confirmation via ${partnerLabel}`,
       });
       return { transactionStatus: 'pending', newBalance: freshBalance };
     });
@@ -266,6 +266,6 @@ export async function POST(request: NextRequest) {
     }, { status: result.transactionStatus === 'failed' ? 502 : 200 });
   } catch (error: any) {
     console.error('Erreur paiement direct MaxiCash:', error);
-    return NextResponse.json({ error: error?.message || 'Erreur eNkambaPay' }, { status: 500 });
+    return NextResponse.json({ error: error?.message || 'Erreur Kenz Pay' }, { status: 500 });
   }
 }

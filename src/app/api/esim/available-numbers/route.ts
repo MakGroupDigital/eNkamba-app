@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     
     // Générer 10 numéros aléatoires disponibles
     for (let i = 0; i < 10; i++) {
-      const prefix = '0700'; // Préfixe pour eSIM-eNkamba
+      const prefix = '0700'; // Préfixe pour eSIM-Kenz
       const suffix = Math.floor(100000 + Math.random() * 900000); // 6 chiffres aléatoires
       const number = `+243 ${prefix} ${suffix.toString().slice(0, 3)} ${suffix.toString().slice(3)}`;
       availableNumbers.push(number);

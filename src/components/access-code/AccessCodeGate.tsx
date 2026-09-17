@@ -42,8 +42,8 @@ export function AccessCodeGate({ children }: { children: React.ReactNode }) {
               <div className="absolute inset-0 rounded-full bg-primary/20 blur-2xl"></div>
               <div className="relative h-28 w-28 overflow-hidden rounded-full bg-primary shadow-2xl ring-4 ring-white/60">
                 <Image
-                  src="/enkamba-logo.png"
-                  alt="eNkamba"
+                  src="/kenz-logo.png"
+                  alt="Kenz"
                   width={112}
                   height={112}
                   className="h-full w-full scale-[1.42] rounded-full object-cover [clip-path:circle(50%_at_50%_50%)]"
@@ -139,7 +139,7 @@ export function AccessCodeGate({ children }: { children: React.ReactNode }) {
             <p className="text-xs text-blue-800 leading-relaxed">
               Cette application est restreinte à l'équipe interne. 
               <br />
-              Contactez <span className="font-semibold">eNkamba</span> pour obtenir l'accès.
+              Contactez <span className="font-semibold">Kenz</span> pour obtenir l'accès.
             </p>
           </div>
         </div>

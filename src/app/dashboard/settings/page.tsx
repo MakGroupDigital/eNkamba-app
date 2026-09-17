@@ -27,12 +27,9 @@ import { useTheme } from 'next-themes';
 import { useState, useEffect } from 'react';
 import { useKycStatus } from '@/hooks/useKycStatus';
 import { useUserProfile } from '@/hooks/useUserProfile';
-import { useBusinessStatus } from '@/hooks/useBusinessStatus';
+import { BUSINESS_PORTAL_ORIGIN } from '@/lib/business-portal';
 import { useAuth } from '@/hooks/useAuth';
-import { useNkampaStore } from '@/hooks/useNkampaStore';
-import { getBusinessDashboardPath, getBusinessStatusLabel } from '@/lib/business-routing';
 import { ContactQRCode } from '@/components/settings/ContactQRCode';
-import { AgentRelaySection } from '@/components/agent-relay/AgentRelaySection';
 import { VerifiedAccountBadge } from '@/components/verified-account-badge';
 import { calculateAgeFromDateOfBirth } from '@/lib/age-policy';
 import {
@@ -54,12 +51,12 @@ const DocumentIcon = ({ size = 24 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <linearGradient id="docGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#009058" />
-        <stop offset="100%" stopColor="#009058" />
+        <stop offset="0%" stopColor="#073B9A" />
+        <stop offset="100%" stopColor="#073B9A" />
       </linearGradient>
     </defs>
     <path d="M12 4H28L36 12V44H12V4Z" fill="url(#docGrad)" />
-    <path d="M28 4V12H36" fill="#009058" />
+    <path d="M28 4V12H36" fill="#073B9A" />
     <rect x="16" y="18" width="16" height="2" rx="1" fill="#fff" fillOpacity="0.5" />
     <rect x="16" y="24" width="12" height="2" rx="1" fill="#fff" fillOpacity="0.5" />
     <rect x="16" y="30" width="14" height="2" rx="1" fill="#fff" fillOpacity="0.5" />
@@ -71,7 +68,7 @@ const UgaviBusinessAccountIcon = ({ size = 24 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <linearGradient id="ugaviBusinessSettingsGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#009058" />
+        <stop offset="0%" stopColor="#073B9A" />
         <stop offset="100%" stopColor="#F97316" />
       </linearGradient>
     </defs>
@@ -152,7 +149,7 @@ interface UserData {
 const USER_STORAGE_KEY = 'enkamba_user';
 
 const getDefaultUser = (): UserData => ({
-  name: 'Utilisateur eNkamba',
+  name: 'Utilisateur Kenz',
   email: 'user@enkamba.io',
 });
 
@@ -161,7 +158,6 @@ export default function SettingsPage() {
   const { isKycCompleted } = useKycStatus();
   const { profile, isLoading: profileLoading } = useUserProfile();
   const { user } = useAuth();
-  const { store: nkampaStore, hasChecked: hasCheckedNkampaStore } = useNkampaStore(user?.uid);
   const [isMounted, setIsMounted] = useState(false);
   const [userData, setUserData] = useState<UserData>(getDefaultUser());
   const [showDetailedInfo, setShowDetailedInfo] = useState(false);
@@ -201,30 +197,6 @@ export default function SettingsPage() {
     );
   }
 
-  const { businessUser } = useBusinessStatus();
-  const businessDescription = businessUser
-    ? businessUser.status === 'APPROVED'
-      ? 'Basculer vers le compte entreprise pour accéder aux modules pro.'
-      : `Statut actuel : ${getBusinessStatusLabel(businessUser.status)}. Modifiez la demande si nécessaire.`
-    : 'Demandez un compte professionnel pour accéder aux modules avancés.';
-
-  const businessActionLink = businessUser?.status === 'APPROVED'
-    ? getBusinessDashboardPath(businessUser.businessType)
-    : '/dashboard/settings/business-account';
-
-  const businessActionLabel = businessUser?.status === 'APPROVED'
-    ? 'Basculer vers le compte entreprise'
-    : 'Afficher la demande et le statut';
-
-  const isBusinessApproved = businessUser?.status === 'APPROVED';
-  const businessRequestLabel = businessUser
-    ? `Statut : ${getBusinessStatusLabel(businessUser.status)}`
-    : 'Demander un compte business';
-  const nkampaStoreHref = nkampaStore ? '/dashboard/nkampa/store/dashboard' : '/dashboard/nkampa/store';
-  const nkampaStoreLabel = hasCheckedNkampaStore && nkampaStore ? 'Ma boutique' : 'Créer boutique';
-  const nkampaStoreDescription = hasCheckedNkampaStore && nkampaStore
-    ? `Accéder à ${nkampaStore.storeName || 'votre boutique Nkampa'}.`
-    : 'Créer ou demander une boutique pour vendre sur Nkampa.';
   const isProfileVerified = isKycCompleted || profile?.kycStatus === 'verified';
   const calculatedProfileAge = calculateAgeFromDateOfBirth(profile?.dateOfBirth);
 
@@ -355,7 +327,7 @@ export default function SettingsPage() {
                               Vérifié
                             </span>
                           ) : (
-                            <span className="text-[#FFA500] flex items-center gap-1">
+                            <span className="text-[#F51B2B] flex items-center gap-1">
                               <AlertCircle size={16} />
                               Non vérifié
                             </span>
@@ -435,61 +407,14 @@ export default function SettingsPage() {
         </CardFooter>
       </Card>
 
-      {/* Business */}
-      <Card className="overflow-hidden border-2 border-primary/20">
-        <CardHeader className="bg-gradient-to-r from-primary/10 to-transparent">
-          <CardTitle className="font-headline text-lg flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-primary" />
-            Business
-          </CardTitle>
-          <CardDescription>Demandes business et accès professionnels par module</CardDescription>
-        </CardHeader>
+      <Card className="overflow-hidden">
         <CardContent className="p-0">
-          <SettingsItem
-            icon={businessUser?.businessType === 'LOGISTICS' ? UgaviBusinessAccountIcon : DocumentIcon}
-            title="Compte business eNkamba"
-            description={businessDescription}
-            action={
-              <Button variant="outline" size="sm" className="rounded-xl" asChild>
-                <Link href={businessActionLink}>
-                  {businessActionLabel}
-                </Link>
-              </Button>
-            }
-          />
-          <BusinessAccessItem
-            icon={UgaviIcon}
-            title="Ugavi Business"
-            description={isBusinessApproved ? 'Accéder au dashboard logistique, relais, flotte et colis.' : businessRequestLabel}
-            href={isBusinessApproved ? getBusinessDashboardPath('LOGISTICS') : '/dashboard/settings/business-account'}
-            label={isBusinessApproved ? 'Accéder' : 'Obtenir'}
-          />
-          <BusinessAccessItem
-            icon={NkampaIcon}
-            title="Nkampa Business"
-            description={isBusinessApproved ? 'Accéder au dashboard commerce pro, catalogue et commandes.' : businessRequestLabel}
-            href={isBusinessApproved ? getBusinessDashboardPath('COMMERCE') : '/dashboard/settings/business-account'}
-            label={isBusinessApproved ? 'Accéder' : 'Obtenir'}
-          />
-          <BusinessAccessItem
-            icon={NkampaIcon}
-            title="Boutique Nkampa"
-            description={nkampaStoreDescription}
-            href={nkampaStoreHref}
-            label={nkampaStoreLabel}
-          />
-          <BusinessAccessItem
-            icon={PaymentNavIcon}
-            title="Mbongo Business"
-            description={isBusinessApproved ? 'Accéder au dashboard paiement pro, API et reporting.' : businessRequestLabel}
-            href={isBusinessApproved ? getBusinessDashboardPath('PAYMENT') : '/dashboard/settings/business-account'}
-            label={isBusinessApproved ? 'Accéder' : 'Obtenir'}
+          <SettingsItem icon={DocumentIcon} title="Obtenir un compte business"
+            description="Kenz Business"
+            action={<Button variant="outline" size="sm" asChild><a href={BUSINESS_PORTAL_ORIGIN}>Accéder</a></Button>}
           />
         </CardContent>
       </Card>
-
-      {/* Agent Relais Section */}
-      <AgentRelaySection />
 
       {/* Preferences & Security */}
       <Card className="overflow-hidden">

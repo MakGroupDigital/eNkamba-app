@@ -162,8 +162,8 @@ interface TontineLedgerEntry {
   createdAt?: any;
 }
 
-const PRIMARY = '#0A8B46';
-const ORANGE = '#FF8A00';
+const PRIMARY = '#073B9A';
+const ORANGE = '#F51B2B';
 
 const modelLabels: Record<TontineModel, string> = {
   rotating: 'Ristourne rotative',
@@ -513,7 +513,7 @@ export default function TontinePage() {
     return new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }).format(date);
   };
 
-  const getDisplayName = () => user?.displayName || user?.email?.split('@')[0] || 'Membre eNkamba';
+  const getDisplayName = () => user?.displayName || user?.email?.split('@')[0] || 'Membre Kenz';
 
   const handleCreateTontine = async () => {
     if (!user) {
@@ -757,7 +757,7 @@ export default function TontinePage() {
       toast({
         variant: 'destructive',
         title: 'QR non reconnu',
-        description: 'Ce scanner accepte uniquement les QR de tontine eNKAMBA.',
+        description: 'Ce scanner accepte uniquement les QR de tontine KENZ.',
       });
       return;
     }
@@ -893,7 +893,7 @@ export default function TontinePage() {
       toast({ title: 'Cotisation payée', description: 'Le wallet a été débité et le journal financier mis à jour.' });
     } catch (error: any) {
       const messages: Record<string, string> = {
-        insufficient: 'Solde insuffisant dans votre wallet eNkamba.',
+        insufficient: 'Solde insuffisant dans votre wallet Kenz.',
         'already-paid': 'Votre cotisation de ce cycle est déjà enregistrée.',
         'contract-required': 'Vous devez accepter le contrat et le mandat avant de payer.',
         'missing-group': 'Cette tontine est introuvable.',
@@ -992,7 +992,7 @@ export default function TontinePage() {
       actorName: getDisplayName(),
       createdAt: serverTimestamp(),
     });
-    toast({ title: 'Rappels envoyés', description: 'Les membres concernés seront notifiés dans leur espace eNkamba.' });
+    toast({ title: 'Rappels envoyés', description: 'Les membres concernés seront notifiés dans leur espace Kenz.' });
   };
 
   const exportReport = () => {
@@ -1038,15 +1038,15 @@ export default function TontinePage() {
   }, [selectedGroup, members]);
 
   return (
-    <div className="min-h-screen bg-[#f7faf8]">
+    <div className="min-h-screen bg-[#FFFFFF]">
       <div className="container mx-auto max-w-6xl space-y-4 p-3 pb-6 animate-in fade-in duration-500 sm:p-4">
         {!openedGroup && (
-          <header className="relative h-[292px] overflow-hidden rounded-[28px] bg-[#0A8B46] px-5 pt-4 text-white shadow-lg shadow-[#0A8B46]/15 md:h-[320px] md:px-8 md:pt-6">
+          <header className="relative h-[292px] overflow-hidden rounded-[28px] bg-[#073B9A] px-5 pt-4 text-white shadow-lg shadow-[#073B9A]/15 md:h-[320px] md:px-8 md:pt-6">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_48%,rgba(255,255,255,0.16),transparent_38%),linear-gradient(135deg,rgba(255,255,255,0.08),transparent_55%)]" />
             <div className="relative z-10 flex items-start justify-between gap-4">
               <div>
                 <div className="flex items-end gap-1">
-                  <span className="font-headline text-[22px] font-black leading-none tracking-tight text-white"><span className="text-[#FF8A00]">e</span>NKAMBA</span>
+                  <span className="font-headline text-[22px] font-black leading-none tracking-tight text-white"><span className="text-[#F51B2B]">e</span>NKAMBA</span>
                 </div>
                 <p className="mt-1 text-[8px] font-bold uppercase tracking-[0.18em] text-white/75">Ristourne & Tontine</p>
               </div>
@@ -1056,7 +1056,7 @@ export default function TontinePage() {
                   <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-black">3</span>
                 </button>
                 <div className="h-9 w-9 overflow-hidden rounded-full bg-white p-0.5">
-                  {user?.photoURL ? <img src={user.photoURL} alt="Profil" className="h-full w-full rounded-full object-cover" /> : <div className="flex h-full w-full items-center justify-center rounded-full bg-[#0A8B46]/10 font-black text-[#0A8B46]">{getDisplayName().charAt(0)}</div>}
+                  {user?.photoURL ? <img src={user.photoURL} alt="Profil" className="h-full w-full rounded-full object-cover" /> : <div className="flex h-full w-full items-center justify-center rounded-full bg-[#073B9A]/10 font-black text-[#073B9A]">{getDisplayName().charAt(0)}</div>}
                 </div>
               </div>
             </div>
@@ -1070,14 +1070,14 @@ export default function TontinePage() {
               </div>
               <div className="absolute -right-1 -top-2 h-36 w-48 md:right-10 md:top-[-18px] md:h-52 md:w-72" aria-hidden="true">
                 <div className="absolute bottom-0 right-1 h-20 w-40 rounded-[50%] bg-white/18 ring-1 ring-white/20 md:h-32 md:w-64" />
-                <div className="absolute bottom-8 right-16 flex h-20 w-20 items-center justify-center rounded-[22px] bg-white text-[#0A8B46] shadow-xl md:bottom-14 md:right-24 md:h-28 md:w-28 md:rounded-[30px]">
+                <div className="absolute bottom-8 right-16 flex h-20 w-20 items-center justify-center rounded-[22px] bg-white text-[#073B9A] shadow-xl md:bottom-14 md:right-24 md:h-28 md:w-28 md:rounded-[30px]">
                   <TontineShieldIcon className="h-14 w-14 md:h-20 md:w-20" />
                 </div>
                 {[0, 1, 2, 3, 4, 5, 6, 7].map((item) => (
                   <span key={item} className="absolute h-6 w-6 rounded-full bg-white/88 shadow-md md:h-9 md:w-9" style={{ bottom: `${6 + (item % 3) * 16}px`, right: `${6 + item * 20}px` }} />
                 ))}
-                <span className="absolute right-36 top-0 flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#0A8B46] shadow-lg md:right-60 md:h-14 md:w-14"><TontineCoinIcon className="h-7 w-7 md:h-10 md:w-10" /></span>
-                <span className="absolute right-0 top-11 flex h-7 w-7 items-center justify-center rounded-full bg-[#FF8A00] text-sm font-black text-white shadow-lg md:right-2 md:top-20 md:h-10 md:w-10 md:text-lg">$</span>
+                <span className="absolute right-36 top-0 flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#073B9A] shadow-lg md:right-60 md:h-14 md:w-14"><TontineCoinIcon className="h-7 w-7 md:h-10 md:w-10" /></span>
+                <span className="absolute right-0 top-11 flex h-7 w-7 items-center justify-center rounded-full bg-[#F51B2B] text-sm font-black text-white shadow-lg md:right-2 md:top-20 md:h-10 md:w-10 md:text-lg">$</span>
               </div>
             </div>
           </header>
@@ -1088,7 +1088,7 @@ export default function TontinePage() {
           <CardContent className="space-y-4 p-4">
             <div className="flex items-center justify-between">
               <h2 className="text-[15px] font-black text-slate-950">Aperçu global</h2>
-              <button type="button" className="flex items-center gap-1 text-[11px] font-bold text-[#0A8B46]">Voir tout <ArrowRight className="h-3.5 w-3.5" /></button>
+              <button type="button" className="flex items-center gap-1 text-[11px] font-bold text-[#073B9A]">Voir tout <ArrowRight className="h-3.5 w-3.5" /></button>
             </div>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               <OverviewTile icon={TontinePeopleIcon} label="Mes groupes" value={String(groups.length).padStart(2, '0')} sub="Groupes actifs" />
@@ -1112,7 +1112,7 @@ export default function TontinePage() {
               </DialogTrigger>
               <DialogContent className="max-h-[88vh] overflow-y-auto rounded-2xl sm:max-w-2xl">
                 <DialogHeader>
-                  <DialogTitle className="text-[#0A8B46]">Créer une tontine professionnelle</DialogTitle>
+                  <DialogTitle className="text-[#073B9A]">Créer une tontine professionnelle</DialogTitle>
                   <DialogDescription>Définissez les règles avant invitation. Les fonds resteront traçables par wallet et journal financier.</DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-2 sm:grid-cols-2">
@@ -1177,7 +1177,7 @@ export default function TontinePage() {
                 </div>
                 <DialogFooter>
                   <Button variant="outline" onClick={() => setShowCreateForm(false)}>Annuler</Button>
-                  <Button onClick={handleCreateTontine} disabled={isCreating} className="bg-[#0A8B46] hover:bg-[#0A8B46]">{isCreating ? 'Création...' : 'Créer et activer'}</Button>
+                  <Button onClick={handleCreateTontine} disabled={isCreating} className="bg-[#073B9A] hover:bg-[#073B9A]">{isCreating ? 'Création...' : 'Créer et activer'}</Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
@@ -1191,19 +1191,19 @@ export default function TontinePage() {
               </DialogTrigger>
               <DialogContent className="rounded-2xl">
                 <DialogHeader>
-                  <DialogTitle className="text-[#0A8B46]">Rejoindre par invitation</DialogTitle>
+                  <DialogTitle className="text-[#073B9A]">Rejoindre par invitation</DialogTitle>
                   <DialogDescription>Collez le lien, le token ou l’identifiant du groupe. Le contrat sera à valider avec votre PIN.</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-2 py-2">
                   <Label>Lien ou token</Label>
                   <div className="flex gap-2">
-                    <Input value={inviteLink} onChange={(event) => setInviteLink(event.target.value)} placeholder="invite_xxx ou lien eNKAMBA" />
+                    <Input value={inviteLink} onChange={(event) => setInviteLink(event.target.value)} placeholder="invite_xxx ou lien KENZ" />
                     <Button variant="outline" size="icon" onClick={() => setShowScanner(true)}><QrCode className="h-4 w-4" /></Button>
                   </div>
                 </div>
                 <DialogFooter>
                   <Button variant="outline" onClick={() => setShowJoinForm(false)}>Annuler</Button>
-                  <Button onClick={handleJoinByLink} disabled={isJoining} className="bg-[#0A8B46] hover:bg-[#0A8B46]">{isJoining ? 'Vérification...' : 'Rejoindre'}</Button>
+                  <Button onClick={handleJoinByLink} disabled={isJoining} className="bg-[#073B9A] hover:bg-[#073B9A]">{isJoining ? 'Vérification...' : 'Rejoindre'}</Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
@@ -1241,7 +1241,7 @@ export default function TontinePage() {
           <TabsContent value="overview" className="space-y-4">
             {openedGroup ? (
               <>
-                <Button variant="outline" className="rounded-xl border-[#0A8B46]/20 text-[#0A8B46]" onClick={() => setOpenedGroupId('')}>
+                <Button variant="outline" className="rounded-xl border-[#073B9A]/20 text-[#073B9A]" onClick={() => setOpenedGroupId('')}>
                   Retour aux tontines
                 </Button>
                 <TontineGroupWorkspace
@@ -1287,18 +1287,18 @@ export default function TontinePage() {
                       />
                     ))}
                 </div>
-                <Card className="mx-2 overflow-hidden rounded-2xl border-[#0A8B46]/10 bg-[#eefbf4] shadow-sm md:mx-8">
+                <Card className="mx-2 overflow-hidden rounded-2xl border-[#073B9A]/10 bg-[#eefbf4] shadow-sm md:mx-8">
                   <CardContent className="grid gap-3 p-3 sm:grid-cols-[1fr_auto] sm:items-center">
                     <div className="flex items-center gap-4">
                       <div className="flex h-20 w-16 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm">
-                        <TontineQrIcon className="h-10 w-10 text-[#0A8B46]" />
+                        <TontineQrIcon className="h-10 w-10 text-[#073B9A]" />
                       </div>
                       <div>
                         <p className="text-[15px] font-black text-slate-950">Partagez votre groupe facilement</p>
                         <p className="mt-1 text-xs font-semibold text-slate-600">Invitez vos proches avec votre QR Code ou votre lien unique.</p>
                       </div>
                     </div>
-                    <Button onClick={() => selectedGroup && copyInvite(selectedGroup)} className="h-11 rounded-xl bg-[#0A8B46] text-xs hover:bg-[#0A8B46]">
+                    <Button onClick={() => selectedGroup && copyInvite(selectedGroup)} className="h-11 rounded-xl bg-[#073B9A] text-xs hover:bg-[#073B9A]">
                       <LinkIcon className="mr-2 h-4 w-4" />Partager mon groupe
                     </Button>
                   </CardContent>
@@ -1309,26 +1309,26 @@ export default function TontinePage() {
 
           <TabsContent value="groups" className="space-y-4">
             <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-              <Card className="border-[#0A8B46]/10">
-                <CardHeader><CardTitle className="text-[#0A8B46]">Mes tontines</CardTitle><CardDescription>Groupes liés à votre compte.</CardDescription></CardHeader>
+              <Card className="border-[#073B9A]/10">
+                <CardHeader><CardTitle className="text-[#073B9A]">Mes tontines</CardTitle><CardDescription>Groupes liés à votre compte.</CardDescription></CardHeader>
                 <CardContent className="space-y-3">
                   {groups.length === 0 ? <EmptyMini text="Aucune tontine liée à votre compte." /> : groups.map((group) => (
                     <GroupCard key={group.id} group={group} currentMember={members.find((member) => member.uid === user?.uid)} onCopy={copyInvite} onSelect={openGroupWorkspace} selected={selectedGroupId === group.id} />
                   ))}
                 </CardContent>
               </Card>
-              <Card className="border-[#0A8B46]/10">
-                <CardHeader><CardTitle className="text-[#0A8B46]">Découvrir</CardTitle><CardDescription>Tontines publiques sur invitation.</CardDescription></CardHeader>
+              <Card className="border-[#073B9A]/10">
+                <CardHeader><CardTitle className="text-[#073B9A]">Découvrir</CardTitle><CardDescription>Tontines publiques sur invitation.</CardDescription></CardHeader>
                 <CardContent className="space-y-3">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input className="pl-9" value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Rechercher un groupe" />
                   </div>
                   {filteredPublicGroups.length === 0 ? <EmptyMini text="Aucune tontine publique disponible." /> : filteredPublicGroups.map((group) => (
-                    <div key={group.id} className="rounded-2xl border border-[#0A8B46]/10 p-3">
+                    <div key={group.id} className="rounded-2xl border border-[#073B9A]/10 p-3">
                       <p className="font-black text-slate-900">{group.name}</p>
                       <p className="text-xs text-muted-foreground">{modelLabels[group.model]} · {formatCurrency(group.contributionAmount, group.currency)}</p>
-                      <Button className="mt-3 w-full bg-[#0A8B46] hover:bg-[#0A8B46]" onClick={() => { setInviteLink(group.inviteToken); setShowJoinForm(true); }}>Rejoindre</Button>
+                      <Button className="mt-3 w-full bg-[#073B9A] hover:bg-[#073B9A]" onClick={() => { setInviteLink(group.inviteToken); setShowJoinForm(true); }}>Rejoindre</Button>
                     </div>
                   ))}
                 </CardContent>
@@ -1337,16 +1337,16 @@ export default function TontinePage() {
           </TabsContent>
 
           <TabsContent value="calendar" className="space-y-3">
-            <Card className="border-[#0A8B46]/10">
-              <CardHeader><CardTitle className="text-[#0A8B46]">Calendrier des cycles</CardTitle><CardDescription>Ordre bénéficiaire et contrôle de protection avant remise du pot.</CardDescription></CardHeader>
+            <Card className="border-[#073B9A]/10">
+              <CardHeader><CardTitle className="text-[#073B9A]">Calendrier des cycles</CardTitle><CardDescription>Ordre bénéficiaire et contrôle de protection avant remise du pot.</CardDescription></CardHeader>
               <CardContent className="space-y-2">
                 {schedule.length === 0 ? <EmptyMini text="Sélectionnez une tontine pour voir le calendrier." /> : schedule.map((item) => (
-                  <div key={item.cycle} className="flex items-center justify-between rounded-2xl border border-[#0A8B46]/10 bg-white p-3">
+                  <div key={item.cycle} className="flex items-center justify-between rounded-2xl border border-[#073B9A]/10 bg-white p-3">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0A8B46]/10 font-black text-[#0A8B46]">{item.cycle}</div>
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#073B9A]/10 font-black text-[#073B9A]">{item.cycle}</div>
                       <div><p className="font-bold">{item.beneficiary}</p><p className="text-xs text-muted-foreground">{formatDate(item.dueDate)}</p></div>
                     </div>
-                    <Badge className={item.secured ? 'bg-[#0A8B46]' : 'bg-[#FF8A00]'}>{item.secured ? 'Protégé' : 'Garantie requise'}</Badge>
+                    <Badge className={item.secured ? 'bg-[#073B9A]' : 'bg-[#F51B2B]'}>{item.secured ? 'Protégé' : 'Garantie requise'}</Badge>
                   </div>
                 ))}
               </CardContent>
@@ -1354,13 +1354,13 @@ export default function TontinePage() {
           </TabsContent>
 
           <TabsContent value="payments" className="space-y-3">
-            <Card className="border-[#0A8B46]/10">
-              <CardHeader><CardTitle className="text-[#0A8B46]">Paiements et journal</CardTitle><CardDescription>Chaque mouvement est traçable. Aucun historique n’est supprimé.</CardDescription></CardHeader>
+            <Card className="border-[#073B9A]/10">
+              <CardHeader><CardTitle className="text-[#073B9A]">Paiements et journal</CardTitle><CardDescription>Chaque mouvement est traçable. Aucun historique n’est supprimé.</CardDescription></CardHeader>
               <CardContent className="space-y-2">
                 {payments.length === 0 ? <EmptyMini text="Aucun paiement enregistré." /> : payments.map((payment) => (
-                  <div key={payment.id} className="flex items-center justify-between rounded-2xl border border-[#0A8B46]/10 p-3">
+                  <div key={payment.id} className="flex items-center justify-between rounded-2xl border border-[#073B9A]/10 p-3">
                     <div><p className="font-bold">{payment.memberName}</p><p className="text-xs text-muted-foreground">{payment.description} · {formatDate(payment.paidAt)}</p></div>
-                    <p className="font-black text-[#0A8B46]">{formatCurrency(payment.amount, payment.currency)}</p>
+                    <p className="font-black text-[#073B9A]">{formatCurrency(payment.amount, payment.currency)}</p>
                   </div>
                 ))}
               </CardContent>
@@ -1368,14 +1368,14 @@ export default function TontinePage() {
           </TabsContent>
 
           <TabsContent value="members" className="space-y-3">
-            <Card className="border-[#0A8B46]/10">
-              <CardHeader><CardTitle className="text-[#0A8B46]">Membres et rôles</CardTitle><CardDescription>Chef, trésorier et contrôleur valident les actions sensibles.</CardDescription></CardHeader>
+            <Card className="border-[#073B9A]/10">
+              <CardHeader><CardTitle className="text-[#073B9A]">Membres et rôles</CardTitle><CardDescription>Chef, trésorier et contrôleur valident les actions sensibles.</CardDescription></CardHeader>
               <CardContent className="grid gap-3 md:grid-cols-2">
                 {members.length === 0 ? <EmptyMini text="Aucun membre chargé." /> : members.map((member) => (
-                  <div key={member.id} className="rounded-2xl border border-[#0A8B46]/10 p-3">
+                  <div key={member.id} className="rounded-2xl border border-[#073B9A]/10 p-3">
                     <div className="flex items-start justify-between gap-3">
                       <div><p className="font-black">{member.displayName}</p><p className="text-xs text-muted-foreground">{member.role} · ordre {member.joinOrder}</p></div>
-                      <Badge variant={member.status === 'active' ? 'default' : 'secondary'} className={member.status === 'active' ? 'bg-[#0A8B46]' : ''}>{member.status}</Badge>
+                      <Badge variant={member.status === 'active' ? 'default' : 'secondary'} className={member.status === 'active' ? 'bg-[#073B9A]' : ''}>{member.status}</Badge>
                     </div>
                     <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
                       <MiniStat label="Cotisations" value={`${member.contributionsPaid || 0}`} />
@@ -1395,8 +1395,8 @@ export default function TontinePage() {
           </TabsContent>
 
           <TabsContent value="guarantees" className="space-y-3">
-            <Card className="border-[#0A8B46]/10">
-              <CardHeader><CardTitle className="text-[#0A8B46]">Garanties et réserve</CardTitle><CardDescription>Protection des membres avant remise de pot.</CardDescription></CardHeader>
+            <Card className="border-[#073B9A]/10">
+              <CardHeader><CardTitle className="text-[#073B9A]">Garanties et réserve</CardTitle><CardDescription>Protection des membres avant remise de pot.</CardDescription></CardHeader>
               <CardContent className="space-y-4">
                 {selectedGroup ? (
                   <>
@@ -1406,9 +1406,9 @@ export default function TontinePage() {
                       <Metric icon={BadgeCheck} label="Réserve collective" value={formatCurrency(selectedGroup.reservePool, selectedGroup.currency)} accent />
                     </div>
                     <Progress value={Math.min(100, ((currentMember?.guaranteePaid || 0) / Math.max(selectedGroup.guaranteeAmount || 1, 1)) * 100)} />
-                    <Button onClick={() => openPinAction('deposit_guarantee', selectedGroup.id)} className="bg-[#0A8B46] hover:bg-[#0A8B46]"><ShieldCheck className="mr-2 h-4 w-4" />Déposer ma garantie</Button>
+                    <Button onClick={() => openPinAction('deposit_guarantee', selectedGroup.id)} className="bg-[#073B9A] hover:bg-[#073B9A]"><ShieldCheck className="mr-2 h-4 w-4" />Déposer ma garantie</Button>
                     <div className="grid gap-2 sm:grid-cols-5">
-                      {['Préfinancement', 'Dépôt garantie', 'Mandat wallet', 'Réserve collective', 'Garantie chef plafonnée'].map((item) => <Badge key={item} variant="outline" className="justify-center rounded-xl border-[#0A8B46]/20 py-2 text-[#0A8B46]">{item}</Badge>)}
+                      {['Préfinancement', 'Dépôt garantie', 'Mandat wallet', 'Réserve collective', 'Garantie chef plafonnée'].map((item) => <Badge key={item} variant="outline" className="justify-center rounded-xl border-[#073B9A]/20 py-2 text-[#073B9A]">{item}</Badge>)}
                     </div>
                   </>
                 ) : <EmptyMini text="Aucune tontine sélectionnée." />}
@@ -1417,12 +1417,12 @@ export default function TontinePage() {
           </TabsContent>
 
           <TabsContent value="documents" className="space-y-3">
-            <Card className="border-[#0A8B46]/10">
-              <CardHeader><CardTitle className="text-[#0A8B46]">Documents</CardTitle><CardDescription>Contrats, mandats, rapports et décisions.</CardDescription></CardHeader>
+            <Card className="border-[#073B9A]/10">
+              <CardHeader><CardTitle className="text-[#073B9A]">Documents</CardTitle><CardDescription>Contrats, mandats, rapports et décisions.</CardDescription></CardHeader>
               <CardContent className="space-y-2">
                 {documents.length === 0 ? <EmptyMini text="Aucun document généré." /> : documents.map((documentItem) => (
-                  <div key={documentItem.id} className="flex items-center justify-between rounded-2xl border border-[#0A8B46]/10 p-3">
-                    <div className="flex items-center gap-3"><FileText className="h-5 w-5 text-[#0A8B46]" /><div><p className="font-bold">{documentItem.title}</p><p className="text-xs text-muted-foreground">{documentItem.type} · {formatDate(documentItem.createdAt)}</p></div></div>
+                  <div key={documentItem.id} className="flex items-center justify-between rounded-2xl border border-[#073B9A]/10 p-3">
+                    <div className="flex items-center gap-3"><FileText className="h-5 w-5 text-[#073B9A]" /><div><p className="font-bold">{documentItem.title}</p><p className="text-xs text-muted-foreground">{documentItem.type} · {formatDate(documentItem.createdAt)}</p></div></div>
                     <Badge variant="outline">{documentItem.status}</Badge>
                   </div>
                 ))}
@@ -1431,15 +1431,15 @@ export default function TontinePage() {
           </TabsContent>
 
           <TabsContent value="reports" className="space-y-3">
-            <Card className="border-[#0A8B46]/10">
-              <CardHeader><CardTitle className="text-[#0A8B46]">Rapports et audit</CardTitle><CardDescription>Export chef, trésorier, contrôleur, entreprise et auditeur.</CardDescription></CardHeader>
+            <Card className="border-[#073B9A]/10">
+              <CardHeader><CardTitle className="text-[#073B9A]">Rapports et audit</CardTitle><CardDescription>Export chef, trésorier, contrôleur, entreprise et auditeur.</CardDescription></CardHeader>
               <CardContent className="space-y-3">
-                <Button onClick={exportReport} disabled={!selectedGroup} className="bg-[#0A8B46] hover:bg-[#0A8B46]"><Download className="mr-2 h-4 w-4" />Exporter le rapport JSON</Button>
+                <Button onClick={exportReport} disabled={!selectedGroup} className="bg-[#073B9A] hover:bg-[#073B9A]"><Download className="mr-2 h-4 w-4" />Exporter le rapport JSON</Button>
                 <div className="space-y-2">
                   {ledger.length === 0 ? <EmptyMini text="Aucun mouvement dans le journal." /> : ledger.map((entry) => (
-                    <div key={entry.id} className="flex items-center justify-between rounded-2xl border border-[#0A8B46]/10 p-3">
+                    <div key={entry.id} className="flex items-center justify-between rounded-2xl border border-[#073B9A]/10 p-3">
                       <div><p className="font-bold">{entry.label}</p><p className="text-xs text-muted-foreground">{entry.actorName} · {formatDate(entry.createdAt)}</p></div>
-                      <p className="font-black text-[#0A8B46]">{entry.amount ? formatCurrency(entry.amount, entry.currency) : entry.type}</p>
+                      <p className="font-black text-[#073B9A]">{entry.amount ? formatCurrency(entry.amount, entry.currency) : entry.type}</p>
                     </div>
                   ))}
                 </div>
@@ -1458,7 +1458,7 @@ export default function TontinePage() {
         onSuccess={handlePinSuccess}
         purpose="payment"
         paymentDetails={{
-          recipient: selectedGroup?.name || 'Tontine eNkamba',
+          recipient: selectedGroup?.name || 'Tontine Kenz',
           amount: String(selectedGroup?.contributionAmount || selectedGroup?.guaranteeAmount || 0),
           currency: selectedGroup?.currency || 'CDF',
         }}
@@ -1475,7 +1475,7 @@ export default function TontinePage() {
           <Dialog open={showRules} onOpenChange={setShowRules}>
             <DialogContent className="rounded-2xl sm:max-w-xl">
               <DialogHeader>
-                <DialogTitle className="text-[#0A8B46]">Règlement du groupe</DialogTitle>
+                <DialogTitle className="text-[#073B9A]">Règlement du groupe</DialogTitle>
                 <DialogDescription>Règles financières et sécurité appliquées à cette tontine.</DialogDescription>
               </DialogHeader>
               <div className="grid gap-2 text-sm">
@@ -1491,7 +1491,7 @@ export default function TontinePage() {
           <Dialog open={showSettings} onOpenChange={setShowSettings}>
             <DialogContent className="rounded-2xl sm:max-w-xl">
               <DialogHeader>
-                <DialogTitle className="text-[#0A8B46]">Paramètres Tontine</DialogTitle>
+                <DialogTitle className="text-[#073B9A]">Paramètres Tontine</DialogTitle>
                 <DialogDescription>Les paramètres sensibles passent par validation du comité.</DialogDescription>
               </DialogHeader>
               <div className="grid gap-3">
@@ -1599,12 +1599,12 @@ function TontineQRScannerDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="rounded-2xl sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-[#0A8B46]">
+          <DialogTitle className="flex items-center gap-2 text-[#073B9A]">
             <ScanLine className="h-5 w-5" />
             Scanner Tontine
           </DialogTitle>
           <DialogDescription>
-            Ce scanner accepte uniquement les QR d’invitation Tontine eNKAMBA.
+            Ce scanner accepte uniquement les QR d’invitation Tontine KENZ.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
@@ -1613,7 +1613,7 @@ function TontineQRScannerDialog({
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="h-40 w-40 rounded-3xl border-2 border-white/80 shadow-[0_0_0_999px_rgba(0,0,0,0.28)]" />
             </div>
-            <div className="absolute left-3 top-3 rounded-full bg-[#0A8B46] px-3 py-1 text-xs font-black text-white">
+            <div className="absolute left-3 top-3 rounded-full bg-[#073B9A] px-3 py-1 text-xs font-black text-white">
               QR Tontine
             </div>
           </div>
@@ -1623,7 +1623,7 @@ function TontineQRScannerDialog({
             <Label>Token ou lien Tontine</Label>
             <div className="flex gap-2">
               <Input value={manualCode} onChange={(event) => setManualCode(event.target.value)} placeholder="invite_xxx ou lien /dashboard/tontine?invite=..." />
-              <Button onClick={() => onScan(manualCode)} className="bg-[#0A8B46] hover:bg-[#0A8B46]">
+              <Button onClick={() => onScan(manualCode)} className="bg-[#073B9A] hover:bg-[#073B9A]">
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
@@ -1633,7 +1633,7 @@ function TontineQRScannerDialog({
               <X className="mr-2 h-4 w-4" />
               Fermer
             </Button>
-            <Button variant="outline" className="flex-1 border-[#0A8B46]/20 text-[#0A8B46]" onClick={() => setStatus('Caméra active. Montrez uniquement un QR Tontine.')}>
+            <Button variant="outline" className="flex-1 border-[#073B9A]/20 text-[#073B9A]" onClick={() => setStatus('Caméra active. Montrez uniquement un QR Tontine.')}>
               <Camera className="mr-2 h-4 w-4" />
               Caméra
             </Button>
@@ -1655,8 +1655,8 @@ function InfoPill({ label, value }: { label: string; value: string }) {
 
 function OverviewTile({ icon: Icon, label, value, sub, accent = false }: { icon: any; label: string; value: string; sub: string; accent?: boolean }) {
   return (
-    <div className="rounded-xl border border-[#0A8B46]/10 bg-white p-2.5 text-center shadow-sm">
-      <div className={`mx-auto mb-2 flex h-8 w-8 items-center justify-center rounded-xl ${accent ? 'bg-[#FF8A00]/10 text-[#FF8A00]' : 'bg-[#0A8B46]/10 text-[#0A8B46]'}`}>
+    <div className="rounded-xl border border-[#073B9A]/10 bg-white p-2.5 text-center shadow-sm">
+      <div className={`mx-auto mb-2 flex h-8 w-8 items-center justify-center rounded-xl ${accent ? 'bg-[#F51B2B]/10 text-[#F51B2B]' : 'bg-[#073B9A]/10 text-[#073B9A]'}`}>
         <Icon className="h-5 w-5" />
       </div>
       <p className="truncate text-[10px] font-bold text-slate-700">{label}</p>
@@ -1687,17 +1687,17 @@ function HomeGroupCard({
     <button
       type="button"
       onClick={() => onOpen(group.id)}
-      className="w-full rounded-2xl border border-[#0A8B46]/10 bg-white p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+      className="w-full rounded-2xl border border-[#073B9A]/10 bg-white p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
     >
       <div className="grid grid-cols-[1fr_auto] gap-2 sm:grid-cols-[1fr_auto_auto] sm:items-center">
         <div className="flex min-w-0 items-center gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white ring-1 ring-[#0A8B46]/10" style={{ color: accent }}>
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white ring-1 ring-[#073B9A]/10" style={{ color: accent }}>
             <Icon className="h-7 w-7" />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <p className="truncate text-sm font-black text-slate-950">{group.name}</p>
-              <BadgeCheck className="h-4 w-4 shrink-0 text-[#0A8B46]" />
+              <BadgeCheck className="h-4 w-4 shrink-0 text-[#073B9A]" />
             </div>
             <p className="mt-1 text-[10px] font-semibold text-muted-foreground">{modelLabels[group.model]} · {group.memberCount} membres</p>
             <div className="mt-3 flex items-center gap-3">
@@ -1710,12 +1710,12 @@ function HomeGroupCard({
         </div>
         <div className="text-right">
           <p className="text-[10px] font-bold text-muted-foreground">Prochaine échéance</p>
-          <p className="mt-1 text-xs font-black text-[#0A8B46]">{formatDate(group.nextDueDate)}</p>
+          <p className="mt-1 text-xs font-black text-[#073B9A]">{formatDate(group.nextDueDate)}</p>
         </div>
         <div className="col-span-2 flex items-center justify-between border-t border-slate-100 pt-2 sm:col-span-1 sm:block sm:border-t-0 sm:pt-0 sm:text-right">
           <p className="text-[10px] font-bold text-muted-foreground">Ma contribution</p>
           <div className="text-right">
-            <p className="text-sm font-black text-[#0A8B46]">{formatCurrency(group.contributionAmount, group.currency)}</p>
+            <p className="text-sm font-black text-[#073B9A]">{formatCurrency(group.contributionAmount, group.currency)}</p>
             <p className="text-[10px] font-semibold text-muted-foreground">{formatCurrency(group.collectedAmount, group.currency)} / {formatCurrency(expected, group.currency)}</p>
           </div>
         </div>
@@ -1785,9 +1785,9 @@ function TontineGroupWorkspace({
 
   return (
     <div className="space-y-4">
-      <section className="overflow-hidden rounded-[28px] bg-[#0A8B46] text-white shadow-xl shadow-[#0A8B46]/20">
+      <section className="overflow-hidden rounded-[28px] bg-[#073B9A] text-white shadow-xl shadow-[#073B9A]/20">
         <div className="relative p-4 sm:p-5">
-          <div className="absolute inset-0 opacity-15" style={{ backgroundImage: 'radial-gradient(circle at 15% 15%, #fff 0 1px, transparent 2px), radial-gradient(circle at 85% 20%, #FF8A00 0 2px, transparent 4px)', backgroundSize: '32px 32px, 72px 72px' }} />
+          <div className="absolute inset-0 opacity-15" style={{ backgroundImage: 'radial-gradient(circle at 15% 15%, #fff 0 1px, transparent 2px), radial-gradient(circle at 85% 20%, #F51B2B 0 2px, transparent 4px)', backgroundSize: '32px 32px, 72px 72px' }} />
           <div className="relative flex items-start justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
               <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-white/14 ring-1 ring-white/25">
@@ -1801,7 +1801,7 @@ function TontineGroupWorkspace({
                 <p className="mt-1 text-sm font-semibold text-white/76">{modelLabels[group.model]} · {group.memberCount} membres</p>
               </div>
             </div>
-            <Badge className="rounded-full bg-[#FF8A00] text-white hover:bg-[#FF8A00]">Sécurité {group.securityLevel}</Badge>
+            <Badge className="rounded-full bg-[#F51B2B] text-white hover:bg-[#F51B2B]">Sécurité {group.securityLevel}</Badge>
           </div>
 
           <div className="relative mt-5 grid gap-3 rounded-3xl border border-white/14 bg-white/8 p-4 sm:grid-cols-3">
@@ -1810,7 +1810,7 @@ function TontineGroupWorkspace({
             <div>
               <p className="text-xs font-bold text-white/66">Prochain bénéficiaire</p>
               <div className="mt-2 flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-lg font-black text-[#0A8B46]">{nextBeneficiary.charAt(0)}</div>
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-lg font-black text-[#073B9A]">{nextBeneficiary.charAt(0)}</div>
                 <div>
                   <p className="font-black">{nextBeneficiary}</p>
                   <p className="text-xs text-white/70">Position {schedule[0]?.cycle || 1}/{group.maxMembers}</p>
@@ -1831,7 +1831,7 @@ function TontineGroupWorkspace({
         </div>
       </section>
 
-      <Card className="-mt-8 rounded-[24px] border-[#0A8B46]/10 bg-white shadow-lg">
+      <Card className="-mt-8 rounded-[24px] border-[#073B9A]/10 bg-white shadow-lg">
         <CardContent className="grid grid-cols-3 gap-1 p-2 sm:grid-cols-6">
           <QuickAction icon={WalletCards} label="Payer ma cotisation" onClick={onPay} disabled={isProcessing || currentMember?.status !== 'active'} />
           <QuickAction icon={UserRoundCheck} label="Inviter" onClick={onInvite} />
@@ -1843,13 +1843,13 @@ function TontineGroupWorkspace({
       </Card>
 
       {currentMember?.status === 'pending_contract' && (
-        <Card className="border-[#FF8A00]/30 bg-[#fff7ed]">
+        <Card className="border-[#F51B2B]/30 bg-[#fff7ed]">
           <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="font-black text-[#9a4b00]">Contrat et mandat requis</p>
-              <p className="text-sm text-[#9a4b00]/80">Validez avec votre PIN avant cotisation. Le mandat est limité à cette tontine.</p>
+              <p className="font-black text-[#F51B2B]">Contrat et mandat requis</p>
+              <p className="text-sm text-[#F51B2B]/80">Validez avec votre PIN avant cotisation. Le mandat est limité à cette tontine.</p>
             </div>
-            <Button onClick={onAcceptContract} className="bg-[#0A8B46] hover:bg-[#0A8B46]"><LockKeyhole className="mr-2 h-4 w-4" />Valider</Button>
+            <Button onClick={onAcceptContract} className="bg-[#073B9A] hover:bg-[#073B9A]"><LockKeyhole className="mr-2 h-4 w-4" />Valider</Button>
           </CardContent>
         </Card>
       )}
@@ -1870,7 +1870,7 @@ function TontineGroupWorkspace({
 
         <TabsContent value="apercu" className="mt-4 space-y-4">
           <div className="grid gap-4 lg:grid-cols-[1fr_0.95fr]">
-            <Card className="border-[#0A8B46]/10">
+            <Card className="border-[#073B9A]/10">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base text-slate-950">Informations du groupe</CardTitle>
               </CardHeader>
@@ -1882,38 +1882,38 @@ function TontineGroupWorkspace({
                 <InfoLine icon={CalendarDays} label="Prochaine échéance" value={formatDate(group.nextDueDate)} />
                 <InfoLine icon={Banknote} label="Devise" value={group.currency} />
                 <InfoLine icon={UserCheck} label="Chef de groupe" value={chief?.displayName || 'À définir'} />
-                <Button variant="ghost" onClick={onOpenRules} className="mt-2 w-full justify-between rounded-xl text-[#0A8B46]">
+                <Button variant="ghost" onClick={onOpenRules} className="mt-2 w-full justify-between rounded-xl text-[#073B9A]">
                   Voir le règlement complet <ArrowRight className="h-4 w-4" />
                 </Button>
               </CardContent>
             </Card>
 
             <div className="space-y-4">
-              <Card className="border-[#0A8B46]/10 bg-[#f1faf5]">
+              <Card className="border-[#073B9A]/10 bg-[#FFFFFF]">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base text-[#0A8B46]">Résumé financier</CardTitle>
+                  <CardTitle className="text-base text-[#073B9A]">Résumé financier</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <InfoLine icon={HandCoins} label="Montant total" value={formatCurrency(totalExpected, group.currency)} strong />
-                  <InfoLine icon={CheckCircle2} label="Total payé" value={formatCurrency(group.collectedAmount, group.currency)} strong valueClass="text-[#0A8B46]" />
+                  <InfoLine icon={CheckCircle2} label="Total payé" value={formatCurrency(group.collectedAmount, group.currency)} strong valueClass="text-[#073B9A]" />
                   <InfoLine icon={AlertTriangle} label="Reste à payer" value={formatCurrency(remaining, group.currency)} strong valueClass="text-red-600" />
                 </CardContent>
               </Card>
 
-              <Card className="border-[#0A8B46]/10">
+              <Card className="border-[#073B9A]/10">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base text-slate-950">Statut des cotisations</CardTitle>
                 </CardHeader>
                 <CardContent className="grid grid-cols-[130px_1fr] items-center gap-4">
                   <ContributionDonut paid={paidMembers} pending={pendingMembers} late={lateMembers} total={Number(group.maxMembers || 0)} />
                   <div className="space-y-2 text-sm">
-                    <Legend color="#0A8B46" label="Ont payé" value={paidMembers} />
-                    <Legend color="#FF8A00" label="En attente" value={pendingMembers} />
+                    <Legend color="#073B9A" label="Ont payé" value={paidMembers} />
+                    <Legend color="#F51B2B" label="En attente" value={pendingMembers} />
                     <Legend color="#ef4444" label="En retard" value={lateMembers} />
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Button variant="ghost" onClick={onSendReminders} className="w-full justify-between rounded-xl text-[#0A8B46]">
+                  <Button variant="ghost" onClick={onSendReminders} className="w-full justify-between rounded-xl text-[#073B9A]">
                     Voir tous les membres <ArrowRight className="h-4 w-4" />
                   </Button>
                 </CardFooter>
@@ -1921,45 +1921,45 @@ function TontineGroupWorkspace({
             </div>
           </div>
 
-          <Card id="tontine-calendar-panel" className="border-[#0A8B46]/10">
+          <Card id="tontine-calendar-panel" className="border-[#073B9A]/10">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-base text-slate-950">Calendrier des bénéficiaires</CardTitle>
-              <Button variant="ghost" size="sm" className="text-[#0A8B46]" onClick={() => onDecision('beneficiary_order', 'Modifier l’ordre bénéficiaire')}>Voir tout</Button>
+              <Button variant="ghost" size="sm" className="text-[#073B9A]" onClick={() => onDecision('beneficiary_order', 'Modifier l’ordre bénéficiaire')}>Voir tout</Button>
             </CardHeader>
             <CardContent className="flex gap-3 overflow-x-auto pb-4">
               {schedule.slice(0, 8).map((item, index) => (
-                <div key={item.cycle} className={`min-w-[118px] rounded-2xl border p-3 text-center ${index === 0 ? 'border-[#0A8B46] bg-[#f1faf5]' : 'border-[#0A8B46]/10 bg-white'}`}>
-                  <p className="mb-2 text-left text-xs font-black text-[#0A8B46]">{item.cycle}</p>
-                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#0A8B46]/10 font-black text-[#0A8B46]">{item.beneficiary.charAt(0)}</div>
+                <div key={item.cycle} className={`min-w-[118px] rounded-2xl border p-3 text-center ${index === 0 ? 'border-[#073B9A] bg-[#FFFFFF]' : 'border-[#073B9A]/10 bg-white'}`}>
+                  <p className="mb-2 text-left text-xs font-black text-[#073B9A]">{item.cycle}</p>
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#073B9A]/10 font-black text-[#073B9A]">{item.beneficiary.charAt(0)}</div>
                   <p className="mt-2 truncate text-sm font-black text-slate-950">{item.beneficiary}</p>
                   <p className="text-xs text-muted-foreground">{formatDate(item.dueDate)}</p>
-                  {index === 0 && <Badge className="mt-2 bg-[#0A8B46]">Prochain</Badge>}
+                  {index === 0 && <Badge className="mt-2 bg-[#073B9A]">Prochain</Badge>}
                 </div>
               ))}
             </CardContent>
           </Card>
 
-          <Card className="border-[#0A8B46]/10 bg-[#f1faf5]">
+          <Card className="border-[#073B9A]/10 bg-[#FFFFFF]">
             <CardContent className="grid gap-4 p-4 md:grid-cols-2">
               <div className="flex gap-3">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-[#0A8B46]">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-[#073B9A]">
                   <ShieldCheck className="h-8 w-8" />
                 </div>
                 <div>
                   <p className="text-xs font-bold text-muted-foreground">Niveau de sécurité du groupe</p>
-                  <p className="text-xl font-black text-[#0A8B46]">Élevé</p>
-                  <p className="mt-1 text-xs font-semibold text-[#0A8B46]">✓ Dépôt de garantie actif · ✓ Mandat de prélèvement actif · ✓ Fonds protégés</p>
+                  <p className="text-xl font-black text-[#073B9A]">Élevé</p>
+                  <p className="mt-1 text-xs font-semibold text-[#073B9A]">✓ Dépôt de garantie actif · ✓ Mandat de prélèvement actif · ✓ Fonds protégés</p>
                 </div>
               </div>
               <div className="rounded-2xl bg-white p-4">
                 <div className="flex items-center gap-3">
-                  <LockKeyhole className="h-7 w-7 text-[#0A8B46]" />
+                  <LockKeyhole className="h-7 w-7 text-[#073B9A]" />
                   <div>
                     <p className="font-black text-slate-950">Cagnotte sécurisée</p>
                     <p className="text-xs text-muted-foreground">Les fonds sont protégés par contrat, garantie et journal d’audit.</p>
                   </div>
                 </div>
-                <Button className="mt-3 bg-[#0A8B46] hover:bg-[#0A8B46]" onClick={onDepositGuarantee}>Compléter ma garantie</Button>
+                <Button className="mt-3 bg-[#073B9A] hover:bg-[#073B9A]" onClick={onDepositGuarantee}>Compléter ma garantie</Button>
               </div>
             </CardContent>
           </Card>
@@ -1967,13 +1967,13 @@ function TontineGroupWorkspace({
 
         <TabsContent value="membres" className="mt-4 grid gap-3 md:grid-cols-2">
           {members.length === 0 ? <EmptyMini text="Aucun membre chargé." /> : members.map((member) => (
-            <div key={member.id} className="rounded-2xl border border-[#0A8B46]/10 bg-white p-3">
+            <div key={member.id} className="rounded-2xl border border-[#073B9A]/10 bg-white p-3">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#0A8B46]/10 font-black text-[#0A8B46]">{member.displayName.charAt(0)}</div>
+                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#073B9A]/10 font-black text-[#073B9A]">{member.displayName.charAt(0)}</div>
                   <div><p className="font-black">{member.displayName}</p><p className="text-xs text-muted-foreground">{member.role} · position {member.joinOrder}</p></div>
                 </div>
-                <Badge className={member.status === 'active' ? 'bg-[#0A8B46]' : 'bg-[#FF8A00]'}>{member.status}</Badge>
+                <Badge className={member.status === 'active' ? 'bg-[#073B9A]' : 'bg-[#F51B2B]'}>{member.status}</Badge>
               </div>
             </div>
           ))}
@@ -1987,27 +1987,27 @@ function TontineGroupWorkspace({
 
         <TabsContent value="calendrier" className="mt-4 space-y-2">
           {schedule.map((item) => (
-            <div key={item.cycle} className="flex items-center justify-between rounded-2xl border border-[#0A8B46]/10 bg-white p-3">
+            <div key={item.cycle} className="flex items-center justify-between rounded-2xl border border-[#073B9A]/10 bg-white p-3">
               <div><p className="font-black">Cycle {item.cycle} · {item.beneficiary}</p><p className="text-xs text-muted-foreground">{formatDate(item.dueDate)}</p></div>
-              <Badge className={item.secured ? 'bg-[#0A8B46]' : 'bg-[#FF8A00]'}>{item.secured ? 'Protégé' : 'Garantie à renforcer'}</Badge>
+              <Badge className={item.secured ? 'bg-[#073B9A]' : 'bg-[#F51B2B]'}>{item.secured ? 'Protégé' : 'Garantie à renforcer'}</Badge>
             </div>
           ))}
         </TabsContent>
 
         <TabsContent value="transactions" className="mt-4 space-y-2">
-          <Button onClick={onExportReport} className="mb-2 bg-[#0A8B46] hover:bg-[#0A8B46]"><Download className="mr-2 h-4 w-4" />Exporter le rapport</Button>
+          <Button onClick={onExportReport} className="mb-2 bg-[#073B9A] hover:bg-[#073B9A]"><Download className="mr-2 h-4 w-4" />Exporter le rapport</Button>
           {ledger.length === 0 ? <EmptyMini text="Aucun mouvement dans le journal." /> : ledger.map((entry) => (
-            <div key={entry.id} className="flex items-center justify-between rounded-2xl border border-[#0A8B46]/10 bg-white p-3">
+            <div key={entry.id} className="flex items-center justify-between rounded-2xl border border-[#073B9A]/10 bg-white p-3">
               <div><p className="font-black">{entry.label}</p><p className="text-xs text-muted-foreground">{entry.actorName} · {formatDate(entry.createdAt)}</p></div>
-              <p className="font-black text-[#0A8B46]">{entry.amount ? formatCurrency(entry.amount, entry.currency) : entry.type}</p>
+              <p className="font-black text-[#073B9A]">{entry.amount ? formatCurrency(entry.amount, entry.currency) : entry.type}</p>
             </div>
           ))}
         </TabsContent>
 
         <TabsContent value="documents" className="mt-4 space-y-2">
           {documents.length === 0 ? <EmptyMini text="Aucun document généré." /> : documents.map((documentItem) => (
-            <div key={documentItem.id} className="flex items-center justify-between rounded-2xl border border-[#0A8B46]/10 bg-white p-3">
-              <div className="flex items-center gap-3"><FileText className="h-5 w-5 text-[#0A8B46]" /><div><p className="font-black">{documentItem.title}</p><p className="text-xs text-muted-foreground">{documentItem.type} · {formatDate(documentItem.createdAt)}</p></div></div>
+            <div key={documentItem.id} className="flex items-center justify-between rounded-2xl border border-[#073B9A]/10 bg-white p-3">
+              <div className="flex items-center gap-3"><FileText className="h-5 w-5 text-[#073B9A]" /><div><p className="font-black">{documentItem.title}</p><p className="text-xs text-muted-foreground">{documentItem.type} · {formatDate(documentItem.createdAt)}</p></div></div>
               <Badge variant="outline">{documentItem.status}</Badge>
             </div>
           ))}
@@ -2033,7 +2033,7 @@ function QuickAction({ icon: Icon, label, onClick, disabled = false }: { icon: a
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="flex min-h-[82px] flex-col items-center justify-center gap-2 rounded-2xl px-2 text-center text-xs font-black text-slate-800 transition hover:bg-[#0A8B46]/6 disabled:cursor-not-allowed disabled:opacity-45"
+      className="flex min-h-[82px] flex-col items-center justify-center gap-2 rounded-2xl px-2 text-center text-xs font-black text-slate-800 transition hover:bg-[#073B9A]/6 disabled:cursor-not-allowed disabled:opacity-45"
     >
       <Icon className="h-6 w-6 text-slate-800" />
       <span className="leading-tight">{label}</span>
@@ -2045,7 +2045,7 @@ function InfoLine({ icon: Icon, label, value, strong = false, valueClass = '' }:
   return (
     <div className="flex items-center justify-between gap-3 text-sm">
       <div className="flex min-w-0 items-center gap-2 text-muted-foreground">
-        <Icon className="h-4 w-4 shrink-0 text-[#0A8B46]" />
+        <Icon className="h-4 w-4 shrink-0 text-[#073B9A]" />
         <span className="truncate">{label}</span>
       </div>
       <span className={`max-w-[55%] truncate text-right ${strong ? 'font-black' : 'font-semibold'} ${valueClass || 'text-slate-900'}`}>{value}</span>
@@ -2060,7 +2060,7 @@ function ContributionDonut({ paid, pending, late, total }: { paid: number; pendi
   return (
     <div
       className="relative flex h-28 w-28 items-center justify-center rounded-full"
-      style={{ background: `conic-gradient(#0A8B46 0deg ${paidDeg}deg, #FF8A00 ${paidDeg}deg ${paidDeg + pendingDeg}deg, #ef4444 ${paidDeg + pendingDeg}deg 360deg)` }}
+      style={{ background: `conic-gradient(#073B9A 0deg ${paidDeg}deg, #F51B2B ${paidDeg}deg ${paidDeg + pendingDeg}deg, #ef4444 ${paidDeg + pendingDeg}deg 360deg)` }}
     >
       <div className="flex h-20 w-20 flex-col items-center justify-center rounded-full bg-white">
         <p className="text-xl font-black text-slate-950">{total}</p>
@@ -2082,14 +2082,14 @@ function Legend({ color, label, value }: { color: string; label: string; value: 
 
 function PaymentRow({ payment, formatCurrency, formatDate }: { payment: TontinePayment; formatCurrency: (amount: number, currency?: Currency) => string; formatDate: (value: any) => string }) {
   return (
-    <div className="flex items-center justify-between rounded-2xl border border-[#0A8B46]/10 bg-white p-3">
+    <div className="flex items-center justify-between rounded-2xl border border-[#073B9A]/10 bg-white p-3">
       <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0A8B46]/10 text-[#0A8B46]">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#073B9A]/10 text-[#073B9A]">
           <ReceiptText className="h-5 w-5" />
         </div>
         <div><p className="font-black">{payment.memberName}</p><p className="text-xs text-muted-foreground">{payment.description} · {formatDate(payment.paidAt)}</p></div>
       </div>
-      <p className="font-black text-[#0A8B46]">{formatCurrency(payment.amount, payment.currency)}</p>
+      <p className="font-black text-[#073B9A]">{formatCurrency(payment.amount, payment.currency)}</p>
     </div>
   );
 }
@@ -2105,9 +2105,9 @@ function Field({ label, children, className = '' }: { label: string; children: R
 
 function Metric({ icon: Icon, label, value, accent = false }: { icon: any; label: string; value: string; accent?: boolean }) {
   return (
-    <Card className="border-[#0A8B46]/10 bg-white">
+    <Card className="border-[#073B9A]/10 bg-white">
       <CardContent className="flex items-center gap-3 p-4">
-        <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${accent ? 'bg-[#FF8A00]/10 text-[#FF8A00]' : 'bg-[#0A8B46]/10 text-[#0A8B46]'}`}>
+        <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${accent ? 'bg-[#F51B2B]/10 text-[#F51B2B]' : 'bg-[#073B9A]/10 text-[#073B9A]'}`}>
           <Icon className="h-5 w-5" />
         </div>
         <div className="min-w-0">
@@ -2121,7 +2121,7 @@ function Metric({ icon: Icon, label, value, accent = false }: { icon: any; label
 
 function MiniStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl bg-[#f7faf8] p-2">
+    <div className="rounded-xl bg-[#FFFFFF] p-2">
       <p className="text-[10px] font-bold uppercase text-muted-foreground">{label}</p>
       <p className="font-black text-slate-950">{value}</p>
     </div>
@@ -2143,17 +2143,17 @@ function GroupCard({
 }) {
   const progress = Math.min(100, (Number(group.memberCount || 0) / Math.max(Number(group.maxMembers || 1), 1)) * 100);
   return (
-    <Card className={`border-[#0A8B46]/10 bg-white transition ${selected ? 'ring-2 ring-[#0A8B46]/20' : ''}`}>
+    <Card className={`border-[#073B9A]/10 bg-white transition ${selected ? 'ring-2 ring-[#073B9A]/20' : ''}`}>
       <CardContent className="p-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex gap-3">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#0A8B46]/10">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#073B9A]/10">
               <TontineCircleIcon className="h-8 w-8" />
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <p className="font-headline text-lg font-black text-slate-950">{group.name}</p>
-                <Badge className="bg-[#0A8B46]">{modelLabels[group.model]}</Badge>
+                <Badge className="bg-[#073B9A]">{modelLabels[group.model]}</Badge>
               </div>
               <p className="mt-1 text-sm text-muted-foreground">{group.description || groupTypeLabels[group.groupType]}</p>
               <div className="mt-2 flex flex-wrap gap-2 text-xs font-semibold text-slate-700">
@@ -2166,7 +2166,7 @@ function GroupCard({
           </div>
           <div className="flex gap-2">
             <Button size="sm" variant="outline" onClick={() => onCopy(group)}><LinkIcon className="mr-2 h-4 w-4" />Inviter</Button>
-            <Button size="sm" onClick={() => onSelect(group.id)} className="bg-[#0A8B46] hover:bg-[#0A8B46]">Ouvrir</Button>
+            <Button size="sm" onClick={() => onSelect(group.id)} className="bg-[#073B9A] hover:bg-[#073B9A]">Ouvrir</Button>
           </div>
         </div>
         <div className="mt-4">
@@ -2178,8 +2178,8 @@ function GroupCard({
         </div>
         {currentMember && (
           <div className="mt-3 flex flex-wrap gap-2">
-            <Badge variant="outline" className="border-[#0A8B46]/20 text-[#0A8B46]"><UserCheck className="mr-1 h-3 w-3" />{currentMember.status}</Badge>
-            {currentMember.contractAccepted ? <Badge className="bg-[#0A8B46]"><CheckCircle2 className="mr-1 h-3 w-3" />Contrat OK</Badge> : <Badge className="bg-[#FF8A00]"><AlertTriangle className="mr-1 h-3 w-3" />Contrat requis</Badge>}
+            <Badge variant="outline" className="border-[#073B9A]/20 text-[#073B9A]"><UserCheck className="mr-1 h-3 w-3" />{currentMember.status}</Badge>
+            {currentMember.contractAccepted ? <Badge className="bg-[#073B9A]"><CheckCircle2 className="mr-1 h-3 w-3" />Contrat OK</Badge> : <Badge className="bg-[#F51B2B]"><AlertTriangle className="mr-1 h-3 w-3" />Contrat requis</Badge>}
           </div>
         )}
       </CardContent>
@@ -2189,15 +2189,15 @@ function GroupCard({
 
 function EmptyState({ onCreate, onJoin }: { onCreate: () => void; onJoin: () => void }) {
   return (
-    <Card className="border-[#0A8B46]/10 bg-white">
+    <Card className="border-[#073B9A]/10 bg-white">
       <CardContent className="p-8 text-center">
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-[#0A8B46]/10">
-          <RotateCcw className="h-8 w-8 text-[#0A8B46]" />
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-[#073B9A]/10">
+          <RotateCcw className="h-8 w-8 text-[#073B9A]" />
         </div>
-        <p className="font-headline text-xl font-black text-[#0A8B46]">Aucune tontine active</p>
+        <p className="font-headline text-xl font-black text-[#073B9A]">Aucune tontine active</p>
         <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-muted-foreground">Créez une tontine ou rejoignez un groupe avec un lien/QR. Les cotisations, garanties, documents et rapports seront suivis en temps réel.</p>
         <div className="mt-4 flex justify-center gap-2">
-          <Button onClick={onCreate} className="bg-[#0A8B46] hover:bg-[#0A8B46]"><Plus className="mr-2 h-4 w-4" />Créer</Button>
+          <Button onClick={onCreate} className="bg-[#073B9A] hover:bg-[#073B9A]"><Plus className="mr-2 h-4 w-4" />Créer</Button>
           <Button variant="outline" onClick={onJoin}><LogIn className="mr-2 h-4 w-4" />Rejoindre</Button>
         </div>
       </CardContent>
@@ -2207,8 +2207,8 @@ function EmptyState({ onCreate, onJoin }: { onCreate: () => void; onJoin: () => 
 
 function EmptyMini({ text }: { text: string }) {
   return (
-    <div className="rounded-2xl border border-dashed border-[#0A8B46]/20 bg-[#f7faf8] p-4 text-center text-sm font-semibold text-muted-foreground">
-      <ReceiptText className="mx-auto mb-2 h-5 w-5 text-[#0A8B46]" />
+    <div className="rounded-2xl border border-dashed border-[#073B9A]/20 bg-[#FFFFFF] p-4 text-center text-sm font-semibold text-muted-foreground">
+      <ReceiptText className="mx-auto mb-2 h-5 w-5 text-[#073B9A]" />
       {text}
     </div>
   );

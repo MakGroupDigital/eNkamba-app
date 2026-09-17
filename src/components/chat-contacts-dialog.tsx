@@ -64,7 +64,7 @@ export function ChatContactsDialog({ open, onOpenChange }: ChatContactsDialogPro
     try {
       const statusInfo = await getContactStatus(addForm.phoneNumber, addForm.email);
       if (statusInfo.status === 'own') {
-        alert('Ce numéro ou email appartient à votre compte eNkamba');
+        alert('Ce numéro ou email appartient à votre compte Kenz');
         setIsSubmitting(false);
         return;
       }
@@ -335,11 +335,11 @@ export function ChatContactsDialog({ open, onOpenChange }: ChatContactsDialogPro
     void handleImportDeviceContacts();
   }, [contacts.length, handleImportDeviceContacts, open]);
 
-  // Inviter un contact non eNkamba
+  // Inviter un contact non Kenz
   const handleSendInvitation = useCallback((contact: any) => {
     try {
-      const userReferralCode = localStorage.getItem('enkamba_referral_code') || 'ENKAMBA';
-      const message = `Rejoins-moi sur eNkamba ! 🚀\n\nCode d'invitation: ${userReferralCode}\n\nTélécharge l'app et crée ton compte avec ce code pour nous connecter directement.\n\nhttps://enkamba.io/join?ref=${userReferralCode}`;
+      const userReferralCode = localStorage.getItem('enkamba_referral_code') || 'KENZ';
+      const message = `Rejoins-moi sur Kenz ! 🚀\n\nCode d'invitation: ${userReferralCode}\n\nTélécharge l'app et crée ton compte avec ce code pour nous connecter directement.\n\nhttps://enkamba.io/join?ref=${userReferralCode}`;
 
       const smsUrl = `sms:${contact.phoneNumber}?body=${encodeURIComponent(message)}`;
       window.location.href = smsUrl;

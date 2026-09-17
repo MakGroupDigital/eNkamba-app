@@ -72,7 +72,7 @@ async function setupWebPush() {
 
   const unsubscribe = onMessage(messaging, (payload) => {
     if (Notification.permission !== 'granted') return;
-    const title = payload.notification?.title || 'eNkamba';
+    const title = payload.notification?.title || 'Kenz';
     const body = payload.notification?.body || 'Nouvelle notification';
     const data = payload.data || {};
     const actionUrl = data.actionUrl || '/dashboard';
@@ -85,7 +85,7 @@ async function setupWebPush() {
     };
     const notificationOptions: RichNotificationOptions = {
       body,
-      icon: '/enkamba-logo.png',
+      icon: '/kenz-logo.png',
       badge: '/favicon.png',
       data,
       tag: isCallNotification && callId ? `enkamba-call-${callId}` : actionUrl,
@@ -126,8 +126,8 @@ async function setupNativePush() {
 
   await PushNotifications.createChannel({
     id: 'enkamba_general',
-    name: 'eNkamba Général',
-    description: 'Notifications eNkamba',
+    name: 'Kenz Général',
+    description: 'Notifications Kenz',
     importance: 5,
     visibility: 1,
     vibration: true,
@@ -135,7 +135,7 @@ async function setupNativePush() {
 
   await PushNotifications.createChannel({
     id: 'enkamba_calls',
-    name: 'eNkamba Appels',
+    name: 'Kenz Appels',
     description: 'Appels audio et vidéo entrants',
     importance: 5,
     visibility: 1,

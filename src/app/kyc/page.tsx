@@ -17,6 +17,7 @@ import { uploadToCloudinary } from '@/lib/cloudinary-upload';
 import { ENKAMBA_MINIMUM_AGE, calculateAgeFromDateOfBirth } from '@/lib/age-policy';
 import { UserCheck, Upload, Camera, Ticket, Loader2, CheckCircle, Smartphone, Building2, ArrowLeft, Check, CreditCard, Globe, AlertCircle } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { KenzDataLoader } from '@/components/shared/kenz-data-loader';
 
 type Step = 'identity' | 'selfie' | 'referral' | 'linkAccount' | 'completed';
 
@@ -661,7 +662,7 @@ export default function KycPage() {
           toast({
             variant: 'destructive',
             title: 'Âge non autorisé',
-            description: `eNkamba est réservé aux utilisateurs de ${ENKAMBA_MINIMUM_AGE} ans ou plus.`,
+            description: `Kenz est réservé aux utilisateurs de ${ENKAMBA_MINIMUM_AGE} ans ou plus.`,
           });
           router.push('/age-restricted');
           return;
@@ -723,7 +724,7 @@ export default function KycPage() {
           toast({
             variant: 'destructive',
             title: 'Âge non autorisé',
-            description: `eNkamba est réservé aux utilisateurs de ${ENKAMBA_MINIMUM_AGE} ans ou plus.`,
+            description: `Kenz est réservé aux utilisateurs de ${ENKAMBA_MINIMUM_AGE} ans ou plus.`,
           });
           router.push('/age-restricted');
           return;
@@ -836,7 +837,7 @@ export default function KycPage() {
       <div className="flex min-h-screen w-full items-center justify-center bg-muted/30 p-4">
         <Card className="w-full max-w-lg">
           <CardContent className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <KenzDataLoader label="Chargement de votre vérification..." className="text-foreground" />
           </CardContent>
         </Card>
       </div>
@@ -1040,13 +1041,13 @@ export default function KycPage() {
             )}
 
             {faceAssessment && !isAssessingFace && (
-              <Alert className={faceAssessment.accepted ? 'bg-primary/5 border-primary/20' : 'bg-[#FFA500]/10 border-[#FFA500]/30'}>
+              <Alert className={faceAssessment.accepted ? 'bg-primary/5 border-primary/20' : 'bg-[#F51B2B]/10 border-[#F51B2B]/30'}>
                 {faceAssessment.accepted ? (
                   <CheckCircle className="h-4 w-4 text-primary" />
                 ) : (
-                  <AlertCircle className="h-4 w-4 text-[#FFA500]" />
+                  <AlertCircle className="h-4 w-4 text-[#F51B2B]" />
                 )}
-                <AlertTitle className={faceAssessment.accepted ? 'text-primary' : 'text-[#FFA500]'}>
+                <AlertTitle className={faceAssessment.accepted ? 'text-primary' : 'text-[#F51B2B]'}>
                   {faceAssessment.accepted ? 'Selfie validé' : 'Revue manuelle'}
                 </AlertTitle>
                 <AlertDescription>
@@ -1337,7 +1338,7 @@ export default function KycPage() {
                   <Alert>
                     <CheckCircle className="h-4 w-4" />
                     <AlertDescription>
-                      En confirmant, vous acceptez de lier ce compte Mobile Money à votre profil eNkamba.
+                      En confirmant, vous acceptez de lier ce compte Mobile Money à votre profil Kenz.
                     </AlertDescription>
                   </Alert>
                 </div>
