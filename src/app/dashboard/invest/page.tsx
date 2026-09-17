@@ -1,220 +1,55 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { AlertTriangle, ArrowLeft, ArrowUpRight, BarChart3, BriefcaseBusiness, CalendarDays, ChevronRight, CircleDollarSign, FileText, LockKeyhole, Menu, PieChart, Search, ShieldCheck, WalletCards, X } from 'lucide-react';
+import { collection, doc, onSnapshot, serverTimestamp, setDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
-// Icône personnalisée Investissement
-const InvestIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" className="w-full h-full">
-    <path d="M3 17L9 11L13 15L21 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M21 7H16M21 7V12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-    <circle cx="9" cy="11" r="1.5" fill="currentColor"/>
-    <circle cx="13" cy="15" r="1.5" fill="currentColor"/>
-    <circle cx="21" cy="7" r="1.5" fill="currentColor"/>
-  </svg>
-);
+type Offering = { id: string; name: string; shortName?: string; durationYears: number; minAmount: number; maxAmount: number; risk: string; status: string; description?: string; jurisdiction?: string; prospectusUrl?: string };
+type Project = { id: string; name: string; sector?: string; province?: string; status: string; summary?: string; progress?: number };
+type Holding = { id: string; offeringName?: string; principal?: number; value?: number; currency?: string; status?: string; maturityDate?: string };
+type Order = { id: string; offeringName?: string; amount?: number; currency?: string; status?: string; reference?: string; createdAt?: { toDate?: () => Date } };
+const statusLabel: Record<string, string> = { APPROVED: 'Disponible', ACTIVE: 'Actif', DUE_DILIGENCE: 'Analyse en cours', PAYMENT_PENDING: 'Paiement attendu', RECEIVED: 'Paiement reçu', RECONCILED: 'Réconcilié' };
+const money = (value = 0, currency = 'USD') => new Intl.NumberFormat('fr-FR', { style: 'currency', currency, maximumFractionDigits: 0 }).format(value);
+const displayDate = (value?: { toDate?: () => Date } | string) => { if (!value) return 'Date à confirmer'; const date = typeof value === 'string' ? new Date(value) : value.toDate?.(); return date ? date.toLocaleDateString('fr-FR') : 'Date à confirmer'; };
 
-// Icône Sécurité
-const SecurityIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" className="w-full h-full">
-    <path d="M12 2L4 6V12C4 16.5 7 20.5 12 22C17 20.5 20 16.5 20 12V6L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="currentColor" opacity="0.2"/>
-    <path d="M9 12L11 14L15 10" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
-// Icône Rentabilité
-const ProfitIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" className="w-full h-full">
-    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" fill="currentColor" opacity="0.2"/>
-    <path d="M12 6V12L16 14" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M15 8C15 8 16 7 17 7C18 7 19 8 19 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-  </svg>
-);
-
-// Icône Diversification
-const DiversifyIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" className="w-full h-full">
-    <rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="2" fill="currentColor" opacity="0.2"/>
-    <rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="2" fill="currentColor" opacity="0.2"/>
-    <rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="2" fill="currentColor" opacity="0.2"/>
-    <rect x="14" y="14" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="2" fill="currentColor" opacity="0.2"/>
-  </svg>
-);
-
-// Icône Opportunité
-const OpportunityIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" className="w-full h-full">
-    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="currentColor" opacity="0.2"/>
-    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
+function OrbitIcon({ kind = 'chart' }: { kind?: 'chart' | 'portfolio' | 'project' }) { return <span className={`invest-orbit invest-orbit-${kind}`} aria-hidden="true"><span>{kind === 'chart' ? '↗' : kind === 'portfolio' ? '◈' : '•'}</span></span>; }
 
 export default function InvestPage() {
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-[#073B9A]/5 to-background">
-      <div className="container mx-auto max-w-4xl p-4 space-y-6 animate-in fade-in duration-500">
-        {/* Header */}
-        <header className="flex items-center gap-4 pt-4 slide-up">
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/dashboard/mbongo-dashboard">
-              <ArrowLeft />
-            </Link>
-          </Button>
-          <div>
-            <h1 className="font-headline text-3xl font-bold bg-gradient-to-r from-[#073B9A] to-[#073B9A] bg-clip-text text-transparent">
-              Investir
-            </h1>
-            <p className="text-sm text-muted-foreground">Opportunités d'investissement</p>
-          </div>
-        </header>
+  const { user } = useAuth(); const { toast } = useToast();
+  const [offerings, setOfferings] = useState<Offering[]>([]); const [projects, setProjects] = useState<Project[]>([]); const [holdings, setHoldings] = useState<Holding[]>([]); const [orders, setOrders] = useState<Order[]>([]); const [profile, setProfile] = useState<Record<string, any> | null>(null);
+  const [tab, setTab] = useState<'overview' | 'offers' | 'portfolio' | 'projects'>('overview'); const [search, setSearch] = useState(''); const [menuOpen, setMenuOpen] = useState(false); const [selected, setSelected] = useState<Offering | null>(null); const [profileOpen, setProfileOpen] = useState(false); const [saving, setSaving] = useState(false); const [amount, setAmount] = useState('');
+  const [form, setForm] = useState({ residenceCountry: 'RDC', taxCountry: 'RDC', sourceOfFunds: '', objective: '', horizon: '5', lossCapacity: '', pep: 'no', consent: false });
 
-        {/* Hero Card avec animation */}
-        <Card className="bg-gradient-to-br from-[#073B9A]/10 via-[#073B9A]/5 to-transparent border-[#073B9A]/20 overflow-hidden slide-up" style={{ animationDelay: '0.1s' }}>
-          <CardContent className="p-8">
-            <div className="flex flex-col items-center text-center space-y-6">
-              {/* Icône principale avec effet glow */}
-              <div className="relative">
-                <div className="absolute inset-0 bg-[#073B9A]/30 rounded-full blur-3xl animate-pulse"></div>
-                <div className="relative bg-gradient-to-br from-[#073B9A] to-[#073B9A] p-8 rounded-3xl shadow-2xl transform hover:scale-105 transition-transform duration-300">
-                  <div className="w-16 h-16 text-white">
-                    <InvestIcon />
-                  </div>
-                </div>
-              </div>
-              
-              <div className="space-y-3">
-                <h2 className="text-2xl font-bold text-foreground">
-                  Opportunités d'investissement
-                </h2>
-                <p className="text-muted-foreground max-w-md leading-relaxed">
-                  Découvrez bientôt des opportunités d'investissement sécurisées et rentables adaptées à vos objectifs financiers
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+  useEffect(() => onSnapshot(collection(db, 'investment_offerings'), (snap) => setOfferings(snap.docs.map((item) => ({ id: item.id, ...item.data() }) as Offering)), () => setOfferings([])), []);
+  useEffect(() => onSnapshot(collection(db, 'investment_projects'), (snap) => setProjects(snap.docs.map((item) => ({ id: item.id, ...item.data() }) as Project)), () => setProjects([])), []);
+  useEffect(() => { if (!user?.uid) return; const a = onSnapshot(doc(db, 'investment_profiles', user.uid), (snap) => setProfile(snap.exists() ? snap.data() : null)); const b = onSnapshot(collection(db, 'users', user.uid, 'investment_holdings'), (snap) => setHoldings(snap.docs.map((item) => ({ id: item.id, ...item.data() }) as Holding))); const c = onSnapshot(collection(db, 'users', user.uid, 'investment_orders'), (snap) => setOrders(snap.docs.map((item) => ({ id: item.id, ...item.data() }) as Order))); return () => { a(); b(); c(); }; }, [user?.uid]);
+  const approvedOffers = useMemo(() => offerings.filter((item) => item.status === 'APPROVED' || item.status === 'ACTIVE').filter((item) => `${item.name} ${item.shortName || ''}`.toLowerCase().includes(search.toLowerCase())), [offerings, search]);
+  const activeProjects = projects.filter((item) => ['APPROVED', 'FUNDED', 'MONITORED', 'ACTIVE'].includes(item.status)); const invested = holdings.reduce((sum, item) => sum + Number(item.principal || item.value || 0), 0); const portfolioValue = holdings.reduce((sum, item) => sum + Number(item.value || item.principal || 0), 0);
 
-        {/* Empty State moderne */}
-        <Card className="border-2 border-dashed border-[#073B9A]/30 bg-gradient-to-br from-[#F51B2B]/5 to-transparent slide-up" style={{ animationDelay: '0.2s' }}>
-          <CardContent className="p-12">
-            <div className="flex flex-col items-center text-center space-y-6">
-              {/* Icône opportunité */}
-              <div className="relative">
-                <div className="absolute inset-0 bg-[#F51B2B]/100/20 rounded-full blur-2xl"></div>
-                <div className="relative bg-gradient-to-br from-[#F51B2B]/20 to-[#F51B2B]/20 p-6 rounded-2xl border-2 border-[#F51B2B]/30">
-                  <div className="w-12 h-12 text-[#F51B2B]">
-                    <OpportunityIcon />
-                  </div>
-                </div>
-              </div>
-              
-              <div className="space-y-3">
-                <h3 className="text-xl font-semibold text-foreground">
-                  Aucune opportunité disponible
-                </h3>
-                <p className="text-muted-foreground max-w-lg leading-relaxed">
-                  Nous travaillons activement pour vous proposer des opportunités d'investissement de qualité. Revenez bientôt pour découvrir nos offres exclusives.
-                </p>
-              </div>
+  const saveInvestorProfile = async (event: FormEvent) => { event.preventDefault(); if (!user?.uid || !form.sourceOfFunds || !form.objective || !form.lossCapacity || !form.consent) return; setSaving(true); try { await setDoc(doc(db, 'investment_profiles', user.uid), { ...form, userId: user.uid, status: 'PENDING_REVIEW', updatedAt: serverTimestamp(), createdAt: profile?.createdAt || serverTimestamp() }, { merge: true }); setProfileOpen(false); toast({ title: 'Profil investisseur enregistré', description: 'Votre dossier sera vérifié avant l’accès aux ordres.' }); } catch { toast({ variant: 'destructive', title: 'Enregistrement impossible', description: 'Vérifiez votre connexion puis réessayez.' }); } finally { setSaving(false); } };
+  const createOrder = async (event: FormEvent) => { event.preventDefault(); if (!user?.uid || !selected) return; const value = Number(amount); if (!profile || !['APPROVED', 'VERIFIED'].includes(String(profile.status || '').toUpperCase())) { toast({ title: 'Profil à vérifier', description: 'Complétez d’abord votre profil investisseur.' }); setSelected(null); setProfileOpen(true); return; } if (!Number.isInteger(value) || value < Math.max(1000, selected.minAmount || 1000) || value > Math.min(10000, selected.maxAmount || 10000)) { toast({ variant: 'destructive', title: 'Montant hors limite', description: 'Le ticket doit rester entre 1 000 et 10 000 USD pour cette émission.' }); return; } setSaving(true); try { const orderRef = doc(collection(db, 'users', user.uid, 'investment_orders')); await setDoc(orderRef, { id: orderRef.id, userId: user.uid, offeringId: selected.id, offeringName: selected.name, amount: value, currency: 'USD', status: 'PAYMENT_PENDING', reference: `ORD-${new Date().getFullYear()}-${orderRef.id.slice(0, 8).toUpperCase()}`, createdAt: serverTimestamp(), disclosureAcceptedAt: serverTimestamp(), note: 'Ordre préparé; paiement à effectuer auprès du dépositaire agréé.' }); setSelected(null); setAmount(''); setTab('portfolio'); toast({ title: 'Ordre préparé', description: 'Le paiement reste à confirmer par le dépositaire agréé.' }); } catch { toast({ variant: 'destructive', title: 'Ordre non créé', description: 'Réessayez dans un instant.' }); } finally { setSaving(false); } };
 
-              {/* Badge informatif */}
-              <div className="inline-flex items-center gap-2 text-sm font-medium text-[#F51B2B] dark:text-[#F51B2B] bg-[#F51B2B]/15 dark:bg-[#F51B2B]/20 px-6 py-3 rounded-full border border-[#F51B2B]/30 dark:border-[#F51B2B]/40">
-                <div className="w-2 h-2 rounded-full bg-[#F51B2B]/100 animate-pulse"></div>
-                <span>Nouvelles opportunités à venir</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Info Cards avec icônes personnalisées */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 slide-up" style={{ animationDelay: '0.3s' }}>
-          {/* Sécurité */}
-          <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20 hover:shadow-lg transition-all duration-300 hover:scale-105 group">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 text-blue-600 group-hover:scale-110 transition-transform">
-                  <SecurityIcon />
-                </div>
-                <CardTitle className="text-sm font-semibold text-blue-700 dark:text-blue-400">
-                  Sécurité
-                </CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Tous les investissements seront vérifiés et sécurisés pour votre tranquillité
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Rentabilité */}
-          <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 hover:shadow-lg transition-all duration-300 hover:scale-105 group">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 text-primary group-hover:scale-110 transition-transform">
-                  <ProfitIcon />
-                </div>
-                <CardTitle className="text-sm font-semibold text-primary dark:text-primary">
-                  Rentabilité
-                </CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Des opportunités avec des rendements attractifs et compétitifs
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Diversification */}
-          <Card className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border-purple-500/20 hover:shadow-lg transition-all duration-300 hover:scale-105 group">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 text-purple-600 group-hover:scale-110 transition-transform">
-                  <DiversifyIcon />
-                </div>
-                <CardTitle className="text-sm font-semibold text-purple-700 dark:text-purple-400">
-                  Diversification
-                </CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Plusieurs types d'investissements pour diversifier votre portefeuille
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* CTA moderne */}
-        <Card className="bg-gradient-to-r from-[#073B9A] to-[#073B9A] text-white shadow-xl slide-up" style={{ animationDelay: '0.4s' }}>
-          <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="text-center sm:text-left">
-                <h3 className="font-semibold text-lg mb-1">Restez informé</h3>
-                <p className="text-sm text-white/90">
-                  Soyez le premier à découvrir nos nouvelles opportunités d'investissement
-                </p>
-              </div>
-              <Button variant="secondary" size="lg" disabled className="whitespace-nowrap">
-                Bientôt disponible
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <style jsx>{`
-        @keyframes slide-up {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .slide-up {
-          animation: slide-up 0.6s ease-out;
-        }
-      `}</style>
-    </div>
-  );
+  return <main className="invest-page"><div className="invest-shell">
+    <header className="invest-topbar"><div className="invest-brand"><Link href="/dashboard/mbongo-dashboard" aria-label="Retour au paiement"><ArrowLeft /></Link><OrbitIcon kind="chart" /><div><span>KENZ</span><strong>Martin&apos;s Invest</strong></div></div><div className="invest-top-actions"><button className="invest-menu-button" onClick={() => setMenuOpen((open) => !open)} aria-label="Ouvrir le menu"><Menu /></button><button className="invest-profile-dot" onClick={() => setProfileOpen(true)}>{user?.displayName?.slice(0, 1) || 'M'}</button></div></header>
+    {menuOpen && <div className="invest-menu"><button onClick={() => { setTab('overview'); setMenuOpen(false); }}>Vue d&apos;ensemble</button><button onClick={() => { setTab('offers'); setMenuOpen(false); }}>Émissions disponibles</button><button onClick={() => { setTab('portfolio'); setMenuOpen(false); }}>Mon portefeuille</button><button onClick={() => { setProfileOpen(true); setMenuOpen(false); }}>Profil investisseur</button></div>}
+    <section className="invest-hero"><div><p className="invest-eyebrow">MARTIN&apos;S INVEST · DIASPORA & RDC</p><h1>Construisez une part<br /><em>de l&apos;avenir.</em></h1><p className="invest-hero-copy">Des opportunités productives sélectionnées, des informations vérifiables et un suivi clair de chaque étape.</p><div className="invest-hero-actions"><Button onClick={() => setTab('offers')} className="invest-primary-button">Explorer les émissions <ArrowUpRight /></Button><button className="invest-text-button" onClick={() => setProfileOpen(true)}>Préparer mon profil <ChevronRight /></button></div></div><div className="invest-hero-art"><div className="invest-grid-art" /><div className="invest-orbit-large"><BarChart3 /></div><div className="invest-art-card"><span>Portefeuille suivi</span><strong>{money(portfolioValue)}</strong><small><ArrowUpRight /> Réconcilié par le registre</small></div></div></section>
+    <nav className="invest-tabs" aria-label="Navigation investissement">{([['overview', 'Vue d’ensemble', BarChart3], ['offers', 'Émissions', CircleDollarSign], ['portfolio', 'Portefeuille', BriefcaseBusiness], ['projects', 'Projets', PieChart]] as const).map(([key, label, Icon]) => <button key={key} className={tab === key ? 'active' : ''} onClick={() => setTab(key)}><Icon />{label}</button>)}</nav>
+    {tab === 'overview' && <><section className="invest-metrics"><article><span><WalletCards /> Capital investi</span><strong>{money(invested)}</strong><small>Valeur déclarée du registre</small></article><article><span><CircleDollarSign /> Valeur suivie</span><strong>{money(portfolioValue)}</strong><small>Coupons et intérêts séparés</small></article><article><span><CalendarDays /> Prochaine échéance</span><strong>{holdings[0]?.maturityDate ? displayDate(holdings[0].maturityDate) : 'À définir'}</strong><small>Selon vos titres émis</small></article><article><span><ShieldCheck /> Conformité</span><strong>{profile?.status === 'APPROVED' || profile?.status === 'VERIFIED' ? 'Vérifiée' : 'À compléter'}</strong><small>KYC, fiscalité et profil risque</small></article></section><div className="invest-section-heading"><div><p className="invest-eyebrow">SÉLECTION DU MOMENT</p><h2>Émissions disponibles</h2></div><button onClick={() => setTab('offers')}>Voir le catalogue <ChevronRight /></button></div><section className="invest-offer-grid">{approvedOffers.slice(0, 3).map((offer) => <OfferCard key={offer.id} offer={offer} onSelect={() => setSelected(offer)} />)}{approvedOffers.length === 0 && <EmptyState icon={<LockKeyhole />} title="Le catalogue est en préparation" copy="Les émissions apparaîtront ici après validation juridique, publication du prospectus et confirmation du dépositaire." />}</section><section className="invest-safety"><div className="invest-safety-icon"><ShieldCheck /></div><div><p className="invest-eyebrow">PROTECTION ET TRANSPARENCE</p><h2>Vos fonds ne transitent pas par un compte opérationnel Kenz.</h2><p>Martin&apos;s Invest orchestre l&apos;information, les ordres et le suivi. Les souscriptions sont conservées auprès d&apos;un dépositaire agréé et aucun rendement n&apos;est garanti sans preuve contractuelle.</p></div><button onClick={() => setTab('projects')}>Voir nos contrôles <ChevronRight /></button></section></>}
+    {tab === 'offers' && <section className="invest-content"><div className="invest-section-heading"><div><p className="invest-eyebrow">CATALOGUE APPROUVÉ</p><h2>Choisissez avec méthode</h2></div><div className="invest-search"><Search /><Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Rechercher une émission" /></div></div><div className="invest-disclosure"><AlertTriangle /><span>Une émission n&apos;est visible qu&apos;après approbation dans votre juridiction. Lisez le prospectus, les risques, les frais et les exclusions avant tout ordre.</span></div><section className="invest-offer-grid">{approvedOffers.map((offer) => <OfferCard key={offer.id} offer={offer} onSelect={() => setSelected(offer)} />)}{approvedOffers.length === 0 && <EmptyState icon={<Search />} title="Aucune émission disponible" copy="Aucun produit approuvé ne correspond à votre recherche pour le moment." />}</section></section>}
+    {tab === 'portfolio' && <section className="invest-content"><div className="invest-section-heading"><div><p className="invest-eyebrow">SUIVI PERSONNEL</p><h2>Mon portefeuille</h2></div><button onClick={() => setProfileOpen(true)}>Gérer mon profil <ChevronRight /></button></div><div className="invest-portfolio-total"><div><span>Valeur suivie</span><strong>{money(portfolioValue)}</strong></div><div><span>Ordres en cours</span><strong>{orders.filter((order) => order.status !== 'CANCELLED').length}</strong></div><div><span>Positions</span><strong>{holdings.length}</strong></div></div><div className="invest-list">{holdings.map((holding) => <div className="invest-list-row" key={holding.id}><OrbitIcon kind="portfolio" /><div><strong>{holding.offeringName || 'Titre d’investissement'}</strong><small>{holding.status || 'En suivi'} · Échéance {holding.maturityDate || 'à confirmer'}</small></div><b>{money(Number(holding.value || holding.principal || 0), holding.currency || 'USD')}</b></div>)}{orders.map((order) => <div className="invest-list-row" key={order.id}><OrbitIcon kind="project" /><div><strong>{order.offeringName || 'Ordre d’investissement'}</strong><small>{order.reference} · {statusLabel[order.status || ''] || order.status || 'Initiée'} · {displayDate(order.createdAt)}</small></div><b>{money(Number(order.amount || 0), order.currency || 'USD')}</b></div>)}{holdings.length === 0 && orders.length === 0 && <EmptyState icon={<BriefcaseBusiness />} title="Votre portefeuille est vide" copy="Préparez un profil investisseur puis sélectionnez une émission approuvée pour créer votre premier ordre." />}</div></section>}
+    {tab === 'projects' && <section className="invest-content"><div className="invest-section-heading"><div><p className="invest-eyebrow">ÉCONOMIE RÉELLE</p><h2>Projets suivis</h2></div><span className="invest-readonly"><LockKeyhole /> Données certifiées</span></div><div className="invest-project-grid">{activeProjects.map((project) => <article className="invest-project-card" key={project.id}><div className="invest-project-cover"><OrbitIcon kind="project" /><span>{statusLabel[project.status] || project.status}</span></div><p className="invest-eyebrow">{project.sector || 'PROJET PRODUCTIF'} {project.province ? `· ${project.province}` : ''}</p><h3>{project.name}</h3><p>{project.summary || 'Les indicateurs et les documents du projet seront publiés après validation.'}</p>{typeof project.progress === 'number' && <div className="invest-progress"><span><small>Avancement certifié</small><b>{project.progress}%</b></span><i><em style={{ width: `${Math.min(100, project.progress)}%` }} /></i></div>}<button>Voir les preuves <ChevronRight /></button></article>)}{activeProjects.length === 0 && <EmptyState icon={<FileText />} title="Les projets seront publiés après diligence" copy="Chaque projet devra présenter son promoteur, son budget, ses risques, ses jalons et les preuves indépendantes disponibles." />}</div></section>}
+    <footer className="invest-footer"><span><LockKeyhole /> Espace d&apos;information et de suivi, pas une banque ni une bourse.</span><span>Document de conception · Vérifications réglementaires obligatoires avant collecte.</span></footer>
+  </div>
+  {profileOpen && <div className="invest-modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setProfileOpen(false)}><form className="invest-modal" onSubmit={saveInvestorProfile}><button type="button" className="invest-close" onClick={() => setProfileOpen(false)} aria-label="Fermer"><X /></button><p className="invest-eyebrow">PROFIL INVESTISSEUR</p><h2>Préparer votre accès</h2><p className="invest-modal-copy">Ces informations servent à évaluer votre éligibilité et votre capacité de perte. Elles ne déclenchent aucun investissement.</p><div className="invest-form-grid"><label>Pays de résidence<Input value={form.residenceCountry} onChange={(e) => setForm({ ...form, residenceCountry: e.target.value })} /></label><label>Pays de résidence fiscale<Input value={form.taxCountry} onChange={(e) => setForm({ ...form, taxCountry: e.target.value })} /></label><label>Source principale des fonds<select value={form.sourceOfFunds} onChange={(e) => setForm({ ...form, sourceOfFunds: e.target.value })}><option value="">Sélectionner</option><option>Salaire</option><option>Activité professionnelle</option><option>Épargne</option><option>Vente d’actif</option><option>Héritage</option></select></label><label>Horizon recherché<select value={form.horizon} onChange={(e) => setForm({ ...form, horizon: e.target.value })}><option value="3">3 ans</option><option value="5">5 ans</option><option value="7">7 ans</option></select></label><label>Objectif<select value={form.objective} onChange={(e) => setForm({ ...form, objective: e.target.value })}><option value="">Sélectionner</option><option>Préserver mon capital</option><option>Développer mon capital</option><option>Financer l’économie productive</option></select></label><label>Capacité à perdre une partie du capital<select value={form.lossCapacity} onChange={(e) => setForm({ ...form, lossCapacity: e.target.value })}><option value="">Sélectionner</option><option>Faible</option><option>Modérée</option><option>Élevée</option></select></label></div><label className="invest-check"><input type="checkbox" checked={form.pep === 'yes'} onChange={(e) => setForm({ ...form, pep: e.target.checked ? 'yes' : 'no' })} /> Je déclare être une personne politiquement exposée ou liée à une PEP.</label><label className="invest-check"><input type="checkbox" checked={form.consent} onChange={(e) => setForm({ ...form, consent: e.target.checked })} /> J&apos;ai lu l&apos;avertissement sur les risques et j&apos;accepte la vérification de mon dossier.</label><Button disabled={saving || !form.consent} className="invest-primary-button w-full">{saving ? 'Enregistrement…' : 'Enregistrer mon profil'}</Button></form></div>}
+  {selected && <div className="invest-modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setSelected(null)}><form className="invest-modal invest-order-modal" onSubmit={createOrder}><button type="button" className="invest-close" onClick={() => setSelected(null)} aria-label="Fermer"><X /></button><p className="invest-eyebrow">NOUVEL ORDRE</p><h2>{selected.name}</h2><p className="invest-modal-copy">{selected.description || 'Consultez les documents de cette émission avant de préparer un ordre.'}</p><div className="invest-order-facts"><span>Durée <b>{selected.durationYears} ans</b></span><span>Ticket <b>{money(selected.minAmount || 1000)} – {money(Math.min(10000, selected.maxAmount || 10000))}</b></span><span>Risque cible <b>{selected.risk || 'À consulter'}</b></span></div>{selected.prospectusUrl && <a className="invest-doc-link" href={selected.prospectusUrl} target="_blank" rel="noreferrer"><FileText /> Lire le prospectus</a>}<label>Montant de l&apos;ordre en USD<Input type="number" min={selected.minAmount || 1000} max={Math.min(10000, selected.maxAmount || 10000)} step="1" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="1 000" /></label><div className="invest-risk-note"><AlertTriangle /><span>Aucun titre n&apos;est émis ici. L&apos;ordre reste en attente du paiement et de la confirmation du dépositaire agréé.</span></div><Button disabled={saving} className="invest-primary-button w-full">{saving ? 'Préparation…' : 'Préparer l’ordre'}</Button></form></div>}
+  </main>;
 }
+
+function OfferCard({ offer, onSelect }: { offer: Offering; onSelect: () => void }) { return <article className="invest-offer-card"><div className="invest-offer-top"><OrbitIcon kind="chart" /><span>{statusLabel[offer.status] || 'Émission'}</span></div><p className="invest-eyebrow">{offer.durationYears} ANS · {offer.jurisdiction || 'Juridiction à confirmer'}</p><h3>{offer.name}</h3><p>{offer.description || 'Informations clés, risques, frais et échéancier disponibles dans le dossier de l’émission.'}</p><div className="invest-offer-facts"><span>Ticket<b>{money(offer.minAmount || 1000)} – {money(Math.min(10000, offer.maxAmount || 10000))}</b></span><span>Risque<b>{offer.risk || 'Non publié'}</b></span></div><div className="invest-offer-footer"><small><LockKeyhole /> Rendement non prérempli</small><button onClick={onSelect}>Consulter <ChevronRight /></button></div></article>; }
+function EmptyState({ icon, title, copy }: { icon: React.ReactNode; title: string; copy: string }) { return <div className="invest-empty"><div>{icon}</div><h3>{title}</h3><p>{copy}</p></div>; }
