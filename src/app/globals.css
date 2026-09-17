@@ -530,3 +530,94 @@
 
 .invest-sidebar-scrim { position: fixed; z-index: 19; inset: 0; border: 0; background: #071a3d80; backdrop-filter: blur(2px); }.invest-sidebar { position: fixed; z-index: 20; top: 0; bottom: 0; left: 0; display: flex; width: min(335px, 88vw); flex-direction: column; padding: 28px 20px 20px; background: #fff; box-shadow: 12px 0 40px #061a3c26; animation: invest-sidebar-in .22s ease-out; }.invest-sidebar-head { display: flex; align-items: start; justify-content: space-between; padding: 0 4px 20px; border-bottom: 1px solid #e4ebf5; }.invest-sidebar-head strong { display: block; margin-top: 5px; color: #0b2550; font-size: 19px; font-weight: 900; }.invest-sidebar-head button { display: grid; width: 31px; height: 31px; place-items: center; border-radius: 50%; color: #6f82a0; }.invest-sidebar-head button:hover { background: #eef4ff; color: #073b9a; }.invest-sidebar-head svg { width: 17px; }.invest-sidebar-user { display: flex; align-items: center; gap: 10px; margin: 20px 4px; padding: 11px; border-radius: 12px; background: #f3f7fd; }.invest-sidebar-user .invest-profile-dot { flex: 0 0 auto; width: 34px; height: 34px; }.invest-sidebar-user div:last-child { display: grid; gap: 4px; }.invest-sidebar-user strong { color: #193561; font-size: 12px; }.invest-sidebar-user small { color: #7185a4; font-size: 10px; }.invest-sidebar nav { display: grid; gap: 5px; }.invest-sidebar nav button { display: flex; align-items: center; gap: 11px; min-height: 46px; padding: 0 13px; border-radius: 10px; color: #5e7396; font-size: 12px; font-weight: 800; text-align: left; }.invest-sidebar nav button svg { width: 18px; color: #7893bd; }.invest-sidebar nav button:hover, .invest-sidebar nav button.active { background: #eaf2ff; color: #073b9a; }.invest-sidebar nav button.active svg, .invest-sidebar nav button:hover svg { color: #073b9a; }.invest-sidebar-foot { display: grid; grid-template-columns: 16px 1fr; gap: 3px 7px; margin-top: auto; padding: 13px; border: 1px solid #dce7f3; border-radius: 11px; color: #47658e; font-size: 10px; font-weight: 800; }.invest-sidebar-foot svg { grid-row: span 2; width: 15px; color: #073b9a; }.invest-sidebar-foot small { color: #8092ab; font-size: 9px; font-weight: 600; line-height: 1.35; }
 @keyframes invest-sidebar-in { from { transform: translateX(-18px); opacity: .6; } to { transform: translateX(0); opacity: 1; } }
+
+/* Invest: denser market-style composition. */
+.invest-page { background: #f7f9fc; }
+.invest-shell { width: min(1240px, calc(100% - 48px)); padding-top: 24px; }
+.invest-topbar { min-height: 62px; }
+.invest-brand > a { width: 40px; height: 40px; box-shadow: 0 6px 16px #073b9a12; }
+.invest-brand > div { gap: 10px; }
+.invest-brand > div strong { font-size: 19px; letter-spacing: -.02em; }
+.invest-brand > div span { color: #f51b2b; font-size: 10px; }
+.invest-menu-button, .invest-profile-dot { width: 42px; height: 42px; box-shadow: 0 6px 16px #073b9a12; }
+.invest-hero { min-height: 330px; grid-template-columns: 1.1fr .9fr; margin-top: 22px; padding: 42px 52px; border-radius: 22px; background: #073b9a; box-shadow: 0 22px 45px #073b9a20; }
+.invest-hero::before { position: absolute; right: 18%; top: -110px; width: 280px; height: 280px; border: 1px solid #ffffff22; border-radius: 50%; box-shadow: 0 0 0 28px #ffffff08, 0 0 0 56px #ffffff05; content: ''; }
+.invest-hero::after { right: -125px; bottom: -235px; border-color: #ffffff2b; box-shadow: 0 0 0 50px #ffffff08, 0 0 0 100px #ffffff04; }
+.invest-hero h1 { margin-top: 12px; font-size: clamp(33px, 4.2vw, 53px); letter-spacing: -.045em; }
+.invest-hero-copy { max-width: 430px; color: #dce9ff; font-size: 13px; }
+.invest-primary-button { min-height: 46px; padding: 0 17px; border-radius: 9px; }
+.invest-text-button { min-height: 40px; }
+.invest-hero-art { min-height: 235px; }
+.invest-grid-art { inset: 3px 5px 5px 35px; opacity: .8; transform: rotate(-8deg); }
+.invest-orbit-large { top: 27px; right: 28px; width: 164px; height: 164px; background: #ffffff08; }
+.invest-art-card { right: 0; bottom: -2px; width: 205px; padding: 14px 16px; border-radius: 12px; background: #fff; box-shadow: 0 14px 30px #00194735; color: #0b2550; }
+.invest-art-card span, .invest-art-card small { color: #7185a4; }
+.invest-art-card strong { color: #073b9a; font-size: 23px; }
+.invest-art-card small svg { color: #f51b2b; }
+.invest-tabs { gap: 5px; margin: 16px 0 26px; padding: 5px; border: 0; border-radius: 12px; background: #e9eff8; box-shadow: none; }
+.invest-tabs button { min-height: 43px; border-radius: 9px; color: #6880a4; transition: background .18s, color .18s, box-shadow .18s; }
+.invest-tabs button.active { background: #fff; box-shadow: 0 5px 14px #073b9a12; color: #073b9a; }
+.invest-metrics { gap: 10px; }
+.invest-metrics article { min-height: 116px; gap: 7px; padding: 16px; border-color: #e0e8f3; border-radius: 13px; box-shadow: 0 5px 16px #073b9a06; }
+.invest-metrics article:nth-child(2) { border-top: 2px solid #f51b2b; }
+.invest-metrics span { color: #7285a2; }
+.invest-metrics span svg { color: #073b9a; }
+.invest-metrics strong { font-size: 22px; letter-spacing: -.02em; }
+.invest-section-heading { margin: 34px 0 15px; }
+.invest-section-heading h2 { font-size: 27px; letter-spacing: -.035em; }
+.invest-offer-grid { gap: 12px; }
+.invest-offer-card { min-height: 266px; padding: 17px; border-radius: 14px; box-shadow: 0 9px 23px #073b9a07; transition: transform .18s, box-shadow .18s, border-color .18s; }
+.invest-offer-card:hover { border-color: #9bb9ec; box-shadow: 0 14px 28px #073b9a13; transform: translateY(-2px); }
+.invest-offer-top .invest-orbit { width: 40px; height: 40px; }
+.invest-offer-card h3 { font-size: 18px; letter-spacing: -.02em; }
+.invest-offer-footer { margin-top: 4px; }
+.invest-empty { min-height: 245px; border: 1px solid #dce7f3; border-radius: 16px; background: #fff; box-shadow: 0 8px 23px #073b9a06; }
+.invest-empty > div { width: 50px; height: 50px; border-radius: 15px; background: #073b9a; color: #fff; box-shadow: 0 8px 20px #073b9a25; }
+.invest-empty h3 { font-size: 18px; }
+.invest-empty p { max-width: 500px; font-size: 12px; }
+.invest-safety { margin-top: 18px; padding: 18px 20px; border: 1px solid #c9dcfa; border-radius: 14px; background: #edf4ff; box-shadow: none; }
+.invest-safety h2 { font-size: 16px; }
+.invest-safety p:not(.invest-eyebrow) { font-size: 11px; }
+.invest-content { min-height: 410px; }
+.invest-disclosure { border-radius: 11px; }
+.invest-portfolio-total { border-radius: 14px; box-shadow: 0 12px 28px #073b9a18; }
+.invest-list-row { border-radius: 12px; box-shadow: 0 5px 14px #073b9a05; }
+.invest-project-card { border-radius: 14px; box-shadow: 0 7px 18px #073b9a07; }
+.invest-project-cover { background: #073b9a; }
+.invest-footer { margin-top: 28px; }
+@media (max-width: 760px) {
+  .invest-shell { width: calc(100% - 24px); padding-top: 10px; }
+  .invest-hero { min-height: 450px; padding: 28px 21px 18px; }
+  .invest-hero h1 { font-size: 39px; }
+  .invest-hero-art { min-height: 185px; }
+  .invest-orbit-large { right: 35px; }
+  .invest-tabs { margin-top: 13px; }
+  .invest-metrics article { min-height: 105px; }
+}
+.invest-policy-status { display: grid; grid-template-columns: 25px 1fr auto; align-items: center; gap: 9px; margin-top: 15px; padding: 11px; border: 1px solid #f3cf88; border-radius: 11px; background: #fff9ec; }.invest-policy-status.approved { border-color: #abd8bf; background: #eef9f2; }.invest-policy-status > span { display: grid; width: 25px; height: 25px; place-items: center; border-radius: 50%; background: #f0a500; color: #fff; font-size: 13px; font-weight: 900; }.invest-policy-status.approved > span { background: #17854e; }.invest-policy-status > div { display: grid; gap: 3px; }.invest-policy-status strong { color: #354d70; font-size: 10px; }.invest-policy-status small { color: #7d8da5; font-size: 9px; line-height: 1.3; }.invest-policy-status button { color: #073b9a; font-size: 10px; font-weight: 900; white-space: nowrap; }
+.invest-policy-screen { position: fixed; z-index: 40; inset: 0; overflow: auto; background: #f7f9fc; color: #0a2149; animation: invest-policy-in .2s ease-out; }.invest-policy-head { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 12px; width: min(900px, calc(100% - 32px)); min-height: 76px; margin: 0 auto; border-bottom: 1px solid #dce7f3; background: #f7f9fcf2; backdrop-filter: blur(12px); }.invest-policy-head > button { display: grid; width: 38px; height: 38px; place-items: center; border: 1px solid #dce7f3; border-radius: 50%; background: #fff; color: #073b9a; }.invest-policy-head > button svg { width: 17px; }.invest-policy-head h1 { margin: 4px 0 0; color: #0a2149; font-size: 20px; font-weight: 900; }.invest-policy-head > span { margin-left: auto; color: #8192aa; font-size: 10px; font-weight: 800; }.invest-policy-body { width: min(760px, calc(100% - 32px)); margin: 0 auto; padding: 30px 0 46px; }.invest-policy-intro { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 25px; padding: 16px; border: 1px solid #c8dcfa; border-radius: 13px; background: #edf4ff; }.invest-policy-intro > svg { flex: 0 0 auto; width: 24px; color: #073b9a; }.invest-policy-intro strong { color: #0b2e67; font-size: 14px; }.invest-policy-intro p { margin: 5px 0 0; color: #61799f; font-size: 11px; line-height: 1.45; }.invest-policy-body section { padding: 17px 0; border-bottom: 1px solid #e1e9f3; }.invest-policy-body section h2 { margin: 0 0 7px; color: #143766; font-size: 14px; font-weight: 900; }.invest-policy-body section p { margin: 0; color: #647a9a; font-size: 12px; line-height: 1.6; }.invest-policy-final { display: flex; align-items: center; gap: 9px; margin-top: 25px; padding: 13px; border: 1px solid #abd8bf; border-radius: 10px; background: #eef9f2; color: #256e4a; font-size: 11px; font-weight: 750; }.invest-policy-final svg { flex: 0 0 auto; width: 18px; }.invest-policy-approve { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 48px; margin-top: 13px; border-radius: 10px; background: #f51b2b; box-shadow: 0 9px 20px #f51b2b20; color: #fff; font-size: 12px; font-weight: 900; }.invest-policy-approve:hover { background: #d91020; }.invest-policy-approve svg { width: 16px; }
+@keyframes invest-policy-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 760px) { .invest-policy-head { width: calc(100% - 24px); min-height: 68px; }.invest-policy-body { width: calc(100% - 24px); padding-top: 20px; }.invest-policy-head h1 { font-size: 17px; }.invest-policy-body section p { font-size: 11px; }.invest-policy-status { grid-template-columns: 25px 1fr; }.invest-policy-status button { grid-column: 2; justify-self: start; } }
+
+.invest-contract-screen { position: fixed; z-index: 42; inset: 0; overflow: auto; background: #f5f8fc; color: #0a2149; animation: invest-policy-in .2s ease-out; }.invest-contract-head { display: flex; align-items: center; justify-content: space-between; width: min(1180px, calc(100% - 32px)); min-height: 88px; margin: 0 auto; border-bottom: 1px solid #dce7f3; }.invest-contract-head h1 { margin: 5px 0 3px; color: #0a2149; font-size: 24px; font-weight: 900; }.invest-contract-head > div > span { color: #7185a4; font-size: 11px; }.invest-contract-head > button { display: grid; width: 38px; height: 38px; place-items: center; border: 1px solid #dce7f3; border-radius: 50%; background: #fff; color: #073b9a; }.invest-contract-head > button svg { width: 17px; }.invest-contract-layout { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(330px, .8fr); gap: 20px; width: min(1180px, calc(100% - 32px)); margin: 22px auto 40px; }.invest-contract-preview, .invest-contract-sign { min-width: 0; padding: 15px; border: 1px solid #dce7f3; border-radius: 15px; background: #fff; box-shadow: 0 9px 24px #073b9a08; }.invest-contract-preview-head { display: flex; align-items: center; justify-content: space-between; padding: 3px 3px 13px; color: #193561; font-size: 12px; }.invest-contract-preview-head span { display: inline-flex; align-items: center; gap: 5px; color: #8192aa; font-size: 10px; }.invest-contract-preview-head svg { width: 14px; }.invest-contract-preview iframe { display: block; width: 100%; height: min(720px, calc(100dvh - 160px)); border: 1px solid #e4ebf5; border-radius: 9px; background: #eef3fa; }.invest-contract-sign { align-self: start; display: grid; gap: 15px; }.invest-contract-step { display: flex; align-items: flex-start; gap: 10px; }.invest-contract-step > span { display: grid; width: 28px; height: 28px; flex: 0 0 auto; place-items: center; border-radius: 9px; background: #073b9a; color: #fff; font-size: 10px; font-weight: 900; }.invest-contract-step > div { display: grid; gap: 4px; }.invest-contract-step strong { color: #193561; font-size: 12px; }.invest-contract-step small { color: #788ba7; font-size: 10px; line-height: 1.4; }.invest-signature-pad { overflow: hidden; border: 1px solid #b9cbe4; border-radius: 11px; background: #fff; }.invest-signature-pad canvas { display: block; width: 100%; height: 160px; touch-action: none; cursor: crosshair; }.invest-signature-pad > div { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 9px 11px; border-top: 1px solid #e1e9f3; background: #f8faff; color: #7185a4; font-size: 9px; }.invest-signature-pad button { color: #f51b2b; font-size: 10px; font-weight: 850; }.invest-contract-warning { display: flex; gap: 8px; padding: 11px; border: 1px solid #f2d18f; border-radius: 10px; background: #fff9eb; color: #806326; font-size: 10px; line-height: 1.4; }.invest-contract-warning svg { flex: 0 0 auto; width: 15px; }.invest-contract-download { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 45px; border-radius: 9px; background: #f51b2b; color: #fff; font-size: 11px; font-weight: 900; }.invest-contract-download:disabled { cursor: not-allowed; background: #cbd5e3; }.invest-contract-download svg { width: 16px; }
+@media (max-width: 760px) { .invest-contract-head { min-height: 72px; }.invest-contract-head h1 { font-size: 18px; }.invest-contract-layout { grid-template-columns: 1fr; gap: 12px; margin-top: 12px; }.invest-contract-preview { order: 2; }.invest-contract-sign { order: 1; }.invest-contract-preview iframe { height: 520px; }.invest-signature-pad canvas { height: 145px; } }
+
+/* Compact investment identity and hero */
+.invest-brand > div strong { color: #073b9a; font-size: 18px; }
+.invest-brand > .invest-orbit { width: 34px; height: 34px; }
+.invest-profile-dot { overflow: hidden; }
+.invest-profile-dot .invest-orbit { width: 28px; height: 28px; border: 0; background: #fff; color: #073b9a; font-size: 17px; }
+.invest-profile-dot .invest-orbit span { width: 20px; height: 20px; background: #073b9a; font-size: 13px; }
+.invest-sidebar-user .invest-profile-dot { background: #073b9a; }
+.invest-sidebar-user .invest-profile-dot .invest-orbit { width: 24px; height: 24px; }
+.invest-sidebar-user .invest-profile-dot .invest-orbit span { width: 17px; height: 17px; font-size: 11px; }
+.invest-hero { min-height: 275px; grid-template-columns: 1fr .72fr; gap: 12px; margin-top: 18px; padding: 30px 40px; border-radius: 19px; }
+.invest-hero h1 { max-width: 490px; margin: 10px 0 9px; font-size: clamp(30px, 3.8vw, 47px); }
+.invest-hero-copy { max-width: 400px; font-size: 12px; line-height: 1.45; }
+.invest-hero-actions { gap: 14px; margin-top: 19px; }
+.invest-hero-art { min-height: 190px; }
+.invest-orbit-large { top: 13px; right: 28px; width: 142px; height: 142px; }
+.invest-orbit-large svg { width: 59px; height: 59px; }
+.invest-art-card { width: 188px; padding: 12px 14px; }
+.invest-art-card strong { font-size: 20px; }
+@media (max-width: 760px) { .invest-hero { min-height: 405px; grid-template-columns: 1fr; padding: 25px 19px 16px; }.invest-hero h1 { font-size: 35px; }.invest-hero-art { min-height: 165px; }.invest-orbit-large { top: 7px; right: 32px; width: 124px; height: 124px; }.invest-art-card { width: 166px; }.invest-brand > div strong { font-size: 15px; } }
