@@ -6,7 +6,6 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
 import { collection, doc, getDoc, limit, onSnapshot, query, where } from 'firebase/firestore';
-import { httpsCallable } from 'firebase/functions';
 import { jsPDF } from 'jspdf';
 import {
   ArrowLeft,
@@ -43,11 +42,12 @@ import {
   getChurchCategory,
   type ChurchAccount,
   type ChurchCampaign,
+  type ChurchFee,
   type ChurchParish,
   type ChurchPaymentCategory,
   type ChurchQrCode,
 } from '@/lib/echurch';
-import { db, functions } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 
 type ReceiptResult = {
   transactionId: string;
@@ -65,12 +65,14 @@ export default function ChurchPaymentPage() {
   const [account, setAccount] = useState<ChurchAccount | null>(null);
   const [parishes, setParishes] = useState<ChurchParish[]>([]);
   const [campaigns, setCampaigns] = useState<ChurchCampaign[]>([]);
+  const [fees, setFees] = useState<ChurchFee[]>([]);
   const [contextQr, setContextQr] = useState<ChurchQrCode | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showPin, setShowPin] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [receipt, setReceipt] = useState<ReceiptResult | null>(null);
   const [form, setForm] = useState({
+    feeId: '',
     parishId: '',
     campaignId: '',
     category: 'offering' as ChurchPaymentCategory,
@@ -100,6 +102,7 @@ export default function ChurchPaymentPage() {
     if (!account) {
       setParishes([]);
       setCampaigns([]);
+      setFees([]);
       return;
     }
     const accountRef = doc(db, 'church_accounts', account.id);
@@ -109,7 +112,10 @@ export default function ChurchPaymentPage() {
     const campaignUnsubscribe = onSnapshot(collection(accountRef, 'campaigns'), (snapshot) => {
       setCampaigns(snapshot.docs.map((item) => ({ id: item.id, ...item.data() }) as ChurchCampaign).filter((item) => item.status === 'active'));
     });
-    return () => { parishUnsubscribe(); campaignUnsubscribe(); };
+    const feeUnsubscribe = onSnapshot(collection(accountRef, 'fees'), (snapshot) => {
+      setFees(snapshot.docs.map((item) => ({ id: item.id, ...item.data() }) as ChurchFee).filter((item) => item.status === 'active'));
+    }, () => setFees([]));
+    return () => { parishUnsubscribe(); campaignUnsubscribe(); feeUnsubscribe(); };
   }, [account]);
 
   useEffect(() => {
@@ -138,7 +144,15 @@ export default function ChurchPaymentPage() {
 
   const selectedParish = useMemo(() => parishes.find((item) => item.id === form.parishId), [form.parishId, parishes]);
   const selectedCampaign = useMemo(() => campaigns.find((item) => item.id === form.campaignId), [campaigns, form.campaignId]);
+  const selectedFee = useMemo(() => fees.find((item) => item.id === form.feeId), [fees, form.feeId]);
+  const visibleFees = useMemo(() => fees.filter((fee) => !contextQr?.parishId || !fee.parishId || fee.parishId === contextQr.parishId), [contextQr?.parishId, fees]);
   const selectedCategory = getChurchCategory(form.category);
+  const paymentLabel = selectedFee?.name || selectedCategory.label;
+  const chooseFee = (fee: ChurchFee | null) => {
+    // Un montant fixe vient du frais ; en quittant un frais fixe, on n'hérite pas de son montant.
+    const nextAmount = fee?.amount ? String(fee.amount) : selectedFee?.amount ? '' : form.amount;
+    setForm({ ...form, feeId: fee?.id || '', category: fee?.category || form.category, amount: nextAmount, parishId: fee?.parishId || form.parishId });
+  };
   const amount = Number(form.amount);
   const canPay = Boolean(user && account?.status === 'validated' && Number.isFinite(amount) && amount > 0 && amount <= balance && !isProcessing);
 
@@ -165,19 +179,25 @@ export default function ChurchPaymentPage() {
     setShowPin(false);
     setIsProcessing(true);
     try {
-      const processChurchPayment = httpsCallable(functions, 'processChurchPayment');
-      const result = await processChurchPayment({
+      const token = await user.getIdToken();
+      const response = await fetch('/api/church/pay/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
         churchId: account.id,
         amount,
         category: form.category,
+        feeId: form.feeId || null,
         parishId: form.parishId || null,
         campaignId: form.campaignId || null,
         qrId: contextQr?.id || null,
         isAnonymous: form.isAnonymous,
         message: form.message.trim() || null,
         source: contextQr ? 'qr' : 'link',
+        }),
       });
-      const data = result.data as ReceiptResult & { success?: boolean };
+      const data = (await response.json().catch(() => ({}))) as ReceiptResult & { success?: boolean; error?: string };
+      if (!response.ok) throw new Error(data.error || 'Paiement non confirmé');
       if (!data.success) throw new Error('Paiement non confirmé');
       setReceipt(data);
       toast({ title: 'Contribution reçue', description: 'Votre reçu eChurch est disponible.' });
@@ -209,7 +229,7 @@ export default function ChurchPaymentPage() {
       `Église : ${account.name}`,
       `Référence : ${receipt.reference}`,
       `Reçu : ${receipt.receiptNumber}`,
-      `Motif : ${selectedCategory.label}`,
+      `Motif : ${paymentLabel}`,
       `Montant : ${formatChurchCurrency(amount)}`,
       `Paroisse : ${selectedParish?.name || 'Collecte générale'}`,
       `Campagne : ${selectedCampaign?.name || 'Aucune'}`,
@@ -239,14 +259,15 @@ export default function ChurchPaymentPage() {
   }
 
   if (receipt) {
-    return <main className="min-h-screen bg-[#FFFFFF] p-4 sm:p-6"><section className="mx-auto max-w-md overflow-hidden rounded-[28px] bg-white shadow-xl shadow-primary/10"><div className="bg-primary px-6 pb-11 pt-6 text-center text-white"><div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15"><CheckCircle2 className="h-8 w-8" /></div><p className="mt-4 text-xl font-black">Contribution confirmée</p><p className="mt-2 text-sm text-white/78">Merci pour votre soutien à {account.name}.</p></div><div className="-mt-6 px-5 pb-6"><div className="rounded-2xl bg-white p-4 text-center shadow-lg shadow-black/10"><p className="text-xs font-bold text-slate-500">Montant reçu</p><p className="mt-1 text-3xl font-black text-primary">{formatChurchCurrency(amount)}</p><Badge className="mt-3 border border-primary/15 bg-primary/10 text-primary">{selectedCategory.label}</Badge></div><div className="mt-5 space-y-3 rounded-2xl bg-slate-50 p-4 text-sm"><ReceiptLine label="Référence" value={receipt.reference} /><ReceiptLine label="Paroisse" value={selectedParish?.name || 'Collecte générale'} /><ReceiptLine label="Canal" value="Wallet Kenz Pay" /><ReceiptLine label="Statut" value="Confirmé" /></div><Button className="mt-5 w-full bg-primary hover:bg-primary" onClick={downloadReceipt}><ReceiptText className="mr-2 h-4 w-4" />Télécharger le reçu PDF</Button><Button asChild variant="ghost" className="mt-2 w-full text-primary"><Link href="/dashboard/mbongo-dashboard">Retour à Kenz Pay</Link></Button></div></section></main>;
+    return <main className="min-h-screen bg-[#FFFFFF] p-4 sm:p-6"><section className="mx-auto max-w-md overflow-hidden rounded-[28px] bg-white shadow-xl shadow-primary/10"><div className="bg-primary px-6 pb-11 pt-6 text-center text-white"><div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15"><CheckCircle2 className="h-8 w-8" /></div><p className="mt-4 text-xl font-black">Contribution confirmée</p><p className="mt-2 text-sm text-white/78">Merci pour votre soutien à {account.name}.</p></div><div className="-mt-6 px-5 pb-6"><div className="rounded-2xl bg-white p-4 text-center shadow-lg shadow-black/10"><p className="text-xs font-bold text-slate-500">Montant reçu</p><p className="mt-1 text-3xl font-black text-primary">{formatChurchCurrency(amount)}</p><Badge className="mt-3 border border-primary/15 bg-primary/10 text-primary">{paymentLabel}</Badge></div><div className="mt-5 space-y-3 rounded-2xl bg-slate-50 p-4 text-sm"><ReceiptLine label="Référence" value={receipt.reference} /><ReceiptLine label="Paroisse" value={selectedParish?.name || 'Collecte générale'} /><ReceiptLine label="Canal" value="Wallet Kenz Pay" /><ReceiptLine label="Statut" value="Confirmé" /></div><Button className="mt-5 w-full bg-primary hover:bg-primary" onClick={downloadReceipt}><ReceiptText className="mr-2 h-4 w-4" />Télécharger le reçu PDF</Button><Button asChild variant="ghost" className="mt-2 w-full text-primary"><Link href="/dashboard/mbongo-dashboard">Retour à Kenz Pay</Link></Button></div></section></main>;
   }
 
   return (
     <main className="min-h-screen bg-[#FFFFFF] pb-8">
       <section className="relative overflow-hidden bg-primary px-5 pb-16 pt-6 text-white"><div className="absolute -right-20 -top-14 h-48 w-48 rounded-full bg-white/10" /><div className="relative mx-auto flex max-w-2xl items-start justify-between gap-4"><div className="flex min-w-0 items-center gap-3"><div className="h-14 w-14 shrink-0 overflow-hidden rounded-2xl bg-white p-1">{account.logoUrl ? <img src={account.logoUrl} alt="Logo" className="h-full w-full rounded-xl object-cover" /> : <EChurchIcon size={48} className="h-full w-full" />}</div><div className="min-w-0"><p className="text-xs font-bold uppercase tracking-[0.14em] text-white/70">Kenz Church Pay</p><h1 className="mt-1 truncate text-lg font-black">{account.name}</h1></div></div><Badge className="border border-white/20 bg-white/10 text-white"><BadgeCheck className="mr-1 h-3.5 w-3.5" />Vérifié</Badge></div></section>
       <section className="relative z-10 mx-auto -mt-9 max-w-2xl px-3 sm:px-5"><Card className="rounded-[24px] border-0 shadow-xl shadow-black/10"><CardContent className="p-4 sm:p-6"><div className="flex items-center gap-3"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><HeartHandshake className="h-5 w-5" /></span><div><p className="text-sm font-black text-slate-950">Contribuer en toute confiance</p><p className="mt-0.5 text-xs text-slate-500">Votre contribution est enregistrée et un reçu est généré après confirmation.</p></div></div>{contextQr && <div className="mt-4 flex items-center gap-3 rounded-xl border border-primary/10 bg-primary/[0.04] p-3"><QrCode className="h-5 w-5 text-primary" /><p className="text-sm font-bold text-slate-700">{contextQr.campaignName || contextQr.parishName || contextQr.categoryLabel || 'Contribution ciblée'}</p></div>}
-        <div className="mt-6 grid gap-4 sm:grid-cols-2"><Field label="Paroisse"><Select value={form.parishId || 'general'} disabled={Boolean(contextQr?.parishId)} onValueChange={(value) => setForm({ ...form, parishId: value === 'general' ? '' : value, campaignId: '' })}><SelectTrigger><SelectValue placeholder="Collecte générale" /></SelectTrigger><SelectContent><SelectItem value="general">Collecte générale</SelectItem>{parishes.map((parish) => <SelectItem key={parish.id} value={parish.id}>{parish.name}</SelectItem>)}</SelectContent></Select></Field><Field label="Motif"><Select value={form.category} disabled={Boolean(contextQr?.category)} onValueChange={(value) => setForm({ ...form, category: value as ChurchPaymentCategory })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{CHURCH_PAYMENT_CATEGORIES.map((category) => <SelectItem key={category.value} value={category.value}>{category.label}</SelectItem>)}</SelectContent></Select></Field><Field label="Campagne (facultatif)" className="sm:col-span-2"><Select value={form.campaignId || 'none'} disabled={Boolean(contextQr?.campaignId)} onValueChange={(value) => setForm({ ...form, campaignId: value === 'none' ? '' : value })}><SelectTrigger><SelectValue placeholder="Aucune campagne" /></SelectTrigger><SelectContent><SelectItem value="none">Aucune campagne</SelectItem>{campaigns.filter((campaign) => !form.parishId || campaign.parishId === form.parishId).map((campaign) => <SelectItem key={campaign.id} value={campaign.id}>{campaign.name}</SelectItem>)}</SelectContent></Select></Field><Field label="Montant de votre contribution (CDF) *" className="sm:col-span-2"><Input type="number" min="1" inputMode="decimal" value={form.amount} onChange={(event) => setForm({ ...form, amount: event.target.value })} placeholder="Ex. 10 000" className="h-12 text-lg font-black" /></Field><Field label="Intention ou message (facultatif)" className="sm:col-span-2"><Textarea value={form.message} onChange={(event) => setForm({ ...form, message: event.target.value })} placeholder="Vous pouvez laisser un message avec votre contribution." /></Field></div>
+        {visibleFees.length > 0 && <div className="mt-6"><p className="text-xs font-bold text-slate-700">Que souhaitez-vous payer ?</p><div className="mt-2 grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label="Frais de l'Église">{visibleFees.map((fee) => { const active = form.feeId === fee.id; return <button key={fee.id} type="button" role="radio" aria-checked={active} onClick={() => chooseFee(active ? null : fee)} className={`rounded-xl border p-3 text-left transition ${active ? 'border-primary bg-primary/[0.06] ring-1 ring-primary' : 'border-slate-200 hover:border-primary/40'}`}><span className="block truncate text-sm font-black text-slate-900">{fee.name}</span><span className="mt-0.5 block text-xs text-slate-500">{fee.amount ? formatChurchCurrency(fee.amount) : 'Montant libre'}{fee.parishName ? ` · ${fee.parishName}` : ''}</span></button>; })}<button type="button" role="radio" aria-checked={!form.feeId} onClick={() => chooseFee(null)} className={`rounded-xl border p-3 text-left transition ${!form.feeId ? 'border-primary bg-primary/[0.06] ring-1 ring-primary' : 'border-slate-200 hover:border-primary/40'}`}><span className="block text-sm font-black text-slate-900">Autre contribution</span><span className="mt-0.5 block text-xs text-slate-500">Choisir le motif et le montant</span></button></div></div>}
+        <div className="mt-6 grid gap-4 sm:grid-cols-2"><Field label="Paroisse"><Select value={form.parishId || 'general'} disabled={Boolean(contextQr?.parishId || selectedFee?.parishId)} onValueChange={(value) => setForm({ ...form, parishId: value === 'general' ? '' : value, campaignId: '' })}><SelectTrigger><SelectValue placeholder="Collecte générale" /></SelectTrigger><SelectContent><SelectItem value="general">Collecte générale</SelectItem>{parishes.map((parish) => <SelectItem key={parish.id} value={parish.id}>{parish.name}</SelectItem>)}</SelectContent></Select></Field><Field label="Motif"><Select value={form.category} disabled={Boolean(contextQr?.category || selectedFee)} onValueChange={(value) => setForm({ ...form, category: value as ChurchPaymentCategory })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{CHURCH_PAYMENT_CATEGORIES.map((category) => <SelectItem key={category.value} value={category.value}>{category.label}</SelectItem>)}</SelectContent></Select></Field><Field label="Campagne (facultatif)" className="sm:col-span-2"><Select value={form.campaignId || 'none'} disabled={Boolean(contextQr?.campaignId)} onValueChange={(value) => setForm({ ...form, campaignId: value === 'none' ? '' : value })}><SelectTrigger><SelectValue placeholder="Aucune campagne" /></SelectTrigger><SelectContent><SelectItem value="none">Aucune campagne</SelectItem>{campaigns.filter((campaign) => !form.parishId || campaign.parishId === form.parishId).map((campaign) => <SelectItem key={campaign.id} value={campaign.id}>{campaign.name}</SelectItem>)}</SelectContent></Select></Field><Field label="Montant de votre contribution (CDF) *" className="sm:col-span-2"><Input type="number" min="1" inputMode="decimal" value={form.amount} readOnly={Boolean(selectedFee?.amount)} onChange={(event) => setForm({ ...form, amount: event.target.value })} placeholder="Ex. 10 000" className="h-12 text-lg font-black" /></Field><Field label="Intention ou message (facultatif)" className="sm:col-span-2"><Textarea value={form.message} onChange={(event) => setForm({ ...form, message: event.target.value })} placeholder="Vous pouvez laisser un message avec votre contribution." /></Field></div>
         <label className="mt-5 flex cursor-pointer items-center justify-between gap-4 rounded-xl bg-slate-50 p-3"><span><span className="block text-sm font-bold text-slate-800">Contribuer anonymement</span><span className="mt-0.5 block text-xs text-slate-500">L'Église ne verra pas votre identité sur la contribution.</span></span><Switch checked={form.isAnonymous} onCheckedChange={(checked) => setForm({ ...form, isAnonymous: checked })} /></label>
         {user && <div className="mt-4 flex items-center justify-between rounded-xl border border-primary/10 bg-primary/[0.04] p-3"><span className="flex items-center gap-2 text-sm font-bold text-slate-700"><WalletCards className="h-4 w-4 text-primary" />Solde Kenz Pay</span><span className="font-black text-primary">{formatChurchCurrency(balance)}</span></div>}
         <Button className="mt-5 h-12 w-full bg-primary text-base font-black hover:bg-primary" disabled={!canPay && Boolean(user)} onClick={beginPayment}>{isProcessing ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <WalletCards className="mr-2 h-5 w-5" />}{user ? `Payer ${amount > 0 ? formatChurchCurrency(amount) : ''}` : 'Se connecter pour contribuer'}</Button><div className="mt-4 flex items-start gap-2 text-xs leading-5 text-slate-500"><LockKeyhole className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />Paiement sécurisé par Kenz Pay. Le PIN est demandé avant toute confirmation.</div></CardContent></Card></section>

@@ -159,6 +159,7 @@ const bills = [
   { icon: TvIcon, labelKey: 'canal', href: '/dashboard/pay-bill?type=tv', aliases: ['television', 'tv', 'abonnement'] },
   { icon: AcademicIcon, labelKey: 'academicFees', href: '/dashboard/academic-fees', aliases: ['universite', 'academique', 'etudiant'] },
   { icon: SchoolIcon, labelKey: 'schoolFees', href: '/dashboard/school-fees', aliases: ['ecole', 'scolarite', 'frais scolaire'] },
+  { icon: EChurchIcon, labelKey: 'echurch', href: '/dashboard/church-pay', aliases: ['eglise', 'église', 'dime', 'dîme', 'offrande', 'paroisse', 'church'] },
   { icon: HealthIcon, labelKey: 'health', href: '/dashboard/health', aliases: ['hopital', 'clinique', 'medical'] },
   { icon: FiveGoIcon, labelKey: 'fivego', href: '/dashboard/5go', aliases: ['transport', 'mobilite', 'course'] },
   { icon: EventIcon, labelKey: 'events', href: '/dashboard/events', aliases: ['evenement', 'ticket', 'billet'] },

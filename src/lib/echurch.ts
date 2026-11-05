@@ -205,3 +205,30 @@ export const createChurchPublicId = (country: string) => {
   const countryCode = country.trim().slice(0, 3).toUpperCase().replace(/[^A-Z]/g, '') || 'INT';
   return `ECH-${countryCode}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
 };
+
+/** Frais créés par l'Église (dîme, offrande, mariage…) que le fidèle choisit au moment de payer. */
+export interface ChurchFee {
+  id: string;
+  name: string;
+  category: ChurchPaymentCategory;
+  categoryLabel: string;
+  /** Montant fixe en CDF ; absent = montant libre. */
+  amount?: number | null;
+  parishId?: string | null;
+  parishName?: string | null;
+  description?: string | null;
+  status: 'active' | 'inactive';
+  createdAt?: unknown;
+}
+
+/** Extrait l'alias (et le QR contextuel) d'un lien ou QR eChurch : https://…/church/{alias}?qr={id}. */
+export function parseChurchLink(raw: string): { alias: string; qrId: string | null } | null {
+  const value = (raw || '').trim();
+  const match = value.match(/\/church\/([^/?#\s]+)\/?(?:\?([^#\s]*))?/i);
+  if (!match) return null;
+  const qrId = new URLSearchParams(match[2] || '').get('qr');
+  return { alias: decodeURIComponent(match[1]), qrId: qrId || null };
+}
+
+export const churchPaymentPath = (alias: string, qrId?: string | null) =>
+  `/church/${encodeURIComponent(alias)}${qrId ? `?qr=${encodeURIComponent(qrId)}` : ''}`;

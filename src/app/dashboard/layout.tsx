@@ -15,6 +15,7 @@ import { useIsKeyboardOpen } from '@/hooks/useIsKeyboardOpen';
 
 // Screens with a bottom CTA, a map or a sensitive input flow: the floating AI button must never cover them (ENK-014).
 const AI_BUTTON_HIDDEN_PREFIXES = [
+  '/dashboard/church-pay',
   '/dashboard/miyiki-chat',
   '/dashboard/ugavi',
   '/dashboard/makutano/create',

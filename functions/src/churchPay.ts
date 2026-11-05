@@ -54,6 +54,7 @@ export const processChurchPayment = functions.https.onCall(
     churchId: string;
     amount: number;
     category: ChurchPaymentCategory;
+    feeId?: string | null;
     parishId?: string | null;
     campaignId?: string | null;
     qrId?: string | null;
@@ -108,7 +109,19 @@ export const processChurchPayment = functions.https.onCall(
         throw new functions.https.HttpsError('failed-precondition', 'Solde Kenz Pay insuffisant.');
       }
 
-      const parishId = asOptionalString(data.parishId);
+      // Frais créé par l'Église : il fixe le motif, la paroisse et, s'il est fixe, le montant.
+      const feeId = asOptionalString(data.feeId);
+      const feeRef = feeId ? churchRef.collection('fees').doc(feeId) : null;
+      const feeSnapshot = feeRef ? await transaction.get(feeRef) : null;
+      const fee = feeSnapshot?.exists ? feeSnapshot.data()! : null;
+      if (feeRef && (!fee || fee.status !== 'active')) {
+        throw new functions.https.HttpsError('failed-precondition', 'Ce frais n’est plus disponible.');
+      }
+      if (fee?.amount && Number(fee.amount) !== amount) {
+        throw new functions.https.HttpsError('invalid-argument', 'Le montant ne correspond pas au frais choisi.');
+      }
+
+      const parishId = asOptionalString(fee?.parishId) || asOptionalString(data.parishId);
       const campaignId = asOptionalString(data.campaignId);
       const parishRef = parishId ? churchRef.collection('parishes').doc(parishId) : null;
       const campaignRef = campaignId ? churchRef.collection('campaigns').doc(campaignId) : null;
@@ -131,7 +144,7 @@ export const processChurchPayment = functions.https.onCall(
         : String(payer.fullName || payer.displayName || payer.name || context.auth?.token.name || 'Fidèle Kenz');
       const parishName = parishSnapshot?.data()?.name || null;
       const campaignName = campaignSnapshot?.data()?.name || null;
-      const categoryLabel = categoryLabels[category];
+      const categoryLabel = asOptionalString(fee?.name) || categoryLabels[category];
       const safeMessage = asOptionalString(data.message);
       const source = data.source === 'qr' || data.source === 'link' ? data.source : 'app';
 
@@ -170,8 +183,9 @@ export const processChurchPayment = functions.https.onCall(
         parishName,
         campaignId,
         campaignName,
-        category,
+        category: (fee?.category && categoryLabels[fee.category as ChurchPaymentCategory]) ? fee.category : category,
         categoryLabel,
+        feeId: fee ? feeId : null,
         amount,
         currency: 'CDF',
         fees: 0,

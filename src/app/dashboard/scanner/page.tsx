@@ -20,6 +20,7 @@ import { useUserProfile } from '@/hooks/useUserProfile';
 import { useMoneyTransfer } from '@/hooks/useMoneyTransfer';
 import { PinVerification } from '@/components/payment/PinVerification';
 import { useDevicePermission } from '@/hooks/useDevicePermission';
+import { churchPaymentPath, parseChurchLink } from '@/lib/echurch';
 
 type Currency = 'CDF' | 'USD' | 'EUR';
 type ViewMode = 'default' | 'camera-scan';
@@ -129,6 +130,12 @@ export default function ScannerPage() {
     const code = jsQR(imageData.data, canvas.width, canvas.height);
 
     if (code) {
+      const churchLink = parseChurchLink(code.data);
+      if (churchLink) {
+        setIsScanning(false);
+        router.push(churchPaymentPath(churchLink.alias, churchLink.qrId));
+        return;
+      }
       const qrData = parseQRData(code.data);
       if (qrData) {
         if (qrData.isValid) {
@@ -295,6 +302,12 @@ export default function ScannerPage() {
             setImportProgress(90);
 
             if (code) {
+              const churchLink = parseChurchLink(code.data);
+              if (churchLink) {
+                setIsImporting(false);
+                router.push(churchPaymentPath(churchLink.alias, churchLink.qrId));
+                return;
+              }
               const qrData = parseQRData(code.data);
               if (qrData) {
                 setImportProgress(100);

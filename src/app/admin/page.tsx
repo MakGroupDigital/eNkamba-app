@@ -21,6 +21,7 @@ import {
   FileCheck2,
   FileText,
   GraduationCap,
+  Church,
   KeyRound,
   Landmark,
   Layers3,
@@ -467,6 +468,12 @@ export default function AdminDashboardPage() {
                 Dossiers Éducation
               </Link>
             </Button>
+            <Button asChild variant="outline" className="gap-2">
+              <Link href="/admin/church-accounts">
+                <Church className="h-4 w-4" />
+                Dossiers eChurch
+              </Link>
+            </Button>
           </div>
         </header>
 
@@ -712,6 +719,12 @@ export default function AdminDashboardPage() {
                 <Button asChild variant="outline" className="justify-between">
                   <Link href="/admin/education-accounts">
                     Valider les établissements Éducation
+                    <ChevronRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" className="justify-between">
+                  <Link href="/admin/church-accounts">
+                    Valider les Églises (eChurch)
                     <ChevronRight className="h-4 w-4" />
                   </Link>
                 </Button>
