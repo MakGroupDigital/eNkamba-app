@@ -1044,7 +1044,7 @@ const TRANSPORT_CATEGORIES = [
 
 const PARCEL_CATEGORIES = ['Document', 'Aliment', 'Electronique', 'Vetement', 'Marchandise', 'Fragile'];
 const PACKAGING_TYPES = ['Carton', 'Sac', 'Palette', 'Conteneur'];
-const CURRENCIES = ['USD', 'CDF', 'RMB', 'EUR'];
+const CURRENCIES = ['USD', 'CDF', 'CNY', 'EUR'];
 const MARITIME_SERVICE_TYPES = [
   'Groupage maritime',
   'Conteneur complet',

@@ -1476,7 +1476,7 @@ function PaymentPosTransferAgency({ businessUser, initialMode }: { businessUser:
             <PaymentPosInput label="Ville de paiement" value={form.payoutCity} onChange={(v) => setForm({ ...form, payoutCity: v })} />
             <PaymentPosInput label="Bureau payeur" value={form.payoutOfficeCode} onChange={(v) => setForm({ ...form, payoutOfficeCode: v })} />
             <PaymentPosInput label="Montant" value={form.amount} onChange={(v) => setForm({ ...form, amount: v })} inputMode="decimal" />
-            <select value={form.currency} onChange={(event) => setForm({ ...form, currency: event.target.value })} className="h-11 rounded-2xl border border-[#073B9A] bg-white px-3 text-sm font-bold">{['USD', 'CDF', 'EUR', 'RMB'].map((currency) => <option key={currency}>{currency}</option>)}</select>
+            <select value={form.currency} onChange={(event) => setForm({ ...form, currency: event.target.value })} className="h-11 rounded-2xl border border-[#073B9A] bg-white px-3 text-sm font-bold">{['USD', 'CDF', 'EUR', 'CNY'].map((currency) => <option key={currency}>{currency}</option>)}</select>
             <PaymentPosInput label="Motif" value={form.reason} onChange={(v) => setForm({ ...form, reason: v })} />
             <PaymentPosInput label="Signature expéditeur" value={form.senderSignature} onChange={(v) => setForm({ ...form, senderSignature: v })} />
           </div>

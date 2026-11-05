@@ -35,7 +35,7 @@ export function BusinessStatusCard({
         return {
           icon: BusinessDashboardIcons.CheckCircle,
           title: 'Compte approuvé',
-          description: 'Félicitations, vous êtes désormais un partenaire certifié Enkamba.',
+          description: 'Félicitations, vous êtes désormais un partenaire certifié Kenz.',
           bgColor: 'bg-primary/5',
           borderColor: 'border-primary/20',
           textColor: 'text-primary',

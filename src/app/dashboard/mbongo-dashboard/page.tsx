@@ -13,6 +13,7 @@ import { useWalletTransactions } from '@/hooks/useWalletTransactions';
 import { useSecureBalanceVisibility } from '@/hooks/useSecureBalanceVisibility';
 import { PinVerification } from '@/components/payment/PinVerification';
 import { auth, db } from '@/lib/firebase';
+import { currencyRegionalLabel } from '@/lib/currency-codes';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 
@@ -347,16 +348,16 @@ export default function MbongoDashboard() {
       />
       <div className="min-h-screen bg-white pt-24 animate-in fade-in duration-500">
         <main className="container mx-auto max-w-5xl space-y-5 px-4 pb-8 pt-2">
-          <div className="grid grid-cols-5 gap-2 sm:gap-6">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(56px,1fr))] gap-x-1.5 gap-y-3 sm:grid-cols-5 sm:gap-6">
             {filteredQuickActions.map((action) => {
               const IconComponent = action.icon;
               const label = copy[action.labelKey] || DEFAULT_COPY[action.labelKey] || action.labelKey;
               return (
                 <Link key={action.labelKey} href={action.href} className="group flex flex-col items-center gap-2.5">
-                  <div className="relative flex h-[62px] w-[62px] items-center justify-center rounded-full border border-[#073B9A]/15 bg-white text-white shadow-xl shadow-[#073B9A]/15 transition-all duration-300 hover:scale-105 sm:h-24 sm:w-24">
-                    <IconComponent className="h-9 w-9 text-white sm:h-14 sm:w-14" strokeWidth={2.4} />
+                  <div className="relative flex h-[clamp(48px,15vw,62px)] w-[clamp(48px,15vw,62px)] items-center justify-center rounded-full border border-[#073B9A]/15 bg-white text-white shadow-xl shadow-[#073B9A]/15 transition-all duration-300 hover:scale-105 sm:h-24 sm:w-24">
+                    <IconComponent className="h-[65%] w-[65%] text-white sm:h-14 sm:w-14" strokeWidth={2.4} />
                   </div>
-                  <p className="text-center text-[12px] font-black leading-tight text-slate-800 sm:text-sm">{label}</p>
+                  <p className="w-full break-words text-center text-[11px] font-black leading-tight text-slate-800 min-[380px]:text-[12px] sm:text-sm">{label}</p>
                 </Link>
               );
             })}
@@ -395,14 +396,15 @@ export default function MbongoDashboard() {
                 <p className="text-center text-[12px] font-black uppercase tracking-[0.22em] text-[#073B9A]">Autres devises</p>
                 <span className="h-px w-14 bg-[#F51B2B]/45" />
               </div>
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 gap-2 min-[400px]:grid-cols-4">
                 {[
-                  { code: 'USD', symbol: '$', estimated: walletBalance * dailyRates.USD },
-                  { code: 'EUR', symbol: '€', estimated: walletBalance * dailyRates.EUR },
-                  { code: 'RMB', symbol: '¥', estimated: walletBalance * dailyRates.CNY },
-                  { code: 'FCFA', symbol: 'FCFA', estimated: walletBalance * dailyRates.XAF },
+                  // walletKey keeps the legacy Firestore key; code is the ISO 4217 code shown to users (ENK-051).
+                  { walletKey: 'USD', code: 'USD', symbol: '$', estimated: walletBalance * dailyRates.USD },
+                  { walletKey: 'EUR', code: 'EUR', symbol: '€', estimated: walletBalance * dailyRates.EUR },
+                  { walletKey: 'RMB', code: 'CNY', symbol: '¥', estimated: walletBalance * dailyRates.CNY },
+                  { walletKey: 'FCFA', code: 'XAF', symbol: 'FCFA', estimated: walletBalance * dailyRates.XAF },
                 ].map((item) => (
-                  <Link key={item.code} href="/dashboard/conversion" className="relative min-h-[74px] overflow-hidden rounded-xl bg-[#073B9A] p-2.5 text-white shadow-md shadow-[#073B9A]/12 transition hover:-translate-y-0.5 hover:shadow-lg">
+                  <Link key={item.code} href="/dashboard/conversion" title={currencyRegionalLabel(item.code)} aria-label={`Portefeuille ${currencyRegionalLabel(item.code)}`} className="relative min-h-[74px] overflow-hidden rounded-xl bg-[#073B9A] p-2.5 text-white shadow-md shadow-[#073B9A]/12 transition hover:-translate-y-0.5 hover:shadow-lg">
                     <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(145deg,rgba(255,255,255,0.14),transparent_58%)]" />
                     <div className="relative flex items-start justify-between gap-1">
                       <p className="text-sm font-black">{item.code}</p>
@@ -411,7 +413,7 @@ export default function MbongoDashboard() {
                       </span>
                     </div>
                     <p className="relative mt-2 truncate text-base font-black">
-                      {isBalanceVisible ? Number(currencyWallets[item.code]?.balance || 0).toLocaleString('fr-FR', { maximumFractionDigits: 2 }) : '••••'}
+                      {isBalanceVisible ? Number(currencyWallets[item.walletKey]?.balance || 0).toLocaleString('fr-FR', { maximumFractionDigits: 2 }) : '••••'}
                     </p>
                     <p className="relative mt-0.5 truncate text-[9px] font-bold text-white/68">
                       ≈ {isBalanceVisible ? item.estimated.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) : '••••'} si CDF
@@ -431,15 +433,15 @@ export default function MbongoDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent className="px-5 pb-6 pt-2">
-              <div className="grid grid-cols-4 gap-3 text-center sm:gap-5">
+              <div className="grid grid-cols-3 gap-3 text-center min-[400px]:grid-cols-4 sm:gap-5">
               {filteredFinancialServices.map(service => {
                 const IconComponent = service.icon;
                 return (
                   <Link href={service.href} key={service.labelKey} className="flex flex-col items-center gap-2 text-sm font-semibold text-slate-950 transition-all hover:text-[#073B9A] group">
-                    <div className={cn("mbongo-service-icon flex h-[82px] w-full max-w-[92px] items-center justify-center overflow-visible rounded-2xl bg-white", "border border-[#073B9A]/10 shadow-sm group-hover:shadow-md group-hover:scale-[1.02] transition-all duration-300")}>
-                      <IconComponent size={58} className="h-[58px] w-[58px]" />
+                    <div className={cn("mbongo-service-icon flex aspect-square w-full max-w-[92px] items-center justify-center overflow-hidden rounded-2xl bg-white", "border border-[#073B9A]/10 shadow-sm group-hover:shadow-md group-hover:scale-[1.02] transition-all duration-300")}>
+                      <IconComponent size={58} className="h-[70%] w-[70%] max-h-[58px] max-w-[58px]" />
                     </div>
-                    <span className="text-center text-[12px] font-bold leading-tight">{copy[service.labelKey]}</span>
+                    <span className="w-full break-words text-center text-[11px] font-bold leading-tight min-[380px]:text-[12px]">{copy[service.labelKey]}</span>
                   </Link>
                 );
               })}
@@ -455,15 +457,15 @@ export default function MbongoDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent className="px-5 pb-6 pt-2">
-              <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 sm:gap-4">
+              <div className="grid grid-cols-3 gap-2 min-[380px]:gap-3 sm:grid-cols-4 sm:gap-4">
               {filteredBills.map(bill => {
                 const IconComponent = bill.icon;
                 return (
                   <Link href={bill.href} key={bill.labelKey} className={cn("flex min-h-[118px] flex-col items-center justify-center gap-2.5 rounded-2xl p-3 text-center", "bg-white border border-[#073B9A]/10", "text-sm font-semibold text-slate-950", "hover:shadow-md hover:scale-[1.02] transition-all duration-300", "group")}>
                     <div className="mbongo-service-icon group-hover:scale-105 transition-transform duration-300">
-                      <IconComponent size={62} className="h-[62px] w-[62px]" />
+                      <IconComponent size={62} className="h-[clamp(44px,13vw,62px)] w-[clamp(44px,13vw,62px)]" />
                     </div>
-                    <span className="text-center text-[12px] font-bold leading-tight">{copy[bill.labelKey]}</span>
+                    <span className="w-full break-words text-center text-[11px] font-bold leading-tight min-[380px]:text-[12px]">{copy[bill.labelKey]}</span>
                   </Link>
                 );
               })}

@@ -7,6 +7,7 @@ import { Bell, BookOpen, Brain, Clock, Code2, CreditCard, Menu, Mic, Plus, Searc
 import { useFirestoreAiChat } from '@/hooks/useFirestoreAiChat';
 import { useAuth } from '@/hooks/useAuth';
 import { EnkambaAIIcon } from '@/components/icons/service-icons';
+import { greetingFirstName } from '@/lib/display-identity';
 
 const starterPrompts = [
   'Aide-moi à comprendre Kenz',
@@ -171,8 +172,8 @@ export default function AiChatDefaultPage() {
   });
   const [inputValue, setInputValue] = useState('');
   const [isSending, setIsSending] = useState(false);
-  const userName = user?.displayName?.split(' ')[0] || user?.email?.split('@')[0] || 'Charmant';
-  const userInitial = userName.charAt(0).toUpperCase();
+  const userName = greetingFirstName(user?.displayName);
+  const userInitial = (userName.charAt(0) || 'K').toUpperCase();
   const greeting = getLocalGreeting();
 
   const handleSendMessage = async (text = inputValue) => {
@@ -269,7 +270,7 @@ export default function AiChatDefaultPage() {
         <div className="flex flex-1 flex-col items-center justify-start px-5 pb-52 pt-24 text-center sm:pt-28">
           <AiMark size={58} />
           <h1 className="mt-5 text-3xl font-light tracking-normal text-white sm:text-5xl">
-            {greeting}, {userName}
+            {userName ? `${greeting}, ${userName}` : greeting}
           </h1>
           <p className="mt-3 max-w-md text-sm font-medium leading-6 text-white/55">
             En quoi puis-je vous aider aujourd'hui ?

@@ -972,7 +972,7 @@ export function CommerceProductBuilder({
                   <option value="CDF">CDF</option>
                   <option value="USD">USD</option>
                   <option value="EUR">EUR</option>
-                  <option value="RMB">RMB</option>
+                  <option value="CNY">CNY (¥)</option>
                 </select>
               </Field>
             </div>

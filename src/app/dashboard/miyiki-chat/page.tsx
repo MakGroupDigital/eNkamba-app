@@ -62,6 +62,7 @@ import { CreateGroupDialog } from '@/components/create-group-dialog';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useRouter } from 'next/navigation';
+import { displayIdentity } from '@/lib/display-identity';
 
 type ChatTab = 'discussions' | 'stories' | 'notifications' | 'settings';
 type MessageFilter = 'all' | 'unread' | 'read' | 'groups';
@@ -300,6 +301,7 @@ export default function MiyikiChatPage() {
             const contactName = getContactNameByPhone(phone);
             if (contactName) displayName = contactName;
           }
+          displayName = displayIdentity(displayName, convo.isGroup ? 'Groupe sans nom' : 'Utilisateur Kenz');
           
           return (
             <Link href={convo.href || `/dashboard/miyiki-chat/${convo.id}`} key={convo.id} className="block">
@@ -613,7 +615,7 @@ export default function MiyikiChatPage() {
     return (
       <div className="space-y-4">
         <Card className="p-4 rounded-2xl">
-          <h3 className="font-bold text-lg mb-4">Paramètres du chat</h3>
+          <h3 className="font-bold text-lg mb-4">Options du chat</h3>
           <div className="space-y-3">
             <Button 
               variant="ghost" 
@@ -834,16 +836,16 @@ export default function MiyikiChatPage() {
     <div className="grid min-w-0 flex-1 grid-cols-4 items-center gap-1.5">
       <button
         onClick={() => setActiveTab('discussions')}
-        className={`flex min-w-0 items-center justify-center gap-1.5 rounded-full px-2 py-2 text-xs font-medium transition-all whitespace-nowrap ${
+        className={`relative flex min-h-12 min-w-0 flex-col items-center justify-center gap-0.5 rounded-2xl px-1 py-1.5 text-[10px] font-semibold leading-tight transition-all min-[400px]:text-[11px] ${
           activeTab === 'discussions'
             ? 'bg-white text-primary shadow-lg'
             : 'bg-white/12 text-white/80 hover:bg-white/20'
         }`}
       >
         <ChatDiscussionsIcon size={18} />
-        <span>Discussions</span>
+        <span className="max-w-full break-words text-center">Discussions</span>
         {conversations.filter(c => c.unread && c.unread > 0).length > 0 && (
-          <Badge className="bg-red-500 text-white rounded-full h-5 min-w-[20px] px-1.5 text-xs">
+          <Badge className="absolute -right-0.5 -top-1 bg-red-500 text-white rounded-full h-5 min-w-[20px] px-1.5 text-[10px]">
             {conversations.filter(c => c.unread && c.unread > 0).length}
           </Badge>
         )}
@@ -851,28 +853,28 @@ export default function MiyikiChatPage() {
 
       <button
         onClick={() => setActiveTab('stories')}
-        className={`flex min-w-0 items-center justify-center gap-1.5 rounded-full px-2 py-2 text-xs font-medium transition-all whitespace-nowrap ${
+        className={`relative flex min-h-12 min-w-0 flex-col items-center justify-center gap-0.5 rounded-2xl px-1 py-1.5 text-[10px] font-semibold leading-tight transition-all min-[400px]:text-[11px] ${
           activeTab === 'stories'
             ? 'bg-white text-purple-600 shadow-lg'
             : 'bg-white/12 text-white/80 hover:bg-white/20'
         }`}
       >
         <ChatStoriesIcon size={18} />
-        <span>Stories</span>
+        <span className="max-w-full break-words text-center">Stories</span>
       </button>
 
       <button
         onClick={() => setActiveTab('notifications')}
-        className={`flex min-w-0 items-center justify-center gap-1.5 rounded-full px-2 py-2 text-xs font-medium transition-all whitespace-nowrap ${
+        className={`relative flex min-h-12 min-w-0 flex-col items-center justify-center gap-0.5 rounded-2xl px-1 py-1.5 text-[10px] font-semibold leading-tight transition-all min-[400px]:text-[11px] ${
           activeTab === 'notifications'
             ? 'bg-white text-primary shadow-lg'
             : 'bg-white/12 text-white/80 hover:bg-white/20'
         }`}
       >
         <ChatNotificationIcon size={19} />
-        <span>Notifications</span>
+        <span className="max-w-full break-words text-center">Alertes</span>
         {unreadCount > 0 && (
-          <Badge className="bg-red-500 text-white rounded-full h-5 min-w-[20px] px-1.5 text-xs">
+          <Badge className="absolute -right-0.5 -top-1 bg-red-500 text-white rounded-full h-5 min-w-[20px] px-1.5 text-[10px]">
             {unreadCount > 9 ? '9+' : unreadCount}
           </Badge>
         )}
@@ -880,14 +882,15 @@ export default function MiyikiChatPage() {
 
       <button
         onClick={() => setActiveTab('settings')}
-        className={`flex min-w-0 items-center justify-center gap-1.5 rounded-full px-2 py-2 text-xs font-medium transition-all whitespace-nowrap ${
+        className={`relative flex min-h-12 min-w-0 flex-col items-center justify-center gap-0.5 rounded-2xl px-1 py-1.5 text-[10px] font-semibold leading-tight transition-all min-[400px]:text-[11px] ${
           activeTab === 'settings'
             ? 'bg-white text-slate-900 shadow-lg'
             : 'bg-white/12 text-white/80 hover:bg-white/20'
         }`}
       >
         <ChatSettingsIcon size={18} />
-        <span>Paramètres</span>
+        {/* ENK-015: chat options, distinct from the global "Paramètres" destination of the bottom bar. */}
+        <span className="max-w-full break-words text-center">Options</span>
       </button>
     </div>
   );
@@ -974,7 +977,7 @@ export default function MiyikiChatPage() {
 
           {/* Message Filters - Only for discussions tab */}
           {activeTab === 'discussions' && (
-            <div className="flex space-x-2 overflow-x-auto pb-2 scrollbar-hide">
+            <div className="flex flex-wrap gap-2 pb-2" role="toolbar" aria-label="Filtrer les discussions">
               {messageFilters.map((filter) => {
                 const IconComponent = filter.icon;
                 const isActive = activeFilter === filter.value;
@@ -989,10 +992,10 @@ export default function MiyikiChatPage() {
                       key={filter.value}
                       variant="ghost"
                       size="sm"
-                      className="flex-shrink-0 rounded-full h-12 px-4 space-x-2.5 border border-primary/30 bg-primary/5 text-primary hover:bg-primary/10"
+                      className="flex-shrink-0 rounded-full h-11 px-3 gap-1.5 border border-primary/30 bg-primary/5 text-primary hover:bg-primary/10"
                       onClick={() => setShowActionsMenu(true)}
                     >
-                      <IconComponent size={28} className="h-7 w-7" />
+                      <IconComponent size={22} className="h-[22px] w-[22px]" />
                       <span className="text-xs font-bold">{filter.label}</span>
                     </Button>
                   );
@@ -1003,14 +1006,15 @@ export default function MiyikiChatPage() {
                     key={filter.value} 
                     variant={isActive ? "secondary" : "ghost"} 
                     size="sm"
-                    className={`flex-shrink-0 rounded-full h-12 px-4 space-x-2.5 border-transparent ${
+                    aria-pressed={isActive}
+                    className={`flex-shrink-0 rounded-full h-11 px-3 gap-1.5 border-transparent ${
                       isActive 
                         ? 'bg-primary/10 text-primary border border-primary/20' 
                         : 'text-muted-foreground hover:bg-muted/50'
                     }`}
                     onClick={() => setActiveFilter(filter.value)}
                   >
-                    <IconComponent size={28} className="h-7 w-7" />
+                    <IconComponent size={22} className="h-[22px] w-[22px]" />
                     <span className="text-xs font-bold">{filter.label}</span>
                     {filter.value === 'unread' && unreadCount > 0 && (
                       <Badge className="bg-red-500 text-white rounded-full h-4 w-4 flex items-center justify-center text-[10px] p-0">

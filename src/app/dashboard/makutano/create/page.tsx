@@ -35,6 +35,8 @@ import { useDashboardLocation } from '@/hooks/useDashboardLocation';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { uploadToCloudinary } from '@/lib/cloudinary-upload';
+import { stripImageMetadata } from '@/lib/strip-image-metadata';
+import { buildPublicPostLocation, LOCATION_VISIBILITY_OPTIONS, type LocationVisibility } from '@/lib/makutano-location';
 import {
   EStreamPostIcon,
   MakutanoAudioIcon,
@@ -72,6 +74,8 @@ export default function MakutanoCreatePage() {
   const { location, hasStoredLocation, isLocating, error: locationError, detectLocation } = useDashboardLocation();
 
   const [activeStep, setActiveStep] = useState<CreateStep>('media');
+  // Privacy by default (ENK-064): no place is shown unless the author explicitly picks a coarse level.
+  const [locationVisibility, setLocationVisibility] = useState<LocationVisibility>('none');
   const [text, setText] = useState('');
   const [category, setCategory] = useState<MakutanoCategory | ''>('');
   const [mediaType, setMediaType] = useState<MediaType>('image');
@@ -113,7 +117,7 @@ export default function MakutanoCreatePage() {
   const canGoToDetails = hasAnyMedia;
   const canGoToPublish = hasAnyMedia && Boolean(text.trim()) && Boolean(category);
   const mediaLabel = mediaType === 'image' ? 'Photo' : mediaType === 'video' ? 'Vidéo' : 'Audio';
-  const locationDetail = [location.quartier, location.ville, location.pays].filter(Boolean).join(' · ');
+  const publicLocationPreview = hasStoredLocation ? buildPublicPostLocation(location, locationVisibility)?.label || '' : '';
 
   const buildDraft = useCallback(() => ({
     text,
@@ -522,7 +526,7 @@ export default function MakutanoCreatePage() {
     if (mediaType === 'image' && pickedPhotoFiles.length > 0) {
       const uploads = await Promise.all(
         pickedPhotoFiles.map(async (file) => {
-          const uploadResult = await uploadToCloudinary(file, 'image');
+          const uploadResult = await uploadToCloudinary(await stripImageMetadata(file), 'image');
           return { url: uploadResult.secureUrl, type: 'image' as MediaType };
         })
       );
@@ -532,7 +536,8 @@ export default function MakutanoCreatePage() {
     if (pickedFile) {
       // Utiliser la même fonction que les stories pour l'upload Cloudinary
       const resourceType = mediaType === 'image' ? 'image' : mediaType === 'video' ? 'video' : 'raw';
-      const uploadResult = await uploadToCloudinary(pickedFile, resourceType);
+      const fileToUpload = resourceType === 'image' ? await stripImageMetadata(pickedFile) : pickedFile;
+      const uploadResult = await uploadToCloudinary(fileToUpload, resourceType);
       return { mediaUrl: uploadResult.secureUrl, mediaItems: [{ url: uploadResult.secureUrl, type: mediaType }] };
     }
     return { mediaUrl: externalMediaUrl.trim(), mediaItems: externalMediaUrl.trim() ? [{ url: externalMediaUrl.trim(), type: mediaType }] : undefined };
@@ -554,12 +559,12 @@ export default function MakutanoCreatePage() {
       setActiveStep('media');
       return;
     }
-    if (!hasStoredLocation) {
+    if (locationVisibility !== 'none' && !hasStoredLocation) {
       setActiveStep('publish');
       detectLocation();
       toast({
-        title: 'Localisation requise',
-        description: 'Autorisez la localisation pour publier avec le lieu de votre publication.',
+        title: 'Localisation en attente',
+        description: 'Autorisez la localisation ou choisissez « Ne pas afficher » pour publier.',
       });
       return;
     }
@@ -567,16 +572,8 @@ export default function MakutanoCreatePage() {
     setIsPublishing(true);
     try {
       const { mediaUrl, mediaItems } = await uploadToStorage();
-      const postLocation = {
-        label: location.label,
-        quartier: location.quartier || '',
-        ville: location.ville || '',
-        pays: location.pays || '',
-        latitude: location.latitude,
-        longitude: location.longitude,
-        accuracy: location.accuracy || null,
-        source: location.source || 'stored',
-      };
+      // Only a coarse, explicitly chosen place is stored: never coordinates, street or accuracy.
+      const postLocation = buildPublicPostLocation(location, locationVisibility);
       await addDoc(collection(db, 'makutano_posts'), {
         text: text.trim(),
         mediaUrl,
@@ -587,11 +584,11 @@ export default function MakutanoCreatePage() {
         comments: 0,
 	        author: {
 	          name: profile?.fullName || profile?.name || user?.displayName || 'Utilisateur Kenz',
-	          location: postLocation.label,
+	          location: postLocation?.label || '',
 	          avatar: profile?.profileImage || user?.photoURL || '',
 	          verified: profile?.kycStatus === 'verified',
 	        },
-        authorLocation: postLocation.label,
+        authorLocation: postLocation?.label || '',
         location: postLocation,
         authorId: user?.uid || null,
         createdAt: serverTimestamp(),
@@ -1067,17 +1064,40 @@ export default function MakutanoCreatePage() {
                     <MapPinIcon size={28} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs font-black uppercase text-[#073B9A]">Localisation</p>
-                    <h2 className="mt-1 truncate text-base font-black">{hasStoredLocation ? location.label : 'Autorisation nécessaire'}</h2>
+                    <p className="text-xs font-black uppercase text-[#073B9A]">Lieu affiché (facultatif)</p>
+                    <h2 className="mt-1 truncate text-base font-black">
+                      {locationVisibility === 'none' ? 'Aucun lieu affiché' : publicLocationPreview || 'Position à autoriser'}
+                    </h2>
                     <p className="mt-1 text-xs font-semibold text-[#475569]">
-                      {hasStoredLocation ? locationDetail || 'Position enregistrée dans l’app' : 'La publication utilisera la localisation globale de l’application.'}
+                      Votre adresse précise et vos coordonnées GPS ne sont jamais publiées.
                     </p>
-                    {locationError && <p className="mt-2 text-xs font-bold text-red-600">{locationError}</p>}
+                    {locationError && locationVisibility !== 'none' && <p className="mt-2 text-xs font-bold text-red-600">{locationError}</p>}
                   </div>
                 </div>
 
-                {!hasStoredLocation && (
-                  <Button type="button" onClick={detectLocation} disabled={isLocating} className="mt-4 h-11 w-full rounded-full bg-[#073B9A] font-black hover:bg-[#073B9A]">
+                <div role="radiogroup" aria-label="Lieu affiché sur la publication" className="mt-4 grid grid-cols-3 gap-2">
+                  {LOCATION_VISIBILITY_OPTIONS.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      role="radio"
+                      aria-checked={locationVisibility === option.value}
+                      title={option.hint}
+                      onClick={() => {
+                        setLocationVisibility(option.value);
+                        if (option.value !== 'none' && !hasStoredLocation) detectLocation();
+                      }}
+                      className={`min-h-11 rounded-2xl border px-2 text-xs font-black transition ${
+                        locationVisibility === option.value ? 'border-[#073B9A] bg-[#073B9A] text-white' : 'border-[#DCE6F8] bg-white text-[#073B9A]'
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+
+                {locationVisibility !== 'none' && !hasStoredLocation && (
+                  <Button type="button" onClick={detectLocation} disabled={isLocating} className="mt-3 h-11 w-full rounded-full bg-[#073B9A] font-black hover:bg-[#073B9A]">
                     {isLocating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MapPinIcon size={20} />}
                     {isLocating ? 'Localisation...' : 'Autoriser la localisation'}
                   </Button>

@@ -94,7 +94,7 @@ const solutions = [
   {
     icon: CircleDollarSign,
     title: 'Conversion Multidevises',
-    purpose: 'Convertir votre argent entre différentes devises (CDF, USD, EUR, RMB).',
+    purpose: 'Convertir votre argent entre différentes devises (CDF, USD, EUR, CNY).',
     usage: 'Choisissez la devise source et cible. Consultez le taux en temps réel, confirmez et recevez votre argent converti.'
   },
   {

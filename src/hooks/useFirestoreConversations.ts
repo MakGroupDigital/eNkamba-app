@@ -16,6 +16,7 @@ import {
   increment,
 } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
+import { preferredDisplayName } from '@/lib/display-identity';
 
 export interface Message {
   id: string;
@@ -210,7 +211,7 @@ export function useFirestoreConversations() {
         // Optionnel: récupérer le nom réel
         if (!otherUserName) {
           const userData = userDoc.data();
-          otherUserName = userData.fullName || userData.displayName || userData.email || 'Utilisateur';
+          otherUserName = preferredDisplayName(userData.fullName, userData.displayName, userData.name);
         }
       }
 
@@ -348,7 +349,7 @@ export function useFirestoreConversations() {
           });
 
           if (messageType !== 'call' && recipientIds.length > 0) {
-            const senderName = currentUser.displayName || currentUser.email || 'Un contact';
+            const senderName = preferredDisplayName(currentUser.displayName);
             const notificationMessage =
               messageType === 'text'
                 ? messagePreview

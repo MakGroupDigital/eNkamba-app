@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { PinVerification } from '@/components/payment/PinVerification';
 import { auth, db } from '@/lib/firebase';
+import { currencyRegionalLabel, toIsoCurrency } from '@/lib/currency-codes';
 import { collection, doc, increment, onSnapshot, runTransaction, serverTimestamp } from 'firebase/firestore';
 
 const currencies = ['CDF', 'USD', 'EUR', 'RMB', 'FCFA'] as const;
@@ -202,7 +203,7 @@ export default function ConversionPage() {
           serviceFee,
           exchangeRate: rate,
           rateSource: 'exchange-rate-api',
-          description: `Conversion ${sourceAmount} ${fromCurrency} vers ${targetAmount} ${toCurrency}`,
+          description: `Conversion ${sourceAmount} ${fromCurrency} vers ${targetAmount} ${toIsoCurrency(toCurrency)}`,
           previousBalance: sourceBalance,
           newBalance: sourceBalance - totalDebit,
           timestamp: serverTimestamp(),
@@ -215,7 +216,7 @@ export default function ConversionPage() {
       setToAmount('');
       toast({
         title: 'Conversion effectuée',
-        description: `${targetAmount.toLocaleString('fr-FR', { maximumFractionDigits: 2 })} ${toCurrency} ajoutés au mini portefeuille ${toCurrency}.`,
+        description: `${targetAmount.toLocaleString('fr-FR', { maximumFractionDigits: 2 })} ${toIsoCurrency(toCurrency)} ajoutés au mini portefeuille ${toIsoCurrency(toCurrency)}.`,
       });
     } catch (error: any) {
       const description = error?.message === 'insufficient'
@@ -318,17 +319,17 @@ export default function ConversionPage() {
                 </SelectTrigger>
                 <SelectContent>
                   {destinationCurrencies.map((currency) => (
-                    <SelectItem key={currency} value={currency}>{currency}</SelectItem>
+                    <SelectItem key={currency} value={currency}>{toIsoCurrency(currency)} · {currencyRegionalLabel(currency)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="grid gap-2 sm:grid-cols-2">
               <p className="rounded-xl bg-[#FFFFFF] px-3 py-2 text-xs font-semibold text-muted-foreground">
-                Solde actuel {toCurrency} : <span className="font-black text-[#073B9A]">{Number(currencyWallets[toCurrency]?.balance || 0).toLocaleString('fr-FR', { maximumFractionDigits: 2 })}</span>
+                Solde actuel {toIsoCurrency(toCurrency)} : <span className="font-black text-[#073B9A]">{Number(currencyWallets[toCurrency]?.balance || 0).toLocaleString('fr-FR', { maximumFractionDigits: 2 })}</span>
               </p>
               <p className="rounded-xl bg-[#FFFFFF] px-3 py-2 text-xs font-semibold text-muted-foreground">
-                Après conversion : <span className="font-black text-[#073B9A]">{(Number(currencyWallets[toCurrency]?.balance || 0) + Number(toAmount || 0)).toLocaleString('fr-FR', { maximumFractionDigits: 2 })} {toCurrency}</span>
+                Après conversion : <span className="font-black text-[#073B9A]">{(Number(currencyWallets[toCurrency]?.balance || 0) + Number(toAmount || 0)).toLocaleString('fr-FR', { maximumFractionDigits: 2 })} {toIsoCurrency(toCurrency)}</span>
               </p>
             </div>
           </div>
@@ -336,7 +337,7 @@ export default function ConversionPage() {
             {rate !== null && (
                 <div className="rounded-2xl border border-[#073B9A]/10 bg-[#FFFFFF] p-3 text-center text-sm font-medium text-[#073B9A]">
                     <TrendingUp className="mx-auto mb-1 h-4 w-4 text-[#073B9A]" />
-                    Taux réel chargé : 1 {fromCurrency} = {rate.toFixed(6)} {toCurrency}
+                    Taux réel chargé : 1 {fromCurrency} = {rate.toFixed(6)} {toIsoCurrency(toCurrency)}
                     {lastUpdated && <p className="mt-1 text-[11px] text-muted-foreground">Actualisé le {lastUpdated}</p>}
                 </div>
             )}
@@ -396,12 +397,12 @@ export default function ConversionPage() {
                   <span className="font-bold text-lg">{fromAmount} {fromCurrency}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Crédit mini portefeuille {toCurrency} :</span>
-                  <span className="font-bold text-lg text-[#073B9A]">{toAmount} {toCurrency}</span>
+                  <span className="text-muted-foreground">Crédit mini portefeuille {toIsoCurrency(toCurrency)} :</span>
+                  <span className="font-bold text-lg text-[#073B9A]">{toAmount} {toIsoCurrency(toCurrency)}</span>
                 </div>
                 <div className="flex justify-between items-center pt-2 border-t">
                   <span className="text-sm text-muted-foreground">Taux de change :</span>
-                  <span className="text-sm font-semibold">1 {fromCurrency} = {rate.toFixed(6)} {toCurrency}</span>
+                  <span className="text-sm font-semibold">1 {fromCurrency} = {rate.toFixed(6)} {toIsoCurrency(toCurrency)}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Frais de service (1%) :</span>
@@ -433,7 +434,7 @@ export default function ConversionPage() {
         }}
         purpose="payment"
         paymentDetails={{
-          recipient: `Bureau de change ${toCurrency}`,
+          recipient: `Bureau de change ${toIsoCurrency(toCurrency)}`,
           amount: fromAmount,
           currency: fromCurrency,
         }}

@@ -7,6 +7,9 @@ import { Bell, BookOpen, Brain, Clock, Code2, CreditCard, Menu, Mic, Plus, Searc
 import { useFirestoreAiChat } from '@/hooks/useFirestoreAiChat';
 import { useAuth } from '@/hooks/useAuth';
 import { EnkambaAIIcon } from '@/components/icons/service-icons';
+import { greetingFirstName } from '@/lib/display-identity';
+import { SafeMarkdown } from '@/components/ai/SafeMarkdown';
+import { AiMessageActions } from '@/components/ai/AiMessageActions';
 
 type ModuleTab = 'assistant' | 'history' | 'settings';
 type AiOptions = {
@@ -307,7 +310,7 @@ function ChatInterface({ chatId }: { chatId: string }) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { sendAiMessage, loadAiMessages } = useFirestoreAiChat();
   const { user } = useAuth();
-  const userName = user?.displayName?.split(' ')[0] || user?.email?.split('@')[0] || 'Utilisateur';
+  const userName = greetingFirstName(user?.displayName);
   const greeting = getLocalGreeting();
 
   useEffect(() => {
@@ -373,7 +376,7 @@ function ChatInterface({ chatId }: { chatId: string }) {
             <div className="flex flex-1 flex-col items-center justify-start pt-2 text-center">
               <AiMark size={58} />
               <h1 className="mt-5 text-3xl font-light tracking-normal text-white sm:text-5xl">
-                {greeting}, {userName}
+                {userName ? `${greeting}, ${userName}` : greeting}
               </h1>
               <p className="mt-3 max-w-md text-sm font-medium leading-6 text-white/55">
                 En quoi puis-je vous aider aujourd'hui ?
@@ -401,7 +404,14 @@ function ChatInterface({ chatId }: { chatId: string }) {
                         : 'rounded-bl-md border border-white/10 bg-white/8 text-white/88'
                     }`}
                   >
-                    <p className="whitespace-pre-wrap">{message.text}</p>
+                    {message.role === 'assistant' ? (
+                      <>
+                        <SafeMarkdown content={message.text} />
+                        <AiMessageActions messageId={message.id} content={message.text} />
+                      </>
+                    ) : (
+                      <p className="whitespace-pre-wrap">{message.text}</p>
+                    )}
                   </div>
                 </div>
               ))}

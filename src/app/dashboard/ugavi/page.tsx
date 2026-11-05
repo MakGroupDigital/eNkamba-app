@@ -2,12 +2,13 @@
 
 import { useEffect, useMemo, useRef, useState, type ComponentType, type ReactNode } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Clock, MessageCircle, Phone, Share2, X } from 'lucide-react';
+import { ChevronLeft, Clock, MessageCircle, Phone, Share2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PinVerification } from '@/components/payment/PinVerification';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useDashboardLocation } from '@/hooks/useDashboardLocation';
 import { addDoc, collection, doc, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { buildUgaviStatusEntry } from '@/lib/ugavi-requests';
@@ -467,6 +468,7 @@ function FloatingBadge({
 }
 
 function AddressAutocompleteInput({
+  label,
   value,
   placeholder,
   Icon,
@@ -478,6 +480,7 @@ function AddressAutocompleteInput({
   onFocus,
   onSelect,
 }: {
+  label: string;
   value: string;
   placeholder: string;
   Icon: CustomIcon;
@@ -491,13 +494,18 @@ function AddressAutocompleteInput({
 }) {
   return (
     <div className="relative">
+      {/* ENK-040: persistent label, the field keeps its meaning once filled. */}
+      <label className="pointer-events-none absolute left-9 top-1.5 text-[10px] font-black uppercase tracking-wide text-slate-500">{label}</label>
       <Icon className={`absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 ${iconClassName}`} />
       <Input
         value={value}
         onChange={(event) => onChange(event.target.value)}
         onFocus={onFocus}
         placeholder={placeholder}
-        className="h-11 rounded-xl border-white/70 bg-white/78 pl-9 shadow-xl backdrop-blur-xl"
+        aria-label={label}
+        autoComplete="off"
+        enterKeyHint="next"
+        className="h-14 rounded-xl border-white/70 bg-white/90 pb-1.5 pl-9 pt-5 text-sm shadow-xl backdrop-blur-xl"
       />
       {isOpen && (isLoading || suggestions.length > 0) && (
         <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-50 overflow-hidden rounded-xl border border-white/70 bg-white/90 shadow-2xl backdrop-blur-xl">
@@ -598,6 +606,7 @@ export default function UgaviPage() {
   const searchParams = useSearchParams();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { detectLocation, isLocating, error: locationError } = useDashboardLocation();
   const mapGestureRef = useRef<{
     pointers: Map<number, { x: number; y: number }>;
     pinchDistance: number | null;
@@ -702,6 +711,12 @@ export default function UgaviPage() {
       window.removeEventListener('storage', syncStoredLocation);
     };
   }, []);
+
+  useEffect(() => {
+    if (locationError) {
+      toast({ variant: 'destructive', title: 'Position indisponible', description: `${locationError}. Saisissez l'adresse de départ manuellement.` });
+    }
+  }, [locationError, toast]);
 
   useEffect(() => {
     if (searchParams?.get('panel') === 'client') {
@@ -1881,7 +1896,10 @@ export default function UgaviPage() {
 
       <button
         type="button"
-        title="Ma localisation"
+        title="Me localiser"
+        aria-label="Me localiser pour cette course"
+        onClick={detectLocation}
+        disabled={isLocating}
         className="absolute z-20 flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-primary shadow-xl ring-4 ring-primary/25"
         style={markerPosition(userPosition, mapCenter, mapRadius)}
       >
@@ -2149,6 +2167,7 @@ export default function UgaviPage() {
               {mode === 'express' && (
                 <div className="space-y-2">
                   <AddressAutocompleteInput
+                    label="Enlèvement"
                     value={pickupLocation}
                     onChange={updatePickupLocation}
                     onFocus={() => setActiveAddressField('pickup')}
@@ -2161,6 +2180,7 @@ export default function UgaviPage() {
                     isOpen={activeAddressField === 'pickup'}
                   />
                   <AddressAutocompleteInput
+                    label="Livraison"
                     value={dropoffLocation}
                     onChange={updateDropoffLocation}
                     onFocus={() => setActiveAddressField('dropoff')}
@@ -2215,6 +2235,7 @@ export default function UgaviPage() {
 
                   <div className="space-y-2">
                     <AddressAutocompleteInput
+                      label="Départ"
                       value={pickupLocation}
                       onChange={updatePickupLocation}
                       onFocus={() => setActiveAddressField('pickup')}
@@ -2226,7 +2247,26 @@ export default function UgaviPage() {
                       isLoading={isAddressSearchLoading && activeAddressField === 'pickup'}
                       isOpen={activeAddressField === 'pickup'}
                     />
+                    <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const nextPickup = dropoffLocation;
+                        const nextPickupPoint = dropoffPoint;
+                        updateDropoffLocation(pickupLocation);
+                        setDropoffPoint(pickupPoint);
+                        updatePickupLocation(nextPickup);
+                        setPickupPoint(nextPickupPoint);
+                      }}
+                      disabled={!pickupLocation && !dropoffLocation}
+                      aria-label="Inverser départ et destination"
+                      title="Inverser"
+                      className="absolute -top-4 right-3 z-10 grid h-8 w-8 place-items-center rounded-full bg-white text-sm font-black text-primary shadow-lg ring-1 ring-primary/15 disabled:opacity-40"
+                    >
+                      ⇅
+                    </button>
                     <AddressAutocompleteInput
+                      label="Destination"
                       value={dropoffLocation}
                       onChange={updateDropoffLocation}
                       onFocus={() => setActiveAddressField('dropoff')}
@@ -2238,6 +2278,7 @@ export default function UgaviPage() {
                       isLoading={isAddressSearchLoading && activeAddressField === 'dropoff'}
                       isOpen={activeAddressField === 'dropoff'}
                     />
+                    </div>
                     <FloatingBadge tone={shipmentType === 'international' ? 'orange' : 'emerald'}>
                     <div className="flex items-center gap-2">
                       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white shadow-sm">
@@ -2258,17 +2299,18 @@ export default function UgaviPage() {
                           }
                           setSelectedAgencyId(null);
                         }}
-                        className="h-10 min-w-0 flex-1 rounded-2xl border border-white/70 bg-white/90 px-3 text-sm font-semibold text-slate-700 shadow-inner"
+                        aria-label="Mode de transport"
+                        className="h-11 min-w-0 flex-1 rounded-2xl border border-white/70 bg-white/90 px-3 text-sm font-semibold text-slate-700 shadow-inner"
                       >
                         {Object.entries(shipmentType === 'international' ? internationalTransportLabels : shipmentType === 'relay' ? relayDeliveryLabels : nationalTransportLabels).map(([value, label]) => (
                           <option key={value} value={value}>{label}</option>
                         ))}
                       </select>
-                      <Button type="button" onClick={searchAgenciesFromCompactFields} className="h-10 rounded-2xl bg-primary px-4 shadow-lg shadow-primary/15 hover:bg-primary">
-                        Rechercher
-                      </Button>
                     </div>
                     </FloatingBadge>
+                    <Button type="button" onClick={searchAgenciesFromCompactFields} className="h-12 w-full rounded-2xl bg-primary text-base font-black shadow-lg shadow-primary/15 hover:bg-primary">
+                      Rechercher
+                    </Button>
                   </div>
 
                   {false && shipmentType === 'national' && (
@@ -3073,10 +3115,11 @@ export default function UgaviPage() {
       <button
         type="button"
         onClick={() => setIsClientPanelOpen(true)}
-        className="absolute left-0 top-1/2 z-40 flex -translate-y-1/2 items-center gap-1 rounded-r-2xl bg-slate-950/90 px-2 py-4 text-xs font-semibold text-white shadow-2xl backdrop-blur transition hover:bg-slate-900"
+        aria-label="Ouvrir mes colis"
+        className="absolute left-3 top-1/2 z-40 flex min-h-11 -translate-y-1/2 items-center gap-1.5 rounded-full bg-white px-3 text-xs font-bold text-primary shadow-lg ring-1 ring-primary/20 transition hover:bg-primary/5"
       >
-        <ChevronRight className="h-4 w-4" />
-        <span className="hidden [writing-mode:vertical-rl] sm:inline">Mes colis</span>
+        <TrackPackageIcon size={18} />
+        <span>Mes colis</span>
       </button>
 
       {isClientPanelOpen && (
