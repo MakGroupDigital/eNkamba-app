@@ -5,22 +5,16 @@ import { Dispatch, SetStateAction } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
-  ChatNavIcon,
-  ShopNavIcon,
-  LogisticsNavIcon,
-  PaymentNavIcon,
-  SocialNavIcon,
-  AINavIcon,
   SettingsNavIcon,
 } from '@/components/icons/service-icons';
 
 const navItems = [
-  { name: 'Chat', icon: ChatNavIcon, href: '/dashboard/miyiki-chat', color: '#009058' },
-  { name: 'Marché', icon: ShopNavIcon, href: '/dashboard/nkampa', color: '#FFA500' },
-  { name: 'Logistique', icon: LogisticsNavIcon, href: '/dashboard/ugavi', color: '#009058' },
-  { name: 'Paiement', icon: PaymentNavIcon, href: '/dashboard/mbongo-dashboard', color: '#009058' },
-  { name: 'Réseau', icon: SocialNavIcon, href: '/dashboard/makutano', color: '#9C27B0' },
-  { name: 'Paramètres', icon: SettingsNavIcon, href: '/dashboard/settings', color: '#666' },
+  { name: 'Chat', logo: '/brand/kenz-chat.jpeg', href: '/dashboard/miyiki-chat' },
+  { name: 'Marché', logo: '/brand/kenz-market.jpeg', href: '/dashboard/nkampa' },
+  { name: 'Logistique', logo: '/brand/kenz-logistics.jpeg', href: '/dashboard/ugavi' },
+  { name: 'Paiement', logo: '/brand/kenz-payment.jpeg', href: '/dashboard/mbongo-dashboard' },
+  { name: 'Réseau', logo: '/brand/kenz-social.jpeg', href: '/dashboard/makutano' },
+  { name: 'Paramètres', icon: SettingsNavIcon, href: '/dashboard/settings' },
 ];
 
 interface HubNavigationProps {
@@ -91,13 +85,24 @@ export default function HubNavigation({
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <IconComponent 
-                    size={isActive ? 42 : 36} 
-                    className={cn(
-                      "transition-all duration-300",
-                      isActive ? "h-[42px] w-[42px] drop-shadow-lg" : "h-9 w-9"
-                    )}
-                  />
+                  {item.logo ? (
+                    <img
+                      src={item.logo}
+                      alt=""
+                      className={cn(
+                        'rounded-xl object-cover transition-all duration-300',
+                        isActive ? 'h-[42px] w-[42px] shadow-[0_8px_16px_rgba(7,59,154,0.2)]' : 'h-9 w-9',
+                      )}
+                    />
+                  ) : IconComponent ? (
+                    <IconComponent
+                      size={isActive ? 42 : 36}
+                      className={cn(
+                        'transition-all duration-300',
+                        isActive ? 'h-[42px] w-[42px] drop-shadow-lg' : 'h-9 w-9',
+                      )}
+                    />
+                  ) : null}
                   
                   {/* Point lumineux pour l'état actif */}
                   {isActive && (

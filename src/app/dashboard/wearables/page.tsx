@@ -32,7 +32,7 @@ export default function WearablesPage() {
     {
       icon: Gem,
       title: 'Anneau de Paiement NFC',
-      description: 'Anneau eNkamba pour paiements sans contact',
+      description: 'Anneau Kenz pour paiements sans contact',
       status: 'En cours de développement',
       color: 'from-purple-500 to-pink-600',
     },
@@ -48,7 +48,7 @@ export default function WearablesPage() {
       title: 'Synchronisation Automatique',
       description: 'Tous vos appareils synchronisés en temps réel',
       status: 'En cours de développement',
-      color: 'from-[#FFA500] to-red-600',
+      color: 'from-[#F51B2B] to-red-600',
     },
   ];
 
@@ -138,7 +138,7 @@ export default function WearablesPage() {
                 <div className="w-2 h-2 rounded-full bg-purple-600 mt-2 flex-shrink-0"></div>
                 <div>
                   <h4 className="font-semibold text-sm">Anneau de Paiement NFC</h4>
-                  <p className="text-sm text-muted-foreground">Anneau eNkamba pour paiements sans contact ultra-rapides et sécurisés</p>
+                  <p className="text-sm text-muted-foreground">Anneau Kenz pour paiements sans contact ultra-rapides et sécurisés</p>
                 </div>
               </div>
 

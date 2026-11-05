@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireRequestUser } from '@/lib/verify-request-user';
 import { initializeApp, getApps } from 'firebase/app';
 import { getFirestore, collection, doc, getDoc, updateDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import {
@@ -63,13 +64,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Récupérer le token d'authentification
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'Non authentifié' },
-        { status: 401 }
-      );
-    }
+    // Only the wallet owner can withdraw from it: the ID token is verified, not just present.
+    const caller = await requireRequestUser(request, userId);
+    if ('response' in caller) return caller.response;
 
     try {
       const db = getFirestore(getFirebaseApp());
@@ -162,7 +159,7 @@ export async function POST(request: NextRequest) {
           Devise: withdrawCurrency,
           Action: 'B2C',
           MobileMoney: normalizedPhoneNumber,
-          Motif: 'Retrait portefeuille eNkamba',
+          Motif: 'Retrait portefeuille Kenz',
         };
 
         const wonyaResponse = await fetch(`${config.baseUrl}/payment`, {
@@ -284,7 +281,7 @@ export async function POST(request: NextRequest) {
       };
 
       if (withdrawalMethod === 'agent') {
-        description = `Retrait Agent eNkamba - ${agentIdentifier}`;
+        description = `Retrait Agent Kenz - ${agentIdentifier}`;
         transactionData.agentIdentifier = agentIdentifier;
       } else if (withdrawalMethod === 'card') {
         description = `Retrait vers carte **** ${cardNumber?.slice(-4)}`;

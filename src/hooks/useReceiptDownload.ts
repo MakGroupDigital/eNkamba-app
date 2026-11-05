@@ -1,7 +1,59 @@
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import { jsPDF } from 'jspdf';
+import { db } from '@/lib/firebase';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
+
+const TYPE_LABELS: Record<string, string> = {
+  deposit: 'Dépôt', withdrawal: 'Retrait', transfer_sent: 'Transfert envoyé', transfer_received: 'Transfert reçu',
+  payment_sent: 'Paiement effectué', payment_received: 'Paiement reçu', payment: 'Paiement', refund: 'Remboursement',
+  nkampa_purchase: 'Achat Nkampa', nkampa_sale: 'Vente Nkampa', currency_conversion: 'Conversion de devises',
+};
+
+function asDate(value: any): Date {
+  if (value?.toDate) return value.toDate();
+  const date = new Date(value || Date.now());
+  return Number.isNaN(date.getTime()) ? new Date() : date;
+}
+
+/** Reçu PDF d'une transaction du wallet, à partir des données enregistrées. */
+export function buildReceiptPdf(transactionId: string, tx: Record<string, any>): Blob {
+  const amount = Number(tx.amount || 0);
+  const currency = typeof tx.currency === 'string' && tx.currency ? tx.currency : 'CDF';
+  const money = (value: number) => `${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(value)} ${currency}`;
+  const pdf = new jsPDF();
+  pdf.setFillColor(7, 59, 154);
+  pdf.rect(0, 0, 210, 32, 'F');
+  pdf.setTextColor(255, 255, 255);
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(17);
+  pdf.text('Kenz Pay', 15, 17);
+  pdf.setFontSize(10);
+  pdf.text('Reçu de transaction', 15, 24);
+  pdf.setTextColor(15, 23, 42);
+  pdf.setFontSize(16);
+  pdf.text(TYPE_LABELS[tx.type] || 'Transaction', 15, 48);
+  pdf.setFontSize(22);
+  pdf.text(money(amount), 15, 62);
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(11);
+  const counterpart = tx.recipientName || tx.senderName || tx.recipientId || tx.senderId;
+  const lines = [
+    `Référence : ${tx.reference || transactionId}`,
+    `Date : ${new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', timeStyle: 'short' }).format(asDate(tx.timestamp || tx.createdAt))}`,
+    `Statut : ${tx.status === 'completed' ? 'Confirmé' : tx.status === 'pending' ? 'En cours' : tx.status || '—'}`,
+    ...(counterpart ? [`${tx.type?.includes('received') ? 'De' : 'À'} : ${counterpart}`] : []),
+    ...(tx.description ? [`Description : ${tx.description}`] : []),
+    ...(tx.paymentMethod || tx.withdrawalMethod ? [`Moyen : ${tx.paymentMethod || tx.withdrawalMethod}`] : []),
+    ...(typeof tx.previousBalance === 'number' && typeof tx.newBalance === 'number'
+      ? [`Solde avant : ${money(tx.previousBalance)}`, `Solde après : ${money(tx.newBalance)}`] : []),
+  ];
+  pdf.text(lines, 15, 78, { maxWidth: 180, lineHeightFactor: 1.8 });
+  pdf.setFontSize(8);
+  pdf.setTextColor(100, 116, 139);
+  pdf.text('Reçu électronique Kenz Pay. Vérifiable à partir de sa référence auprès du support Kenz.', 15, 287, { maxWidth: 180 });
+  return pdf.output('blob');
+}
 
 export function useReceiptDownload() {
   const { user } = useAuth();
@@ -18,26 +70,12 @@ export function useReceiptDownload() {
     }
 
     try {
-      // Générer le PDF
-      const generateReceiptPDFFn = httpsCallable(functions, 'generateReceiptPDF');
-      const result = await generateReceiptPDFFn({
-        userId: user.uid,
-        transactionId,
-      });
-
-      const data = result.data as any;
-
-      if (!data.success || !data.pdf) {
-        throw new Error('Erreur lors de la génération du PDF');
+      // Reçu généré dans l'app à partir de la transaction (la Cloud Function generateReceiptPDF n'est plus disponible).
+      const snapshot = await getDoc(doc(db, 'users', user.uid, 'transactions', transactionId));
+      if (!snapshot.exists()) {
+        throw new Error('Transaction introuvable');
       }
-
-      // Convertir base64 en blob
-      const binaryString = atob(data.pdf);
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
-      const blob = new Blob([bytes], { type: 'application/pdf' });
+      const blob = buildReceiptPdf(transactionId, snapshot.data());
 
       // Déterminer la plateforme et utiliser la méthode appropriée
       await downloadByPlatform(blob, filename);

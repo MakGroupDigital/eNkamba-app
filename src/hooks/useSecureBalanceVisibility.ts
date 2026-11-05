@@ -39,7 +39,7 @@ export function useSecureBalanceVisibility() {
     } catch {
       toast({
         title: 'Vérification biométrique indisponible',
-        description: 'Veuillez confirmer avec votre code PIN eNkamba.',
+        description: 'Veuillez confirmer avec votre code PIN Kenz.',
       });
     } finally {
       setIsBiometricChecking(false);

@@ -4,7 +4,7 @@ import { AdminInfrastructureView, AdminPageHeader } from '@/components/admin/adm
 
 export default function AdminInfrastructurePage() {
   return (
-    <main className="min-h-screen bg-[#F7FAF8] p-4 text-slate-950 md:p-6">
+    <main className="min-h-screen bg-[#FFFFFF] p-4 text-slate-950 md:p-6">
       <div className="mx-auto max-w-7xl space-y-5">
         <AdminPageHeader
           title="Infrastructure systeme"

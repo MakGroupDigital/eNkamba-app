@@ -47,7 +47,7 @@ const quickActions = [
       { icon: Scan, label: 'Scanner QR', href: '/dashboard/scanner' },
       { icon: Mail, label: 'Par Email', href: '/dashboard/send?method=email' },
       { icon: Phone, label: 'Par Téléphone', href: '/dashboard/send?method=phone' },
-      { icon: CreditCardIcon, label: 'Carte eNkamba', href: '/dashboard/send?method=card' },
+      { icon: CreditCardIcon, label: 'Carte Kenz', href: '/dashboard/send?method=card' },
       { icon: Hash, label: 'N° de Compte', href: '/dashboard/send?method=account' },
       { icon: Smartphone, label: 'Mobile Money', href: '/dashboard/send?method=mobile' },
     ],
@@ -60,7 +60,7 @@ const quickActions = [
       { icon: QrCode, label: 'Générer QR', href: '/dashboard/receive?method=qr' },
       { icon: Mail, label: 'Par Email', href: '/dashboard/receive?method=email' },
       { icon: Phone, label: 'Par Téléphone', href: '/dashboard/receive?method=phone' },
-      { icon: CreditCardIcon, label: 'Carte eNkamba', href: '/dashboard/receive?method=card' },
+      { icon: CreditCardIcon, label: 'Carte Kenz', href: '/dashboard/receive?method=card' },
       { icon: Hash, label: 'N° de Compte', href: '/dashboard/receive?method=account' },
       { icon: Smartphone, label: 'Mobile Money', href: '/dashboard/receive?method=mobile' },
     ],
@@ -214,10 +214,10 @@ export default function WalletPage() {
                     <div className="relative w-full h-full p-6 flex flex-col justify-between text-white">
                       <div className="flex items-start justify-between">
                         <div>
-                          <p className="text-xs font-semibold opacity-80 tracking-widest">eNkamba</p>
+                          <p className="text-xs font-semibold opacity-80 tracking-widest">Kenz</p>
                           <p className="text-lg font-bold">PAY</p>
                         </div>
-                        <Image src="/enkamba-logo.png" alt="eNkamba" width={32} height={32} className="drop-shadow-lg w-8 h-8 sm:w-10 sm:h-10" />
+                        <Image src="/kenz-logo.png" alt="Kenz" width={32} height={32} className="drop-shadow-lg w-8 h-8 sm:w-10 sm:h-10" />
                       </div>
 
                       <div className="flex items-end justify-between gap-2">

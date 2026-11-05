@@ -39,7 +39,7 @@ export function ContactQRCode({ open, onOpenChange, userData }: ContactQRCodePro
           margin: 4,
           errorCorrectionLevel: 'H',
           color: {
-            dark: '#009058',
+            dark: '#073B9A',
             light: '#ffffff',
           },
         });
@@ -109,8 +109,8 @@ export function ContactQRCode({ open, onOpenChange, userData }: ContactQRCodePro
 
       if (navigator.share && navigator.canShare({ files: [file] })) {
         await navigator.share({
-          title: 'Mon contact eNkamba',
-          text: `Ajoutez-moi sur eNkamba: ${userData.name}`,
+          title: 'Mon contact Kenz',
+          text: `Ajoutez-moi sur Kenz: ${userData.name}`,
           files: [file],
         });
         

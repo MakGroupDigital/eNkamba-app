@@ -62,13 +62,13 @@ const solutions = [
     title: 'Ugavi',
     subtitle: 'Logistique Intelligente',
     description:
-      "Suivez vos colis, gérez vos livraisons et optimisez votre chaîne d'approvisionnement grâce à notre solution logistique intégrée à l'écosystème eNkamba.",
+      "Suivez vos colis, gérez vos livraisons et optimisez votre chaîne d'approvisionnement grâce à notre solution logistique intégrée à l'écosystème Kenz.",
     icon: UgaviLogoIcon,
     href: '/dashboard/ugavi',
     color: 'bg-primary',
   },
   {
-    title: 'eNkamba.ai',
+    title: 'Kenz.ai',
     subtitle: 'Assistant Intelligent',
     description:
       "Votre assistant personnel basé sur l'IA pour analyser vos finances, obtenir des recommandations personnalisées et interagir avec tous les services de l'écosystème.",

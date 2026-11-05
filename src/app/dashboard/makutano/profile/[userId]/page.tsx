@@ -4,13 +4,19 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, limit, onSnapshot, query, serverTimestamp, setDoc, where } from 'firebase/firestore';
-import { ArrowLeft, Ban, Grid3X3, Heart, MapPin, MessageCircle, MoreHorizontal, PlayCircle, Send, ShieldAlert, UserCheck } from 'lucide-react';
+import { ArrowLeft, Ban, Grid3X3, Loader2, MapPin, MoreHorizontal, Send, ShieldAlert, UserCheck, X } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { VerifiedAccountBadge } from '@/components/verified-account-badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { PhotoViewer } from '@/components/profile/PhotoViewer';
+import { MakutanoMediaStage, type FullscreenMedia } from '@/components/makutano/MediaStage';
+import { MakutanoPostBody } from '@/components/makutano/PostBody';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import type { ReactionType } from '@/lib/makutano-reactions';
 
 type PublicUser = {
   id: string;
@@ -29,8 +35,18 @@ type PublicPost = {
   mediaItems?: Array<{ url: string; type: 'image' | 'video' | 'audio' }>;
   likes: number;
   comments: number;
+  reactionCounts?: Partial<Record<ReactionType, number>>;
   category: string;
   createdAt: any;
+};
+
+type PeopleListKind = 'followers' | 'following' | 'friends';
+type PersonRow = { id: string; name: string };
+
+const PEOPLE_LIST_TITLES: Record<PeopleListKind, string> = {
+  followers: 'Abonnés',
+  following: 'Suivis',
+  friends: 'Amis sur Kenz',
 };
 
 function inferMediaType(mediaUrl: string): 'image' | 'video' | 'audio' {
@@ -62,7 +78,11 @@ export default function MakutanoPublicProfilePage() {
   const [publicUser, setPublicUser] = useState<PublicUser | null>(null);
   const [posts, setPosts] = useState<PublicPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedPost, setSelectedPost] = useState<PublicPost | null>(null);
+  const { profile } = useUserProfile();
+  const [isPhotoOpen, setIsPhotoOpen] = useState(false);
+  const [fullscreenMedia, setFullscreenMedia] = useState<FullscreenMedia | null>(null);
+  const [peopleList, setPeopleList] = useState<PeopleListKind | null>(null);
+  const [people, setPeople] = useState<PersonRow[] | null>(null);
   const [isFollowing, setIsFollowing] = useState(false);
   const [isFollowLoading, setIsFollowLoading] = useState(false);
   const [isChatOpening, setIsChatOpening] = useState(false);
@@ -92,7 +112,7 @@ export default function MakutanoPublicProfilePage() {
 
         setPublicUser({
           id: userId,
-          name: data.fullName || data.displayName || data.name || 'Utilisateur eNkamba',
+          name: data.fullName || data.displayName || data.name || 'Utilisateur Kenz',
           avatar: data.profileImage || data.photoURL || data.profilePhotoUrl || data.kyc?.profileImage || '',
           location: data.city || data.country || data.location || 'Makutano',
           bio: data.bio || data.about || 'Profil public Makutano.',
@@ -132,6 +152,7 @@ export default function MakutanoPublicProfilePage() {
                     mediaItems: mediaItems.length ? mediaItems : undefined,
                     likes: Number(postData.likes || 0),
                     comments: Number(postData.comments || 0),
+                    reactionCounts: postData.reactionCounts || undefined,
                     category: postData.category || 'Accueil',
                     createdAt: postData.createdAt,
                   };
@@ -255,6 +276,55 @@ export default function MakutanoPublicProfilePage() {
     };
   }, [posts]);
 
+  const commentActor = useMemo(() => (
+    user?.uid
+      ? { uid: user.uid, name: profile?.fullName || profile?.name || user.displayName || 'Utilisateur Kenz', avatar: profile?.profileImage || user.photoURL || '' }
+      : null
+  ), [profile?.fullName, profile?.name, profile?.profileImage, user?.displayName, user?.photoURL, user?.uid]);
+
+  const scrollToPosts = () => document.getElementById('profile-publications')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // ENK-006: every counter opens the list it counts, from the same source as the counter.
+  const openPeopleList = async (kind: PeopleListKind) => {
+    if (!userId) return;
+    if (kind === 'friends' && !isOwnProfile) return;
+    setPeopleList(kind);
+    setPeople(null);
+    try {
+      if (kind === 'friends') {
+        const snapshot = await getDocs(query(collection(db, 'contacts'), where('userId', '==', userId)));
+        setPeople(snapshot.docs
+          .map((contactDoc) => contactDoc.data() as any)
+          .filter((contact) => contact.isOnEnkamba)
+          .map((contact, index) => ({ id: contact.enkambaUserId || contact.contactUserId || `contact-${index}`, name: contact.name || contact.displayName || 'Contact Kenz' })));
+        return;
+      }
+      const field = kind === 'followers' ? 'followingId' : 'followerId';
+      const snapshot = await getDocs(query(collection(db, 'makutano_follows'), where(field, '==', userId)));
+      setPeople(snapshot.docs.map((followDoc) => {
+        const data = followDoc.data() as any;
+        return kind === 'followers'
+          ? { id: data.followerId, name: data.followerName || 'Utilisateur Kenz' }
+          : { id: data.followingId, name: data.followingName || 'Utilisateur Kenz' };
+      }));
+    } catch (error) {
+      console.error('Erreur liste profil Makutano:', error);
+      setPeople([]);
+    }
+  };
+
+  const handleSharePost = async (postId: string) => {
+    const url = `${window.location.origin}/dashboard/makutano?post=${encodeURIComponent(postId)}`;
+    if (navigator.share) {
+      await navigator.share({ title: `Publication de ${publicUser?.name || 'Makutano'}`, url }).catch(() => undefined);
+      return;
+    }
+    await navigator.clipboard.writeText(url).then(
+      () => toast({ title: 'Lien copié', description: 'Le lien de la publication est dans votre presse-papiers.' }),
+      () => toast({ variant: 'destructive', title: 'Partage impossible', description: url }),
+    );
+  };
+
   const handleFollow = async () => {
     if (!canInteract || !publicUser || isFollowLoading) return;
 
@@ -272,7 +342,7 @@ export default function MakutanoPublicProfilePage() {
         await setDoc(doc(db, 'makutano_follows', followId), {
           followerId: activeUser.uid,
           followingId: publicUser.id,
-          followerName: activeUser.displayName || activeUser.email || 'Utilisateur eNkamba',
+          followerName: activeUser.displayName || activeUser.email || 'Utilisateur Kenz',
           followingName: publicUser.name,
           createdAt: serverTimestamp(),
         });
@@ -408,10 +478,10 @@ export default function MakutanoPublicProfilePage() {
   if (!publicUser) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-primary/5 px-4">
-        <div className="w-full max-w-sm rounded-[28px] border border-[#009058] bg-white p-6 text-center shadow-sm">
+        <div className="w-full max-w-sm rounded-[28px] border border-[#073B9A] bg-white p-6 text-center shadow-sm">
           <h1 className="text-lg font-black text-foreground">Profil introuvable</h1>
           <p className="mt-2 text-sm text-muted-foreground">Ce profil public n’est pas disponible.</p>
-          <Button onClick={() => router.back()} className="mt-4 rounded-full bg-[#009058] hover:bg-[#009058]">
+          <Button onClick={() => router.back()} className="mt-4 rounded-full bg-[#073B9A] hover:bg-[#073B9A]">
             Retour
           </Button>
         </div>
@@ -421,12 +491,12 @@ export default function MakutanoPublicProfilePage() {
 
   return (
     <main className="min-h-screen bg-primary/5 pb-10 text-foreground">
-      <header className="sticky top-0 z-30 border-b border-[#009058]/70 bg-primary/5 px-4 py-3 backdrop-blur-xl">
+      <header className="sticky top-0 z-30 border-b border-[#073B9A]/70 bg-primary/5 px-4 py-3 backdrop-blur-xl">
         <div className="mx-auto flex max-w-4xl items-center justify-between gap-3">
           <button
             type="button"
             onClick={() => router.back()}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-foreground shadow-sm ring-1 ring-[#009058] transition hover:bg-primary/10"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-foreground shadow-sm ring-1 ring-[#073B9A] transition hover:bg-primary/10"
             aria-label="Retour"
           >
             <ArrowLeft className="h-5 w-5" />
@@ -437,29 +507,37 @@ export default function MakutanoPublicProfilePage() {
       </header>
 
       <section className="mx-auto max-w-4xl px-4 pt-5">
-        <div className="overflow-hidden rounded-[34px] border border-[#009058] bg-white shadow-[0_24px_80px_rgba(18,33,22,0.08)]">
-          <div className="h-28 bg-[radial-gradient(circle_at_18%_20%,rgba(255,165,0,0.38),transparent_28%),radial-gradient(circle_at_82%_15%,rgba(50,187,120,0.42),transparent_30%),linear-gradient(135deg,#009058,#009058)]" />
+        <div className="overflow-hidden rounded-[34px] border border-[#073B9A] bg-white shadow-[0_24px_80px_rgba(18,33,22,0.08)]">
+          <div className="h-28 bg-[radial-gradient(circle_at_18%_20%,rgba(245, 27, 43,0.38),transparent_28%),radial-gradient(circle_at_82%_15%,rgba(7, 59, 154,0.42),transparent_30%),linear-gradient(135deg,#073B9A,#073B9A)]" />
           <div className="px-5 pb-5 sm:px-7">
             <div className="-mt-12 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div className="flex min-w-0 items-end gap-4">
-                <Avatar className="h-24 w-24 border-4 border-white shadow-xl ring-1 ring-[#009058]">
-                  <AvatarImage src={publicUser.avatar} />
-                  <AvatarFallback className="bg-primary/10 text-3xl font-black text-[#009058]">
-                    {publicUser.name.charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
+                <button
+                  type="button"
+                  onClick={() => publicUser.avatar && setIsPhotoOpen(true)}
+                  disabled={!publicUser.avatar}
+                  aria-label={`Voir la photo de ${publicUser.name} en grand`}
+                  className="shrink-0 rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#073B9A] disabled:cursor-default"
+                >
+                  <Avatar className="h-24 w-24 border-4 border-white shadow-xl ring-1 ring-[#073B9A]">
+                    <AvatarImage src={publicUser.avatar} alt="" />
+                    <AvatarFallback className="bg-primary/10 text-3xl font-black text-[#073B9A]">
+                      {publicUser.name.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                </button>
                 <div className="min-w-0 pb-1">
 	                  <h1 className="flex min-w-0 items-center gap-2 text-2xl font-black tracking-tight sm:text-3xl">
 	                    <span className="truncate">{publicUser.name}</span>
 	                    <VerifiedAccountBadge verified={publicUser.verified} label />
 	                  </h1>
                   <p className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-muted-foreground">
-                    <MapPin className="h-4 w-4 text-[#009058]" />
+                    <MapPin className="h-4 w-4 text-[#073B9A]" />
                     {publicUser.location}
                   </p>
                 </div>
               </div>
-              <div className="inline-flex rounded-full bg-primary/10 px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-[#009058]">
+              <div className="inline-flex rounded-full bg-primary/10 px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-[#073B9A]">
                 Public
               </div>
             </div>
@@ -474,21 +552,25 @@ export default function MakutanoPublicProfilePage() {
                   disabled={!canInteract || isFollowLoading}
                   className={`h-11 rounded-full px-5 font-black shadow-sm ${
                     isFollowing
-                      ? 'bg-primary/10 text-[#009058] hover:bg-primary/20'
-                      : 'bg-[#009058] text-white hover:bg-[#009058]'
+                      ? 'bg-primary/10 text-[#073B9A] hover:bg-primary/20'
+                      : 'bg-[#073B9A] text-white hover:bg-[#073B9A]'
                   }`}
                 >
                   <UserCheck className="mr-2 h-4 w-4" />
                   {isFollowLoading ? '...' : isFollowing ? 'Suivi' : 'Suivre'}
                 </Button>
-                <div className="rounded-full bg-white px-4 py-2 text-sm font-black text-slate-900 ring-1 ring-[#009058]/15">
+                <button
+                  type="button"
+                  onClick={() => void openPeopleList('followers')}
+                  className="min-h-11 rounded-full bg-white px-4 py-2 text-sm font-black text-slate-900 ring-1 ring-[#073B9A]/15 hover:bg-primary/5"
+                >
                   {socialCounts.followers.toLocaleString('fr-FR')} abonnés
-                </div>
+                </button>
                 <Button
                   type="button"
                   onClick={() => void handleOpenChat()}
                   disabled={!canInteract || isChatOpening}
-                  className="h-11 rounded-full bg-white px-4 font-black text-[#009058] shadow-sm ring-1 ring-[#009058]/20 hover:bg-primary/5"
+                  className="h-11 rounded-full bg-white px-4 font-black text-[#073B9A] shadow-sm ring-1 ring-[#073B9A]/20 hover:bg-primary/5"
                 >
                   <Send className="mr-2 h-4 w-4" />
                   {isChatOpening ? 'Ouverture...' : 'Écrire'}
@@ -513,7 +595,7 @@ export default function MakutanoPublicProfilePage() {
                         disabled={!user?.uid || relationshipControl.blocked || relationshipControl.blockedByTarget || relationshipControl.isLoading}
                         className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-bold text-slate-700 hover:bg-primary/5 disabled:opacity-50"
                       >
-                        <ShieldAlert className="h-4 w-4 text-[#FFA500]" />
+                        <ShieldAlert className="h-4 w-4 text-[#F51B2B]" />
                         {relationshipControl.restricted ? 'Retirer restriction' : 'Restreindre'}
                       </button>
                       <button
@@ -543,20 +625,21 @@ export default function MakutanoPublicProfilePage() {
             )}
 
             <div className="mt-5 grid grid-cols-3 gap-2 sm:max-w-md">
-              <StatPill value={socialCounts.following} label="Suivis" />
-              <StatPill value={socialCounts.friends} label="Amis" />
-              <StatPill value={stats.posts} label="Posts" />
-              <StatPill value={stats.likes} label="Likes" />
-              <StatPill value={stats.comments} label="Coms" />
+              <StatPill value={socialCounts.following} label="Suivis" onClick={() => void openPeopleList('following')} />
+              <StatPill value={socialCounts.friends} label="Amis" onClick={isOwnProfile ? () => void openPeopleList('friends') : undefined} />
+              <StatPill value={stats.posts} label="Posts" onClick={scrollToPosts} />
+              <StatPill value={stats.likes} label="Likes" onClick={scrollToPosts} />
+              <StatPill value={stats.comments} label="Coms" onClick={scrollToPosts} />
+              {isOwnProfile && <StatPill value={socialCounts.followers} label="Abonnés" onClick={() => void openPeopleList('followers')} />}
             </div>
           </div>
         </div>
 
-        <div className="mt-6 flex items-center justify-between">
+        <div id="profile-publications" className="mt-6 flex scroll-mt-20 items-center justify-between">
           <div>
             <h2 className="text-base font-black">Publications</h2>
           </div>
-          <div className="flex h-9 items-center gap-2 rounded-full bg-white px-3 text-xs font-black text-[#009058] ring-1 ring-[#009058]">
+          <div className="flex h-9 items-center gap-2 rounded-full bg-white px-3 text-xs font-black text-[#073B9A] ring-1 ring-[#073B9A]">
             <Grid3X3 className="h-4 w-4" />
             {posts.length}
           </div>
@@ -571,102 +654,112 @@ export default function MakutanoPublicProfilePage() {
             Aucune publication publique pour le moment.
           </div>
         ) : (
-          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 md:gap-3">
+          <div className="mx-auto mt-4 max-w-xl space-y-4">
             {posts.map((post) => (
-              <button
-                key={post.id}
-                type="button"
-                onClick={() => setSelectedPost(post)}
-                className="group relative aspect-[4/5] overflow-hidden rounded-[22px] bg-primary/10 text-left shadow-sm ring-1 ring-[#009058] transition hover:-translate-y-0.5 hover:shadow-xl"
-              >
-                {(post.mediaItems?.[0]?.url || post.mediaUrl) ? (
-                  post.mediaType === 'video' ? (
-                    <video src={post.mediaItems?.[0]?.url || post.mediaUrl} className="h-full w-full object-cover" muted playsInline preload="metadata" />
-                  ) : post.mediaType === 'audio' ? (
-                    <div className="flex h-full w-full flex-col justify-between bg-[#009058] p-4 text-white">
-                      <PlayCircle className="h-9 w-9" />
-                      <div>
-                        <p className="text-xs font-black uppercase tracking-[0.16em] text-white/60">Audio</p>
-                        <p className="mt-1 line-clamp-2 text-sm font-bold">{post.text || 'Publication audio'}</p>
-                      </div>
+              <article key={post.id} className="overflow-hidden rounded-[22px] border border-[#DCE6F8] bg-white shadow-sm">
+                <div className="flex items-center justify-between gap-3 px-3.5 py-3">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <Avatar className="h-9 w-9 border border-[#DCE6F8]">
+                      <AvatarImage src={publicUser.avatar} alt="" />
+                      <AvatarFallback className="bg-primary/10 text-[#073B9A]">{publicUser.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0">
+                      <p className="flex min-w-0 items-center gap-1.5 text-sm font-semibold">
+                        <span className="truncate">{publicUser.name}</span>
+                        <VerifiedAccountBadge verified={publicUser.verified} />
+                      </p>
+                      <p className="text-xs text-muted-foreground">{formatDate(post.createdAt)}</p>
                     </div>
-                  ) : (
-                    <>
-                      <img src={post.mediaItems?.[0]?.url || post.mediaUrl} alt={post.text || 'Publication'} className="h-full w-full object-cover" loading="lazy" />
-                      {(post.mediaItems?.length || 0) > 1 && (
-                        <span className="absolute right-2 top-2 rounded-full bg-black/55 px-2 py-1 text-[10px] font-black text-white">
-                          {post.mediaItems?.length} photos
-                        </span>
-                      )}
-                    </>
-                  )
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center p-4 text-center text-sm font-bold text-[#009058]">
-                    {post.text || 'Publication'}
                   </div>
-                )}
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-3 text-white">
-                  <div className="flex items-center justify-between gap-2 text-[11px] font-bold">
-                    <span className="rounded-full bg-white/18 px-2 py-1 backdrop-blur">{post.category}</span>
-                    <span>{formatDate(post.createdAt)}</span>
-                  </div>
+                  <span className="rounded-full bg-primary/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-[#073B9A]">{post.category}</span>
                 </div>
-              </button>
+                {(post.mediaItems?.length || post.mediaUrl) && (
+                  <MakutanoMediaStage
+                    post={{ ...post, author: { name: publicUser.name } }}
+                    isActive={false}
+                    onFullscreen={setFullscreenMedia}
+                  />
+                )}
+                <MakutanoPostBody
+                  post={{
+                    id: post.id,
+                    text: post.text,
+                    authorName: publicUser.name,
+                    authorId: publicUser.id,
+                    likes: post.likes,
+                    comments: post.comments,
+                    reactionCounts: post.reactionCounts,
+                  }}
+                  actor={commentActor}
+                  onOpenProfile={(uid) => router.push(`/dashboard/makutano/profile/${uid}`)}
+                  onShare={() => void handleSharePost(post.id)}
+                />
+              </article>
             ))}
           </div>
         )}
       </section>
 
-      {selectedPost && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-3 backdrop-blur-sm">
-          <div className="max-h-full w-full max-w-3xl overflow-hidden rounded-[30px] bg-white shadow-2xl">
-            <div className="flex items-center justify-between gap-3 border-b border-[#edf3ef] px-4 py-3">
-              <div className="min-w-0">
-                <p className="truncate text-sm font-black">{selectedPost.category}</p>
-                <p className="text-xs font-semibold text-muted-foreground">{formatDate(selectedPost.createdAt)}</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelectedPost(null)}
-                className="rounded-full bg-primary/5 px-4 py-2 text-sm font-black text-foreground hover:bg-primary/10"
-              >
-                Fermer
-              </button>
-            </div>
+      <PhotoViewer src={publicUser.avatar} alt={`Photo de profil de ${publicUser.name}`} open={isPhotoOpen} onClose={() => setIsPhotoOpen(false)} />
 
-            <div className="flex max-h-[70vh] snap-x snap-mandatory overflow-x-auto bg-black [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {(selectedPost.mediaItems?.length ? selectedPost.mediaItems : selectedPost.mediaUrl ? [{ url: selectedPost.mediaUrl, type: selectedPost.mediaType }] : []).map((media, index) => (
-                media.type === 'video' ? (
-                  <video key={`${media.url}-${index}`} src={media.url} controls autoPlay={index === 0} className="max-h-[70vh] w-full shrink-0 snap-center object-contain" />
-                ) : media.type === 'audio' ? (
-                  <div key={`${media.url}-${index}`} className="flex min-h-[260px] w-full shrink-0 snap-center items-center justify-center bg-[#009058] p-6">
-                    <audio src={media.url} controls autoPlay={index === 0} className="w-full max-w-xl" />
-                  </div>
-                ) : (
-                  <img key={`${media.url}-${index}`} src={media.url} alt={selectedPost.text || 'Publication'} className="max-h-[70vh] w-full shrink-0 snap-center object-contain" />
-                )
-              ))}
-            </div>
-
-            <div className="space-y-3 p-4">
-              {selectedPost.text && <p className="text-sm leading-6 text-foreground">{selectedPost.text}</p>}
-              <div className="flex items-center gap-4 text-xs font-black text-muted-foreground">
-                <span className="flex items-center gap-1"><Heart className="h-4 w-4 text-[#009058]" /> {selectedPost.likes}</span>
-                <span className="flex items-center gap-1"><MessageCircle className="h-4 w-4 text-[#009058]" /> {selectedPost.comments}</span>
-              </div>
-            </div>
+      {fullscreenMedia && (fullscreenMedia.type === 'image' ? (
+        <PhotoViewer src={fullscreenMedia.src} alt={fullscreenMedia.label} open onClose={() => setFullscreenMedia(null)} />
+      ) : (
+        <div role="dialog" aria-modal="true" aria-label={fullscreenMedia.label} className="fixed inset-0 z-[90] flex flex-col bg-black text-white">
+          <div className="flex items-center justify-between gap-3 px-4 py-3">
+            <p className="min-w-0 flex-1 truncate text-sm font-semibold">{fullscreenMedia.label}</p>
+            <button type="button" onClick={() => setFullscreenMedia(null)} aria-label="Fermer" className="grid h-11 w-11 place-items-center rounded-full bg-white/10">
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          <div className="flex min-h-0 flex-1 items-center justify-center p-4">
+            {fullscreenMedia.type === 'video'
+              ? <video src={fullscreenMedia.src} controls autoPlay playsInline className="max-h-full max-w-full" />
+              : <audio src={fullscreenMedia.src} controls autoPlay className="w-full max-w-xl" />}
           </div>
         </div>
-      )}
+      ))}
+
+      <Dialog open={peopleList !== null} onOpenChange={(open) => { if (!open) setPeopleList(null); }}>
+        <DialogContent className="max-w-sm rounded-3xl">
+          <DialogHeader><DialogTitle>{peopleList ? PEOPLE_LIST_TITLES[peopleList] : ''}</DialogTitle></DialogHeader>
+          <div className="max-h-96 space-y-1 overflow-y-auto">
+            {people === null ? (
+              <p className="flex items-center gap-2 py-6 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Chargement…</p>
+            ) : people.length === 0 ? (
+              <p className="py-6 text-center text-sm text-muted-foreground">Personne pour le moment.</p>
+            ) : people.map((person) => (
+              <button
+                key={person.id}
+                type="button"
+                disabled={person.id.startsWith('contact-')}
+                onClick={() => { setPeopleList(null); router.push(`/dashboard/makutano/profile/${person.id}`); }}
+                className="flex w-full items-center gap-3 rounded-2xl px-2 py-2 text-left hover:bg-primary/5 disabled:cursor-default"
+              >
+                <Avatar className="h-10 w-10"><AvatarFallback className="bg-primary/10 font-bold text-[#073B9A]">{person.name.charAt(0)}</AvatarFallback></Avatar>
+                <span className="truncate text-sm font-semibold">{person.name}</span>
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }
 
-function StatPill({ value, label }: { value: number; label: string }) {
-  return (
-    <div className="rounded-2xl bg-primary/5 px-3 py-3 text-center ring-1 ring-[#009058]">
-      <p className="text-xl font-black text-foreground">{value}</p>
+function StatPill({ value, label, onClick }: { value: number; label: string; onClick?: () => void }) {
+  const content = (
+    <>
+      <p className="text-xl font-black text-foreground">{value.toLocaleString('fr-FR')}</p>
       <p className="text-[11px] font-black uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
-    </div>
+    </>
+  );
+  if (!onClick) {
+    return <div className="rounded-2xl bg-primary/5 px-3 py-3 text-center ring-1 ring-[#073B9A]">{content}</div>;
+  }
+  return (
+    <button type="button" onClick={onClick} aria-label={`${value} ${label} — afficher`} className="rounded-2xl bg-primary/5 px-3 py-3 text-center ring-1 ring-[#073B9A] transition hover:bg-primary/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#073B9A]">
+      {content}
+    </button>
   );
 }

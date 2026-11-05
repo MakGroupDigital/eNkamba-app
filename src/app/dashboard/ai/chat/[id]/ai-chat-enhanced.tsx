@@ -130,7 +130,7 @@ export default function AiChatEnhanced() {
         ) : messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <Brain className="h-16 w-16 text-gray-300 mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Bienvenue sur eNkamba AI</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Bienvenue sur Kenz AI</h2>
             <p className="text-gray-600 max-w-md">
               Posez vos questions et obtenez des réponses bien formatées avec recherche web, analyse et réflexion.
             </p>

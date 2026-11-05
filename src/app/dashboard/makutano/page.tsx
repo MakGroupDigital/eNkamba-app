@@ -3,7 +3,6 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -13,22 +12,20 @@ import { useStories } from '@/hooks/useStories';
 import { useNkampaEcommerce } from '@/hooks/useNkampaEcommerce';
 import { useNkampaStores } from '@/hooks/useNkampaStores';
 import { useDashboardLocation } from '@/hooks/useDashboardLocation';
-import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, increment, limit, onSnapshot, orderBy, query, serverTimestamp, setDoc, updateDoc, where } from 'firebase/firestore';
+import { publicPostLocationLabel } from '@/lib/makutano-location';
+import type { ReactionType } from '@/lib/makutano-reactions';
+import { MakutanoPostBody } from '@/components/makutano/PostBody';
+import { MakutanoMediaStage, inferMediaType, type FullscreenMedia } from '@/components/makutano/MediaStage';
+import { addDoc, collection, deleteDoc, doc, getDocs, increment, limit, onSnapshot, orderBy, query, serverTimestamp, setDoc, updateDoc, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import { StoryViewer } from '@/components/stories/StoryViewer';
 import { VerifiedAccountBadge } from '@/components/verified-account-badge';
 import {
-  MakutanoAudioIcon,
   MakutanoBookIcon,
-  MakutanoCommentIcon,
   MakutanoCreateIcon,
   MakutanoIdeaIcon,
-  MakutanoLikeIcon,
   MakutanoMoreIcon,
-  MakutanoPauseIcon,
-  MakutanoPlayIcon,
-  MakutanoShareIcon,
   HomeNavIcon,
   AgentIcon,
   MapPinIcon,
@@ -52,17 +49,9 @@ interface Post {
   mediaItems?: Array<{ url: string; type: 'image' | 'video' | 'audio' }>;
   likes: number;
   comments: number;
-  isLiked: boolean;
+  reactionCounts?: Partial<Record<ReactionType, number>>;
   createdAt?: any;
   category: 'Accueil' | 'Savoir' | 'Entrepreneur' | 'Projets' | 'Local';
-}
-
-interface PostComment {
-  id: string;
-  text: string;
-  authorId: string;
-  authorName: string;
-  authorAvatar: string;
 }
 
 const postCategories: Array<Post['category']> = ['Savoir', 'Entrepreneur', 'Projets', 'Local', 'Accueil'];
@@ -107,12 +96,6 @@ type NearbyPlace = {
   score: number;
 };
 
-type FullscreenMedia = {
-  src: string;
-  type: 'image' | 'video' | 'audio';
-  label: string;
-};
-
 const createEmptyRecommendationProfile = (): RecommendationProfile => ({
   categories: {},
   mediaTypes: {},
@@ -152,14 +135,6 @@ function scorePostForUser(post: Post, profile: RecommendationProfile) {
   return freshnessScore + engagementScore + categoryScore + mediaScore + authorScore + personalInteractionScore + explorationScore - fatiguePenalty;
 }
 
-function areStringSetsEqual(first: Set<string>, second: Set<string>) {
-  if (first.size !== second.size) return false;
-  for (const value of first) {
-    if (!second.has(value)) return false;
-  }
-  return true;
-}
-
 function getProductPopularityScore(product: any) {
   const clicks = Number(product?.clickCount ?? product?.viewCount ?? product?.views ?? 0);
   const sold = Number(product?.sold ?? product?.sales ?? 0);
@@ -196,301 +171,6 @@ function scoreNearbyStore(store: any, locationLabel: string) {
   return localScore + trustedScore + businessScore + stableHash(String(store?.id || store?.slug || store?.storeName || 'store')) * 100;
 }
 
-function inferMediaType(mediaUrl: string): 'image' | 'video' | 'audio' {
-  const lowerUrl = mediaUrl.toLowerCase();
-  if (
-    lowerUrl.includes('.mp3') ||
-    lowerUrl.includes('.wav') ||
-    lowerUrl.includes('.ogg') ||
-    lowerUrl.includes('.m4a') ||
-    lowerUrl.includes('/audio/')
-  ) {
-    return 'audio';
-  }
-  if (
-    lowerUrl.includes('.mp4') ||
-    lowerUrl.includes('.webm') ||
-    lowerUrl.includes('.mov') ||
-    lowerUrl.includes('.m3u8') ||
-    lowerUrl.includes('/video/')
-  ) {
-    return 'video';
-  }
-  return 'image';
-}
-
-function formatMediaTime(seconds: number) {
-  if (!Number.isFinite(seconds) || seconds <= 0) return '0:00';
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60).toString().padStart(2, '0');
-  return `${mins}:${secs}`;
-}
-
-function MakutanoAudioPlayer({ src, isActive = false }: { src: string; isActive?: boolean }) {
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [duration, setDuration] = useState(0);
-  const [currentTime, setCurrentTime] = useState(0);
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    if (isActive) {
-      audio.play().catch(() => undefined);
-      setIsPlaying(true);
-      return;
-    }
-
-    audio.pause();
-    setIsPlaying(false);
-  }, [isActive, src]);
-
-  const togglePlay = () => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    if (audio.paused) {
-      audio.play().catch(() => undefined);
-      setIsPlaying(true);
-      return;
-    }
-
-    audio.pause();
-    setIsPlaying(false);
-  };
-
-  const handleSeek = (value: string) => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    const nextTime = Number(value);
-    audio.currentTime = nextTime;
-    setCurrentTime(nextTime);
-  };
-
-  return (
-    <div className="relative flex h-full w-full flex-col justify-between overflow-hidden bg-[#009058] p-5 text-white">
-      <div className="absolute inset-0 bg-[#009058]" />
-      <div className="relative z-10 flex items-center justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/60">Audio</p>
-          <p className="mt-1 text-lg font-bold">Makutano</p>
-        </div>
-        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white/15 text-white">
-          <MakutanoAudioIcon size={24} />
-        </div>
-      </div>
-
-      <button
-        type="button"
-        onClick={togglePlay}
-        className="relative z-10 mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-white text-[#009058] shadow-lg transition hover:scale-105"
-        aria-label={isPlaying ? 'Mettre en pause' : 'Lire'}
-      >
-        {isPlaying ? <MakutanoPauseIcon size={40} /> : <MakutanoPlayIcon size={40} />}
-      </button>
-
-      <div className="relative z-10">
-        <div className="mb-4 flex h-24 items-end justify-center gap-1.5">
-          {Array.from({ length: 36 }).map((_, index) => (
-            <span
-              key={index}
-              className={cn('w-1.5 rounded-full bg-white/75', isPlaying && 'animate-pulse')}
-              style={{
-                height: `${18 + ((index * 9) % 64)}px`,
-                animationDelay: `${index * 28}ms`,
-              }}
-            />
-          ))}
-        </div>
-
-        <input
-          type="range"
-          min={0}
-          max={duration || 0}
-          value={Math.min(currentTime, duration || 0)}
-          onChange={(event) => handleSeek(event.target.value)}
-          className="h-2 w-full accent-white"
-          aria-label="Progression audio"
-        />
-        <div className="mt-2 flex items-center justify-between text-xs font-medium text-white/75">
-          <span>{formatMediaTime(currentTime)}</span>
-          <span>{formatMediaTime(duration)}</span>
-        </div>
-        <audio
-          ref={audioRef}
-          src={src}
-          preload="metadata"
-          onLoadedMetadata={(event) => setDuration(event.currentTarget.duration || 0)}
-          onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime || 0)}
-          onEnded={() => setIsPlaying(false)}
-          className="hidden"
-        />
-      </div>
-    </div>
-  );
-}
-
-function MakutanoVideoPlayer({ src, isActive = false }: { src: string; isActive?: boolean }) {
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [duration, setDuration] = useState(0);
-  const [currentTime, setCurrentTime] = useState(0);
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    if (isActive) {
-      video.play().catch(() => undefined);
-      setIsPlaying(true);
-      return;
-    }
-
-    video.pause();
-    setIsPlaying(false);
-  }, [isActive, src]);
-
-  const togglePlay = () => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    if (video.paused) {
-      video.play().catch(() => undefined);
-      setIsPlaying(true);
-      return;
-    }
-
-    video.pause();
-    setIsPlaying(false);
-  };
-
-  const handleSeek = (value: string) => {
-    const video = videoRef.current;
-    if (!video) return;
-    const nextTime = Number(value);
-    video.currentTime = nextTime;
-    setCurrentTime(nextTime);
-  };
-
-  return (
-    <div className="group relative h-full overflow-hidden bg-[#009058]">
-      <video
-        ref={videoRef}
-        src={src}
-        className="h-full w-full object-cover"
-        playsInline
-        preload="metadata"
-        onClick={togglePlay}
-        onLoadedMetadata={(event) => setDuration(event.currentTarget.duration || 0)}
-        onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime || 0)}
-        onEnded={() => setIsPlaying(false)}
-      />
-
-      {!isPlaying && (
-        <button
-          type="button"
-          onClick={togglePlay}
-          className="absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-foreground shadow-lg transition hover:scale-105"
-          aria-label="Lire la vidéo"
-        >
-          <MakutanoPlayIcon size={38} />
-        </button>
-      )}
-
-      <div className="absolute bottom-0 left-0 right-0 bg-black/55 px-4 py-3 text-white backdrop-blur-sm">
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={togglePlay}
-            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#009058] transition hover:bg-[#009058]"
-            aria-label={isPlaying ? 'Mettre en pause' : 'Lire'}
-          >
-            {isPlaying ? <MakutanoPauseIcon size={24} /> : <MakutanoPlayIcon size={24} />}
-          </button>
-          <input
-            type="range"
-            min={0}
-            max={duration || 0}
-            value={Math.min(currentTime, duration || 0)}
-            onChange={(event) => handleSeek(event.target.value)}
-            className="h-2 min-w-0 flex-1 accent-[#009058]"
-            aria-label="Progression vidéo"
-          />
-          <span className="w-20 text-right text-xs font-medium">
-            {formatMediaTime(currentTime)} / {formatMediaTime(duration)}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function MakutanoMediaStage({
-  post,
-  isActive,
-  onFullscreen,
-}: {
-  post: Post;
-  isActive: boolean;
-  onFullscreen: (media: FullscreenMedia) => void;
-}) {
-  const mediaItems = post.mediaItems?.length
-    ? post.mediaItems
-    : post.mediaUrl
-      ? [{ url: post.mediaUrl, type: post.mediaType }]
-      : [];
-
-  if (mediaItems.length === 0) {
-    return (
-      <div className="flex h-[min(56dvh,420px)] w-full items-center justify-center bg-primary/10">
-        <p className="text-sm font-medium text-[#009058]">Média indisponible</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="relative overflow-hidden bg-slate-950">
-      <div className="flex snap-x snap-mandatory overflow-x-auto overscroll-x-contain scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {mediaItems.map((media, index) => (
-          <div key={`${media.url}-${index}`} className="relative h-[min(56dvh,430px)] w-full shrink-0 snap-center bg-slate-950 sm:h-[min(62dvh,520px)]">
-            {media.type === 'audio' ? (
-              <MakutanoAudioPlayer src={media.url} isActive={isActive && index === 0} />
-            ) : media.type === 'video' ? (
-              <MakutanoVideoPlayer src={media.url} isActive={isActive && index === 0} />
-            ) : (
-              <img
-                src={media.url}
-                alt={post.text || `Publication ${index + 1}`}
-                className="h-full w-full object-contain"
-                loading="lazy"
-                draggable={false}
-              />
-            )}
-            <button
-              type="button"
-              onClick={() => onFullscreen({ src: media.url, type: media.type, label: post.text || `Publication de ${post.author.name}` })}
-              className="absolute right-3 top-3 rounded-full bg-black/55 px-3 py-1.5 text-xs font-bold text-white shadow-lg backdrop-blur transition hover:bg-black/70"
-              aria-label="Afficher en plein écran"
-            >
-              Plein écran
-            </button>
-          </div>
-        ))}
-      </div>
-      {mediaItems.length > 1 && (
-        <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5 rounded-full bg-black/45 px-2 py-1.5 backdrop-blur">
-          {mediaItems.map((_, index) => (
-            <span key={index} className="h-1.5 w-1.5 rounded-full bg-white/90" />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 export default function MakutanoPage() {
   const { toast } = useToast();
   const router = useRouter();
@@ -505,12 +185,6 @@ export default function MakutanoPage() {
   const [postLimit, setPostLimit] = useState(80);
   const [feedRounds, setFeedRounds] = useState(4);
   const [isLoadingPosts, setIsLoadingPosts] = useState(true);
-  const [activeCommentPostId, setActiveCommentPostId] = useState<string | null>(null);
-  const [commentsByPost, setCommentsByPost] = useState<Record<string, PostComment[]>>({});
-  const [commentInputByPost, setCommentInputByPost] = useState<Record<string, string>>({});
-  const [isLoadingCommentsByPost, setIsLoadingCommentsByPost] = useState<Record<string, boolean>>({});
-  const [isSubmittingCommentByPost, setIsSubmittingCommentByPost] = useState<Record<string, boolean>>({});
-  const [likedPostIds, setLikedPostIds] = useState<Set<string>>(new Set());
   const [activeMediaPostId, setActiveMediaPostId] = useState<string | null>(null);
   const [fullscreenMedia, setFullscreenMedia] = useState<FullscreenMedia | null>(null);
   const [viewingStories, setViewingStories] = useState<{ stories: any[]; index: number } | null>(null);
@@ -569,7 +243,7 @@ export default function MakutanoPage() {
       .filter((store: any) => store?.slug && store?.id)
       .map((store: any) => ({
         id: store.id,
-        name: store.storeName || 'Adresse eNkamba',
+        name: store.storeName || 'Adresse Kenz',
         label: getPlaceLabel(store),
         image: store.coverUrl || store.logoUrl || 'https://picsum.photos/seed/nkampa-place/500/340',
         href: `/shop/${store.slug}`,
@@ -621,7 +295,6 @@ export default function MakutanoPage() {
   }, [feedRounds, filteredPosts, nearbyPlaces.length, storyOffers, suggestedUsers.length]);
 
   const recommendationStorageKey = `${RECOMMENDATION_STORAGE_PREFIX}:${user?.uid || 'anonymous'}`;
-  const postIdsKey = useMemo(() => posts.map((post) => post.id).join('|'), [posts]);
 
   useEffect(() => {
     try {
@@ -655,10 +328,10 @@ export default function MakutanoPage() {
             const data = userDoc.data() as any;
             return {
               id: userDoc.id,
-              name: data.fullName || data.displayName || data.name || data.email || 'Utilisateur eNkamba',
+              name: data.fullName || data.displayName || data.name || data.email || 'Utilisateur Kenz',
               avatar: data.profileImage || data.photoURL || data.profilePhotoUrl || data.kyc?.profileImage || '',
               location: data.city || data.country || data.location || 'Makutano',
-              bio: data.bio || data.about || 'Profil public eNkamba',
+              bio: data.bio || data.about || 'Profil public Kenz',
               verified: data.kycStatus === 'verified',
             };
           })
@@ -793,7 +466,7 @@ export default function MakutanoPage() {
       await setDoc(doc(db, 'makutano_follows', followId), {
         followerId: user.uid,
         followingId: targetUser.id,
-        followerName: user.displayName || user.email || 'Utilisateur eNkamba',
+        followerName: user.displayName || user.email || 'Utilisateur Kenz',
         followingName: targetUser.name,
         createdAt: serverTimestamp(),
       });
@@ -841,8 +514,8 @@ export default function MakutanoPage() {
           return {
             id: docSnapshot.id,
             author: {
-              name: data.author?.name || data.authorName || 'Utilisateur eNkamba',
-              location: data.author?.location || data.authorLocation || 'RDC',
+              name: data.author?.name || data.authorName || 'Utilisateur Kenz',
+              location: publicPostLocationLabel(data),
 	              avatar: data.author?.avatar || data.authorAvatar || 'https://picsum.photos/seed/default-user/40/40',
 	              verified: Boolean(data.author?.verified || data.authorVerified),
 	            },
@@ -853,7 +526,7 @@ export default function MakutanoPage() {
             mediaItems: normalizedMediaItems.length ? normalizedMediaItems : undefined,
             likes: Number(data.likes || 0),
             comments: Number(data.comments || 0),
-            isLiked: false,
+            reactionCounts: data.reactionCounts || undefined,
             createdAt: data.createdAt,
             category,
           };
@@ -875,51 +548,6 @@ export default function MakutanoPage() {
 
     return () => unsubscribe();
   }, [postLimit, toast]);
-
-  useEffect(() => {
-    let cancelled = false;
-    const postIds = postIdsKey.split('|').filter(Boolean);
-
-    const loadLikedPosts = async () => {
-      if (!user?.uid || postIds.length === 0) {
-        setLikedPostIds((current) => (current.size === 0 ? current : new Set()));
-        return;
-      }
-
-      try {
-        const likedIds = new Set<string>();
-        await Promise.all(
-          postIds.map(async (postId) => {
-            const likeDoc = await getDoc(doc(db, 'makutano_posts', postId, 'likes', user.uid));
-            if (likeDoc.exists()) likedIds.add(postId);
-          })
-        );
-        if (!cancelled) {
-          setLikedPostIds((current) => (areStringSetsEqual(current, likedIds) ? current : likedIds));
-        }
-      } catch (error) {
-        console.error('Erreur chargement likes utilisateur:', error);
-      }
-    };
-
-    void loadLikedPosts();
-    return () => {
-      cancelled = true;
-    };
-  }, [user?.uid, postIdsKey]);
-
-  useEffect(() => {
-    setPosts((prev) => {
-      let changed = false;
-      const nextPosts = prev.map((post) => {
-        const nextIsLiked = likedPostIds.has(post.id);
-        if (post.isLiked === nextIsLiked) return post;
-        changed = true;
-        return { ...post, isLiked: nextIsLiked };
-      });
-      return changed ? nextPosts : prev;
-    });
-  }, [likedPostIds]);
 
   useEffect(() => {
     if (!user?.uid) {
@@ -1035,197 +663,27 @@ export default function MakutanoPage() {
     };
   }, [filteredPosts, fullscreenMedia]);
 
-  const handleLike = async (postId: string) => {
-    if (!user?.uid) {
-      toast({
-        variant: 'destructive',
-        title: 'Connexion requise',
-        description: 'Connecte-toi pour liker.',
-      });
-      return;
-    }
-
-    const wasLiked = likedPostIds.has(postId);
-    const targetPost = posts.find((post) => post.id === postId);
-    if (targetPost) recordPostSignal(targetPost, wasLiked ? 'unlike' : 'like');
-
-    setLikedPostIds((prev) => {
-      const next = new Set(prev);
-      if (wasLiked) next.delete(postId);
-      else next.add(postId);
-      return next;
-    });
-    setPosts((prev) =>
-      prev.map((post) => {
-        if (post.id !== postId) return post;
-        const nextLikes = wasLiked ? Math.max(0, Number(post.likes || 0) - 1) : Number(post.likes || 0) + 1;
-        return {
-          ...post,
-          likes: nextLikes,
-          isLiked: !wasLiked,
-        };
-      })
-    );
-
-    try {
-      const postRef = doc(db, 'makutano_posts', postId);
-      const likeRef = doc(db, 'makutano_posts', postId, 'likes', user.uid);
-
-      if (wasLiked) {
-        await deleteDoc(likeRef);
-        await updateDoc(postRef, { likes: increment(-1) });
-      } else {
-        await setDoc(likeRef, {
-          userId: user.uid,
-          createdAt: serverTimestamp(),
-        });
-        await updateDoc(postRef, { likes: increment(1) });
-      }
-    } catch (error) {
-      console.error('Erreur like/unlike:', error);
-      setLikedPostIds((prev) => {
-        const next = new Set(prev);
-        if (wasLiked) next.add(postId);
-        else next.delete(postId);
-        return next;
-      });
-      setPosts((prev) =>
-        prev.map((post) => {
-          if (post.id !== postId) return post;
-          const revertedLikes = wasLiked ? Number(post.likes || 0) + 1 : Math.max(0, Number(post.likes || 0) - 1);
-          return {
-            ...post,
-            likes: revertedLikes,
-            isLiked: wasLiked,
-          };
-        })
-      );
-      toast({
-        variant: 'destructive',
-        title: 'Erreur',
-        description: 'Impossible de mettre à jour le like.',
-      });
-    }
-  };
-
-  const loadComments = async (postId: string) => {
-    setIsLoadingCommentsByPost((prev) => ({ ...prev, [postId]: true }));
-    try {
-      const commentsQuery = query(
-        collection(db, 'makutano_posts', postId, 'comments'),
-        orderBy('createdAt', 'desc'),
-        limit(30)
-      );
-      const snapshot = await getDocs(commentsQuery);
-      const loadedComments: PostComment[] = snapshot.docs.map((docSnapshot) => {
-        const data = docSnapshot.data() as any;
-        return {
-          id: docSnapshot.id,
-          text: data.text || '',
-          authorId: data.authorId || '',
-          authorName: data.author?.name || 'Utilisateur',
-          authorAvatar: data.author?.avatar || '',
-        };
-      });
-      setCommentsByPost((prev) => ({ ...prev, [postId]: loadedComments }));
-    } catch (error) {
-      console.error('Erreur chargement commentaires:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Erreur',
-        description: 'Impossible de charger les commentaires.',
-      });
-    } finally {
-      setIsLoadingCommentsByPost((prev) => ({ ...prev, [postId]: false }));
-    }
-  };
-
-  const handleComment = async (postId: string) => {
-    const nextOpenPostId = activeCommentPostId === postId ? null : postId;
-    const targetPost = posts.find((post) => post.id === postId);
-    if (nextOpenPostId && targetPost) recordPostSignal(targetPost, 'comment');
-    setActiveCommentPostId(nextOpenPostId);
-    if (nextOpenPostId && !commentsByPost[postId]) {
-      await loadComments(postId);
-    }
-  };
-
-  const submitComment = async (postId: string) => {
-    const commentText = (commentInputByPost[postId] || '').trim();
-    if (!commentText) return;
-
-    if (!user?.uid) {
-      toast({
-        variant: 'destructive',
-        title: 'Connexion requise',
-        description: 'Connecte-toi pour commenter.',
-      });
-      return;
-    }
-
-    setIsSubmittingCommentByPost((prev) => ({ ...prev, [postId]: true }));
-    try {
-      const authorName = profile?.fullName || profile?.name || user.displayName || 'Utilisateur eNkamba';
-      const authorAvatar = profile?.profileImage || user.photoURL || '';
-
-      const commentRef = await addDoc(collection(db, 'makutano_posts', postId, 'comments'), {
-        text: commentText,
-        authorId: user.uid,
-        author: {
-          name: authorName,
-          avatar: authorAvatar,
-        },
-        createdAt: serverTimestamp(),
-      });
-
-      setCommentInputByPost((prev) => ({ ...prev, [postId]: '' }));
-      setCommentsByPost((prev) => ({
-        ...prev,
-        [postId]: [
-          {
-            id: commentRef.id,
-            text: commentText,
-            authorId: user.uid,
-            authorName,
-            authorAvatar,
-          },
-          ...(prev[postId] || []),
-        ],
-      }));
-
-      setPosts((prev) =>
-        prev.map((post) => (post.id === postId ? { ...post, comments: Number(post.comments || 0) + 1 } : post))
-      );
-      const targetPost = posts.find((post) => post.id === postId);
-      if (targetPost) recordPostSignal(targetPost, 'comment');
-
-      updateDoc(doc(db, 'makutano_posts', postId), {
-        comments: increment(1),
-      }).catch((error) => {
-        console.warn('Impossible de mettre à jour le compteur de commentaires:', error);
-      });
-
-      setActiveCommentPostId(null);
-    } catch (error) {
-      console.error('Erreur ajout commentaire:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Erreur',
-        description: 'Impossible d’ajouter le commentaire.',
-      });
-    } finally {
-      setIsSubmittingCommentByPost((prev) => ({ ...prev, [postId]: false }));
-    }
-  };
-
-  const handleShare = (id: string) => {
+  const handleShare = async (id: string) => {
     const targetPost = posts.find((post) => post.id === id);
-    if (targetPost) recordPostSignal(targetPost, 'share');
-    toast({
-      title: "Partage",
-      description: "Lien de partage copié.",
-    });
+    const url = `${window.location.origin}/dashboard/makutano?post=${encodeURIComponent(id)}`;
+    const title = targetPost ? `Publication de ${targetPost.author.name}` : 'Publication Makutano';
+    if (navigator.share) {
+      await navigator.share({ title, url }).catch(() => undefined);
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      toast({ title: 'Lien copié', description: 'Le lien de la publication est dans votre presse-papiers.' });
+    } catch {
+      toast({ variant: 'destructive', title: 'Partage impossible', description: url });
+    }
   };
+
+  const commentActor = useMemo(() => (
+    user?.uid
+      ? { uid: user.uid, name: profile?.fullName || profile?.name || user.displayName || 'Utilisateur Kenz', avatar: profile?.profileImage || user.photoURL || '' }
+      : null
+  ), [profile?.fullName, profile?.name, profile?.profileImage, user?.displayName, user?.photoURL, user?.uid]);
 
   const handleReportPost = async (post: Post) => {
     if (!user?.uid) {
@@ -1308,7 +766,7 @@ export default function MakutanoPage() {
   };
 
   return (
-    <div className="flex h-[calc(100dvh-2.5rem)] min-h-0 flex-col overflow-hidden bg-[#f5f7f6]">
+    <div className="flex h-[calc(100dvh-2.5rem)] min-h-0 flex-col overflow-hidden bg-[#FFFFFF]">
       <div
         className={cn(
           'relative z-50 w-full shrink-0 overflow-hidden bg-white/0 transition-[opacity,transform] duration-200 ease-out',
@@ -1330,10 +788,11 @@ export default function MakutanoPage() {
                     key={item.name}
                     type="button"
                     onClick={() => router.push(item.link)}
-                    className="flex h-12 min-w-0 flex-col items-center justify-center gap-0.5 rounded-full px-1 text-[10px] font-bold leading-none text-[#009058] transition hover:bg-[#009058]/10 hover:text-[#009058] sm:flex-row sm:gap-2 sm:px-3 sm:text-xs"
+                    aria-label={item.name}
+                    className="flex min-h-12 min-w-0 flex-col items-center justify-center gap-0.5 rounded-full px-1 py-1 text-[10px] font-bold leading-none text-[#073B9A] transition hover:bg-[#073B9A]/10 hover:text-[#073B9A] sm:flex-row sm:gap-2 sm:px-3 sm:text-xs"
                   >
                     <IconComponent size={24} className="h-6 w-6 shrink-0 sm:h-7 sm:w-7" />
-                    <span className="max-w-full truncate">{item.name}</span>
+                    <span lang="fr" className="max-w-full break-words text-center leading-[1.05] [hyphens:auto]">{item.name}</span>
                   </button>
                 );
               }
@@ -1346,15 +805,17 @@ export default function MakutanoPage() {
                     setActiveTab(item.name);
                     recordCategoryPreference(item.name as Post['category']);
                   }}
+                  aria-label={item.name}
+                  aria-pressed={activeTab === item.name}
                   className={cn(
-                    'flex h-12 min-w-0 flex-col items-center justify-center gap-0.5 rounded-full px-1 text-[10px] font-bold leading-none transition sm:flex-row sm:gap-2 sm:px-3 sm:text-xs',
+                    'flex min-h-12 min-w-0 flex-col items-center justify-center gap-0.5 rounded-[1.25rem] px-1 py-1 text-[10px] font-bold leading-none transition sm:flex-row sm:gap-2 sm:rounded-full sm:px-3 sm:text-xs',
                     activeTab === item.name
-                      ? 'bg-[#009058] text-white shadow-[0_8px_18px_rgba(50,187,120,0.24)]'
-                      : 'text-[#009058] hover:bg-[#009058]/10 hover:text-[#009058]'
+                      ? 'bg-[#073B9A] text-white shadow-[0_8px_18px_rgba(7, 59, 154,0.24)]'
+                      : 'text-[#073B9A] hover:bg-[#073B9A]/10 hover:text-[#073B9A]'
                   )}
                 >
                   <IconComponent size={24} className="h-6 w-6 shrink-0 sm:h-7 sm:w-7" />
-                  <span className="max-w-full truncate">{item.name}</span>
+                  <span lang="fr" className="max-w-full break-words text-center leading-[1.05] [hyphens:auto]">{item.name}</span>
                 </button>
               );
             })}
@@ -1364,12 +825,12 @@ export default function MakutanoPage() {
             <button
               type="button"
               onClick={() => router.push(`/dashboard/makutano/profile/${user.uid}`)}
-              className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border border-[#009058]/20 bg-[#009058]/10 shadow-inner transition hover:bg-[#009058]/15"
+              className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border border-[#073B9A]/20 bg-[#073B9A]/10 shadow-inner transition hover:bg-[#073B9A]/15"
               aria-label="Ouvrir mon profil"
             >
               <Avatar className="h-9 w-9 border border-white">
                 <AvatarImage src={profile?.photoURL || profile?.profileImage} />
-                <AvatarFallback className="bg-white text-xs font-black text-[#009058]">
+                <AvatarFallback className="bg-white text-xs font-black text-[#073B9A]">
                   {profile?.displayName?.charAt(0) || profile?.fullName?.charAt(0) || 'U'}
                 </AvatarFallback>
               </Avatar>
@@ -1378,19 +839,19 @@ export default function MakutanoPage() {
         </div>
       </header>
 
-      <section className="border-b border-[#edf3ef] bg-white px-3 py-3">
-        <div className="mx-auto max-w-xl rounded-2xl border border-[#edf3ef] bg-white p-3 shadow-[0_10px_24px_rgba(15,23,42,0.06)]">
+      <section className="border-b border-[#DCE6F8] bg-white px-3 py-3">
+        <div className="mx-auto max-w-xl rounded-2xl border border-[#DCE6F8] bg-white p-3 shadow-[0_10px_24px_rgba(15,23,42,0.06)]">
           <div className="mb-3 flex items-center gap-3">
-            <Avatar className="h-10 w-10 border border-[#e4eee8]">
+            <Avatar className="h-10 w-10 border border-[#DCE6F8]">
               <AvatarImage src={profile?.photoURL || profile?.profileImage} />
-              <AvatarFallback className="bg-primary/10 text-xs font-black text-[#009058]">
+              <AvatarFallback className="bg-primary/10 text-xs font-black text-[#073B9A]">
                 {profile?.displayName?.charAt(0) || profile?.fullName?.charAt(0) || 'U'}
               </AvatarFallback>
             </Avatar>
             <button
               type="button"
               onClick={openCreatePost}
-              className="flex h-11 min-w-0 flex-1 items-center rounded-full bg-slate-100 px-4 text-left text-sm font-semibold text-slate-500 transition hover:bg-[#009058]/10 hover:text-[#009058]"
+              className="flex h-11 min-w-0 flex-1 items-center rounded-full bg-slate-100 px-4 text-left text-sm font-semibold text-slate-500 transition hover:bg-[#073B9A]/10 hover:text-[#073B9A]"
             >
               Quoi de neuf ?
             </button>
@@ -1398,7 +859,7 @@ export default function MakutanoPage() {
         </div>
       </section>
 
-      <section className="border-b border-[#009058] bg-white px-3 py-2">
+      <section className="border-b border-[#073B9A] bg-white px-3 py-2">
         <div className="mx-auto flex max-w-xl gap-2.5 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           <div className="flex w-[66px] flex-shrink-0 flex-col items-center gap-1">
             <div className="relative">
@@ -1409,13 +870,13 @@ export default function MakutanoPage() {
                 }}
                 className={cn(
                   'rounded-full p-0.5',
-                  myStories.length ? 'bg-gradient-to-tr from-[#009058] via-[#009058] to-[#FFA500]' : 'bg-[#009058]'
+                  myStories.length ? 'bg-gradient-to-tr from-[#073B9A] via-[#073B9A] to-[#F51B2B]' : 'bg-[#073B9A]'
                 )}
                 aria-label={myStories.length ? 'Voir ma story' : 'Aucune story'}
               >
                 <Avatar className="h-14 w-14 border-2 border-white">
                   <AvatarImage src={profile?.photoURL || profile?.profileImage} />
-                  <AvatarFallback className="bg-primary/10 text-[#009058]">
+                  <AvatarFallback className="bg-primary/10 text-[#073B9A]">
                     {profile?.displayName?.charAt(0) || profile?.fullName?.charAt(0) || 'U'}
                   </AvatarFallback>
                 </Avatar>
@@ -1423,7 +884,7 @@ export default function MakutanoPage() {
               <button
                 type="button"
                 onClick={handleCreateStory}
-                className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-[#009058] text-white"
+                className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-[#073B9A] text-white"
                 aria-label="Ajouter une story"
               >
                 <MakutanoCreateIcon size={14} />
@@ -1443,11 +904,11 @@ export default function MakutanoPage() {
               >
                 <div className={cn(
                   'rounded-full p-0.5',
-                  contactStory.hasUnviewed ? 'bg-gradient-to-tr from-[#009058] via-[#009058] to-[#FFA500]' : 'bg-[#009058]'
+                  contactStory.hasUnviewed ? 'bg-gradient-to-tr from-[#073B9A] via-[#073B9A] to-[#F51B2B]' : 'bg-[#073B9A]'
                 )}>
                   <Avatar className="h-14 w-14 border-2 border-white">
                     <AvatarImage src={contactStory.userAvatar} />
-                    <AvatarFallback className="bg-primary/10 text-[#009058]">
+                    <AvatarFallback className="bg-primary/10 text-[#073B9A]">
                       {contactStory.userName.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
@@ -1469,7 +930,7 @@ export default function MakutanoPage() {
                 onClick={() => router.push(offer.href)}
                 className="flex w-[66px] flex-shrink-0 flex-col items-center gap-1"
               >
-                <div className="rounded-full bg-gradient-to-tr from-[#009058] via-[#009058] to-[#FFA500] p-0.5">
+                <div className="rounded-full bg-gradient-to-tr from-[#073B9A] via-[#073B9A] to-[#F51B2B] p-0.5">
                   <div className="relative h-14 w-14 overflow-hidden rounded-full border-2 border-white bg-primary/10">
                     <img
                       src={offer.image}
@@ -1477,7 +938,7 @@ export default function MakutanoPage() {
                       className="h-full w-full object-cover"
                       loading="lazy"
                     />
-                    <span className="absolute bottom-0 left-0 right-0 bg-[#009058]/90 px-1 py-0.5 text-[9px] font-bold text-white">
+                    <span className="absolute bottom-0 left-0 right-0 bg-[#073B9A]/90 px-1 py-0.5 text-[9px] font-bold text-white">
                       Offre
                     </span>
                   </div>
@@ -1496,7 +957,7 @@ export default function MakutanoPage() {
       <main
         ref={mainFeedRef}
         onScroll={handleFeedScroll}
-        className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain scroll-auto bg-[#f5f7f6] px-0 pb-24 pt-2 [-webkit-overflow-scrolling:touch] [touch-action:pan-y] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] sm:px-4"
+        className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain scroll-auto bg-[#FFFFFF] px-0 pb-24 pt-2 [-webkit-overflow-scrolling:touch] [touch-action:pan-y] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] sm:px-4"
       >
         {isLoadingPosts ? (
           <div className="flex h-full items-center justify-center text-muted-foreground">
@@ -1596,7 +1057,7 @@ export default function MakutanoPage() {
                   <section key={`places-${item.key}`} className="mx-0 overflow-hidden border-y border-slate-200 bg-white px-3 py-4 shadow-sm sm:rounded-2xl sm:border">
                     <div className="mb-3">
                       <h2 className="text-sm font-black text-slate-950">{item.label}</h2>
-                      <p className="text-xs font-semibold text-slate-500">{location?.label || 'Selon votre localisation eNkamba'}</p>
+                      <p className="text-xs font-semibold text-slate-500">{location?.label || 'Selon votre localisation Kenz'}</p>
                     </div>
                     <div className="flex gap-3 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                       {nearbyPlaces.map((place) => (
@@ -1641,14 +1102,14 @@ export default function MakutanoPage() {
                     className="flex min-w-0 items-center gap-3 rounded-xl text-left transition hover:bg-slate-100"
                     aria-label={`Ouvrir le profil de ${post.author.name}`}
                   >
-                    <Avatar className="h-9 w-9 border border-[#e4eee8]">
+                    <Avatar className="h-9 w-9 border border-[#DCE6F8]">
                       <AvatarImage src={post.author.avatar} />
-                      <AvatarFallback className="bg-primary/10 text-[#009058]">
+                      <AvatarFallback className="bg-primary/10 text-[#073B9A]">
                         {post.author.name.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
-	                      <p className="flex min-w-0 items-center gap-1.5 text-sm font-semibold text-foreground hover:text-[#009058]">
+	                      <p className="flex min-w-0 items-center gap-1.5 text-sm font-semibold text-foreground hover:text-[#073B9A]">
 	                        <span className="truncate">{post.author.name}</span>
 	                        <VerifiedAccountBadge verified={post.author.verified} />
 	                      </p>
@@ -1656,7 +1117,7 @@ export default function MakutanoPage() {
                     </div>
                   </button>
                   <div className="flex items-center gap-2">
-                    <span className="rounded-full bg-primary/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-[#009058]">
+                    <span className="rounded-full bg-primary/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-[#073B9A]">
                       {post.category}
                     </span>
                     <Button
@@ -1682,109 +1143,21 @@ export default function MakutanoPage() {
                   onFullscreen={openFullscreenMedia}
                 />
 
-                <div className="flex-shrink-0 space-y-2 px-3.5 py-3">
-                  {/* Texte du post */}
-                  {post.text && (
-                    <p className="line-clamp-2 text-sm leading-5 text-foreground">
-                      <span className="font-semibold">{post.author.name}</span>{' '}
-                      {post.text}
-                    </p>
-                  )}
-
-                  {/* Actions */}
-                  <div className="flex items-center justify-between border-t border-[#edf3ef] pt-2">
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          void handleLike(post.id);
-                        }}
-                        className={cn(
-                          'touch-manipulation flex h-9 items-center gap-2 rounded-full px-3 text-sm font-semibold transition-all',
-                          post.isLiked
-                            ? 'bg-[#009058] text-white shadow-sm'
-                            : 'bg-primary/5 text-muted-foreground hover:bg-primary/10 hover:text-[#009058]'
-                        )}
-                      >
-                        <MakutanoLikeIcon size={18} />
-                        <span>{post.likes}</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          void handleComment(post.id);
-                        }}
-                        className="touch-manipulation flex h-9 items-center gap-2 rounded-full bg-primary/5 px-3 text-sm font-semibold text-muted-foreground transition-colors hover:bg-primary/10 hover:text-[#009058]"
-                      >
-                        <MakutanoCommentIcon size={18} />
-                        <span>{post.comments}</span>
-                      </button>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleShare(post.id);
-                      }}
-                      className="touch-manipulation flex h-9 w-9 items-center justify-center rounded-full bg-primary/5 text-muted-foreground transition-colors hover:bg-primary/10 hover:text-[#009058]"
-                      aria-label="Partager"
-                    >
-                      <MakutanoShareIcon size={18} />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Section commentaires */}
-                {activeCommentPostId === post.id && (
-                  <div className="border-t border-[#edf3ef] bg-[#fbfdfc] p-4">
-                    <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Commentaires</p>
-                    <div className="mb-3 max-h-44 space-y-2 overflow-y-auto pr-1">
-                      {isLoadingCommentsByPost[post.id] ? (
-                        <p className="text-xs text-muted-foreground">Chargement...</p>
-                      ) : (commentsByPost[post.id] || []).length === 0 ? (
-                        <p className="text-xs text-muted-foreground">Aucun commentaire.</p>
-                      ) : (
-                        (commentsByPost[post.id] || []).map((comment) => (
-                          <div key={comment.id} className="rounded-xl border border-[#edf3ef] bg-white p-3">
-                            <p className="text-xs font-semibold text-foreground">{comment.authorName}</p>
-                            <p className="mt-1 text-xs leading-5 text-muted-foreground">{comment.text}</p>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        value={commentInputByPost[post.id] || ''}
-                        onChange={(e) =>
-                          setCommentInputByPost((prev) => ({ ...prev, [post.id]: e.target.value }))
-                        }
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            void submitComment(post.id);
-                          }
-                        }}
-                        placeholder="Ajouter un commentaire..."
-                        className="h-10 flex-1 rounded-full border-[#009058] bg-white text-sm focus-visible:ring-[#009058]"
-                      />
-                      <Button
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          void submitComment(post.id);
-                        }}
-                        disabled={isSubmittingCommentByPost[post.id]}
-                        className="h-10 rounded-full bg-[#009058] px-4 hover:bg-[#009058]"
-                      >
-                        {isSubmittingCommentByPost[post.id] ? '...' : 'Publier'}
-                      </Button>
-                    </div>
-                  </div>
-                )}
+                <MakutanoPostBody
+                  post={{
+                    id: post.id,
+                    text: post.text,
+                    authorName: post.author.name,
+                    authorId: post.authorId,
+                    likes: post.likes,
+                    comments: post.comments,
+                    reactionCounts: post.reactionCounts,
+                  }}
+                  actor={commentActor}
+                  onOpenProfile={openPublicProfile}
+                  onShare={() => void handleShare(post.id)}
+                  onSignal={(signal) => recordPostSignal(post, signal)}
+                />
                 </article>
               );
             })}
@@ -1814,7 +1187,7 @@ export default function MakutanoPage() {
                 className="max-h-full max-w-full rounded-2xl object-contain"
               />
             ) : fullscreenMedia.type === 'audio' ? (
-              <div className="w-full max-w-xl rounded-3xl bg-[#009058] p-6 shadow-2xl">
+              <div className="w-full max-w-xl rounded-3xl bg-[#073B9A] p-6 shadow-2xl">
                 <p className="mb-4 text-xs font-bold uppercase tracking-[0.18em] text-white/60">Audio Makutano</p>
                 <audio src={fullscreenMedia.src} controls autoPlay className="w-full" />
               </div>

@@ -246,7 +246,8 @@ export function useConversations() {
                       ud.profilePhotoUrl ||
                       ud.kyc?.profileImage ||
                       '';
-                    const name = ud.fullName || ud.displayName || ud.name || ud.email || '';
+                    // ENK-025: never use the e-mail as a display name.
+                    const name = ud.fullName || ud.displayName || ud.name || '';
                     if (avatarUrl) nextAvatars[u.id] = String(avatarUrl);
                     if (name) nextNames[u.id] = String(name);
                   });

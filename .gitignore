@@ -11,6 +11,8 @@
 
 # next.js
 /.next/
+/.next-education-check/
+/.next-invest-check/
 /out/
 
 # production
@@ -60,3 +62,7 @@ google-services*.json
 
 # clerk configuration (can include secrets)
 /.clerk/
+
+# ENK-007 wallet audit output (contains user ids)
+audite/wallet-audit.csv
+audite/makutano-location-backup.json

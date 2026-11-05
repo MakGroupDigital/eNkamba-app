@@ -30,9 +30,9 @@ const plans: AiPlan[] = [
     name: 'Gratuit',
     price: 0,
     period: 'inclus',
-    description: 'Pour découvrir eNkamba AI au quotidien.',
+    description: 'Pour découvrir Kenz AI au quotidien.',
     icon: Sparkles,
-    features: ['Questions simples', 'Historique limité', 'Assistance eNkamba de base', 'Réponses standard'],
+    features: ['Questions simples', 'Historique limité', 'Assistance Kenz de base', 'Réponses standard'],
   },
   {
     id: 'paid',
@@ -100,7 +100,7 @@ export default function AiSubscriptionPage() {
         const currentBalance = Number(userSnap.data()?.walletBalance || 0);
 
         if (amount > 0 && currentBalance < amount) {
-          throw new Error('Solde eNkamba Pay insuffisant');
+          throw new Error('Solde Kenz Pay insuffisant');
         }
 
         if (amount > 0) {
@@ -138,7 +138,7 @@ export default function AiSubscriptionPage() {
           amount,
           paymentMethod: 'enkamba_pay',
           status: 'completed',
-          description: amount > 0 ? `Abonnement eNkamba AI - ${plan.name}` : 'Activation eNkamba AI gratuit',
+          description: amount > 0 ? `Abonnement Kenz AI - ${plan.name}` : 'Activation Kenz AI gratuit',
           previousBalance: currentBalance,
           newBalance: amount > 0 ? currentBalance - amount : currentBalance,
           timestamp: serverTimestamp(),
@@ -154,7 +154,7 @@ export default function AiSubscriptionPage() {
 
       toast({
         title: 'Abonnement activé',
-        description: `${plan.name} est maintenant actif via eNkamba Pay.`,
+        description: `${plan.name} est maintenant actif via Kenz Pay.`,
         className: 'bg-primary text-white border-none',
       });
     } catch (error: any) {
@@ -198,7 +198,7 @@ export default function AiSubscriptionPage() {
   };
 
   return (
-    <main className="h-full overflow-y-auto bg-[#f6fbf8] px-4 pb-36 pt-4 text-foreground sm:px-6">
+    <main className="h-full overflow-y-auto bg-[#FFFFFF] px-4 pb-36 pt-4 text-foreground sm:px-6">
       <div className="mx-auto max-w-6xl">
         <header className="flex items-center justify-between gap-3">
           <Button variant="ghost" size="icon" asChild className="rounded-full">
@@ -207,7 +207,7 @@ export default function AiSubscriptionPage() {
             </Link>
           </Button>
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-primary">eNkamba Pay</p>
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-primary">Kenz Pay</p>
             <h1 className="truncate text-2xl font-black">Mon abonnement IA</h1>
           </div>
           <div className="grid h-12 w-12 place-items-center rounded-full bg-primary/10">
@@ -218,10 +218,10 @@ export default function AiSubscriptionPage() {
         <section className="mt-5 rounded-[2rem] bg-primary p-5 text-white shadow-2xl shadow-primary/20">
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className="text-sm font-bold text-white/70">Solde eNkamba Pay</p>
+              <p className="text-sm font-bold text-white/70">Solde Kenz Pay</p>
               <p className="mt-1 text-3xl font-black">{balance.toLocaleString('fr-FR')} CDF</p>
               <p className="mt-2 max-w-xl text-sm font-medium text-white/75">
-                Choisissez un plan IA. Le paiement est débité directement depuis votre portefeuille eNkamba Pay.
+                Choisissez un plan IA. Le paiement est débité directement depuis votre portefeuille Kenz Pay.
               </p>
             </div>
             <div className="rounded-2xl bg-white/12 px-4 py-3 text-sm font-black backdrop-blur">
@@ -245,7 +245,7 @@ export default function AiSubscriptionPage() {
                   <div className="grid h-12 w-12 place-items-center rounded-2xl bg-primary/10 text-primary">
                     <Icon className="h-6 w-6" />
                   </div>
-                  {plan.highlight && <span className="rounded-full bg-[#FFA500] px-3 py-1 text-[11px] font-black text-white">Populaire</span>}
+                  {plan.highlight && <span className="rounded-full bg-[#F51B2B] px-3 py-1 text-[11px] font-black text-white">Populaire</span>}
                 </div>
                 <h2 className="mt-4 text-xl font-black">{plan.name}</h2>
                 <p className="mt-1 min-h-10 text-sm font-medium text-muted-foreground">{plan.description}</p>
@@ -267,7 +267,7 @@ export default function AiSubscriptionPage() {
                   className="mt-5 w-full rounded-2xl"
                 >
                   <CreditCard className="h-4 w-4" />
-                  {plan.price === 0 ? 'Activer' : 'Payer avec eNkamba Pay'}
+                  {plan.price === 0 ? 'Activer' : 'Payer avec Kenz Pay'}
                 </Button>
               </article>
             );
@@ -283,7 +283,7 @@ export default function AiSubscriptionPage() {
                 </div>
                 <div>
                   <h2 className="text-xl font-black">Startup API</h2>
-                  <p className="text-sm font-medium text-muted-foreground">Pour intégrer eNkamba AI dans une application ou un service externe.</p>
+                  <p className="text-sm font-medium text-muted-foreground">Pour intégrer Kenz AI dans une application ou un service externe.</p>
                 </div>
               </div>
               <div className="mt-4 grid gap-2 sm:grid-cols-3">
@@ -295,7 +295,7 @@ export default function AiSubscriptionPage() {
               </div>
             </div>
 
-            <div className="w-full max-w-sm rounded-[1.5rem] bg-[#f6fbf8] p-4">
+            <div className="w-full max-w-sm rounded-[1.5rem] bg-[#FFFFFF] p-4">
               <label className="text-xs font-black uppercase tracking-[0.16em] text-muted-foreground">Utilisateurs API</label>
               <input
                 type="number"
@@ -327,7 +327,7 @@ export default function AiSubscriptionPage() {
         paymentDetails={
           pendingPlan
             ? {
-                recipient: 'eNkamba AI',
+                recipient: 'Kenz AI',
                 amount: pendingPlan.price.toLocaleString('fr-FR'),
                 currency: 'CDF',
               }

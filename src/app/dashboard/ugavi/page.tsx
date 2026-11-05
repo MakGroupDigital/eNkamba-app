@@ -2,13 +2,13 @@
 
 import { useEffect, useMemo, useRef, useState, type ComponentType, type ReactNode } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Clock, MessageCircle, Phone, Share2, X } from 'lucide-react';
+import { ChevronLeft, Clock, MessageCircle, Phone, Share2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PinVerification } from '@/components/payment/PinVerification';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { useBusinessStatus } from '@/hooks/useBusinessStatus';
+import { useDashboardLocation } from '@/hooks/useDashboardLocation';
 import { addDoc, collection, doc, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { buildUgaviStatusEntry } from '@/lib/ugavi-requests';
@@ -309,7 +309,7 @@ const AGENCIES: Agency[] = [
   },
   {
     id: 'int-guangzhou',
-    name: 'Agence Transitaire Guangzhou eNKAMBA Partner',
+    name: 'Agence Transitaire Guangzhou KENZ Partner',
     scope: 'international',
     zone: 'Baiyun District',
     eta: 'Agence distante',
@@ -455,10 +455,10 @@ function FloatingBadge({
 }) {
   const toneClass =
     tone === 'orange'
-      ? 'border-[#FFA500]/30/70 bg-[#FFA500]/10 shadow-[#FFA500]/10'
+      ? 'border-[#F51B2B]/30 bg-[#F51B2B]/10 shadow-[#F51B2B]/10'
       : tone === 'slate'
         ? 'border-slate-200/70 bg-white/74 shadow-slate-900/10'
-        : 'border-primary/20/70 bg-primary/5/76 shadow-primary/10';
+        : 'border-primary/20 bg-primary/5 shadow-primary/10';
 
   return (
     <div className={`rounded-2xl border p-2 shadow-2xl backdrop-blur-2xl ring-1 ring-white/55 ${toneClass}`}>
@@ -468,6 +468,7 @@ function FloatingBadge({
 }
 
 function AddressAutocompleteInput({
+  label,
   value,
   placeholder,
   Icon,
@@ -479,6 +480,7 @@ function AddressAutocompleteInput({
   onFocus,
   onSelect,
 }: {
+  label: string;
   value: string;
   placeholder: string;
   Icon: CustomIcon;
@@ -492,13 +494,18 @@ function AddressAutocompleteInput({
 }) {
   return (
     <div className="relative">
+      {/* ENK-040: persistent label, the field keeps its meaning once filled. */}
+      <label className="pointer-events-none absolute left-9 top-1.5 text-[10px] font-black uppercase tracking-wide text-slate-500">{label}</label>
       <Icon className={`absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 ${iconClassName}`} />
       <Input
         value={value}
         onChange={(event) => onChange(event.target.value)}
         onFocus={onFocus}
         placeholder={placeholder}
-        className="h-11 rounded-xl border-white/70 bg-white/78 pl-9 shadow-xl backdrop-blur-xl"
+        aria-label={label}
+        autoComplete="off"
+        enterKeyHint="next"
+        className="h-14 rounded-xl border-white/70 bg-white/90 pb-1.5 pl-9 pt-5 text-sm shadow-xl backdrop-blur-xl"
       />
       {isOpen && (isLoading || suggestions.length > 0) && (
         <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-50 overflow-hidden rounded-xl border border-white/70 bg-white/90 shadow-2xl backdrop-blur-xl">
@@ -599,7 +606,7 @@ export default function UgaviPage() {
   const searchParams = useSearchParams();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { businessUser } = useBusinessStatus();
+  const { detectLocation, isLocating, error: locationError } = useDashboardLocation();
   const mapGestureRef = useRef<{
     pointers: Map<number, { x: number; y: number }>;
     pinchDistance: number | null;
@@ -704,6 +711,12 @@ export default function UgaviPage() {
       window.removeEventListener('storage', syncStoredLocation);
     };
   }, []);
+
+  useEffect(() => {
+    if (locationError) {
+      toast({ variant: 'destructive', title: 'Position indisponible', description: `${locationError}. Saisissez l'adresse de départ manuellement.` });
+    }
+  }, [locationError, toast]);
 
   useEffect(() => {
     if (searchParams?.get('panel') === 'client') {
@@ -1291,10 +1304,10 @@ export default function UgaviPage() {
     }
 
     const provisionalCode = `ENK-DEP-${new Date().getFullYear()}-${(selectedAgency.country || 'INT').slice(0, 2).toUpperCase()}-${Date.now().toString().slice(-6)}`;
-    const requesterName = user?.displayName || user?.email || 'Requerant eNKAMBA';
+    const requesterName = user?.displayName || user?.email || 'Requerant KENZ';
     const requesterPhone = user?.phoneNumber || 'Numero non renseigne';
     const instructions = [
-      `Fiche depot eNKAMBA Logistique`,
+      `Fiche depot KENZ Logistique`,
       `Code provisoire: ${provisionalCode}`,
       `Requerant: ${requesterName}`,
       `Telephone requerant: ${requesterPhone}`,
@@ -1372,7 +1385,7 @@ export default function UgaviPage() {
     }
 
     const provisionalCode = `ENK-NAT-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
-    const requesterName = user?.displayName || user?.email || 'Client eNKAMBA';
+    const requesterName = user?.displayName || user?.email || 'Client KENZ';
 
     setIsCreatingNationalDeposit(true);
     try {
@@ -1430,7 +1443,7 @@ export default function UgaviPage() {
     }
 
     const trackingNumber = `ENK-REL-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
-    const requesterName = user?.displayName || user?.email || 'Client eNKAMBA';
+    const requesterName = user?.displayName || user?.email || 'Client KENZ';
 
     setIsCreatingRelayParcel(true);
     try {
@@ -1565,13 +1578,6 @@ export default function UgaviPage() {
     setNationalDepositCode(null);
   };
 
-  const openBusinessArea = () => {
-    if (businessUser?.status === 'APPROVED') {
-      router.push('/dashboard/business-pro?module=LOGISTICS');
-      return;
-    }
-    router.push('/dashboard/settings/business-account');
-  };
 
   const buildExpressTrackingNumber = () => {
     const origin = pickupLocation.slice(0, 3).toUpperCase().replace(/[^A-Z]/g, '') || 'KIN';
@@ -1633,7 +1639,7 @@ export default function UgaviPage() {
       statusHistory: [
         buildUgaviStatusEntry('draft', actorName, pickupLocation, 'Demande livraison creee'),
         ...(options.paidByWallet
-          ? [buildUgaviStatusEntry('payment_confirmed', actorName, 'eNkambaPay', 'Paiement confirme')]
+          ? [buildUgaviStatusEntry('payment_confirmed', actorName, 'Kenz Pay', 'Paiement confirme')]
           : []),
         buildUgaviStatusEntry('assigned', selectedCourier.name, selectedCourier.zone, 'Livreur assigne'),
       ],
@@ -1731,7 +1737,7 @@ export default function UgaviPage() {
 
       toast({
         title: 'Paiement confirme',
-        description: 'Votre portefeuille eNkambapay a ete debite.',
+        description: 'Votre portefeuille Kenz Pay a ete debite.',
         className: 'bg-primary text-white border-none',
       });
       setShowPinDialog(false);
@@ -1886,11 +1892,14 @@ export default function UgaviPage() {
         onWheel={handleMapWheel}
       />
       <div className="pointer-events-none absolute inset-0 bg-white/30 mix-blend-screen" />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(50,187,120,0.08),transparent_45%),linear-gradient(to_bottom,rgba(255,255,255,0.1),rgba(255,255,255,0.45))]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(7, 59, 154,0.08),transparent_45%),linear-gradient(to_bottom,rgba(255,255,255,0.1),rgba(255,255,255,0.45))]" />
 
       <button
         type="button"
-        title="Ma localisation"
+        title="Me localiser"
+        aria-label="Me localiser pour cette course"
+        onClick={detectLocation}
+        disabled={isLocating}
         className="absolute z-20 flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-primary shadow-xl ring-4 ring-primary/25"
         style={markerPosition(userPosition, mapCenter, mapRadius)}
       >
@@ -1914,7 +1923,7 @@ export default function UgaviPage() {
         <button
           type="button"
           title={dropoffLocation}
-          className="absolute z-20 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-full bg-[#FFA500] px-2.5 py-1.5 text-xs font-semibold text-white shadow-lg ring-2 ring-white/80"
+          className="absolute z-20 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-full bg-[#F51B2B] px-2.5 py-1.5 text-xs font-semibold text-white shadow-lg ring-2 ring-white/80"
           style={markerPosition(dropoffPoint, mapCenter, mapRadius)}
         >
           <MapPinIcon size={16} />
@@ -1955,7 +1964,7 @@ export default function UgaviPage() {
             }}
             title={`${courier.name} - ${locomotionLabels[courier.locomotion]}`}
             className={`absolute z-20 flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full shadow-xl ring-2 ring-white/80 ${
-              selectedCourierId === courier.id ? 'bg-[#FFA500] text-white' : 'bg-white text-slate-800'
+              selectedCourierId === courier.id ? 'bg-[#F51B2B] text-white' : 'bg-white text-slate-800'
             }`}
             style={markerPosition(courier, mapCenter, mapRadius)}
           >
@@ -1996,15 +2005,7 @@ export default function UgaviPage() {
             Ugavi
           </p>
         </div>
-        <Button
-          type="button"
-          size="sm"
-          variant="secondary"
-          onClick={openBusinessArea}
-          className="rounded-full bg-white/90 text-slate-800 shadow-lg backdrop-blur hover:bg-white"
-        >
-          Business
-        </Button>
+
       </header>
 
       <div className="absolute right-4 top-24 z-30 flex flex-col gap-2">
@@ -2166,6 +2167,7 @@ export default function UgaviPage() {
               {mode === 'express' && (
                 <div className="space-y-2">
                   <AddressAutocompleteInput
+                    label="Enlèvement"
                     value={pickupLocation}
                     onChange={updatePickupLocation}
                     onFocus={() => setActiveAddressField('pickup')}
@@ -2178,13 +2180,14 @@ export default function UgaviPage() {
                     isOpen={activeAddressField === 'pickup'}
                   />
                   <AddressAutocompleteInput
+                    label="Livraison"
                     value={dropoffLocation}
                     onChange={updateDropoffLocation}
                     onFocus={() => setActiveAddressField('dropoff')}
                     onSelect={(suggestion) => selectAddressSuggestion('dropoff', suggestion)}
                     placeholder="Destination"
                     Icon={UgaviIcon}
-                    iconClassName="text-[#FFA500]"
+                    iconClassName="text-[#F51B2B]"
                     suggestions={addressSuggestions.dropoff}
                     isLoading={isAddressSearchLoading && activeAddressField === 'dropoff'}
                     isOpen={activeAddressField === 'dropoff'}
@@ -2232,6 +2235,7 @@ export default function UgaviPage() {
 
                   <div className="space-y-2">
                     <AddressAutocompleteInput
+                      label="Départ"
                       value={pickupLocation}
                       onChange={updatePickupLocation}
                       onFocus={() => setActiveAddressField('pickup')}
@@ -2243,18 +2247,38 @@ export default function UgaviPage() {
                       isLoading={isAddressSearchLoading && activeAddressField === 'pickup'}
                       isOpen={activeAddressField === 'pickup'}
                     />
+                    <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const nextPickup = dropoffLocation;
+                        const nextPickupPoint = dropoffPoint;
+                        updateDropoffLocation(pickupLocation);
+                        setDropoffPoint(pickupPoint);
+                        updatePickupLocation(nextPickup);
+                        setPickupPoint(nextPickupPoint);
+                      }}
+                      disabled={!pickupLocation && !dropoffLocation}
+                      aria-label="Inverser départ et destination"
+                      title="Inverser"
+                      className="absolute -top-4 right-3 z-10 grid h-8 w-8 place-items-center rounded-full bg-white text-sm font-black text-primary shadow-lg ring-1 ring-primary/15 disabled:opacity-40"
+                    >
+                      ⇅
+                    </button>
                     <AddressAutocompleteInput
+                      label="Destination"
                       value={dropoffLocation}
                       onChange={updateDropoffLocation}
                       onFocus={() => setActiveAddressField('dropoff')}
                       onSelect={(suggestion) => selectAddressSuggestion('dropoff', suggestion)}
                       placeholder={shipmentType === 'international' ? 'Pays ou ville destination' : shipmentType === 'relay' ? 'Point de livraison ou zone' : 'Ville de destination'}
                       Icon={UgaviIcon}
-                      iconClassName="text-[#FFA500]"
+                      iconClassName="text-[#F51B2B]"
                       suggestions={addressSuggestions.dropoff}
                       isLoading={isAddressSearchLoading && activeAddressField === 'dropoff'}
                       isOpen={activeAddressField === 'dropoff'}
                     />
+                    </div>
                     <FloatingBadge tone={shipmentType === 'international' ? 'orange' : 'emerald'}>
                     <div className="flex items-center gap-2">
                       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white shadow-sm">
@@ -2275,17 +2299,18 @@ export default function UgaviPage() {
                           }
                           setSelectedAgencyId(null);
                         }}
-                        className="h-10 min-w-0 flex-1 rounded-2xl border border-white/70 bg-white/90 px-3 text-sm font-semibold text-slate-700 shadow-inner"
+                        aria-label="Mode de transport"
+                        className="h-11 min-w-0 flex-1 rounded-2xl border border-white/70 bg-white/90 px-3 text-sm font-semibold text-slate-700 shadow-inner"
                       >
                         {Object.entries(shipmentType === 'international' ? internationalTransportLabels : shipmentType === 'relay' ? relayDeliveryLabels : nationalTransportLabels).map(([value, label]) => (
                           <option key={value} value={value}>{label}</option>
                         ))}
                       </select>
-                      <Button type="button" onClick={searchAgenciesFromCompactFields} className="h-10 rounded-2xl bg-primary px-4 shadow-lg shadow-primary/15 hover:bg-primary">
-                        Rechercher
-                      </Button>
                     </div>
                     </FloatingBadge>
+                    <Button type="button" onClick={searchAgenciesFromCompactFields} className="h-12 w-full rounded-2xl bg-primary text-base font-black shadow-lg shadow-primary/15 hover:bg-primary">
+                      Rechercher
+                    </Button>
                   </div>
 
                   {false && shipmentType === 'national' && (
@@ -2748,7 +2773,7 @@ export default function UgaviPage() {
                             setDepositInstructions(null);
                             setDepositInstructionCode(null);
                           }}
-                          className={`w-full rounded-2xl border bg-white/78 px-3 py-2 text-left text-sm shadow-lg shadow-[#FFA500]/10 backdrop-blur-xl transition ${
+                          className={`w-full rounded-2xl border bg-white/78 px-3 py-2 text-left text-sm shadow-lg shadow-[#F51B2B]/10 backdrop-blur-xl transition ${
 	                            selectedAgencyId === agency.id ? 'border-primary' : 'border-white/70 hover:border-primary/20'
 	                          }`}
                         >
@@ -2777,9 +2802,9 @@ export default function UgaviPage() {
                   )}
 
                   {shipmentType === 'international' && selectedAgency && (
-                    <div className="space-y-2 rounded-[24px] border border-[#FFA500]/20/80 bg-[#FFA500]/10 p-3 shadow-2xl shadow-[#FFA500]/15 backdrop-blur-2xl ring-1 ring-white/55">
+                    <div className="space-y-2 rounded-[24px] border border-[#F51B2B]/20/80 bg-[#F51B2B]/10 p-3 shadow-2xl shadow-[#F51B2B]/15 backdrop-blur-2xl ring-1 ring-white/55">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-xs font-black uppercase text-[#FFA500]">3. Instructions de depot</p>
+                        <p className="text-xs font-black uppercase text-[#F51B2B]">3. Instructions de depot</p>
                         <button
                           type="button"
                           onClick={() => {
@@ -2855,17 +2880,17 @@ export default function UgaviPage() {
                           <div className="space-y-2">
                             <div className="flex items-center justify-between gap-3">
                               <div>
-                                <p className="text-xs font-black uppercase text-[#FFA500]">Trajet analyse</p>
+                                <p className="text-xs font-black uppercase text-[#F51B2B]">Trajet analyse</p>
                                 <p className="text-sm font-bold text-slate-900">{pickupLocation} → {dropoffLocation}</p>
                               </div>
-                              <span className="rounded-full bg-white px-2 py-1 text-xs font-bold text-[#FFA500]">
+                              <span className="rounded-full bg-white px-2 py-1 text-xs font-bold text-[#F51B2B]">
                                 {deliveryRouteDistance ? `${deliveryRouteDistance.toFixed(1)} km` : 'Distance'}
                               </span>
                             </div>
                             <Button
                               type="button"
                               onClick={() => setDeliveryStep('options')}
-                              className="h-10 w-full rounded-2xl bg-[#FFA500] hover:bg-[#FFA500]"
+                              className="h-10 w-full rounded-2xl bg-[#F51B2B] hover:bg-[#F51B2B]"
                             >
                               Continuer
                             </Button>
@@ -2888,10 +2913,10 @@ export default function UgaviPage() {
                             setConfirmedDeliveryTracking(null);
                             setDeliveryStep('parcel');
                           }}
-                          className="rounded-2xl border border-white/70 bg-white/78 p-3 text-left shadow-xl backdrop-blur-xl transition hover:border-[#FFA500]/30 hover:bg-white/90"
+                          className="rounded-2xl border border-white/70 bg-white/78 p-3 text-left shadow-xl backdrop-blur-xl transition hover:border-[#F51B2B]/30 hover:bg-white/90"
                         >
                           <div className="mb-2 flex items-center justify-between">
-                            <span className="rounded-2xl bg-[#FFA500]/10 p-2 text-[#FFA500]">
+                            <span className="rounded-2xl bg-[#F51B2B]/10 p-2 text-[#F51B2B]">
                               <LocomotionIcon type={courier.locomotion} />
                             </span>
                             <span className="text-xs font-bold text-primary">Disponible</span>
@@ -2905,10 +2930,10 @@ export default function UgaviPage() {
                   )}
 
                   {deliveryStep === 'parcel' && selectedCourier && (
-                    <div className="space-y-2 rounded-[24px] border border-[#FFA500]/20/80 bg-[#FFA500]/10 p-3 shadow-2xl shadow-[#FFA500]/15 backdrop-blur-2xl ring-1 ring-white/55">
+                    <div className="space-y-2 rounded-[24px] border border-[#F51B2B]/20/80 bg-[#F51B2B]/10 p-3 shadow-2xl shadow-[#F51B2B]/15 backdrop-blur-2xl ring-1 ring-white/55">
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
-                          <span className="rounded-2xl bg-white p-2 text-[#FFA500] shadow-sm">
+                          <span className="rounded-2xl bg-white p-2 text-[#F51B2B] shadow-sm">
                             <LocomotionIcon type={selectedCourier.locomotion} />
                           </span>
                           <div>
@@ -2997,7 +3022,7 @@ export default function UgaviPage() {
                       </div>
                       <div className="grid grid-cols-2 gap-2">
                       {[
-                        { id: 'wallet', label: 'eNkambapay' },
+                        { id: 'wallet', label: 'Kenz Pay' },
                         { id: 'cod', label: 'A la livraison' },
                       ].map((item) => (
                         <button
@@ -3014,7 +3039,7 @@ export default function UgaviPage() {
                   )}
 
                   {deliveryStep === 'payment' && selectedCourier && paymentChoice && (
-                    <Button onClick={confirmExpressDelivery} className="h-11 w-full rounded-2xl bg-[#FFA500] hover:bg-[#FFA500]">
+                    <Button onClick={confirmExpressDelivery} className="h-11 w-full rounded-2xl bg-[#F51B2B] hover:bg-[#F51B2B]">
                       Confirmer et envoyer
                     </Button>
                   )}
@@ -3090,10 +3115,11 @@ export default function UgaviPage() {
       <button
         type="button"
         onClick={() => setIsClientPanelOpen(true)}
-        className="absolute left-0 top-1/2 z-40 flex -translate-y-1/2 items-center gap-1 rounded-r-2xl bg-slate-950/90 px-2 py-4 text-xs font-semibold text-white shadow-2xl backdrop-blur transition hover:bg-slate-900"
+        aria-label="Ouvrir mes colis"
+        className="absolute left-3 top-1/2 z-40 flex min-h-11 -translate-y-1/2 items-center gap-1.5 rounded-full bg-white px-3 text-xs font-bold text-primary shadow-lg ring-1 ring-primary/20 transition hover:bg-primary/5"
       >
-        <ChevronRight className="h-4 w-4" />
-        <span className="hidden [writing-mode:vertical-rl] sm:inline">Mes colis</span>
+        <TrackPackageIcon size={18} />
+        <span>Mes colis</span>
       </button>
 
       {isClientPanelOpen && (
@@ -3136,7 +3162,7 @@ export default function UgaviPage() {
               <div className="grid grid-cols-2 gap-2">
                 {[
                   { label: 'Livraisons', value: recentShipments.length, tone: 'bg-primary/5 text-primary' },
-                  { label: 'A deposer', value: recentShipments.filter((item) => item.status === 'En attente').length, tone: 'bg-[#FFA500]/10 text-[#FFA500]' },
+                  { label: 'A deposer', value: recentShipments.filter((item) => item.status === 'En attente').length, tone: 'bg-[#F51B2B]/10 text-[#F51B2B]' },
                   { label: 'En transit', value: recentShipments.filter((item) => item.status === 'En transit').length, tone: 'bg-blue-50 text-blue-700' },
                   { label: 'Livres', value: recentShipments.filter((item) => item.status === 'Livre').length, tone: 'bg-slate-100 text-slate-700' },
                 ].map((section) => (

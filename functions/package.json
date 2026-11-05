@@ -1,6 +1,6 @@
 {
   "name": "enkamba-functions",
-  "description": "Cloud Functions for eNkamba",
+  "description": "Cloud Functions for Kenz",
   "scripts": {
     "build": "tsc",
     "serve": "firebase emulators:start --only functions",

@@ -21,27 +21,27 @@ export const DepositTransactionIcon = ({ className, size = 24 }: IconProps) => (
   >
     <defs>
       <linearGradient id="depositGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#009058" />
-        <stop offset="100%" stopColor="#009058" />
+        <stop offset="0%" stopColor="#073B9A" />
+        <stop offset="100%" stopColor="#073B9A" />
       </linearGradient>
     </defs>
     {/* Portefeuille/Coffre */}
     <rect x="8" y="24" width="32" height="18" rx="3" fill="url(#depositGrad)" />
-    <rect x="12" y="28" width="24" height="10" rx="2" fill="#009058" />
+    <rect x="12" y="28" width="24" height="10" rx="2" fill="#073B9A" />
     {/* Symbole dollar */}
-    <circle cx="24" cy="33" r="4" fill="#009058" />
+    <circle cx="24" cy="33" r="4" fill="#073B9A" />
     <text x="24" y="36" textAnchor="middle" fontSize="6" fill="#fff" fontWeight="bold">$</text>
     {/* Flèche descendante (argent qui entre) */}
-    <path d="M24 4V20" stroke="#009058" strokeWidth="3" strokeLinecap="round" />
-    <path d="M18 14L24 20L30 14" stroke="#009058" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    <path d="M24 4V20" stroke="#073B9A" strokeWidth="3" strokeLinecap="round" />
+    <path d="M18 14L24 20L30 14" stroke="#073B9A" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="none" />
     {/* Pièces qui tombent */}
-    <circle cx="16" cy="8" r="3" fill="#FFA500" />
+    <circle cx="16" cy="8" r="3" fill="#F51B2B" />
     <text x="16" y="10" textAnchor="middle" fontSize="4" fill="#fff" fontWeight="bold">$</text>
-    <circle cx="32" cy="12" r="3" fill="#FFA500" />
+    <circle cx="32" cy="12" r="3" fill="#F51B2B" />
     <text x="32" y="14" textAnchor="middle" fontSize="4" fill="#fff" fontWeight="bold">$</text>
     {/* Sparkles */}
-    <circle cx="12" cy="20" r="1.5" fill="#009058" opacity="0.6" />
-    <circle cx="36" cy="18" r="1.5" fill="#009058" opacity="0.6" />
+    <circle cx="12" cy="20" r="1.5" fill="#073B9A" opacity="0.6" />
+    <circle cx="36" cy="18" r="1.5" fill="#073B9A" opacity="0.6" />
   </svg>
 );
 
@@ -71,8 +71,8 @@ export const WithdrawalTransactionIcon = ({ className, size = 24 }: IconProps) =
     <path d="M24 18V4" stroke="#E53935" strokeWidth="3" strokeLinecap="round" />
     <path d="M18 10L24 4L30 10" stroke="#E53935" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="none" />
     {/* Billets qui sortent */}
-    <rect x="14" y="6" width="8" height="5" rx="1" fill="#FFA500" />
-    <rect x="26" y="8" width="8" height="5" rx="1" fill="#FFA500" />
+    <rect x="14" y="6" width="8" height="5" rx="1" fill="#F51B2B" />
+    <rect x="26" y="8" width="8" height="5" rx="1" fill="#F51B2B" />
     {/* Lignes de mouvement */}
     <path d="M10 14L6 14" stroke="#E53935" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
     <path d="M38 16L42 16" stroke="#E53935" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
@@ -91,24 +91,24 @@ export const SendTransactionIcon = ({ className, size = 24 }: IconProps) => (
   >
     <defs>
       <linearGradient id="sendTxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#FFA500" />
-        <stop offset="100%" stopColor="#FFA500" />
+        <stop offset="0%" stopColor="#F51B2B" />
+        <stop offset="100%" stopColor="#F51B2B" />
       </linearGradient>
     </defs>
     {/* Enveloppe */}
     <path d="M6 14H42V34C42 36.2 40.2 38 38 38H10C7.8 38 6 36.2 6 34V14Z" fill="url(#sendTxGrad)" />
     {/* Rabat */}
     <path d="M6 14L24 26L42 14" stroke="#fff" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M6 14L24 24L42 14" fill="#FFA500" />
+    <path d="M6 14L24 24L42 14" fill="#F51B2B" />
     {/* Symbole dollar sur l'enveloppe */}
     <circle cx="24" cy="28" r="5" fill="#fff" opacity="0.9" />
-    <text x="24" y="31" textAnchor="middle" fontSize="6" fill="#FFA500" fontWeight="bold">$</text>
+    <text x="24" y="31" textAnchor="middle" fontSize="6" fill="#F51B2B" fontWeight="bold">$</text>
     {/* Flèche d'envoi rapide */}
-    <path d="M34 8L42 12L34 16" stroke="#009058" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-    <path d="M42 12H30" stroke="#009058" strokeWidth="2.5" strokeLinecap="round" />
+    <path d="M34 8L42 12L34 16" stroke="#073B9A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    <path d="M42 12H30" stroke="#073B9A" strokeWidth="2.5" strokeLinecap="round" />
     {/* Lignes de vitesse */}
-    <path d="M28 6L32 6" stroke="#009058" strokeWidth="1.5" strokeLinecap="round" opacity="0.6" />
-    <path d="M26 10L30 10" stroke="#009058" strokeWidth="1.5" strokeLinecap="round" opacity="0.6" />
+    <path d="M28 6L32 6" stroke="#073B9A" strokeWidth="1.5" strokeLinecap="round" opacity="0.6" />
+    <path d="M26 10L30 10" stroke="#073B9A" strokeWidth="1.5" strokeLinecap="round" opacity="0.6" />
   </svg>
 );
 
@@ -124,8 +124,8 @@ export const ReceiveTransactionIcon = ({ className, size = 24 }: IconProps) => (
   >
     <defs>
       <linearGradient id="receiveTxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#009058" />
-        <stop offset="100%" stopColor="#009058" />
+        <stop offset="0%" stopColor="#073B9A" />
+        <stop offset="100%" stopColor="#073B9A" />
       </linearGradient>
     </defs>
     {/* Main ouverte (paume) */}
@@ -135,17 +135,17 @@ export const ReceiveTransactionIcon = ({ className, size = 24 }: IconProps) => (
     {/* Paume */}
     <path d="M8 28C8 32 12 36 20 38C28 36 36 32 36 28H8Z" fill="url(#receiveTxGrad)" />
     {/* Poignet */}
-    <rect x="14" y="38" width="16" height="6" rx="2" fill="#009058" />
+    <rect x="14" y="38" width="16" height="6" rx="2" fill="#073B9A" />
     {/* Billets qui tombent dans la main */}
-    <rect x="18" y="4" width="12" height="8" rx="1" fill="#FFA500" />
-    <circle cx="24" cy="8" r="3" fill="#FFA500" />
+    <rect x="18" y="4" width="12" height="8" rx="1" fill="#F51B2B" />
+    <circle cx="24" cy="8" r="3" fill="#F51B2B" />
     <text x="24" y="10" textAnchor="middle" fontSize="4" fill="#fff" fontWeight="bold">$</text>
     {/* Flèche descendante */}
-    <path d="M24 14V22" stroke="#FFA500" strokeWidth="2" strokeLinecap="round" />
-    <path d="M20 18L24 22L28 18" stroke="#FFA500" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    <path d="M24 14V22" stroke="#F51B2B" strokeWidth="2" strokeLinecap="round" />
+    <path d="M20 18L24 22L28 18" stroke="#F51B2B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
     {/* Sparkles */}
-    <circle cx="10" cy="24" r="1.5" fill="#009058" />
-    <circle cx="38" cy="24" r="1.5" fill="#009058" />
+    <circle cx="10" cy="24" r="1.5" fill="#073B9A" />
+    <circle cx="38" cy="24" r="1.5" fill="#073B9A" />
   </svg>
 );
 
@@ -176,11 +176,11 @@ export const PaymentTransactionIcon = ({ className, size = 24 }: IconProps) => (
     <rect x="20" y="28" width="12" height="2" rx="1" fill="#fff" opacity="0.6" />
     <rect x="20" y="32" width="8" height="2" rx="1" fill="#fff" opacity="0.6" />
     {/* Check de validation */}
-    <circle cx="38" cy="10" r="8" fill="#009058" />
+    <circle cx="38" cy="10" r="8" fill="#073B9A" />
     <path d="M34 10L37 13L42 8" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
     {/* Ondes de paiement sans contact */}
-    <path d="M26 10C28 10 30 12 30 14" stroke="#009058" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.7" />
-    <path d="M24 8C27 8 30 11 30 14" stroke="#009058" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.5" />
+    <path d="M26 10C28 10 30 12 30 14" stroke="#073B9A" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.7" />
+    <path d="M24 8C27 8 30 11 30 14" stroke="#073B9A" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.5" />
   </svg>
 );
 
@@ -209,13 +209,13 @@ export const RequestTransactionIcon = ({ className, size = 24 }: IconProps) => (
     {/* Poignet */}
     <rect x="16" y="36" width="16" height="6" rx="2" fill="#7B1FA2" />
     {/* Bulle de demande avec point d'interrogation */}
-    <circle cx="26" cy="40" r="6" fill="#FFA500" />
+    <circle cx="26" cy="40" r="6" fill="#F51B2B" />
     <text x="26" y="44" textAnchor="middle" fontSize="8" fill="#fff" fontWeight="bold">?</text>
     {/* Symbole dollar flottant */}
-    <circle cx="8" cy="8" r="4" fill="#009058" />
+    <circle cx="8" cy="8" r="4" fill="#073B9A" />
     <text x="8" y="10" textAnchor="middle" fontSize="5" fill="#fff" fontWeight="bold">$</text>
     {/* Flèches pointillées */}
-    <path d="M12 10L18 16" stroke="#009058" strokeWidth="1.5" strokeDasharray="2 2" strokeLinecap="round" opacity="0.6" />
+    <path d="M12 10L18 16" stroke="#073B9A" strokeWidth="1.5" strokeDasharray="2 2" strokeLinecap="round" opacity="0.6" />
   </svg>
 );
 
@@ -231,30 +231,30 @@ export const SavingsTransactionIcon = ({ className, size = 24 }: IconProps) => (
   >
     <defs>
       <linearGradient id="savingsTxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#009058" />
-        <stop offset="100%" stopColor="#009058" />
+        <stop offset="0%" stopColor="#073B9A" />
+        <stop offset="100%" stopColor="#073B9A" />
       </linearGradient>
     </defs>
     {/* Corps de la tirelire */}
     <ellipse cx="24" cy="26" rx="16" ry="12" fill="url(#savingsTxGrad)" />
     {/* Fente pour pièces */}
-    <rect x="18" y="16" width="12" height="3" rx="1.5" fill="#009058" />
+    <rect x="18" y="16" width="12" height="3" rx="1.5" fill="#073B9A" />
     {/* Pattes */}
-    <rect x="12" y="34" width="4" height="6" rx="2" fill="#009058" />
-    <rect x="32" y="34" width="4" height="6" rx="2" fill="#009058" />
+    <rect x="12" y="34" width="4" height="6" rx="2" fill="#073B9A" />
+    <rect x="32" y="34" width="4" height="6" rx="2" fill="#073B9A" />
     {/* Oreille */}
-    <ellipse cx="36" cy="20" rx="4" ry="3" fill="#009058" stroke="#009058" strokeWidth="1" />
+    <ellipse cx="36" cy="20" rx="4" ry="3" fill="#073B9A" stroke="#073B9A" strokeWidth="1" />
     {/* Queue en tire-bouchon */}
-    <path d="M38 28C40 28 40 30 38 30C36 30 36 32 38 32" stroke="#009058" strokeWidth="2" fill="none" strokeLinecap="round" />
+    <path d="M38 28C40 28 40 30 38 30C36 30 36 32 38 32" stroke="#073B9A" strokeWidth="2" fill="none" strokeLinecap="round" />
     {/* Œil */}
     <circle cx="32" cy="24" r="2" fill="#fff" />
-    <circle cx="32.5" cy="24" r="1" fill="#009058" />
+    <circle cx="32.5" cy="24" r="1" fill="#073B9A" />
     {/* Pièce qui tombe */}
-    <circle cx="24" cy="8" r="5" fill="#FFA500" stroke="#FFA500" strokeWidth="1" />
+    <circle cx="24" cy="8" r="5" fill="#F51B2B" stroke="#F51B2B" strokeWidth="1" />
     <text x="24" y="11" textAnchor="middle" fontSize="6" fill="#fff" fontWeight="bold">$</text>
     {/* Lignes de mouvement */}
-    <path d="M20 10L22 12" stroke="#FFA500" strokeWidth="1" strokeLinecap="round" opacity="0.5" />
-    <path d="M28 10L26 12" stroke="#FFA500" strokeWidth="1" strokeLinecap="round" opacity="0.5" />
+    <path d="M20 10L22 12" stroke="#F51B2B" strokeWidth="1" strokeLinecap="round" opacity="0.5" />
+    <path d="M28 10L26 12" stroke="#F51B2B" strokeWidth="1" strokeLinecap="round" opacity="0.5" />
     {/* Sparkles */}
     <path d="M40 12L41 14L43 13L42 15L44 16L42 16L41 18L40 16L38 16L40 15L39 13L41 14L40 12Z" fill="#FFE066" />
   </svg>
@@ -277,27 +277,27 @@ export const BulkPaymentTransactionIcon = ({ className, size = 24 }: IconProps) 
       </linearGradient>
     </defs>
     {/* Personne 1 */}
-    <circle cx="12" cy="12" r="4" fill="#009058" />
-    <path d="M8 18C8 16 10 16 12 16C14 16 16 16 16 18V24H8V18Z" fill="#009058" />
+    <circle cx="12" cy="12" r="4" fill="#073B9A" />
+    <path d="M8 18C8 16 10 16 12 16C14 16 16 16 16 18V24H8V18Z" fill="#073B9A" />
     {/* Personne 2 (centrale) */}
     <circle cx="24" cy="10" r="5" fill="url(#bulkPayTxGrad)" />
     <path d="M18 18C18 15 21 15 24 15C27 15 30 15 30 18V26H18V18Z" fill="url(#bulkPayTxGrad)" />
     {/* Personne 3 */}
-    <circle cx="36" cy="12" r="4" fill="#FFA500" />
-    <path d="M32 18C32 16 34 16 36 16C38 16 40 16 40 18V24H32V18Z" fill="#FFA500" />
+    <circle cx="36" cy="12" r="4" fill="#F51B2B" />
+    <path d="M32 18C32 16 34 16 36 16C38 16 40 16 40 18V24H32V18Z" fill="#F51B2B" />
     {/* Billets distribués */}
-    <rect x="10" y="30" width="8" height="6" rx="1" fill="#009058" />
+    <rect x="10" y="30" width="8" height="6" rx="1" fill="#073B9A" />
     <text x="14" y="35" textAnchor="middle" fontSize="4" fill="#fff" fontWeight="bold">$</text>
     <rect x="20" y="32" width="8" height="6" rx="1" fill="#9C27B0" />
     <text x="24" y="37" textAnchor="middle" fontSize="4" fill="#fff" fontWeight="bold">$</text>
-    <rect x="30" y="30" width="8" height="6" rx="1" fill="#FFA500" />
+    <rect x="30" y="30" width="8" height="6" rx="1" fill="#F51B2B" />
     <text x="34" y="35" textAnchor="middle" fontSize="4" fill="#fff" fontWeight="bold">$</text>
     {/* Flèches de distribution */}
-    <path d="M14 26L14 30" stroke="#009058" strokeWidth="1.5" strokeLinecap="round" />
+    <path d="M14 26L14 30" stroke="#073B9A" strokeWidth="1.5" strokeLinecap="round" />
     <path d="M24 28L24 32" stroke="#9C27B0" strokeWidth="1.5" strokeLinecap="round" />
-    <path d="M34 26L34 30" stroke="#FFA500" strokeWidth="1.5" strokeLinecap="round" />
+    <path d="M34 26L34 30" stroke="#F51B2B" strokeWidth="1.5" strokeLinecap="round" />
     {/* Source centrale */}
-    <circle cx="24" cy="42" r="4" fill="#009058" />
+    <circle cx="24" cy="42" r="4" fill="#073B9A" />
     <text x="24" y="45" textAnchor="middle" fontSize="5" fill="#fff" fontWeight="bold">$</text>
   </svg>
 );
@@ -314,28 +314,28 @@ export const TransferTransactionIcon = ({ className, size = 24 }: IconProps) => 
   >
     <defs>
       <linearGradient id="transferTxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#FFA500" />
-        <stop offset="100%" stopColor="#FFA500" />
+        <stop offset="0%" stopColor="#F51B2B" />
+        <stop offset="100%" stopColor="#F51B2B" />
       </linearGradient>
     </defs>
     {/* Portefeuille gauche */}
     <rect x="4" y="16" width="16" height="16" rx="2" fill="url(#transferTxGrad)" />
-    <rect x="6" y="18" width="12" height="10" rx="1" fill="#FFA500" />
-    <circle cx="12" cy="23" r="3" fill="#FFA500" />
+    <rect x="6" y="18" width="12" height="10" rx="1" fill="#F51B2B" />
+    <circle cx="12" cy="23" r="3" fill="#F51B2B" />
     <text x="12" y="25" textAnchor="middle" fontSize="4" fill="#fff" fontWeight="bold">$</text>
     {/* Portefeuille droit */}
-    <rect x="28" y="16" width="16" height="16" rx="2" fill="#009058" />
-    <rect x="30" y="18" width="12" height="10" rx="1" fill="#009058" />
-    <circle cx="36" cy="23" r="3" fill="#009058" />
+    <rect x="28" y="16" width="16" height="16" rx="2" fill="#073B9A" />
+    <rect x="30" y="18" width="12" height="10" rx="1" fill="#073B9A" />
+    <circle cx="36" cy="23" r="3" fill="#073B9A" />
     <text x="36" y="25" textAnchor="middle" fontSize="4" fill="#fff" fontWeight="bold">$</text>
     {/* Flèches d'échange */}
-    <path d="M20 20L28 20" stroke="#009058" strokeWidth="2.5" strokeLinecap="round" />
-    <path d="M25 17L28 20L25 23" stroke="#009058" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-    <path d="M28 28L20 28" stroke="#FFA500" strokeWidth="2.5" strokeLinecap="round" />
-    <path d="M23 25L20 28L23 31" stroke="#FFA500" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    <path d="M20 20L28 20" stroke="#073B9A" strokeWidth="2.5" strokeLinecap="round" />
+    <path d="M25 17L28 20L25 23" stroke="#073B9A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    <path d="M28 28L20 28" stroke="#F51B2B" strokeWidth="2.5" strokeLinecap="round" />
+    <path d="M23 25L20 28L23 31" stroke="#F51B2B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
     {/* Billet en transit */}
     <rect x="20" y="6" width="8" height="5" rx="1" fill="#FFD700" />
-    <text x="24" y="10" textAnchor="middle" fontSize="3" fill="#FFA500" fontWeight="bold">$</text>
+    <text x="24" y="10" textAnchor="middle" fontSize="3" fill="#F51B2B" fontWeight="bold">$</text>
   </svg>
 );
 

@@ -58,7 +58,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
     if (isLoading) {
         return (
-            <div className="flex h-screen w-full items-center justify-center bg-gradient-to-br from-[#009058] via-[#009058] to-[#009058]">
+            <div className="flex h-screen w-full items-center justify-center bg-gradient-to-br from-[#073B9A] via-[#073B9A] to-[#073B9A]">
                 <style>{`
                     @keyframes spin-smooth {
                         from { transform: rotate(0deg); }
@@ -101,8 +101,8 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
                             {/* Logo Image - Cropped in Circle */}
                             <div className="relative z-10 float w-full h-full flex items-center justify-center">
                                 <Image
-                                    src="/enkamba-logo.png"
-                                    alt="eNkamba"
+                                    src="/kenz-logo.png"
+                                    alt="Kenz"
                                     width={160}
                                     height={160}
                                     className="drop-shadow-lg object-cover w-full h-full"

@@ -161,7 +161,7 @@ export function UnifiedReceiveFlow({
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Paiement eNkamba',
+          title: 'Paiement Kenz',
           text: `Payez ${amount ? amount + ' CDF' : 'un montant'} à ${profile?.fullName}`,
           url: paymentLink.url,
         });

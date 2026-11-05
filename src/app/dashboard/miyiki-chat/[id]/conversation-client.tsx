@@ -19,6 +19,7 @@ import { MoneyTransferMessage } from '@/components/chat/MoneyTransferMessage';
 import { useLocationSharing } from '@/hooks/useLocationSharing';
 import { useChatMoneyTransfer } from '@/hooks/useChatMoneyTransfer';
 import { uploadToCloudinary } from '@/lib/cloudinary-upload';
+import { VOICE_CONSTRAINTS, fileExtensionFor, formatClock, microphoneErrorMessage, pickRecorderMimeType, validateRecording } from '@/lib/media-recording';
 import { Ban, Bell, BellOff, Camera, ChevronLeft, Flag, Image as ImageIcon, ScanLine, Send, Loader2, Mail, Phone, Mic, Video, MapPin, DollarSign, Paperclip, Plus, X, Check, Square, Settings, ShieldAlert, UserMinus, Users, Trash2, Edit2, MoreVertical, Languages, SmilePlus } from 'lucide-react';
 import Link from 'next/link';
 import { GroupSettingsDialog } from '@/components/group-settings-dialog';
@@ -27,6 +28,7 @@ import { EnkambaSmartKeyboard } from '@/components/chat/EnkambaSmartKeyboard';
 import type { EnkambaKeyboardItem } from '@/lib/enkamba-keyboard';
 import { getNativeAcceptedCallId } from '@/lib/native-call-access';
 import { hasNativeCallEngine, startNativeChatCall } from '@/lib/native-calls';
+import { displayIdentity } from '@/lib/display-identity';
 
 type IncomingCallDoc = {
     id: string;
@@ -134,9 +136,20 @@ export default function ConversationClient() {
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const streamRef = useRef<MediaStream | null>(null);
     const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const recordingStartedAtRef = useRef(0);
+    const discardRecordingRef = useRef(false);
+    const mediaSourcesRef = useRef<WeakMap<HTMLMediaElement, MediaElementAudioSourceNode>>(new WeakMap());
     const videoPreviewRef = useRef<HTMLVideoElement>(null);
     const audioContextRef = useRef<AudioContext | null>(null);
     const { typingUsers, sendTyping, stopTyping } = useChatRealtime(conversationId, currentUser?.uid);
+    // One object URL per recording (a new URL on every render restarted the preview and leaked memory).
+    const recordingPreviewUrl = useMemo(() => (recordingBlob ? URL.createObjectURL(recordingBlob) : ''), [recordingBlob]);
+    useEffect(() => () => { if (recordingPreviewUrl) URL.revokeObjectURL(recordingPreviewUrl); }, [recordingPreviewUrl]);
+    useEffect(() => () => {
+        discardRecordingRef.current = true;
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') mediaRecorderRef.current.stop();
+        streamRef.current?.getTracks().forEach((track) => track.stop());
+    }, []);
 
     useEffect(() => {
         window.dispatchEvent(
@@ -385,7 +398,7 @@ export default function ConversationClient() {
 
                             const contactData = {
                                 id: otherUid,
-                                name: participantNames[otherParticipantIdx],
+                                name: displayIdentity(participantNames[otherParticipantIdx]),
                                 phoneNumber: convData.phoneNumber || '',
                                 email: convData.email || '',
                                 avatar: avatarUrl || undefined,
@@ -875,7 +888,7 @@ export default function ConversationClient() {
             setReplyingTo(null);
             setShowSmartKeyboard(false);
         } catch (error) {
-            console.error('Erreur envoi clavier eNkamba:', error);
+            console.error('Erreur envoi clavier Kenz:', error);
             alert(error instanceof Error ? error.message : "L'element n'a pas pu etre envoye.");
         } finally {
             setIsSending(false);
@@ -915,10 +928,17 @@ export default function ConversationClient() {
         }
         
         const audioContext = audioContextRef.current;
-        const source = audioContext.createMediaElementSource(audioElement);
+        if (audioContext.state === 'suspended') void audioContext.resume();
+        // An element can only be connected once; reconnecting throws and broke replays (ENK-009).
+        let source = mediaSourcesRef.current.get(audioElement);
+        if (!source) {
+            source = audioContext.createMediaElementSource(audioElement);
+            mediaSourcesRef.current.set(audioElement, source);
+        }
         const analyser = audioContext.createAnalyser();
         analyser.fftSize = 256;
         
+        source.disconnect();
         source.connect(analyser);
         analyser.connect(audioContext.destination);
         
@@ -942,93 +962,82 @@ export default function ConversationClient() {
         animate();
     };
 
-    // Envoyer un message vocal
-    const handleVoiceMessage = async () => {
+    // Shared recorder lifecycle for voice and video notes (ENK-009): real format, real duration,
+    // microphone released on stop, interruption (call, permission revoked) ends the take cleanly.
+    const startMediaRecording = async (kind: 'audio' | 'video') => {
+        if (isRecording) return;
+        let stream: MediaStream;
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            streamRef.current = stream;
-            const mediaRecorder = new MediaRecorder(stream);
-            mediaRecorderRef.current = mediaRecorder;
-            setIsRecording(true);
-            setRecordingType('audio');
-            setRecordingDuration(0);
-
-            const chunks: BlobPart[] = [];
-            mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
-            mediaRecorder.onstop = () => {
-                const blob = new Blob(chunks, { type: 'audio/wav' });
-                setRecordingBlob(blob);
-            };
-
-            mediaRecorder.start();
-
-            // Timer pour la durée
-            recordingTimerRef.current = setInterval(() => {
-                setRecordingDuration((d) => d + 1);
-            }, 1000);
+            stream = await navigator.mediaDevices.getUserMedia(kind === 'audio' ? { audio: VOICE_CONSTRAINTS } : { video: true, audio: VOICE_CONSTRAINTS });
         } catch (err) {
-            console.error('Erreur accès microphone:', err);
-            alert('Impossible d\'accéder au microphone');
-            setIsRecording(false);
-            setRecordingType(null);
+            console.error('Erreur accès micro/caméra:', err);
+            alert(kind === 'audio' ? microphoneErrorMessage(err) : "Impossible d'accéder à la caméra ou au micro.");
+            return;
         }
+
+        streamRef.current = stream;
+        if (kind === 'video' && videoPreviewRef.current) videoPreviewRef.current.srcObject = stream;
+
+        const mimeType = pickRecorderMimeType(kind);
+        const mediaRecorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+        mediaRecorderRef.current = mediaRecorder;
+        discardRecordingRef.current = false;
+        setRecordingBlob(null);
+        setRecordingType(kind);
+        setRecordingDuration(0);
+        setIsRecording(true);
+
+        const chunks: BlobPart[] = [];
+        mediaRecorder.ondataavailable = (event) => { if (event.data && event.data.size > 0) chunks.push(event.data); };
+        mediaRecorder.onstop = () => {
+            const elapsed = (performance.now() - recordingStartedAtRef.current) / 1000;
+            stream.getTracks().forEach((track) => track.stop());
+            if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+            setIsRecording(false);
+            if (discardRecordingRef.current) return;
+
+            const blob = new Blob(chunks, { type: mediaRecorder.mimeType || mimeType || (kind === 'audio' ? 'audio/webm' : 'video/webm') });
+            const problem = validateRecording(blob, elapsed);
+            if (problem) {
+                alert(problem);
+                setRecordingType(null);
+                setRecordingDuration(0);
+                return;
+            }
+            setRecordingDuration(Math.round(elapsed));
+            setRecordingBlob(blob);
+        };
+        // A track ending on its own means the device took the mic/camera away: keep what was recorded.
+        stream.getTracks().forEach((track) => {
+            track.onended = () => { if (mediaRecorder.state !== 'inactive') mediaRecorder.stop(); };
+        });
+
+        recordingStartedAtRef.current = performance.now();
+        mediaRecorder.start(1000);
+        recordingTimerRef.current = setInterval(() => {
+            setRecordingDuration(Math.floor((performance.now() - recordingStartedAtRef.current) / 1000));
+        }, 250);
     };
+
+    const handleVoiceMessage = () => startMediaRecording('audio');
 
     // Arrêter l'enregistrement en cours
     const stopRecordingNow = () => {
-        if (mediaRecorderRef.current && isRecording) {
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
             mediaRecorderRef.current.stop();
-            setIsRecording(false);
-        }
-        if (recordingTimerRef.current) {
-            clearInterval(recordingTimerRef.current);
         }
     };
 
     // Envoyer un message vidéo
-    const handleVideoMessage = async () => {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-            streamRef.current = stream;
-            
-            // Afficher le flux vidéo dans la preview
-            if (videoPreviewRef.current) {
-                videoPreviewRef.current.srcObject = stream;
-            }
-            
-            const mediaRecorder = new MediaRecorder(stream);
-            mediaRecorderRef.current = mediaRecorder;
-            setIsRecording(true);
-            setRecordingType('video');
-            setRecordingDuration(0);
-
-            const chunks: BlobPart[] = [];
-            mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
-            mediaRecorder.onstop = () => {
-                const blob = new Blob(chunks, { type: 'video/webm' });
-                setRecordingBlob(blob);
-            };
-
-            mediaRecorder.start();
-
-            // Timer pour la durée
-            recordingTimerRef.current = setInterval(() => {
-                setRecordingDuration((d) => d + 1);
-            }, 1000);
-        } catch (err) {
-            console.error('Erreur accès caméra:', err);
-            alert('Impossible d\'accéder à la caméra');
-            setIsRecording(false);
-            setRecordingType(null);
-        }
-    };
+    const handleVideoMessage = () => startMediaRecording('video');
 
     // Annuler l'enregistrement
     const cancelRecording = () => {
-        if (mediaRecorderRef.current) {
+        discardRecordingRef.current = true;
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
             mediaRecorderRef.current.stop();
-            setIsRecording(false);
         }
+        setIsRecording(false);
         if (streamRef.current) {
             streamRef.current.getTracks().forEach(track => track.stop());
         }
@@ -1048,10 +1057,9 @@ export default function ConversationClient() {
         setSendingProgress(0);
         try {
             // Convertir le blob en fichier
-            const fileName = `${recordingType}-${Date.now()}.${recordingType === 'audio' ? 'wav' : 'webm'}`;
-            const file = new File([recordingBlob], fileName, { 
-                type: recordingType === 'audio' ? 'audio/wav' : 'video/webm' 
-            });
+            const mimeType = recordingBlob.type || (recordingType === 'audio' ? 'audio/webm' : 'video/webm');
+            const fileName = `${recordingType}-${Date.now()}.${fileExtensionFor(mimeType)}`;
+            const file = new File([recordingBlob], fileName, { type: mimeType });
 
             const messageText = recordingType === 'audio' ? '🎤 Message vocal' : '🎥 Message vidéo';
             
@@ -1218,7 +1226,7 @@ export default function ConversationClient() {
 
     const reportConversation = async () => {
         if (!currentUser?.uid || !conversationId) return;
-        const confirmed = window.confirm('Signaler cette discussion à l’équipe eNkamba ?');
+        const confirmed = window.confirm('Signaler cette discussion à l’équipe Kenz ?');
         if (!confirmed) return;
 
         try {
@@ -1476,7 +1484,7 @@ export default function ConversationClient() {
 
             {/* Incoming call banner */}
             {incomingCall && !isGroup && (
-                <div className="flex items-center justify-between gap-3 px-4 py-3 bg-gradient-to-r from-primary via-primary to-[#FFA500] text-white shadow-md flex-shrink-0">
+                <div className="flex items-center justify-between gap-3 px-4 py-3 bg-gradient-to-r from-primary via-primary to-[#F51B2B] text-white shadow-md flex-shrink-0">
                     <div className="flex items-center gap-3 min-w-0">
                         <Avatar className="h-9 w-9 border border-white/30">
                             {contact?.avatar ? (
@@ -1701,10 +1709,16 @@ export default function ConversationClient() {
                                                                         cancelAnimationFrame(animationFrameRef.current);
                                                                     }
                                                                 } else {
-                                                                    audioElement.play();
-                                                                    setPlayingMessageId(message.id);
-                                                                    const analyser = initAudioAnalyser(audioElement);
-                                                                    updateAudioSpectrum(analyser, message.id);
+                                                                    try {
+                                                                        const analyser = initAudioAnalyser(audioElement);
+                                                                        updateAudioSpectrum(analyser, message.id);
+                                                                    } catch (error) {
+                                                                        console.warn('Visualiseur audio indisponible:', error);
+                                                                    }
+                                                                    audioElement.play().then(
+                                                                        () => setPlayingMessageId(message.id),
+                                                                        () => setPlayingMessageId(null),
+                                                                    );
                                                                 }
                                                             }
                                                         }}
@@ -1720,7 +1734,7 @@ export default function ConversationClient() {
                                                         )}
                                                     </Button>
                                                     <span className={`text-sm font-medium leading-5 ${isOwn ? 'text-white' : 'text-gray-700'}`}>
-                                                        {message.metadata?.duration ? `${Math.floor(message.metadata.duration / 60)}:${String(message.metadata.duration % 60).padStart(2, '0')}` : 'Vocal'}
+                                                        {message.metadata?.duration ? formatClock(message.metadata.duration) : 'Vocal'}
                                                     </span>
                                                 </div>
                                                 
@@ -1748,6 +1762,8 @@ export default function ConversationClient() {
                                                     <audio
                                                         id={`audio-${message.id}`}
                                                         src={audioUrl}
+                                                        crossOrigin={audioUrl.startsWith('data:') ? undefined : 'anonymous'}
+                                                        preload="metadata"
                                                         onPlay={() => setPlayingMessageId(message.id)}
                                                         onPause={() => setPlayingMessageId(null)}
                                                         onEnded={() => setPlayingMessageId(null)}
@@ -1764,7 +1780,7 @@ export default function ConversationClient() {
                                                     controls
                                                 />
                                                 <p className="text-xs text-center opacity-70">
-                                                    {message.metadata?.duration ? `${Math.floor(message.metadata.duration / 60)}:${String(message.metadata.duration % 60).padStart(2, '0')}` : 'Vidéo'}
+                                                    {message.metadata?.duration ? formatClock(message.metadata.duration) : 'Vidéo'}
                                                 </p>
                                         </div>
                                     ) : message.messageType === 'story_reply' && message.metadata?.storyId ? (
@@ -2086,9 +2102,9 @@ export default function ConversationClient() {
                 
                 {/* Edit Preview */}
                 {editingMessage && (
-                    <div className={`border-l-4 border-[#FFA500] rounded-lg p-3 bg-[#FFA500]/10 dark:bg-[#FFA500]/20 flex items-start justify-between`}>
+                    <div className={`border-l-4 border-[#F51B2B] rounded-lg p-3 bg-[#F51B2B]/10 dark:bg-[#F51B2B]/20 flex items-start justify-between`}>
                         <div className="flex-1 min-w-0">
-                            <p className="text-xs font-semibold text-[#FFA500] dark:text-[#FFA500] mb-1">Modification du message</p>
+                            <p className="text-xs font-semibold text-[#F51B2B] dark:text-[#F51B2B] mb-1">Modification du message</p>
                             <p className="text-sm truncate text-muted-foreground">
                                 {editingMessage.text?.substring(0, 50)}
                             </p>
@@ -2139,21 +2155,21 @@ export default function ConversationClient() {
                                 </span>
                             </div>
                             <span className="text-sm text-muted-foreground">
-                                {Math.floor(recordingDuration / 60)}:{String(recordingDuration % 60).padStart(2, '0')}
+                                {formatClock(recordingDuration)}
                             </span>
                         </div>
                         
-                        {recordingType === 'audio' && (
+                        {recordingType === 'audio' && recordingPreviewUrl && (
                             <audio
                                 controls
-                                src={URL.createObjectURL(recordingBlob)}
+                                src={recordingPreviewUrl}
                                 className="w-full h-8"
                             />
                         )}
 
-                        {recordingType === 'video' && (
+                        {recordingType === 'video' && recordingPreviewUrl && (
                             <video
-                                src={URL.createObjectURL(recordingBlob)}
+                                src={recordingPreviewUrl}
                                 className="w-full h-48 bg-black rounded-lg"
                                 controls
                             />
@@ -2270,7 +2286,7 @@ export default function ConversationClient() {
                             disabled={isSending}
                         >
                             <EnkambaAIIcon className="h-4 w-4" size={16} />
-                            eNkamba AI
+                            Kenz AI
                         </Button>
                         <Button
                             size="sm"
@@ -2345,7 +2361,7 @@ export default function ConversationClient() {
                                 requestAnimationFrame(() => textAreaRef.current?.focus());
                             }}
                             disabled={isSending || isRecording || (!isGroup && relationshipControl.blocked)}
-                            title="eNbimoji eNkamba"
+                            title="eNbimoji Kenz"
                         >
                             <SmilePlus className="h-4 w-4" />
                         </Button>
@@ -2427,7 +2443,7 @@ export default function ConversationClient() {
                                 Enregistrement vidéo en cours...
                             </span>
                             <span className="text-lg font-mono font-bold text-red-700 bg-red-100 px-3 py-1 rounded-md">
-                                {Math.floor(recordingDuration / 60)}:{String(recordingDuration % 60).padStart(2, '0')}
+                                {formatClock(recordingDuration)}
                             </span>
                         </div>
 
@@ -2462,7 +2478,7 @@ export default function ConversationClient() {
                                 Enregistrement audio en cours...
                             </span>
                             <span className="text-lg font-mono font-bold text-red-700 bg-red-100 px-3 py-1 rounded-md">
-                                {Math.floor(recordingDuration / 60)}:{String(recordingDuration % 60).padStart(2, '0')}
+                                {formatClock(recordingDuration)}
                             </span>
                         </div>
 

@@ -35,7 +35,7 @@ function buildBusinessRequestExport(request: BusinessRequestData & { id: string 
 
 function buildBusinessRequestsReport(requests: Array<BusinessRequestData & { id: string }>) {
   return [
-    'RAPPORT DEMANDES BUSINESS ENKAMBA',
+    'RAPPORT DEMANDES BUSINESS KENZ',
     `Genere le: ${new Date().toLocaleString('fr-FR')}`,
     `Demandes en attente: ${requests.length}`,
     '',
@@ -306,7 +306,7 @@ export default function BusinessRequestsPage() {
                 Rapport
               </Button>
               <Button
-                className="gap-2 bg-[#009058] hover:bg-[#009058]"
+                className="gap-2 bg-[#073B9A] hover:bg-[#073B9A]"
                 onClick={() => downloadCsv('enkamba-business-requests.csv', filteredRequests.map(buildBusinessRequestExport))}
               >
                 <Download size={16} />

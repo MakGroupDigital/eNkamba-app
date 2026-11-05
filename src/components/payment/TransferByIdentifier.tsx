@@ -40,7 +40,7 @@ export function TransferByIdentifier({ onCancel, onTransferComplete }: TransferB
   const identifierOptions = [
     { value: 'phone', label: 'Numéro de Téléphone', icon: Phone, placeholder: '+243...' },
     { value: 'email', label: 'Adresse Email', icon: Mail, placeholder: 'user@example.com' },
-    { value: 'enkNumber', label: 'Numéro eNkamba', icon: Hash, placeholder: 'ENK000000000000' },
+    { value: 'enkNumber', label: 'Numéro Kenz', icon: Hash, placeholder: 'ENK000000000000' },
     { value: 'cardNumber', label: 'Numéro de Carte', icon: CreditCard, placeholder: '1234 5678 9012 3456' },
   ];
 
@@ -77,7 +77,7 @@ export function TransferByIdentifier({ onCancel, onTransferComplete }: TransferB
         toast({
           variant: 'destructive',
           title: 'Utilisateur introuvable',
-          description: 'Aucun compte eNkamba trouvé avec cet identifiant',
+          description: 'Aucun compte Kenz trouvé avec cet identifiant',
         });
         setUserInfo(null);
         return;
@@ -87,7 +87,7 @@ export function TransferByIdentifier({ onCancel, onTransferComplete }: TransferB
 
       const userData = resolvedUser.data;
 
-      // Générer le numéro eNkamba si pas présent
+      // Générer le numéro Kenz si pas présent
       let enkNumber = userData.accountNumber;
       if (!enkNumber) {
         const hash = resolvedUser.uid.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
@@ -104,7 +104,7 @@ export function TransferByIdentifier({ onCancel, onTransferComplete }: TransferB
 
       const foundUser: UserInfo = {
         uid: resolvedUser.uid,
-        fullName: userData.fullName || userData.name || userData.displayName || 'Utilisateur eNkamba',
+        fullName: userData.fullName || userData.name || userData.displayName || 'Utilisateur Kenz',
         email: userData.email || '',
         phoneNumber: userData.phoneNumber || '',
         enkNumber: enkNumber,
@@ -162,7 +162,7 @@ export function TransferByIdentifier({ onCancel, onTransferComplete }: TransferB
                       variant={identifierType === option.value ? 'default' : 'outline'}
                       className={`h-auto py-3 flex flex-col items-center gap-2 ${
                         identifierType === option.value
-                          ? 'bg-[#009058] hover:bg-[#009058]'
+                          ? 'bg-[#073B9A] hover:bg-[#073B9A]'
                           : ''
                       }`}
                       onClick={() => {
@@ -199,7 +199,7 @@ export function TransferByIdentifier({ onCancel, onTransferComplete }: TransferB
                 <Button
                   onClick={handleSearch}
                   disabled={isSearching || !identifierValue.trim()}
-                  className="bg-[#009058] hover:bg-[#009058]"
+                  className="bg-[#073B9A] hover:bg-[#073B9A]"
                 >
                   {isSearching ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -240,22 +240,22 @@ export function TransferByIdentifier({ onCancel, onTransferComplete }: TransferB
 
             {/* Avatar et nom */}
             <div className="flex flex-col items-center gap-3 py-4">
-              <div className="bg-[#009058]/10 rounded-full p-6">
-                <User className="w-12 h-12 text-[#009058]" />
+              <div className="bg-[#073B9A]/10 rounded-full p-6">
+                <User className="w-12 h-12 text-[#073B9A]" />
               </div>
               <div className="text-center">
-                <p className="font-bold text-xl text-[#009058]">{userInfo.fullName}</p>
+                <p className="font-bold text-xl text-[#073B9A]">{userInfo.fullName}</p>
               </div>
             </div>
 
             {/* Toutes les informations */}
             <div className="space-y-3 bg-muted/50 rounded-lg p-4">
               <div className="flex items-center gap-3">
-                <div className="bg-[#009058]/10 rounded-full p-2">
-                  <Hash className="w-4 h-4 text-[#009058]" />
+                <div className="bg-[#073B9A]/10 rounded-full p-2">
+                  <Hash className="w-4 h-4 text-[#073B9A]" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs text-muted-foreground">Numéro eNkamba</p>
+                  <p className="text-xs text-muted-foreground">Numéro Kenz</p>
                   <p className="font-semibold truncate">{userInfo.enkNumber}</p>
                 </div>
               </div>
@@ -284,8 +284,8 @@ export function TransferByIdentifier({ onCancel, onTransferComplete }: TransferB
 
               {userInfo.email && (
                 <div className="flex items-center gap-3">
-                  <div className="bg-[#FFA500]/100/10 rounded-full p-2">
-                    <Mail className="w-4 h-4 text-[#FFA500]" />
+                  <div className="bg-[#F51B2B]/100/10 rounded-full p-2">
+                    <Mail className="w-4 h-4 text-[#F51B2B]" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-muted-foreground">Email</p>
@@ -323,7 +323,7 @@ export function TransferByIdentifier({ onCancel, onTransferComplete }: TransferB
 
           {/* Boutons d'action */}
           <Button
-            className="w-full bg-gradient-to-r from-[#009058] to-primary hover:from-[#009058] hover:to-primary h-12 text-base font-bold"
+            className="w-full bg-gradient-to-r from-[#073B9A] to-primary hover:from-[#073B9A] hover:to-primary h-12 text-base font-bold"
             onClick={handleContinue}
             disabled={!amount || parseFloat(amount) <= 0}
           >

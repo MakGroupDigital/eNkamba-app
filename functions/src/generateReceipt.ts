@@ -60,7 +60,7 @@ export const generateReceiptPDF = functions.https.onCall(
       // Télécharger le logo
       let logoBuffer: Buffer | null = null;
       try {
-        const logoResponse = await axios.get('https://enkamba.io/enkamba-logo.png', {
+        const logoResponse = await axios.get('https://enkamba.io/kenz-logo.png', {
           responseType: 'arraybuffer',
           timeout: 5000,
         });
@@ -87,7 +87,7 @@ export const generateReceiptPDF = functions.https.onCall(
 
       // ===== EN-TÊTE MODERNE =====
       // Fond dégradé (simulé avec rectangle)
-      doc.rect(0, 0, 595, 120).fill('#32BB78');
+      doc.rect(0, 0, 595, 120).fill('#073B9A');
       
       // Logo et titre
       if (logoBuffer) {
@@ -98,14 +98,14 @@ export const generateReceiptPDF = functions.https.onCall(
         }
       }
 
-      doc.fontSize(28).font('Helvetica-Bold').fillColor('#FFFFFF').text('eNkamba', 100, 25);
-      doc.fontSize(11).font('Helvetica').fillColor('#E8F5E9').text('La vie simplifiée et meilleure', 100, 55);
+      doc.fontSize(28).font('Helvetica-Bold').fillColor('#FFFFFF').text('Kenz', 100, 25);
+      doc.fontSize(11).font('Helvetica').fillColor('#FFFFFF').text('La vie simplifiée et meilleure', 100, 55);
 
       // Retour à la position normale
       doc.fillColor('#000000').moveDown(3);
 
       // ===== TITRE DU REÇU =====
-      doc.fontSize(18).font('Helvetica-Bold').fillColor('#32BB78').text('REÇU DE TRANSACTION', { align: 'center' });
+      doc.fontSize(18).font('Helvetica-Bold').fillColor('#073B9A').text('REÇU DE TRANSACTION', { align: 'center' });
       doc.moveDown(0.3);
 
       // Numéro et date
@@ -122,7 +122,7 @@ export const generateReceiptPDF = functions.https.onCall(
       doc.moveDown(1);
 
       // ===== SECTION EXPÉDITEUR ET DESTINATAIRE =====
-      doc.fontSize(10).font('Helvetica-Bold').fillColor('#2a9d63').text('EXPÉDITEUR');
+      doc.fontSize(10).font('Helvetica-Bold').fillColor('#073B9A').text('EXPÉDITEUR');
       doc.fontSize(9).font('Helvetica').fillColor('#000000');
       doc.text(`${userData.fullName || 'N/A'}`);
       doc.text(`Email: ${userData.email || 'N/A'}`);
@@ -137,7 +137,7 @@ export const generateReceiptPDF = functions.https.onCall(
       // Destinataire (seulement si applicable)
       if (recipientData && (transaction.type === 'transfer_sent' || transaction.type === 'transfer_received' || transaction.type === 'money_request_sent' || transaction.type === 'money_request_received')) {
         doc.moveDown(0.5);
-        doc.fontSize(10).font('Helvetica-Bold').fillColor('#2a9d63').text('DESTINATAIRE');
+        doc.fontSize(10).font('Helvetica-Bold').fillColor('#073B9A').text('DESTINATAIRE');
         doc.fontSize(9).font('Helvetica').fillColor('#000000');
         doc.text(`${recipientData.fullName || 'N/A'}`);
         doc.text(`Email: ${recipientData.email || 'N/A'}`);
@@ -191,7 +191,7 @@ export const generateReceiptPDF = functions.https.onCall(
       // Numéro de suivi pour les commandes e-commerce
       if (transaction.type === 'ecommerce_purchase' && transaction.metadata?.trackingNumber) {
         doc.moveDown(0.3);
-        doc.fontSize(10).font('Helvetica-Bold').fillColor('#32BB78');
+        doc.fontSize(10).font('Helvetica-Bold').fillColor('#073B9A');
         doc.text(`🔍 Numéro de suivi: ${transaction.metadata.trackingNumber}`);
         doc.fontSize(8).font('Helvetica').fillColor('#666666');
         doc.text('Utilisez ce numéro pour suivre votre colis', { indent: 20 });
@@ -204,16 +204,16 @@ export const generateReceiptPDF = functions.https.onCall(
       doc.moveDown(1);
 
       // ===== MONTANTS (SECTION IMPORTANTE) =====
-      doc.fontSize(12).font('Helvetica-Bold').fillColor('#32BB78').text('MONTANTS');
+      doc.fontSize(12).font('Helvetica-Bold').fillColor('#073B9A').text('MONTANTS');
       doc.moveDown(0.5);
 
       doc.fontSize(10).font('Helvetica').fillColor('#000000');
       doc.text(`Montant: ${transaction.amount.toLocaleString('fr-FR')} ${transaction.currency || 'CDF'}`);
       
       if (transaction.status === 'completed') {
-        doc.fontSize(9).font('Helvetica-Bold').fillColor('#32BB78').text('✓ Complétée');
+        doc.fontSize(9).font('Helvetica-Bold').fillColor('#073B9A').text('✓ Complétée');
       } else if (transaction.status === 'pending') {
-        doc.fontSize(9).font('Helvetica-Bold').fillColor('#FFA500').text('⏳ En attente');
+        doc.fontSize(9).font('Helvetica-Bold').fillColor('#F51B2B').text('⏳ En attente');
       } else if (transaction.status === 'cancelled') {
         doc.fontSize(9).font('Helvetica-Bold').fillColor('#FF6B6B').text('✗ Annulée');
       }
@@ -250,7 +250,7 @@ export const generateReceiptPDF = functions.https.onCall(
         doc.text(`Solde avant: ${transaction.previousBalance.toLocaleString('fr-FR')} CDF`);
         doc.moveDown(0.3);
 
-        doc.fontSize(11).font('Helvetica-Bold').fillColor('#32BB78');
+        doc.fontSize(11).font('Helvetica-Bold').fillColor('#073B9A');
         doc.text(`Solde après: ${transaction.newBalance.toLocaleString('fr-FR')} CDF`);
         doc.moveDown(1);
 
@@ -268,7 +268,7 @@ export const generateReceiptPDF = functions.https.onCall(
       // Fond pied de page
       doc.rect(0, doc.y, 595, 80).fill('#F5F5F5');
       
-      doc.fontSize(10).font('Helvetica-Bold').fillColor('#32BB78').text('eNkamba', { align: 'center' });
+      doc.fontSize(10).font('Helvetica-Bold').fillColor('#073B9A').text('Kenz', { align: 'center' });
       doc.fontSize(9).font('Helvetica').fillColor('#666666');
       doc.text('La vie simplifiée et meilleure', { align: 'center' });
       doc.text('www.enkamba.io', { align: 'center' });

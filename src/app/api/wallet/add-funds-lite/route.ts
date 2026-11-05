@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireRequestUser } from '@/lib/verify-request-user';
 import { initializeApp, getApps } from 'firebase/app';
 import {
   getFirestore,
@@ -37,6 +38,11 @@ function getFirebaseApp() {
  * Fallback route when Firebase Admin SDK is not available.
  * Note: this is less strict security-wise; keep it for dev / breakglass.
  */
+const UNSUPPORTED_METHOD_ERROR = {
+  error: "Ce moyen de paiement n'est pas encore activé. Aucun montant n'a été crédité.",
+  code: 'PAYMENT_METHOD_NOT_AVAILABLE',
+};
+
 export async function POST(request: NextRequest) {
   const isDev = process.env.NODE_ENV !== 'production';
   
@@ -53,6 +59,13 @@ export async function POST(request: NextRequest) {
 
     if (amount <= 0) {
       return NextResponse.json({ error: 'Le montant doit être supérieur à 0' }, { status: 400 });
+    }
+
+    // ENK-007: only the wallet owner can start a deposit, and only through a real payment provider.
+    const caller = await requireRequestUser(request, userId);
+    if ('response' in caller) return caller.response;
+    if (paymentMethod !== 'wonyapay') {
+      return NextResponse.json(UNSUPPORTED_METHOD_ERROR, { status: 400 });
     }
 
     // Utilisation du SDK client Firebase (temporaire)
@@ -93,7 +106,7 @@ export async function POST(request: NextRequest) {
       const config = getWonyaPayConfig();
       const normalizedPhoneNumber = normalizePhoneNumber(phoneNumber || '');
       const currency = wonyaDetails?.currency === 'USD' ? 'USD' : 'CDF';
-      const motif = wonyaDetails?.motif?.trim() || 'Depot portefeuille eNkamba';
+      const motif = wonyaDetails?.motif?.trim() || 'Depot portefeuille Kenz';
 
       if (!config.token || !config.refPartenaire) {
         return NextResponse.json(
@@ -305,46 +318,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(responseData);
     }
 
-    const newBalance = currentBalance + amount;
-    
-    const transactionData: any = {
-      id: transactionId,
-      type: 'deposit',
-      amount,
-      paymentMethod,
-      status: 'completed',
-      previousBalance: currentBalance,
-      newBalance,
-      description: 'Dépôt enregistré avec succès',
-      timestamp: new Date(),
-      createdAt: new Date().toISOString(),
-    };
-
-    // Ajouter les champs optionnels seulement s'ils existent
-    if (paymentMethod === 'mobile_money' && phoneNumber) {
-      transactionData.phoneNumber = phoneNumber;
-    }
-    if (cardDetails?.cardNumber) {
-      transactionData.cardLast4 = cardDetails.cardNumber.slice(-4);
-    }
-    if (cardDetails?.cardholderName) {
-      transactionData.cardHolder = cardDetails.cardholderName;
-    }
-
-    await setDoc(transactionRef, transactionData);
-
-    await updateDoc(userRef, { 
-      walletBalance: newBalance, 
-      lastTransactionTime: new Date() 
-    });
-    return NextResponse.json({
-      success: true,
-      transactionId,
-      newBalance,
-      amount,
-      message: 'Dépôt enregistré avec succès',
-      transactionStatus: 'completed',
-    });
+    // Unreachable: non-provider methods are rejected above and never credit the wallet.
+    return NextResponse.json(UNSUPPORTED_METHOD_ERROR, { status: 400 });
   } catch (error: any) {
     console.error('Erreur add-funds-lite:', error);
     return NextResponse.json({ error: error?.message || 'Erreur serveur' }, { status: 500 });

@@ -15,16 +15,16 @@ export default function EnkambaReturnsPage() {
               <ArrowLeft className="w-5 h-5" />
             </Button>
           </Link>
-          <h1 className="text-2xl font-bold">Politique de Retours - eNKAMBA</h1>
+          <h1 className="text-2xl font-bold">Politique de Retours - KENZ</h1>
         </div>
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-12">
         <Card className="mb-8 bg-gradient-to-r from-primary/10 to-primary/10 border-primary/20">
           <CardContent className="p-8">
-            <h2 className="text-2xl font-bold mb-4">Politique de retours eNKAMBA</h2>
+            <h2 className="text-2xl font-bold mb-4">Politique de retours KENZ</h2>
             <p className="text-gray-700">
-              Guangzhou eNKAMBA International Company CO., Ltd offre une politique de retours flexible pour tous les partenaires établissements et leurs clients.
+              Guangzhou KENZ International Company CO., Ltd offre une politique de retours flexible pour tous les partenaires établissements et leurs clients.
             </p>
           </CardContent>
         </Card>
@@ -61,7 +61,7 @@ export default function EnkambaReturnsPage() {
               </li>
               <li className="flex gap-3">
                 <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700">Le reçu ou le numéro de commande eNKAMBA doit être fourni</span>
+                <span className="text-gray-700">Le reçu ou le numéro de commande KENZ doit être fourni</span>
               </li>
               <li className="flex gap-3">
                 <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
@@ -73,10 +73,10 @@ export default function EnkambaReturnsPage() {
 
         <Card className="mb-8">
           <CardContent className="p-8">
-            <h3 className="text-xl font-bold mb-6">Processus de retour eNKAMBA</h3>
+            <h3 className="text-xl font-bold mb-6">Processus de retour KENZ</h3>
             <div className="space-y-6">
               {[
-                { step: 1, title: 'Initier le retour', desc: 'Contactez le partenaire établissements ou eNKAMBA avec votre numéro de commande' },
+                { step: 1, title: 'Initier le retour', desc: 'Contactez le partenaire établissements ou KENZ avec votre numéro de commande' },
                 { step: 2, title: 'Recevoir l\'étiquette', desc: 'Vous recevrez une étiquette de retour gratuite par email dans les 24 heures' },
                 { step: 3, title: 'Expédier le produit', desc: 'Emballez le produit et utilisez l\'étiquette fournie pour l\'expédier' },
                 { step: 4, title: 'Inspection', desc: 'Notre équipe inspecte le produit à la réception' },
@@ -96,13 +96,13 @@ export default function EnkambaReturnsPage() {
           </CardContent>
         </Card>
 
-        <Card className="mb-8 border-[#FFA500]/30 bg-[#FFA500]/10">
+        <Card className="mb-8 border-[#F51B2B]/30 bg-[#F51B2B]/10">
           <CardContent className="p-8">
             <div className="flex gap-4">
-              <AlertCircle className="w-6 h-6 text-[#FFA500] flex-shrink-0 mt-0.5" />
+              <AlertCircle className="w-6 h-6 text-[#F51B2B] flex-shrink-0 mt-0.5" />
               <div>
-                <h3 className="text-lg font-bold text-[#FFA500] mb-3">Articles non retournables</h3>
-                <ul className="space-y-2 text-[#FFA500] text-sm">
+                <h3 className="text-lg font-bold text-[#F51B2B] mb-3">Articles non retournables</h3>
+                <ul className="space-y-2 text-[#F51B2B] text-sm">
                   <li>• Articles personnalisés ou sur commande</li>
                   <li>• Produits numériques ou téléchargés</li>
                   <li>• Articles endommagés par le client</li>
@@ -125,7 +125,7 @@ export default function EnkambaReturnsPage() {
               Les remboursements sont traités sur le compte ou la méthode de paiement d\'origine dans un délai de 5 à 7 jours ouvrables après approbation.
             </p>
             <p className="text-gray-700">
-              Pour les partenaires établissements, les remboursements sont crédités directement sur votre compte eNKAMBA.
+              Pour les partenaires établissements, les remboursements sont crédités directement sur votre compte KENZ.
             </p>
           </CardContent>
         </Card>
@@ -134,7 +134,7 @@ export default function EnkambaReturnsPage() {
           <CardContent className="p-8 text-center">
             <h2 className="text-2xl font-bold mb-3">Des questions sur les retours?</h2>
             <p className="text-gray-600 mb-6">
-              Contactez notre équipe de support eNKAMBA pour toute assistance.
+              Contactez notre équipe de support KENZ pour toute assistance.
             </p>
             <a href="mailto:support@enkamba.com">
               <Button className="bg-primary hover:bg-primary/90">

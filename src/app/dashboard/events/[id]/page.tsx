@@ -258,7 +258,7 @@ export default function EventDetailPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-[#009058]/5 to-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-[#073B9A]/5 to-background">
       <div className="container mx-auto max-w-6xl p-4 space-y-6 animate-in fade-in duration-500">
         <header className="flex items-center gap-4 pt-4">
           <Button variant="ghost" size="icon" onClick={() => {
@@ -407,7 +407,7 @@ export default function EventDetailPage() {
                     </Button>
 
                     <p className="text-xs text-center text-muted-foreground">
-                      Paiement sécurisé via eNkambaPay
+                      Paiement sécurisé via Kenz Pay
                     </p>
                   </CardContent>
                 </Card>
@@ -497,14 +497,14 @@ export default function EventDetailPage() {
         {step === 'receipt' && receipt && (
           <div className="space-y-6">
             <div ref={receiptRef} className="bg-white rounded-2xl shadow-2xl overflow-hidden">
-              <div className="bg-gradient-to-r from-[#009058] to-[#009058] p-6 text-white">
+              <div className="bg-gradient-to-r from-[#073B9A] to-[#073B9A] p-6 text-white">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
-                      <Image src="/enkamba-logo.png" alt="eNkamba" width={32} height={32} />
+                      <Image src="/kenz-logo.png" alt="Kenz" width={32} height={32} />
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold">eNkambaPay</h2>
+                      <h2 className="text-2xl font-bold">Kenz Pay</h2>
                       <p className="text-sm opacity-90">Billet d'événement</p>
                     </div>
                   </div>
@@ -599,7 +599,7 @@ export default function EventDetailPage() {
                     Présentez ce billet à l'entrée de l'événement. Le code QR sera scanné pour validation.
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    eNkambaPay © {new Date().getFullYear()} - Tous droits réservés
+                    Kenz Pay © {new Date().getFullYear()} - Tous droits réservés
                   </p>
                 </div>
               </div>

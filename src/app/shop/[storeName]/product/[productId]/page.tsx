@@ -21,6 +21,7 @@ import { useWalletBalance } from '@/hooks/useWalletBalance';
 import { OrderReceipt } from '@/components/nkampa/OrderReceipt';
 import { PinVerification } from '@/components/payment/PinVerification';
 import { getDashboardLocationOrDefault } from '@/lib/dashboard-location';
+import { KenzDataLoader } from '@/components/shared/kenz-data-loader';
 
 type PickupRouteContext = {
   enabled: boolean;
@@ -195,7 +196,7 @@ export default function ShopProductPage({
               id: reviewDoc.id,
               rating: Number(data.rating || 0),
               comment: data.comment || '',
-              authorName: data.authorName || 'Client eNkamba',
+              authorName: data.authorName || 'Client Kenz',
               authorAvatar: data.authorAvatar || '',
               productName: data.productName || '',
               createdAt: data.createdAt,
@@ -336,7 +337,7 @@ export default function ShopProductPage({
     if (isDigitalProduct) {
       return {
         shippingAddress: 'Livraison digitale - accès disponible après paiement',
-        shippingPhone: user.phoneNumber || user.email || 'Compte eNkamba',
+        shippingPhone: user.phoneNumber || user.email || 'Compte Kenz',
         deliveryOption: 'delivery',
       };
     }
@@ -657,14 +658,14 @@ export default function ShopProductPage({
       await addDoc(collection(db, 'nkampa_store_reviews'), {
         storeId: storeDoc.id,
         storeSlug: slug,
-        storeName: storeDoc.storeName || 'Boutique eNkamba',
+        storeName: storeDoc.storeName || 'Boutique Kenz',
         ownerId: storeDoc.ownerId || '',
         productId: product.id,
         productName: product.name || '',
         rating: reviewRating,
         comment,
         authorId: user.uid,
-        authorName: user.displayName || user.email || 'Client eNkamba',
+        authorName: user.displayName || user.email || 'Client Kenz',
         authorAvatar: user.photoURL || '',
         createdAt: serverTimestamp(),
       });
@@ -697,7 +698,7 @@ export default function ShopProductPage({
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        <KenzDataLoader label="Chargement de l'offre..." className="text-foreground" />
       </div>
     );
   }
@@ -719,10 +720,10 @@ export default function ShopProductPage({
           </div>
         </div>
         <div className="max-w-5xl mx-auto p-4">
-          <Card className="border border-[#FFA500]/30 bg-[#FFA500]/10">
+          <Card className="border border-[#F51B2B]/30 bg-[#F51B2B]/10">
             <CardContent className="p-4">
-              <p className="text-sm font-semibold text-[#FFA500]">Accès non disponible</p>
-              <p className="text-xs text-[#FFA500] mt-1">Ce produit n'est pas encore public.</p>
+              <p className="text-sm font-semibold text-[#F51B2B]">Accès non disponible</p>
+              <p className="text-xs text-[#F51B2B] mt-1">Ce produit n'est pas encore public.</p>
               <Button asChild className="mt-3 bg-primary hover:bg-primary/90">
                 <Link href={`/shop/${slug}`}>Retour boutique</Link>
               </Button>
@@ -735,7 +736,7 @@ export default function ShopProductPage({
 
   return (
     <div className="min-h-screen max-w-full overflow-x-hidden bg-white pb-36">
-      {/* Header vert eNkamba */}
+      {/* Header vert Kenz */}
       <header className="sticky top-0 z-40 bg-gradient-to-r from-primary to-primary text-white px-4 py-3 shadow-lg">
         <div className="flex min-w-0 items-center justify-between gap-3">
           <button onClick={() => router.back()} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/20 transition-all hover:bg-white/30">
@@ -790,11 +791,11 @@ export default function ShopProductPage({
           )}
         </div>
 
-        {/* Badge eNkamba Quality Pro */}
+        {/* Badge Kenz Quality Pro */}
         <div className="absolute top-4 left-4 bg-black text-white px-3 py-1.5 rounded-lg text-xs font-bold">
           <div className="flex items-center gap-1">
             <div className="w-2 h-2 bg-primary rounded-full"></div>
-            <span>eNkamba</span>
+            <span>Kenz</span>
           </div>
           <div className="text-[10px] text-primary">QUALITÉ PRO</div>
         </div>
@@ -885,9 +886,9 @@ export default function ShopProductPage({
       {/* Signaux marketplace essentiels */}
       <div className="mx-4 mt-4 max-w-[calc(100vw-2rem)] rounded-2xl border border-gray-100 bg-white p-3 shadow-sm">
         <div className="flex flex-wrap items-center gap-2">
-          <Badge className="rounded-full bg-[#FFA500]/10 px-2.5 py-1 text-[#FFA500] hover:bg-[#FFA500]/10">
+          <Badge className="rounded-full bg-[#F51B2B]/10 px-2.5 py-1 text-[#F51B2B] hover:bg-[#F51B2B]/10">
             ★ {productRating.toFixed(1)}
-            <span className="ml-1 font-medium text-[#FFA500]">
+            <span className="ml-1 font-medium text-[#F51B2B]">
               ({productReviewCount > 0 ? `${productReviewCount.toLocaleString('fr-FR')} avis` : 'avis vérifiés'})
             </span>
           </Badge>
@@ -912,12 +913,12 @@ export default function ShopProductPage({
             <p className="mt-0.5 text-primary/75">Niveau {sellerTrustLevel}</p>
           </div>
           <div className="rounded-xl bg-primary/5 px-3 py-2 text-primary">
-            <p className="font-black">Livré par eNKAMBA</p>
+            <p className="font-black">Livré par KENZ</p>
             <p className="mt-0.5 text-primary/75">{deliveryDelay}</p>
           </div>
-          <div className="rounded-xl bg-[#FFA500]/10 px-3 py-2 text-[#FFA500]">
+          <div className="rounded-xl bg-[#F51B2B]/10 px-3 py-2 text-[#F51B2B]">
             <p className="font-black">Paiement sécurisé</p>
-            <p className="mt-0.5 text-[#FFA500]/75">eNkamba Pay</p>
+            <p className="mt-0.5 text-[#F51B2B]/75">Kenz Pay</p>
           </div>
           <div className="rounded-xl bg-slate-50 px-3 py-2 text-slate-800">
             <p className="font-black">Livraison réussie</p>
@@ -945,7 +946,7 @@ export default function ShopProductPage({
       {/* Vendeur */}
       <button 
         onClick={() => router.push(`/shop/${slug}`)}
-        className="mx-4 mt-4 w-[calc(100%-2rem)] max-w-[calc(100vw-2rem)] rounded-2xl border border-primary/15 bg-gradient-to-r from-primary via-white to-[#FFA500]/10 p-3 transition-colors hover:bg-gray-100"
+        className="mx-4 mt-4 w-[calc(100%-2rem)] max-w-[calc(100vw-2rem)] rounded-2xl border border-primary/15 bg-gradient-to-r from-primary via-white to-[#F51B2B]/10 p-3 transition-colors hover:bg-gray-100"
       >
         <div className="flex min-w-0 items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
@@ -990,12 +991,12 @@ export default function ShopProductPage({
               Notez la boutique, le fournisseur ou l’entreprise après votre expérience.
             </p>
           </div>
-          <div className="rounded-2xl bg-[#FFA500]/10 px-3 py-2 text-right">
-            <div className="flex items-center justify-end gap-1 text-[#FFA500]">
-              <Star className="h-4 w-4 fill-[#FFA500] text-[#FFA500]" />
+          <div className="rounded-2xl bg-[#F51B2B]/10 px-3 py-2 text-right">
+            <div className="flex items-center justify-end gap-1 text-[#F51B2B]">
+              <Star className="h-4 w-4 fill-[#F51B2B] text-[#F51B2B]" />
               <span className="text-sm font-black">{sellerReviewAverage.toFixed(1)}</span>
             </div>
-            <p className="mt-0.5 text-[10px] font-bold text-[#FFA500]">
+            <p className="mt-0.5 text-[10px] font-bold text-[#F51B2B]">
               {sellerReviewCount.toLocaleString('fr-FR')} avis
             </p>
           </div>
@@ -1014,7 +1015,7 @@ export default function ShopProductPage({
                   className="rounded-full p-1 transition hover:bg-white"
                   aria-label={`Donner ${value} étoile${value > 1 ? 's' : ''}`}
                 >
-                  <Star className={`h-6 w-6 ${active ? 'fill-[#FFA500] text-[#FFA500]' : 'text-slate-300'}`} />
+                  <Star className={`h-6 w-6 ${active ? 'fill-[#F51B2B] text-[#F51B2B]' : 'text-slate-300'}`} />
                 </button>
               );
             })}
@@ -1047,7 +1048,7 @@ export default function ShopProductPage({
                     {Array.from({ length: 5 }).map((_, index) => (
                       <Star
                         key={index}
-                        className={`h-3.5 w-3.5 ${index < Math.round(review.rating) ? 'fill-[#FFA500] text-[#FFA500]' : 'text-slate-300'}`}
+                        className={`h-3.5 w-3.5 ${index < Math.round(review.rating) ? 'fill-[#F51B2B] text-[#F51B2B]' : 'text-slate-300'}`}
                       />
                     ))}
                   </div>
@@ -1129,7 +1130,7 @@ export default function ShopProductPage({
                 className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
               />
             ) : (
-              <div className="rounded-2xl border border-[#FFA500]/30 bg-[#FFA500]/10 px-4 py-3 text-sm text-[#FFA500]">
+              <div className="rounded-2xl border border-[#F51B2B]/30 bg-[#F51B2B]/10 px-4 py-3 text-sm text-[#F51B2B]">
                 <div className="flex items-start gap-2">
                   <MapPinned className="mt-0.5 h-4 w-4 flex-shrink-0" />
                   <div>
@@ -1188,7 +1189,7 @@ export default function ShopProductPage({
                       {Number(offer.price || 0).toLocaleString('fr-FR')} {offer.currency || 'CDF'}
                     </p>
                     <p className="line-clamp-1 text-[10px] font-semibold text-slate-500">
-                      {offer.storeName || offer.sellerName || 'Boutique eNkamba'}
+                      {offer.storeName || offer.sellerName || 'Boutique Kenz'}
                     </p>
                   </div>
                 </button>
@@ -1250,7 +1251,7 @@ export default function ShopProductPage({
             <DialogHeader>
               <DialogTitle className="text-xl font-black">Confirmer la commande</DialogTitle>
               <DialogDescription className="text-white/85">
-                Vérifiez les détails puis confirmez le paiement avec votre PIN eNkambaPay.
+                Vérifiez les détails puis confirmez le paiement avec votre PIN Kenz Pay.
               </DialogDescription>
             </DialogHeader>
           </div>
@@ -1293,10 +1294,10 @@ export default function ShopProductPage({
               )}
             </div>
 
-            <div className="rounded-2xl border border-[#FFA500]/20 bg-[#FFA500]/10 p-4">
-              <p className="text-sm font-semibold text-[#FFA500]">Paiement sécurisé</p>
-              <p className="mt-1 text-sm text-[#FFA500]">
-                Votre solde actuel est de {balance.toLocaleString()} CDF. Le paiement sera confirmé avec votre PIN eNkambaPay.
+            <div className="rounded-2xl border border-[#F51B2B]/20 bg-[#F51B2B]/10 p-4">
+              <p className="text-sm font-semibold text-[#F51B2B]">Paiement sécurisé</p>
+              <p className="mt-1 text-sm text-[#F51B2B]">
+                Votre solde actuel est de {balance.toLocaleString()} CDF. Le paiement sera confirmé avec votre PIN Kenz Pay.
               </p>
             </div>
           </div>

@@ -64,7 +64,7 @@ export default function MiyikiChatNewConversationPage() {
           const otherName = getUserDisplayName(uSnap.data());
           conversationId = await createConversation(target.userId, otherName, 'uid');
         } else {
-          // contact = téléphone (contacts-list filtre déjà "sur eNkamba")
+          // contact = téléphone (contacts-list filtre déjà "sur Kenz")
           conversationId = await createConversation(target.contact, '', 'phone');
         }
 

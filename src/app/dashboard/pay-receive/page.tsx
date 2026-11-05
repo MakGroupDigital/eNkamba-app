@@ -58,9 +58,9 @@ const MULTI_PAY_TYPES: Array<{
 }> = [
   { id: 'same', title: 'Même montant à plusieurs', subtitle: 'Même montant pour tous les bénéficiaires', icon: Users, tone: 'bg-primary/10 text-primary' },
   { id: 'different', title: 'Montants différents', subtitle: 'Chaque bénéficiaire reçoit un montant différent', icon: User, tone: 'bg-blue-50 text-blue-700' },
-  { id: 'salary', title: 'Salaires', subtitle: 'Paiement mensuel des employés', icon: BriefcaseBusiness, tone: 'bg-[#FFA500]/10 text-[#FFA500]' },
+  { id: 'salary', title: 'Salaires', subtitle: 'Paiement mensuel des employés', icon: BriefcaseBusiness, tone: 'bg-[#F51B2B]/10 text-[#F51B2B]' },
   { id: 'bonus', title: 'Primes', subtitle: 'Primes, bonus et indemnités', icon: Gift, tone: 'bg-purple-50 text-purple-700' },
-  { id: 'commission', title: 'Commissions', subtitle: 'Commissions commerciales', icon: TrendingUp, tone: 'bg-[#FFA500]/10 text-[#FFA500]' },
+  { id: 'commission', title: 'Commissions', subtitle: 'Commissions commerciales', icon: TrendingUp, tone: 'bg-[#F51B2B]/10 text-[#F51B2B]' },
   { id: 'suppliers', title: 'Fournisseurs', subtitle: 'Prestataires et partenaires', icon: Truck, tone: 'bg-sky-50 text-sky-700' },
   { id: 'excel', title: 'Importer Excel', subtitle: 'Importer un fichier CSV/Excel exporté', icon: FileSpreadsheet, tone: 'bg-primary/10 text-primary' },
   { id: 'scheduled', title: 'Paiement programmé', subtitle: 'Planifier vos paiements récurrents', icon: CalendarClock, tone: 'bg-violet-50 text-violet-700' },
@@ -156,7 +156,7 @@ export default function PayReceivePage() {
     if (profile?.uid) {
       const hash = profile.uid.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
       const accountNum = `ENK${String(hash).padStart(12, '0')}`;
-      const fullName = profile.name || profile.fullName || 'eNkamba User';
+      const fullName = profile.name || profile.fullName || 'Kenz User';
       const email = profile.email || '';
       
       setAccountNumber(accountNum);
@@ -169,7 +169,7 @@ export default function PayReceivePage() {
         width: 300,
         margin: 2,
         errorCorrectionLevel: 'H',
-        color: { dark: '#009058', light: '#ffffff' },
+        color: { dark: '#073B9A', light: '#ffffff' },
       }).then(setQrCode);
     }
   }, [profile?.uid, profile?.name, profile?.fullName, profile?.email]);
@@ -222,7 +222,7 @@ export default function PayReceivePage() {
         }
         return {
           accountNumber: parts[0],
-          fullName: 'Compte eNkamba',
+          fullName: 'Compte Kenz',
           isValid: true,
         };
       }
@@ -311,7 +311,7 @@ export default function PayReceivePage() {
       toast({
         variant: 'destructive',
         title: 'Bénéficiaire requis',
-        description: 'Ajoutez un numéro, ID eNkamba ou numéro de compte.',
+        description: 'Ajoutez un numéro, ID Kenz ou numéro de compte.',
       });
       return;
     }
@@ -512,7 +512,7 @@ export default function PayReceivePage() {
 
     const brandedQRCode = await createBrandedQRCodeDataUrl({
       qrCode,
-      title: 'QR paiement eNkamba',
+      title: 'QR paiement Kenz',
       name: accountName,
       subtitle: accountNumber,
       centerImageSrc: paymentProfileImage,
@@ -521,7 +521,7 @@ export default function PayReceivePage() {
 
     const link = document.createElement('a');
     link.href = brandedQRCode;
-    link.download = `eNkamba-QR-${accountNumber}.png`;
+    link.download = `Kenz-QR-${accountNumber}.png`;
     
     try {
       document.body.appendChild(link);
@@ -546,8 +546,8 @@ export default function PayReceivePage() {
     if (!qrCode) return;
     if (navigator.share) {
       navigator.share({
-        title: 'Mon QR Code eNkamba',
-        text: `Envoyez-moi de l\'argent via eNkamba. Compte: ${accountNumber}`,
+        title: 'Mon QR Code Kenz',
+        text: `Envoyez-moi de l\'argent via Kenz. Compte: ${accountNumber}`,
         url: window.location.href,
       });
     } else {
@@ -699,8 +699,8 @@ export default function PayReceivePage() {
           <title>Reçu paiement multiple ${multiPayBatchReference}</title>
           <style>
             body { font-family: Arial, sans-serif; color: #0f172a; padding: 24px; background: #f8fafc; }
-            .receipt { max-width: 780px; margin: 0 auto; background: white; border: 1px solid #dbe7df; border-radius: 18px; overflow: hidden; }
-            .header { background: #009058; color: white; padding: 22px 26px; }
+            .receipt { max-width: 780px; margin: 0 auto; background: white; border: 1px solid #DCE6F8; border-radius: 18px; overflow: hidden; }
+            .header { background: #073B9A; color: white; padding: 22px 26px; }
             h1 { margin: 0; font-size: 24px; }
             .content { padding: 24px 26px; }
             .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
@@ -709,8 +709,8 @@ export default function PayReceivePage() {
             .value { margin-top: 4px; font-weight: 900; }
             table { width: 100%; border-collapse: collapse; margin-top: 18px; font-size: 13px; }
             th, td { padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: left; }
-            th { background: #f0f7f3; color: #009058; }
-            .total { margin-top: 18px; border-radius: 12px; background: #f0f7f3; padding: 14px; color: #009058; font-weight: 900; }
+            th { background: #F2F6FF; color: #073B9A; }
+            .total { margin-top: 18px; border-radius: 12px; background: #F2F6FF; padding: 14px; color: #073B9A; font-weight: 900; }
           </style>
         </head>
         <body>
@@ -843,7 +843,7 @@ export default function PayReceivePage() {
           <div className="flex gap-2">
             <Button 
               size="icon" 
-              className="bg-[#009058] hover:bg-[#009058] text-white"
+              className="bg-[#073B9A] hover:bg-[#073B9A] text-white"
               onClick={() => {
                 setPreviousMode('receive');
                 setMode('scanner');
@@ -867,12 +867,12 @@ export default function PayReceivePage() {
                   {qrCode && (
                     <BrandedQRCodeCard
                       qrCode={qrCode}
-                      title="QR paiement eNkamba"
+                      title="QR paiement Kenz"
                       name={accountName}
                       subtitle={accountNumber}
                       centerImageSrc={paymentProfileImage}
                       variant="payment"
-                      qrAlt="Mon QR Code paiement eNkamba"
+                      qrAlt="Mon QR Code paiement Kenz"
                     />
                   )}
 
@@ -945,7 +945,7 @@ export default function PayReceivePage() {
                   />
                   <div className="absolute inset-0 bg-black/30">
                     <div 
-                      className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#009058] to-transparent shadow-lg shadow-[#009058]"
+                      className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#073B9A] to-transparent shadow-lg shadow-[#073B9A]"
                       style={{ top: `${importProgress}%`, transition: 'top 0.1s linear' }}
                     />
                   </div>
@@ -1149,7 +1149,7 @@ export default function PayReceivePage() {
               <div className="rounded-[8px] border border-primary/15 bg-white p-4 shadow-sm">
                 <div className="mb-4 flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-xs font-black uppercase tracking-[0.16em] text-primary">eNKAMBA Pay</p>
+                    <p className="text-xs font-black uppercase tracking-[0.16em] text-primary">KENZ Pay</p>
                     <h3 className="mt-1 text-xl font-black text-slate-950">
                       {multiPayType === 'salary' ? 'Paiement des Salaires' : 'Paiement Multiple'}
                     </h3>
@@ -1279,7 +1279,7 @@ export default function PayReceivePage() {
                       <p className="mb-3 text-sm font-black text-slate-950">Ajouter un bénéficiaire</p>
                       <div className="grid gap-2">
                         <Input value={manualRecipientName} onChange={(event) => setManualRecipientName(event.target.value)} placeholder="Nom complet / société" />
-                        <Input value={manualRecipientIdentifier} onChange={(event) => setManualRecipientIdentifier(event.target.value)} placeholder="Numéro, ID eNkamba ou compte ENK" />
+                        <Input value={manualRecipientIdentifier} onChange={(event) => setManualRecipientIdentifier(event.target.value)} placeholder="Numéro, ID Kenz ou compte ENK" />
                         <div className="grid grid-cols-2 gap-2">
                           <Input value={manualRecipientRole} onChange={(event) => setManualRecipientRole(event.target.value)} placeholder="Rôle" />
                           <Input type="number" value={manualRecipientAmount} onChange={(event) => setManualRecipientAmount(event.target.value)} placeholder="Montant" />
@@ -1369,7 +1369,7 @@ export default function PayReceivePage() {
                     <div className="rounded-[8px] bg-slate-50 p-3 text-sm">
                       <div className="flex justify-between py-1"><span>Total bénéficiaires</span><strong>{multiPayRecipients.length}</strong></div>
                       <div className="flex justify-between py-1"><span>Montant total</span><strong>{multiPayTotalAmount.toLocaleString('fr-FR')} {paymentCurrency}</strong></div>
-                      <div className="flex justify-between py-1"><span>Frais eNKAMBA</span><strong>{multiPayFees.toLocaleString('fr-FR')} {paymentCurrency}</strong></div>
+                      <div className="flex justify-between py-1"><span>Frais KENZ</span><strong>{multiPayFees.toLocaleString('fr-FR')} {paymentCurrency}</strong></div>
                       <div className="flex justify-between py-1"><span>Frais opérateur</span><strong>{multiPayOperatorFees.toLocaleString('fr-FR')} {paymentCurrency}</strong></div>
                       <div className="mt-2 flex justify-between border-t border-slate-200 pt-2 text-base"><span className="font-black">Total à débiter</span><strong className="text-primary">{multiPayDebitTotal.toLocaleString('fr-FR')} {paymentCurrency}</strong></div>
                     </div>
@@ -1425,7 +1425,7 @@ export default function PayReceivePage() {
                         <span className="flex items-center gap-2"><ClipboardList className="h-4 w-4" /> Télécharger le reçu</span>
                         <ArrowLeft className="h-4 w-4 rotate-180" />
                       </Button>
-                      <Button variant="outline" className="w-full justify-between" onClick={() => navigator.share?.({ title: 'Paiement multiple eNkamba', text: `Référence ${multiPayBatchReference}` })}>
+                      <Button variant="outline" className="w-full justify-between" onClick={() => navigator.share?.({ title: 'Paiement multiple Kenz', text: `Référence ${multiPayBatchReference}` })}>
                         <span className="flex items-center gap-2"><Share2 className="h-4 w-4" /> Partager le reçu</span>
                         <ArrowLeft className="h-4 w-4 rotate-180" />
                       </Button>

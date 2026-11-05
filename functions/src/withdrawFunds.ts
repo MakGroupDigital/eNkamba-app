@@ -116,7 +116,7 @@ export const withdrawFunds = functions.https.onCall(
         transactionData.provider = provider;
         transactionData.providerName = providerName;
       } else if (withdrawalMethod === 'agent') {
-        transactionData.description = `Retrait chez agent eNkamba - ${agentLocation}`;
+        transactionData.description = `Retrait chez agent Kenz - ${agentLocation}`;
         transactionData.agentCode = agentCode;
         transactionData.agentLocation = agentLocation;
         transactionData.agentId = agentId;

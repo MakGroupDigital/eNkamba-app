@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireRequestUser } from '@/lib/verify-request-user';
 import { cert, getApps, initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { FieldValue, getFirestore } from 'firebase-admin/firestore';
@@ -131,8 +132,16 @@ export async function POST(request: NextRequest) {
     const db = getFirestore(adminApp);
     */
 
-    // SOLUTION TEMPORAIRE : Utiliser SDK client au lieu d'Admin
-    console.log('⚠️ ATTENTION: Authentification Firebase Admin désactivée temporairement');
+    // ENK-007: the token is verified with Google public keys (no service account needed),
+    // so only the wallet owner can start a deposit, and only through a real payment provider.
+    const caller = await requireRequestUser(request, userId);
+    if ('response' in caller) return caller.response;
+    if (paymentMethod !== 'wonyapay') {
+      return NextResponse.json(
+        { error: "Ce moyen de paiement n'est pas encore activé. Aucun montant n'a été crédité.", code: 'PAYMENT_METHOD_NOT_AVAILABLE' },
+        { status: 400 }
+      );
+    }
     
     const app = getFirebaseApp();
     const db = getClientFirestore(app);
@@ -200,7 +209,7 @@ export async function POST(request: NextRequest) {
           Devise: currency as 'CDF' | 'USD',
           Action: 'C2B', // Collection (client vers business)
           MobileMoney: normalizedPhone,
-          Motif: motif || 'Dépôt portefeuille eNkamba'
+          Motif: motif || 'Dépôt portefeuille Kenz'
         };
 
         // Exécution de la transaction WonyaPay
@@ -277,41 +286,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Autres méthodes de paiement (simulation)
-    const newBalance = currentBalance + amount;
-    const transactionId = `TXN-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    const transactionRef = doc(collection(userRef, 'transactions'), transactionId);
-
-    const transactionData = {
-      id: transactionId,
-      type: 'deposit',
-      amount,
-      currency: 'CDF',
-      paymentMethod,
-      status: 'completed',
-      previousBalance: currentBalance,
-      newBalance,
-      description: `Ajout de fonds via ${paymentMethod}`,
-      timestamp: new Date(),
-      createdAt: new Date().toISOString(),
-      ...(phoneNumber && { phoneNumber }),
-    };
-
-    await setDoc(transactionRef, transactionData);
-    await updateDoc(userRef, {
-      walletBalance: newBalance,
-      lastTransactionTime: new Date(),
-    });
-
-    return NextResponse.json({
-      success: true,
-      transactionId,
-      newBalance,
-      amount,
-      currency: 'CDF',
-      message: 'Dépôt enregistré avec succès',
-      transactionStatus: 'completed',
-    });
+    // Unreachable: non-provider methods are rejected above and never credit the wallet.
+    return NextResponse.json({ error: 'Moyen de paiement non disponible' }, { status: 400 });
 
   } catch (error: any) {
     console.error('Erreur lors du dépôt:', error);

@@ -311,7 +311,7 @@ function buildAdminOperationalReport(params: {
   const uniqueIps = new Set(params.userActivities.map((activity) => activity.ip).filter(Boolean)).size;
 
   const lines = [
-    'RAPPORT OPERATIONNEL ADMIN ENKAMBA',
+    'RAPPORT OPERATIONNEL ADMIN KENZ',
     `Genere le: ${new Date().toLocaleString('fr-FR')}`,
     '',
     'SYNTHESE',
@@ -348,7 +348,7 @@ export function AdminPageHeader({ title, description }: { title: string; descrip
         <h1 className="font-headline text-3xl font-black">{title}</h1>
         <p className="mt-2 max-w-2xl text-sm text-slate-600">{description}</p>
       </div>
-      <Badge className="w-fit bg-[#009058] hover:bg-[#009058]">
+      <Badge className="w-fit bg-[#073B9A] hover:bg-[#073B9A]">
         <Activity className="mr-1 h-3.5 w-3.5" />
         Temps reel
       </Badge>
@@ -366,10 +366,10 @@ export function AdminInfrastructureView() {
   const trackedModules = new Set(userActivities.map((activity) => activity.module).filter(Boolean)).size;
 
   const cards = [
-    { label: 'Etat systeme', value: `${health}%`, detail: criticalErrors ? `${criticalErrors} critique(s)` : 'Stable', icon: Server, tone: health > 90 ? 'text-primary bg-primary/5' : 'text-[#FFA500] bg-[#FFA500]/10' },
+    { label: 'Etat systeme', value: `${health}%`, detail: criticalErrors ? `${criticalErrors} critique(s)` : 'Stable', icon: Server, tone: health > 90 ? 'text-primary bg-primary/5' : 'text-[#F51B2B] bg-[#F51B2B]/10' },
     { label: 'Sessions live', value: `${activeUsers.length}`, detail: 'utilisateurs actifs', icon: Wifi, tone: 'text-primary bg-primary/5' },
     { label: 'Logs erreurs', value: `${errorLogs.length}`, detail: telemetryStatus.errors === 'connecte' ? 'flux connecte' : telemetryStatus.errors || 'en attente', icon: Bug, tone: 'text-red-700 bg-red-50' },
-    { label: 'Signaux cyber', value: `${securityEvents.length}`, detail: `${attacks.length} attaque(s) probable(s)`, icon: ShieldAlert, tone: 'text-[#FFA500] bg-[#FFA500]/10' },
+    { label: 'Signaux cyber', value: `${securityEvents.length}`, detail: `${attacks.length} attaque(s) probable(s)`, icon: ShieldAlert, tone: 'text-[#F51B2B] bg-[#F51B2B]/10' },
     { label: 'Modules suivis', value: `${trackedModules}`, detail: 'telemetrie utilisateurs', icon: Activity, tone: 'text-sky-700 bg-sky-50' },
     { label: 'Memoire client', value: usedMemoryMb ? `${usedMemoryMb}MB` : 'N/A', detail: 'mesure navigateur', icon: Cpu, tone: 'text-violet-700 bg-violet-50' },
     { label: 'IP admin', value: formatIp(clientContext?.ip), detail: formatLocation(clientContext), icon: Globe2, tone: 'text-slate-700 bg-slate-100' },
@@ -395,7 +395,7 @@ export function AdminInfrastructureView() {
             Rapport
           </Button>
           <Button
-            className="gap-2 bg-[#009058] hover:bg-[#009058]"
+            className="gap-2 bg-[#073B9A] hover:bg-[#073B9A]"
             onClick={() => downloadCsv(`enkamba-admin-activity-${exportDateSuffix()}.csv`, userActivities.map(mapActivityForExport))}
           >
             <Download className="h-4 w-4" />
@@ -432,7 +432,7 @@ export function AdminInfrastructureView() {
           const Icon = item.icon;
           return (
             <div key={item.label} className="flex items-center gap-3 rounded-[8px] border border-slate-200 bg-white p-4">
-              <Icon className="h-5 w-5 text-[#009058]" />
+              <Icon className="h-5 w-5 text-[#073B9A]" />
               <div>
                 <p className="text-sm font-semibold">{item.label}</p>
                 <p className="text-xs text-slate-500">{item.status}</p>
@@ -490,7 +490,7 @@ export function AdminLogsView() {
           </Button>
           <Button
             size="sm"
-            className="h-9 gap-2 bg-[#009058] hover:bg-[#009058]"
+            className="h-9 gap-2 bg-[#073B9A] hover:bg-[#073B9A]"
             onClick={() => downloadCsv(`enkamba-admin-logs-${exportDateSuffix()}.csv`, filteredLogs.map(mapErrorLogForExport))}
           >
             <Download className="h-4 w-4" />
@@ -528,7 +528,7 @@ export function AdminLogsView() {
               key={item.key}
               size="sm"
               variant={severityFilter === item.key ? 'default' : 'outline'}
-              className={cn('h-9', severityFilter === item.key && 'bg-[#009058] hover:bg-[#009058]')}
+              className={cn('h-9', severityFilter === item.key && 'bg-[#073B9A] hover:bg-[#073B9A]')}
               onClick={() => setSeverityFilter(item.key as typeof severityFilter)}
             >
               {item.label}
@@ -557,7 +557,7 @@ export function AdminLogsView() {
               {entry.stack && <pre className="mt-3 max-h-36 overflow-auto rounded-[8px] bg-slate-950 p-2 text-[11px] leading-5 text-white/80">{entry.stack}</pre>}
               <div className="mt-3 flex gap-2">
                 <Button size="sm" variant="outline" className="h-8 gap-2" onClick={() => void copyText(errorText)}><Copy className="h-3.5 w-3.5" />Copier</Button>
-                <Button size="sm" variant="outline" className="h-8 gap-2" onClick={() => void shareText(errorText, 'Log erreur eNkamba')}><Share2 className="h-3.5 w-3.5" />Partager</Button>
+                <Button size="sm" variant="outline" className="h-8 gap-2" onClick={() => void shareText(errorText, 'Log erreur Kenz')}><Share2 className="h-3.5 w-3.5" />Partager</Button>
               </div>
             </div>
           );
@@ -600,14 +600,14 @@ export function AdminCyberView() {
       <section className="rounded-[8px] border border-primary/10 bg-white p-4 shadow-sm">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <h2 className="flex items-center gap-2 font-headline text-xl font-bold"><Fingerprint className="h-5 w-5 text-[#009058]" />Cyber intelligence</h2>
+            <h2 className="flex items-center gap-2 font-headline text-xl font-bold"><Fingerprint className="h-5 w-5 text-[#073B9A]" />Cyber intelligence</h2>
             <p className="mt-1 text-sm text-slate-500">IP admin actuelle: <span className="font-mono font-semibold text-slate-900">{formatIp(clientContext?.ip)}</span> - {formatLocation(clientContext)}</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Badge variant="outline">{clientContext?.ipType === 'local' ? 'IP locale' : 'IP reseau'}</Badge>
             <Button
               size="sm"
-              className="h-9 gap-2 bg-[#009058] hover:bg-[#009058]"
+              className="h-9 gap-2 bg-[#073B9A] hover:bg-[#073B9A]"
               onClick={() => downloadCsv(`enkamba-admin-cyber-activity-${exportDateSuffix()}.csv`, filteredActivities.map(mapActivityForExport))}
             >
               <Download className="h-4 w-4" />
@@ -626,7 +626,7 @@ export function AdminCyberView() {
             const Icon = item.icon;
             return (
               <div key={item.label} className="rounded-[8px] border border-slate-200 bg-slate-50 p-3">
-                <Icon className="h-4 w-4 text-[#009058]" />
+                <Icon className="h-4 w-4 text-[#073B9A]" />
                 <p className="mt-2 text-2xl font-black">{item.value}</p>
                 <p className="text-xs text-slate-500">{item.label}</p>
               </div>
@@ -649,7 +649,7 @@ export function AdminCyberView() {
                 key={item.key}
                 size="sm"
                 variant={activityFilter === item.key ? 'default' : 'outline'}
-                className={cn('h-9', activityFilter === item.key && 'bg-[#009058] hover:bg-[#009058]')}
+                className={cn('h-9', activityFilter === item.key && 'bg-[#073B9A] hover:bg-[#073B9A]')}
                 onClick={() => setActivityFilter(item.key as typeof activityFilter)}
               >
                 {item.label}
@@ -677,7 +677,7 @@ export function AdminCyberView() {
                 <p className="truncate text-sm font-bold">{activity.userName || activity.userEmail || activity.userId || 'Utilisateur inconnu'}</p>
                 <p className="mt-1 truncate text-xs text-slate-500">{activity.module} - {activity.path}</p>
               </div>
-              <Badge variant={activity.active ? 'default' : 'secondary'} className={activity.active ? 'bg-[#009058] hover:bg-[#009058]' : ''}>{activity.active ? 'Actif' : formatDuration(activity.durationSeconds)}</Badge>
+              <Badge variant={activity.active ? 'default' : 'secondary'} className={activity.active ? 'bg-[#073B9A] hover:bg-[#073B9A]' : ''}>{activity.active ? 'Actif' : formatDuration(activity.durationSeconds)}</Badge>
             </div>
             <div className="mt-3 grid gap-2 text-xs text-slate-500 sm:grid-cols-3">
               <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{[activity.city, activity.country].filter(Boolean).join(', ') || 'Localisation N/A'}</span>
@@ -732,13 +732,13 @@ export function AdminAttacksView() {
           </Button>
           <Button
             size="sm"
-            className="h-9 gap-2 bg-[#009058] hover:bg-[#009058]"
+            className="h-9 gap-2 bg-[#073B9A] hover:bg-[#073B9A]"
             onClick={() => downloadCsv(`enkamba-admin-attacks-${exportDateSuffix()}.csv`, filteredAttacks.map(mapAttackForExport))}
           >
             <Download className="h-4 w-4" />
             CSV
           </Button>
-          <ShieldAlert className="h-9 w-9 rounded-[8px] bg-white/10 p-2 text-[#FFA500]" />
+          <ShieldAlert className="h-9 w-9 rounded-[8px] bg-white/10 p-2 text-[#F51B2B]" />
         </div>
       </div>
       <div className="mt-4 grid gap-3 md:grid-cols-3">
@@ -776,15 +776,15 @@ export function AdminAttacksView() {
           return (
             <div key={attack.id} className="rounded-[8px] border border-white/10 bg-white/[0.07] p-3">
               <div className="flex items-start justify-between gap-3">
-                <div><p className="flex items-center gap-2 font-bold"><Crosshair className="h-4 w-4 text-[#FFA500]" />{attack.title}</p><p className="mt-1 text-xs text-white/55">{attack.when} - {attack.module}</p></div>
-                <Badge className={attack.severity === 'critical' ? 'bg-red-600 hover:bg-red-600' : 'bg-[#FFA500]/100 hover:bg-[#FFA500]/100'}>{attack.severity}</Badge>
+                <div><p className="flex items-center gap-2 font-bold"><Crosshair className="h-4 w-4 text-[#F51B2B]" />{attack.title}</p><p className="mt-1 text-xs text-white/55">{attack.when} - {attack.module}</p></div>
+                <Badge className={attack.severity === 'critical' ? 'bg-red-600 hover:bg-red-600' : 'bg-[#F51B2B]/100 hover:bg-[#F51B2B]/100'}>{attack.severity}</Badge>
               </div>
               <div className="mt-3 grid gap-2 text-xs text-white/70 md:grid-cols-2">
                 <p><span className="text-white/40">Par:</span> {attack.actor}</p><p><span className="text-white/40">IP:</span> {attack.ip}</p><p className="md:col-span-2"><span className="text-white/40">Page:</span> {attack.path}</p><p className="md:col-span-2"><span className="text-white/40">Faille:</span> {attack.breach}</p><p className="md:col-span-2"><span className="text-white/40">Contrer:</span> {attack.counter}</p>
               </div>
               <div className="mt-3 flex gap-2">
                 <Button size="sm" variant="secondary" className="h-8 gap-2" onClick={() => void copyText(attackText)}><Copy className="h-3.5 w-3.5" />Copier</Button>
-                <Button size="sm" variant="secondary" className="h-8 gap-2" onClick={() => void shareText(attackText, 'Rapport cyber eNkamba')}><Share2 className="h-3.5 w-3.5" />Partager</Button>
+                <Button size="sm" variant="secondary" className="h-8 gap-2" onClick={() => void shareText(attackText, 'Rapport cyber Kenz')}><Share2 className="h-3.5 w-3.5" />Partager</Button>
               </div>
             </div>
           );
@@ -838,10 +838,10 @@ export function AdminReportsView() {
     <div className="space-y-4">
       <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
         {[
-          { label: 'Sante operationnelle', value: `${health}%`, detail: telemetryStatus.activity === 'connecte' ? 'Flux connectes' : 'Flux en observation', icon: Activity, tone: health > 88 ? 'text-primary bg-primary/5' : 'text-[#FFA500] bg-[#FFA500]/10' },
+          { label: 'Sante operationnelle', value: `${health}%`, detail: telemetryStatus.activity === 'connecte' ? 'Flux connectes' : 'Flux en observation', icon: Activity, tone: health > 88 ? 'text-primary bg-primary/5' : 'text-[#F51B2B] bg-[#F51B2B]/10' },
           { label: 'Utilisateurs actifs', value: activeUsers.length, detail: `${userActivities.length} session(s) analysees`, icon: Users, tone: 'text-primary bg-primary/5' },
           { label: 'Erreurs critiques', value: criticalErrors, detail: `${errorLogs.length} log(s) total`, icon: Bug, tone: criticalErrors ? 'text-red-700 bg-red-50' : 'text-primary bg-primary/5' },
-          { label: 'Signaux cyber', value: securityEvents.length, detail: `${attacks.length} attaque(s) probable(s)`, icon: Fingerprint, tone: 'text-[#FFA500] bg-[#FFA500]/10' },
+          { label: 'Signaux cyber', value: securityEvents.length, detail: `${attacks.length} attaque(s) probable(s)`, icon: Fingerprint, tone: 'text-[#F51B2B] bg-[#F51B2B]/10' },
           { label: 'IP observees', value: uniqueIps, detail: 'sources actives ou recentes', icon: Globe2, tone: 'text-sky-700 bg-sky-50' },
         ].map((item) => {
           const Icon = item.icon;
@@ -868,7 +868,7 @@ export function AdminReportsView() {
             <h2 className="font-headline text-xl font-bold">Exports operationnels</h2>
             <p className="mt-1 text-sm text-slate-500">Telechargement direct des rapports admin pour audit, support, supervision et client.</p>
           </div>
-          <Badge className="w-fit bg-[#009058] hover:bg-[#009058]">Export local</Badge>
+          <Badge className="w-fit bg-[#073B9A] hover:bg-[#073B9A]">Export local</Badge>
         </div>
         <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
           {exportActions.map((item) => {
@@ -878,12 +878,12 @@ export function AdminReportsView() {
                 key={item.label}
                 type="button"
                 onClick={item.action}
-                className="rounded-[8px] border border-slate-200 bg-slate-50 p-4 text-left transition hover:border-[#009058]/50 hover:bg-[#009058]/5"
+                className="rounded-[8px] border border-slate-200 bg-slate-50 p-4 text-left transition hover:border-[#073B9A]/50 hover:bg-[#073B9A]/5"
               >
-                <Icon className="h-5 w-5 text-[#009058]" />
+                <Icon className="h-5 w-5 text-[#073B9A]" />
                 <p className="mt-3 font-bold">{item.label}</p>
                 <p className="mt-1 text-xs leading-5 text-slate-500">{item.detail}</p>
-                <span className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-[#009058]">
+                <span className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-[#073B9A]">
                   <Download className="h-3.5 w-3.5" />
                   Telecharger
                 </span>

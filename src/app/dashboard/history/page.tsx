@@ -25,8 +25,7 @@ import { useAllTransactions, Transaction } from '@/hooks/useAllTransactions';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useReceiptDownload } from '@/hooks/useReceiptDownload';
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/lib/firebase';
+import { serverCallable } from '@/lib/server-callable';
 
 type TransactionTypeFilter = 'all' | 'transfer_sent' | 'transfer_received' | 'deposit' | 'withdrawal' | 'payment_link' | 'contact_payment' | 'money_request_sent' | 'money_request_received';
 
@@ -55,7 +54,11 @@ const getTransactionLabel = (type: Transaction['type']) => {
   return labels[type] || 'Transaction';
 };
 
+// Annulation libre désactivée (audit ENK-007) : elle remboursait l'expéditeur sans reprendre les fonds au destinataire.
+const SELF_SERVICE_CANCELLATION_ENABLED = false;
+
 const canCancelTransaction = (transaction: Transaction): boolean => {
+  if (!SELF_SERVICE_CANCELLATION_ENABLED) return false;
   if (transaction.status !== 'completed') return false;
   if (transaction.type !== 'transfer_sent' && transaction.type !== 'withdrawal') return false;
   
@@ -109,7 +112,7 @@ export default function HistoryPage() {
 
     setIsCancelling(true);
     try {
-      const cancelTransactionFn = httpsCallable(functions, 'cancelTransaction');
+      const cancelTransactionFn = serverCallable('cancelTransaction');
       const result = await cancelTransactionFn({
         userId: user.uid,
         transactionId: selectedTransaction.id,
@@ -164,8 +167,8 @@ export default function HistoryPage() {
             </Link>
           </Button>
           <div className="flex items-center gap-2">
-            <HistoryIcon className="h-6 w-6 text-[#009058]" />
-            <h1 className="font-headline text-2xl font-bold bg-gradient-to-r from-[#009058] to-[#009058] bg-clip-text text-transparent">
+            <HistoryIcon className="h-6 w-6 text-[#073B9A]" />
+            <h1 className="font-headline text-2xl font-bold bg-gradient-to-r from-[#073B9A] to-[#073B9A] bg-clip-text text-transparent">
               Historique des Transactions
             </h1>
           </div>
@@ -253,7 +256,7 @@ export default function HistoryPage() {
                   <div
                     key={tx.id}
                     onClick={() => setSelectedTransaction(tx)}
-                    className="flex items-center gap-4 p-4 rounded-xl hover:bg-muted/50 transition-colors group cursor-pointer border border-border/50 hover:border-[#009058]/50"
+                    className="flex items-center gap-4 p-4 rounded-xl hover:bg-muted/50 transition-colors group cursor-pointer border border-border/50 hover:border-[#073B9A]/50"
                   >
                     <div className={`p-3 rounded-full flex-shrink-0 ${iconConfig.bgColor}`}>
                       <Icon className={`w-5 h-5 ${iconConfig.iconColor}`} size={20} />
@@ -265,7 +268,7 @@ export default function HistoryPage() {
                         {getStatusBadge(tx.status)}
                       </div>
                     </div>
-                    <p className={`font-bold text-sm flex-shrink-0 ${isIncoming ? 'text-[#009058]' : 'text-foreground'}`}>
+                    <p className={`font-bold text-sm flex-shrink-0 ${isIncoming ? 'text-[#073B9A]' : 'text-foreground'}`}>
                       {isIncoming ? '+' : '-'} {tx.amount.toLocaleString('fr-FR')} {tx.currency || 'CDF'}
                     </p>
                   </div>
@@ -384,7 +387,7 @@ export default function HistoryPage() {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">Solde après</span>
-                      <span className="font-semibold text-[#009058]">{selectedTransaction.newBalance.toLocaleString('fr-FR')} CDF</span>
+                      <span className="font-semibold text-[#073B9A]">{selectedTransaction.newBalance.toLocaleString('fr-FR')} CDF</span>
                     </div>
                   </div>
                 </>
@@ -439,7 +442,7 @@ export default function HistoryPage() {
               <Button
                 onClick={handleDownloadReceipt}
                 disabled={isDownloading}
-                className="flex-1 bg-[#009058] hover:bg-[#009058] text-white gap-2"
+                className="flex-1 bg-[#073B9A] hover:bg-[#073B9A] text-white gap-2"
               >
                 {isDownloading ? (
                   <>

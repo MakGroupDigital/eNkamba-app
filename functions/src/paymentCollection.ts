@@ -90,7 +90,12 @@ export const processPaymentLink = functions.https.onCall(
     payerId: string;
     amount: number;
   }, context) => {
-    const { linkId, code, payerId, amount } = data;
+    const { linkId, code, payerId } = data;
+    // Montant strictement positif : un montant négatif ferait payer le propriétaire du lien.
+    const amount = typeof data.amount === 'number' ? data.amount : Number.NaN;
+    if (!Number.isFinite(amount) || amount <= 0) {
+      throw new functions.https.HttpsError('invalid-argument', 'Montant invalide');
+    }
 
     if (!context.auth) {
       throw new functions.https.HttpsError(
@@ -161,96 +166,60 @@ export const processPaymentLink = functions.https.onCall(
         );
       }
 
-      // Vérifier le solde du payeur
-      const payerDoc = await db.collection('users').doc(payerId).get();
-      const payerBalance = payerDoc.data()?.walletBalance || 0;
-
-      if (payerBalance < amount) {
-        throw new functions.https.HttpsError(
-          'failed-precondition',
-          'Solde insuffisant'
-        );
-      }
-
-      // Effectuer le transfert
+      // Débit, crédit, écritures et passage du lien à « utilisé » dans une seule transaction :
+      // pas de double dépense, et un lien ne peut être payé qu'une fois.
+      const linkRef = linkDoc.ref;
       const receiverRef = db.collection('users').doc(linkData.userId);
       const payerRef = db.collection('users').doc(payerId);
+      const payerTransactionRef = payerRef.collection('transactions').doc();
+      const receiverTransactionRef = receiverRef.collection('transactions').doc();
+      const payerNotificationRef = payerRef.collection('notifications').doc();
+      const receiverNotificationRef = receiverRef.collection('notifications').doc();
+      const now = admin.firestore.FieldValue.serverTimestamp();
 
-      const receiverDoc = await receiverRef.get();
-      const receiverBalance = receiverDoc.data()?.walletBalance || 0;
+      await db.runTransaction(async (transaction) => {
+        const [freshLink, payerDoc, receiverDoc] = await Promise.all([
+          transaction.get(linkRef), transaction.get(payerRef), transaction.get(receiverRef),
+        ]);
+        if (freshLink.data()?.status !== 'active') {
+          throw new functions.https.HttpsError('failed-precondition', 'Ce lien de paiement n\'est plus actif');
+        }
+        if (!payerDoc.exists || !receiverDoc.exists) {
+          throw new functions.https.HttpsError('not-found', 'Compte introuvable');
+        }
+        const payerBalance = Number(payerDoc.data()?.walletBalance || 0);
+        const receiverBalance = Number(receiverDoc.data()?.walletBalance || 0);
+        if (payerBalance < amount) {
+          throw new functions.https.HttpsError('failed-precondition', 'Solde insuffisant');
+        }
+        const payerName = payerDoc.data()?.fullName || 'un utilisateur Kenz';
+        const receiverName = receiverDoc.data()?.fullName || 'un utilisateur Kenz';
 
-      // Mettre à jour les soldes
-      await payerRef.update({
-        walletBalance: payerBalance - amount,
-        lastTransactionTime: admin.firestore.FieldValue.serverTimestamp(),
-      });
-
-      await receiverRef.update({
-        walletBalance: receiverBalance + amount,
-        lastTransactionTime: admin.firestore.FieldValue.serverTimestamp(),
-      });
-
-      // Créer les transactions
-      const payerTransactionRef = db.collection('users').doc(payerId).collection('transactions').doc();
-      await payerTransactionRef.set({
-        id: payerTransactionRef.id,
-        type: 'payment',
-        amount,
-        status: 'completed',
-        description: `Paiement via lien à ${receiverDoc.data()?.fullName}`,
-        previousBalance: payerBalance,
-        newBalance: payerBalance - amount,
-        timestamp: admin.firestore.FieldValue.serverTimestamp(),
-        createdAt: new Date().toISOString(),
-        linkId,
-      });
-
-      const receiverTransactionRef = db.collection('users').doc(linkData.userId).collection('transactions').doc();
-      await receiverTransactionRef.set({
-        id: receiverTransactionRef.id,
-        type: 'payment_received',
-        amount,
-        status: 'completed',
-        description: `Paiement reçu de ${payerDoc.data()?.fullName}`,
-        previousBalance: receiverBalance,
-        newBalance: receiverBalance + amount,
-        timestamp: admin.firestore.FieldValue.serverTimestamp(),
-        createdAt: new Date().toISOString(),
-        linkId,
-      });
-
-      // Créer les notifications
-      const payerNotificationRef = db.collection('users').doc(payerId).collection('notifications').doc();
-      await payerNotificationRef.set({
-        id: payerNotificationRef.id,
-        type: 'payment_sent',
-        title: 'Paiement envoyé',
-        message: `Vous avez envoyé ${amount.toLocaleString('fr-FR')} CDF`,
-        amount,
-        transactionId: payerTransactionRef.id,
-        read: false,
-        timestamp: admin.firestore.FieldValue.serverTimestamp(),
-        createdAt: new Date().toISOString(),
-      });
-
-      const receiverNotificationRef = db.collection('users').doc(linkData.userId).collection('notifications').doc();
-      await receiverNotificationRef.set({
-        id: receiverNotificationRef.id,
-        type: 'payment_received',
-        title: 'Paiement reçu',
-        message: `Vous avez reçu ${amount.toLocaleString('fr-FR')} CDF de ${payerDoc.data()?.fullName}`,
-        amount,
-        transactionId: receiverTransactionRef.id,
-        read: false,
-        timestamp: admin.firestore.FieldValue.serverTimestamp(),
-        createdAt: new Date().toISOString(),
-      });
-
-      // Marquer le lien comme utilisé
-      await linkDoc.ref.update({
-        status: 'used',
-        usedAt: admin.firestore.FieldValue.serverTimestamp(),
-        usedBy: payerId,
+        transaction.update(payerRef, { walletBalance: payerBalance - amount, lastTransactionTime: now });
+        transaction.update(receiverRef, { walletBalance: receiverBalance + amount, lastTransactionTime: now });
+        transaction.set(payerTransactionRef, {
+          id: payerTransactionRef.id, type: 'payment', amount, status: 'completed',
+          description: `Paiement via lien à ${receiverName}`,
+          previousBalance: payerBalance, newBalance: payerBalance - amount,
+          timestamp: now, createdAt: new Date().toISOString(), linkId,
+        });
+        transaction.set(receiverTransactionRef, {
+          id: receiverTransactionRef.id, type: 'payment_received', amount, status: 'completed',
+          description: `Paiement reçu de ${payerName}`,
+          previousBalance: receiverBalance, newBalance: receiverBalance + amount,
+          timestamp: now, createdAt: new Date().toISOString(), linkId,
+        });
+        transaction.set(payerNotificationRef, {
+          id: payerNotificationRef.id, type: 'payment_sent', title: 'Paiement envoyé',
+          message: `Vous avez envoyé ${amount.toLocaleString('fr-FR')} CDF`, amount,
+          transactionId: payerTransactionRef.id, read: false, timestamp: now, createdAt: new Date().toISOString(),
+        });
+        transaction.set(receiverNotificationRef, {
+          id: receiverNotificationRef.id, type: 'payment_received', title: 'Paiement reçu',
+          message: `Vous avez reçu ${amount.toLocaleString('fr-FR')} CDF de ${payerName}`, amount,
+          transactionId: receiverTransactionRef.id, read: false, timestamp: now, createdAt: new Date().toISOString(),
+        });
+        transaction.update(linkRef, { status: 'used', usedAt: now, usedBy: payerId });
       });
 
       return {

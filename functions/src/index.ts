@@ -12,3 +12,4 @@ export * from './savingsManagement';
 export * from './addFunds';
 export * from './withdrawFunds';
 export * from './pushNotifications';
+export * from './churchPay';

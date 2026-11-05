@@ -130,7 +130,7 @@ export default function WalletPage() {
       
       setCardData({
         cardNumber: cardNum,
-        cardHolderName: (profile.fullName || profile.name || 'eNkamba User').toUpperCase(),
+        cardHolderName: (profile.fullName || profile.name || 'Kenz User').toUpperCase(),
         accountNumber: accountNum,
         balance: isBalanceVisible ? walletBalance.toLocaleString('fr-FR') : '••••••',
         currency: 'CDF',
@@ -159,12 +159,12 @@ export default function WalletPage() {
     return {
       label: 'Terminé',
       badgeClassName: 'bg-primary/10 text-primary',
-      amountClassName: 'text-[#009058]',
+      amountClassName: 'text-[#073B9A]',
     };
   };
 
   return (
-    <div className="min-h-screen bg-[#f7faf8]">
+    <div className="min-h-screen bg-[#FFFFFF]">
       <style>{`
         @keyframes slide-up {
           from { opacity: 0; transform: translateY(20px); }
@@ -184,7 +184,7 @@ export default function WalletPage() {
             </Link>
           </Button>
           <div>
-            <h1 className="font-headline text-xl font-bold text-[#009058] sm:text-2xl">
+            <h1 className="font-headline text-xl font-bold text-[#073B9A] sm:text-2xl">
               Mon Portefeuille
             </h1>
             <p className="text-xs text-muted-foreground">La vie simplifiée et meilleure</p>
@@ -201,7 +201,7 @@ export default function WalletPage() {
               disabled={isBiometricChecking}
               aria-label={isBalanceVisible ? 'Masquer le solde' : 'Afficher le solde'}
               title={isBalanceVisible ? 'Masquer le solde' : 'Afficher le solde'}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#009058]/20 bg-white text-[#009058] shadow-sm transition hover:border-[#009058]/40 hover:bg-[#009058]/5 disabled:opacity-60"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#073B9A]/20 bg-white text-[#073B9A] shadow-sm transition hover:border-[#073B9A]/40 hover:bg-[#073B9A]/5 disabled:opacity-60"
             >
               {isBiometricChecking ? <Loader2 className="h-4 w-4 animate-spin" /> : isBalanceVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
@@ -226,14 +226,14 @@ export default function WalletPage() {
 
           {/* Actions Wallet - Below Card */}
           <div className="w-full slide-up" style={{ animationDelay: '0.2s' }}>
-            <div className="mx-auto flex max-w-sm items-center justify-between gap-2 rounded-2xl border border-[#009058]/10 bg-white px-3 py-2 shadow-sm">
+            <div className="mx-auto flex max-w-sm items-center justify-between gap-2 rounded-2xl border border-[#073B9A]/10 bg-white px-3 py-2 shadow-sm">
               {walletActions.map((action) => {
                 const Icon = action.icon;
                 return (
                   <Link key={action.label} href={action.href} className="flex-1">
                     <div className="group relative flex cursor-pointer flex-col items-center gap-1.5">
                       <div className="relative">
-                        <div className="relative rounded-xl border border-[#009058]/20 bg-[#009058]/10 p-2.5 text-[#009058] transition duration-200 group-hover:-translate-y-0.5 group-hover:bg-[#009058] group-hover:text-white sm:p-3">
+                        <div className="relative rounded-xl border border-[#073B9A]/20 bg-[#073B9A]/10 p-2.5 text-[#073B9A] transition duration-200 group-hover:-translate-y-0.5 group-hover:bg-[#073B9A] group-hover:text-white sm:p-3">
                           <div className="absolute inset-2 rounded-full border border-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                           <div className="relative">
                             <Icon />
@@ -241,7 +241,7 @@ export default function WalletPage() {
                         </div>
                       </div>
                       
-                      <span className="text-[0.65rem] sm:text-xs font-semibold text-foreground group-hover:text-[#009058] transition-colors duration-300 text-center leading-tight">
+                      <span className="text-[0.65rem] sm:text-xs font-semibold text-foreground group-hover:text-[#073B9A] transition-colors duration-300 text-center leading-tight">
                         {action.label}
                       </span>
                     </div>
@@ -252,27 +252,27 @@ export default function WalletPage() {
           </div>
         </div>
 
-        <Card className="slide-up overflow-hidden border border-[#009058]/10 bg-white shadow-sm" style={{ animationDelay: '0.25s' }}>
+        <Card className="slide-up overflow-hidden border border-[#073B9A]/10 bg-white shadow-sm" style={{ animationDelay: '0.25s' }}>
           <CardContent className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[#009058]/15 bg-[#009058]/10">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[#073B9A]/15 bg-[#073B9A]/10">
                 <Image
-                  src="/enkamba-logo.png"
-                  alt="eNkamba AI"
+                  src="/kenz-logo.png"
+                  alt="Kenz AI"
                   width={30}
                   height={30}
                   className="h-7 w-7 rounded-lg object-cover"
                 />
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#009058]">Assistant financier IA</p>
-                <h2 className="mt-0.5 text-base font-black text-[#009058] sm:text-lg">Analyse intelligente du portefeuille</h2>
+                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#073B9A]">Assistant financier IA</p>
+                <h2 className="mt-0.5 text-base font-black text-[#073B9A] sm:text-lg">Analyse intelligente du portefeuille</h2>
                 <p className="mt-0.5 max-w-xl text-xs leading-5 text-muted-foreground sm:text-sm">
                   Analysez votre historique, repérez les anomalies et générez des recommandations financières.
                 </p>
               </div>
             </div>
-            <Button className="h-8 shrink-0 rounded-xl bg-[#009058] px-3 text-xs font-bold text-white hover:bg-[#009058] sm:h-9" asChild>
+            <Button className="h-8 shrink-0 rounded-xl bg-[#073B9A] px-3 text-xs font-bold text-white hover:bg-[#073B9A] sm:h-9" asChild>
               <Link href="/dashboard/report">Générer un rapport</Link>
             </Button>
           </CardContent>
@@ -281,7 +281,7 @@ export default function WalletPage() {
         {/* Stats Section */}
         <div className="grid grid-cols-1 gap-3 md:grid-cols-3 slide-up" style={{ animationDelay: '0.3s' }}>
           {/* Balance Overview */}
-          <Card className="border-0 bg-[#009058] text-white shadow-sm transition-shadow hover:shadow-md">
+          <Card className="border-0 bg-[#073B9A] text-white shadow-sm transition-shadow hover:shadow-md">
             <CardContent className="p-3 sm:p-4">
               <div className="mb-2 flex items-start justify-between">
                 <div className="flex-1">
@@ -334,7 +334,7 @@ export default function WalletPage() {
 
                 {/* GBP Bubble */}
                 <div className="group relative flex flex-col items-center gap-1 cursor-pointer flex-1">
-                  <div className="relative flex h-10 w-10 flex-col items-center justify-center rounded-full border border-[#FFA500]/60 bg-gradient-to-br from-[#FFA500] via-[#FFA500] to-[#FFA500] shadow-sm transition duration-200 group-hover:scale-105 group-hover:shadow-md">
+                  <div className="relative flex h-10 w-10 flex-col items-center justify-center rounded-full border border-[#F51B2B]/60 bg-gradient-to-br from-[#F51B2B] via-[#F51B2B] to-[#F51B2B] shadow-sm transition duration-200 group-hover:scale-105 group-hover:shadow-md">
                     <div className="relative text-white text-[0.4rem] font-bold leading-tight">GBP</div>
                     <div className="relative text-white text-[0.35rem] font-medium leading-tight px-1 text-center overflow-hidden">
                       {isBalanceVisible ? formatAmount(convertedAmounts.GBP, 'GBP') : '••••'}
@@ -358,26 +358,26 @@ export default function WalletPage() {
           </Card>
 
           {/* Account Status */}
-          <Card className="border border-[#009058]/10 bg-white shadow-sm transition-shadow hover:shadow-md">
+          <Card className="border border-[#073B9A]/10 bg-white shadow-sm transition-shadow hover:shadow-md">
             <CardContent className="p-3 sm:p-4">
               <div className="mb-2 flex items-start justify-between gap-3">
                 <div>
                   <p className="mb-1 text-xs font-medium text-muted-foreground">Compte</p>
                   <p className="text-base font-mono font-bold text-foreground sm:text-lg">{cardData.accountNumber}</p>
                 </div>
-                <div className="rounded-xl bg-[#FFA500]/10 p-2.5">
-                  <CreditCard className="w-6 h-6 text-[#FFA500]" />
+                <div className="rounded-xl bg-[#F51B2B]/10 p-2.5">
+                  <CreditCard className="w-6 h-6 text-[#F51B2B]" />
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-[#009058]"></div>
-                <span className="text-sm font-medium text-[#009058]">Actif</span>
+                <div className="w-2 h-2 rounded-full bg-[#073B9A]"></div>
+                <span className="text-sm font-medium text-[#073B9A]">Actif</span>
               </div>
             </CardContent>
           </Card>
 
           {/* Security */}
-          <Card className="border border-[#009058]/10 bg-white shadow-sm transition-shadow hover:shadow-md">
+          <Card className="border border-[#073B9A]/10 bg-white shadow-sm transition-shadow hover:shadow-md">
             <CardContent className="p-3 sm:p-4">
               <div className="mb-2 flex items-start justify-between">
                 <div>
@@ -398,7 +398,7 @@ export default function WalletPage() {
 
         {/* Transactions Timeline */}
         <div className="slide-up" style={{ animationDelay: '0.4s' }}>
-          <Card className="border-[#009058]/20 shadow-sm">
+          <Card className="border-[#073B9A]/20 shadow-sm">
             <CardHeader className="px-4 py-2.5">
               <CardTitle className="font-headline text-base">Transactions Récentes</CardTitle>
             </CardHeader>
@@ -428,7 +428,7 @@ export default function WalletPage() {
                             </span>
                           </div>
                         </div>
-                        <p className={`shrink-0 text-right text-sm font-bold ${tx.status === 'failed' || tx.status === 'pending' ? statusUI.amountClassName : isIncoming ? 'text-[#009058]' : 'text-foreground'}`}>
+                        <p className={`shrink-0 text-right text-sm font-bold ${tx.status === 'failed' || tx.status === 'pending' ? statusUI.amountClassName : isIncoming ? 'text-[#073B9A]' : 'text-foreground'}`}>
                           {isIncoming ? '+' : '-'} {tx.amount.toLocaleString('fr-FR')} CDF
                         </p>
                       </div>

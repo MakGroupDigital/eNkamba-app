@@ -72,7 +72,7 @@ const FEATURED_EVENTS: FeaturedEvent[] = [
     date: '25 Juin 2024',
     image: 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=800',
     eventId: 'event-002',
-    gradient: 'from-[#FFA500] to-red-800',
+    gradient: 'from-[#F51B2B] to-red-800',
   },
 ];
 
@@ -341,7 +341,7 @@ export default function EventsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-[#009058]/5 to-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-[#073B9A]/5 to-background">
       <div className="container mx-auto max-w-7xl p-4 space-y-6 animate-in fade-in duration-500">
         <header className="flex items-center gap-4 pt-4">
           <Button variant="ghost" size="icon" asChild>
@@ -350,7 +350,7 @@ export default function EventsPage() {
             </Link>
           </Button>
           <div className="flex-1">
-            <h1 className="font-headline text-2xl font-bold bg-gradient-to-r from-[#009058] to-[#009058] bg-clip-text text-transparent">
+            <h1 className="font-headline text-2xl font-bold bg-gradient-to-r from-[#073B9A] to-[#073B9A] bg-clip-text text-transparent">
               Billeterie Événements
             </h1>
             <p className="text-sm text-muted-foreground">
@@ -611,7 +611,7 @@ export default function EventsPage() {
                     className="object-cover group-hover:scale-110 transition-transform duration-300"
                   />
                   {event.featured && (
-                    <Badge className="absolute top-2 right-2 bg-gradient-to-r from-[#009058] to-[#009058]">
+                    <Badge className="absolute top-2 right-2 bg-gradient-to-r from-[#073B9A] to-[#073B9A]">
                       Vedette
                     </Badge>
                   )}

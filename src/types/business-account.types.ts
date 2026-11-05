@@ -117,7 +117,7 @@ export interface TransferAgencyCompliance {
   legalDocuments: string[];
   headOfficeConfirmed: boolean;
   settlementWallet: string;
-  defaultCurrency: 'USD' | 'CDF' | 'EUR' | 'RMB' | '';
+  defaultCurrency: 'USD' | 'CDF' | 'EUR' | 'CNY' | 'RMB' | '';
   supportedCurrencies: string[];
   openingCashFloat: string;
   dailyTransactionLimit: string;

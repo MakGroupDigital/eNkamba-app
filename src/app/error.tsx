@@ -50,7 +50,7 @@ export default function Error({ error, reset }: ErrorProps) {
 
   const handleCopyError = () => {
     const errorText = `
-Erreur eNkamba
+Erreur Kenz
 --------------
 Message: ${error.message}
 Digest: ${error.digest || 'N/A'}
@@ -140,8 +140,8 @@ Date: ${new Date().toISOString()}
           <div className="flex items-center justify-center gap-2 mb-8">
             {isOnline ? (
               <>
-                <Wifi className="w-5 h-5 text-[#009058]" />
-                <span className="text-sm text-[#009058] font-semibold">Connexion active</span>
+                <Wifi className="w-5 h-5 text-[#073B9A]" />
+                <span className="text-sm text-[#073B9A] font-semibold">Connexion active</span>
               </>
             ) : (
               <>
@@ -155,7 +155,7 @@ Date: ${new Date().toISOString()}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
             <Button
               onClick={reset}
-              className="w-full bg-gradient-to-r from-[#009058] to-[#009058] hover:from-[#009058] hover:to-[#009058] text-white gap-2"
+              className="w-full bg-gradient-to-r from-[#073B9A] to-[#073B9A] hover:from-[#073B9A] hover:to-[#073B9A] text-white gap-2"
             >
               <RefreshCw className="w-4 h-4" />
               Réessayer
@@ -164,7 +164,7 @@ Date: ${new Date().toISOString()}
             <Button
               onClick={() => router.push('/dashboard')}
               variant="outline"
-              className="w-full border-[#009058]/30 hover:bg-[#009058]/10 gap-2"
+              className="w-full border-[#073B9A]/30 hover:bg-[#073B9A]/10 gap-2"
             >
               <Home className="w-4 h-4" />
               Tableau de bord
@@ -175,7 +175,7 @@ Date: ${new Date().toISOString()}
             <Button
               onClick={handleGoBack}
               variant="outline"
-              className="w-full border-[#009058]/30 hover:bg-[#009058]/10 gap-2"
+              className="w-full border-[#073B9A]/30 hover:bg-[#073B9A]/10 gap-2"
             >
               <ArrowLeft className="w-4 h-4" />
               Retour
@@ -184,11 +184,11 @@ Date: ${new Date().toISOString()}
             <Button
               onClick={handleCopyError}
               variant="outline"
-              className="w-full border-[#009058]/30 hover:bg-[#009058]/10 gap-2"
+              className="w-full border-[#073B9A]/30 hover:bg-[#073B9A]/10 gap-2"
             >
               {copied ? (
                 <>
-                  <Check className="w-4 h-4 text-[#009058]" />
+                  <Check className="w-4 h-4 text-[#073B9A]" />
                   Copié !
                 </>
               ) : (
@@ -225,28 +225,28 @@ Date: ${new Date().toISOString()}
             </p>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li className="flex items-start gap-2">
-                <span className="text-[#009058] mt-0.5">•</span>
+                <span className="text-[#073B9A] mt-0.5">•</span>
                 <span>Vérifiez votre connexion internet</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-[#009058] mt-0.5">•</span>
+                <span className="text-[#073B9A] mt-0.5">•</span>
                 <span>Actualisez la page</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-[#009058] mt-0.5">•</span>
+                <span className="text-[#073B9A] mt-0.5">•</span>
                 <span>Essayez de vous reconnecter</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-[#009058] mt-0.5">•</span>
+                <span className="text-[#073B9A] mt-0.5">•</span>
                 <span>Si le problème persiste, contactez le support</span>
               </li>
             </ul>
           </div>
 
           {/* Message d'aide */}
-          <div className="mt-6 p-4 bg-[#009058]/10 rounded-lg border border-[#009058]/20">
+          <div className="mt-6 p-4 bg-[#073B9A]/10 rounded-lg border border-[#073B9A]/20">
             <p className="text-xs text-muted-foreground text-center">
-              Besoin d'aide ? Contactez le support eNkamba avec l'ID d'erreur ci-dessus
+              Besoin d'aide ? Contactez le support Kenz avec l'ID d'erreur ci-dessus
             </p>
           </div>
         </CardContent>

@@ -12,8 +12,8 @@ const AgentRelayIcon = ({ size = 24 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <linearGradient id="agentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#009058" />
-        <stop offset="100%" stopColor="#009058" />
+        <stop offset="0%" stopColor="#073B9A" />
+        <stop offset="100%" stopColor="#073B9A" />
       </linearGradient>
     </defs>
     <circle cx="24" cy="24" r="20" fill="url(#agentGrad)" />
@@ -71,7 +71,7 @@ export function AgentRelaySection() {
         <CardHeader className="bg-gradient-to-r from-primary/10 to-transparent">
           <CardTitle className="font-headline text-lg flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-primary" />
-            Agent Relais eNkamba-Pay
+            Agent Relais Kenz-Pay
           </CardTitle>
         </CardHeader>
         <CardContent className="p-8">
@@ -128,10 +128,10 @@ export function AgentRelaySection() {
     const isSubmitted = status === 'submitted';
     
     return (
-      <Card className="overflow-hidden border-2 border-[#009058]/30 bg-[#009058]/5">
-        <CardHeader className="bg-gradient-to-r from-[#009058]/10 to-transparent">
+      <Card className="overflow-hidden border-2 border-[#073B9A]/30 bg-[#073B9A]/5">
+        <CardHeader className="bg-gradient-to-r from-[#073B9A]/10 to-transparent">
           <CardTitle className="font-headline text-lg flex items-center gap-2">
-            <Clock size={20} className="text-[#009058]" />
+            <Clock size={20} className="text-[#073B9A]" />
             Demande Agent Relais
           </CardTitle>
         </CardHeader>
@@ -161,7 +161,7 @@ export function AgentRelaySection() {
               </Button>
             }
             badge={
-              <span className="px-2 py-0.5 rounded-full bg-[#FFA500]/15 text-[#FFA500] text-xs font-medium">
+              <span className="px-2 py-0.5 rounded-full bg-[#F51B2B]/15 text-[#F51B2B] text-xs font-medium">
                 {isSubmitted ? 'En examen' : `Étape ${application?.currentStep || 1}/5`}
               </span>
             }
@@ -215,14 +215,14 @@ export function AgentRelaySection() {
       <CardHeader className="bg-gradient-to-r from-primary/10 to-transparent">
         <CardTitle className="font-headline text-lg flex items-center gap-2">
           <span className="h-2 w-2 rounded-full bg-primary" />
-          Devenir Agent Relais eNkamba-Pay
+          Devenir Agent Relais Kenz-Pay
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
         <SettingsItem
           icon={AgentRelayIcon}
           title="Devenir Agent Relais"
-          description="Rejoignez notre réseau de partenaires et développez votre activité avec eNkamba"
+          description="Rejoignez notre réseau de partenaires et développez votre activité avec Kenz"
           action={
             <Button variant="outline" size="sm" className="rounded-xl" asChild>
               <Link href="/dashboard/agent-relay">

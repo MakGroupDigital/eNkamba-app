@@ -432,7 +432,7 @@ export function ContactQRScanner({ open, onOpenChange, onContactFound }: Contact
 
                     <div className="flex items-center gap-2 text-primary">
                       <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-                      <span className="text-sm font-medium">Sur eNkamba</span>
+                      <span className="text-sm font-medium">Sur Kenz</span>
                     </div>
                   </div>
 
@@ -458,17 +458,17 @@ export function ContactQRScanner({ open, onOpenChange, onContactFound }: Contact
               ) : (
                 <>
                   {/* Contact non trouvé */}
-                  <div className="flex flex-col items-center gap-4 p-6 bg-gradient-to-br from-[#FFA500]/10 to-[#FFA500]/15 rounded-lg border border-[#FFA500]/30">
-                    <div className="h-20 w-20 rounded-full bg-[#FFA500]/100 flex items-center justify-center">
+                  <div className="flex flex-col items-center gap-4 p-6 bg-gradient-to-br from-[#F51B2B]/10 to-[#F51B2B]/15 rounded-lg border border-[#F51B2B]/30">
+                    <div className="h-20 w-20 rounded-full bg-[#F51B2B]/100 flex items-center justify-center">
                       <UserPlus className="h-10 w-10 text-white" />
                     </div>
                     
                     <div className="text-center">
-                      <p className="text-lg font-bold text-[#FFA500]">
+                      <p className="text-lg font-bold text-[#F51B2B]">
                         Contact non trouvé
                       </p>
-                      <p className="text-sm text-[#FFA500] mt-1">
-                        Ce contact n'est pas encore sur eNkamba
+                      <p className="text-sm text-[#F51B2B] mt-1">
+                        Ce contact n'est pas encore sur Kenz
                       </p>
                     </div>
                   </div>

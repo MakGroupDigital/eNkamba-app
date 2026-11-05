@@ -89,7 +89,7 @@ export function EnkambaSmartKeyboard({
             <Keyboard className="h-4 w-4" />
           </span>
           <div className="min-w-0">
-            <p className="truncate text-xs font-black text-foreground">Clavier eNkamba</p>
+            <p className="truncate text-xs font-black text-foreground">Clavier Kenz</p>
             <p className="truncate text-[10px] font-semibold text-muted-foreground">
               {ENKAMBA_KEYBOARD_TOTAL}+ stickers, icônes et eNbimoji
             </p>
@@ -102,11 +102,11 @@ export function EnkambaSmartKeyboard({
             variant="ghost"
             className="h-8 w-8 rounded-full"
             onClick={() => setShowSettings((value) => !value)}
-            aria-label="Réglages clavier eNkamba"
+            aria-label="Réglages clavier Kenz"
           >
             <Settings2 className="h-4 w-4" />
           </Button>
-          <Button type="button" size="icon" variant="ghost" className="h-8 w-8 rounded-full" onClick={onClose} aria-label="Fermer le clavier eNkamba">
+          <Button type="button" size="icon" variant="ghost" className="h-8 w-8 rounded-full" onClick={onClose} aria-label="Fermer le clavier Kenz">
             <X className="h-4 w-4" />
           </Button>
         </div>
@@ -158,7 +158,7 @@ export function EnkambaSmartKeyboard({
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Rechercher dans le clavier eNkamba"
+          placeholder="Rechercher dans le clavier Kenz"
           className="min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none placeholder:text-muted-foreground"
         />
       </label>

@@ -13,9 +13,9 @@ function getAppFromPath(pathname: string) {
   if (pathname.includes('/ugavi')) return 'Logistique';
   if (pathname.includes('/mbongo') || pathname.includes('/wallet') || pathname.includes('/pay-receive')) return 'Paiement';
   if (pathname.includes('/makutano')) return 'Réseau';
-  if (pathname.includes('/ai')) return 'eNkamba AI';
+  if (pathname.includes('/ai')) return 'Kenz AI';
   if (pathname.includes('/admin')) return 'Admin';
-  return 'eNkamba';
+  return 'Kenz';
 }
 
 export function useRealtimeNotifications() {
@@ -88,7 +88,7 @@ export function useRealtimeNotifications() {
       const targetUrl = isCall && actionUrl ? `${actionUrl}${actionUrl.includes('?') ? '&' : '?'}webAccepted=1` : actionUrl;
       const notification = new Notification(title, {
         body: message,
-        icon: '/enkamba-logo.png',
+        icon: '/kenz-logo.png',
         badge: '/favicon.png',
         tag: notificationId || actionUrl || title,
         renotify: isCall,
@@ -104,7 +104,7 @@ export function useRealtimeNotifications() {
     };
 
     const unsubscribeNotification = enkambaRealtime.subscribe('notification:realtime', (payload) => {
-      const title = String(payload.title || 'eNkamba');
+      const title = String(payload.title || 'Kenz');
       const message = String(payload.message || 'Nouvelle notification');
       const actionUrl = String(payload.actionUrl || '');
       if (!shouldDisplay(payload, `${title}:${message}:${actionUrl}`)) return;

@@ -13,6 +13,7 @@ import { useWalletTransactions } from '@/hooks/useWalletTransactions';
 import { useSecureBalanceVisibility } from '@/hooks/useSecureBalanceVisibility';
 import { PinVerification } from '@/components/payment/PinVerification';
 import { auth, db } from '@/lib/firebase';
+import { currencyRegionalLabel } from '@/lib/currency-codes';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 
@@ -37,8 +38,8 @@ const DEFAULT_COPY: DashboardCopy = {
   agentAccount: 'Compte Agent',
   linkAccount: 'Lier un compte',
   bonus: 'Bonus',
-  esim: 'eSIM-eNkamba',
-  tax: 'Taxe et Impôt',
+  esim: 'eSIM-Kenz',
+  tax: 'DRC Gouv',
   regideso: 'Regideso',
   canal: 'Canal+',
   academicFees: 'Frais Académiques',
@@ -142,26 +143,25 @@ const quickActions = [
 ];
 
 const financialServices = [
+  { icon: TaxIcon, labelKey: 'tax', href: '/dashboard/drc-gouv', aliases: ['drc gouv', 'impot', 'impôts', 'taxe', 'taxes', 'declaration', 'fiscalite', 'dgi', 'douane'] },
   { icon: SavingsIcon, labelKey: 'savings', href: '/dashboard/savings', aliases: ['epargner', 'argent de cote'] },
   { icon: CreditIcon, labelKey: 'credit', href: '/dashboard/credit', aliases: ['pret', 'emprunt', 'microcredit'] },
   { icon: TontineIcon, labelKey: 'tontine', href: '/dashboard/tontine', aliases: ['ristourne', 'cotisation', 'groupe'] },
   { icon: ConversionIcon, labelKey: 'conversion', href: '/dashboard/conversion', aliases: ['bureau de change', 'devise', 'usd', 'eur', 'rmb', 'fcfa', 'changer argent'] },
   { icon: ReferralIcon, labelKey: 'referral', href: '/dashboard/referral', aliases: ['inviter', 'parrain', 'commission'] },
-  { icon: AgentIcon, labelKey: 'agentAccount', href: '/dashboard/agent', aliases: ['agent', 'compte agent', 'cash in', 'cash out'] },
   { icon: LinkAccountIcon, labelKey: 'linkAccount', href: '/dashboard/link-account', aliases: ['banque', 'lier banque', 'compte bancaire'] },
   { icon: BonusIcon, labelKey: 'bonus', href: '/dashboard/bonus', aliases: ['recompense', 'cadeau', 'promotion'] },
 ];
 
 const bills = [
   { icon: ESimIcon, labelKey: 'esim', href: '/dashboard/partner-services', aliases: ['sim', 'internet', 'data'] },
-  { icon: TaxIcon, labelKey: 'tax', href: '/dashboard/tax-declaration', aliases: ['impot', 'declaration', 'fiscalite'] },
   { icon: WaterIcon, labelKey: 'regideso', href: '/dashboard/pay-bill?type=water', aliases: ['eau', 'facture eau'] },
   { icon: TvIcon, labelKey: 'canal', href: '/dashboard/pay-bill?type=tv', aliases: ['television', 'tv', 'abonnement'] },
   { icon: AcademicIcon, labelKey: 'academicFees', href: '/dashboard/academic-fees', aliases: ['universite', 'academique', 'etudiant'] },
   { icon: SchoolIcon, labelKey: 'schoolFees', href: '/dashboard/school-fees', aliases: ['ecole', 'scolarite', 'frais scolaire'] },
+  { icon: EChurchIcon, labelKey: 'echurch', href: '/dashboard/church-pay', aliases: ['eglise', 'église', 'dime', 'dîme', 'offrande', 'paroisse', 'church'] },
   { icon: HealthIcon, labelKey: 'health', href: '/dashboard/health', aliases: ['hopital', 'clinique', 'medical'] },
   { icon: FiveGoIcon, labelKey: 'fivego', href: '/dashboard/5go', aliases: ['transport', 'mobilite', 'course'] },
-  { icon: EChurchIcon, labelKey: 'echurch', href: '/dashboard/echurch', aliases: ['eglise', 'offrande', 'don'] },
   { icon: EventIcon, labelKey: 'events', href: '/dashboard/events', aliases: ['evenement', 'ticket', 'billet'] },
   { icon: PhoneCreditIcon, labelKey: 'phoneCredit', href: '/dashboard/pay-bill?type=phone', aliases: ['airtime', 'telephone', 'unite', 'credit appel'] },
   { icon: InsuranceIcon, labelKey: 'insurance', href: '/dashboard/insurance', aliases: ['assurer', 'protection'] },
@@ -349,23 +349,23 @@ export default function MbongoDashboard() {
       />
       <div className="min-h-screen bg-white pt-24 animate-in fade-in duration-500">
         <main className="container mx-auto max-w-5xl space-y-5 px-4 pb-8 pt-2">
-          <div className="grid grid-cols-5 gap-2 sm:gap-6">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(56px,1fr))] gap-x-1.5 gap-y-3 sm:grid-cols-5 sm:gap-6">
             {filteredQuickActions.map((action) => {
               const IconComponent = action.icon;
               const label = copy[action.labelKey] || DEFAULT_COPY[action.labelKey] || action.labelKey;
               return (
                 <Link key={action.labelKey} href={action.href} className="group flex flex-col items-center gap-2.5">
-                  <div className="flex h-[62px] w-[62px] items-center justify-center rounded-full bg-[#0A8B46] text-white shadow-xl shadow-[#0A8B46]/20 transition-all duration-300 hover:scale-105 sm:h-24 sm:w-24">
-                    <IconComponent className="h-9 w-9 text-white sm:h-14 sm:w-14" strokeWidth={2.4} />
+                  <div className="relative flex h-[clamp(48px,15vw,62px)] w-[clamp(48px,15vw,62px)] items-center justify-center rounded-full border border-[#073B9A]/15 bg-white text-white shadow-xl shadow-[#073B9A]/15 transition-all duration-300 hover:scale-105 sm:h-24 sm:w-24">
+                    <IconComponent className="h-[65%] w-[65%] text-white sm:h-14 sm:w-14" strokeWidth={2.4} />
                   </div>
-                  <p className="text-center text-[12px] font-black leading-tight text-slate-800 sm:text-sm">{label}</p>
+                  <p className="w-full break-words text-center text-[11px] font-black leading-tight text-slate-800 min-[380px]:text-[12px] sm:text-sm">{label}</p>
                 </Link>
               );
             })}
           </div>
 
           <section className="space-y-4">
-            <div className="relative flex min-h-[118px] items-center justify-between overflow-hidden rounded-2xl bg-[#0A8B46] px-6 py-5 text-white shadow-xl shadow-[#0A8B46]/20">
+            <div className="relative flex min-h-[118px] items-center justify-between overflow-hidden rounded-2xl border-l-4 border-[#F51B2B] bg-[#073B9A] px-6 py-5 text-white shadow-xl shadow-[#073B9A]/20">
               <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_86%_20%,rgba(255,255,255,0.16),transparent_34%)]" />
               <Link href="/dashboard/wallet" className="relative min-w-0 flex-1">
                 <p className="text-[11px] font-black uppercase tracking-[0.22em] text-white/75">Solde principal</p>
@@ -384,27 +384,28 @@ export default function MbongoDashboard() {
                 {isBiometricChecking ? (
                   <Loader2 className="h-7 w-7 animate-spin" />
                 ) : isBalanceVisible ? (
-                  <Eye className="h-7 w-7" />
+                  <Eye className="h-7 w-7 text-[#F51B2B]" />
                 ) : (
-                  <EyeOff className="h-7 w-7" />
+                  <EyeOff className="h-7 w-7 text-[#F51B2B]" />
                 )}
               </button>
             </div>
 
             <div>
               <div className="mb-3 flex items-center justify-center gap-4">
-                <span className="h-px w-14 bg-[#0A8B46]/20" />
-                <p className="text-center text-[12px] font-black uppercase tracking-[0.22em] text-[#0A8B46]">Autres devises</p>
-                <span className="h-px w-14 bg-[#0A8B46]/20" />
+                <span className="h-px w-14 bg-[#073B9A]/20" />
+                <p className="text-center text-[12px] font-black uppercase tracking-[0.22em] text-[#073B9A]">Autres devises</p>
+                <span className="h-px w-14 bg-[#F51B2B]/45" />
               </div>
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 gap-2 min-[400px]:grid-cols-4">
                 {[
-                  { code: 'USD', symbol: '$', estimated: walletBalance * dailyRates.USD },
-                  { code: 'EUR', symbol: '€', estimated: walletBalance * dailyRates.EUR },
-                  { code: 'RMB', symbol: '¥', estimated: walletBalance * dailyRates.CNY },
-                  { code: 'FCFA', symbol: 'FCFA', estimated: walletBalance * dailyRates.XAF },
+                  // walletKey keeps the legacy Firestore key; code is the ISO 4217 code shown to users (ENK-051).
+                  { walletKey: 'USD', code: 'USD', symbol: '$', estimated: walletBalance * dailyRates.USD },
+                  { walletKey: 'EUR', code: 'EUR', symbol: '€', estimated: walletBalance * dailyRates.EUR },
+                  { walletKey: 'RMB', code: 'CNY', symbol: '¥', estimated: walletBalance * dailyRates.CNY },
+                  { walletKey: 'FCFA', code: 'XAF', symbol: 'FCFA', estimated: walletBalance * dailyRates.XAF },
                 ].map((item) => (
-                  <Link key={item.code} href="/dashboard/conversion" className="relative min-h-[74px] overflow-hidden rounded-xl bg-[#0A8B46] p-2.5 text-white shadow-md shadow-[#0A8B46]/12 transition hover:-translate-y-0.5 hover:shadow-lg">
+                  <Link key={item.code} href="/dashboard/conversion" title={currencyRegionalLabel(item.code)} aria-label={`Portefeuille ${currencyRegionalLabel(item.code)}`} className="relative min-h-[74px] overflow-hidden rounded-xl bg-[#073B9A] p-2.5 text-white shadow-md shadow-[#073B9A]/12 transition hover:-translate-y-0.5 hover:shadow-lg">
                     <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(145deg,rgba(255,255,255,0.14),transparent_58%)]" />
                     <div className="relative flex items-start justify-between gap-1">
                       <p className="text-sm font-black">{item.code}</p>
@@ -413,7 +414,7 @@ export default function MbongoDashboard() {
                       </span>
                     </div>
                     <p className="relative mt-2 truncate text-base font-black">
-                      {isBalanceVisible ? Number(currencyWallets[item.code]?.balance || 0).toLocaleString('fr-FR', { maximumFractionDigits: 2 }) : '••••'}
+                      {isBalanceVisible ? Number(currencyWallets[item.walletKey]?.balance || 0).toLocaleString('fr-FR', { maximumFractionDigits: 2 }) : '••••'}
                     </p>
                     <p className="relative mt-0.5 truncate text-[9px] font-bold text-white/68">
                       ≈ {isBalanceVisible ? item.estimated.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) : '••••'} si CDF
@@ -424,24 +425,24 @@ export default function MbongoDashboard() {
             </div>
           </section>
 
-          <Card className="overflow-hidden rounded-3xl border-[#0A8B46]/10 bg-white shadow-xl shadow-black/5">
+          <Card className="overflow-hidden rounded-3xl border-[#073B9A]/10 bg-white shadow-xl shadow-black/5">
             <CardHeader className="px-5 pb-2 pt-5">
               <CardTitle className="font-headline flex items-center gap-2 text-2xl text-slate-950">
-                <span className="h-3 w-3 rounded-full bg-[#0A8B46]" />
+                <span className="h-3 w-3 rounded-full bg-[#F51B2B]" />
                 {copy.financialServices}
                 {isTranslating && <span className="text-xs font-normal text-muted-foreground">...</span>}
               </CardTitle>
             </CardHeader>
             <CardContent className="px-5 pb-6 pt-2">
-              <div className="grid grid-cols-4 gap-3 text-center sm:gap-5">
+              <div className="grid grid-cols-3 gap-3 text-center min-[400px]:grid-cols-4 sm:gap-5">
               {filteredFinancialServices.map(service => {
                 const IconComponent = service.icon;
                 return (
-                  <Link href={service.href} key={service.labelKey} className="flex flex-col items-center gap-2 text-sm font-semibold text-slate-950 transition-all hover:text-[#0A8B46] group">
-                    <div className={cn("mbongo-service-icon flex h-[82px] w-full max-w-[92px] items-center justify-center overflow-visible rounded-2xl bg-white", "border border-[#0A8B46]/10 shadow-sm group-hover:shadow-md group-hover:scale-[1.02] transition-all duration-300")}>
-                      <IconComponent size={58} className="h-[58px] w-[58px]" />
+                  <Link href={service.href} key={service.labelKey} className="flex flex-col items-center gap-2 text-sm font-semibold text-slate-950 transition-all hover:text-[#073B9A] group">
+                    <div className={cn("mbongo-service-icon flex aspect-square w-full max-w-[92px] items-center justify-center overflow-hidden rounded-2xl bg-white", "border border-[#073B9A]/10 shadow-sm group-hover:shadow-md group-hover:scale-[1.02] transition-all duration-300")}>
+                      <IconComponent size={58} className="h-[70%] w-[70%] max-h-[58px] max-w-[58px]" />
                     </div>
-                    <span className="text-center text-[12px] font-bold leading-tight">{copy[service.labelKey]}</span>
+                    <span className="w-full break-words text-center text-[11px] font-bold leading-tight min-[380px]:text-[12px]">{copy[service.labelKey]}</span>
                   </Link>
                 );
               })}
@@ -449,29 +450,29 @@ export default function MbongoDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="overflow-hidden rounded-3xl border-[#0A8B46]/10 bg-white shadow-xl shadow-black/5">
+          <Card className="overflow-hidden rounded-3xl border-[#073B9A]/10 bg-white shadow-xl shadow-black/5">
             <CardHeader className="px-5 pb-2 pt-5">
               <CardTitle className="font-headline flex items-center gap-2 text-xl text-slate-950">
-                <span className="h-3 w-3 rounded-full bg-[#0A8B46]" />
+                <span className="h-3 w-3 rounded-full bg-[#F51B2B]" />
                 {copy.billsServices}
               </CardTitle>
             </CardHeader>
             <CardContent className="px-5 pb-6 pt-2">
-              <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 sm:gap-4">
+              <div className="grid grid-cols-3 gap-2 min-[380px]:gap-3 sm:grid-cols-4 sm:gap-4">
               {filteredBills.map(bill => {
                 const IconComponent = bill.icon;
                 return (
-                  <Link href={bill.href} key={bill.labelKey} className={cn("flex min-h-[118px] flex-col items-center justify-center gap-2.5 rounded-2xl p-3 text-center", "bg-white border border-[#0A8B46]/10", "text-sm font-semibold text-slate-950", "hover:shadow-md hover:scale-[1.02] transition-all duration-300", "group")}>
+                  <Link href={bill.href} key={bill.labelKey} className={cn("flex min-h-[118px] flex-col items-center justify-center gap-2.5 rounded-2xl p-3 text-center", "bg-white border border-[#073B9A]/10", "text-sm font-semibold text-slate-950", "hover:shadow-md hover:scale-[1.02] transition-all duration-300", "group")}>
                     <div className="mbongo-service-icon group-hover:scale-105 transition-transform duration-300">
-                      <IconComponent size={62} className="h-[62px] w-[62px]" />
+                      <IconComponent size={62} className="h-[clamp(44px,13vw,62px)] w-[clamp(44px,13vw,62px)]" />
                     </div>
-                    <span className="text-center text-[12px] font-bold leading-tight">{copy[bill.labelKey]}</span>
+                    <span className="w-full break-words text-center text-[11px] font-bold leading-tight min-[380px]:text-[12px]">{copy[bill.labelKey]}</span>
                   </Link>
                 );
               })}
               </div>
               {hasSearchQuery && !hasSearchResults && (
-                <div className="mt-4 rounded-2xl border border-dashed border-[#0A8B46]/20 bg-[#0A8B46]/5 px-4 py-5 text-center">
+                <div className="mt-4 rounded-2xl border border-dashed border-[#073B9A]/20 bg-[#073B9A]/5 px-4 py-5 text-center">
                   <p className="text-sm font-black text-slate-900">Aucun service trouvé</p>
                   <p className="mt-1 text-xs font-semibold text-slate-500">Essayez avec paiement, tontine, bureau de change, facture ou QR.</p>
                 </div>
@@ -490,31 +491,6 @@ export default function MbongoDashboard() {
             currency: 'CDF',
           }}
         />
-        <style jsx global>{`
-          .mbongo-service-icon svg [fill='#FFA500'] {
-            fill: #0A8B46 !important;
-          }
-
-          .mbongo-service-icon svg [stroke='#FFA500'] {
-            stroke: #0A8B46 !important;
-          }
-
-          .mbongo-service-icon svg [stop-color='#FFA500'] {
-            stop-color: #0A8B46 !important;
-          }
-
-          .mbongo-service-icon svg [fill='#009058'],
-          .mbongo-service-icon svg [fill='#25543A'],
-          .mbongo-service-icon svg [fill='#479B67'] {
-            fill: #0A8B46 !important;
-          }
-
-          .mbongo-service-icon svg [stroke='#009058'],
-          .mbongo-service-icon svg [stroke='#25543A'],
-          .mbongo-service-icon svg [stroke='#479B67'] {
-            stroke: #0A8B46 !important;
-          }
-        `}</style>
       </div>
     </>
   );

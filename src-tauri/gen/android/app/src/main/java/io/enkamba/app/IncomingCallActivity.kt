@@ -43,7 +43,7 @@ class IncomingCallActivity : AppCompatActivity() {
       )
     }
 
-    val title = intent.getStringExtra("title").orEmpty().ifBlank { "Appel eNkamba" }
+    val title = intent.getStringExtra("title").orEmpty().ifBlank { "Appel Kenz" }
     val body = intent.getStringExtra("body").orEmpty().ifBlank { "Appel entrant" }
     val callType = intent.getStringExtra("callType").orEmpty().ifBlank { "video" }
     val callId = intent.getStringExtra("callId").orEmpty()
@@ -75,7 +75,7 @@ class IncomingCallActivity : AppCompatActivity() {
     }
 
     val brand = TextView(this).apply {
-      text = "eNkamba"
+      text = "Kenz"
       textSize = 15f
       setTextColor(Color.argb(210, 255, 255, 255))
       typeface = Typeface.DEFAULT_BOLD

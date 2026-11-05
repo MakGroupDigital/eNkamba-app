@@ -8,9 +8,10 @@ export function AppServiceWorkerRegistrar() {
 
     const registerWorker = async () => {
       try {
-        await navigator.serviceWorker.register("/firebase-messaging-sw.js");
+        const registration = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
+        await registration.update();
       } catch (error) {
-        console.warn("Service worker eNkamba indisponible:", error);
+        console.warn("Service worker Kenz indisponible:", error);
       }
     };
 

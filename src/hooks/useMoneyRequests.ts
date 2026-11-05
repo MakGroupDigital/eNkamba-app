@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
-import { httpsCallable } from 'firebase/functions';
-import { functions, db, auth } from '@/lib/firebase';
+import { serverCallable } from '@/lib/server-callable';
+import { db, auth } from '@/lib/firebase';
 import { collection, onSnapshot, query, orderBy, limit, where } from 'firebase/firestore';
 
 export interface MoneyRequest {
@@ -89,7 +89,7 @@ export function useMoneyRequests() {
       setError(null);
 
       try {
-        const acceptFn = httpsCallable(functions, 'acceptMoneyRequest');
+        const acceptFn = serverCallable('acceptMoneyRequest');
         const result = await acceptFn({
           requestId,
           userId: currentUser.uid,
@@ -119,7 +119,7 @@ export function useMoneyRequests() {
       setError(null);
 
       try {
-        const rejectFn = httpsCallable(functions, 'rejectMoneyRequest');
+        const rejectFn = serverCallable('rejectMoneyRequest');
         const result = await rejectFn({
           requestId,
           userId: currentUser.uid,

@@ -78,18 +78,18 @@ export default function AgeRestrictedPage() {
       <div className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-md flex-col justify-center">
         <div className="mb-6 text-center">
           <div className="mx-auto mb-4 h-20 w-20 overflow-hidden rounded-full bg-primary shadow-2xl ring-2 ring-white/40">
-            <Image src="/enkamba-logo.png" alt="eNkamba" width={96} height={96} className="h-full w-full scale-[1.42] rounded-full object-cover" />
+            <Image src="/kenz-logo.png" alt="Kenz" width={96} height={96} className="h-full w-full scale-[1.42] rounded-full object-cover" />
           </div>
           <h1 className="text-2xl font-black">Accès limité</h1>
           <p className="mt-2 text-sm font-medium text-white/75">
-            eNkamba est réservé aux utilisateurs de {ENKAMBA_MINIMUM_AGE} ans ou plus.
+            Kenz est réservé aux utilisateurs de {ENKAMBA_MINIMUM_AGE} ans ou plus.
           </p>
         </div>
 
         <Card className="rounded-[28px] border-white/15 bg-white text-slate-950 shadow-2xl">
           <CardContent className="space-y-5 p-5">
-            <div className="rounded-2xl bg-[#FFA500]/10 p-4">
-              <AlertTriangle className="mb-3 h-7 w-7 text-[#FFA500]" />
+            <div className="rounded-2xl bg-[#F51B2B]/10 p-4">
+              <AlertTriangle className="mb-3 h-7 w-7 text-[#F51B2B]" />
               <p className="text-sm font-bold">
                 Votre date de naissance indique {age !== null ? `${age} ans` : 'un âge non valide'}.
               </p>

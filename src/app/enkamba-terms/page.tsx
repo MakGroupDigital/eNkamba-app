@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 const sections = [
   {
     title: '1. Acceptation',
-    text: 'En utilisant eNkamba, vous acceptez les présentes conditions. Elles encadrent l’accès aux apps de chat, marché, paiement, logistique, réseau social, IA, comptes professionnels et services associés.',
+    text: 'En utilisant Kenz, vous acceptez les présentes conditions. Elles encadrent l’accès aux apps de chat, marché, paiement, logistique, réseau social, IA, comptes professionnels et services associés.',
   },
   {
     title: '2. Compte utilisateur',
@@ -20,7 +20,7 @@ const sections = [
   },
   {
     title: '4. Marché et vendeurs',
-    text: 'Les vendeurs, fournisseurs et entreprises sont responsables des produits, prix, stocks, délais, garanties et informations publiées. eNkamba peut contrôler ou suspendre les comptes suspects.',
+    text: 'Les vendeurs, fournisseurs et entreprises sont responsables des produits, prix, stocks, délais, garanties et informations publiées. Kenz peut contrôler ou suspendre les comptes suspects.',
   },
   {
     title: '5. Logistique',
@@ -36,7 +36,7 @@ const sections = [
   },
   {
     title: '8. Disponibilité',
-    text: 'eNkamba cherche à maintenir un service stable, mais certaines fonctionnalités peuvent dépendre du réseau, des partenaires, des services de paiement, de la localisation ou des infrastructures externes.',
+    text: 'Kenz cherche à maintenir un service stable, mais certaines fonctionnalités peuvent dépendre du réseau, des partenaires, des services de paiement, de la localisation ou des infrastructures externes.',
   },
   {
     title: '9. Modification des conditions',
@@ -55,7 +55,7 @@ export default function EnkambaTermsPage() {
             </Link>
           </Button>
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-primary">eNkamba</p>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-primary">Kenz</p>
             <h1 className="text-xl font-black">Conditions d’utilisation</h1>
           </div>
         </div>
@@ -66,9 +66,9 @@ export default function EnkambaTermsPage() {
           <CardContent className="space-y-6 p-6 sm:p-8">
             <div className="rounded-2xl bg-primary p-5 text-white">
               <FileText className="mb-3 h-8 w-8" />
-              <h2 className="text-2xl font-black">Utiliser eNkamba avec responsabilité</h2>
+              <h2 className="text-2xl font-black">Utiliser Kenz avec responsabilité</h2>
               <p className="mt-2 text-sm text-white/80">
-                Ces conditions expliquent les règles générales d’utilisation de la plateforme numérique intégrée eNkamba.
+                Ces conditions expliquent les règles générales d’utilisation de la plateforme numérique intégrée Kenz.
               </p>
             </div>
 
@@ -82,7 +82,7 @@ export default function EnkambaTermsPage() {
             <section className="rounded-xl border bg-white p-4">
               <h3 className="text-base font-black">Contact</h3>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                Pour toute question liée aux conditions d’utilisation, contactez le support eNkamba depuis l’application ou via les canaux officiels communiqués par la plateforme.
+                Pour toute question liée aux conditions d’utilisation, contactez le support Kenz depuis l’application ou via les canaux officiels communiqués par la plateforme.
               </p>
             </section>
           </CardContent>

@@ -130,7 +130,7 @@ export function useContactQRScanner() {
           };
         }
         
-        // Essayer de détecter si c'est un numéro de compte eNkamba seul
+        // Essayer de détecter si c'est un numéro de compte Kenz seul
         if (qrData.startsWith('ENK') && qrData.length >= 12 && !qrData.includes('|')) {
           return {
             type: 'ENKAMBA_ACCOUNT',
@@ -236,7 +236,7 @@ export function useContactQRScanner() {
         console.log('❌ Aucun utilisateur trouvé par téléphone');
       }
 
-      // 4. Chercher par numéro de compte eNkamba
+      // 4. Chercher par numéro de compte Kenz
       if (contactData.accountNumber) {
         console.log('💳 Tentative recherche par accountNumber:', contactData.accountNumber);
         
@@ -285,7 +285,7 @@ export function useContactQRScanner() {
         console.log('❌ Aucun utilisateur trouvé par accountNumber');
       }
 
-      // 5. Chercher par numéro de carte eNkamba
+      // 5. Chercher par numéro de carte Kenz
       if (contactData.cardNumber) {
         console.log('💳 Tentative recherche par cardNumber:', contactData.cardNumber);
         const qByCard = query(usersRef, where('cardNumber', '==', contactData.cardNumber));
@@ -332,7 +332,7 @@ export function useContactQRScanner() {
         toast({
           variant: 'destructive',
           title: 'QR Code non reconnu',
-          description: 'Ce QR code n\'est pas un contact eNkamba valide',
+          description: 'Ce QR code n\'est pas un contact Kenz valide',
         });
         setIsScanning(false);
         return null;
@@ -348,7 +348,7 @@ export function useContactQRScanner() {
         console.log('✅ Contact trouvé:', user.displayName);
         toast({
           title: 'Contact trouvé',
-          description: `${user.displayName} est sur eNkamba`,
+          description: `${user.displayName} est sur Kenz`,
           className: 'bg-primary text-white border-none',
         });
       } else {
@@ -356,7 +356,7 @@ export function useContactQRScanner() {
         toast({
           variant: 'destructive',
           title: 'Contact non trouvé',
-          description: 'Ce contact n\'est pas encore sur eNkamba',
+          description: 'Ce contact n\'est pas encore sur Kenz',
         });
       }
 

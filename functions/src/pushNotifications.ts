@@ -29,7 +29,7 @@ async function relayToSupabase(
     user_id: userId,
     notification_id: notificationId,
     type: String(notif.type || 'system'),
-    title: String(notif.title || 'eNkamba'),
+    title: String(notif.title || 'Kenz'),
     message: String(notif.message || 'Nouvelle notification'),
     action_url: String(notif.actionUrl || '/dashboard'),
     created_at: new Date().toISOString(),
@@ -138,7 +138,7 @@ export const onUserNotificationCreated = functions.firestore
       return null;
     }
 
-    const title = String(notif.title || 'eNkamba');
+    const title = String(notif.title || 'Kenz');
     const body = String(notif.message || 'Vous avez une nouvelle notification');
     const actionUrl = String(notif.actionUrl || '/dashboard');
     const notificationType = String(notif.type || 'system');
@@ -245,7 +245,7 @@ export const onUserNotificationCreated = functions.firestore
           notification: {
             title,
             body,
-            icon: '/enkamba-logo.png',
+            icon: '/kenz-logo.png',
             badge: '/favicon.png',
             data: { actionUrl },
             requireInteraction: isCallNotification,

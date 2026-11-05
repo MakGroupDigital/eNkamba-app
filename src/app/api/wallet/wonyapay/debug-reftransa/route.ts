@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
       Devise: 'CDF',
       Action: 'C2B',
       MobileMoney: phoneNumber,
-      Motif: 'Test debug RefTransa eNkamba'
+      Motif: 'Test debug RefTransa Kenz'
     };
     
     console.log('🔍 Debug WonyaPay Request:', wonyaPayload);

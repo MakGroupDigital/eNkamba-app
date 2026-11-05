@@ -153,7 +153,7 @@ export function buildNkampaInvoice(input: {
     logisticsFee,
     totalAmount,
     currency: input.currency || 'CDF',
-    fiscalNote: 'Montant TTC enregistré pour contrôle fiscal eNkamba.',
+    fiscalNote: 'Montant TTC enregistré pour contrôle fiscal Kenz.',
   } satisfies NkampaOrderInvoice;
 }
 

@@ -165,7 +165,7 @@ export default function PackageTrackingPage() {
           date: createdDate.toLocaleDateString('fr-FR'),
           time: createdDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
           status: 'Paiement confirmé',
-          location: 'eNkamba',
+          location: 'Kenz',
         });
       }
 

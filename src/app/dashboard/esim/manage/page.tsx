@@ -167,7 +167,7 @@ export default function ESIMManagePage() {
 
   if (esims.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-[#009058]/5 to-background">
+      <div className="min-h-screen bg-gradient-to-br from-background via-[#073B9A]/5 to-background">
         <div className="container mx-auto max-w-2xl p-4 space-y-6 animate-in fade-in duration-500">
           <header className="flex items-center gap-4 pt-4">
             <Button variant="ghost" size="icon" asChild>
@@ -183,7 +183,7 @@ export default function ESIMManagePage() {
               <Smartphone className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-xl font-bold mb-2">Aucun eSIM actif</h3>
               <p className="text-muted-foreground mb-6">
-                Vous n'avez pas encore d'eSIM-eNkamba. Achetez-en un pour commencer.
+                Vous n'avez pas encore d'eSIM-Kenz. Achetez-en un pour commencer.
               </p>
               <Button onClick={() => router.push('/dashboard/esim/purchase')}>
                 <Plus className="mr-2 h-4 w-4" />
@@ -197,7 +197,7 @@ export default function ESIMManagePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-[#009058]/5 to-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-[#073B9A]/5 to-background">
       <div className="container mx-auto max-w-4xl p-4 space-y-6 animate-in fade-in duration-500">
         {/* Header */}
         <header className="flex items-center justify-between pt-4">

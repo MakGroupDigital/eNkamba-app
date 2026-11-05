@@ -61,7 +61,7 @@ export function SearchOptions({ onOptionsChange, isLoading }: SearchOptionsProps
       label: 'Générer du Code',
       description: 'Inclure des exemples de code',
       icon: Code2,
-      color: 'text-[#FFA500]',
+      color: 'text-[#F51B2B]',
     },
   ];
 

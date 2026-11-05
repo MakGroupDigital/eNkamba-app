@@ -10,8 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { ArrowLeft, Loader2, Search, Mail, Phone, CreditCard, User, AlertCircle, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/lib/firebase';
+import { serverCallable } from '@/lib/server-callable';
 
 interface UserSearchResult {
   uid: string;
@@ -58,7 +57,7 @@ export default function RequestPage() {
 
     setIsSearching(true);
     try {
-      const searchUserFn = httpsCallable(functions, 'searchUserByIdentifier');
+      const searchUserFn = serverCallable('searchUserByIdentifier');
       const result = await searchUserFn({
         searchMethod,
         searchQuery: searchQuery.trim(),
@@ -110,7 +109,7 @@ export default function RequestPage() {
 
     setIsSubmitting(true);
     try {
-      const createRequestFn = httpsCallable(functions, 'createMoneyRequest');
+      const createRequestFn = serverCallable('createMoneyRequest');
       const result = await createRequestFn({
         fromUserId: user?.uid,
         toUserId: foundUser.uid,
@@ -148,7 +147,7 @@ export default function RequestPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-[#009058]/5 to-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-[#073B9A]/5 to-background">
       <div className="container mx-auto max-w-2xl p-4 space-y-6 animate-in fade-in duration-500">
         {/* Header */}
         <header className="flex items-center gap-4 pt-4">
@@ -158,10 +157,10 @@ export default function RequestPage() {
             </Link>
           </Button>
           <div>
-            <h1 className="font-headline text-3xl font-bold bg-gradient-to-r from-[#009058] to-[#009058] bg-clip-text text-transparent">
+            <h1 className="font-headline text-3xl font-bold bg-gradient-to-r from-[#073B9A] to-[#073B9A] bg-clip-text text-transparent">
               Demander de l'argent
             </h1>
-            <p className="text-sm text-muted-foreground">Demandez un paiement à un utilisateur eNkamba</p>
+            <p className="text-sm text-muted-foreground">Demandez un paiement à un utilisateur Kenz</p>
           </div>
         </header>
 
@@ -169,30 +168,30 @@ export default function RequestPage() {
         {step === 'method' && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card
-              className="cursor-pointer border-2 hover:border-[#009058] transition-colors"
+              className="cursor-pointer border-2 hover:border-[#073B9A] transition-colors"
               onClick={() => handleMethodSelect('card')}
             >
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center gap-4 text-center">
-                  <div className="p-4 rounded-full bg-[#009058]/20">
-                    <CreditCard className="h-[64px] w-[64px] text-[#009058]" />
+                  <div className="p-4 rounded-full bg-[#073B9A]/20">
+                    <CreditCard className="h-[64px] w-[64px] text-[#073B9A]" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-lg">Numéro de Carte</h3>
-                    <p className="text-sm text-muted-foreground">Numéro de carte eNkamba</p>
+                    <p className="text-sm text-muted-foreground">Numéro de carte Kenz</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
             <Card
-              className="cursor-pointer border-2 hover:border-[#009058] transition-colors"
+              className="cursor-pointer border-2 hover:border-[#073B9A] transition-colors"
               onClick={() => handleMethodSelect('account')}
             >
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center gap-4 text-center">
-                  <div className="p-4 rounded-full bg-[#009058]/20">
-                    <User className="h-[64px] w-[64px] text-[#009058]" />
+                  <div className="p-4 rounded-full bg-[#073B9A]/20">
+                    <User className="h-[64px] w-[64px] text-[#073B9A]" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-lg">Numéro de Compte</h3>
@@ -203,13 +202,13 @@ export default function RequestPage() {
             </Card>
 
             <Card
-              className="cursor-pointer border-2 hover:border-[#009058] transition-colors"
+              className="cursor-pointer border-2 hover:border-[#073B9A] transition-colors"
               onClick={() => handleMethodSelect('email')}
             >
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center gap-4 text-center">
-                  <div className="p-4 rounded-full bg-[#009058]/20">
-                    <Mail className="h-[64px] w-[64px] text-[#009058]" />
+                  <div className="p-4 rounded-full bg-[#073B9A]/20">
+                    <Mail className="h-[64px] w-[64px] text-[#073B9A]" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-lg">Adresse Email</h3>
@@ -220,13 +219,13 @@ export default function RequestPage() {
             </Card>
 
             <Card
-              className="cursor-pointer border-2 hover:border-[#009058] transition-colors"
+              className="cursor-pointer border-2 hover:border-[#073B9A] transition-colors"
               onClick={() => handleMethodSelect('phone')}
             >
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center gap-4 text-center">
-                  <div className="p-4 rounded-full bg-[#009058]/20">
-                    <Phone className="h-[64px] w-[64px] text-[#009058]" />
+                  <div className="p-4 rounded-full bg-[#073B9A]/20">
+                    <Phone className="h-[64px] w-[64px] text-[#073B9A]" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-lg">Numéro de Téléphone</h3>
@@ -275,7 +274,7 @@ export default function RequestPage() {
                   <Button
                     onClick={searchUser}
                     disabled={isSearching}
-                    className="bg-[#009058] hover:bg-[#009058]"
+                    className="bg-[#073B9A] hover:bg-[#073B9A]"
                   >
                     {isSearching ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -307,7 +306,7 @@ export default function RequestPage() {
         {step === 'confirm' && foundUser && (
           <div className="space-y-4">
             {/* User Info Card */}
-            <Card className="border-[#009058]/20 bg-gradient-to-br from-[#009058]/10 to-[#009058]/5">
+            <Card className="border-[#073B9A]/20 bg-gradient-to-br from-[#073B9A]/10 to-[#073B9A]/5">
               <CardHeader>
                 <CardTitle className="text-lg">Informations de l'utilisateur</CardTitle>
               </CardHeader>
@@ -387,7 +386,7 @@ export default function RequestPage() {
                   <Button
                     onClick={handleConfirm}
                     disabled={isSubmitting || !amount}
-                    className="flex-1 bg-[#009058] hover:bg-[#009058]"
+                    className="flex-1 bg-[#073B9A] hover:bg-[#073B9A]"
                   >
                     {isSubmitting ? (
                       <>

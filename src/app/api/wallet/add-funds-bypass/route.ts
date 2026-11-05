@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
           Devise: currency as 'CDF' | 'USD',
           Action: 'C2B',
           MobileMoney: normalizedPhone,
-          Motif: motif || 'Dépôt portefeuille eNkamba (Bypass Firebase)'
+          Motif: motif || 'Dépôt portefeuille Kenz (Bypass Firebase)'
         };
 
         console.log('🚀 WonyaPay Request (Bypass):', {

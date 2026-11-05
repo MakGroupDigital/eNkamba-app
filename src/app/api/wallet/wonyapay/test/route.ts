@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
       Devise: currency as 'CDF' | 'USD',
       Action: action as 'C2B' | 'B2C',
       MobileMoney: normalizedPhone,
-      Motif: 'Test eNkamba - Transaction de validation'
+      Motif: 'Test Kenz - Transaction de validation'
     };
 
     console.log('Test WonyaPay - Configuration:', {

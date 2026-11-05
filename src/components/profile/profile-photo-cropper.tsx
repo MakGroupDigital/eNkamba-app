@@ -126,7 +126,7 @@ export function ProfilePhotoCropper({
 
         <div className="flex flex-col items-center gap-5">
           <div
-            className={`relative h-[260px] w-[260px] touch-none overflow-hidden rounded-full border-[6px] border-white bg-slate-100 shadow-[0_18px_50px_rgba(10,139,70,0.22)] ring-2 ring-primary/20 ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+            className={`relative h-[260px] w-[260px] touch-none overflow-hidden rounded-full border-[6px] border-white bg-slate-100 shadow-[0_18px_50px_rgba(7, 59, 154,0.22)] ring-2 ring-primary/20 ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={stopDragging}

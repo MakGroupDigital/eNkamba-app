@@ -16,7 +16,7 @@ import { NativeFirebaseSessionBridge } from "@/components/native-firebase-sessio
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://enkamba.app"),
-  title: "eNkamba - La vie simplifiée et meilleure",
+  title: "Kenz - La vie simplifiée et meilleure",
   description:
     "Écosystème digital tout-en-un : finance, e-commerce, logistique, messagerie et réseau social.",
   icons: {
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     apple: "/apple-touch-icon.png",
   },
   openGraph: {
-    title: "eNkamba - La vie simplifiée et meilleure",
+    title: "Kenz - La vie simplifiée et meilleure",
     description:
       "Écosystème digital tout-en-un : finance, e-commerce, logistique, messagerie et réseau social.",
     type: "website",
@@ -36,13 +36,13 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 512,
         height: 512,
-        alt: "Logo eNkamba",
+        alt: "Logo Kenz",
       },
     ],
   },
   twitter: {
     card: "summary",
-    title: "eNkamba - La vie simplifiée et meilleure",
+    title: "Kenz - La vie simplifiée et meilleure",
     description:
       "Écosystème digital tout-en-un : finance, e-commerce, logistique, messagerie et réseau social.",
     images: ["/og-image.png"],
@@ -63,7 +63,7 @@ export default function RootLayout({
         <link rel="icon" type="image/png" href="/favicon.png" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/site.webmanifest" />
-        <meta name="theme-color" content="#009058" />
+        <meta name="theme-color" content="#073B9A" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           rel="preconnect"
