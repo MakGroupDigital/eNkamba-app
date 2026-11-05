@@ -7,8 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { ArrowLeft, Copy, Share2, Loader2, Users, TrendingUp, Gift } from 'lucide-react';
 import Link from 'next/link';
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/lib/firebase';
+import { serverCallable } from '@/lib/server-callable';
 
 export default function InvitePage() {
   const { toast } = useToast();
@@ -25,7 +24,7 @@ export default function InvitePage() {
 
     setIsLoading(true);
     try {
-      const generateLinkFn = httpsCallable(functions, 'generateReferralLink');
+      const generateLinkFn = serverCallable('generateReferralLink');
       const result = await generateLinkFn({
         userId: user.uid,
       });

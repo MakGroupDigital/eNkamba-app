@@ -25,8 +25,7 @@ import { useAllTransactions, Transaction } from '@/hooks/useAllTransactions';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useReceiptDownload } from '@/hooks/useReceiptDownload';
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/lib/firebase';
+import { serverCallable } from '@/lib/server-callable';
 
 type TransactionTypeFilter = 'all' | 'transfer_sent' | 'transfer_received' | 'deposit' | 'withdrawal' | 'payment_link' | 'contact_payment' | 'money_request_sent' | 'money_request_received';
 
@@ -55,7 +54,11 @@ const getTransactionLabel = (type: Transaction['type']) => {
   return labels[type] || 'Transaction';
 };
 
+// Annulation libre désactivée (audit ENK-007) : elle remboursait l'expéditeur sans reprendre les fonds au destinataire.
+const SELF_SERVICE_CANCELLATION_ENABLED = false;
+
 const canCancelTransaction = (transaction: Transaction): boolean => {
+  if (!SELF_SERVICE_CANCELLATION_ENABLED) return false;
   if (transaction.status !== 'completed') return false;
   if (transaction.type !== 'transfer_sent' && transaction.type !== 'withdrawal') return false;
   
@@ -109,7 +112,7 @@ export default function HistoryPage() {
 
     setIsCancelling(true);
     try {
-      const cancelTransactionFn = httpsCallable(functions, 'cancelTransaction');
+      const cancelTransactionFn = serverCallable('cancelTransaction');
       const result = await cancelTransactionFn({
         userId: user.uid,
         transactionId: selectedTransaction.id,

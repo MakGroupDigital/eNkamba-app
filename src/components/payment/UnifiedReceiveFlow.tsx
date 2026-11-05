@@ -8,8 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { Loader2, Copy, Share2, QrCode, Link as LinkIcon, Zap, CheckCircle2, Download, Wifi, Bluetooth, AlertTriangle, Languages } from 'lucide-react';
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/lib/firebase';
+import { serverCallable } from '@/lib/server-callable';
 import QRCode from 'qrcode';
 import { TranslationDialog } from '@/components/translation/TranslationDialog';
 import { BrandedQRCodeCard, createBrandedQRCodeDataUrl } from '@/components/qrcode/branded-qr-code-card';
@@ -86,7 +85,7 @@ export function UnifiedReceiveFlow({
 
     setIsGenerating(true);
     try {
-      const createLinkFn = httpsCallable(functions, 'createPaymentLink');
+      const createLinkFn = serverCallable('createPaymentLink');
       const result = await createLinkFn({
         userId: user.uid,
         amount: amount ? parseFloat(amount) : undefined,

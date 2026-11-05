@@ -4,8 +4,7 @@ import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useWalletTransactions } from '@/hooks/useWalletTransactions';
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/lib/firebase';
+import { serverCallable } from '@/lib/server-callable';
 
 export type PaymentMethod = 'qrcode' | 'card' | 'account' | 'email' | 'phone' | 'bluetooth' | 'wifi';
 export type PaymentContext = 'wallet' | 'nkampa' | 'ugavi' | 'makutano' | 'miyiki' | 'bills' | 'services';
@@ -112,7 +111,7 @@ export function useUnifiedPayment(config: UnifiedPaymentConfig) {
     }
 
     try {
-      const searchFn = httpsCallable(functions, 'searchUserByIdentifier');
+      const searchFn = serverCallable('searchUserByIdentifier');
       const result = await searchFn({
         searchMethod: method,
         searchQuery: query.trim(),
@@ -159,7 +158,7 @@ export function useUnifiedPayment(config: UnifiedPaymentConfig) {
 
     setIsProcessing(true);
     try {
-      const processPaymentFn = httpsCallable(functions, 'processUnifiedPayment');
+      const processPaymentFn = serverCallable('processUnifiedPayment');
       const result = await processPaymentFn({
         payerId: user?.uid,
         amount: data.amount,

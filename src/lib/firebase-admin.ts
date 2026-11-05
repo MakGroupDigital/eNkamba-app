@@ -5,7 +5,8 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { getFirebaseAdminConfig } from '@/lib/decode-secrets';
 
 function getAdminApp() {
-  const existingApp = getApps()[0];
+  // L'app par défaut seulement : d'autres apps nommées (ex. vérification de jeton sans identifiants) peuvent exister.
+  const existingApp = getApps().find((app) => app.name === '[DEFAULT]');
   if (existingApp) return existingApp;
 
   const config = getFirebaseAdminConfig();

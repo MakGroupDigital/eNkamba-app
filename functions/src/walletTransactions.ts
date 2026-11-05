@@ -19,6 +19,16 @@ export const addFundsToWallet = functions.https.onCall(
   }, context) => {
     const { userId, amount, paymentMethod, phoneNumber, cardDetails } = data;
 
+    // Sécurité (audit ENK-007) : cette fonction créditait le wallet sans aucun encaissement réel.
+    // Les dépôts passent uniquement par les routes serveur WonyaPay / MaxiCash, confirmées par le prestataire.
+    const unverifiedDepositsEnabled = process.env.ENABLE_UNVERIFIED_DEPOSITS === 'true';
+    if (!unverifiedDepositsEnabled) {
+      throw new functions.https.HttpsError(
+        'failed-precondition',
+        'Ce mode de dépôt n’est plus disponible. Utilisez « Ajouter des fonds » (Mobile Money).'
+      );
+    }
+
     // Vérifier l'authentification
     if (!context.auth) {
       throw new functions.https.HttpsError(
@@ -440,6 +450,16 @@ export const cancelTransaction = functions.https.onCall(
           'Seules les transactions complétées peuvent être annulées'
         );
       }
+
+      // Sécurité (audit ENK-007) : un transfert terminé a déjà crédité le destinataire, et un retrait terminé
+      // a déjà été versé sur Mobile Money. Rembourser l'expéditeur sans reprendre ces fonds créerait de l'argent.
+      // Toute annulation passe donc par le support (contre-passation contrôlée des deux côtés).
+      throw new functions.https.HttpsError(
+        'failed-precondition',
+        transaction.type === 'withdrawal'
+          ? 'Un retrait envoyé vers Mobile Money ne peut pas être annulé. En cas d’échec, le remboursement est automatique.'
+          : 'Un transfert terminé ne peut pas être annulé depuis l’application. Contactez le destinataire ou le support Kenz.'
+      );
 
       // Annuler la transaction
       await transactionDoc.ref.update({

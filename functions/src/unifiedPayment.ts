@@ -19,7 +19,6 @@ export const processUnifiedPayment = functions.https.onCall(
   }, context) => {
     const {
       payerId,
-      amount,
       paymentMethod,
       context: paymentContext,
       recipientId,
@@ -43,7 +42,9 @@ export const processUnifiedPayment = functions.https.onCall(
       );
     }
 
-    if (!amount || amount <= 0) {
+    // Montant strictement numérique : une chaîne ferait une concaténation sur le solde du destinataire.
+    const amount = typeof data.amount === 'number' ? data.amount : Number.NaN;
+    if (!Number.isFinite(amount) || amount <= 0) {
       throw new functions.https.HttpsError(
         'invalid-argument',
         'Le montant doit être supérieur à 0'
@@ -53,26 +54,7 @@ export const processUnifiedPayment = functions.https.onCall(
     try {
       const db = admin.firestore();
 
-      // Récupérer le payeur
-      const payerDoc = await db.collection('users').doc(payerId).get();
-      if (!payerDoc.exists) {
-        throw new functions.https.HttpsError(
-          'not-found',
-          'Utilisateur non trouvé'
-        );
-      }
-
-      const payerData = payerDoc.data()!;
-      const payerBalance = payerData.walletBalance || 0;
-
-      // Vérifier le solde
-      if (payerBalance < amount) {
-        throw new functions.https.HttpsError(
-          'failed-precondition',
-          'Solde insuffisant'
-        );
-      }
-
+      const payerRef = db.collection('users').doc(payerId);
       let recipientId_final = recipientId;
       let recipientData: any = null;
 
@@ -135,105 +117,92 @@ export const processUnifiedPayment = functions.https.onCall(
         );
       }
 
-      // Récupérer le destinataire
-      const recipientDoc = await db.collection('users').doc(recipientId_final).get();
-      if (!recipientDoc.exists) {
-        throw new functions.https.HttpsError(
-          'not-found',
-          'Destinataire non trouvé'
-        );
-      }
+      const recipientRef = db.collection('users').doc(recipientId_final);
+      const payerTransactionRef = payerRef.collection('transactions').doc();
+      const recipientTransactionRef = recipientRef.collection('transactions').doc();
+      const payerNotificationRef = payerRef.collection('notifications').doc();
+      const recipientNotificationRef = recipientRef.collection('notifications').doc();
+      const now = admin.firestore.FieldValue.serverTimestamp();
 
-      recipientData = recipientDoc.data()!;
-      const recipientBalance = recipientData.walletBalance || 0;
+      // Lecture des soldes et écritures dans une seule transaction : pas de double dépense ni de crédit écrasé.
+      const payerBalance = await db.runTransaction(async (transaction) => {
+        const [payerDoc, recipientDoc] = await Promise.all([transaction.get(payerRef), transaction.get(recipientRef)]);
+        if (!payerDoc.exists) {
+          throw new functions.https.HttpsError('not-found', 'Utilisateur non trouvé');
+        }
+        if (!recipientDoc.exists) {
+          throw new functions.https.HttpsError('not-found', 'Destinataire non trouvé');
+        }
+        const payerData = payerDoc.data()!;
+        const recipientData = recipientDoc.data()!;
+        const currentPayerBalance = Number(payerData.walletBalance || 0);
+        const recipientBalance = Number(recipientData.walletBalance || 0);
+        if (currentPayerBalance < amount) {
+          throw new functions.https.HttpsError('failed-precondition', 'Solde insuffisant');
+        }
 
-      // Effectuer le paiement
-      await db.collection('users').doc(payerId).update({
-        walletBalance: payerBalance - amount,
-        lastTransactionTime: admin.firestore.FieldValue.serverTimestamp(),
-      });
+        transaction.update(payerRef, { walletBalance: currentPayerBalance - amount, lastTransactionTime: now });
+        transaction.update(recipientRef, { walletBalance: recipientBalance + amount, lastTransactionTime: now });
 
-      await db.collection('users').doc(recipientId_final).update({
-        walletBalance: recipientBalance + amount,
-        lastTransactionTime: admin.firestore.FieldValue.serverTimestamp(),
-      });
-
-      // Créer les transactions
-      const payerTransactionRef = db.collection('users').doc(payerId).collection('transactions').doc();
-      const payerTransactionData: any = {
-        id: payerTransactionRef.id,
-        type: 'payment_sent',
-        context: paymentContext,
-        amount,
-        amountInCDF: amount,
-        status: 'completed',
-        description: description || `Paiement à ${recipientData.fullName}`,
-        previousBalance: payerBalance,
-        newBalance: payerBalance - amount,
-        timestamp: admin.firestore.FieldValue.serverTimestamp(),
-        createdAt: new Date().toISOString(),
-        recipientId: recipientId_final,
-        paymentMethod,
-        metadata: metadata || {},
-      };
-
-      if (recipientData?.fullName) {
-        payerTransactionData.recipientName = recipientData.fullName;
-      }
-
-      await payerTransactionRef.set(payerTransactionData);
-
-      const recipientTransactionRef = db.collection('users').doc(recipientId_final).collection('transactions').doc();
-      const recipientTransactionData: any = {
-        id: recipientTransactionRef.id,
-        type: 'payment_received',
-        context: paymentContext,
-        amount,
-        amountInCDF: amount,
-        status: 'completed',
-        description: description || `Paiement reçu de ${payerData.fullName}`,
-        previousBalance: recipientBalance,
-        newBalance: recipientBalance + amount,
-        timestamp: admin.firestore.FieldValue.serverTimestamp(),
-        createdAt: new Date().toISOString(),
-        senderId: payerId,
-        paymentMethod,
-        metadata: metadata || {},
-      };
-
-      if (payerData?.fullName) {
-        recipientTransactionData.senderName = payerData.fullName;
-      }
-
-      await recipientTransactionRef.set(recipientTransactionData);
-
-      // Créer les notifications
-      const payerNotificationRef = db.collection('users').doc(payerId).collection('notifications').doc();
-      await payerNotificationRef.set({
-        id: payerNotificationRef.id,
-        type: 'payment_sent',
-        title: 'Paiement effectué',
-        message: `Vous avez payé ${amount.toLocaleString('fr-FR')} CDF à ${recipientData.fullName}`,
-        amount,
-        transactionId: payerTransactionRef.id,
-        context: paymentContext,
-        read: false,
-        timestamp: admin.firestore.FieldValue.serverTimestamp(),
-        createdAt: new Date().toISOString(),
-      });
-
-      const recipientNotificationRef = db.collection('users').doc(recipientId_final).collection('notifications').doc();
-      await recipientNotificationRef.set({
-        id: recipientNotificationRef.id,
-        type: 'payment_received',
-        title: 'Paiement reçu',
-        message: `Vous avez reçu ${amount.toLocaleString('fr-FR')} CDF de ${payerData.fullName}`,
-        amount,
-        transactionId: recipientTransactionRef.id,
-        context: paymentContext,
-        read: false,
-        timestamp: admin.firestore.FieldValue.serverTimestamp(),
-        createdAt: new Date().toISOString(),
+        transaction.set(payerTransactionRef, {
+          id: payerTransactionRef.id,
+          type: 'payment_sent',
+          context: paymentContext,
+          amount,
+          amountInCDF: amount,
+          status: 'completed',
+          description: description || `Paiement à ${recipientData.fullName || 'un utilisateur Kenz'}`,
+          previousBalance: currentPayerBalance,
+          newBalance: currentPayerBalance - amount,
+          timestamp: now,
+          createdAt: new Date().toISOString(),
+          recipientId: recipientId_final,
+          paymentMethod,
+          metadata: metadata || {},
+          ...(recipientData.fullName ? { recipientName: recipientData.fullName } : {}),
+        });
+        transaction.set(recipientTransactionRef, {
+          id: recipientTransactionRef.id,
+          type: 'payment_received',
+          context: paymentContext,
+          amount,
+          amountInCDF: amount,
+          status: 'completed',
+          description: description || `Paiement reçu de ${payerData.fullName || 'un utilisateur Kenz'}`,
+          previousBalance: recipientBalance,
+          newBalance: recipientBalance + amount,
+          timestamp: now,
+          createdAt: new Date().toISOString(),
+          senderId: payerId,
+          paymentMethod,
+          metadata: metadata || {},
+          ...(payerData.fullName ? { senderName: payerData.fullName } : {}),
+        });
+        transaction.set(payerNotificationRef, {
+          id: payerNotificationRef.id,
+          type: 'payment_sent',
+          title: 'Paiement effectué',
+          message: `Vous avez payé ${amount.toLocaleString('fr-FR')} CDF à ${recipientData.fullName || 'un utilisateur Kenz'}`,
+          amount,
+          transactionId: payerTransactionRef.id,
+          context: paymentContext,
+          read: false,
+          timestamp: now,
+          createdAt: new Date().toISOString(),
+        });
+        transaction.set(recipientNotificationRef, {
+          id: recipientNotificationRef.id,
+          type: 'payment_received',
+          title: 'Paiement reçu',
+          message: `Vous avez reçu ${amount.toLocaleString('fr-FR')} CDF de ${payerData.fullName || 'un utilisateur Kenz'}`,
+          amount,
+          transactionId: recipientTransactionRef.id,
+          context: paymentContext,
+          read: false,
+          timestamp: now,
+          createdAt: new Date().toISOString(),
+        });
+        return currentPayerBalance;
       });
 
       return {

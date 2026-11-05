@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
-import { httpsCallable } from 'firebase/functions';
-import { functions, auth } from '@/lib/firebase';
+import { serverCallable } from '@/lib/server-callable';
+import { auth } from '@/lib/firebase';
 
 export interface PaymentLink {
   id: string;
@@ -26,7 +26,7 @@ export function usePaymentCollection() {
       setError(null);
 
       try {
-        const createLinkFn = httpsCallable(functions, 'createPaymentLink');
+        const createLinkFn = serverCallable('createPaymentLink');
         const result = await createLinkFn({
           userId: currentUser.uid,
           amount: amount || undefined,
@@ -61,7 +61,7 @@ export function usePaymentCollection() {
       setError(null);
 
       try {
-        const processFn = httpsCallable(functions, 'processPaymentLink');
+        const processFn = serverCallable('processPaymentLink');
         const result = await processFn({
           linkId,
           code,
@@ -93,7 +93,7 @@ export function usePaymentCollection() {
       setError(null);
 
       try {
-        const getDetailsFn = httpsCallable(functions, 'getPaymentLinkDetails');
+        const getDetailsFn = serverCallable('getPaymentLinkDetails');
         const result = await getDetailsFn({
           linkId,
           code,
@@ -125,7 +125,7 @@ export function usePaymentCollection() {
       setError(null);
 
       try {
-        const createCodeFn = httpsCallable(functions, 'createContactPaymentCode');
+        const createCodeFn = serverCallable('createContactPaymentCode');
         const result = await createCodeFn({
           userId: currentUser.uid,
           amount: amount || undefined,
@@ -158,7 +158,7 @@ export function usePaymentCollection() {
       setError(null);
 
       try {
-        const getStatsFn = httpsCallable(functions, 'getCollectionStats');
+        const getStatsFn = serverCallable('getCollectionStats');
         const result = await getStatsFn({
           userId: currentUser.uid,
         });

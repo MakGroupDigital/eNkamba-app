@@ -10,8 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { ArrowLeft, Loader2, Search, Mail, Phone, CreditCard, User, AlertCircle, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/lib/firebase';
+import { serverCallable } from '@/lib/server-callable';
 
 interface UserSearchResult {
   uid: string;
@@ -58,7 +57,7 @@ export default function RequestPage() {
 
     setIsSearching(true);
     try {
-      const searchUserFn = httpsCallable(functions, 'searchUserByIdentifier');
+      const searchUserFn = serverCallable('searchUserByIdentifier');
       const result = await searchUserFn({
         searchMethod,
         searchQuery: searchQuery.trim(),
@@ -110,7 +109,7 @@ export default function RequestPage() {
 
     setIsSubmitting(true);
     try {
-      const createRequestFn = httpsCallable(functions, 'createMoneyRequest');
+      const createRequestFn = serverCallable('createMoneyRequest');
       const result = await createRequestFn({
         fromUserId: user?.uid,
         toUserId: foundUser.uid,
