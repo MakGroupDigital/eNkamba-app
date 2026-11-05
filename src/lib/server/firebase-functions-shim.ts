@@ -32,8 +32,15 @@ function onCall(handler: Handler) {
   return callable;
 }
 
+// Déclencheurs (Firestore, planifiés) : ils ne s'exécutent que sur Cloud Functions ; ici, simple déclaration inerte.
+const inertTrigger = () => () => undefined;
+const firestore = {
+  document: () => ({ onCreate: inertTrigger, onUpdate: inertTrigger, onWrite: inertTrigger, onDelete: inertTrigger }),
+};
+const pubsub = { schedule: () => ({ timeZone: () => ({ onRun: inertTrigger }), onRun: inertTrigger }) };
+
 const logger = { log: console.log, info: console.info, warn: console.warn, error: console.error, debug: console.debug };
 
 export const https = { onCall, HttpsError };
-export { logger };
-export default { https, logger };
+export { logger, firestore, pubsub };
+export default { https, logger, firestore, pubsub };

@@ -1,6 +1,7 @@
 import 'server-only';
 // Le code des Cloud Functions (functions/src) est exécuté tel quel par l'API Next.js :
 // « firebase-functions » y est remplacé par src/lib/server/firebase-functions-shim.ts (voir next.config.ts).
+import './init-admin-default';
 import * as moneyRequest from '../../../functions/src/moneyRequest';
 import * as unifiedPayment from '../../../functions/src/unifiedPayment';
 import * as paymentCollection from '../../../functions/src/paymentCollection';

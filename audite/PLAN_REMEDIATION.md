@@ -77,3 +77,10 @@ Vérifications : `tsc --noEmit` client et business = 0 erreur · tests business 
 - **Devise des pages agent relais (business)** : ✅ décision : devise selon le pays de l'utilisateur, CDF par défaut (RDC). Montants de référence (rédigés en FCFA) convertis à des taux indicatifs et arrondis — `lib/local-currency.ts`, `hooks/useLocalCurrency.ts`. Les montants eux-mêmes restent à valider par le métier.
 - **Marque (ENK-017)** : ✅ décision : la marque affichée est « Kenz » (libellés visibles « eNKAMBA » remplacés ; noms techniques inchangés).
 - **Mentions @** : ✅ chaque personne mentionnée reçoit une notification « Vous avez été mentionné » (`users/{uid}/notifications`).
+
+## Session 2026-11-05 (suite) — eChurch et vérification des fonctionnalités
+- **Cause racine** : facturation du projet Firebase désactivée (`billingEnabled: false`) → **toutes les Cloud Functions sont hors service** (Firestore fonctionne). À réactiver par le titulaire du compte de facturation.
+- **Contournement** : le code de `functions/src` est exécuté par l'API Next (`/api/fn/[name]`, shim de `firebase-functions`, jeton vérifié) pour Payer, Recevoir/liens, Demandes d'argent, recherche d'utilisateur, parrainage. eChurch : `/api/church/pay`. Reçus PDF générés dans l'app (jsPDF). Jetons push écrits directement dans Firestore.
+- **Failles fermées** (tests émulateur 22/22 + eChurch 20/20) : paiement unifié non atomique et montant texte ; lien de paiement à montant négatif ; annulation qui remboursait sans reprendre les fonds ; `addFundsToWallet` qui créditait sans paiement ; mauvaise app Admin utilisée par les routes serveur.
+- **eChurch** : tuile Mbongo (référence ECH-… ou QR), frais créés par l'Église (business, onglet « Frais »), validation des Églises (admin `/admin/church-accounts`). Les 3 Églises existantes sont « soumises » : à valider.
+- **Restes** : « Envoyer » (`useMoneyTransferDirect`) modifie encore les soldes depuis le navigateur (ENK-048) ; la recherche d'utilisateur renvoie e-mail et téléphone ; build de production (webpack) du pont non testé sur cette machine (mémoire insuffisante).

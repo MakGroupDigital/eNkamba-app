@@ -1,11 +1,18 @@
 import { useEffect, useRef } from 'react';
-import { httpsCallable } from 'firebase/functions';
-import { app, functions } from '@/lib/firebase';
+import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { app, auth, db } from '@/lib/firebase';
 import { useAuth } from './useAuth';
 
 type PushPlatform = 'web' | 'android' | 'ios';
 
-const savePushTokenFn = httpsCallable(functions, 'savePushToken');
+// Même emplacement que la Cloud Function savePushToken : users/{uid}/pushTokens/{sha256(token)}.
+async function savePushTokenFn({ token, platform }: { token: string; platform: PushPlatform }) {
+  const uid = auth.currentUser?.uid;
+  if (!uid) throw new Error('Utilisateur non connecté');
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token));
+  const tokenId = Array.from(new Uint8Array(digest)).map((byte) => byte.toString(16).padStart(2, '0')).join('');
+  await setDoc(doc(db, 'users', uid, 'pushTokens', tokenId), { token, platform, updatedAt: serverTimestamp(), createdAt: serverTimestamp() }, { merge: true });
+}
 
 declare global {
   interface Window {
